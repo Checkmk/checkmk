@@ -96,6 +96,43 @@ class CustomServiceWizard(CmkPage):
         self._pick_suggestion(host_name)
         expect(self.host_select, f"Host {host_name!r} was not selected").to_contain_text(host_name)
 
+    def assignment_tab(self, title: str) -> Locator:
+        """The tab choosing how the service is assigned: "Manual" or "Automatic"."""
+        return self.active_step.get_by_role("tab", name=title, exact=True)
+
+    @property
+    def host_name_template_input(self) -> Locator:
+        return self.active_step.get_by_role("textbox", name="Host name template")
+
+    def template_attribute_button(self, attribute_key: str) -> Locator:
+        """The button appending the placeholder of `attribute_key` to the host name template."""
+        return self.active_step.get_by_role("button", name=f"+ {attribute_key}", exact=True)
+
+    def type_into_host_name_template(self, text: str) -> None:
+        """Type `text` at the end of the host name template, keeping what is already there."""
+        self.host_name_template_input.focus()
+        self.host_name_template_input.press("End")
+        self.host_name_template_input.press_sequentially(text)
+
+    @property
+    def no_host_name_warning(self) -> Locator:
+        return self.active_step.get_by_text(
+            "This template currently resolves to no host name, so the service cannot be saved."
+        )
+
+    @property
+    def target_hosts(self) -> Locator:
+        """The configured hosts the host name template matches, as a comma separated list."""
+        return self._labelled_value("Target hosts:")
+
+    @property
+    def new_hosts(self) -> Locator:
+        """The host names of no configured host, which saving creates in the Main folder."""
+        return self._labelled_value("New hosts, created in the Main folder on saving:")
+
+    def _labelled_value(self, label: str) -> Locator:
+        return self.active_step.locator("span", has_text=label).locator("strong")
+
     # Dropdowns of every step
 
     @property

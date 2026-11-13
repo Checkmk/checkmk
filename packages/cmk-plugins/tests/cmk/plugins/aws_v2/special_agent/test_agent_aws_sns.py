@@ -14,6 +14,7 @@ import pytest
 from cmk.plugins.aws_v2.special_agent.config import (
     AWSConfig,
     NamingConvention,
+    NonEC2PiggybackTemplate,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
@@ -119,7 +120,11 @@ def _create_sns_limits(
     n_std_topics: int, n_fifo_topics: int, n_subs: int, account_id: str = "123456789012"
 ) -> SNSLimits:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account(account_id)
     config.add_single_service_config("sns_names", [])
     config.add_single_service_config("sns_tags", [])
@@ -163,7 +168,11 @@ def test_sns_limits_of_one_account_are_not_cached_for_another() -> None:
 
 def test_sns_summary_does_not_list_topics_again_when_limits_found_none() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("sns_names", None)
     config.add_service_tags("sns_tags", (None, None))
@@ -192,7 +201,11 @@ class CountingTaggingClient:
 
 def test_sns_summary_does_not_fetch_tags_without_topics() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("sns_names", None)
     config.add_service_tags("sns_tags", (None, None))
@@ -227,7 +240,12 @@ def get_sns_sections() -> SNSSections:
     ) -> SNSSectionsOut:
         region = "eu-west-1"
         config = AWSConfig(
-            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname",
+            Args(),
+            ([], []),
+            NamingConvention.ip_region_instance,
+            NonEC2PiggybackTemplate.LONG,
+            tag_import,
         ).for_account("123456789012")
         config.add_single_service_config("sns_names", names)
         config.add_service_tags("sns_tags", tags)

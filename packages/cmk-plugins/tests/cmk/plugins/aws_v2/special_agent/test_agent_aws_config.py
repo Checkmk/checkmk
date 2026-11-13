@@ -11,7 +11,11 @@ from unittest import mock
 import pytest
 
 from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import parse_arguments
-from cmk.plugins.aws_v2.special_agent.config import AWSConfig, NamingConvention
+from cmk.plugins.aws_v2.special_agent.config import (
+    AWSConfig,
+    NamingConvention,
+    NonEC2PiggybackTemplate,
+)
 from cmk.plugins.aws_v2.special_agent.sections.costs_and_usage import CostsAndUsage
 
 
@@ -30,8 +34,20 @@ from cmk.plugins.aws_v2.special_agent.sections.costs_and_usage import CostsAndUs
 def test_agent_aws_config_hash_names(
     sys_argv_1: Args, sys_argv_2: Args, expected_result: bool
 ) -> None:
-    aws_config_1 = AWSConfig("heute1", sys_argv_1, ([], []), NamingConvention.ip_region_instance)
-    aws_config_2 = AWSConfig("heute1", sys_argv_2, ([], []), NamingConvention.ip_region_instance)
+    aws_config_1 = AWSConfig(
+        "heute1",
+        sys_argv_1,
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
+    )
+    aws_config_2 = AWSConfig(
+        "heute1",
+        sys_argv_2,
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
+    )
     assert (
         bool(
             aws_config_1._compute_config_hash(sys_argv_1)  # noqa: SLF001
@@ -62,7 +78,13 @@ def test_agent_aws_config_hash_processes(
     sys_argv: Args, hashed_val: str, expected_result: bool
 ) -> None:
     """Test whether the hash is the same across different python processes"""
-    aws_config_1 = AWSConfig("heute1", sys_argv, ([], []), NamingConvention.ip_region_instance)
+    aws_config_1 = AWSConfig(
+        "heute1",
+        sys_argv,
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
+    )
     assert bool(aws_config_1._compute_config_hash(sys_argv) == hashed_val) is expected_result  # noqa: SLF001
 
 
@@ -73,18 +95,28 @@ def test_config_hash_roundtrip(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
     """
     monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
     args = Args(foo="Foo")
-    cfg = AWSConfig("heute1", args, ([], []), NamingConvention.ip_region_instance)
+    cfg = AWSConfig(
+        "heute1", args, ([], []), NamingConvention.ip_region_instance, NonEC2PiggybackTemplate.LONG
+    )
     cfg._write_config_hash()  # noqa: SLF001
     assert cfg._load_config_hash() == cfg._current_config_hash  # noqa: SLF001
 
 
 def test_changed_option_value_makes_the_config_out_of_date() -> None:
     AWSConfig(
-        "heute1", Args(regions=["eu-central-1"]), ([], []), NamingConvention.ip_region_instance
+        "heute1",
+        Args(regions=["eu-central-1"]),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).is_up_to_date()  # first run stores the hash
 
     changed = AWSConfig(
-        "heute1", Args(regions=["eu-west-1"]), ([], []), NamingConvention.ip_region_instance
+        "heute1",
+        Args(regions=["eu-west-1"]),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     )
 
     assert not changed.is_up_to_date()
@@ -107,18 +139,32 @@ def test_unchanged_agent_command_line_keeps_the_config_up_to_date() -> None:
         "ec2",
     ]
     AWSConfig(
-        "heute1", parse_arguments(argv), ([], []), NamingConvention.ip_region_instance
+        "heute1",
+        parse_arguments(argv),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).is_up_to_date()
 
     rerun = AWSConfig(
-        "heute1", parse_arguments(argv), ([], []), NamingConvention.ip_region_instance
+        "heute1",
+        parse_arguments(argv),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     )
 
     assert rerun.is_up_to_date()
 
 
 def test_account_config_changes_do_not_reach_the_rule_config() -> None:
-    rule_config = AWSConfig("heute1", Args(), ([], []), NamingConvention.ip_region_instance)
+    rule_config = AWSConfig(
+        "heute1",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
+    )
 
     rule_config.for_account("333333333333").add_single_service_config("sns_names", ["topic"])
 
@@ -126,7 +172,13 @@ def test_account_config_changes_do_not_reach_the_rule_config() -> None:
 
 
 def test_section_refuses_a_config_without_an_account() -> None:
-    rule_config = AWSConfig("heute1", Args(), ([], []), NamingConvention.ip_region_instance)
+    rule_config = AWSConfig(
+        "heute1",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
+    )
 
     with pytest.raises(ValueError):
         CostsAndUsage(mock.Mock(), "us-east-1", rule_config)

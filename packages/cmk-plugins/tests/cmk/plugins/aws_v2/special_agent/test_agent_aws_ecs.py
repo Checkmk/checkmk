@@ -13,6 +13,7 @@ import pytest
 from cmk.plugins.aws_v2.special_agent.config import (
     AWSConfig,
     NamingConvention,
+    NonEC2PiggybackTemplate,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
@@ -160,7 +161,11 @@ class FakeEmptyECSClient:
 
 def test_ecs_summary_does_not_list_clusters_again_when_limits_found_none() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("ecs_names", None)
     config.add_service_tags("ecs_tags", (None, None))
@@ -194,7 +199,11 @@ class PageSizeRecordingQuotaClient:
 
 def test_ecs_limits_ask_for_100_quotas_per_page() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("ecs_names", None)
     config.add_service_tags("ecs_tags", (None, None))
@@ -208,7 +217,11 @@ def test_ecs_limits_ask_for_100_quotas_per_page() -> None:
 
 def test_ecs_limits_use_the_stored_quotas() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("ecs_names", None)
     config.add_service_tags("ecs_tags", (None, None))
@@ -242,7 +255,12 @@ def get_ecs_sections() -> ECSSections:
     ) -> ECSSectionsOut:
         region = "region"
         config = AWSConfig(
-            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname",
+            Args(),
+            ([], []),
+            NamingConvention.ip_region_instance,
+            NonEC2PiggybackTemplate.LONG,
+            tag_import,
         ).for_account("123456789012")
         config.add_single_service_config("ecs_names", names)
         config.add_service_tags("ecs_tags", tags)
@@ -382,7 +400,11 @@ def test_agent_aws_ecs_limits(
 def test_agent_aws_ecs_limits_without_quota_client() -> None:
     region = "region"
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("ecs_names", None)
     config.add_service_tags("ecs_tags", (None, None))

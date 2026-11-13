@@ -36,6 +36,7 @@ from .config import (
     CloudFrontHostAssignment,
     LOGGER,
     NamingConvention,
+    NonEC2PiggybackTemplate,
     TagsImportPatternOption,
 )
 from .credentials import (
@@ -605,6 +606,7 @@ def _configure_aws(args: argparse.Namespace) -> AWSConfig:
         args,
         (args.overall_tag_keys, args.overall_tag_values),
         args.piggyback_naming_convention,
+        NonEC2PiggybackTemplate.LONG,  # TODO: take actual arg
         args.tag_key_pattern,
         cloudfront_host_assignment=args.cloudfront_host_assignment,
     )

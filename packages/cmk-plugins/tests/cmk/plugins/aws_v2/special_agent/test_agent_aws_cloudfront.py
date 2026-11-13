@@ -16,6 +16,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     AWSConfig,
     CloudFrontHostAssignment,
     NamingConvention,
+    NonEC2PiggybackTemplate,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
@@ -246,7 +247,11 @@ class CountingTaggingClient:
 
 def test_cloudfront_summary_does_not_fetch_tags_without_distributions() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("cloudfront_names", None)
     config.add_service_tags("cloudfront_tags", (None, None))
@@ -285,6 +290,7 @@ def get_cloudfront_sections() -> CloudFrontSections:
             Args(),
             ([], []),
             NamingConvention.ip_region_instance,
+            NonEC2PiggybackTemplate.LONG,
             tag_import,
             cloudfront_host_assignment=host_assignment,
         ).for_account("123456789012")

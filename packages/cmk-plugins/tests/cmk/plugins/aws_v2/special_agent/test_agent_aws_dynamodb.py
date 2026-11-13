@@ -13,6 +13,7 @@ import pytest
 from cmk.plugins.aws_v2.special_agent.config import (
     AWSConfig,
     NamingConvention,
+    NonEC2PiggybackTemplate,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
@@ -79,7 +80,11 @@ class FakeEmptyDynamoDBClient:
 
 def test_dynamodb_summary_does_not_list_tables_again_when_limits_found_none() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("dynamodb_names", None)
     config.add_service_tags("dynamodb_tags", (None, None))
@@ -146,7 +151,12 @@ def get_dynamodb_sections() -> DynamobSections:
     ) -> DynamobSectionsOut:
         region = "region"
         config = AWSConfig(
-            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname",
+            Args(),
+            ([], []),
+            NamingConvention.ip_region_instance,
+            NonEC2PiggybackTemplate.LONG,
+            tag_import,
         ).for_account("123456789012")
         config.add_single_service_config("dynamodb_names", names)
         config.add_service_tags("dynamodb_tags", tags)

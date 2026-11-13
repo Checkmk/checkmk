@@ -13,6 +13,7 @@ import pytest
 from cmk.plugins.aws_v2.special_agent.config import (
     AWSConfig,
     NamingConvention,
+    NonEC2PiggybackTemplate,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
@@ -69,7 +70,11 @@ class FakeEmptyGlacierClient:
 
 def test_glacier_summary_does_not_list_vaults_again_when_limits_found_none() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("glacier_names", None)
     config.add_service_tags("glacier_tags", (None, None))
@@ -94,7 +99,12 @@ def get_glacier_sections() -> GetGlacierSections:
     ) -> GlacierSections:
         region = "eu-central-1"
         config = AWSConfig(
-            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname",
+            Args(),
+            ([], []),
+            NamingConvention.ip_region_instance,
+            NonEC2PiggybackTemplate.LONG,
+            tag_import,
         ).for_account("123456789012")
         config.add_single_service_config("glacier_names", names)
         config.add_service_tags("glacier_tags", tags)

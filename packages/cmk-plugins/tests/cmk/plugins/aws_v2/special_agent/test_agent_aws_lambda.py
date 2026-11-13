@@ -16,6 +16,7 @@ from mypy_boto3_logs.type_defs import GetQueryResultsRequestTypeDef, GetQueryRes
 from cmk.plugins.aws_v2.special_agent.config import (
     AWSConfig,
     NamingConvention,
+    NonEC2PiggybackTemplate,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
@@ -94,6 +95,7 @@ def create_config(
         Args(),
         ([], []),
         NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
         tag_import,
     ).for_account("123456789012")
     config.add_single_service_config("lambda_names", names)

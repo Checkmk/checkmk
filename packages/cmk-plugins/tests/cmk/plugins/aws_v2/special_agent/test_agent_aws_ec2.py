@@ -14,6 +14,7 @@ import pytest
 from cmk.plugins.aws_v2.special_agent.config import (
     AWSConfig,
     NamingConvention,
+    NonEC2PiggybackTemplate,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
@@ -155,7 +156,11 @@ def test_ec2_summary_does_not_describe_instances_again_after_limits(
     names: list[str] | None, has_instances: bool
 ) -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("ec2_names", names)
     config.add_service_tags("ec2_tags", (None, None))
@@ -197,9 +202,14 @@ def get_ec2_sections() -> EC2Sections:
         name_tags: Mapping[str, str] | None = None,
     ) -> EC2SectionsOut:
         region = "region"
-        config = AWSConfig("hostname", Args(), ([], []), naming_convention, tag_import).for_account(
-            "123456789012"
-        )
+        config = AWSConfig(
+            "hostname",
+            Args(),
+            ([], []),
+            naming_convention,
+            NonEC2PiggybackTemplate.LONG,
+            tag_import,
+        ).for_account("123456789012")
         config.add_single_service_config("ec2_names", names)
         config.add_service_tags("ec2_tags", tags)
         fake_ec2_client = FakeEC2Client(skip_entities, name_tags)
@@ -524,7 +534,11 @@ def test_agent_aws_ec2_filters_labels(
 
 def test_agent_aws_ec2_limits_go_to_the_account_host_of_a_listed_account() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("333333333333")
     config.add_single_service_config("ec2_names", None)
     config.add_service_tags("ec2_tags", (None, None))
@@ -622,7 +636,11 @@ class SampledCloudwatchClient:
 
 def test_agent_aws_ec2_reports_a_status_check_that_failed_once_in_the_period() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("ec2_names", None)
     config.add_service_tags("ec2_tags", (None, None))

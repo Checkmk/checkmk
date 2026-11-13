@@ -6,7 +6,11 @@
 
 from argparse import Namespace as Args
 
-from cmk.plugins.aws_v2.special_agent.config import AWSConfig, NamingConvention
+from cmk.plugins.aws_v2.special_agent.config import (
+    AWSConfig,
+    NamingConvention,
+    NonEC2PiggybackTemplate,
+)
 from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.costs_and_usage import CostsAndUsage
 
@@ -35,7 +39,11 @@ class FakeCEClient:
 def test_agent_aws_costs_and_usage() -> None:
     region = "us-east-1"
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
 
     # TODO: FakeECClient shoud actually subclass ECClient.

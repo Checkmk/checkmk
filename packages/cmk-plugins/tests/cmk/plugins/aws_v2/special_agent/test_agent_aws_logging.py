@@ -13,7 +13,11 @@ from unittest import mock
 import pytest
 
 from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import agent_aws_main, parse_arguments
-from cmk.plugins.aws_v2.special_agent.config import AWSConfig, NamingConvention
+from cmk.plugins.aws_v2.special_agent.config import (
+    AWSConfig,
+    NamingConvention,
+    NonEC2PiggybackTemplate,
+)
 from cmk.plugins.aws_v2.special_agent.runner import AWSSectionsGeneric
 from cmk.plugins.aws_v2.special_agent.sections.s3 import ResultDistributorS3Limits
 
@@ -93,7 +97,13 @@ def test_three_verbose_flags_add_botocore_debug_output(capsys: pytest.CaptureFix
 
 def test_failed_section_is_a_warning_naming_the_section(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.WARNING)
-    config = AWSConfig("aws-host", Args(), ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig(
+        "aws-host",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
+    )
     config.add_single_service_config("ebs_names", None)
     config.add_service_tags("ebs_tags", ([], []))
     session = mock.Mock(**{"client.return_value.describe_volumes.side_effect": RuntimeError})

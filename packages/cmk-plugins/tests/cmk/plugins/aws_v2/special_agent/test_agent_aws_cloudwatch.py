@@ -9,7 +9,11 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.aws_v2.special_agent.config import AWSConfig, NamingConvention
+from cmk.plugins.aws_v2.special_agent.config import (
+    AWSConfig,
+    NamingConvention,
+    NonEC2PiggybackTemplate,
+)
 from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.cloudwatch import (
     CloudwatchAlarms,
@@ -33,7 +37,11 @@ def get_cloudwatch_alarms_sections() -> CreateCloudwatchAlarmSections:
     ) -> tuple[CloudwatchAlarmsLimits, CloudwatchAlarms]:
         region = "region"
         config = AWSConfig(
-            "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+            "hostname",
+            Args(),
+            ([], []),
+            NamingConvention.ip_region_instance,
+            NonEC2PiggybackTemplate.LONG,
         ).for_account("123456789012")
         config.add_single_service_config("cloudwatch_alarms", alarm_names)
 
@@ -78,7 +86,11 @@ class AlarmsClient:
 @pytest.mark.parametrize("amount", [pytest.param(0, id="no alarms"), pytest.param(2, id="alarms")])
 def test_cloudwatch_alarms_do_not_describe_alarms_again_after_limits(amount: int) -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("cloudwatch_alarms", None)
     client = AlarmsClient(amount)

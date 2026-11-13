@@ -10,7 +10,12 @@ from collections.abc import Iterator, Mapping
 
 import pytest
 
-from cmk.plugins.aws_v2.special_agent.config import AWSConfig, NamingConvention, Tags
+from cmk.plugins.aws_v2.special_agent.config import (
+    AWSConfig,
+    NamingConvention,
+    NonEC2PiggybackTemplate,
+    Tags,
+)
 from cmk.plugins.aws_v2.special_agent.sections.core import (
     filter_resources_matching_tags,
     ServiceQuotas,
@@ -150,9 +155,13 @@ class FailingQuotaClient:
 
 
 def _config() -> AWSConfig:
-    return AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance).for_account(
-        "123456789012"
-    )
+    return AWSConfig(
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
+    ).for_account("123456789012")
 
 
 def test_service_quotas_are_read_from_aws_once_a_day() -> None:

@@ -94,6 +94,13 @@ class CloudFrontHostAssignment(Enum):
     distribution = "distribution_host"
 
 
+class NonEC2PiggybackTemplate(Enum):
+    """For non-EC2 piggyback hosts, which template should be used?"""
+
+    LONG = "long"
+    SHORT = "short"
+
+
 @dataclass(frozen=True)
 class HostNaming:
     """The rule settings that the host names of AWS resources depend on.
@@ -102,6 +109,7 @@ class HostNaming:
     """
 
     ec2: NamingConvention
+    non_ec2: NonEC2PiggybackTemplate
     cloudfront: CloudFrontHostAssignment
     account: str | None = None
     """The piggyback host for the data of the account. None until the config is scoped to
@@ -123,6 +131,7 @@ class AWSConfig:
         sys_argv: argparse.Namespace,
         overall_tags: OverallTags,
         piggyback_naming_convention: NamingConvention,
+        non_ec2_piggyback_template: NonEC2PiggybackTemplate,
         tags_option: TagsOption = TagsImportPatternOption.import_all,
         *,
         cloudfront_host_assignment: CloudFrontHostAssignment = CloudFrontHostAssignment.account,
@@ -134,7 +143,9 @@ class AWSConfig:
         self._config_hash_key = "config_hash"
         self._current_config_hash = self._compute_config_hash(sys_argv)
         self.host_naming = HostNaming(
-            ec2=piggyback_naming_convention, cloudfront=cloudfront_host_assignment
+            ec2=piggyback_naming_convention,
+            non_ec2=non_ec2_piggyback_template,
+            cloudfront=cloudfront_host_assignment,
         )
         self.tags_option = tags_option
         self.account_id: str | None = None

@@ -11,6 +11,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     CloudFrontHostAssignment,
     HostNaming,
     NamingConvention,
+    NonEC2PiggybackTemplate,
 )
 from cmk.plugins.aws_v2.special_agent.hosts import (
     AccountScope,
@@ -36,11 +37,13 @@ from cmk.plugins.aws_v2.special_agent.hosts import (
 
 DEFAULT_NAMING = HostNaming(
     ec2=NamingConvention.ip_region_instance,
+    non_ec2=NonEC2PiggybackTemplate.LONG,
     cloudfront=CloudFrontHostAssignment.account,
     account="333333333333",
 )
 DOMAIN_HOST_NAMING = HostNaming(
     ec2=NamingConvention.ip_region_instance,
+    non_ec2=NonEC2PiggybackTemplate.LONG,
     cloudfront=CloudFrontHostAssignment.origin_domain,
     account="333333333333",
 )
@@ -68,7 +71,11 @@ INSTANCE = {
 def test_ec2_instance_host_follows_the_naming_convention(
     convention: NamingConvention, expected: str
 ) -> None:
-    naming = HostNaming(ec2=convention, cloudfront=CloudFrontHostAssignment.account)
+    naming = HostNaming(
+        ec2=convention,
+        non_ec2=NonEC2PiggybackTemplate.LONG,
+        cloudfront=CloudFrontHostAssignment.account,
+    )
 
     assert list(ec2_instance_hosts([INSTANCE], "eu-central-1", naming)) == [(expected, INSTANCE)]
 
@@ -96,7 +103,11 @@ def test_ec2_instance_host_follows_the_naming_convention(
 def test_ec2_instance_without_a_name_has_no_host(
     convention: NamingConvention, instance: Mapping[str, object]
 ) -> None:
-    naming = HostNaming(ec2=convention, cloudfront=CloudFrontHostAssignment.account)
+    naming = HostNaming(
+        ec2=convention,
+        non_ec2=NonEC2PiggybackTemplate.LONG,
+        cloudfront=CloudFrontHostAssignment.account,
+    )
 
     assert not list(ec2_instance_hosts([instance], "eu-central-1", naming))
 
@@ -153,7 +164,9 @@ def test_cloudfront_distribution_goes_to_its_origin_domain_host_when_assigned() 
 def test_cloudfront_distribution_goes_to_its_own_host_when_assigned() -> None:
     distribution = CloudFrontDistribution("E2RAYOVSSL6ZM3", "origin.example.com")
     naming = HostNaming(
-        ec2=NamingConvention.ip_region_instance, cloudfront=CloudFrontHostAssignment.distribution
+        ec2=NamingConvention.ip_region_instance,
+        non_ec2=NonEC2PiggybackTemplate.LONG,
+        cloudfront=CloudFrontHostAssignment.distribution,
     )
 
     assert target_host(distribution, naming) == "E2RAYOVSSL6ZM3"
@@ -195,7 +208,10 @@ def test_account_data_goes_to_the_account_host(
     resource: HostedResource, cloudfront: CloudFrontHostAssignment
 ) -> None:
     naming = HostNaming(
-        ec2=NamingConvention.ip_region_instance, cloudfront=cloudfront, account="333333333333"
+        ec2=NamingConvention.ip_region_instance,
+        non_ec2=NonEC2PiggybackTemplate.LONG,
+        cloudfront=cloudfront,
+        account="333333333333",
     )
 
     assert target_host(resource, naming) == "333333333333"

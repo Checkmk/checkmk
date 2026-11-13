@@ -15,6 +15,7 @@ import pytest
 from cmk.plugins.aws_v2.special_agent.config import (
     AWSConfig,
     NamingConvention,
+    NonEC2PiggybackTemplate,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
@@ -94,7 +95,11 @@ class FakeEmptyS3Client:
 
 def test_s3_summary_does_not_list_buckets_again_when_limits_found_none() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("s3_names", None)
     config.add_service_tags("s3_tags", (None, None))
@@ -124,7 +129,12 @@ def get_s3_sections(monkeypatch: pytest.MonkeyPatch) -> CreateS3Sections:
 
         region = "region"
         config = AWSConfig(
-            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname",
+            Args(),
+            ([], []),
+            NamingConvention.ip_region_instance,
+            NonEC2PiggybackTemplate.LONG,
+            tag_import,
         ).for_account("123456789012")
         config.add_single_service_config("s3_names", names)
         config.add_service_tags("s3_tags", tags)

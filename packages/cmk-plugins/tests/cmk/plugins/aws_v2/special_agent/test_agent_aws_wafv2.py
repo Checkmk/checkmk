@@ -13,6 +13,7 @@ import pytest
 from cmk.plugins.aws_v2.special_agent.config import (
     AWSConfig,
     NamingConvention,
+    NonEC2PiggybackTemplate,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
@@ -91,7 +92,11 @@ class FakeEmptyWAFV2Client:
 
 def test_wafv2_summary_does_not_list_web_acls_again_when_limits_found_none() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("wafv2_names", None)
     config.add_service_tags("wafv2_tags", (None, None))
@@ -154,7 +159,12 @@ def create_sections(
     scope: Literal["REGIONAL", "CLOUDFRONT"] = "REGIONAL" if is_regional else "CLOUDFRONT"
 
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
+        tag_import,
     ).for_account("123456789012")
     config.add_single_service_config("wafv2_names", names)
     config.add_service_tags("wafv2_tags", tags)
@@ -251,7 +261,11 @@ wafv2_params = [
 
 def test_agent_aws_wafv2_regional_cloudfront() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
 
     region = "region"

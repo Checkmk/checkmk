@@ -15,6 +15,7 @@ from dateutil.tz import tzutc
 from cmk.plugins.aws_v2.special_agent.config import (
     AWSConfig,
     NamingConvention,
+    NonEC2PiggybackTemplate,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
@@ -355,7 +356,11 @@ class CountingTaggingClient:
 
 def test_elasticache_summary_does_not_fetch_tags_without_clusters() -> None:
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     config.add_single_service_config("elasticache_names", None)
     config.add_service_tags("elasticache_tags", (None, None))
@@ -388,7 +393,12 @@ def get_elasticache_sections() -> ElasticacheSections:
     ) -> ElasticacheSectionsOut:
         region = "region"
         config = AWSConfig(
-            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname",
+            Args(),
+            ([], []),
+            NamingConvention.ip_region_instance,
+            NonEC2PiggybackTemplate.LONG,
+            tag_import,
         ).for_account("123456789012")
         config.add_single_service_config("elasticache_names", names)
         config.add_service_tags("elasticache_tags", tags)
@@ -465,7 +475,11 @@ def test_agent_aws_elasticache_limits(
 def test_agent_aws_elasticache_limits_without_quota_client() -> None:
     region = "region"
     config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("123456789012")
     fake_elasticache_client = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
     # TODO: FakeElastiCacheClient shoud actually subclass ElastiCacheClient.

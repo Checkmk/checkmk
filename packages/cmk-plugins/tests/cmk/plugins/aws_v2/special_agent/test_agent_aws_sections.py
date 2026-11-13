@@ -15,7 +15,11 @@ from unittest import mock
 
 import pytest
 
-from cmk.plugins.aws_v2.special_agent.config import AWSConfig, NamingConvention
+from cmk.plugins.aws_v2.special_agent.config import (
+    AWSConfig,
+    NamingConvention,
+    NonEC2PiggybackTemplate,
+)
 from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.labels import AwsResource
 from cmk.plugins.aws_v2.special_agent.runner import (
@@ -229,7 +233,11 @@ def test_account_name_labels_the_hosts_of_the_resources(capsys: pytest.CaptureFi
 
 def _account_host_sections() -> AWSSectionsUSEast:
     config = AWSConfig(
-        "aws-org", Args(), ([], []), NamingConvention.ip_region_instance
+        "aws-org",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
     ).for_account("333333333333")
     sections = AWSSectionsUSEast(hostname="aws-org", session=mock.Mock(), account_id="333333333333")
     sections.init_sections([], "us-east-1", config, ResultDistributorS3Limits(None))

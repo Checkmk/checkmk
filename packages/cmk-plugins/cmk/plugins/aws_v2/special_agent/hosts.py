@@ -12,16 +12,22 @@ Some resources get a piggyback host of their own. Each resource type has its own
 name function below.
 """
 
+import hashlib
+import re
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from typing import assert_never, NewType, Self
 
 from pydantic import BaseModel, Field
 
-from .config import CloudFrontHostAssignment, HostNaming, NamingConvention
+from .config import CloudFrontHostAssignment, HostNaming, NamingConvention, NonEC2PiggybackTemplate
 
 TargetHost = NewType("TargetHost", str)
 """The name of a piggyback host."""
+
+
+INVALID_HOST_NAME_CHAR = re.compile(r"[^-0-9a-zA-Z_.]")
+PIGGYBACK_HASH_LENGTH = 8
 
 
 @dataclass(frozen=True)
@@ -300,3 +306,41 @@ def _hostname_from_name_and_region(name: str, region: str) -> TargetHost:
     same names (for example replicated DynamoDB tables).
     """
     return TargetHost(f"{name}_{region}")
+
+
+def _sanitize_name(name: str) -> str:
+    """
+    Replace each character that a host name cannot contain with "_".
+    """
+    return INVALID_HOST_NAME_CHAR.sub("_", name)
+
+
+def _hash_arn(arn: str) -> str:
+    """
+    Generate a mostly-unique hash (partial sha256) from an ARN.
+    """
+    sha = hashlib.sha256(arn.encode("utf-8"), usedforsecurity=False).hexdigest()
+    return sha[-PIGGYBACK_HASH_LENGTH:]
+
+
+def _hostname_with_hashed_arn(
+    resource_type: str,
+    name: str,
+    arn: str,
+    template: NonEC2PiggybackTemplate,
+) -> TargetHost:
+    """
+    Given an AWS resource type, a name and an ARN from AWS, create a unique piggyback host name.
+
+    Template:
+    LONG: aws_<resource type>_<name>_<ARN hash>
+    SHORT: <name>_<ARN hash>
+    """
+
+    name = _sanitize_name(name)
+    arn_hash = _hash_arn(arn)
+    match template:
+        case NonEC2PiggybackTemplate.LONG:
+            return TargetHost(f"aws_{resource_type}_{name}_{arn_hash}")
+        case NonEC2PiggybackTemplate.SHORT:
+            return TargetHost(f"{name}_{arn_hash}")

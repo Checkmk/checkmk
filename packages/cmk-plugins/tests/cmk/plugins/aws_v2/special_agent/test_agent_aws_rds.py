@@ -13,6 +13,7 @@ import pytest
 from cmk.plugins.aws_v2.special_agent.config import (
     AWSConfig,
     NamingConvention,
+    NonEC2PiggybackTemplate,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
@@ -109,6 +110,7 @@ def get_rds_sections() -> RDSSections:
             Args(),
             ([], []),
             NamingConvention.ip_region_instance,
+            NonEC2PiggybackTemplate.LONG,
             tag_import,
         ).for_account("123456789012")
         config.add_single_service_config("rds_names", names)

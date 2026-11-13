@@ -143,7 +143,10 @@ cc_test(
             "test/*.cc",
             "test/*.h",
         ],
-        exclude = ["test/TemporaryDirectory.h"],
+        exclude = [
+            "test/TemporaryDirectory.h",
+            "test/test_LogEntryAllocations.cc",
+        ],
     ),
     copts = ["-std=c++20"],
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
@@ -153,6 +156,20 @@ cc_test(
         ":temporary_directory",
         "@gtest//:gtest_main",
         "@re2",
+    ],
+)
+
+# A binary of its own, because it replaces the global operator new.
+cc_test(
+    name = "test_allocations",
+    size = "small",
+    srcs = ["test/test_LogEntryAllocations.cc"],
+    copts = ["-std=c++20"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
+    tags = ["cpp"],
+    deps = [
+        ":livestatus_base",
+        "@gtest//:gtest_main",
     ],
 )
 

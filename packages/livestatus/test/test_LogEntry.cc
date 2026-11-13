@@ -947,6 +947,15 @@ TEST(LogEntry, LogInitialStates) {
     EXPECT_EQ("", e.state_info());
 }
 
+TEST(LogEntry, LogInitialStatesMisspelled) {
+    // The Livestatus NEB module wrote this typo until 2013.
+    const LogEntry e{42, "[1551424305] logging intitial states"};
+
+    EXPECT_EQ(std::pair(LogEntry::Class::program,
+                        LogEntryKind::logging_initial_states),
+              std::pair(e.log_class(), e.kind()));
+}
+
 TEST(LogEntry, CoreStarting1) {
     auto line = "[1551424305] starting..."s;
     const LogEntry e{42, line};

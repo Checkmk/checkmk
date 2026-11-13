@@ -180,8 +180,8 @@ private:
 
     void assign(LogEntryParam par, std::string_view field);
     void classifyLogMessage();
-    [[nodiscard]] bool textStartsWith(const std::string &what) const;
-    [[nodiscard]] bool textContains(const std::string &what) const;
+    [[nodiscard]] bool textStartsWith(std::string_view what) const;
+    [[nodiscard]] bool textContains(std::string_view what) const;
 };
 
 #endif  // LogEntry_h

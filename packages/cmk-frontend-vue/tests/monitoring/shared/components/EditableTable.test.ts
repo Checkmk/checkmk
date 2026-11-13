@@ -110,11 +110,9 @@ test('marks the rows a variant calls erroring, and only those', () => {
     getRowVariant: (row: Row) => (row.id === 'row-1' ? 'error' : null)
   })
 
-  expect(screen.getByTestId('row-row-1').closest('tr')).toHaveClass(
-    'monitoring-editable-table__row--error'
-  )
+  expect(screen.getByTestId('row-row-1').closest('tr')).toHaveClass('monitoring-table-row--error')
   expect(screen.getByTestId('row-row-0').closest('tr')).not.toHaveClass(
-    'monitoring-editable-table__row--error'
+    'monitoring-table-row--error'
   )
 })
 

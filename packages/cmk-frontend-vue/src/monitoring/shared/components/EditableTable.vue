@@ -22,6 +22,7 @@ import {
   resolveUpdater
 } from './MonitoringTableContext'
 import MonitoringTableHeader from './MonitoringTableHeader.vue'
+import MonitoringTableRow from './MonitoringTableRow.vue'
 
 const borderSpacing = TABLE_BORDER_SPACING_PX
 
@@ -166,18 +167,15 @@ defineExpose({
         class="monitoring-editable-table__row-group"
         :class="{ 'monitoring-editable-table__row-group--dragging': draggedRowIndex === index }"
       >
-        <tr
+        <MonitoringTableRow
           class="monitoring-editable-table__row"
-          :class="{
-            'monitoring-editable-table__row--alt': index % 2 === 1,
-            'monitoring-editable-table__row--no-hover': isDraggingRow,
-            'monitoring-editable-table__row--error': getRowVariant?.(row, index) === 'error'
-          }"
+          :variant="getRowVariant?.(row, index)"
+          :hoverable="!isDraggingRow"
           @mouseenter="emit('rowHover', row)"
           @mouseleave="emit('rowHover', null)"
         >
           <slot name="row" :row="row" :table-row="tableRowAt(index)" :index="index" />
-        </tr>
+        </MonitoringTableRow>
         <template v-if="isRowExpanded?.(row, index)">
           <slot name="expansion" :row="row" :table-row="tableRowAt(index)" :index="index" />
         </template>
@@ -206,31 +204,6 @@ defineExpose({
 
 .monitoring-editable-table__row {
   height: v-bind(effectiveRowHeight);
-  background: var(--ux-theme-4);
-}
-
-.monitoring-editable-table__row--alt {
-  background: var(--ux-theme-3);
-}
-
-/* stylelint-disable selector-pseudo-class-no-unknown */
-.monitoring-editable-table__row:not(
-    .monitoring-editable-table__row--no-hover,
-    .monitoring-editable-table__row--error
-  ):hover,
-.monitoring-editable-table__row:not(
-    .monitoring-editable-table__row--no-hover,
-    .monitoring-editable-table__row--error
-  ):hover
-  :deep(td) {
-  background-color: var(--background-highlight);
-}
-/* stylelint-enable selector-pseudo-class-no-unknown */
-
-.monitoring-editable-table__row--error,
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-.monitoring-editable-table__row--error :deep(td) {
-  background-color: var(--status-background-error);
 }
 
 .monitoring-editable-table__row-group--dragging {
@@ -239,7 +212,7 @@ defineExpose({
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .monitoring-editable-table__row-group--dragging :deep(td) {
-  background-color: var(--background-highlight);
+  background-color: var(--background-row-hover-highlight);
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */

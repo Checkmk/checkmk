@@ -120,14 +120,29 @@ pkg_tar(
 cc_test(
     name = "test",
     size = "small",
-    srcs = glob([
-        "test/*.cc",
-        "test/*.h",
-    ]),
+    srcs = glob(
+        [
+            "test/*.cc",
+            "test/*.h",
+        ],
+        exclude = ["test/test_LogEntryAllocations.cc"],
+    ),
     copts = ["-std=c++20"],
     deps = [
         ":livestatus_base",
         "@gtest",
         "@re2",
+    ],
+)
+
+# A binary of its own, because it replaces the global operator new.
+cc_test(
+    name = "test_allocations",
+    size = "small",
+    srcs = ["test/test_LogEntryAllocations.cc"],
+    copts = ["-std=c++20"],
+    deps = [
+        ":livestatus_base",
+        "@gtest//:gtest_main",
     ],
 )

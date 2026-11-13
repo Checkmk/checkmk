@@ -112,6 +112,12 @@ cp "$PY_DIR/pythonw.exe" "$VENV/Scripts/pythonw3.exe"
 [ -f "$PY_DIR/python3.dll" ] && cp "$PY_DIR/python3.dll" "$VENV/Scripts/"
 [ -f "$PY_DIR/vcruntime140.dll" ] && cp "$PY_DIR/vcruntime140.dll" "$VENV/Scripts/"
 [ -f "$PY_DIR/vcruntime140_1.dll" ] && cp "$PY_DIR/vcruntime140_1.dll" "$VENV/Scripts/"
+# abi3t extension modules (like cryptography's _rust.pyd for cp315) link
+# against python3t.dll, which 3.15 loads from abi3t-compat\ next to the
+# python3XX.dll it runs with: for the venv's python.exe, the copy above.
+if [ -d "$PY_DIR/abi3t-compat" ]; then
+    cp -R "$PY_DIR/abi3t-compat" "$VENV/Scripts/"
+fi
 rm "$PY_DIR"/DLLs/sqlite3.dll
 rm "$PY_DIR"/DLLs/_sqlite3.pyd
 cp "$PY_DIR"/DLLs/*.pyd "$PY_DIR"/DLLs/*.dll "$VENV/Scripts/"

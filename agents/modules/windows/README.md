@@ -166,6 +166,7 @@ python-3.cab
 |-- postinstall.cmd          # verbatim from agents/modules/windows/postinstall.cmd
 |-- python.exe               # base interpreter (from core.msi + exe.msi)
 |-- python3XX.dll            # XX = PYTHON_VERSION_WINDOWS's minor
+|-- abi3t-compat/            # 3.15: python3t.dll, for abi3t extension modules
 |-- DLLs/
 |-- Lib/                     # stdlib (from lib.msi); strip list mirrors clean_environment.cmd history
 |-- Lib/site-packages/pip/   # the pinned pip wheel (replaces the ensurepip bootstrap)

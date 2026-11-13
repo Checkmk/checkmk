@@ -95,7 +95,7 @@ const actions = computed<MonitoringTableActions | undefined>((previous) => {
 })
 
 function unappliedHint(value: ComputedMonitoringTable): string {
-  return _t('Not applied to this table: %{filters}', {
+  return _t('Some filters not supported yet: %{filters}', {
     filters: value.unapplied_filters.map((filter) => filter.title).join(', ')
   })
 }

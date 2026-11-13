@@ -334,7 +334,7 @@ describe('DashboardContentMonitoringTable', () => {
     await renderWidget()
 
     expect(await screen.findByRole('note')).toHaveTextContent(
-      'Not applied to this table: Host groups'
+      'Some filters not supported yet: Host groups'
     )
   })
 

@@ -34,6 +34,8 @@ _KEY = re.compile(r"[^\s<>&\"']+")
 
 # A view's row is one object; these filters value elements that stand for several.
 _MULTI_VALUE_ONLY = frozenset({"sites", "wato_folders", "hostgroups"})
+# Any view may show host or service information, so it offers their filters.
+_OBJECT_INFOS = ("host", "service")
 
 # An Alert statistics row counts its alerts per state, in this order.
 _ALERT_COUNT_COLUMNS = ("log_alerts_ok", "log_alerts_warn", "log_alerts_crit", "log_alerts_unknown")
@@ -64,6 +66,13 @@ def row_drilldown(data_source: ABCDataSource, filter_name: FilterName) -> Drilld
     ):
         return _alert_stats_drilldown(filter_name)
     return filter_drilldown(filter_name)
+
+
+def row_has_columns(data_source: ABCDataSource, filter_name: FilterName) -> bool:
+    """Whether a row of the data source has the filter's columns. A query asks for no others:
+    Livestatus answers an unknown column with null only through a fallback it may drop."""
+    filter_ = filter_registry.get(filter_name)
+    return filter_ is not None and filter_.info in data_source.infos
 
 
 def _alert_stats_drilldown(filter_name: FilterName) -> Drilldown | None:
@@ -112,9 +121,9 @@ def drilldown_filters(
         if row_drilldown(data_source, filter_name) is not None
         and filter_name not in _MULTI_VALUE_ONLY
         and filter_.available()
-        and filter_.info in data_source.infos
+        and (filter_.info in data_source.infos or filter_.info in _OBJECT_INFOS)
         # A dashboard's context takes only host and service filters.
-        and (target_type == "views" or filter_.info in ("host", "service"))
+        and (target_type == "views" or filter_.info in _OBJECT_INFOS)
     ]
 
 

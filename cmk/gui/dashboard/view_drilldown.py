@@ -30,6 +30,7 @@ from cmk.gui.views.drilldown_filters import (
     dropped_filters_variable,
     filter_keys,
     row_drilldown,
+    row_has_columns,
 )
 from cmk.gui.visuals.filter.drilldowns import Drilldown
 from cmk.shared_typing.drill_up_button import DrillUpButton
@@ -91,7 +92,8 @@ def column_drilldowns(
             drilldowns[index] = CellDrilldown(
                 columns=[
                     column
-                    for carried_filter in carried.values()
+                    for filter_name, carried_filter in carried.items()
+                    if row_has_columns(data_source, filter_name)
                     for column in carried_filter.drilldown.columns
                 ],
                 url=partial(

@@ -516,6 +516,20 @@ def test_column_drilldowns_custom_link_to_a_host_view_links_even_without_the_hos
             [],
             id="no column that splits a statistics row",
         ),
+        pytest.param(
+            "hosts",
+            _custom(
+                ContextFilterConfig(filter_id="host"), ContextFilterConfig(filter_id="service")
+            ),
+            ["host_name"],
+            id="no service column on a host row",
+        ),
+        pytest.param(
+            "hostgroups",
+            _custom(ContextFilterConfig(filter_id="host")),
+            [],
+            id="no host column on a group row",
+        ),
     ],
 )
 @pytest.mark.usefixtures("request_context")
@@ -545,6 +559,21 @@ def test_column_drilldowns_custom_link_names_a_filter_it_cannot_carry(
     )
 
     assert variables["_dropped_filters"] == "log_class:not_available"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_column_drilldowns_custom_link_on_a_host_row_names_the_service_it_has_no_value_for(
+    admin_permissions: UserPermissions,
+) -> None:
+    _path, variables = _url_of_first_column(
+        _view_spec("allhosts"),
+        _custom(ContextFilterConfig(filter_id="host"), ContextFilterConfig(filter_id="service")),
+        _CUSTOM_HOST_ROW,
+        admin_permissions,
+    )
+
+    assert variables["host"] == "heute"
+    assert variables["_dropped_filters"] == "service:no_value"
 
 
 @pytest.mark.usefixtures("request_context")

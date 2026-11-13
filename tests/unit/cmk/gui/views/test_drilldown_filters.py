@@ -600,7 +600,7 @@ def test_drilldowns_set_only_variables_the_filter_reads(
 
 
 @pytest.mark.usefixtures("request_context")
-def test_drilldown_filters_offer_a_dashboard_only_host_filters() -> None:
+def test_drilldown_filters_offer_a_dashboard_only_host_and_service_filters() -> None:
     assert drilldown_filters(data_source_registry["hosts"](), "dashboards") == [
         "wato_folder",
         "host",
@@ -612,10 +612,22 @@ def test_drilldown_filters_offer_a_dashboard_only_host_filters() -> None:
         "host_ctc",
         "host_check_command_exact",
         "hoststate",
+        "service",
+        "optservicegroup",
+        "optservice_contactgroup",
+        "service_ctc",
+        "check_command_exact",
+        "svcstate",
+        "svchardstate",
+        "service_state_type",
+        "service_staleness",
         "host_labels",
+        "service_labels",
         "host_auxtags",
         "host_tags",
+        "service_tags",
         "hst_service_level",
+        "svc_service_level",
         "siteopt",
         "site",
         "kubernetes_cluster",
@@ -719,11 +731,24 @@ def test_row_drilldown_sets_only_variables_the_alert_statistics_filter_reads(
 
 
 @pytest.mark.usefixtures("request_context")
-def test_drilldown_filters_offer_only_group_filters_on_a_group_view() -> None:
-    assert drilldown_filters(data_source_registry["hostgroups"](), "views") == [
-        "hostsgroups_having_problems",
-        "hostgroup",
-    ]
+def test_drilldown_filters_offer_a_group_view_only_group_host_and_service_filters() -> None:
+    filters = drilldown_filters(data_source_registry["hostgroups"](), "views")
+
+    assert {filter_registry[name].info for name in filters} == {"hostgroup", "host", "service"}
+
+
+@pytest.mark.usefixtures("request_context")
+@pytest.mark.parametrize(
+    "datasource, filters",
+    [
+        pytest.param("bi_aggregations", {"host", "service"}, id="BI view"),
+        pytest.param("hosts", {"service"}, id="host view"),
+    ],
+)
+def test_drilldown_filters_offer_host_and_service_filters_without_their_info(
+    datasource: str, filters: set[FilterName]
+) -> None:
+    assert filters <= set(drilldown_filters(data_source_registry[datasource](), "views"))
 
 
 @pytest.mark.usefixtures("request_context")

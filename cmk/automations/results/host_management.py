@@ -145,6 +145,8 @@ class BakeryChangedTargetsResult(AutomationResult):
     # The targets of each problem. A problem is the name of the failing bakery plug-in
     # and its message. A problem that no plug-in caused has no name.
     errors: Mapping[tuple[str | None, str], Sequence[str]]
+    # The targets of each missing password, by its ID.
+    missing_secrets: Mapping[str, Sequence[str]]
 
     @staticmethod
     @override

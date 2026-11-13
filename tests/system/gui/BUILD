@@ -41,6 +41,7 @@ py_library(
         "//:gpl+nonfree_repo": [
             "//cmk/gui/nonfree/pro",
             "//non-free/tests/testlib/system:data_backend",
+            "//non-free/tests/testlib/system:telemetry_custom_services",
             "//non-free/tests/testlib/system/licensing",
             "//packages/cmk-wsgi",
         ],

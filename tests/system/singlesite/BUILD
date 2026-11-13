@@ -58,6 +58,7 @@ py_library(
             "//non-free/packages/cmk-telemetry:cmk-telemetry-custom-query-rule-value",
             "//non-free/tests/testlib/system:data_backend",
             "//non-free/tests/testlib/system:opentelemetry",
+            "//non-free/tests/testlib/system:telemetry_custom_services",
             "//non-free/tests/testlib/system/licensing",
             "//packages/cmk-agent-receiver",
         ],

@@ -49,7 +49,7 @@ const onUpdateFilterValues = (filterId: string, values: ConfiguredValues | null)
     <template #header>
       <CatalogPanelHeader :title="filterLabels.title" :help-text="filterLabels.tooltip" />
     </template>
-    <div :style="`max-width: ${MAX_WIZARD_FORM_WIDTH}px`">
+    <div :style="`max-width: ${MAX_WIZARD_FORM_WIDTH}px; min-width: min-content`">
       <MultiFilter
         v-if="objectSelectionMode === ElementSelection.MULTIPLE"
         :object-type="objectType"

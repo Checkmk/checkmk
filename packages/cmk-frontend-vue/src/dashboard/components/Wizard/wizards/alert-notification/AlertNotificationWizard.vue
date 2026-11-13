@@ -170,7 +170,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
       />
     </WizardStepsContainer>
 
-    <WizardStageContainer>
+    <WizardStageContainer :grow-with-content="wizardHandler.stage.value === 0">
       <CloseButton @close="() => emit('close')" />
 
       <Stage1

@@ -210,7 +210,7 @@ const handleAddWidget = (
       />
     </WizardStepsContainer>
 
-    <WizardStageContainer>
+    <WizardStageContainer :grow-with-content="wizardHandler.stage.value === 0">
       <CloseButton @close="() => emit('close')" />
       <Stage1
         v-if="wizardHandler.stage.value === 0"

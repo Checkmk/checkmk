@@ -199,7 +199,7 @@ function saveWidget(generalSettings: WidgetGeneralSettings) {
       />
     </WizardStepsContainer>
 
-    <WizardStageContainer size="large">
+    <WizardStageContainer size="large" :grow-with-content="wizardHandler.stage.value === 0">
       <CloseButton @close="emit('close')" />
       <Stage1
         v-if="wizardHandler.stage.value === 0"

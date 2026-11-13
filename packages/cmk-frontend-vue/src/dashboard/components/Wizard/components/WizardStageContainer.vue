@@ -7,9 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 const props = withDefaults(
   defineProps<{
     overflowHidden?: boolean
+    growWithContent?: boolean
   }>(),
   {
-    overflowHidden: false
+    overflowHidden: false,
+    growWithContent: false
   }
 )
 </script>
@@ -20,7 +22,12 @@ const props = withDefaults(
       class="db-wizard-stage-container__steps-inner-container"
       :class="{ 'db-wizard-stage-container--overflow-hidden': props.overflowHidden }"
     >
-      <slot />
+      <div
+        class="db-wizard-stage-container__content"
+        :class="{ 'db-wizard-stage-container__content--grow': props.growWithContent }"
+      >
+        <slot />
+      </div>
     </div>
   </div>
 </template>
@@ -40,6 +47,17 @@ const props = withDefaults(
   max-height: 100%;
   overflow-y: auto;
   position: relative;
+}
+
+/* Keeps percentage heights of stage contents working */
+.db-wizard-stage-container__content {
+  height: 100%;
+}
+
+/* Grow beyond the container when content can't wrap, so backgrounds follow */
+.db-wizard-stage-container__content--grow {
+  width: fit-content;
+  min-width: 100%;
 }
 
 .db-wizard-stage-container__steps-inner-container.db-wizard-stage-container--overflow-hidden {

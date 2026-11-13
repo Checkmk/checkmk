@@ -150,7 +150,7 @@ const emptyContextTitle = computed(() => {
       </template>
       <!-- object-configured-filters is not being recognized as a props -->
       <!-- @vue-ignore -->
-      <div :style="`max-width: ${MAX_WIZARD_FORM_WIDTH}px`">
+      <div :style="`max-width: ${MAX_WIZARD_FORM_WIDTH}px; min-width: min-content`">
         <DisplayContextFilters
           :object-configured-filters="objectConfiguredFilters"
           :context-filters="relevantContextFilters"

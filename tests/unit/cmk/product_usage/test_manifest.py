@@ -24,6 +24,20 @@ def _payload(grafana: GrafanaUsageData | None) -> ProductUsagePayload:
         edition="community",
         cmk_version="2.5.0p1",
         os="Ubuntu 24.04.3 LTS",
+        users={
+            "humans": {
+                "total": 1,
+                "by_role": {"admin": 1},
+                "by_connector_type": {"htpasswd": 1},
+                "active": {"24h": 1, "7d": 1, "30d": 1},
+            },
+            "automation": {
+                "total": 0,
+                "by_role": {},
+                "by_connector_type": {},
+                "active": {"24h": 0, "7d": 0, "30d": 0},
+            },
+        },
         timestamp=1767700800,
         checks={"check_mk-df": {"count": 1, "count_hosts": 1, "count_disabled": 0}},
         grafana=grafana,

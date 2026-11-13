@@ -58,6 +58,108 @@ class GrafanaUsageData(pydantic.BaseModel):
     )
 
 
+ActiveUsers = typing.TypedDict(
+    "ActiveUsers",
+    {
+        "24h": typing.Annotated[
+            int,
+            pydantic.Field(
+                description="The number of users that were active in the last 24 hours.",
+                examples=[5],
+            ),
+        ],
+        "7d": typing.Annotated[
+            int,
+            pydantic.Field(
+                description="The number of users that were active in the last 7 days.",
+                examples=[12],
+            ),
+        ],
+        "30d": typing.Annotated[
+            int,
+            pydantic.Field(
+                description="The number of users that were active in the last 30 days.",
+                examples=[20],
+            ),
+        ],
+    },
+)
+
+
+class UserGroupData(typing.TypedDict):
+    total: typing.Annotated[
+        int,
+        pydantic.Field(
+            description="The number of users of this kind configured on the site.",
+            examples=[25],
+        ),
+    ]
+    by_role: typing.Annotated[
+        dict[str, int],
+        pydantic.Field(
+            description=(
+                "The number of users per role. Built-in roles are counted under their ID."
+                " All custom roles are counted together under 'custom', their names and IDs are"
+                " never collected. A user with several roles is counted once for each of them,"
+                " so the sum can be larger than the total."
+            ),
+            examples=[{"admin": 2, "user": 20, "custom": 3}],
+        ),
+    ]
+    by_connector_type: typing.Annotated[
+        dict[str, int],
+        pydantic.Field(
+            description=(
+                "The number of users per type of the connection the users are managed by, for"
+                " example 'htpasswd', 'ldap', 'saml2' or 'oauth2'. Users of a connection that no"
+                " longer exists are counted under 'unknown'. Connection IDs are never collected."
+            ),
+            examples=[{"htpasswd": 5, "ldap": 20}],
+        ),
+    ]
+    active: typing.Annotated[
+        ActiveUsers,
+        pydantic.Field(
+            description=(
+                "The number of users that used the GUI or the REST API in the given period."
+                " Only the counts are collected, no times of individual users."
+            ),
+            examples=[{"24h": 5, "7d": 12, "30d": 20}],
+        ),
+    ]
+
+
+class UsersData(typing.TypedDict):
+    humans: typing.Annotated[
+        UserGroupData,
+        pydantic.Field(
+            description="Counts of the users that are not automation users.",
+            examples=[
+                {
+                    "total": 25,
+                    "by_role": {"admin": 2, "user": 20, "custom": 3},
+                    "by_connector_type": {"htpasswd": 5, "ldap": 20},
+                    "active": {"24h": 5, "7d": 12, "30d": 20},
+                }
+            ],
+        ),
+    ]
+    automation: typing.Annotated[
+        UserGroupData,
+        pydantic.Field(
+            description="Counts of the automation users.",
+            examples=[
+                {
+                    "total": 2,
+                    "by_role": {"admin": 1, "agent_registration": 1},
+                    "by_connector_type": {"htpasswd": 2},
+                    "active": {"24h": 1, "7d": 1, "30d": 2},
+                }
+            ],
+        ),
+    ]
+
+
 class Metadata(typing.TypedDict):
     version: str
     namespace: str
@@ -150,6 +252,28 @@ class ProductUsageData(SiteInfo):
             " is the technical name/ID of the check command."
         ),
         examples=[{"check_mk-df": {"count": 400, "count_hosts": 56, "count_disabled": 15}}],
+    )
+    users: UsersData = pydantic.Field(
+        description=(
+            "Counts of the users configured on the site. User names, aliases, email addresses"
+            " and other user attributes are never collected."
+        ),
+        examples=[
+            {
+                "humans": {
+                    "total": 25,
+                    "by_role": {"admin": 2, "user": 20, "custom": 3},
+                    "by_connector_type": {"htpasswd": 5, "ldap": 20},
+                    "active": {"24h": 5, "7d": 12, "30d": 20},
+                },
+                "automation": {
+                    "total": 2,
+                    "by_role": {"admin": 1, "agent_registration": 1},
+                    "by_connector_type": {"htpasswd": 2},
+                    "active": {"24h": 1, "7d": 1, "30d": 2},
+                },
+            }
+        ],
     )
     grafana: GrafanaUsageData | None = pydantic.Field(
         default=None,

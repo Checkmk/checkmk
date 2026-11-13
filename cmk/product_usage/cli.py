@@ -134,6 +134,7 @@ def main(
             data = collect_data(
                 paths.var_dir,
                 paths.check_mk_config_dir,
+                paths.default_config_dir,
                 paths.omd_root,
                 logger,
             )

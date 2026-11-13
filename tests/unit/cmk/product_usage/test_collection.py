@@ -194,6 +194,20 @@ def _product_usage_payload() -> ProductUsagePayload:
         os="Ubuntu 24.04.3 LTS",
         timestamp=1767790000,
         checks={},
+        users={
+            "humans": {
+                "total": 1,
+                "by_role": {"admin": 1},
+                "by_connector_type": {"htpasswd": 1},
+                "active": {"24h": 1, "7d": 1, "30d": 1},
+            },
+            "automation": {
+                "total": 0,
+                "by_role": {},
+                "by_connector_type": {},
+                "active": {"24h": 0, "7d": 0, "30d": 0},
+            },
+        },
         grafana=None,
     )
 

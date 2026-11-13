@@ -2937,6 +2937,53 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(!updater(Some(config), some_agent_info()).handle_update_cycle(&registry.registry));
     }
 
+    thread_local! {
+        static LOGGED: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+    }
+
+    /// Collects per thread, because the tests of this binary share one logger.
+    struct ThreadLog;
+
+    impl log::Log for ThreadLog {
+        fn enabled(&self, _metadata: &log::Metadata) -> bool {
+            true
+        }
+
+        fn log(&self, record: &log::Record) {
+            LOGGED.with_borrow_mut(|logged| logged.push(record.args().to_string()));
+        }
+
+        fn flush(&self) {}
+    }
+
+    fn logged_by(action: impl FnOnce()) -> Vec<String> {
+        // Fails when an earlier test has installed the logger already.
+        let _ = log::set_logger(&ThreadLog);
+        log::set_max_level(log::LevelFilter::Info);
+        LOGGED.take();
+        action();
+        LOGGED.take()
+    }
+
+    /// The system tests in non-free/tests/system/agent_updates wait for this
+    /// line (DAEMON_SKIPPED_LOG). A skipped cycle leaves no other trace.
+    #[test]
+    fn test_maybe_update_agent_without_config_logs_the_skip() {
+        let registry = registry_with_one_connection();
+        let updater = updater(None, some_agent_info());
+
+        let logged = logged_by(|| {
+            updater.handle_update_cycle(&registry.registry);
+        });
+
+        assert!(
+            logged.contains(&String::from(
+                "Skipping the agent update: automatic agent updates are deactivated"
+            )),
+            "{logged:?}"
+        );
+    }
+
     /// CMK-39502: the daemon runs the cycle on a host without an update source
     /// whose Python updater was registered, so that the cycle migrates it.
     #[test]

@@ -12,7 +12,7 @@ import jsonschema
 import pytest
 
 from cmk.product_usage.manifest import build_manifest, main
-from cmk.product_usage.schema import GrafanaUsageData, ProductUsagePayload
+from cmk.product_usage.schema import GrafanaUsageData, InventoryData, ProductUsagePayload
 
 
 def _payload(grafana: GrafanaUsageData | None) -> ProductUsagePayload:
@@ -40,6 +40,7 @@ def _payload(grafana: GrafanaUsageData | None) -> ProductUsagePayload:
         },
         timestamp=1767700800,
         checks={"check_mk-df": {"count": 1, "count_hosts": 1, "count_disabled": 0}},
+        inventory=InventoryData(hosts_with_inventory=4),
         grafana=grafana,
     )
 

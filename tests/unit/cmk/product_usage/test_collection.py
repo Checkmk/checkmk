@@ -16,6 +16,7 @@ from cmk.product_usage.schema import (
     AuditLog,
     AuditLogActorClass,
     CloudTrialPayload,
+    InventoryData,
     ProductUsagePayload,
     UserCount,
 )
@@ -208,6 +209,7 @@ def _product_usage_payload() -> ProductUsagePayload:
                 "active": {"24h": 0, "7d": 0, "30d": 0},
             },
         },
+        inventory=InventoryData(hosts_with_inventory=4),
         grafana=None,
     )
 

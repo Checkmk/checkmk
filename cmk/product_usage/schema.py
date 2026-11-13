@@ -160,6 +160,13 @@ class UsersData(typing.TypedDict):
     ]
 
 
+class InventoryData(pydantic.BaseModel):
+    hosts_with_inventory: int = pydantic.Field(
+        description="The number of monitored hosts that have HW/SW Inventory data.",
+        examples=[150],
+    )
+
+
 class Metadata(typing.TypedDict):
     version: str
     namespace: str
@@ -274,6 +281,10 @@ class ProductUsageData(SiteInfo):
                 },
             }
         ],
+    )
+    inventory: InventoryData = pydantic.Field(
+        description="Usage of the HW/SW Inventory.",
+        examples=[{"hosts_with_inventory": 150}],
     )
     grafana: GrafanaUsageData | None = pydantic.Field(
         default=None,

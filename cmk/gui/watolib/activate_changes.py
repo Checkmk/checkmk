@@ -3629,20 +3629,14 @@ def get_pending_changes(sites: Sequence[SiteId]) -> dict[str, ActivationChange]:
     }
 
 
-def _need_to_update_mkps_after_sync() -> bool:
+def _central_version_of_sync_request() -> str:
     if not (central_version := _request.headers.get("x-checkmk-version")):
         raise ValueError("Request header x-checkmk-version is missing")
-    logger.debug(
-        "Local version: %(local_version)s, Central version: %(central_version)s",
-        {"local_version": version.__version__, "central_version": central_version},
-    )
-    return version.__version__ != central_version
+    return central_version
 
 
-def _need_to_update_config_after_sync() -> bool:
-    if not (central_version := _request.headers.get("x-checkmk-version")):
-        raise ValueError("Request header x-checkmk-version is missing")
-    this_v = version.Version.from_str(version.__version__)
+def _update_config_needed(local_version: str, central_version: str) -> bool:
+    this_v = version.Version.from_str(local_version)
     other_v = version.Version.from_str(central_version)
     if this_v.base is None or other_v.base is None:
         logger.debug(
@@ -3655,6 +3649,44 @@ def _need_to_update_config_after_sync() -> bool:
         # For this reason we always treat them to be compatbile.
         return False
     return (this_v.base.major, this_v.base.minor) != (other_v.base.major, other_v.base.minor)
+
+
+def update_local_site_after_sync(
+    *,
+    local_version: str,
+    central_version: str,
+    local_files_changed: bool,
+    update_mkps: Callable[[], tuple[Sequence[str], Sequence[str]]],
+    execute_changed_local_files_actions: Callable[[], None],
+    execute_cmk_update_config: Callable[[], None],
+    migrate_extension_rulesets: Callable[[Sequence[str]], None],
+) -> None:
+    """Make the synchronized configuration fit the local Checkmk version
+
+    When receiving configuration from a central site that uses a previous major
+    version, the config migration logic has to be executed to make the local
+    configuration compatible with the local Checkmk version.
+
+    `update_mkps` returns the names of the uninstalled and the installed MKPs.
+    """
+    logger.debug(
+        "Local version: %(local_version)s, Central version: %(central_version)s",
+        {"local_version": local_version, "central_version": central_version},
+    )
+    if local_version != central_version:
+        uninstalled, installed = update_mkps()
+    else:
+        uninstalled, installed = (), ()
+
+    if local_files_changed or uninstalled or installed:
+        with _debug_log_message("Executing changed local files actions"):
+            execute_changed_local_files_actions()
+
+    if _update_config_needed(local_version, central_version):
+        with _debug_log_message("Executing cmk-update-config"):
+            execute_cmk_update_config()
+    elif installed:
+        migrate_extension_rulesets(installed)
 
 
 def _execute_update_mkps(
@@ -3674,6 +3706,23 @@ def _execute_update_mkps(
             parse_version=version.Version.from_str,
         )
     return uninstalled, installed
+
+
+def _update_mkps() -> tuple[Sequence[str], Sequence[str]]:
+    if (path_config := make_path_config()) is None:
+        return (), ()
+    uninstalled, installed = _execute_update_mkps(path_config)
+    return [m.name for m in uninstalled], [m.name for m in installed]
+
+
+def _migrate_extension_rulesets(package_names: Sequence[str]) -> None:
+    cmd = ["cmk-migrate-extension-rulesets", *package_names]
+    with _debug_log_message(f"Executing `{' '.join(cmd)}`"):
+        try:
+            for line in subprocess.check_output(cmd, text=True).splitlines():
+                logger.debug("  %(line)s", {"line": line.strip()})
+        except subprocess.CalledProcessError as e:
+            logger.warning("Error while running migration script: %(error)s", {"error": e})
 
 
 def make_path_config() -> mkp_tool.PathConfig | None:
@@ -3762,31 +3811,15 @@ def _execute_post_config_sync_actions(
     site_id: SiteId, *, local_files_changed: bool, use_git: bool
 ) -> None:
     try:
-        # When receiving configuration from a central site that uses a previous major
-        # version, the config migration logic has to be executed to make the local
-        # configuration compatible with the local Checkmk version.
-        if _need_to_update_mkps_after_sync() and (path_config := make_path_config()):
-            uninstalled, installed = _execute_update_mkps(path_config)
-            mkps_changed = bool(uninstalled or installed)
-        else:
-            installed = ()
-            mkps_changed = False
-
-        if local_files_changed or mkps_changed:
-            with _debug_log_message("Executing changed local files actions"):
-                _execute_changed_local_files_actions()
-
-        if _need_to_update_config_after_sync():
-            with _debug_log_message("Executing cmk-update-config"):
-                _execute_cmk_update_config()
-        elif installed:
-            cmd = ["cmk-migrate-extension-rulesets", *(m.name for m in installed)]
-            with _debug_log_message(f"Executing `{' '.join(cmd)}`"):
-                try:
-                    for line in subprocess.check_output(cmd, text=True).splitlines():
-                        logger.debug("  %(line)s", {"line": line.strip()})
-                except subprocess.CalledProcessError as e:
-                    logger.warning("Error while running migration script: %(error)s", {"error": e})
+        update_local_site_after_sync(
+            local_version=version.__version__,
+            central_version=_central_version_of_sync_request(),
+            local_files_changed=local_files_changed,
+            update_mkps=_update_mkps,
+            execute_changed_local_files_actions=_execute_changed_local_files_actions,
+            execute_cmk_update_config=_execute_cmk_update_config,
+            migrate_extension_rulesets=_migrate_extension_rulesets,
+        )
 
         with _debug_log_message("Updating passwords"):
             _execute_update_passwords()

@@ -48,6 +48,7 @@ from cmk.gui.watolib.activate_changes import (
     RemoteActivationCrash,
     RemoteActivationStatus,
     sort_for_activation,
+    update_local_site_after_sync,
 )
 from cmk.gui.watolib.automations import MKRemoteSiteUnavailable
 from cmk.gui.watolib.config_domain_name import (
@@ -1878,3 +1879,95 @@ def test_failing_broker_connection_during_hub_config_distribution_is_logged(
         )
 
     assert any("message broker" in m for m in caplog.messages)
+
+
+class _SyncSteps:
+    def __init__(self, *, installed_mkps: Sequence[str] = ()) -> None:
+        self._installed_mkps = installed_mkps
+        self.executed: list[str] = []
+
+    def update_mkps(self) -> tuple[Sequence[str], Sequence[str]]:
+        self.executed.append("update_mkps")
+        return (), self._installed_mkps
+
+    def execute_changed_local_files_actions(self) -> None:
+        self.executed.append("changed_local_files_actions")
+
+    def execute_cmk_update_config(self) -> None:
+        self.executed.append("cmk_update_config")
+
+    def migrate_extension_rulesets(self, package_names: Sequence[str]) -> None:
+        self.executed.append(f"migrate_extension_rulesets {' '.join(package_names)}")
+
+
+def _update_local_site_after_sync(
+    steps: _SyncSteps, *, central_version: str, local_files_changed: bool = False
+) -> None:
+    update_local_site_after_sync(
+        local_version="2.6.0p2",
+        central_version=central_version,
+        local_files_changed=local_files_changed,
+        update_mkps=steps.update_mkps,
+        execute_changed_local_files_actions=steps.execute_changed_local_files_actions,
+        execute_cmk_update_config=steps.execute_cmk_update_config,
+        migrate_extension_rulesets=steps.migrate_extension_rulesets,
+    )
+
+
+def test_sync_from_central_site_of_same_version_does_not_update_the_local_site() -> None:
+    steps = _SyncSteps(installed_mkps=["cool_package"])
+
+    _update_local_site_after_sync(steps, central_version="2.6.0p2")
+
+    assert not steps.executed
+
+
+def test_sync_from_central_site_of_other_major_version_runs_cmk_update_config_after_mkp_update() -> (
+    None
+):
+    steps = _SyncSteps()
+
+    _update_local_site_after_sync(steps, central_version="2.5.0p30")
+
+    assert steps.executed == ["update_mkps", "cmk_update_config"]
+
+
+@pytest.mark.parametrize(
+    "central_version",
+    [
+        pytest.param("2.6.0p1", id="patch release"),
+        pytest.param("2.6.0-2026.11.12", id="daily build"),
+    ],
+)
+def test_sync_from_central_site_of_same_major_version_only_updates_mkps(
+    central_version: str,
+) -> None:
+    steps = _SyncSteps()
+
+    _update_local_site_after_sync(steps, central_version=central_version)
+
+    assert steps.executed == ["update_mkps"]
+
+
+def test_mkps_installed_without_cmk_update_config_get_their_rulesets_migrated() -> None:
+    steps = _SyncSteps(installed_mkps=["cool_package", "fine_package"])
+
+    _update_local_site_after_sync(steps, central_version="2.6.0p1")
+
+    assert steps.executed[-1] == "migrate_extension_rulesets cool_package fine_package"
+
+
+def test_changed_mkps_trigger_the_changed_local_files_actions() -> None:
+    steps = _SyncSteps(installed_mkps=["cool_package"])
+
+    _update_local_site_after_sync(steps, central_version="2.6.0p1")
+
+    assert "changed_local_files_actions" in steps.executed
+
+
+def test_synced_local_files_trigger_the_changed_local_files_actions() -> None:
+    steps = _SyncSteps()
+
+    _update_local_site_after_sync(steps, central_version="2.6.0p2", local_files_changed=True)
+
+    assert steps.executed == ["changed_local_files_actions"]

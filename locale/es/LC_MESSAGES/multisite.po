@@ -1895,15 +1895,6 @@ msgid ""
 "correct."
 msgstr ""
 
-msgid ""
-"<b>Experimental.</b> When enabled, Checkmk collects usage information about "
-"MCP requests and forwards it to Checkmk's central telemetry collector, so we "
-"can understand how the MCP server is used and improve it.<br><br>We collect: "
-"which tools were called, response times, response sizes, error codes, which "
-"AI client or tool was used, and a random session ID.<br><br>We do not "
-"collect: the content of your requests or their results."
-msgstr ""
-
 #, fuzzy
 msgid ""
 "<b>Gather all service instances and restrict by overall AWS tags:</b><br>If "
@@ -2752,6 +2743,13 @@ msgid ""
 "A Checkmk Ultimate central site can only have remote sites with Checkmk "
 "Ultimate or Checkmk Pro/Community remote sites without configuration "
 "replication."
+msgstr ""
+
+msgid ""
+"A Linux agent in the classic layout spreads its files over several "
+"directories. An agent installed below a single directory reports that "
+"directory to Checkmk. This state is used if the agent reports no "
+"installation directory."
 msgstr ""
 
 msgid ""
@@ -3812,6 +3810,10 @@ msgid "AWS v2/Lambda Concurrency"
 msgstr "Simultaneidad AWS/Lambda"
 
 #, fuzzy
+msgid "AWS v2/Lambda Concurrency of aliases and versions"
+msgstr "Simultaneidad AWS/Lambda"
+
+#, fuzzy
 msgid "AWS v2/Lambda Memory"
 msgstr "AWS/Lambda Memoria"
 
@@ -4333,6 +4335,11 @@ msgstr ""
 #, fuzzy
 msgid "Access key information"
 msgstr "Información sobre el host"
+
+msgid ""
+"Access key: in AWS IAM, create a user with the \"ReadOnlyAccess\" policy and "
+"an access key. Enter the access key ID and the secret access key below."
+msgstr ""
 
 msgid "Access point"
 msgstr "Punto de acceso"
@@ -7168,6 +7175,10 @@ msgstr "Alias"
 
 msgid "Alias for created gateway hosts"
 msgstr "Alias para los hosts de puerta de enlace creados"
+
+#, fuzzy
+msgid "Alias or version"
+msgstr "última versión"
 
 #, fuzzy
 msgid "Alien Alarm (long)"
@@ -12719,7 +12730,7 @@ msgid ""
 "automatically, if it doesn't exist yet.<br>If you want to change this "
 "default behavior, you can configure this rule for setting a custom agent/"
 "Agent Controller user.<br><b>Note</b>: You can only use this configuration "
-"with the new single directory structure. Please enable <i>Customize "
+"with the new single-directory structure. Please enable <i>Customize "
 "installation directories</i> before saving the rule."
 msgstr ""
 
@@ -19054,6 +19065,14 @@ msgstr "Couchbase: Cache"
 
 #, fuzzy
 msgid ""
+"Could not access your AWS account. Please check the authentication and the "
+"accounts and try again."
+msgstr ""
+"No se ha encontrado ningún objeto de usuario para la sincronización. Por "
+"favor, compruebe la configuración del filtro."
+
+#, fuzzy
+msgid ""
 "Could not access your AWS account. Please check your access and secret key "
 "and try again."
 msgstr ""
@@ -21688,6 +21707,13 @@ msgstr "Por defecto (%(style)s)"
 #, fuzzy
 msgid "Default AWS credentials"
 msgstr "Credenciales por defecto"
+
+msgid ""
+"Default AWS credentials: Checkmk stores no secret. The agent uses the "
+"default credential chain of the AWS SDK on the selected site, for example "
+"the instance profile when Checkmk runs on EC2. Attach the \"ReadOnlyAccess\" "
+"policy to this identity."
+msgstr ""
 
 #, fuzzy
 msgid "Default BI visualization settings"
@@ -26784,10 +26810,14 @@ msgid ""
 "{value}'.<br>Independent of this option, every AWS piggyback host is given "
 "the host label 'cmk/aws/account', and the host of a resource is given labels "
 "for its service, name, resource ID and region, for example 'cmk/aws/"
-"service:rds'. The piggyback hosts for EC2 instances are also given the host "
-"label 'cmk/aws/ec2:instance'.<br>You can further restrict the imported tags "
-"by specifying a pattern which Checkmk searches for in the key of the AWS "
-"tag, or you can disable the import of AWS tags altogether."
+"service:rds'. If AWS gives the ARN of the resource, its host is also given "
+"the label 'cmk/aws/arn' with the ARN unchanged, for example 'cmk/aws/"
+"arn:arn:aws:rds:eu-central-1:123456789012:db:my-db'. AWS gives no ARN for "
+"EC2 instances, classic load balancers and S3 buckets. The piggyback hosts "
+"for EC2 instances are also given the host label 'cmk/aws/ec2:instance'."
+"<br>You can further restrict the imported tags by specifying a pattern which "
+"Checkmk searches for in the key of the AWS tag, or you can disable the "
+"import of AWS tags altogether."
 msgstr ""
 
 msgid "Enable this package"
@@ -30728,10 +30758,6 @@ msgid "Found all %(num_groups)d groups."
 msgstr "Se han encontrado todos los grupos %(num_groups)d."
 
 #, fuzzy, python-format
-msgid "Found configured rules of deprecated rule set %(name)r."
-msgstr "Ninguna regla configurada se ve afectada"
-
-#, fuzzy, python-format
 msgid ""
 "Found configured rules of unknown check parameter rule set %(rule_set)r."
 msgstr "Ninguna regla configurada se ve afectada"
@@ -30811,6 +30837,10 @@ msgstr ""
 
 msgid "Found rule packs"
 msgstr "Paquetes de reglas encontrados"
+
+#, fuzzy, python-format
+msgid "Found rules of the rule set \"%(title)s\" (%(name)s)."
+msgstr "Ninguna regla configurada se ve afectada"
 
 msgid "Fraction"
 msgstr "Fracción"
@@ -35619,19 +35649,28 @@ msgstr "Hosts que tienen un agente actualizado"
 msgid "Hosts that have not been checked for too long."
 msgstr "Los hosts que no han sido revisados durante mucho tiempo."
 
+#, python-format
+msgid ""
+"Hosts that match a rule <a href=\"%(rules_url)s\">Use classic file "
+"deployment</a> and no rule <i>Customize agent package</i> keep the classic "
+"file deployment. Checkmk 3.1 removes the classic file deployment. Move these "
+"hosts to the single-directory deployment before you update to Checkmk 3.1. "
+"<a href=\"%(werk_url)s\" target=\"_blank\">%(werk)s</a> describes how."
+msgstr ""
+
 msgid ""
 "Hosts that match this rule keep the classic file deployment. The classic "
 "file deployment distributes the agent files over several directories, such "
 "as <tt>/usr/bin</tt>, <tt>/etc/check_mk</tt> and <tt>/var/lib/"
 "check_mk_agent</tt>. The rule sets <i>Installation paths for agent files</i> "
 "and <i>Run agent as non-root user</i> apply only to these hosts. As an "
-"exception, the migration to the single directory deployment takes the old "
+"exception, the migration to the single-directory deployment takes the old "
 "directory for variable data from <i>Installation paths for agent files</i>. "
 "Keep the rules of <i>Installation paths for agent files</i> until the "
 "migrated hosts have installed their new agent package.<br>The rule set "
 "<i>Customize agent package</i> takes precedence over this rule set. A host "
-"that matches both gets the single directory deployment.<br>Hosts without a "
-"rule get the single directory deployment. To move hosts, narrow the "
+"that matches both gets the single-directory deployment.<br>Hosts without a "
+"rule get the single-directory deployment. To move hosts, narrow the "
 "conditions of this rule, delete the rule, or add a rule <i>Customize agent "
 "package</i> for them.<br>Checkmk 3.1 will remove the classic file deployment."
 msgstr ""
@@ -49663,6 +49702,12 @@ msgstr "Nombres: %(name)s"
 msgid "Named profile"
 msgstr "Editar perfil"
 
+msgid ""
+"Named profile: Checkmk stores no secret. Add the profile to ~/.aws/config of "
+"the site user on the selected site. Attach the \"ReadOnlyAccess\" policy to "
+"the identity of the profile."
+msgstr ""
+
 msgid "Names"
 msgstr "Nombres"
 
@@ -51538,8 +51583,9 @@ msgid ""
 "activates all pending changes on the selected site."
 msgstr ""
 
-#, python-format
-msgid "Note: To authenticate with an IAM role, please use the %(link)s."
+msgid ""
+"Note: To monitor through an IAM role, select \"Explicit list of account "
+"IDs\" under \"Accounts\", and enter the account and the name of the role."
 msgstr ""
 
 msgid "Note: this still does an HTTP GET or POST, not a HEAD."
@@ -65374,6 +65420,9 @@ msgstr ""
 msgid "Select from a list of service names known to Checkmk"
 msgstr ""
 
+msgid "Select how Checkmk logs in to AWS, and prepare AWS for it:"
+msgstr ""
+
 msgid ""
 "Select how multiple data points from replicas of the same service should be "
 "aggregated. By default, the latest value independent of replica is taken. "
@@ -68095,6 +68144,10 @@ msgstr ""
 
 msgid "Show the pin"
 msgstr "Mostrar el pin"
+
+#, fuzzy
+msgid "Show the rules of this rule set"
+msgstr "No ha iniciado la sesión en el sitio remoto."
 
 msgid "Show the service problems contained in this branch"
 msgstr "Mostrar los problemas de servicio contenidos en esta rama"
@@ -71158,6 +71211,9 @@ msgid "State if specific check plug-ins receive no monitoring data."
 msgstr ""
 "Indique si los plugins de comprobación específicos no reciben datos de "
 "supervisión."
+
+msgid "State if the agent uses the classic layout"
+msgstr ""
 
 msgid "State if the failover link is not up."
 msgstr "Estado si el enlace de conmutación por error no está activo."
@@ -80029,6 +80085,10 @@ msgstr "El valor %(value)r tiene el tipo %(type)s, pero debe ser del tipo int"
 msgid "The value for %(title)s must be between %(mmin)d and %(mmax)d"
 msgstr "El valor de %(title)s debe estar entre %(mmin)d y %(mmax)d"
 
+#, python-format
+msgid "The value has an unknown format: %(error)s"
+msgstr ""
+
 msgid "The value is not of type dict."
 msgstr "El valor no es de tipo dict."
 
@@ -80518,7 +80578,7 @@ msgstr ""
 
 msgid ""
 "These paths apply only to hosts that match the rule <i>Use classic file "
-"deployment</i>. All other hosts get the single directory deployment, which "
+"deployment</i>. All other hosts get the single-directory deployment, which "
 "can be configured with the rule set <i>Customize agent package</i>."
 "<br><b>Note</b>: When updating agents to the new directory structure, please "
 "keep this rule set until the agent update is done. The agent package will "
@@ -83968,7 +84028,7 @@ msgid ""
 "will be deployed to target hosts when not further configuring agent paths:"
 "<br><tt>/usr/bin/some_executable</tt><br><tt>/usr/lib/check_mk_agent/local/"
 "my_local_check</tt><br><tt>/usr/lib/check_mk_agent/some_file</tt><br>When "
-"activating the single directory deployment in the <i>Customize agent "
+"activating the single-directory deployment in the <i>Customize agent "
 "package</i> rule set:<br><tt>/opt/checkmk/agent/default/package/bin/"
 "some_executable</tt><br><tt>/opt/checkmk/agent/default/package/local/"
 "my_local_check</tt><br><tt>/opt/checkmk/agent/default/package/some_file</"
@@ -84716,7 +84776,7 @@ msgid ""
 "This rule set will only set the agent user to the configured value.<br>It "
 "will not take care of further needed permissions on the target system.<br>It "
 "applies only to hosts that match the rule <i>Use classic file deployment</"
-"i>. All other hosts get the single directory deployment, where the agent "
+"i>. All other hosts get the single-directory deployment, where the agent "
 "runs as root unless the rule set <i>Customize agent package</i> configures "
 "another user.<br>Please use <i>Customize agent package</i> instead, which "
 "offers a proper non-root agent installation.<br>"
@@ -96408,6 +96468,15 @@ msgstr ""
 "del helper, se levantarán a través de ellas y resultarán directamente en la "
 "terminación del proceso del helper."
 
+msgid ""
+"When enabled, Checkmk collects usage information about MCP requests and "
+"forwards it to Checkmk's central telemetry collector, so we can understand "
+"how the MCP server is used and improve it.<br><br>We collect: which tools "
+"were called, response times, response sizes, error codes, which AI client or "
+"tool was used, and a random session ID.<br><br>We do not collect: the "
+"content of your requests or their results."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "When enabled, a rule editor icon is displayed for each service in the "
@@ -102199,10 +102268,6 @@ msgstr "Inicio de sesión desactivado"
 
 msgid "not available"
 msgstr "no disponible"
-
-#, fuzzy
-msgid "not disabled"
-msgstr "deshabilitados"
 
 msgid "not found"
 msgstr "No se ha encontrado"
@@ -115186,6 +115251,10 @@ msgid "To explore"
 msgstr "La prueba ha caducado"
 
 #, fuzzy
+#~ msgid "not disabled"
+#~ msgstr "deshabilitados"
+
+#, fuzzy
 #~ msgid "Not available yet"
 #~ msgstr "no disponible"
 
@@ -124788,9 +124857,6 @@ msgstr "La prueba ha caducado"
 #, fuzzy
 #~ msgid "Your IT monitoring platform"
 #~ msgstr "Su máquina de vigilancia"
-
-#~ msgid "latest version"
-#~ msgstr "última versión"
 
 #~ msgid "website"
 #~ msgstr "sitio web"

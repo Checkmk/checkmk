@@ -41,6 +41,7 @@ interface TooltipContentProps {
   side?: 'right' | 'left' | 'top' | 'bottom'
   align?: 'center' | 'end' | 'start'
   avoidCollisions?: boolean
+  collisionBoundary?: Element | null | Array<Element | null>
   usePortal?: boolean
 }
 
@@ -82,6 +83,7 @@ const {
   align = 'center',
   sideOffset = 4,
   avoidCollisions = false,
+  collisionBoundary = [],
   usePortal = false,
   class: className = '',
   variant,
@@ -99,7 +101,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
 <template>
   <TooltipPortal :disabled="!usePortal">
     <TooltipContent
-      v-bind="{ ...forwarded, asChild, avoidCollisions }"
+      v-bind="{ ...forwarded, asChild, avoidCollisions, collisionBoundary }"
       :class="[className, { 'cmk-tooltip-content__layer': variant !== 'unstyled' }]"
     >
       <slot v-if="variant === 'unstyled'" />

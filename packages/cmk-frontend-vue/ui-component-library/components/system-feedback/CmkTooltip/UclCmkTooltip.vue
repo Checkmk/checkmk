@@ -103,7 +103,7 @@ export const panelConfig = {
 } satisfies PanelConfigFor<typeof CmkTooltip> &
   PanelConfigFor<
     typeof CmkTooltipContent,
-    'asChild' | 'sideOffset' | 'avoidCollisions' | 'usePortal'
+    'asChild' | 'sideOffset' | 'avoidCollisions' | 'collisionBoundary' | 'usePortal'
   >
 </script>
 

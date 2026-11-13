@@ -35,11 +35,9 @@ from cmk.livestatus_client import (
     lqencode,
     MKLivestatusQueryError,
     MultiSiteConnection,
-    NetworkSocketInfo,
     sanitize_site_configuration,
-    SiteConfiguration,
+    site_config_for_livestatus,
     SiteConfigurations,
-    UnixSocketInfo,
 )
 from cmk.livestatus_client.queries import site_restricted_connection
 from cmk.utils import paths
@@ -375,7 +373,7 @@ def _get_enabled_and_disabled_sites(
     for site_id, site_spec in user.authorized_sites(
         unfiltered_sites=site_config.enabled_sites(active_config.sites)
     ).items():
-        site_spec = _site_config_for_livestatus(site_id, site_spec)
+        site_spec = site_config_for_livestatus(site_id, site_spec, livestatus_unix_socket)
 
         if user.is_site_disabled(site_id):
             disabled_sites[site_id] = site_spec
@@ -383,48 +381,6 @@ def _get_enabled_and_disabled_sites(
             enabled_sites[site_id] = site_spec
 
     return enabled_sites, disabled_sites
-
-
-def _site_config_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -> SiteConfiguration:
-    """Prepares a site config specification for the livestatus module
-
-    In case the GUI connects to the local livestatus proxy there are several
-    special things to do:
-    a) Tell livestatus not to strip away the cache header
-    b) Connect in plain text to the sites local proxy unix socket
-    """
-    copied_site: SiteConfiguration = site_spec.copy()
-
-    if site_spec.get("proxy") is not None:
-        assert site_spec["proxy"] is not None
-        copied_site["cache"] = site_spec["proxy"].get("cache", True)
-    elif isinstance(site_spec["socket"], tuple) and site_spec["socket"][0] in ["tcp", "tcp6"]:
-        copied_site["tls"] = site_spec["socket"][1]["tls"]
-    copied_site["socket"] = encode_socket_for_livestatus(site_id, site_spec)
-
-    return copied_site
-
-
-def encode_socket_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -> str:
-    socket_spec = site_spec["socket"]
-
-    if site_spec.get("proxy") is not None:
-        return f"unix:{livestatus_unix_socket}proxy/{site_id}"
-
-    if socket_spec[0] == "local":
-        return f"unix:{livestatus_unix_socket}"
-
-    if socket_spec[0] == "unix":
-        unix_family_spec, unix_address_spec = cast(UnixSocketInfo, socket_spec)
-        return f"{unix_family_spec}:{unix_address_spec['path']}"
-
-    if socket_spec[0] in ("tcp", "tcp6"):
-        tcp_family_spec, tcp_address_spec = cast(NetworkSocketInfo, socket_spec)
-        return (
-            f"{tcp_family_spec}:{tcp_address_spec['address'][0]}:{tcp_address_spec['address'][1]}"
-        )
-
-    raise NotImplementedError
 
 
 def update_site_states_from_dead_sites() -> None:

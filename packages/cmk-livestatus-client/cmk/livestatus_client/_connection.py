@@ -22,7 +22,18 @@ from dataclasses import dataclass, field
 from enum import Enum
 from functools import cache
 from io import BytesIO
-from typing import Any, Literal, NamedTuple, NewType, NotRequired, override, Protocol, TypedDict
+from pathlib import Path
+from typing import (
+    Any,
+    cast,
+    Literal,
+    NamedTuple,
+    NewType,
+    NotRequired,
+    override,
+    Protocol,
+    TypedDict,
+)
 
 from cmk import trace
 from cmk.ccc.site import SiteId
@@ -148,14 +159,63 @@ class SiteConfiguration(TypedDict):
     socket: str | UnixSocketInfo | NetworkSocketInfo | LocalSocketInfo
 
     # There are actually transforms in place to convert from Checkmk managed config to the
-    # livestatus client (see cmk.gui.sites._site_config_for_livestatus). Would be desirable to
-    # clean up this conversion or make independent types of it.
+    # livestatus client (see site_config_for_livestatus). Would be desirable to clean up this
+    # conversion or make independent types of it.
     cache: NotRequired[bool]
     tls: NotRequired[TLSInfo]
 
 
 def sanitize_site_configuration(config: SiteConfiguration) -> dict[str, object]:
     return {key: "redacted" if key == "secret" else value for key, value in config.items()}
+
+
+def site_config_for_livestatus(
+    site_id: SiteId, site_spec: SiteConfiguration, local_socket: Path
+) -> SiteConfiguration:
+    """Prepares a site config specification for MultiSiteConnection
+
+    In case of a connection through the local livestatus proxy there are several special
+    things to do:
+    a) Tell livestatus not to strip away the cache header
+    b) Connect in plain text to the local proxy unix socket of the site
+
+    local_socket is the livestatus unix socket of the local site.
+    """
+    copied_site: SiteConfiguration = site_spec.copy()
+
+    if site_spec.get("proxy") is not None:
+        assert site_spec["proxy"] is not None
+        copied_site["cache"] = site_spec["proxy"].get("cache", True)
+    elif isinstance(site_spec["socket"], tuple) and site_spec["socket"][0] in ["tcp", "tcp6"]:
+        copied_site["tls"] = site_spec["socket"][1]["tls"]
+    copied_site["socket"] = encode_socket_for_livestatus(site_id, site_spec, local_socket)
+
+    return copied_site
+
+
+def encode_socket_for_livestatus(
+    site_id: SiteId, site_spec: SiteConfiguration, local_socket: Path
+) -> str:
+    """Socket URL of a site, local_socket is the livestatus unix socket of the local site"""
+    socket_spec = site_spec["socket"]
+
+    if site_spec.get("proxy") is not None:
+        return f"unix:{local_socket}proxy/{site_id}"
+
+    if socket_spec[0] == "local":
+        return f"unix:{local_socket}"
+
+    if socket_spec[0] == "unix":
+        unix_family_spec, unix_address_spec = cast(UnixSocketInfo, socket_spec)
+        return f"{unix_family_spec}:{unix_address_spec['path']}"
+
+    if socket_spec[0] in ("tcp", "tcp6"):
+        tcp_family_spec, tcp_address_spec = cast(NetworkSocketInfo, socket_spec)
+        return (
+            f"{tcp_family_spec}:{tcp_address_spec['address'][0]}:{tcp_address_spec['address'][1]}"
+        )
+
+    raise NotImplementedError
 
 
 SiteConfigurations = NewType("SiteConfigurations", dict[SiteId, SiteConfiguration])

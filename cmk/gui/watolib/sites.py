@@ -17,7 +17,6 @@ from typing import Any, cast, NamedTuple, override, Protocol
 from flask import has_request_context
 
 import cmk.ccc.version as cmk_version
-import cmk.gui.sites
 import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.sidebar_reload
 from cmk.ccc import store
@@ -97,6 +96,7 @@ from cmk.livestatus_client import (
     BrokerConnection,
     BrokerConnections,
     ConnectionId,
+    encode_socket_for_livestatus,
     NetworkSocketDetails,
     SiteConfiguration,
     SiteConfigurations,
@@ -1097,7 +1097,7 @@ def _encode_socket_for_nagvis(site_id: SiteId, site: SiteConfiguration) -> str:
     if site["proxy"] is None and is_livestatus_encrypted(site):
         assert isinstance(site["socket"], tuple) and site["socket"][0] in ["tcp", "tcp6"]
         return "tcp-tls:%s:%d" % site["socket"][1]["address"]
-    return cmk.gui.sites.encode_socket_for_livestatus(site_id, site)
+    return encode_socket_for_livestatus(site_id, site, cmk.utils.paths.livestatus_unix_socket)
 
 
 def _update_distributed_wato_file(sites: SiteConfigurations) -> None:

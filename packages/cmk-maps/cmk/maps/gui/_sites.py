@@ -30,8 +30,11 @@ from cmk.ccc.site import SiteId
 from cmk.gui import hooks, site_config
 from cmk.gui.config import active_config
 from cmk.gui.log import logger
-from cmk.gui.sites import encode_socket_for_livestatus
-from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
+from cmk.livestatus_client import (
+    encode_socket_for_livestatus,
+    SiteConfiguration,
+    SiteConfigurations,
+)
 from cmk.maps.shared.config_vars import VAR_SITE_SPECS
 
 
@@ -42,19 +45,18 @@ def site_specs_path() -> Path:
 def _for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -> dict[str, object]:
     """Normalise a site spec for ``livestatus.MultiSiteConnection``.
 
-    Mirrors ``cmk.gui.sites``' own (module-private) normalisation: encode the
-    socket via the public ``encode_socket_for_livestatus`` helper (the same one
-    the NagVis backend writer uses) and carry the proxy-cache / TCP-tls hint the
-    connection needs. Kept here rather than widening the ``cmk.gui.sites`` API for
-    a single caller; the socket encoding itself (the proxy/OMD-specific part) is
-    the shared helper.
+    Like ``cmk.livestatus_client.site_config_for_livestatus``: encode the socket
+    via ``encode_socket_for_livestatus`` (the same one the NagVis backend writer
+    uses) and carry the proxy-cache / TCP-tls hint the connection needs.
 
     Only the keys the connection reads are written: the daemon never logs in to
     a remote site or applies its global settings, so the remote login secret and
     whatever a site spec gains later stay out of its file (part of omd backup).
     """
     prepared: dict[str, object] = {
-        "socket": encode_socket_for_livestatus(site_id, site_spec),
+        "socket": encode_socket_for_livestatus(
+            site_id, site_spec, cmk.utils.paths.livestatus_unix_socket
+        ),
         "timeout": site_spec["timeout"],
         "persist": site_spec["persist"],
         "status_host": site_spec["status_host"],

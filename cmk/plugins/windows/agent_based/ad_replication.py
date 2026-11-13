@@ -56,6 +56,9 @@ def parse_ad_replication_info(info: StringTable) -> list[list[str]]:
         # Make lines split by , instead of spaces
         line_txt = " ".join(line_parts).replace(",CN=", ";CN=").replace(",DC=", ";DC=")
         line_parts = line_txt.split(",")
+        if len(line_parts) > 11:
+            line_parts = line_parts[:10] if ";" in line_parts[2] else line_parts[:11]
+
         if len(line_parts) in [11, 10]:
             lines.append(line_parts)
     return lines

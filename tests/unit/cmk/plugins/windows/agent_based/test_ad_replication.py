@@ -16,7 +16,145 @@ from cmk.plugins.windows.agent_based.ad_replication import (
     check_ad_replication,
     discover_ad_replication,
     parse_ad_replication,
+    parse_ad_replication_info,
 )
+
+
+def test_parse_yields_no_rows_without_data() -> None:
+    assert parse_ad_replication_info([]) == []
+
+
+def test_parse_splits_row_into_11_fields() -> None:
+    rows = parse_ad_replication_info(
+        [
+            [
+                'showrepl_INFO,SITE-A,DC01,"DC=example,DC=local",SITE-B,DC02,RPC,0,0,2026-11-12',
+                "09:48:38,0",
+            ]
+        ]
+    )
+
+    assert rows == [
+        [
+            "showrepl_INFO",
+            "SITE-A",
+            "DC01",
+            '"DC=example;DC=local"',
+            "SITE-B",
+            "DC02",
+            "RPC",
+            "0",
+            "0",
+            "2026-11-12 09:48:38",
+            "0",
+        ]
+    ]
+
+
+def test_parse_keeps_naming_context_with_several_commas_in_one_field() -> None:
+    rows = parse_ad_replication_info(
+        [
+            [
+                'showrepl_INFO,SITE-A,DC01,"CN=Schema,CN=Configuration,DC=example,DC=local",SITE-B,DC02,RPC,0,0,2026-11-12',
+                "09:48:38,0",
+            ]
+        ]
+    )
+
+    assert rows == [
+        [
+            "showrepl_INFO",
+            "SITE-A",
+            "DC01",
+            '"CN=Schema;CN=Configuration;DC=example;DC=local"',
+            "SITE-B",
+            "DC02",
+            "RPC",
+            "0",
+            "0",
+            "2026-11-12 09:48:38",
+            "0",
+        ]
+    ]
+
+
+def test_parse_merges_unquoted_naming_context_into_destination_dc_field() -> None:
+    rows = parse_ad_replication_info(
+        [["showrepl_INFO,SITE-A,DC01,DC=local,SITE-B,DC02,RPC,0,0,2026-11-12", "09:48:38,0"]]
+    )
+
+    assert rows == [
+        [
+            "showrepl_INFO",
+            "SITE-A",
+            "DC01;DC=local",
+            "SITE-B",
+            "DC02",
+            "RPC",
+            "0",
+            "0",
+            "2026-11-12 09:48:38",
+            "0",
+        ]
+    ]
+
+
+def test_parse_drops_appended_columns() -> None:
+    rows = parse_ad_replication_info(
+        [
+            [
+                'showrepl_INFO,SITE-A,DC01,"DC=example,DC=local",SITE-B,DC02,RPC,0,0,2026-11-12',
+                '09:48:38,0,dc01.example.local,dc02.example.local,"DC=example,DC=local","DC=example,DC=local"',
+            ]
+        ]
+    )
+
+    assert rows == [
+        [
+            "showrepl_INFO",
+            "SITE-A",
+            "DC01",
+            '"DC=example;DC=local"',
+            "SITE-B",
+            "DC02",
+            "RPC",
+            "0",
+            "0",
+            "2026-11-12 09:48:38",
+            "0",
+        ]
+    ]
+
+
+def test_parse_drops_appended_columns_after_unquoted_naming_context() -> None:
+    rows = parse_ad_replication_info(
+        [
+            [
+                "showrepl_INFO,SITE-A,DC01,DC=local,SITE-B,DC02,RPC,0,0,2026-11-12",
+                '09:48:38,0,dc01.example.local,dc02.example.local,"DC=example,DC=local","DC=example,DC=local"',
+            ]
+        ]
+    )
+
+    assert rows == [
+        [
+            "showrepl_INFO",
+            "SITE-A",
+            "DC01;DC=local",
+            "SITE-B",
+            "DC02",
+            "RPC",
+            "0",
+            "0",
+            "2026-11-12 09:48:38",
+            "0",
+        ]
+    ]
+
+
+def test_parse_drops_row_with_fewer_than_10_fields() -> None:
+    assert parse_ad_replication_info([["showrepl_INFO,SITE-A,DC01,DC=local"]]) == []
+
 
 # Test data from generictests/datasets/ad_replication_regression.py
 test_info = [

@@ -279,7 +279,7 @@ std::strong_ordering natural_compare(std::string_view a, std::string_view b) {
     // Chop off and return str's leading run of digits (want_digits) or
     // non-digits (!want_digits), possibly empty, advancing str past the run.
     auto take_run = [](std::string_view &str, bool want_digits) {
-        auto end = std::ranges::find_if(str, [want_digits](char c) {
+        const auto *end = std::ranges::find_if(str, [want_digits](char c) {
             return is_ascii_digit(c) != want_digits;
         });
         auto run = str.substr(0, static_cast<std::size_t>(end - str.begin()));

@@ -56,6 +56,5 @@ void RendererPython3::outputBlob(const std::vector<char> &value) {
 }
 
 void RendererPython3::outputString(const std::string &value) {
-    outputUnicodeString(value.data(), value.data() + value.size(),
-                        _data_encoding);
+    outputUnicodeString(value, _data_encoding);
 }

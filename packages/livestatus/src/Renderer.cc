@@ -6,6 +6,7 @@
 #include "livestatus/Renderer.h"
 
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 
 #include "livestatus/Logger.h"
@@ -102,33 +103,32 @@ void Renderer::outputByteString(const std::string &prefix,
     _os << R"(")";  // "
 }
 
-void Renderer::outputUnicodeString(const char *start, const char *end,
+void Renderer::outputUnicodeString(std::string_view value,
                                    Encoding data_encoding) {
     _os << R"(")";  // "
     // TODO(sp) Use polymorphism instead of switch.
     // TODO(sp) Use codecvt framework instead of homemade stuff.
     switch (data_encoding) {
         case Encoding::utf8:
-            outputUTF8(start, end);
+            outputUTF8(value);
             break;
         case Encoding::latin1:
-            outputLatin1(start, end);
+            outputLatin1(value);
             break;
         case Encoding::mixed:
-            outputMixed(start, end);
+            outputMixed(value);
             break;
     }
     _os << R"(")";  // "
 }
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
-void Renderer::outputUTF8(const char *start, const char *end) {
-    // NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    for (const char *p = start; p != end; ++p) {
-        const unsigned char ch0 = *p;
+void Renderer::outputUTF8(std::string_view value) {
+    for (size_t i = 0; i < value.size(); ++i) {
+        const unsigned char ch0 = value[i];
         if ((ch0 & 0x80) == 0x00) {
             if (isBoringChar(ch0)) {
-                _os.put(*p);
+                _os.put(value[i]);
             } else {
                 outputUnicodeChar(ch0);
             }
@@ -138,10 +138,10 @@ void Renderer::outputUTF8(const char *start, const char *end) {
                 // overlong encoding
                 return invalidUTF8(ch0);
             }
-            if (end <= &p[1]) {
+            if (value.size() <= i + 1) {
                 return truncatedUTF8();
             }
-            const unsigned char ch1 = *++p;
+            const unsigned char ch1 = value[++i];
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
@@ -149,14 +149,14 @@ void Renderer::outputUTF8(const char *start, const char *end) {
                               ((ch1 & 0x3F) << 0));
         } else if ((ch0 & 0xF0) == 0xE0) {
             // 3 byte encoding
-            if (end <= &p[2]) {
+            if (value.size() <= i + 2) {
                 return truncatedUTF8();
             }
-            const unsigned char ch1 = *++p;
+            const unsigned char ch1 = value[++i];
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
-            const unsigned char ch2 = *++p;
+            const unsigned char ch2 = value[++i];
             if ((ch2 & 0xC0) != 0x80) {
                 return invalidUTF8(ch2);
             }
@@ -169,18 +169,18 @@ void Renderer::outputUTF8(const char *start, const char *end) {
                 // result would be larger than 0x10FFFF
                 return invalidUTF8(ch0);
             }
-            if (end <= &p[3]) {
+            if (value.size() <= i + 3) {
                 return truncatedUTF8();
             }
-            const unsigned char ch1 = *++p;
+            const unsigned char ch1 = value[++i];
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
-            const unsigned char ch2 = *++p;
+            const unsigned char ch2 = value[++i];
             if ((ch2 & 0xC0) != 0x80) {
                 return invalidUTF8(ch2);
             }
-            const unsigned char ch3 = *++p;
+            const unsigned char ch3 = value[++i];
             if ((ch3 & 0xC0) != 0x80) {
                 return invalidUTF8(ch3);
             }
@@ -194,30 +194,29 @@ void Renderer::outputUTF8(const char *start, const char *end) {
     }
 }
 
-void Renderer::outputLatin1(const char *start, const char *end) {
-    for (const char *p = start; p != end; ++p) {
-        const unsigned char ch = *p;
+void Renderer::outputLatin1(std::string_view value) {
+    for (const char c : value) {
+        const unsigned char ch = c;
         if (isBoringChar(ch)) {
-            _os.put(*p);
+            _os.put(c);
         } else {
             outputUnicodeChar(ch);
         }
     }
 }
 
-void Renderer::outputMixed(const char *start, const char *end) {
-    for (const char *p = start; p != end; ++p) {
-        const unsigned char ch0 = *p;
+void Renderer::outputMixed(std::string_view value) {
+    for (size_t i = 0; i < value.size(); ++i) {
+        const unsigned char ch0 = value[i];
         if (isBoringChar(ch0)) {
-            _os.put(*p);
+            _os.put(value[i]);
         } else if ((ch0 & 0xE0) == 0xC0) {
             // Possible 2 byte encoding? => Assume UTF-8, ignore overlong
             // encodings
-            if (end <= &p[1]) {
+            if (value.size() <= i + 1) {
                 return truncatedUTF8();
             }
-            const unsigned char ch1 = *++p;
-            // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            const unsigned char ch1 = value[++i];
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }

@@ -147,9 +147,13 @@ TEST_F(InputBufferTest, RejectsInvalidUtf8) {
 TEST_F(InputBufferTest, ReadsALineLongerThanTheBuffer) {
     // The first line moves the read position off zero, so completing the second
     // one makes the buffer first shift its unprocessed rest to the front and
-    // then grow -- the two spots which used to index past the end.
-    const std::string line{"Filter: name = " +
-                           std::string(initial_buffer_size + 1000, 'x')};
+    // then grow -- the two spots which used to index past the end. The bytes
+    // vary, so that a byte lost or duplicated while shifting shows up.
+    std::string filler(initial_buffer_size + 1000, ' ');
+    for (size_t i = 0; i < filler.size(); ++i) {
+        filler[i] = static_cast<char>('a' + (i % 26));
+    }
+    const std::string line{"Filter: name = " + filler};
     feed("GET hosts\n" + line + "\n\n");
 
     EXPECT_EQ(InputBuffer::Result::request_read, buffer().readRequest());

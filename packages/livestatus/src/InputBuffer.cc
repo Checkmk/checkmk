@@ -13,6 +13,7 @@
 #include <cerrno>
 #include <compare>
 #include <ostream>
+#include <span>
 #include <string_view>
 #include <utility>
 
@@ -169,9 +170,10 @@ InputBuffer::Result InputBuffer::readRequest() {
             else if (_read_index > 0) {
                 const size_t shift_by =
                     _read_index;  // distance to beginning of buffer
-                std::move(_readahead_buffer.data() + _read_index,
-                          _readahead_buffer.data() + _write_index,
-                          _readahead_buffer.data());
+                const std::span buffer{_readahead_buffer};
+                std::ranges::move(
+                    buffer.subspan(_read_index, _write_index - _read_index),
+                    buffer.begin());
                 _read_index = 0;  // unread data is now at the beginning
                 _write_index -= shift_by;  // write pointer shifted to the left
                 r -= shift_by;  // current scan position also shift left
@@ -199,18 +201,16 @@ InputBuffer::Result InputBuffer::readRequest() {
                 return Result::request_read;
 
             }  // non-empty line: belongs to current request
-            size_t length = r - _read_index;
             // Note the cast: a request line may contain UTF-8, so the bytes we
             // look at are routinely negative when char is signed. Handing such
             // a value to the <cctype> functions is undefined behavior, they are
             // only defined for unsigned char values and EOF.
-            for (size_t end = r;
-                 end > _read_index &&
-                 // NOLINTNEXTLINE(bugprone-inc-dec-in-conditions)
-                 (std::isspace(static_cast<unsigned char>(
-                      _readahead_buffer[--end])) != 0);) {
-                length--;
+            size_t end = r;
+            while (end > _read_index && std::isspace(static_cast<unsigned char>(
+                                            _readahead_buffer[end - 1])) != 0) {
+                --end;
             }
+            const size_t length = end - _read_index;
             if (length > 0) {
                 const std::string_view s(&_readahead_buffer[_read_index],
                                          length);
@@ -245,8 +245,8 @@ InputBuffer::Result InputBuffer::readData() {
             }
             break;
         }
-        const ssize_t r = ::read(_fd, _readahead_buffer.data() + _write_index,
-                                 _readahead_buffer.size() - _write_index);
+        const auto space = std::span{_readahead_buffer}.subspan(_write_index);
+        const ssize_t r = ::read(_fd, space.data(), space.size());
         if (r < 0) {
             return Result::eof;
         }

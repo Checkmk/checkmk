@@ -5,7 +5,7 @@
  */
 import { type Ref, computed, ref } from 'vue'
 
-import type { GraphLegendStyle, GraphRenderOptions } from '@/dashboard/components/Wizard/types'
+import type { GraphLegend, GraphRenderOptions } from '@/dashboard/components/Wizard/types'
 
 import { useGraphLegend } from './useGraphLegend'
 
@@ -17,8 +17,7 @@ export interface UseGraphRenderOptions {
 
   timestamp: Ref<boolean>
   roundMargin: Ref<boolean>
-  graphLegend: Ref<boolean>
-  graphLegendStyle: Ref<GraphLegendStyle>
+  graphLegend: Ref<GraphLegend>
 
   clickToPlacePin: Ref<boolean>
   showBurgerMenu: Ref<boolean>
@@ -49,7 +48,7 @@ export const useGraphRenderOptions = (
 
   const timestamp = ref<boolean>(data?.show_graph_time ?? false)
   const roundMargin = ref<boolean>(data?.show_margin ?? false)
-  const { graphLegend, graphLegendStyle } = useGraphLegend(data, isNewWidget)
+  const { graphLegend } = useGraphLegend(data, isNewWidget)
 
   const clickToPlacePin = ref<boolean>(data?.show_pin ?? true)
   const showBurgerMenu = ref<boolean>(data?.show_controls ?? false)
@@ -63,8 +62,7 @@ export const useGraphRenderOptions = (
 
       show_graph_time: timestamp.value,
       show_margin: roundMargin.value,
-      show_legend: graphLegend.value,
-      legend_style: graphLegendStyle.value,
+      legend: graphLegend.value,
       show_pin: clickToPlacePin.value,
       show_controls: showBurgerMenu.value
     }
@@ -83,7 +81,6 @@ export const useGraphRenderOptions = (
     timestamp,
     roundMargin,
     graphLegend,
-    graphLegendStyle,
 
     clickToPlacePin,
     showBurgerMenu,

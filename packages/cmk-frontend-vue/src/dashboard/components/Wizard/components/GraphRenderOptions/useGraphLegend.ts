@@ -5,23 +5,19 @@
  */
 import { type Ref, ref } from 'vue'
 
-import type { GraphLegendStyle } from '@/dashboard/components/Wizard/types'
+import type { GraphLegend } from '@/dashboard/components/Wizard/types'
 
 interface StoredGraphLegend {
-  show_legend?: boolean
-  legend_style?: GraphLegendStyle
+  legend?: GraphLegend
 }
 
 export interface UseGraphLegend {
-  graphLegend: Ref<boolean>
-  graphLegendStyle: Ref<GraphLegendStyle>
+  graphLegend: Ref<GraphLegend>
 }
 
 export const useGraphLegend = (
   stored: StoredGraphLegend | undefined,
   isNewWidget: boolean
-): UseGraphLegend => {
-  const graphLegend = ref<boolean>(isNewWidget ? true : (stored?.show_legend ?? false))
-  const graphLegendStyle = ref<GraphLegendStyle>(stored?.legend_style ?? 'compact')
-  return { graphLegend, graphLegendStyle }
-}
+): UseGraphLegend => ({
+  graphLegend: ref<GraphLegend>(isNewWidget ? 'compact' : (stored?.legend ?? 'none'))
+})

@@ -17,20 +17,19 @@ describe('useGraphRenderOptions', () => {
       expect(opts.fixedVerticalAxisWidth.value).toBe(8)
       expect(opts.timestamp.value).toBe(false)
       expect(opts.roundMargin.value).toBe(false)
-      expect(opts.graphLegend.value).toBe(true)
-      expect(opts.graphLegendStyle.value).toBe('compact')
+      expect(opts.graphLegend.value).toBe('compact')
       expect(opts.clickToPlacePin.value).toBe(true)
       expect(opts.showBurgerMenu.value).toBe(false)
     })
 
     it('keeps the legend off for stored options without it', () => {
       const opts = useGraphRenderOptions({}, false)
-      expect(opts.graphLegend.value).toBe(false)
+      expect(opts.graphLegend.value).toBe('none')
     })
 
     it('keeps the legend off for a stored widget without any options', () => {
       const opts = useGraphRenderOptions(undefined, false)
-      expect(opts.graphLegend.value).toBe(false)
+      expect(opts.graphLegend.value).toBe('none')
     })
   })
 
@@ -43,8 +42,7 @@ describe('useGraphRenderOptions', () => {
           vertical_axis_width: 42,
           show_graph_time: true,
           show_margin: true,
-          show_legend: true,
-          legend_style: 'extended',
+          legend: 'extended',
           show_pin: false,
           show_controls: true
         },
@@ -56,8 +54,7 @@ describe('useGraphRenderOptions', () => {
       expect(opts.fixedVerticalAxisWidth.value).toBe(42)
       expect(opts.timestamp.value).toBe(true)
       expect(opts.roundMargin.value).toBe(true)
-      expect(opts.graphLegend.value).toBe(true)
-      expect(opts.graphLegendStyle.value).toBe('extended')
+      expect(opts.graphLegend.value).toBe('extended')
       expect(opts.clickToPlacePin.value).toBe(false)
       expect(opts.showBurgerMenu.value).toBe(true)
     })
@@ -89,8 +86,7 @@ describe('useGraphRenderOptions', () => {
         vertical_axis_width: 'fixed',
         show_graph_time: false,
         show_margin: false,
-        show_legend: true,
-        legend_style: 'compact',
+        legend: 'compact',
         show_pin: true,
         show_controls: false
       })
@@ -110,12 +106,10 @@ describe('useGraphRenderOptions', () => {
       const opts = useGraphRenderOptions(undefined, true)
 
       opts.horizontalAxis.value = false
-      opts.graphLegend.value = false
-      opts.graphLegendStyle.value = 'extended'
+      opts.graphLegend.value = 'extended'
 
       expect(opts.graphRenderOptions.value.show_time_axis).toBe(false)
-      expect(opts.graphRenderOptions.value.show_legend).toBe(false)
-      expect(opts.graphRenderOptions.value.legend_style).toBe('extended')
+      expect(opts.graphRenderOptions.value.legend).toBe('extended')
     })
 
     it('should update vertical_axis_width when switching mode and size', () => {

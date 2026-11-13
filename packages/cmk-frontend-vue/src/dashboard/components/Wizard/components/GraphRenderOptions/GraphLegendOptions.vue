@@ -8,21 +8,28 @@ import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import RadioButton from '@/dashboard/components/Wizard/components/RadioButton.vue'
-import type { GraphLegendStyle } from '@/dashboard/components/Wizard/types'
+import type { GraphLegend, GraphLegendStyle } from '@/dashboard/components/Wizard/types'
 
 const { _t } = usei18n()
 
-const showLegend = defineModel<boolean>('showLegend', { required: true })
-const legendStyle = defineModel<GraphLegendStyle>('legendStyle', { required: true })
+const legend = defineModel<GraphLegend>('legend', { required: true })
 
 const name = useId()
+const lastStyle = ref<GraphLegendStyle>(legend.value === 'none' ? 'compact' : legend.value)
+const showLegend = computed({
+  get: (): boolean => legend.value !== 'none',
+  set: (show: boolean) => {
+    legend.value = show ? lastStyle.value : 'none'
+  }
+})
 const style = computed({
-  get: (): string => legendStyle.value,
+  get: (): string => (legend.value === 'none' ? lastStyle.value : legend.value),
   set: (value: string) => {
-    legendStyle.value = value === 'extended' ? 'extended' : 'compact'
+    lastStyle.value = value === 'extended' ? 'extended' : 'compact'
+    legend.value = lastStyle.value
   }
 })
 </script>

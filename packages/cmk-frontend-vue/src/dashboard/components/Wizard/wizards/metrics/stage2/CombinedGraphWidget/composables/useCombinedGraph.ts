@@ -82,7 +82,6 @@ export const useCombinedGraph = async (
     timestamp,
     roundMargin,
     graphLegend,
-    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
     graphRenderOptions
@@ -181,7 +180,6 @@ export const useCombinedGraph = async (
     timestamp,
     roundMargin,
     graphLegend,
-    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
 

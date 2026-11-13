@@ -307,7 +307,6 @@ def default_widget_graph_render_options() -> WidgetGraphRenderOptions:
     return WidgetGraphRenderOptions(
         show_graph_time=False,
         show_margin=False,
-        show_legend=False,
         show_title=False,
         show_controls=False,
         show_time_range_previews=False,

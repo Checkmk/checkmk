@@ -169,7 +169,7 @@ class TestProblemGraphContent:
             {
                 "type": "problem_graph",
                 "timerange": {"type": "predefined", "value": "last_25_hours"},
-                "graph_render_options": {"show_legend": False},
+                "graph_render_options": {"legend": "none"},
             },
         )
 
@@ -430,18 +430,16 @@ class TestAverageScatterplotContent:
                             "metric_color": "default",
                             "average_color": "default",
                             "median_color": "default",
-                            "show_legend": True,
-                            "legend_style": "extended",
+                            "legend": "extended",
                         }
                     )
                 },
             )
         )
         widget = next(iter(resp.json["extensions"]["widgets"].values()))
-        assert widget["content"]["show_legend"] is True
-        assert widget["content"]["legend_style"] == "extended"
+        assert widget["content"]["legend"] == "extended"
 
-    def test_leaves_an_omitted_legend_out(self, clients: ClientRegistry) -> None:
+    def test_shows_no_legend_if_omitted(self, clients: ClientRegistry) -> None:
         resp = clients.DashboardClient.create_relative_grid_dashboard(
             create_dashboard_payload(
                 "test_dashboard",
@@ -461,10 +459,9 @@ class TestAverageScatterplotContent:
             )
         )
         widget = next(iter(resp.json["extensions"]["widgets"].values()))
-        assert "show_legend" not in widget["content"]
-        assert "legend_style" not in widget["content"]
+        assert widget["content"]["legend"] == "none"
 
-    def test_rejects_an_unknown_legend_style(self, clients: ClientRegistry) -> None:
+    def test_rejects_an_unknown_legend(self, clients: ClientRegistry) -> None:
         resp = clients.DashboardClient.create_relative_grid_dashboard(
             create_dashboard_payload(
                 "test_dashboard",
@@ -478,7 +475,7 @@ class TestAverageScatterplotContent:
                             "metric_color": "default",
                             "average_color": "default",
                             "median_color": "default",
-                            "legend_style": "huge",
+                            "legend": "huge",
                         }
                     )
                 },

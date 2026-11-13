@@ -16,8 +16,7 @@ const requiredProps = {
   fixedVerticalAxisWidth: 8,
   timestamp: false,
   roundMargin: false,
-  graphLegend: false,
-  graphLegendStyle: 'compact' as const,
+  graphLegend: 'none' as const,
   clickToPlacePin: true,
   showBurgerMenu: false
 }
@@ -54,31 +53,54 @@ describe('GraphRenderOptions', () => {
   })
 
   describe('legend', () => {
-    it('emits update:graphLegend when the legend is switched on', async () => {
+    it('emits the compact legend when the legend is switched on', async () => {
       const user = userEvent.setup()
       const { emitted } = render(GraphRenderOptions, { props: { ...requiredProps } })
 
       await user.click(screen.getByRole('checkbox', { name: 'Show graph legend' }))
 
-      expect(emitted('update:graphLegend')).toEqual([[true]])
+      expect(emitted('update:graphLegend')).toEqual([['compact']])
+    })
+
+    it('emits no legend when the legend is switched off', async () => {
+      const user = userEvent.setup()
+      const { emitted } = render(GraphRenderOptions, {
+        props: { ...requiredProps, graphLegend: 'extended' }
+      })
+
+      await user.click(screen.getByRole('checkbox', { name: 'Show graph legend' }))
+
+      expect(emitted('update:graphLegend')).toEqual([['none']])
+    })
+
+    it('brings back the last style when the legend is switched on again', async () => {
+      const user = userEvent.setup()
+      const { emitted } = render(GraphRenderOptions, {
+        props: { ...requiredProps, graphLegend: 'extended' }
+      })
+
+      await user.click(screen.getByRole('checkbox', { name: 'Show graph legend' }))
+      await user.click(screen.getByRole('checkbox', { name: 'Show graph legend' }))
+
+      expect(emitted('update:graphLegend')).toEqual([['none'], ['extended']])
     })
 
     it('offers compact and extended while the legend is shown', () => {
-      render(GraphRenderOptions, { props: { ...requiredProps, graphLegend: true } })
+      render(GraphRenderOptions, { props: { ...requiredProps, graphLegend: 'compact' } })
 
       expect(screen.getByRole('radio', { name: 'Compact' })).toBeChecked()
       expect(screen.getByRole('radio', { name: 'Extended' })).not.toBeChecked()
     })
 
-    it('emits update:graphLegendStyle when extended is chosen', async () => {
+    it('emits the extended legend when extended is chosen', async () => {
       const user = userEvent.setup()
       const { emitted } = render(GraphRenderOptions, {
-        props: { ...requiredProps, graphLegend: true }
+        props: { ...requiredProps, graphLegend: 'compact' }
       })
 
       await user.click(screen.getByRole('radio', { name: 'Extended' }))
 
-      expect(emitted('update:graphLegendStyle')).toEqual([['extended']])
+      expect(emitted('update:graphLegend')).toEqual([['extended']])
     })
   })
 })

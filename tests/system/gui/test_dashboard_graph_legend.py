@@ -260,9 +260,9 @@ def _graph_dashboard(
     dashboard_id: str,
     title: str,
     widget_title: str,
-    legend_style: str,
+    legend: str,
 ) -> Iterator[None]:
-    """A dashboard of one template graph widget on the legend style, following the dashboard's
+    """A dashboard of one template graph widget with the legend, following the dashboard's
     time range.
 
     Built through the REST API: the wizard is not what is under test here. Shared with all
@@ -277,7 +277,7 @@ def _graph_dashboard(
             "type": "performance_graph",
             "contextual_link": {"type": "none"},
             "timerange": "dashboard",
-            "graph_render_options": {"show_legend": True, "legend_style": legend_style},
+            "graph_render_options": {"legend": legend},
             "source": graph.graph_id,
         },
         "filters": {"host": {"host": host_name}, "service": {"service": SERVICE_WITH_GRAPHS}},
@@ -352,7 +352,7 @@ def fixture_compact_legend_dashboard(
         dashboard_id=_COMPACT_DASHBOARD_ID,
         title=_COMPACT_DASHBOARD_TITLE,
         widget_title=_COMPACT_WIDGET_TITLE,
-        legend_style="compact",
+        legend="compact",
     ):
         yield _open_dashboard(
             dashboard_page, test_site, _COMPACT_DASHBOARD_ID, _COMPACT_DASHBOARD_TITLE
@@ -373,7 +373,7 @@ def fixture_extended_legend_dashboard(
         dashboard_id=_EXTENDED_DASHBOARD_ID,
         title=_EXTENDED_DASHBOARD_TITLE,
         widget_title=_EXTENDED_WIDGET_TITLE,
-        legend_style="extended",
+        legend="extended",
     ):
         yield
 

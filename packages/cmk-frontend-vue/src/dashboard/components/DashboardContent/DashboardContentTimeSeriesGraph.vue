@@ -326,12 +326,7 @@ const graphRenderOptions = computed(() => {
 const legendOptions = computed(() =>
   props.content.type === 'average_scatterplot' ? props.content : graphRenderOptions.value
 )
-const legend = computed((): GraphFigureLegend => {
-  if (!(legendOptions.value?.show_legend ?? false)) {
-    return 'none'
-  }
-  return legendOptions.value?.legend_style ?? 'compact'
-})
+const legend = computed((): GraphFigureLegend => legendOptions.value?.legend ?? 'none')
 const showTimestamp = computed(() => graphRenderOptions.value?.show_graph_time ?? false)
 const showPin = computed(
   () => props.isPreview !== true && (graphRenderOptions.value?.show_pin ?? true)

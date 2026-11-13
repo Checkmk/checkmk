@@ -23,7 +23,7 @@ from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
 from cmk.gui.dashboard.api.model.widget_content.graph import EmbeddedCustomGraphContent
 from cmk.gui.dashboard.api.model.widget_content.url import URLContent
 from cmk.gui.dashboard.dashlet.dashlets.custom_url import URLDashletConfig
-from cmk.gui.dashboard.type_defs import EmbeddedCustomGraphDashletConfig
+from cmk.gui.dashboard.type_defs import EmbeddedCustomGraphDashletConfig, GraphLegend
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.views.icon.registry import all_icons
@@ -540,16 +540,16 @@ class TestPerformanceGraphContent:
         )
 
     @pytest.mark.parametrize(
-        "legend",
+        ("render_options", "expected"),
         [
-            pytest.param({"show_legend": False}, id="no_legend"),
-            pytest.param({"show_legend": True, "legend_style": "compact"}, id="compact"),
-            pytest.param({"show_legend": True, "legend_style": "extended"}, id="extended"),
-            pytest.param({"show_legend": True}, id="shown_without_a_style"),
+            pytest.param({}, "none", id="omitted"),
+            pytest.param({"legend": "none"}, "none", id="none"),
+            pytest.param({"legend": "compact"}, "compact", id="compact"),
+            pytest.param({"legend": "extended"}, "extended", id="extended"),
         ],
     )
-    def test_stores_the_legend_as_sent(
-        self, clients: ClientRegistry, legend: dict[str, object]
+    def test_stores_the_legend_with_none_as_the_default(
+        self, clients: ClientRegistry, render_options: dict[str, object], expected: GraphLegend
     ) -> None:
         clients.DashboardClient.create_relative_grid_dashboard(
             create_dashboard_payload(
@@ -560,7 +560,7 @@ class TestPerformanceGraphContent:
                             "type": "performance_graph",
                             "contextual_link": {"type": "none"},
                             "timerange": {"type": "predefined", "value": "last_25_hours"},
-                            "graph_render_options": legend,
+                            "graph_render_options": render_options,
                             "source": "active_sessions",
                         }
                     )
@@ -571,15 +571,9 @@ class TestPerformanceGraphContent:
         resp = clients.DashboardClient.get_relative_grid_dashboard("test_dashboard")
 
         widget = next(iter(resp.json["extensions"]["widgets"].values()))
-        render_options = widget["content"]["graph_render_options"]
-        stored = {
-            key: render_options[key]
-            for key in ("show_legend", "legend_style")
-            if key in render_options
-        }
-        assert stored == legend
+        assert widget["content"]["graph_render_options"]["legend"] == expected
 
-    def test_rejects_an_unknown_legend_style(self, clients: ClientRegistry) -> None:
+    def test_rejects_an_unknown_legend(self, clients: ClientRegistry) -> None:
         resp = clients.DashboardClient.create_relative_grid_dashboard(
             create_dashboard_payload(
                 "test_dashboard",
@@ -589,7 +583,7 @@ class TestPerformanceGraphContent:
                             "type": "performance_graph",
                             "contextual_link": {"type": "none"},
                             "timerange": {"type": "predefined", "value": "last_25_hours"},
-                            "graph_render_options": {"legend_style": "huge"},
+                            "graph_render_options": {"legend": "huge"},
                             "source": "active_sessions",
                         }
                     )

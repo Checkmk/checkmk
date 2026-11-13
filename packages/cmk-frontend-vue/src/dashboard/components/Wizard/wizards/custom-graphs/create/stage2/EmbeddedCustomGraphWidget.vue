@@ -106,7 +106,6 @@ watch(
       v-model:timestamp="handler.renderOptions.timestamp.value"
       v-model:round-margin="handler.renderOptions.roundMargin.value"
       v-model:graph-legend="handler.renderOptions.graphLegend.value"
-      v-model:graph-legend-style="handler.renderOptions.graphLegendStyle.value"
       v-model:click-to-place-pin="handler.renderOptions.clickToPlacePin.value"
       v-model:show-burger-menu="handler.renderOptions.showBurgerMenu.value"
     >

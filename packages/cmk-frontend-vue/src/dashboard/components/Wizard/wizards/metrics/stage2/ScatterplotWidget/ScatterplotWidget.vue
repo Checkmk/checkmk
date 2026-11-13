@@ -98,10 +98,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
       <TableFormRow>
         <FieldDescription>{{ _t('Legend') }}</FieldDescription>
         <FieldComponent>
-          <GraphLegendOptions
-            v-model:show-legend="handler.graphLegend.value"
-            v-model:legend-style="handler.graphLegendStyle.value"
-          />
+          <GraphLegendOptions v-model:legend="handler.graphLegend.value" />
         </FieldComponent>
       </TableFormRow>
     </TableForm>

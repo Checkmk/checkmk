@@ -16,7 +16,7 @@ from cmk.gui.dashboard.store import (
     MaybeOldDashboardConfig,
     migrate_dashboard_config,
 )
-from cmk.gui.dashboard.type_defs import ViewDashletConfig
+from cmk.gui.dashboard.type_defs import GraphLegend, ViewDashletConfig
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec, ViewSpec
 from cmk.gui.views.store import ViewStore
 
@@ -663,6 +663,128 @@ class TestMigrateGraphTimeRange:
         result = migrate_dashboard_config(dashboard)
 
         assert result["widgets"]["w1"]["timerange"] == time_range  # type: ignore[typeddict-item]
+
+
+class TestMigrateGraphLegend:
+    @pytest.mark.parametrize("style", ["compact", "extended"])
+    def test_a_shown_legend_keeps_its_style(self, style: GraphLegend) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": "combined_graph",
+                "timerange": {"type": "dashboard"},
+                "graph_render_options": {
+                    "show_legend": True,
+                    "legend_style": style,
+                    "show_pin": True,
+                },
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["graph_render_options"] == {  # type: ignore[typeddict-item]
+            "legend": style,
+            "show_pin": True,
+        }
+
+    @pytest.mark.parametrize("widget_type", ["pnpgraph", "custom_graph"])
+    def test_a_shown_legend_without_a_style_is_compact(self, widget_type: str) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": widget_type,
+                "timerange": {"type": "dashboard"},
+                "graph_render_options": {"show_legend": True},
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["graph_render_options"] == {"legend": "compact"}  # type: ignore[typeddict-item]
+
+    def test_a_hidden_legend_becomes_none(self) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": "single_timeseries",
+                "timerange": {"type": "dashboard"},
+                "graph_render_options": {"show_legend": False, "legend_style": "extended"},
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["graph_render_options"] == {"legend": "none"}  # type: ignore[typeddict-item]
+
+    def test_a_migrated_legend_stays_unchanged(self) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": "problem_graph",
+                "timerange": {"type": "dashboard"},
+                "graph_render_options": {"legend": "compact"},
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["graph_render_options"] == {"legend": "compact"}  # type: ignore[typeddict-item]
+
+    @pytest.mark.parametrize("widget_type", ["custom_graph", "combined_graph"])
+    def test_a_top_level_legend_moves_into_the_render_options(self, widget_type: str) -> None:
+        dashboard = _responsive_dashboard({"type": widget_type, "show_legend": True})
+
+        result = migrate_dashboard_config(dashboard)
+
+        widget = result["widgets"]["w1"]
+        assert "show_legend" not in widget
+        assert widget["graph_render_options"] == {"legend": "compact"}  # type: ignore[typeddict-item]
+
+    def test_a_top_level_legend_replaces_the_render_option(self) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": "custom_graph",
+                "custom_graph": "my_graph",
+                "show_legend": False,
+                "graph_render_options": {"show_legend": True, "show_pin": True},
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["graph_render_options"] == {  # type: ignore[typeddict-item]
+            "legend": "none",
+            "show_pin": True,
+        }
+
+
+class TestMigrateScatterplotLegend:
+    @pytest.mark.parametrize(
+        ("legend_settings", "expected"),
+        [
+            pytest.param(
+                {"show_legend": True, "legend_style": "extended"},
+                {"legend": "extended"},
+                id="extended",
+            ),
+            pytest.param({"show_legend": True}, {"legend": "compact"}, id="shown_without_a_style"),
+            pytest.param(
+                {"show_legend": False, "legend_style": "extended"}, {"legend": "none"}, id="hidden"
+            ),
+            pytest.param({}, {}, id="never_set"),
+        ],
+    )
+    def test_the_legend_settings_become_the_legend(
+        self, legend_settings: dict[str, object], expected: dict[str, object]
+    ) -> None:
+        dashboard = _responsive_dashboard(
+            {"type": "average_scatterplot", "time_range": {"type": "dashboard"}, **legend_settings}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert {
+            key: value
+            for key, value in result["widgets"]["w1"].items()
+            if key in ("legend", "show_legend", "legend_style")
+        } == expected
 
 
 class TestMigrateTimelineTimeRange:

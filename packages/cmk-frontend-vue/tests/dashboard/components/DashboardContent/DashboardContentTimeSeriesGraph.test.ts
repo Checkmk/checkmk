@@ -83,7 +83,7 @@ const CUSTOM_GRAPH_CONTENT: CustomGraphContent = {
   type: 'custom_graph',
   custom_graph: 'my_graph',
   timerange: { type: 'predefined', value: 'last_25_hours' },
-  graph_render_options: { show_legend: true, show_graph_time: false }
+  graph_render_options: { legend: 'compact', show_graph_time: false }
 }
 
 const baseProps = makeContentProps(CUSTOM_GRAPH_CONTENT, {
@@ -185,7 +185,7 @@ const EMBEDDED_CUSTOM_GRAPH_CONTENT: EmbeddedCustomGraphContent = {
   type: 'embedded_custom_graph',
   definition: DEFINITION,
   timerange: { type: 'predefined', value: 'last_25_hours' },
-  graph_render_options: { show_legend: true, show_graph_time: false }
+  graph_render_options: { legend: 'compact', show_graph_time: false }
 }
 
 describe('custom graph widget with an embedded definition', () => {
@@ -257,7 +257,7 @@ describe('graph render options', () => {
 
   test('shows both axes when the widget stores no axis options', async () => {
     renderWidget({
-      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: true } }
+      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { legend: 'compact' } }
     })
 
     const figure = await screen.findByTestId('graph-figure')
@@ -275,7 +275,7 @@ describe('graph render options', () => {
   })
 
   test('a widget storing no margin option leaves the figure flush', async () => {
-    const marginUnset = { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: true } }
+    const marginUnset = { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { legend: 'compact' } }
 
     renderWidget({ content: marginUnset })
 
@@ -288,39 +288,25 @@ describe('the legend of a graph widget', () => {
   const legendOf = async () =>
     (await screen.findByTestId('graph-figure')).getAttribute('data-legend')
 
-  test('is compact when shown without a stored style', async () => {
+  test('follows the stored legend', async () => {
     renderWidget({
-      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: true } }
-    })
-
-    expect(await legendOf()).toBe('compact')
-  })
-
-  test('follows the stored style', async () => {
-    renderWidget({
-      content: {
-        ...CUSTOM_GRAPH_CONTENT,
-        graph_render_options: { show_legend: true, legend_style: 'extended' }
-      }
+      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { legend: 'extended' } }
     })
 
     expect(await legendOf()).toBe('extended')
   })
 
-  test('is not drawn while switched off, whatever the stored style', async () => {
+  test('is not drawn for a widget stored without a legend', async () => {
     renderWidget({
-      content: {
-        ...CUSTOM_GRAPH_CONTENT,
-        graph_render_options: { show_legend: false, legend_style: 'extended' }
-      }
+      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: {} }
     })
 
     expect(await legendOf()).toBe('none')
   })
 
-  test('of a scatterplot follows the options on its content', async () => {
+  test('of a scatterplot follows the legend on its content', async () => {
     renderWidget({
-      content: { ...SCATTERPLOT_CONTENT, show_legend: true, legend_style: 'extended' }
+      content: { ...SCATTERPLOT_CONTENT, legend: 'extended' }
     })
 
     expect(await legendOf()).toBe('extended')
@@ -337,10 +323,7 @@ describe('the legend of a graph widget', () => {
   test('makes the widget preview scrollable', async () => {
     renderWidget({
       isPreview: true,
-      content: {
-        ...CUSTOM_GRAPH_CONTENT,
-        graph_render_options: { show_legend: true, legend_style: 'extended' }
-      }
+      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { legend: 'extended' } }
     })
 
     await screen.findByTestId('graph-figure')
@@ -350,7 +333,7 @@ describe('the legend of a graph widget', () => {
   test('leaves the widget preview unscrolled while switched off', async () => {
     renderWidget({
       isPreview: true,
-      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: false } }
+      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { legend: 'none' } }
     })
 
     await screen.findByTestId('graph-figure')

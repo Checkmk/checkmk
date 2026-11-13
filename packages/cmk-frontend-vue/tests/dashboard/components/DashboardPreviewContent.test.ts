@@ -52,11 +52,11 @@ describe('DashboardPreviewContent', () => {
   })
 
   it.each([
-    { legendStyle: 'extended', scrolls: true },
-    { legendStyle: 'compact', scrolls: false }
+    { legend: 'extended', scrolls: true },
+    { legend: 'compact', scrolls: false }
   ] as const)(
-    'scrolls a scatterplot preview with a $legendStyle legend: $scrolls',
-    async ({ legendStyle, scrolls }) => {
+    'scrolls a scatterplot preview with a $legend legend: $scrolls',
+    async ({ legend, scrolls }) => {
       vi.spyOn(client, 'POST').mockResolvedValue({
         data: {
           graphs: [{ internal: '{"graphs": []}', title: 'Scatterplot' }],
@@ -72,8 +72,7 @@ describe('DashboardPreviewContent', () => {
         metric_color: 'default',
         average_color: 'default',
         median_color: 'default',
-        show_legend: true,
-        legend_style: legendStyle,
+        legend,
         contextual_link: { type: 'none' }
       })
 

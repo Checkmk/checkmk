@@ -812,7 +812,6 @@ class RowShading(TypedDict):
 
 
 GraphTitleFormatVS = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
-GraphLegendStyle = Literal["compact", "extended"]
 
 
 class GraphRenderOptionsVS(TypedDict, total=False):

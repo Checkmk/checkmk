@@ -12,7 +12,6 @@ from cmk.gui.type_defs import (
     ContextualLinkLocationConfig,
     DashboardEmbeddedViewSpec,
     FilterName,
-    GraphLegendStyle,
     GraphPresentation,
     GraphTitleFormatVS,
     InventoryJoinMacrosSpec,
@@ -97,11 +96,13 @@ class DashboardWindow(TypedDict):
     type: Literal["dashboard"]
 
 
+type GraphLegend = Literal["none", "compact", "extended"]
+
+
 class WidgetGraphRenderOptions(TypedDict, total=False):
-    legend_style: GraphLegendStyle
+    legend: GraphLegend
     show_controls: bool
     show_graph_time: bool
-    show_legend: bool
     show_margin: bool
     show_pin: bool
     show_time_axis: bool
@@ -134,10 +135,6 @@ class SingleTimeseriesDashletConfig(ABCGraphDashletConfig):
 
 class CustomGraphDashletConfig(ABCGraphDashletConfig):
     custom_graph: str
-    # Seems to be some old option which is still referenced by some migration code.
-    # See CustomGraphDashlet._migrate_show_legend_to_graph_render_options for additional information
-    # TODO: Investigate whether there is/was migration code in place and if this can be removed
-    show_legend: NotRequired[bool]
 
 
 class EmbeddedCustomGraphDashletConfig(ABCGraphDashletConfig):
@@ -199,8 +196,7 @@ class AverageScatterplotDashletConfig(DashletConfig):
     metric_color: str | None
     avg_color: str | None
     median_color: str | None
-    show_legend: NotRequired[bool]
-    legend_style: NotRequired[GraphLegendStyle]
+    legend: NotRequired[GraphLegend]
     contextual_link: NotRequired[ContextualLinkConfig]
 
 

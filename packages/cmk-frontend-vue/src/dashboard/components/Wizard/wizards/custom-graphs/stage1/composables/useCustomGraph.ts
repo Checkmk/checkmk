@@ -82,7 +82,6 @@ export const useCustomGraph = async (
     timestamp,
     roundMargin,
     graphLegend,
-    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
     graphRenderOptions
@@ -182,7 +181,6 @@ export const useCustomGraph = async (
     timestamp,
     roundMargin,
     graphLegend,
-    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
 

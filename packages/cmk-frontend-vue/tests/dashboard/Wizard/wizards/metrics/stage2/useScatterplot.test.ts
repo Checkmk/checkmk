@@ -99,22 +99,19 @@ describe('useScatterplot', () => {
   it('submits a compact legend for a new widget', async () => {
     const content = await submittedContent(await openScatterplot())
 
-    expect(content.show_legend).toBe(true)
-    expect(content.legend_style).toBe('compact')
+    expect(content.legend).toBe('compact')
   })
 
   it('keeps a widget stored before the legend existed without one', async () => {
     const content = await submittedContent(await openScatterplot(STORED))
 
-    expect(content.show_legend).toBe(false)
+    expect(content.legend).toBe('none')
   })
 
   it('keeps the stored legend style of an edited widget', async () => {
-    const content = await submittedContent(
-      await openScatterplot({ ...STORED, show_legend: true, legend_style: 'extended' })
-    )
+    const content = await submittedContent(await openScatterplot({ ...STORED, legend: 'extended' }))
 
-    expect(content.legend_style).toBe('extended')
+    expect(content.legend).toBe('extended')
   })
 
   it('follows the dashboard time range for a new widget', async () => {

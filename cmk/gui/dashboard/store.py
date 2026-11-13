@@ -8,9 +8,9 @@
 
 import time
 import uuid
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from functools import partial
-from typing import Any, cast, NotRequired
+from typing import Any, cast, Literal, NotRequired
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.user import UserId
@@ -281,6 +281,8 @@ def _migrate_widget(widget: DashletConfig, owner: UserId | None) -> DashletConfi
         _migrate_metric_time_range,
         partial(_migrate_inventory_link, owner=owner),
         migrate_widget_time_range,
+        _migrate_graph_legend,
+        _migrate_scatterplot_legend,
         _migrate_alert_overview_time_range,
         _migrate_timeline_time_range,
         _clamp_timeline_window,
@@ -375,6 +377,44 @@ def _migrate_graph_time_range(widget: DashletConfig) -> DashletConfig:
         DashletConfig,
         {**widget, "timerange": time_range, "graph_render_options": render_options},
     )
+
+
+_FORMER_LEGEND_KEYS = frozenset({"show_legend", "legend_style"})
+
+
+def _migrate_graph_legend(widget: DashletConfig) -> DashletConfig:
+    if widget["type"] not in _GRAPH_TYPES:
+        return widget
+    raw = dict(cast(dict[str, object], widget))
+    render_options = dict(cast(dict[str, object], raw.get("graph_render_options") or {}))
+    if "show_legend" in raw:
+        render_options["show_legend"] = raw.pop("show_legend")
+    if not render_options.keys() & _FORMER_LEGEND_KEYS:
+        return widget
+    return cast(
+        DashletConfig,
+        {**raw, "graph_render_options": _with_legend(render_options, unstyled="compact")},
+    )
+
+
+def _migrate_scatterplot_legend(widget: DashletConfig) -> DashletConfig:
+    raw = cast(dict[str, object], widget)
+    if widget["type"] != "average_scatterplot" or not raw.keys() & _FORMER_LEGEND_KEYS:
+        return widget
+    return cast(DashletConfig, _with_legend(raw, unstyled="compact"))
+
+
+def _with_legend(
+    options: Mapping[str, object], unstyled: Literal["compact", "extended"]
+) -> dict[str, object]:
+    migrated = {key: value for key, value in options.items() if key not in _FORMER_LEGEND_KEYS}
+    if options.get("show_legend") is not True:
+        return {**migrated, "legend": "none"}
+    match options.get("legend_style"):
+        case "compact" | "extended" as style:
+            return {**migrated, "legend": style}
+        case _:
+            return {**migrated, "legend": unstyled}
 
 
 def _migrate_timeline_time_range(widget: DashletConfig) -> DashletConfig:

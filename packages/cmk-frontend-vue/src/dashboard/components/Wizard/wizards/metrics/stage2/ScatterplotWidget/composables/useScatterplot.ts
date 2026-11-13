@@ -79,10 +79,7 @@ export const useScatterplot = async (
     currentContent?.median_color
   )
 
-  const { graphLegend, graphLegendStyle } = useGraphLegend(
-    currentContent ?? undefined,
-    currentContent === null
-  )
+  const { graphLegend } = useGraphLegend(currentContent ?? undefined, currentContent === null)
 
   const contextualLink = useContextualLink<ScatterplotContent>(
     constants.widgets[CONTENT_TYPE]!.contextual_link!,
@@ -106,8 +103,7 @@ export const useScatterplot = async (
       average_color:
         averageColor.value === 'default' ? 'default' : averageColor.value.toUpperCase(),
       median_color: medianColor.value === 'default' ? 'default' : medianColor.value.toUpperCase(),
-      show_legend: graphLegend.value,
-      legend_style: graphLegendStyle.value,
+      legend: graphLegend.value,
       contextual_link: contextualLink.contextualLink.value ?? { type: 'none' }
     }
   }
@@ -144,8 +140,7 @@ export const useScatterplot = async (
       metricColor,
       averageColor,
       medianColor,
-      graphLegend,
-      graphLegendStyle
+      graphLegend
     ],
     useDebounceFn(() => {
       void _updateWidgetProps()
@@ -173,7 +168,6 @@ export const useScatterplot = async (
     medianColor,
 
     graphLegend,
-    graphLegendStyle,
 
     titleUrlValidationErrors,
     titleMacros,

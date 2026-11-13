@@ -14,6 +14,7 @@ from cmk.gui.dashboard.type_defs import (
     AverageScatterplotDashletConfig,
     BarplotDashletConfig,
     GaugeDashletConfig,
+    GraphLegend,
     MetricCurrentValue,
     MetricDashboardWindow,
     MetricDisplayRangeFixed,
@@ -34,7 +35,6 @@ from cmk.gui.openapi.framework.model.common_fields import (
     timerange_from_internal,
     TimerangeModel,
 )
-from cmk.gui.type_defs import GraphLegendStyle
 
 from ..context_filters import (
     OBJECT_SERVICE_FILTER_ADAPTER,
@@ -406,13 +406,9 @@ class AverageScatterplotContent(_BaseMetricContent):
     metric_color: DefaultOrColor = api_field(description="Color of the scattered dots.")
     average_color: DefaultOrColor = api_field(description="Color of the average.")
     median_color: DefaultOrColor = api_field(description="Color of the median.")
-    show_legend: bool | ApiOmitted = api_field(
-        description="Show the graph legend. Defaults to false.",
-        default_factory=ApiOmitted,
-    )
-    legend_style: GraphLegendStyle | ApiOmitted = api_field(
-        description="How the legend is drawn when show_legend is set: compact names the series in "
-        "a single row, extended lists them in a table with their statistics. Defaults to compact.",
+    legend: GraphLegend | ApiOmitted = api_field(
+        description="The graph legend: none draws no legend, compact names the series in a single "
+        "row, extended lists them in a table with their statistics. Defaults to none.",
         default_factory=ApiOmitted,
     )
     contextual_link: TargetlessContextualLinkSpec[ObjectServiceContextFilter] = api_field(
@@ -433,8 +429,7 @@ class AverageScatterplotContent(_BaseMetricContent):
             metric_color=config.get("metric_color") or "default",
             average_color=config.get("avg_color") or "default",
             median_color=config.get("median_color") or "default",
-            show_legend=config.get("show_legend", ApiOmitted()),
-            legend_style=config.get("legend_style", ApiOmitted()),
+            legend=config.get("legend", "none"),
             contextual_link=targetless_contextual_link_from_internal(
                 config.get("contextual_link"), OBJECT_SERVICE_FILTER_ADAPTER
             ),
@@ -450,10 +445,8 @@ class AverageScatterplotContent(_BaseMetricContent):
             avg_color=self.average_color,
             median_color=self.median_color,
         )
-        if not isinstance(self.show_legend, ApiOmitted):
-            config["show_legend"] = self.show_legend
-        if not isinstance(self.legend_style, ApiOmitted):
-            config["legend_style"] = self.legend_style
+        if not isinstance(self.legend, ApiOmitted):
+            config["legend"] = self.legend
         if (link := contextual_link_to_internal(self.contextual_link)) is not None:
             config["contextual_link"] = link
         return config

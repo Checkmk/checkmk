@@ -19,7 +19,7 @@ import TableForm from '@/dashboard/components/Wizard/components/TableForm/TableF
 import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
 import type {
   CombinedGraphContentPresentation,
-  GraphLegendStyle
+  GraphLegend
 } from '@/dashboard/components/Wizard/types'
 
 import ColorSelector from '../ColorSelector/ColorSelector.vue'
@@ -48,8 +48,7 @@ const presentation = defineModel<CombinedGraphContentPresentation>('presentation
 const color = defineModel<string>('color', { required: false, default: undefined })
 const timestamp = defineModel<boolean>('timestamp', { required: true })
 const roundMargin = defineModel<boolean>('roundMargin', { required: true })
-const graphLegend = defineModel<boolean>('graphLegend', { required: true })
-const graphLegendStyle = defineModel<GraphLegendStyle>('graphLegendStyle', { required: true })
+const graphLegend = defineModel<GraphLegend>('graphLegend', { required: true })
 
 const clickToPlacePin = defineModel<boolean>('clickToPlacePin', { required: true })
 const showBurgerMenu = defineModel<boolean>('showBurgerMenu', { required: true })
@@ -149,10 +148,7 @@ const displayPresentation = computed(() => presentation.value !== undefined)
     <TableFormRow>
       <FieldDescription>{{ _t('Legend') }}</FieldDescription>
       <FieldComponent>
-        <GraphLegendOptions
-          v-model:show-legend="graphLegend"
-          v-model:legend-style="graphLegendStyle"
-        />
+        <GraphLegendOptions v-model:legend="graphLegend" />
       </FieldComponent>
     </TableFormRow>
 

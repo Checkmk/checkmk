@@ -80,7 +80,6 @@ export const usePerformanceGraph = async (
     timestamp,
     roundMargin,
     graphLegend,
-    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
     graphRenderOptions
@@ -172,7 +171,6 @@ export const usePerformanceGraph = async (
     timestamp,
     roundMargin,
     graphLegend,
-    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
 

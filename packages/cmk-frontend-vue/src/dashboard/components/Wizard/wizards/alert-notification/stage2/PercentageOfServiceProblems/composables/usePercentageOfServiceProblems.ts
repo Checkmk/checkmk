@@ -74,7 +74,6 @@ export const usePercentageOfServiceProblems = async (
     timestamp,
     roundMargin,
     graphLegend,
-    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
     graphRenderOptions
@@ -131,7 +130,6 @@ export const usePercentageOfServiceProblems = async (
       timestamp,
       roundMargin,
       graphLegend,
-      graphLegendStyle,
       clickToPlacePin,
       showBurgerMenu
     ],
@@ -166,7 +164,6 @@ export const usePercentageOfServiceProblems = async (
     timestamp,
     roundMargin,
     graphLegend,
-    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
 

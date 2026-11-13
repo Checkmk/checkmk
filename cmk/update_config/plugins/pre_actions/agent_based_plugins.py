@@ -26,7 +26,6 @@ from cmk.update_config.plugins.pre_actions.utils import (
     AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX,
     disable_incomp_mkp,
     get_installer_and_package_map,
-    is_applicable_mkp,
     make_path_config,
     PACKAGE_STORE,
 )
@@ -52,12 +51,10 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
         installer, package_map = get_installer_and_package_map(path_config)
         # group the local_agent_based_plugins_dir files by package
         grouped_files: dict[PackageID, list[Path]] = {}
-        manifests: dict[PackageID, Manifest] = {}
         inactive_files_not_in_package = []
         for path in self._get_files():
             if (manifest := package_map.get(path.resolve())) is not None:
                 grouped_files.setdefault(manifest.id, []).append(path)
-                manifests[manifest.id] = manifest
             else:
                 inactive_files_not_in_package.append(path)
 
@@ -71,14 +68,6 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
                 raise MKUserError(None, "decommissioned file(s)")
 
         for package_id, paths in grouped_files.items():
-            if not is_applicable_mkp(manifests[package_id]):
-                logger.info(
-                    "[%(package_name)s %(package_version)s]: Ignoring problems "
-                    "(MKP will be disabled on target version)",
-                    {"package_name": package_id.name, "package_version": package_id.version},
-                )
-                continue
-
             _log_error_message_obsolete_files(logger, paths)
             logger.error(
                 "The above file(s) are part of the extension package "
@@ -107,8 +96,6 @@ class PluginProblems:
     by_local: Mapping[str, Sequence[str]]
     """Problems of unpackaged customizations, by local file or module"""
     shipped: Sequence[str]
-    outdated: Sequence[Manifest]
-    """Packages that will be disabled on the target version: their problems are moot"""
 
 
 @dataclass(frozen=True)
@@ -118,7 +105,6 @@ class _Origin:
     """The file, or the module if it can not be located"""
     manifest: Manifest | None
     is_local: bool
-    is_outdated: bool = False
 
 
 def find_plugin_problems(
@@ -133,11 +119,8 @@ def find_plugin_problems(
     So are modules we can not locate: shipped modules can always be located.
     Everything else is shipped.
     A name conflict concerns every customization involved, whichever plug-in is used.
-    Packages that will be disabled on the target version are not responsible for
-    anything, and a name conflict with them will be gone.
     """
     by_package: dict[PackageID, list[str]] = {}
-    outdated: dict[PackageID, Manifest] = {}
     by_local: dict[str, list[str]] = {}
     shipped: list[str] = []
 
@@ -150,16 +133,12 @@ def find_plugin_problems(
                 str(path),
                 manifest,
                 is_local=False,
-                is_outdated=not is_applicable_mkp(manifest),
             )
         if path.is_relative_to(local_root):
             return _Origin(f"local file {path}", str(path), None, is_local=True)
         return _Origin(f"shipped file {path}", str(path), None, is_local=False)
 
     def add(origins: Sequence[_Origin], message: str) -> None:
-        if moot := [o.manifest for o in origins if o.manifest is not None and o.is_outdated]:
-            outdated.update((m.id, m) for m in moot)
-            return
         # Both sides of a conflict may belong to the same culprit: report it only once.
         packages = {o.manifest.id for o in origins if o.manifest is not None}
         locals_ = {o.description for o in origins if o.manifest is None and o.is_local}
@@ -188,7 +167,6 @@ def find_plugin_problems(
         by_package=by_package,
         by_local=by_local,
         shipped=shipped,
-        outdated=list(outdated.values()),
     )
 
 
@@ -199,13 +177,6 @@ def report_plugin_problems(
 
     Continuing is not harmful: the site will load the plug-ins just like this.
     """
-    for manifest in problems.outdated:
-        logger.info(
-            "[%(package_name)s %(package_version)s]: Ignoring problems "
-            "(MKP will be disabled on target version)",
-            {"package_name": manifest.name, "package_version": manifest.version},
-        )
-
     # Nothing the user can fix: don't block the update.
     if problems.shipped:
         _log_problems(logger, logging.WARNING, "Checkmk", problems.shipped)

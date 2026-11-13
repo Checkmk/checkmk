@@ -28,7 +28,6 @@ from cmk.update_config.plugins.pre_actions.utils import (
     error_message_incomp_package,
     get_installer_and_package_map,
     GUI_PLUGINS_PREACTION_SORT_INDEX,
-    is_applicable_mkp,
     make_path_config,
     PACKAGE_STORE,
 )
@@ -64,14 +63,6 @@ class PreUpdateUIExtensions(PreUpdateAction):
                 raise MKUserError(None, "incompatible local file")
 
             if manifest.id in dealt_with_packages:
-                continue
-
-            if not is_applicable_mkp(manifest):
-                dealt_with_packages.add(manifest.id)
-                logger.info(
-                    "[%(manifest_name)s %(manifest_version)s]: Ignoring problems (MKP will be disabled on target version)",
-                    {"manifest_name": manifest.name, "manifest_version": manifest.version},
-                )
                 continue
 
             logger.error(error_message_incomp_package(path, manifest.id, error))

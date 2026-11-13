@@ -10,7 +10,6 @@ from typing import Final
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # astrein: disable=module-layers
-from cmk.ccc import version
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.gui.search import index as search_index
 from cmk.mkp_tool import (
@@ -156,23 +155,3 @@ def get_installer_and_package_map(
         for file in files
     }
     return installer, installed_files_package_map
-
-
-def is_applicable_mkp(manifest: Manifest) -> bool:
-    """Try to find out if this MKP is applicable to the version we upgrade to.
-    Assume yes if we can't find out.
-    """
-    target_version = version.Version.from_str(version.__version__)
-    try:
-        lower_bound_ok = target_version >= version.Version.from_str(manifest.version_min_required)
-    except ValueError:
-        lower_bound_ok = True
-
-    try:
-        upper_bound_ok = manifest.version_usable_until is None or (
-            version.Version.from_str(manifest.version_usable_until) > target_version
-        )
-    except ValueError:
-        upper_bound_ok = True
-
-    return lower_bound_ok and upper_bound_ok

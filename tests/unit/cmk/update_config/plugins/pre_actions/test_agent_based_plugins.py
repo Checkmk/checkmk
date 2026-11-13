@@ -33,16 +33,12 @@ OTHER_MKP_FILE = LOCAL_ROOT / "lib/python3/cmk_addons/plugins/openvpn_clients/ag
 LOCAL_MODULE = "cmk_addons.plugins.mine.agent_based.mine"
 LOCAL_FILE = LOCAL_ROOT / "lib/python3/cmk_addons/plugins/mine/agent_based/mine.py"
 
-OUTDATED_MKP_MODULE = "cmk_addons.plugins.openvpn_old.agent_based.openvpn_clients"
-OUTDATED_MKP_FILE = LOCAL_ROOT / "lib/python3/cmk_addons/plugins/openvpn_old/agent_based/x.py"
-
 MODULE_PATHS = {
     SHIPPED_MODULE: SHIPPED_FILE,
     OTHER_SHIPPED_MODULE: OTHER_SHIPPED_FILE,
     MKP_MODULE: MKP_FILE,
     OTHER_MKP_MODULE: OTHER_MKP_FILE,
     LOCAL_MODULE: LOCAL_FILE,
-    OUTDATED_MKP_MODULE: OUTDATED_MKP_FILE,
 }
 
 MANIFEST = Manifest(
@@ -55,9 +51,6 @@ MANIFEST = Manifest(
     author="someone",
     download_url="",
     files={},
-)
-OUTDATED_MANIFEST = MANIFEST.model_copy(
-    update={"name": PackageName("openvpn_old"), "version_usable_until": "2.0.0"}
 )
 
 
@@ -155,17 +148,6 @@ def test_error_of_a_package_names_the_file() -> None:
     assert problems.by_package == {MANIFEST.id: [f"bad section ({MKP_FILE})"]}
 
 
-def test_errors_of_a_package_that_will_be_disabled_are_not_reported() -> None:
-    problems = find_plugin_problems(
-        _plugins(errors_by_module={OUTDATED_MKP_MODULE: ["bad section"]}),
-        MODULE_PATHS.get,
-        {OUTDATED_MKP_FILE: OUTDATED_MANIFEST},
-        LOCAL_ROOT,
-    )
-
-    assert (problems.by_package, problems.outdated) == ({}, [OUTDATED_MANIFEST])
-
-
 def test_problems_of_one_unpackaged_local_file_are_grouped() -> None:
     problems = find_plugin_problems(
         _plugins(
@@ -196,17 +178,6 @@ def test_problems_of_a_module_that_can_not_be_located_are_reported_as_local() ->
     )
 
 
-def test_conflict_with_a_package_that_will_be_disabled_is_not_reported() -> None:
-    problems = find_plugin_problems(
-        _plugins(conflicts=[_conflict(OUTDATED_MKP_MODULE, MKP_MODULE)]),
-        MODULE_PATHS.get,
-        {MKP_FILE: MANIFEST, OUTDATED_MKP_FILE: OUTDATED_MANIFEST},
-        LOCAL_ROOT,
-    )
-
-    assert (problems.by_package, problems.outdated) == ({}, [OUTDATED_MANIFEST])
-
-
 def _problems(
     by_package: dict[PackageID, list[str]] | None = None,
     by_local: dict[str, list[str]] | None = None,
@@ -216,7 +187,6 @@ def _problems(
         by_package=by_package or {},
         by_local=by_local or {},
         shipped=shipped or [],
-        outdated=[],
     )
 
 

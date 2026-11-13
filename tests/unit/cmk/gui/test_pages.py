@@ -32,6 +32,7 @@ def test_registered_pages() -> None:
         "ajax_get_user_messages",
         "ajax_user_message_action",
         "ajax_dict_host_tag_condition_get_choice",
+        "ajax_enable_product_usage_analytics",
         "ajax_fetch_ca",
         "ajax_inv_render_tree",
         "ajax_nagvis_maps_snapin",

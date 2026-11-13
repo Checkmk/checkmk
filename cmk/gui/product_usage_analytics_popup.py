@@ -5,6 +5,7 @@
 
 import datetime
 from dataclasses import asdict, dataclass
+from typing import Final
 
 from cmk.ccc.site import url_prefix
 from cmk.gui.config import Config
@@ -12,6 +13,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, Response
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.product_usage_analytics.enable import may_change_the_setting, VARNAME
 from cmk.gui.site_config import (
     has_distributed_setup_remote_sites,
     is_distributed_setup_remote_site,
@@ -23,7 +25,7 @@ from cmk.gui.utils.product_usage_analytics_popup_cookie import (
     REMINDER_INTERVAL_SECONDS,
     set_user_product_usage_analytics_popup_cookie,
 )
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.product_usage.config import load_product_usage_config
 from cmk.shared_typing.product_usage_analytics import (
     ProductUsageAnalyticsConfig,
@@ -36,6 +38,8 @@ from cmk.utils import paths
 class ProductUsageAnalyticsConfigTyped(ProductUsageAnalyticsConfig): ...
 
 
+MANIFEST_URL: Final = "https://analytics.checkmk.com/manifest"
+
 __popup_enabled = True
 
 
@@ -47,11 +51,11 @@ def disable_product_usage_analytics_popup() -> None:
 def render_product_usage_analytics_popup(
     active_config: Config, user: LoggedInUser, request: Request, response: Response
 ) -> None:
-    # Show product usage analytics popup if user is admin and the site is a central site (in case of
-    # distributed setup) and has not decided about product usage analytics. We show the popup only
-    # after 30 days have passed since the first login. After that, we keep showing the popup on
-    # every page load until the user decides or defers the decision in the popup. Deferring resets
-    # the cookie in the browser.
+    # Show product usage analytics popup if the user may change the setting and the site is a
+    # central site (in case of distributed setup) and has not decided about product usage
+    # analytics. We show the popup only after 30 days have passed since the first login. After
+    # that, we keep showing the popup on every page load until the user decides or defers the
+    # decision in the popup. Deferring resets the cookie in the browser.
 
     is_not_distributed_setup = not has_distributed_setup_remote_sites(
         active_config.sites
@@ -63,7 +67,7 @@ def render_product_usage_analytics_popup(
     if not __popup_enabled:
         return
 
-    if "admin" in user.role_ids:
+    if may_change_the_setting(active_config, user):
         if is_not_distributed_setup or is_central_site_in_distributed_setup:
             if load_product_usage_config(paths.default_config_dir, logger).enabled == "not_decided":
                 popup_timestamp_cookie = product_usage_analytics_popup_timestamp_cookie(request)
@@ -84,8 +88,12 @@ def _show_popup(request: Request) -> None:
             ProductUsageAnalyticsConfigTyped(
                 global_settings_link=makeuri(
                     request,
-                    addvars=[("mode", "edit_configvar"), ("varname", "product_usage_analytics")],
+                    addvars=[("mode", "edit_configvar"), ("varname", VARNAME)],
                     filename="wato.py",
+                ),
+                manifest_link=MANIFEST_URL,
+                activate_changes_link=makeuri_contextless(
+                    request, [("mode", "changelog")], filename="wato.py"
                 ),
                 reminder_cookie=ReminderCookie(
                     name=COOKIE_NAME,

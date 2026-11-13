@@ -7,6 +7,7 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.permissions import PermissionRegistry
 from cmk.gui.product_usage_analytics import _permissions, global_config
 from cmk.gui.product_usage_analytics import download as product_usage_analytics_download_page
+from cmk.gui.product_usage_analytics import enable as product_usage_analytics_enable_page
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainRegistry,
     ConfigVariableGroupRegistry,
@@ -28,6 +29,7 @@ def register(
     replication_path_registry: ReplicationPathRegistry,
 ) -> None:
     product_usage_analytics_download_page.register(page_registry)
+    product_usage_analytics_enable_page.register(page_registry)
     _permissions.register(permission_registry)
     config_domain_registry.register(global_config.ConfigDomainProductUsageAnalytics())
     config_variable_group_registry.register(global_config.ConfigVariableGroupProductUsageAnalytics)

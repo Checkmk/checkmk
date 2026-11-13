@@ -65,13 +65,27 @@ cc_shared_library(
 cc_test(
     name = "test",
     size = "small",
-    srcs = glob([
-        "test/*.cc",
-        "test/*.h",
-    ]),
+    srcs = glob(
+        [
+            "test/*.cc",
+            "test/*.h",
+        ],
+        exclude = ["test/test_LogEntryAllocations.cc"],
+    ),
     deps = [
         ":livestatus_base",
         "@googletest//:gtest",
         "@re2",
+    ],
+)
+
+# A binary of its own, because it replaces the global operator new.
+cc_test(
+    name = "test_allocations",
+    size = "small",
+    srcs = ["test/test_LogEntryAllocations.cc"],
+    deps = [
+        ":livestatus_base",
+        "@googletest//:gtest_main",
     ],
 )

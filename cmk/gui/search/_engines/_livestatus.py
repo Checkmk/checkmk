@@ -58,7 +58,7 @@ Matches = tuple[str, list[HTTPVariable]] | None
 @dataclass
 class LivestatusResult:
     text_tokens: list[tuple[str, str]]
-    url: str
+    view_vars: list[HTTPVariable]
     row: Row
     display_text: str
     context: str = ""
@@ -448,13 +448,13 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             elements.append(
                 LivestatusResult(
                     text_tokens=text_tokens,
-                    url=build_url(url_tokens),
+                    view_vars=url_tokens,
                     row=row,
                     display_text="",  # Is created later by self._generate_display_texts
                 )
             )
 
-        return self._generate_display_texts(elements)
+        return self._generate_display_texts(elements, build_url)
 
     def _get_target_view(self, exact_match: bool = True) -> ViewName:
         if exact_match:
@@ -478,10 +478,16 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
         raise NotImplementedError
 
-    def _generate_display_texts(self, elements: list[LivestatusResult]) -> list[SearchResult]:
+    def _generate_display_texts(
+        self, elements: list[LivestatusResult], build_url: UrlBuilder
+    ) -> list[SearchResult]:
         """Creates the text displayed to the user
 
         Analyzes all display texts and ensures that we have unique ones"""
+
+        def url_of(element: LivestatusResult) -> str:
+            return build_url(element.view_vars)
+
         for element in elements:
             if self.livestatus_table == "services":
                 element.display_text = element.row["description"]
@@ -493,7 +499,8 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
                 if self._displays_host_address(element):
                     element.context = self._host_name_of(element)
             return [
-                SearchResult(title=e.display_text, url=e.url, context=e.context) for e in elements
+                SearchResult(title=e.display_text, url=url_of(e), context=e.context)
+                for e in elements
             ]
 
         # Some (ugly) special handling when the results are not unique
@@ -506,15 +513,15 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             for element in elements:
                 if element.display_text in used_groups:
                     continue
-                results.append(SearchResult(title=element.display_text, url=element.url))
+                results.append(SearchResult(title=element.display_text, url=url_of(element)))
                 used_groups.add(element.display_text)
             return results
 
         # Add additional info to the display text
         for element in elements:
             hostname = self._host_name_of(element)
-            if "&host_regex=" not in element.url:
-                element.url += "&host_regex=%s" % hostname
+            if all(name != "host_regex" for name, _value in element.view_vars):
+                element.view_vars.append(("host_regex", hostname))
 
             for shortname, text in element.text_tokens:
                 if shortname in ["h", "al"] and text not in element.display_text:
@@ -523,7 +530,9 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             else:
                 element.context = hostname
 
-        return [SearchResult(title=e.display_text, url=e.url, context=e.context) for e in elements]
+        return [
+            SearchResult(title=e.display_text, url=url_of(e), context=e.context) for e in elements
+        ]
 
     def _displays_host_address(self, element: LivestatusResult) -> bool:
         return (

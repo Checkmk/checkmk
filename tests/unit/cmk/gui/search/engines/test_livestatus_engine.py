@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from typing import override
-from urllib.parse import parse_qsl, urlsplit
+from urllib.parse import parse_qsl, urlencode, urlsplit
 
 import pytest
 from werkzeug.test import create_environ
@@ -35,6 +36,10 @@ from cmk.web.utils.urls import HTTPVariable
 
 def _build_url(query_string: str = "q=myhost") -> UrlBuilder:
     return get_url_builder(Request(create_environ(query_string=query_string)))
+
+
+def _view_query(addvars: Sequence[HTTPVariable]) -> str:
+    return f"view.py?{urlencode(addvars)}"
 
 
 def _url_params(url: str) -> dict[str, str]:
@@ -288,13 +293,13 @@ class TestGenerateDisplayTexts:
         elements = [
             LivestatusResult(
                 text_tokens=[("s", "CPU load")],
-                url="view.py?a=1",
+                view_vars=[("a", "1")],
                 row={"description": "CPU load", "host_name": "myhost"},
                 display_text="",
             )
         ]
 
-        results = conductor._generate_display_texts(elements)  # noqa: SLF001
+        results = conductor._generate_display_texts(elements, _view_query)  # noqa: SLF001
 
         assert [(result.title, result.url, result.context) for result in results] == [
             ("CPU load", "view.py?a=1", "")
@@ -305,19 +310,19 @@ class TestGenerateDisplayTexts:
         elements = [
             LivestatusResult(
                 text_tokens=[("h", "myhost")],
-                url="view.py?a=1",
+                view_vars=[("a", "1")],
                 row={"name": "myhost", "site": "site1"},
                 display_text="",
             ),
             LivestatusResult(
                 text_tokens=[("h", "myhost")],
-                url="view.py?a=2",
+                view_vars=[("a", "2")],
                 row={"name": "myhost", "site": "site2"},
                 display_text="",
             ),
         ]
 
-        results = conductor._generate_display_texts(elements)  # noqa: SLF001
+        results = conductor._generate_display_texts(elements, _view_query)  # noqa: SLF001
 
         assert [(result.url, result.context) for result in results] == [
             ("view.py?a=1&host_regex=myhost", "myhost"),
@@ -329,19 +334,19 @@ class TestGenerateDisplayTexts:
         elements = [
             LivestatusResult(
                 text_tokens=[("h", "myhost"), ("al", "My alias")],
-                url="view.py?a=1",
+                view_vars=[("a", "1")],
                 row={"name": "myhost", "site": "site1"},
                 display_text="",
             ),
             LivestatusResult(
                 text_tokens=[("h", "myhost"), ("al", "Another alias")],
-                url="view.py?a=2",
+                view_vars=[("a", "2")],
                 row={"name": "myhost", "site": "site2"},
                 display_text="",
             ),
         ]
 
-        results = conductor._generate_display_texts(elements)  # noqa: SLF001
+        results = conductor._generate_display_texts(elements, _view_query)  # noqa: SLF001
 
         assert [result.context for result in results] == ["My alias", "Another alias"]
 
@@ -350,19 +355,19 @@ class TestGenerateDisplayTexts:
         elements = [
             LivestatusResult(
                 text_tokens=[("ad", "10.10.15.200")],
-                url="view.py?a=1",
+                view_vars=[("a", "1")],
                 row={"name": "myhost", "site": "site1"},
                 display_text="",
             ),
             LivestatusResult(
                 text_tokens=[("ad", "10.10.15.201")],
-                url="view.py?a=2",
+                view_vars=[("a", "2")],
                 row={"name": "otherhost", "site": "site1"},
                 display_text="",
             ),
         ]
 
-        results = conductor._generate_display_texts(elements)  # noqa: SLF001
+        results = conductor._generate_display_texts(elements, _view_query)  # noqa: SLF001
 
         assert [(result.title, result.url, result.context) for result in results] == [
             ("10.10.15.200", "view.py?a=1", "myhost"),
@@ -374,13 +379,13 @@ class TestGenerateDisplayTexts:
         elements = [
             LivestatusResult(
                 text_tokens=[("al", "My alias"), ("ad", "10.10.15.200")],
-                url="view.py?a=1",
+                view_vars=[("a", "1")],
                 row={"name": "myhost", "site": "site1"},
                 display_text="",
             )
         ]
 
-        results = conductor._generate_display_texts(elements)  # noqa: SLF001
+        results = conductor._generate_display_texts(elements, _view_query)  # noqa: SLF001
 
         assert [(result.title, result.context) for result in results] == [("My alias", "")]
 
@@ -389,13 +394,13 @@ class TestGenerateDisplayTexts:
         elements = [
             LivestatusResult(
                 text_tokens=[("ad", "10.10.15.200")],
-                url="view.py?a=1",
+                view_vars=[("a", "1")],
                 row={"name": "10.10.15.200", "site": "site1"},
                 display_text="",
             )
         ]
 
-        results = conductor._generate_display_texts(elements)  # noqa: SLF001
+        results = conductor._generate_display_texts(elements, _view_query)  # noqa: SLF001
 
         assert [result.context for result in results] == [""]
 
@@ -404,13 +409,13 @@ class TestGenerateDisplayTexts:
         elements = [
             LivestatusResult(
                 text_tokens=[("h", "myhost")],
-                url="view.py?a=1",
+                view_vars=[("a", "1")],
                 row={"name": "myhost", "site": "site1"},
                 display_text="",
             )
         ]
 
-        results = conductor._generate_display_texts(elements)  # noqa: SLF001
+        results = conductor._generate_display_texts(elements, _view_query)  # noqa: SLF001
 
         assert [(result.title, result.url, result.context) for result in results] == [
             ("myhost", "view.py?a=1", "")
@@ -421,13 +426,13 @@ class TestGenerateDisplayTexts:
         elements = [
             LivestatusResult(
                 text_tokens=[("ad", "10.10.15.200"), ("s", "CPU load")],
-                url="view.py?a=1",
+                view_vars=[("a", "1")],
                 row={"description": "CPU load", "host_name": "myhost"},
                 display_text="",
             )
         ]
 
-        results = conductor._generate_display_texts(elements)  # noqa: SLF001
+        results = conductor._generate_display_texts(elements, _view_query)  # noqa: SLF001
 
         assert [(result.title, result.context) for result in results] == [("CPU load", "")]
 
@@ -436,19 +441,19 @@ class TestGenerateDisplayTexts:
         elements = [
             LivestatusResult(
                 text_tokens=[("hg", "mygroup")],
-                url="view.py?a=1",
+                view_vars=[("a", "1")],
                 row={"name": "mygroup", "site": "site1"},
                 display_text="",
             ),
             LivestatusResult(
                 text_tokens=[("hg", "mygroup")],
-                url="view.py?a=2",
+                view_vars=[("a", "2")],
                 row={"name": "mygroup", "site": "site2"},
                 display_text="",
             ),
         ]
 
-        results = conductor._generate_display_texts(elements)  # noqa: SLF001
+        results = conductor._generate_display_texts(elements, _view_query)  # noqa: SLF001
 
         assert [result.title for result in results] == ["mygroup"]
 

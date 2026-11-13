@@ -44,6 +44,20 @@ def fixture_mock_product_usage_data() -> ProductUsagePayload:
         edition="pro",
         cmk_version="2.5.0",
         os="Ubuntu 24.04.3 LTS",
+        users={
+            "humans": {
+                "total": 1,
+                "by_role": {"admin": 1},
+                "by_connector_type": {"htpasswd": 1},
+                "active": {"24h": 1, "7d": 1, "30d": 1},
+            },
+            "automation": {
+                "total": 0,
+                "by_role": {},
+                "by_connector_type": {},
+                "active": {"24h": 0, "7d": 0, "30d": 0},
+            },
+        },
         checks={},
         grafana=None,
     )

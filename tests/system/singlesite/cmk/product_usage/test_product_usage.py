@@ -210,6 +210,17 @@ def test_product_usage_json_counts_and_version(site: Site) -> None:
 
 
 @pytest.mark.usefixtures("default_cfg")
+def test_product_usage_json_counts_active_automation_user(site: Site) -> None:
+    """The REST API calls of default_cfg are made by an automation user"""
+    run_product_usage_collection(site)
+
+    json_content = get_product_usage_json_content(site)
+    automation = json.loads(json_content)["data"]["users"]["automation"]
+    assert automation["by_role"].get("admin", 0) >= 1
+    assert automation["active"]["24h"] >= 1
+
+
+@pytest.mark.usefixtures("default_cfg")
 def test_successful_https_product_usage_data_transmission(
     site: Site, mock_https_server: MockServer
 ) -> None:

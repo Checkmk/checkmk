@@ -103,6 +103,7 @@ def main(args: Sequence[str] | None = None) -> int:
             data = collect_data(
                 paths.var_dir,
                 BaseConfigurationMKFiles.from_omd_root(paths.omd_root).conf_d,
+                paths.default_config_dir,
                 paths.omd_root,
                 logger,
             )

@@ -13,6 +13,7 @@ import cmk.product_usage.collectors.grafana as grafana_collector
 import cmk.product_usage.collectors.host_services as host_services_collector
 import cmk.product_usage.collectors.sessions as sessions_collector
 import cmk.product_usage.collectors.site_info as site_info_collector
+import cmk.product_usage.collectors.user_stats as user_stats_collector
 import cmk.product_usage.collectors.users as users_collector
 from cmk.product_usage.schema import (
     AuditLog,
@@ -24,14 +25,19 @@ from cmk.product_usage.schema import (
 
 
 def collect_data(
-    var_dir: Path, cmk_config_dir: Path, omd_root: Path, logger: logging.Logger
+    var_dir: Path,
+    cmk_config_dir: Path,
+    default_config_dir: Path,
+    omd_root: Path,
+    logger: logging.Logger,
 ) -> ProductUsagePayload:
     logger.info("Collection starts")
 
+    now = int(time.time())
     site_info = site_info_collector.collect(cmk_config_dir, var_dir, omd_root)
 
     return ProductUsagePayload(
-        timestamp=int(time.time()),
+        timestamp=now,
         id=site_info.id,
         count_hosts=site_info.count_hosts,
         count_services=site_info.count_services,
@@ -40,6 +46,7 @@ def collect_data(
         cmk_version=site_info.cmk_version,
         os=site_info.os,
         checks=checks_collector.collect(),
+        users=user_stats_collector.collect(default_config_dir, var_dir / "web", now),
         grafana=grafana_collector.collect(var_dir),
     )
 

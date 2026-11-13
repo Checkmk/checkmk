@@ -3,19 +3,17 @@ Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends string">
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useId from 'cmk-ui-library/lib/useId'
 
-interface RadioButtonProp {
-  value: string
+defineProps<{
+  value: T
   label?: TranslatedString
   disabled?: boolean
   name?: string
-}
-
-defineProps<RadioButtonProp>()
-const model = defineModel<string>({ required: true })
+}>()
+const model = defineModel<T>({ required: true })
 const id = useId()
 </script>
 

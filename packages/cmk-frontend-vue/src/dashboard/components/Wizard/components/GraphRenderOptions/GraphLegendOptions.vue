@@ -26,10 +26,10 @@ const showLegend = computed({
   }
 })
 const style = computed({
-  get: (): string => (legend.value === 'none' ? lastStyle.value : legend.value),
-  set: (value: string) => {
-    lastStyle.value = value === 'extended' ? 'extended' : 'compact'
-    legend.value = lastStyle.value
+  get: (): GraphLegendStyle => (legend.value === 'none' ? lastStyle.value : legend.value),
+  set: (value: GraphLegendStyle) => {
+    lastStyle.value = value
+    legend.value = value
   }
 })
 </script>

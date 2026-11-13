@@ -127,7 +127,11 @@ class GetAgentOutputResult(AutomationResult):
 
 @dataclass
 class BakeAgentsResult(AutomationResult):
+    # The problems as text, one line each. None if all agent packages are baked.
     output: str | None
+    # The targets without a baked agent package, by problem. Keys and values as in
+    # BakeryChangedTargetsResult.errors.
+    errors: Mapping[tuple[str | None, str], Sequence[str]]
 
     @staticmethod
     @override

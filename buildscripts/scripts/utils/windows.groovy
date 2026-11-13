@@ -91,6 +91,25 @@ void with_azure_signing_flag(String branch_name, String credentials_file, Closur
     }
 }
 
+/// Build python-3.cab for the commit under test and copy it into the current
+/// directory. A cab of another revision would hide a broken cab or a fix of one,
+/// and the cab build takes only about a minute.
+/// cab_job is the absolute name (leading "/") of the job building the cab.
+void download_python_cab(String cab_job) {
+    def commit = bat(script: "@git rev-parse HEAD", returnStdout: true).trim();
+    // "steps.": this file's own build(Map) would shadow the step. No retry: a broken
+    // cab is what this is meant to report.
+    def cab_build = steps.build(
+        job: cab_job,
+        propagate: false,
+        parameters: [string(name: "CUSTOM_GIT_REF", value: commit)],
+    );
+    if (cab_build.result != "SUCCESS") {
+        raise("${cab_build.absoluteUrl} ended with ${cab_build.result} instead of building the cab for ${commit}");
+    }
+    copyArtifacts(projectName: cab_job, selector: specific("${cab_build.number}"));
+}
+
 void build(Map args) {
     def jenkins_base_folder = new File(currentBuild.fullProjectName).parent;    // groovylint-disable JavaIoPackageAccess
     def artifacts_dir = 'artefacts';
@@ -103,9 +122,7 @@ void build(Map args) {
             Utils.markStageSkippedForConditional("not test_integration");
         } else {
             dir(artifacts_dir) {
-                copyArtifacts(
-                    projectName: "${jenkins_base_folder}/winagt-build-modules-linux",
-                )
+                download_python_cab("/${jenkins_base_folder}/winagt-build-modules-linux");
             }
         }
     }

@@ -58,7 +58,14 @@ static LinkedHashMap<String, List> dependency_paths_mapping() {
             "non-free/packages/cmk-relay-engine/script",
         ],
         "winagt-build-modules-linux": [
+            // A patch-level bump of the Windows Python touches only package_versions.bzl
+            // (its version) and python_cab_repositories.bzl (the pins of its MSIs);
+            // python_cab.MODULE.bazel declares the cab's repositories and wheel hubs.
+            // MODULE.bazel.lock is left out: it changes with nearly every dependency bump.
             "agents/modules/windows",
+            "package_versions.bzl",
+            "bazel/extensions/python_cab_repositories.bzl",
+            "bazel/module/python_cab.MODULE.bazel",
         ],
     ];
 }

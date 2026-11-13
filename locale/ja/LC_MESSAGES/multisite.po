@@ -1526,21 +1526,6 @@ msgstr ""
 "す。"
 
 msgid ""
-"<b>Experimental.</b> When enabled, Checkmk collects usage information about "
-"MCP requests and forwards it to Checkmk's central telemetry collector, so we "
-"can understand how the MCP server is used and improve it.<br><br>We collect: "
-"which tools were called, response times, response sizes, error codes, which "
-"AI client or tool was used, and a random session ID.<br><br>We do not "
-"collect: the content of your requests or their results."
-msgstr ""
-"<b>実験的機能。</b> この機能を有効にすると、CheckmkはMCPリクエストの使用状況"
-"を収集し、Checkmkの中央Telemetryコレクターに転送します。これにより、MCPサー"
-"バーの使用状況を把握し、改善を図ることができます。<br><br>収集対象：呼び出さ"
-"れたツール、応答時間、応答サイズ、エラーコード、使用されたAIクライアントまた"
-"はツール、およびランダムなセッションID。<br><br>収集対象外：リクエストの内容"
-"やその結果。"
-
-msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
 "filtered by those tags. Otherwise, all instances will be collected."
@@ -71107,6 +71092,10 @@ msgstr "値%rの型は%sですが、型はintである必要があります"
 msgid "The value for %s must be between %d and %d"
 msgstr "%sの値は%dから%dの間でなければなりません"
 
+#, fuzzy, python-format
+msgid "The value has an unknown format: %s"
+msgstr "このルールの値は無効です。: '%s'"
+
 msgid "The value is not of type dict."
 msgstr "値がdict型ではありません。"
 
@@ -85468,6 +85457,22 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"When enabled, Checkmk collects usage information about MCP requests and "
+"forwards it to Checkmk's central telemetry collector, so we can understand "
+"how the MCP server is used and improve it.<br><br>We collect: which tools "
+"were called, response times, response sizes, error codes, which AI client or "
+"tool was used, and a random session ID.<br><br>We do not collect: the "
+"content of your requests or their results."
+msgstr ""
+"<b>実験的機能。</b> この機能を有効にすると、CheckmkはMCPリクエストの使用状況"
+"を収集し、Checkmkの中央Telemetryコレクターに転送します。これにより、MCPサー"
+"バーの使用状況を把握し、改善を図ることができます。<br><br>収集対象：呼び出さ"
+"れたツール、応答時間、応答サイズ、エラーコード、使用されたAIクライアントまた"
+"はツール、およびランダムなセッションID。<br><br>収集対象外：リクエストの内容"
+"やその結果。"
+
+#, fuzzy
+msgid ""
 "When enabled, a rule editor icon is displayed for each service in the "
 "graphical user interface (GUI) views. It is only displayed if the user does "
 "have the permission to edit rules."
@@ -90920,9 +90925,6 @@ msgstr "通常の接続"
 
 msgid "not available"
 msgstr "利用不可"
-
-msgid "not disabled"
-msgstr "無効ではない"
 
 msgid "not found"
 msgstr "見つかりません"
@@ -97235,6 +97237,9 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "not disabled"
+#~ msgstr "無効ではない"
 
 #~ msgid "Deprecated GUI extensions"
 #~ msgstr "非推奨のGUI拡張機能"

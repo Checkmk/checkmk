@@ -1567,15 +1567,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"<b>Experimental.</b> When enabled, Checkmk collects usage information about "
-"MCP requests and forwards it to Checkmk's central telemetry collector, so we "
-"can understand how the MCP server is used and improve it.<br><br>We collect: "
-"which tools were called, response times, response sizes, error codes, which "
-"AI client or tool was used, and a random session ID.<br><br>We do not "
-"collect: the content of your requests or their results."
-msgstr ""
-
-msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
 "filtered by those tags. Otherwise, all instances will be collected."
@@ -75133,6 +75124,10 @@ msgstr "Valoarea %r are tipul %s, dar trebuie să fie de tip int"
 msgid "The value for %s must be between %d and %d"
 msgstr "Valoarea pentru %s trebuie să fie cuprinsă între %d și %d."
 
+#, fuzzy, python-format
+msgid "The value has an unknown format: %s"
+msgstr "Valoarea nu este validă: '%s'"
+
 msgid "The value is not of type dict."
 msgstr "Valoarea nu este de tip dict."
 
@@ -90720,6 +90715,15 @@ msgstr ""
 "ajutorului vor fi ridicate și vor duce direct la terminarea procesului de "
 "ajutor."
 
+msgid ""
+"When enabled, Checkmk collects usage information about MCP requests and "
+"forwards it to Checkmk's central telemetry collector, so we can understand "
+"how the MCP server is used and improve it.<br><br>We collect: which tools "
+"were called, response times, response sizes, error codes, which AI client or "
+"tool was used, and a random session ID.<br><br>We do not collect: the "
+"content of your requests or their results."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "When enabled, a rule editor icon is displayed for each service in the "
@@ -96414,9 +96418,6 @@ msgstr "conexiune normală"
 
 msgid "not available"
 msgstr "nu este disponibil"
-
-msgid "not disabled"
-msgstr "nu este dezactivat"
 
 #, fuzzy
 msgid "not found"
@@ -102587,6 +102588,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "not disabled"
+#~ msgstr "nu este dezactivat"
 
 #, fuzzy
 #~ msgid "Deprecated GUI extensions"

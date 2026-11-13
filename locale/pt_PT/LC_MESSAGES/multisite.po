@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-11-11 08:56+0000\n"
+"PO-Revision-Date: 2026-11-13 11:01+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -1553,15 +1553,6 @@ msgstr ""
 msgid ""
 "<b>Display limit reached:</b> This table shows only %s entries. Additional "
 "records are not included in this view. Sort order may not be correct."
-msgstr ""
-
-msgid ""
-"<b>Experimental.</b> When enabled, Checkmk collects usage information about "
-"MCP requests and forwards it to Checkmk's central telemetry collector, so we "
-"can understand how the MCP server is used and improve it.<br><br>We collect: "
-"which tools were called, response times, response sizes, error codes, which "
-"AI client or tool was used, and a random session ID.<br><br>We do not "
-"collect: the content of your requests or their results."
 msgstr ""
 
 msgid ""
@@ -74865,6 +74856,10 @@ msgstr "O valor %r tem o tipo %s, mas deve ser do tipo int"
 msgid "The value for %s must be between %d and %d"
 msgstr "O valor para %s deve estar entre %d e %d"
 
+#, fuzzy, python-format
+msgid "The value has an unknown format: %s"
+msgstr "O valor não é válido: '%s'"
+
 msgid "The value is not of type dict."
 msgstr "O valor não é do tipo dict."
 
@@ -90278,6 +90273,15 @@ msgstr ""
 "helper irão aumentar e resultar directamente no encerramento do processo de "
 "helper."
 
+msgid ""
+"When enabled, Checkmk collects usage information about MCP requests and "
+"forwards it to Checkmk's central telemetry collector, so we can understand "
+"how the MCP server is used and improve it.<br><br>We collect: which tools "
+"were called, response times, response sizes, error codes, which AI client or "
+"tool was used, and a random session ID.<br><br>We do not collect: the "
+"content of your requests or their results."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "When enabled, a rule editor icon is displayed for each service in the "
@@ -94818,6 +94822,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -95335,6 +95340,7 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -95884,10 +95890,6 @@ msgstr "ligação normal"
 
 msgid "not available"
 msgstr "não disponíveis"
-
-#, fuzzy
-msgid "not disabled"
-msgstr "inválido"
 
 msgid "not found"
 msgstr "Não encontrado"
@@ -101988,6 +101990,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "not disabled"
+#~ msgstr "inválido"
 
 #, fuzzy
 #~ msgid "Deprecated GUI extensions"

@@ -1551,15 +1551,6 @@ msgstr ""
 "L'ordinamento potrebbe non essere corretto."
 
 msgid ""
-"<b>Experimental.</b> When enabled, Checkmk collects usage information about "
-"MCP requests and forwards it to Checkmk's central telemetry collector, so we "
-"can understand how the MCP server is used and improve it.<br><br>We collect: "
-"which tools were called, response times, response sizes, error codes, which "
-"AI client or tool was used, and a random session ID.<br><br>We do not "
-"collect: the content of your requests or their results."
-msgstr ""
-
-msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
 "filtered by those tags. Otherwise, all instances will be collected."
@@ -74690,6 +74681,10 @@ msgstr "Il valore %r ha il tipo %s, ma deve essere di tipo int"
 msgid "The value for %s must be between %d and %d"
 msgstr "Il valore di %s deve essere tra %d e %d"
 
+#, fuzzy, python-format
+msgid "The value has an unknown format: %s"
+msgstr "Il valore non è valido: '%s'"
+
 msgid "The value is not of type dict."
 msgstr "Il valore non è di tipo dict."
 
@@ -90084,6 +90079,15 @@ msgstr ""
 "l'esecuzione dell'helper saranno sollevate attraverso e risulteranno "
 "direttamente nella terminazione del processo dell'helper."
 
+msgid ""
+"When enabled, Checkmk collects usage information about MCP requests and "
+"forwards it to Checkmk's central telemetry collector, so we can understand "
+"how the MCP server is used and improve it.<br><br>We collect: which tools "
+"were called, response times, response sizes, error codes, which AI client or "
+"tool was used, and a random session ID.<br><br>We do not collect: the "
+"content of your requests or their results."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "When enabled, a rule editor icon is displayed for each service in the "
@@ -95753,9 +95757,6 @@ msgstr "connessione normale"
 
 msgid "not available"
 msgstr "non disponibile"
-
-msgid "not disabled"
-msgstr "non disabilitato"
 
 msgid "not found"
 msgstr "Non trovato"
@@ -101850,6 +101851,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "not disabled"
+#~ msgstr "non disabilitato"
 
 #, fuzzy
 #~ msgid "Deprecated GUI extensions"

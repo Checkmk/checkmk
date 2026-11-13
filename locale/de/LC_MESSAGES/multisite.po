@@ -1564,15 +1564,6 @@ msgstr ""
 "ist möglicherweise nicht korrekt."
 
 msgid ""
-"<b>Experimental.</b> When enabled, Checkmk collects usage information about "
-"MCP requests and forwards it to Checkmk's central telemetry collector, so we "
-"can understand how the MCP server is used and improve it.<br><br>We collect: "
-"which tools were called, response times, response sizes, error codes, which "
-"AI client or tool was used, and a random session ID.<br><br>We do not "
-"collect: the content of your requests or their results."
-msgstr ""
-
-msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
 "filtered by those tags. Otherwise, all instances will be collected."
@@ -72537,6 +72528,10 @@ msgstr "Der Wert %r ist vom Typ %s, muss aber int sein"
 msgid "The value for %s must be between %d and %d"
 msgstr "Der Wert für %s muss zwischen %d und %d sein"
 
+#, fuzzy, python-format
+msgid "The value has an unknown format: %s"
+msgstr "Der Wert ist ungültig: '%s'"
+
 msgid "The value is not of type dict."
 msgstr "Der Wert ist nicht vom Typ dict."
 
@@ -87206,6 +87201,15 @@ msgstr ""
 "zur Beendigung des Helper-Prozesses."
 
 msgid ""
+"When enabled, Checkmk collects usage information about MCP requests and "
+"forwards it to Checkmk's central telemetry collector, so we can understand "
+"how the MCP server is used and improve it.<br><br>We collect: which tools "
+"were called, response times, response sizes, error codes, which AI client or "
+"tool was used, and a random session ID.<br><br>We do not collect: the "
+"content of your requests or their results."
+msgstr ""
+
+msgid ""
 "When enabled, a rule editor icon is displayed for each service in the "
 "graphical user interface (GUI) views. It is only displayed if the user does "
 "have the permission to edit rules."
@@ -92886,9 +92890,6 @@ msgstr "Normale Verbindung"
 
 msgid "not available"
 msgstr "nicht verfügbar"
-
-msgid "not disabled"
-msgstr "nicht deaktiviert"
 
 msgid "not found"
 msgstr "nicht gefunden"
@@ -98745,6 +98746,9 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "not disabled"
+#~ msgstr "nicht deaktiviert"
 
 #~ msgid "Deprecated GUI extensions"
 #~ msgstr "Veraltete GUI-Erweiterungen"

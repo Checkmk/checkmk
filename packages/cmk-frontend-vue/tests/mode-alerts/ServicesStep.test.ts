@@ -387,7 +387,7 @@ test('services only on hosts the user cannot see still continue to the next step
   })
 })
 
-test('services in different units block navigation and name an example of each', async () => {
+test('services in different units block navigation and name the units', async () => {
   answer = searchResult([
     service('web01', 'HTTP request duration', { unit: 'ms' }),
     service('web01', 'HTTP queue length', { unit: '' })
@@ -396,11 +396,7 @@ test('services in different units block navigation and name an example of each',
 
   await next()
 
-  expect(
-    await screen.findByText(
-      /different units: ms \(HTTP request duration on web01\), no unit \(HTTP queue length on web01\)/
-    )
-  ).toBeInTheDocument()
+  expect(await screen.findByText(/different units: ms, no unit\./)).toBeInTheDocument()
   expect(navigation.next).not.toHaveBeenCalled()
 })
 
@@ -436,7 +432,7 @@ test('narrowing the service name to one unit clears the unit warning', async () 
   expect(screen.queryByText(/different units/)).not.toBeInTheDocument()
 })
 
-test('an unknown unit counts as a unit of its own and names the service', async () => {
+test('an unknown unit counts as a unit of its own', async () => {
   answer = searchResult([
     service('web01', 'HTTP request duration', { unit: 'ms' }),
     service('app03', 'HTTP request duration', { unit: null })
@@ -445,13 +441,11 @@ test('an unknown unit counts as a unit of its own and names the service', async 
 
   await next()
 
-  expect(
-    await screen.findByText(/unit unknown \(HTTP request duration on app03\)/)
-  ).toBeInTheDocument()
+  expect(await screen.findByText(/different units: ms, unit unknown\./)).toBeInTheDocument()
   expect(navigation.next).not.toHaveBeenCalled()
 })
 
-test('a unit only on hosts the user cannot see is named without the host', async () => {
+test('a unit only on hosts the user cannot see is named too', async () => {
   answer = searchResult([service('web01', 'HTTP request duration', { unit: 'ms' })], {
     total: 2,
     hidden: 1,
@@ -464,7 +458,7 @@ test('a unit only on hosts the user cannot see is named without the host', async
 
   await next()
 
-  expect(await screen.findByText(/B\/s \(on hosts you cannot see\)/)).toBeInTheDocument()
+  expect(await screen.findByText(/different units: ms, B\/s\./)).toBeInTheDocument()
 })
 
 test('each listed service shows its unit, so the user can tell the services apart', async () => {

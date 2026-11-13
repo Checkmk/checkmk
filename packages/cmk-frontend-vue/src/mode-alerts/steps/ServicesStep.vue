@@ -32,7 +32,6 @@ import { formSpecErrors } from '@/mode-alerts/conditions-validation'
 import {
   type FoundService,
   type ServiceSearchResult,
-  type UnitSummary,
   patternErrorOf,
   searchServices
 } from '@/mode-alerts/service-client'
@@ -240,18 +239,6 @@ function rowUnit(service: FoundService): string {
   return unitLabel(service.unit)
 }
 
-function unitWithExample(entry: UnitSummary): string {
-  const example = entry.example
-  if (example === null || example === undefined) {
-    return _t('%{unit} (on hosts you cannot see)', { unit: unitLabel(entry.unit) })
-  }
-  return _t('%{unit} (%{service} on %{host})', {
-    unit: unitLabel(entry.unit),
-    service: example.service_name,
-    host: example.host_name
-  })
-}
-
 // The units cover every service found, not only the listed ones, as the alert applies to all.
 const unitsError = computed(() => {
   const units = matches.value?.units ?? []
@@ -260,7 +247,7 @@ const unitsError = computed(() => {
   }
   return _t(
     'The selected services have different units: %{units}. You must select services with the same units to set levels on them.',
-    { units: units.map(unitWithExample).join(', ') }
+    { units: units.map((entry) => unitLabel(entry.unit)).join(', ') }
   )
 })
 </script>

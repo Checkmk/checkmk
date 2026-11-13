@@ -17,16 +17,14 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import {
   MAX_SERVICES,
   type ServiceSearchResult,
-  patternErrorOf,
   searchServices,
   suggestionPattern
 } from '@/mode-alerts/service-client'
-import type { AlertConditions, ServiceNameMatch } from '@/mode-alerts/types'
+import type { AlertConditions } from '@/mode-alerts/types'
 
 const { _t } = usei18n()
 
-const { matchType, conditions, id, hasError } = defineProps<{
-  matchType: ServiceNameMatch
+const { conditions, id, hasError } = defineProps<{
   conditions?: AlertConditions | undefined
   id?: string | undefined
   hasError?: boolean
@@ -34,8 +32,8 @@ const { matchType, conditions, id, hasError } = defineProps<{
 
 const serviceName = defineModel<string | null>({ required: true })
 
-// A regular expression is a pattern, not a name the site can offer, so whatever was typed
-// is always selectable alongside the names of the services found.
+// A service may not exist yet, so whatever was typed is always selectable alongside the
+// names of the services found.
 function typedName(query: string, names: string[]): Suggestion[] {
   if (query === '' || names.includes(query)) {
     return []
@@ -48,11 +46,9 @@ async function querySuggestions(
 ): Promise<Response | WarningResponse | ErrorResponse> {
   let result: ServiceSearchResult
   try {
-    result = await searchServices('regex', suggestionPattern(matchType, query), conditions)
+    result = await searchServices('regex', suggestionPattern(query), conditions)
   } catch (error: unknown) {
-    return new ErrorResponse(
-      patternErrorOf(error) ?? ((error as CmkError)?.message || _t('Unknown error'))
-    )
+    return new ErrorResponse((error as CmkError)?.message || _t('Unknown error'))
   }
   const suggestions: Suggestion[] = [
     ...typedName(query, result.service_names),

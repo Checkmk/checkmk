@@ -17,6 +17,7 @@ import type { CmkWizardStepProps } from 'cmk-ui-library/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
+import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
@@ -295,11 +296,21 @@ const unitsError = computed(() => {
               :label="_t('Match service name by')"
             />
             <CustomServiceSelect
+              v-if="model.matchType === 'exact'"
               :id="patternFieldId"
               v-model="selectedServiceName"
-              :match-type="model.matchType"
               :conditions="conditions"
               :has-error="patternErrors.length > 0"
+            />
+            <CmkInput
+              v-else
+              :id="patternFieldId"
+              :model-value="model.servicePattern"
+              field-size="fill"
+              :placeholder="_t('Enter a regular expression…')"
+              :external-errors="patternErrors"
+              hide-validation-message
+              @update:model-value="(value) => (model.servicePattern = value ?? '')"
             />
           </div>
           <CmkAlert

@@ -102,10 +102,7 @@ class AlertWizard(CmkPage):
         ).to_contain_text(match_type)
 
     def select_service_name(self, name: str) -> None:
-        """Choose a discovered service name, or commit `name` as typed if none matches.
-
-        A regular expression is committed as typed, too.
-        """
+        """Choose a discovered service name, or commit `name` as typed if none matches."""
         logger.info("Select service name '%s'", name)
         self.service_name_select.click()
         self._open_suggestions.get_by_role("textbox", name="filter").fill(name)
@@ -114,6 +111,18 @@ class AlertWizard(CmkPage):
             self.service_name_select,
             message=f"Service name '{name}' was not selected",
         ).to_contain_text(name)
+
+    @property
+    def service_pattern_input(self) -> Locator:
+        """The service name field of the match type "Regular expression"."""
+        return self.main_area.locator().get_by_role("textbox", name=re.compile(r"^Service name\b"))
+
+    def enter_service_pattern(self, pattern: str) -> None:
+        logger.info("Enter the service name pattern '%s'", pattern)
+        self.service_pattern_input.fill(pattern)
+        expect(self.service_pattern_input, f"Pattern {pattern!r} was not entered").to_have_value(
+            pattern
+        )
 
     @property
     def folder_select(self) -> Locator:

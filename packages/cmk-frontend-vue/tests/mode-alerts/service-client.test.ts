@@ -95,10 +95,6 @@ test('a refusal about another field is not taken for a pattern error', async () 
   expect(patternErrorOf(error)).toBeNull()
 })
 
-test('an exact name is suggested from what it contains, taken literally', () => {
-  expect(suggestionPattern('exact', 'duration (p95)')).toBe('.*duration \\(p95\\)')
-})
-
-test('a regular expression is suggested from anywhere in the name', () => {
-  expect(suggestionPattern('regex', 'CPU|Memory')).toBe('.*(?:CPU|Memory)')
+test('a name is suggested from what it contains, taken literally', () => {
+  expect(suggestionPattern('duration (p95)')).toBe('.*duration \\(p95\\)')
 })

@@ -10,7 +10,6 @@ import { afterEach, expect, test } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 import CustomServiceSelect from '@/mode-alerts/CustomServiceSelect.vue'
-import type { ServiceNameMatch } from '@/mode-alerts/types'
 
 const FOUND: Array<[string, string]> = [
   ['web01', 'HTTP request duration'],
@@ -26,25 +25,6 @@ useMswServer(
     async ({ request, response }) => {
       const body = (await request.json()) as { service_match: { pattern: string } }
       sentPattern = body.service_match.pattern
-      try {
-        new RegExp(sentPattern)
-      } catch (error) {
-        return response.untyped(
-          Response.json(
-            {
-              title: 'Bad Request',
-              status: 400,
-              fields: {
-                'body.service_match.regex.pattern': {
-                  loc: ['body', 'service_match', 'regex', 'pattern'],
-                  msg: `Value error, Not a valid regular expression: ${(error as Error).message}`
-                }
-              }
-            },
-            { status: 400 }
-          )
-        )
-      }
       const names = [
         ...new Set(
           FOUND.filter(([, name]) => new RegExp(`^(?:${sentPattern})`).test(name)).map(
@@ -73,14 +53,14 @@ afterEach(() => {
   sentPattern = null
 })
 
-function renderSelect(matchType: ServiceNameMatch = 'exact') {
+function renderSelect() {
   const serviceName = ref<string | null>(null)
   const wrapper = defineComponent({
     components: { CustomServiceSelect },
     setup() {
-      return { serviceName, matchType }
+      return { serviceName }
     },
-    template: `<CustomServiceSelect v-model="serviceName" :match-type="matchType" />`
+    template: `<CustomServiceSelect v-model="serviceName" />`
   })
   render(wrapper)
   return { serviceName }
@@ -111,7 +91,7 @@ test('choosing an offered name selects it', async () => {
 })
 
 test('a name no service has can still be selected as typed', async () => {
-  const { serviceName } = renderSelect('regex')
+  const { serviceName } = renderSelect()
 
   await open()
   await userEvent.type(await screen.findByRole('textbox', { name: 'filter' }), 'duration$')
@@ -120,8 +100,8 @@ test('a name no service has can still be selected as typed', async () => {
   expect(serviceName.value).toBe('duration$')
 })
 
-test('an exact match looks for the query literally', async () => {
-  renderSelect('exact')
+test('names are looked up by the query taken literally', async () => {
+  renderSelect()
 
   await open()
   await userEvent.type(await screen.findByRole('textbox', { name: 'filter' }), 'duration.')
@@ -129,24 +109,4 @@ test('an exact match looks for the query literally', async () => {
   await waitFor(() => {
     expect(sentPattern).toBe('.*duration\\.')
   })
-})
-
-test('a regular expression is searched anywhere in the name', async () => {
-  renderSelect('regex')
-
-  await open()
-  await userEvent.type(await screen.findByRole('textbox', { name: 'filter' }), 'duration.')
-
-  await waitFor(() => {
-    expect(sentPattern).toBe('.*(?:duration.)')
-  })
-})
-
-test('a pattern the server refuses shows its reason', async () => {
-  renderSelect('regex')
-
-  await open()
-  await userEvent.type(await screen.findByRole('textbox', { name: 'filter' }), '(')
-
-  expect(await screen.findByText(/^Not a valid regular expression: /)).toBeInTheDocument()
 })

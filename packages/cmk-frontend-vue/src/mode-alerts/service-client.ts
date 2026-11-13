@@ -65,6 +65,6 @@ function asLiteral(text: string): string {
  * A pattern finding the names that contain what was typed so far, so a partially typed name
  * still has suggestions.
  */
-export function suggestionPattern(match: ServiceNameMatch, typed: string): string {
-  return match === 'exact' ? `.*${asLiteral(typed)}` : `.*(?:${typed})`
+export function suggestionPattern(typed: string): string {
+  return `.*${asLiteral(typed)}`
 }

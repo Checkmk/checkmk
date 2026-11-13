@@ -300,6 +300,10 @@ test('a regular expression the server refuses blocks navigation and says why', a
   expect(
     await screen.findByText('Not a valid regular expression: unterminated character set')
   ).toBeInTheDocument()
+  expect(screen.getByRole('textbox', { name: /Service name/ })).toHaveAttribute(
+    'aria-invalid',
+    'true'
+  )
   expect(navigation.next).not.toHaveBeenCalled()
 })
 
@@ -604,6 +608,16 @@ test('several sites that did not answer are named', async () => {
       'The sites remote, branch did not answer, so their services are missing.'
     )
   ).toBeInTheDocument()
+})
+
+test('a regular expression is typed freely instead of picked from suggestions', async () => {
+  const { model } = renderStep()
+
+  await pickMatchType('Regular expression')
+  await userEvent.type(screen.getByRole('textbox', { name: /^Service name/ }), 'HTTP.*')
+
+  expect(model.value.servicePattern).toBe('HTTP.*')
+  expect(screen.queryByRole('combobox', { name: 'Service name' })).not.toBeInTheDocument()
 })
 
 test('changing the match type discards the results of the previous search', async () => {

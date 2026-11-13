@@ -133,6 +133,7 @@ class SNSTopic:
 @dataclass(frozen=True)
 class LambdaFunction:
     name: str
+    arn: str
 
 
 @dataclass(frozen=True)
@@ -187,7 +188,7 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost:
         case SNSTopic():
             return _sns_topic_host(resource)
         case LambdaFunction():
-            return _lambda_function_host(resource)
+            return _lambda_function_host(resource, naming.non_ec2)
         case ECSCluster():
             return _ecs_cluster_host(resource)
         case _:
@@ -292,8 +293,10 @@ def _sns_topic_host(topic: SNSTopic) -> TargetHost:
     return _hostname_from_name_and_region(topic.name, topic.region)
 
 
-def _lambda_function_host(function: LambdaFunction) -> TargetHost:
-    return TargetHost(function.name)
+def _lambda_function_host(
+    function: LambdaFunction, template: NonEC2PiggybackTemplate
+) -> TargetHost:
+    return _hostname_with_hashed_arn("lambda_function", function.name, function.arn, template)
 
 
 def _ecs_cluster_host(cluster: ECSCluster) -> TargetHost:

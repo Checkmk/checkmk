@@ -109,7 +109,10 @@ class LambdaRegionLimits(AWSSectionLimits):
                 self._add_limit(
                     limit,
                     region=self._region,
-                    resource=hosts.LambdaFunction(function["FunctionName"]),
+                    resource=hosts.LambdaFunction(
+                        function["FunctionName"],
+                        function["FunctionArn"],
+                    ),
                 )
         return AWSComputedContent(limits, raw_content.cache_timestamp)
 
@@ -184,7 +187,12 @@ class LambdaSummary(AWSSection):
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(
-                self._target_host(hosts.LambdaFunction(function["FunctionName"])),
+                self._target_host(
+                    hosts.LambdaFunction(
+                        function["FunctionName"],
+                        function["FunctionArn"],
+                    )
+                ),
                 [function],
                 _lambda_resource(function["FunctionArn"]),
             )
@@ -324,7 +332,10 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
         return [
             AWSSectionResult(
                 self._target_host(
-                    hosts.LambdaFunction(_function_arn_to_function_name_dim(function_arn))
+                    hosts.LambdaFunction(
+                        _function_arn_to_function_name_dim(function_arn),
+                        function_arn,
+                    )
                 ),
                 rows,
                 _lambda_resource(function_arn),
@@ -391,7 +402,10 @@ class LambdaProvisionedConcurrency(AWSSection):
         return [
             AWSSectionResult(
                 self._target_host(
-                    hosts.LambdaFunction(_function_arn_to_function_name_dim(function_arn))
+                    hosts.LambdaFunction(
+                        _function_arn_to_function_name_dim(function_arn),
+                        function_arn,
+                    )
                 ),
                 {function_arn: function_content},
                 _lambda_resource(function_arn),
@@ -596,7 +610,10 @@ class LambdaCloudwatchInsights(AWSSection):
         return [
             AWSSectionResult(
                 self._target_host(
-                    hosts.LambdaFunction(_function_arn_to_function_name_dim(function_arn))
+                    hosts.LambdaFunction(
+                        _function_arn_to_function_name_dim(function_arn),
+                        function_arn,
+                    )
                 ),
                 {function_arn: function_content},
                 _lambda_resource(function_arn),

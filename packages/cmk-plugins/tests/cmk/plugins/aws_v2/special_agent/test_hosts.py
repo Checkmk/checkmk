@@ -127,7 +127,13 @@ def test_ec2_instance_without_a_name_has_no_host(
         pytest.param(GlacierVault("vault"), "vault", id="glacier vault"),
         pytest.param(S3Bucket("bucket"), "bucket", id="s3 bucket"),
         pytest.param(SNSTopic("topic", "eu-central-1"), "topic_eu-central-1", id="sns topic"),
-        pytest.param(LambdaFunction("function"), "function", id="lambda function"),
+        pytest.param(
+            LambdaFunction(
+                "function", "arn:aws:lambda:eu-central-1:123456789012:function:function"
+            ),
+            "aws_lambda_function_function_6086769b",
+            id="lambda function",
+        ),
         pytest.param(
             ECSCluster("cluster", "eu-central-1"), "cluster_eu-central-1", id="ecs cluster"
         ),
@@ -147,6 +153,42 @@ def test_ecs_clusters_with_the_same_name_in_two_regions_go_to_two_hosts() -> Non
     assert target_host(ECSCluster("cluster", "eu-central-1"), DEFAULT_NAMING) != target_host(
         ECSCluster("cluster", "us-east-1"), DEFAULT_NAMING
     )
+
+
+@pytest.mark.parametrize(
+    "other_arn",
+    [
+        pytest.param(
+            "arn:aws:lambda:us-east-1:123456789012:function:function", id="another region"
+        ),
+        pytest.param(
+            "arn:aws:lambda:eu-central-1:210987654321:function:function", id="another account"
+        ),
+    ],
+)
+def test_lambda_functions_with_the_same_name_and_another_arn_go_to_two_hosts(
+    other_arn: str,
+) -> None:
+    function = LambdaFunction(
+        "function", "arn:aws:lambda:eu-central-1:123456789012:function:function"
+    )
+
+    assert target_host(function, DEFAULT_NAMING) != target_host(
+        LambdaFunction("function", other_arn), DEFAULT_NAMING
+    )
+
+
+def test_lambda_function_host_follows_the_short_template() -> None:
+    naming = HostNaming(
+        ec2=NamingConvention.ip_region_instance,
+        non_ec2=NonEC2PiggybackTemplate.SHORT,
+        cloudfront=CloudFrontHostAssignment.account,
+    )
+    function = LambdaFunction(
+        "function", "arn:aws:lambda:eu-central-1:123456789012:function:function"
+    )
+
+    assert target_host(function, naming) == "function_6086769b"
 
 
 def test_ebs_attachment_goes_to_the_host_of_its_monitored_instance() -> None:

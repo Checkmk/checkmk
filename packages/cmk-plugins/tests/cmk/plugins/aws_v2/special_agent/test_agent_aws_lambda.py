@@ -42,6 +42,10 @@ from .agent_aws_fake_clients import (
 )
 
 ACCOUNT_HOST = TargetHost("123456789012")
+FUNCTION_HOSTS = {
+    "FunctionName-0": TargetHost("aws_lambda_function_FunctionName-0_c6f31aff"),
+    "FunctionName-1": TargetHost("aws_lambda_function_FunctionName-1_29a018f2"),
+}
 
 
 class PaginatorListFunctions:
@@ -198,7 +202,7 @@ def test_agent_aws_lambda_summary(
             lambda_function["FunctionName"] for lambda_function in result.content
         ]
         for result in lambda_summary_results
-    } == {function_name: [function_name] for function_name in expected}
+    } == {FUNCTION_HOSTS[function_name]: [function_name] for function_name in expected}
 
 
 @pytest.mark.parametrize("names,tags", no_tags_or_names_params)
@@ -376,11 +380,11 @@ def test_agent_aws_lambda_puts_each_function_on_its_own_host() -> None:
     function_arn = "arn:aws:lambda:eu-central-1:123456789:function:FunctionName"
     assert results == {
         "lambda_provisioned_concurrency": {
-            "FunctionName-0": [f"{function_arn}-0"],
-            "FunctionName-1": [f"{function_arn}-1"],
+            FUNCTION_HOSTS["FunctionName-0"]: [f"{function_arn}-0"],
+            FUNCTION_HOSTS["FunctionName-1"]: [f"{function_arn}-1"],
         },
         # In the simulation data, only FunctionName-0 has a log group.
-        "lambda_cloudwatch_insights": {"FunctionName-0": [f"{function_arn}-0"]},
+        "lambda_cloudwatch_insights": {FUNCTION_HOSTS["FunctionName-0"]: [f"{function_arn}-0"]},
     }
 
 
@@ -401,7 +405,7 @@ def test_agent_aws_lambda_puts_the_aliases_on_the_host_of_their_function() -> No
     assert {
         result.piggyback_hostname: {row["Label"] for row in result.content} for result in results
     } == {
-        f"FunctionName-{i}": {
+        FUNCTION_HOSTS[f"FunctionName-{i}"]: {
             f"{function_arn}-{i}",
             f"{function_arn}-{i}:Alias-0",
             f"{function_arn}-{i}:Alias-1",
@@ -426,7 +430,7 @@ def test_agent_aws_lambda_region_limits_go_to_the_account_and_each_function_host
         result.piggyback_hostname: [limit.key for limit in result.content] for result in results
     } == {
         host: ["total_code_size", "concurrent_executions", "unreserved_concurrent_executions"]
-        for host in (ACCOUNT_HOST, "FunctionName-0", "FunctionName-1")
+        for host in (ACCOUNT_HOST, *FUNCTION_HOSTS.values())
     }
 
 
@@ -450,11 +454,14 @@ def test_agent_aws_lambda_function_hosts_get_the_function_arn() -> None:
     function_arn = "arn:aws:lambda:eu-central-1:123456789:function:FunctionName"
     assert results
     expected_labels = {
-        f"FunctionName-{i}": {"cmk/aws/service": "lambda", "cmk/aws/arn": f"{function_arn}-{i}"}
+        FUNCTION_HOSTS[f"FunctionName-{i}"]: {
+            "cmk/aws/service": "lambda",
+            "cmk/aws/arn": f"{function_arn}-{i}",
+        }
         for i in range(2)
     }
     assert all(
-        result.piggyback_host_labels == expected_labels[str(result.piggyback_hostname)]
+        result.piggyback_host_labels == expected_labels[TargetHost(result.piggyback_hostname)]
         for result in results
     )
 

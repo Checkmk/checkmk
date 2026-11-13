@@ -259,3 +259,187 @@ INSTANTIATE_TEST_SUITE_P(
               .null = "None",
               .blob = {"b\"p\\x5c\\x0a\\xff\\x0e\""},
               .string = "\"A small\\u000at\\u03b5st...\\U0001f60b\""}));
+
+namespace {
+class RecordingHandler : public Handler {
+public:
+    explicit RecordingHandler(std::vector<std::string> &messages)
+        : messages_{messages} {}
+
+    void publish(const LogRecord &record) override {
+        messages_.push_back(record.getMessage());
+    }
+
+private:
+    std::vector<std::string> &messages_;
+};
+
+struct StringCase {
+    std::string name;
+    Encoding encoding;
+    std::string input;
+    std::string output;
+    std::vector<std::string> warnings;
+};
+
+// Only the name, the input is not valid UTF-8, see Blob above.
+std::ostream &operator<<(std::ostream &os, const StringCase &c) {
+    return os << c.name;
+}
+
+std::string case_name(const ::testing::TestParamInfo<StringCase> &info) {
+    return info.param.name;
+}
+}  // namespace
+
+class JSONString : public ::testing::TestWithParam<StringCase> {
+public:
+    void SetUp() override {
+        logger_->setHandler(std::make_unique<RecordingHandler>(warnings_));
+        logger_->setUseParentHandlers(false);
+    }
+
+    void TearDown() override {
+        logger_->setUseParentHandlers(true);
+        logger_->setHandler(nullptr);
+    }
+
+    [[nodiscard]] std::string render(Encoding encoding,
+                                     const std::string &value) const {
+        std::ostringstream out;
+        Renderer::make(OutputFormat::json, out, logger_,
+                       CSVSeparators{"\n", ";", ",", "|"}, encoding)
+            ->output(value);
+        return out.str();
+    }
+
+    [[nodiscard]] const std::vector<std::string> &warnings() const {
+        return warnings_;
+    }
+
+private:
+    Logger *const logger_{Logger::getLogger("test.Renderer")};
+    std::vector<std::string> warnings_;
+};
+
+TEST_P(JSONString, EscapesUpToFirstMalformedByte) {
+    const auto &param = GetParam();
+
+    const auto output = render(param.encoding, param.input);
+
+    EXPECT_EQ(param.output, output);
+    EXPECT_EQ(param.warnings, warnings());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    CompleteUTF8AtEnd, JSONString,
+    ::testing::Values(StringCase{.name = "TwoBytes",
+                                 .encoding = Encoding::utf8,
+                                 .input = "a\xCE\xB5",
+                                 .output = R"("a\u03b5")",
+                                 .warnings = {}},
+                      StringCase{.name = "ThreeBytes",
+                                 .encoding = Encoding::utf8,
+                                 .input = "a\xE2\x82\xAC",
+                                 .output = R"("a\u20ac")",
+                                 .warnings = {}},
+                      StringCase{.name = "FourBytes",
+                                 .encoding = Encoding::utf8,
+                                 .input = "a\xF0\x9F\x98\x8B",
+                                 .output = R"("a\ud83d\ude0b")",
+                                 .warnings = {}}),
+    case_name);
+
+INSTANTIATE_TEST_SUITE_P(
+    TruncatedUTF8, JSONString,
+    ::testing::Values(StringCase{.name = "TwoBytes",
+                                 .encoding = Encoding::utf8,
+                                 .input = "a\xCE",
+                                 .output = R"("a")",
+                                 .warnings = {"UTF-8 sequence too short"}},
+                      StringCase{.name = "ThreeBytes",
+                                 .encoding = Encoding::utf8,
+                                 .input = "a\xE2\x82",
+                                 .output = R"("a")",
+                                 .warnings = {"UTF-8 sequence too short"}},
+                      StringCase{.name = "FourBytes",
+                                 .encoding = Encoding::utf8,
+                                 .input = "a\xF0\x9F\x98",
+                                 .output = R"("a")",
+                                 .warnings = {"UTF-8 sequence too short"}}),
+    case_name);
+
+INSTANTIATE_TEST_SUITE_P(
+    InvalidUTF8, JSONString,
+    ::testing::Values(
+        StringCase{.name = "SecondOfTwoBytes",
+                   .encoding = Encoding::utf8,
+                   .input = "a\xCEzz",
+                   .output = R"("a")",
+                   .warnings = {"invalid byte 122 in UTF-8 sequence"}},
+        StringCase{.name = "SecondOfThreeBytes",
+                   .encoding = Encoding::utf8,
+                   .input = "a\xE2z\xACz",
+                   .output = R"("a")",
+                   .warnings = {"invalid byte 122 in UTF-8 sequence"}},
+        StringCase{.name = "ThirdOfThreeBytes",
+                   .encoding = Encoding::utf8,
+                   .input = "a\xE2\x82zz",
+                   .output = R"("a")",
+                   .warnings = {"invalid byte 122 in UTF-8 sequence"}},
+        StringCase{.name = "SecondOfFourBytes",
+                   .encoding = Encoding::utf8,
+                   .input = "a\xF0z\x98\x8Bz",
+                   .output = R"("a")",
+                   .warnings = {"invalid byte 122 in UTF-8 sequence"}},
+        StringCase{.name = "ThirdOfFourBytes",
+                   .encoding = Encoding::utf8,
+                   .input = "a\xF0\x9Fz\x8Bz",
+                   .output = R"("a")",
+                   .warnings = {"invalid byte 122 in UTF-8 sequence"}},
+        StringCase{.name = "FourthOfFourBytes",
+                   .encoding = Encoding::utf8,
+                   .input = "a\xF0\x9F\x98zz",
+                   .output = R"("a")",
+                   .warnings = {"invalid byte 122 in UTF-8 sequence"}},
+        StringCase{.name = "OverlongLeadByte",
+                   .encoding = Encoding::utf8,
+                   .input = "a\xC0\xAFz",
+                   .output = R"("a")",
+                   .warnings = {"invalid byte 192 in UTF-8 sequence"}},
+        StringCase{.name = "TooLargeLeadByte",
+                   .encoding = Encoding::utf8,
+                   .input = "a\xF5\x80\x80\x80z",
+                   .output = R"("a")",
+                   .warnings = {"invalid byte 245 in UTF-8 sequence"}},
+        StringCase{.name = "ContinuationAsLeadByte",
+                   .encoding = Encoding::utf8,
+                   .input = "a\x80z",
+                   .output = R"("a")",
+                   .warnings = {"invalid byte 128 in UTF-8 sequence"}}),
+    case_name);
+
+INSTANTIATE_TEST_SUITE_P(
+    MixedEncoding, JSONString,
+    ::testing::Values(StringCase{.name = "UTF8AtEnd",
+                                 .encoding = Encoding::mixed,
+                                 .input = "a\xC3\xA4",
+                                 .output = R"("a\u00e4")",
+                                 .warnings = {}},
+                      StringCase{.name = "Latin1",
+                                 .encoding = Encoding::mixed,
+                                 .input = "a\xE4z",
+                                 .output = R"("a\u00e4z")",
+                                 .warnings = {}},
+                      StringCase{.name = "TruncatedUTF8",
+                                 .encoding = Encoding::mixed,
+                                 .input = "a\xC3",
+                                 .output = R"("a")",
+                                 .warnings = {"UTF-8 sequence too short"}},
+                      StringCase{
+                          .name = "InvalidUTF8",
+                          .encoding = Encoding::mixed,
+                          .input = "a\xC3zz",
+                          .output = R"("a")",
+                          .warnings = {"invalid byte 122 in UTF-8 sequence"}}),
+    case_name);

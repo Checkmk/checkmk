@@ -6,6 +6,7 @@
 #include "livestatus/RendererJSON.h"
 
 #include <ostream>
+#include <string_view>
 #include <vector>
 
 #include "livestatus/data_encoding.h"
@@ -54,13 +55,10 @@ bool RendererJSON::useSurrogatePairs() const { return true; };
 void RendererJSON::outputNull() { _os << "null"; }
 
 void RendererJSON::outputBlob(const std::vector<char> &value) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    outputUnicodeString(value.data(), value.data() + value.size(),
+    outputUnicodeString(std::string_view{value.data(), value.size()},
                         Encoding::latin1);
 }
 
 void RendererJSON::outputString(const std::string &value) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    outputUnicodeString(value.data(), value.data() + value.size(),
-                        _data_encoding);
+    outputUnicodeString(value, _data_encoding);
 }

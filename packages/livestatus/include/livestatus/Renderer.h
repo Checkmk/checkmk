@@ -14,6 +14,7 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "livestatus/OStreamStateSaver.h"
@@ -96,15 +97,14 @@ protected:
 
     void outputByteString(const std::string &prefix,
                           const std::vector<char> &value);
-    void outputUnicodeString(const char *start, const char *end,
-                             Encoding data_encoding);
+    void outputUnicodeString(std::string_view value, Encoding data_encoding);
 
 private:
     Logger *const _logger;
 
-    void outputUTF8(const char *start, const char *end);
-    void outputLatin1(const char *start, const char *end);
-    void outputMixed(const char *start, const char *end);
+    void outputUTF8(std::string_view value);
+    void outputLatin1(std::string_view value);
+    void outputMixed(std::string_view value);
     void truncatedUTF8();
     void invalidUTF8(unsigned char ch);
 

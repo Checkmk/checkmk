@@ -35,6 +35,7 @@ import {
   resolveUpdater
 } from './MonitoringTableContext'
 import MonitoringTableHeader from './MonitoringTableHeader.vue'
+import MonitoringTableRow from './MonitoringTableRow.vue'
 
 const DEFAULT_COLUMN_MIN_SIZE = 20
 const DEFAULT_COLUMN_MAX_SIZE = Number.POSITIVE_INFINITY
@@ -410,9 +411,10 @@ const paddingBottom = computed(() => {
   return last ? Math.max(0, totalSize.value - last.end + headerHeight.value) : 0
 })
 
-function measureRowElement(el: Element | ComponentPublicInstance | null): void {
-  if (el instanceof HTMLElement) {
-    rowVirtualizer.value.measureElement(el)
+function measureRowElement(row: Element | ComponentPublicInstance | null): void {
+  const element: unknown = row instanceof Element ? row : row?.$el
+  if (element instanceof HTMLElement) {
+    rowVirtualizer.value.measureElement(element)
   }
 }
 
@@ -461,13 +463,12 @@ function tableRowAt(index: number): Row<T> {
           <tr v-if="paddingTop > 0" class="monitoring-table__spacer" aria-hidden="true">
             <td :colspan="leafColumnCount" :style="{ height: `${paddingTop}px` }"></td>
           </tr>
-          <tr
+          <MonitoringTableRow
             v-for="virtualRow in virtualRows"
             :key="rowKeyOf(virtualRow.index)"
             :ref="measureRowElement"
-            :data-index="virtualRow.index"
             class="monitoring-table__row"
-            :class="{ 'monitoring-table__row--alt': virtualRow.index % 2 === 1 }"
+            :data-index="virtualRow.index"
           >
             <slot
               name="row"
@@ -475,7 +476,7 @@ function tableRowAt(index: number): Row<T> {
               :table-row="tableRowAt(virtualRow.index)"
               :index="virtualRow.index"
             />
-          </tr>
+          </MonitoringTableRow>
           <tr v-if="paddingBottom > 0" class="monitoring-table__spacer" aria-hidden="true">
             <td :colspan="leafColumnCount" :style="{ height: `${paddingBottom}px` }"></td>
           </tr>
@@ -502,20 +503,6 @@ function tableRowAt(index: number): Row<T> {
   border-collapse: separate;
   border-spacing: v-bind(borderSpacing);
   background: var(--ux-theme-4);
-}
-
-.monitoring-table__row {
-  background: var(--ux-theme-4);
-}
-
-.monitoring-table__row--alt {
-  background: var(--ux-theme-3);
-}
-
-.monitoring-table__row:hover,
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-.monitoring-table__row:hover :deep(td) {
-  background-color: var(--background-row-hover-highlight);
 }
 
 .monitoring-table__spacer {

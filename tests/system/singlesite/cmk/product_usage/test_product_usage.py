@@ -205,6 +205,7 @@ def test_product_usage_json_counts_and_version(site: Site) -> None:
     assert data["count_folders"] == EXPECTED_FOLDER_COUNT
     assert data["edition"] == site.edition.short
     assert data["cmk_version"] == f"{site.version.version_data}"
+    assert data["os"] not in ("", "UNKNOWN")
 
 
 @pytest.mark.usefixtures("default_cfg")

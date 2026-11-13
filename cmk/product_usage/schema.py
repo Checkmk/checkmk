@@ -129,6 +129,13 @@ class SiteInfo(pydantic.BaseModel):
         ),
         examples=["2.5.0-2026.01.06"],
     )
+    os: str = pydantic.Field(
+        description=(
+            "The operating system the site is running on, as reported by the OS release files."
+            " This is the same value that is reported with the license usage."
+        ),
+        examples=["Ubuntu 24.04.3 LTS"],
+    )
 
 
 class ProductUsageData(SiteInfo):

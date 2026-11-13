@@ -36,6 +36,7 @@ def fixture_mock_product_usage_data() -> ProductUsagePayload:
         count_folders=5,
         edition="pro",
         cmk_version="2.5.0",
+        os="Ubuntu 24.04.3 LTS",
         checks={},
         grafana=None,
     )

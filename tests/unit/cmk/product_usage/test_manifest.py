@@ -23,6 +23,7 @@ def _payload(grafana: GrafanaUsageData | None) -> ProductUsagePayload:
         count_folders=3,
         edition="community",
         cmk_version="2.5.0p1",
+        os="Ubuntu 24.04.3 LTS",
         timestamp=1767700800,
         checks={"check_mk-df": {"count": 1, "count_hosts": 1, "count_disabled": 0}},
         grafana=grafana,

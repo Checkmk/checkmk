@@ -36,6 +36,7 @@ def collect(cmk_config_dir: Path, var_dir: Path, omd_root: Path) -> SiteInfo:
         count_folders=get_number_of_folders(str(wato_path)),
         edition=checkmk_info.edition,
         cmk_version=checkmk_info.version,
+        os=checkmk_info.os,
     )
 
     return SiteInfo.model_validate(response_dict)
@@ -102,10 +103,13 @@ def get_site_status() -> SiteStatus:
 class CheckmkInfo(typing.NamedTuple):
     version: str
     edition: str
+    os: str
 
 
 def get_checkmk_info(omd_root: Path) -> CheckmkInfo:
     general_version_infos = cmk_version_info.get_general_version_infos(omd_root)
     return CheckmkInfo(
-        version=general_version_infos["version"], edition=general_version_infos["edition"]
+        version=general_version_infos["version"],
+        edition=general_version_infos["edition"],
+        os=general_version_infos["os"],
     )

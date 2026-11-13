@@ -31,21 +31,26 @@ test('a service whose graphs cannot be built is answered with the reason the bac
   })
 })
 
-test('a monitoring core that does not answer stays a failure, for the reader to retry', async () => {
-  respondWith(503, { title: 'Monitoring data source unavailable', detail: 'Connection refused' })
+test.each([
+  {
+    outcome: 'a monitoring core that does not answer stays a failure, for the reader to retry',
+    status: 503,
+    problem: { title: 'Monitoring data source unavailable', detail: 'Connection refused' }
+  },
+  {
+    outcome: 'a crash of the endpoint stays a failure, for the reader to retry and report',
+    status: 500,
+    problem: { title: 'Graph discovery failed', detail: "Failed to discover graphs: 'unit'" }
+  },
+  {
+    outcome: 'a 422 for another reason stays a failure, for the reader to retry',
+    status: 422,
+    problem: { title: 'Unprocessable Content', detail: 'Body is not valid' }
+  }
+])('$outcome', async ({ status, problem }) => {
+  respondWith(status, problem)
 
-  await expect(new GraphsApi().discover(HOST, 'Memory')).rejects.toThrow('Connection refused')
-})
-
-test('a crash of the endpoint stays a failure, for the reader to retry and report', async () => {
-  respondWith(500, {
-    title: 'Graph discovery failed',
-    detail: "Failed to discover graphs: 'unit'"
-  })
-
-  await expect(new GraphsApi().discover(HOST, 'Memory')).rejects.toThrow(
-    "Failed to discover graphs: 'unit'"
-  )
+  await expect(new GraphsApi().discover(HOST, 'Memory')).rejects.toThrow(problem.detail)
 })
 
 test('discovered graphs carry no error', async () => {

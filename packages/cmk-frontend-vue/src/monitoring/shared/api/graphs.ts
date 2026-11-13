@@ -49,6 +49,17 @@ const NOT_BUILDABLE_TITLE = 'Graph cannot be built'
 // The service name the graphing backend reads as the host itself, as the legacy views pass it.
 const HOST_PSEUDO_SERVICE = '_HOST_'
 
+export function notBuildableReason(error: unknown): string | null {
+  if (!(error instanceof CmkApiError) || error.statusCode !== NOT_BUILDABLE_STATUS) {
+    return null
+  }
+  const body = error.body as MaybeRestApiError | undefined
+  if (body?.title !== NOT_BUILDABLE_TITLE) {
+    return null
+  }
+  return body.detail ?? null
+}
+
 export class GraphsApi {
   /** Discovers the graphs of a service of the host, or of the host itself without a service. */
   public async discover(host: HostRef, service?: string): Promise<DiscoveredGraphs> {
@@ -70,22 +81,11 @@ export class GraphsApi {
         errorMessage: null
       }
     } catch (error) {
-      const reason = GraphsApi.persistentFailureReason(error)
+      const reason = notBuildableReason(error)
       if (reason === null) {
         throw error
       }
       return { graphs: [], noDataMessage: null, errorMessage: reason }
     }
-  }
-
-  private static persistentFailureReason(error: unknown): string | null {
-    if (!(error instanceof CmkApiError) || error.statusCode !== NOT_BUILDABLE_STATUS) {
-      return null
-    }
-    const body = error.body as MaybeRestApiError | undefined
-    if (body?.title !== NOT_BUILDABLE_TITLE) {
-      return null
-    }
-    return body.detail ?? null
   }
 }

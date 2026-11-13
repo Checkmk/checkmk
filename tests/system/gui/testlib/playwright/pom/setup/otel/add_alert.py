@@ -179,8 +179,8 @@ class AlertWizard(CmkPage):
 
     @property
     def matching_services(self) -> Locator:
-        """One item per matching service, holding its service and host name."""
-        return self.active_step.locator(".mode-alerts-services-step__list > li")
+        """One table row per matching service, holding its service and host name."""
+        return self.active_step.locator(".mode-alerts-services-step__table > tbody > tr")
 
     def matching_service(self, service_name: str, host_name: str) -> Locator:
         return self.matching_services.filter(

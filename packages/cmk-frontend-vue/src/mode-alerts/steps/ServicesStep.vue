@@ -7,12 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
-import CmkChip from 'cmk-ui-library/components/CmkChip.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
+import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import type { CmkWizardStepProps } from 'cmk-ui-library/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
@@ -272,88 +273,88 @@ const unitsError = computed(() => {
 
     <template #content>
       <div class="mode-alerts-services-step">
-        <CmkParagraph>
-          {{ _t('Select the custom services the alert applies to by their service name.') }}
-        </CmkParagraph>
+        <div class="mode-alerts-services-step__form">
+          <CmkParagraph>
+            {{ _t('Select the custom services the alert applies to by their service name.') }}
+          </CmkParagraph>
 
-        <div class="mode-alerts-services-step__field">
-          <CmkLabel :for="patternFieldId">
-            {{ _t('Service name') }}
-            <CmkLabelRequired />
-            <CmkHelpText
-              :aria-label="_t('How are service names matched?')"
-              :help="
+          <div class="mode-alerts-services-step__field">
+            <CmkLabel :for="patternFieldId">
+              {{ _t('Service name') }}
+              <CmkLabelRequired />
+              <CmkHelpText
+                :aria-label="_t('How are service names matched?')"
+                :help="
+                  _t(
+                    'Exact matching needs the complete service name. A regular expression matches from the start of the service name, so begin it with .* to match anywhere in it.'
+                  )
+                "
+              />
+            </CmkLabel>
+            <div class="mode-alerts-services-step__service-row">
+              <CmkDropdown
+                v-model="selectedMatchType"
+                :options="matchTypeOptions"
+                :label="_t('Match service name by')"
+              />
+              <CustomServiceSelect
+                v-if="model.matchType === 'exact'"
+                :id="patternFieldId"
+                v-model="selectedServiceName"
+                :conditions="conditions"
+                :has-error="patternErrors.length > 0"
+              />
+              <CmkInput
+                v-else
+                :id="patternFieldId"
+                :model-value="model.servicePattern"
+                field-size="fill"
+                :placeholder="_t('Enter a regular expression…')"
+                :external-errors="patternErrors"
+                hide-validation-message
+                @update:model-value="(value) => (model.servicePattern = value ?? '')"
+              />
+            </div>
+            <CmkAlert
+              v-if="matchMaySelectOthers"
+              variant="warning"
+              :text="
                 _t(
-                  'Exact matching needs the complete service name. A regular expression matches from the start of the service name, so begin it with .* to match anywhere in it.'
+                  'This service name may also match other custom services on these hosts. Review it before you continue.'
                 )
               "
             />
-          </CmkLabel>
-          <div class="mode-alerts-services-step__service-row">
-            <CmkDropdown
-              v-model="selectedMatchType"
-              :options="matchTypeOptions"
-              :label="_t('Match service name by')"
-            />
-            <CustomServiceSelect
-              v-if="model.matchType === 'exact'"
-              :id="patternFieldId"
-              v-model="selectedServiceName"
-              :conditions="conditions"
-              :has-error="patternErrors.length > 0"
-            />
-            <CmkInput
-              v-else
-              :id="patternFieldId"
-              :model-value="model.servicePattern"
-              field-size="fill"
-              :placeholder="_t('Enter a regular expression…')"
-              :external-errors="patternErrors"
-              hide-validation-message
-              @update:model-value="(value) => (model.servicePattern = value ?? '')"
+            <CmkAlert
+              v-for="error in patternErrors"
+              :key="error"
+              variant="error"
+              size="small"
+              :text="untranslated(error)"
             />
           </div>
+
+          <div class="mode-alerts-services-step__field">
+            <CmkHeading type="h4">{{ _t('Conditions') }}</CmkHeading>
+            <FormEdit
+              v-model:data="model.conditions"
+              :spec="conditionsSpec"
+              :backend-validation="conditionsValidation"
+            />
+          </div>
+
           <CmkAlert
-            v-if="matchMaySelectOthers"
-            variant="warning"
-            size="small"
-            :text="
-              _t(
-                'This service name may also match other custom services on these hosts. Review it before you continue.'
-              )
-            "
-          />
-          <CmkAlert
-            v-for="error in patternErrors"
-            :key="error"
+            v-if="searchError"
             variant="error"
             size="small"
-            :text="untranslated(error)"
+            :text="untranslated(searchError)"
           />
         </div>
-
-        <div class="mode-alerts-services-step__field">
-          <CmkHeading type="h4">{{ _t('Conditions') }}</CmkHeading>
-          <FormEdit
-            v-model:data="model.conditions"
-            :spec="conditionsSpec"
-            :backend-validation="conditionsValidation"
-          />
-        </div>
-
-        <CmkAlert
-          v-if="searchError"
-          variant="error"
-          size="small"
-          :text="untranslated(searchError)"
-        />
 
         <CmkLoading v-if="searching" />
 
         <CmkAlert
           v-else-if="noMatches"
           :variant="displayErrors ? 'error' : 'warning'"
-          size="small"
           :text="
             _t(
               'No matching services. A custom service is found once it is discovered or its series reported in the last 10 minutes.'
@@ -363,9 +364,7 @@ const unitsError = computed(() => {
 
         <div v-else-if="matches" class="mode-alerts-services-step__results">
           <div class="mode-alerts-services-step__results-header">
-            <CmkLabel variant="subtitle">
-              {{ _t('Matching services') }} ({{ matches.total }})
-            </CmkLabel>
+            <CmkHeading type="h4"> {{ _t('Matching services') }} ({{ matches.total }}) </CmkHeading>
             <CmkButton
               v-if="matches.services.length > PREVIEW_LIMIT"
               variant="text"
@@ -376,19 +375,47 @@ const unitsError = computed(() => {
             </CmkButton>
           </div>
           <CmkScrollContainer max-height="240px">
-            <ul class="mode-alerts-services-step__list">
-              <li
-                v-for="service in visibleMatches"
-                :key="`${service.host_name}:${service.service_name}`"
-              >
-                <span class="mode-alerts-services-step__name">{{ service.service_name }}</span>
-                <CmkChip v-if="!service.discovered" as-div size="small" color="warning">
-                  {{ _t('not yet discovered') }}
-                </CmkChip>
-                <span class="mode-alerts-services-step__unit">{{ rowUnit(service) }}</span>
-                <span class="mode-alerts-services-step__host">{{ service.host_name }}</span>
-              </li>
-            </ul>
+            <table class="mode-alerts-services-step__table">
+              <colgroup>
+                <col class="mode-alerts-services-step__col--number" />
+                <col />
+                <col class="mode-alerts-services-step__col--unit" />
+                <col class="mode-alerts-services-step__col--host" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>{{ _t('Service name') }}</th>
+                  <th>{{ _t('Unit') }}</th>
+                  <th>{{ _t('Host') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(service, position) in visibleMatches"
+                  :key="`${service.host_name}:${service.service_name}`"
+                >
+                  <td class="mode-alerts-services-step__dimmed">{{ position + 1 }}</td>
+                  <td class="mode-alerts-services-step__name">
+                    {{ service.service_name }}
+                    <span
+                      v-if="!service.discovered"
+                      class="mode-alerts-services-step__status"
+                      :title="_t('not yet discovered')"
+                    >
+                      <CmkMultitoneIcon
+                        name="warning"
+                        :primary-color="{ custom: 'var(--status-icon-color-warning)' }"
+                        size="small"
+                      />
+                      <CmkVisuallyHidden :text="_t('not yet discovered')" />
+                    </span>
+                  </td>
+                  <td class="mode-alerts-services-step__dimmed">{{ rowUnit(service) }}</td>
+                  <td class="mode-alerts-services-step__name">{{ service.host_name }}</td>
+                </tr>
+              </tbody>
+            </table>
           </CmkScrollContainer>
           <CmkParagraph v-if="unlisted > 0">
             {{
@@ -413,7 +440,6 @@ const unitsError = computed(() => {
           <CmkAlert
             v-if="matches.undiscovered > 0"
             variant="warning"
-            size="small"
             :text="
               _tn(
                 '%{count} of these services is not discovered yet. The alert applies to it only after a service discovery on %{hosts}.',
@@ -426,7 +452,6 @@ const unitsError = computed(() => {
           <CmkAlert
             v-if="matches.incomplete_configurations.length > 0"
             variant="warning"
-            size="small"
             :text="
               _tn(
                 'The custom service %{names} has more series than can be checked here. The alert also applies to its services that are not listed, but their units were not checked.',
@@ -439,7 +464,6 @@ const unitsError = computed(() => {
           <CmkAlert
             v-if="matches.unreachable_sites.length > 0"
             variant="warning"
-            size="small"
             :text="
               _tn(
                 'The site %{sites} did not answer, so its services are missing.',
@@ -467,17 +491,21 @@ const unitsError = computed(() => {
 </template>
 
 <style scoped>
-.mode-alerts-services-step {
+.mode-alerts-services-step,
+.mode-alerts-services-step__form {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-5);
+}
+
+.mode-alerts-services-step__form {
   max-width: 620px;
 }
 
 .mode-alerts-services-step__field {
   display: flex;
   flex-direction: column;
-  gap: var(--dimension-2);
+  gap: var(--dimension-4);
 }
 
 .mode-alerts-services-step__service-row {
@@ -506,27 +534,65 @@ const unitsError = computed(() => {
   gap: var(--dimension-4);
 }
 
-.mode-alerts-services-step__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: var(--font-size-small);
+.mode-alerts-services-step__table {
+  border-collapse: separate;
+  border-spacing: 0 var(--dimension-3);
+  table-layout: fixed;
+  width: 100%;
+  text-align: left;
+
+  th,
+  td {
+    padding: var(--dimension-3) var(--dimension-4);
+    vertical-align: middle;
+  }
+
+  th {
+    padding-block: 0;
+    font-weight: var(--font-weight-bold);
+  }
+
+  td {
+    background: var(--ux-theme-3);
+  }
+
+  td:first-child {
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+  }
+
+  td:last-child {
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  }
+
+  tbody tr:hover td {
+    background: var(--background-row-hover-strong);
+  }
 }
 
-.mode-alerts-services-step__list li {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--dimension-4);
-  padding: var(--dimension-2) 0;
+.mode-alerts-services-step__col--number {
+  width: 40px;
+}
+
+.mode-alerts-services-step__col--unit {
+  width: 20%;
+}
+
+.mode-alerts-services-step__col--host {
+  width: 25%;
+}
+
+.mode-alerts-services-step__status {
+  display: inline-flex;
+  margin-left: var(--dimension-3);
+  vertical-align: middle;
 }
 
 .mode-alerts-services-step__name {
-  flex: 1;
+  overflow-wrap: anywhere;
 }
 
-.mode-alerts-services-step__unit,
-.mode-alerts-services-step__host {
+.mode-alerts-services-step__dimmed {
   color: var(--font-color-dimmed);
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 </style>

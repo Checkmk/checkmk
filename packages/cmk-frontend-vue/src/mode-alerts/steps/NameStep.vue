@@ -69,7 +69,7 @@ function validate(): Promise<boolean> {
 .mode-alerts-name-step {
   display: flex;
   flex-direction: column;
-  gap: var(--dimension-2);
+  gap: var(--dimension-4);
   max-width: 620px;
 }
 </style>

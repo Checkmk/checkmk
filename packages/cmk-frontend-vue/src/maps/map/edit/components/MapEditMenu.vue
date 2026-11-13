@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <!--
 The popup a floating edit button opens: a short list of choices above the
 button, with the active one ticked. Used by the add-object picker and the
-grid-size menu, which differ only in what they list.
+snap-grid menu, which differ only in what they list.
 -->
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'

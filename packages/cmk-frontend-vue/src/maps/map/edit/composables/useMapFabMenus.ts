@@ -13,9 +13,9 @@ import { snapGridSizes } from '@/maps/map/edit/draftFacts'
  * What the floating edit buttons open: the panel that adds an object, and the
  * menu that sets how coarsely the canvas snaps.
  *
- * Both only hold what is open — the editor owns the draft and the grid size
- * itself. Closing is the caller's: the grid button carries `v-click-outside`,
- * and the view's Escape handler reaches the menu through `gridMenuOpen`.
+ * Both only hold what is open — the editor owns the draft and the snap-grid size
+ * itself. Closing is the caller's: the snap button carries `v-click-outside`,
+ * and the view's Escape handler reaches the menu through `snapMenuOpen`.
  */
 export function useMapFabMenus(editor: MapEditor) {
   const { _t } = usei18n()
@@ -50,28 +50,28 @@ export function useMapFabMenus(editor: MapEditor) {
     }
   )
 
-  // ---- Grid-snap menu ----
-  const gridMenuOpen = ref(false)
-  const gridSnapActive = computed(() => editor.snapGrid.value > 0)
-  const gridSizeOptions = computed(() => snapGridSizes(_t))
+  // ---- Snap-to-grid menu ----
+  const snapMenuOpen = ref(false)
+  const snapActive = computed(() => editor.snapGrid.value > 0)
+  const snapSizeOptions = computed(() => snapGridSizes(_t))
 
-  function pickGrid(value: number): void {
+  function pickSnapGrid(value: number): void {
     editor.snapGrid.value = value
-    gridMenuOpen.value = false
+    snapMenuOpen.value = false
   }
 
-  function closeGridMenu(): void {
-    gridMenuOpen.value = false
+  function closeSnapMenu(): void {
+    snapMenuOpen.value = false
   }
 
   return {
     addPanelOpen,
     toggleAddPanel,
     closeAddPanel,
-    gridMenuOpen,
-    gridSnapActive,
-    gridSizeOptions,
-    pickGrid,
-    closeGridMenu
+    snapMenuOpen,
+    snapActive,
+    snapSizeOptions,
+    pickSnapGrid,
+    closeSnapMenu
   }
 }

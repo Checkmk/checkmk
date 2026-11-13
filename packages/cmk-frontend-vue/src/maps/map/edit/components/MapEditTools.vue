@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <!--
 The floating controls that put a map into edit mode and keep it there: the
-add-object panel, the grid-size menu, and the buttons that open them.
+add-object panel, the snap-grid menu, and the buttons that open them.
 
 They sit over the map rather than in the page chrome, because editing is about
 the canvas — and they are the only chrome an operator needs while placing
@@ -28,8 +28,8 @@ const props = defineProps<{
   connectionId: string
   /** Presentation maps place elements on their slides, not via this panel. */
   offersAddObject: boolean
-  /** A geo map snaps to coordinates, so it has no grid to size. */
-  offersGrid: boolean
+  /** A geo map snaps to coordinates, so it has no grid to snap to. */
+  offersSnapGrid: boolean
   /** False while a dialog over the map owns the keyboard. */
   keyboardActive: boolean
   /** The slide inspector takes the right edge, so the tools sit left of it. */
@@ -56,15 +56,15 @@ const {
   addPanelOpen,
   toggleAddPanel,
   closeAddPanel,
-  gridMenuOpen,
-  gridSnapActive,
-  gridSizeOptions,
-  pickGrid,
-  closeGridMenu
+  snapMenuOpen,
+  snapActive,
+  snapSizeOptions,
+  pickSnapGrid,
+  closeSnapMenu
 } = useMapFabMenus(props.editor)
 
 const addButton = useTemplateRef<HTMLButtonElement>('addButton')
-const gridButton = useTemplateRef<HTMLButtonElement>('gridButton')
+const snapButton = useTemplateRef<HTMLButtonElement>('snapButton')
 
 /** Closing the form hands the focus back to the button that opened it. */
 function dismissAddPanel(): void {
@@ -73,7 +73,7 @@ function dismissAddPanel(): void {
 }
 
 /**
- * Dismiss the grid menu and put the focus back on the button that opened it —
+ * Dismiss the snap menu and put the focus back on the button that opened it —
  * otherwise Escape drops a keyboard user out of the controls entirely.
  *
  * The add-object panel is deliberately not dismissed here: it is a form, and a
@@ -84,11 +84,11 @@ function dismissAddPanel(): void {
  * would go on to clear the selection in the same keystroke.
  */
 function dismissMenus(): boolean {
-  if (!gridMenuOpen.value) {
+  if (!snapMenuOpen.value) {
     return false
   }
-  closeGridMenu()
-  gridButton.value?.focus()
+  closeSnapMenu()
+  snapButton.value?.focus()
   return true
 }
 
@@ -101,8 +101,8 @@ useMapEditShortcuts(props.editor, {
 
 const editing = computed(() => props.editor.editMode.value)
 
-const gridEntries = computed<MapEditMenuEntry[]>(() =>
-  gridSizeOptions.value.map((option) => ({
+const snapEntries = computed<MapEditMenuEntry[]>(() =>
+  snapSizeOptions.value.map((option) => ({
     key: String(option.value),
     title: option.title,
     active: props.editor.snapGrid.value === option.value
@@ -155,24 +155,22 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
     </Transition>
 
     <div
-      v-if="editing && offersGrid"
-      v-click-outside="closeGridMenu"
+      v-if="editing && offersSnapGrid"
+      v-click-outside="closeSnapMenu"
       class="maps-map-edit-tools__anchor"
     >
       <button
-        ref="gridButton"
+        ref="snapButton"
         type="button"
         class="maps-map-edit-tools__button"
         :class="
-          gridSnapActive
-            ? 'maps-map-edit-tools__button--active'
-            : 'maps-map-edit-tools__button--idle'
+          snapActive ? 'maps-map-edit-tools__button--active' : 'maps-map-edit-tools__button--idle'
         "
         :title="_t('Grid')"
         :aria-label="_t('Grid')"
-        :aria-expanded="gridMenuOpen"
+        :aria-expanded="snapMenuOpen"
         aria-haspopup="menu"
-        @click="gridMenuOpen = !gridMenuOpen"
+        @click="snapMenuOpen = !snapMenuOpen"
       >
         <CmkIcon name="dashboard-grid" size="medium" />
       </button>
@@ -183,11 +181,11 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
         leave-active-class="maps-map-edit-tools__menu-leave-active"
       >
         <MapEditMenu
-          v-if="gridMenuOpen"
+          v-if="snapMenuOpen"
           :label="_t('Grid')"
-          :entries="gridEntries"
+          :entries="snapEntries"
           choice
-          @pick="pickGrid(Number($event))"
+          @pick="pickSnapGrid(Number($event))"
         />
       </Transition>
     </div>

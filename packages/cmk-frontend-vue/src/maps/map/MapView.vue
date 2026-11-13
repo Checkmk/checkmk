@@ -989,7 +989,7 @@ function closeBulkAckModal(sent: boolean): void {
         :connection-id="mapConfig?.connection_id ?? ''"
         :keyboard-active="editKeyboardActive"
         :offers-add-object="!isPresentation"
-        :offers-grid="!isWorldmap && !isPresentation"
+        :offers-snap-grid="!isWorldmap && !isPresentation"
         :beside-inspector="isPresentation && editor.editMode.value"
         @start-placing="onStartPlacing()"
         @toggle-edit-mode="onToggleEditMode"

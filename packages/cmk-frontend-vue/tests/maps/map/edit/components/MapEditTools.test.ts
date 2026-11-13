@@ -33,7 +33,7 @@ function renderTools(selection: string[], keyboardActive = true) {
       editor,
       connectionId: 'test',
       offersAddObject: true,
-      offersGrid: true,
+      offersSnapGrid: true,
       keyboardActive,
       besideInspector: false
     },
@@ -188,7 +188,7 @@ describe('MapEditTools – the add-object panel', () => {
   })
 })
 
-describe('MapEditTools – reaching the grid menu by keyboard', () => {
+describe('MapEditTools – reaching the snap-grid menu by keyboard', () => {
   it('puts the menu after its button, so Tab walks into it', async () => {
     renderTools([])
     const button = screen.getByRole('button', { name: 'Grid' })

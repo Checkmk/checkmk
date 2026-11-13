@@ -58,7 +58,7 @@ _APPEARANCE_TABLE_SELECTOR = ".graphing-appearance-table"
 _APPEARANCE_SERIES_ROW_SELECTOR = ".graphing-appearance-table__expanded-row"
 
 _CREATE_CUSTOM_SERVICE = "Create custom service"
-_SELECT_HOST_FIELD = "Select host"
+_SELECT_HOST_FIELD = re.compile(r"^Select host\b")
 
 
 class DesignerBody(ABC):
@@ -212,7 +212,7 @@ class DesignerBody(ABC):
     def _fill_autocompleter(
         self,
         form: Locator,
-        field_name: str,
+        field_name: str | re.Pattern[str],
         option_title: str,
         *,
         filter_text: str | None = None,

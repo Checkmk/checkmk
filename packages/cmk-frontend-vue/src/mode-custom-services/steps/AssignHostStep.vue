@@ -9,12 +9,14 @@ import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_fil
 import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
 import FormAutocompleter from 'cmk-ui-library/components/FormAutocompleter/FormAutocompleter.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref, watch } from 'vue'
 
@@ -124,35 +126,58 @@ const openTelemetryData = useOpenTelemetryData(() => {
   return templatePreview.status === 'resolved' ? templatePreview.resolution.matching_hosts : []
 })
 
+const serviceNameMacroHelp = untranslated(
+  [
+    _t(
+      'Combine free text with macros to name each service after the data it monitors: every macro is replaced by the matching value of each series, such as the metric name or an OpenTelemetry attribute, so different series can get their own services.'
+    ),
+    '',
+    _t('Available service name macros:'),
+    [
+      '$METRIC_NAME$',
+      '$SERIES_ID$',
+      '$RESOURCE_ATTR.&lt;key&gt;$',
+      '$SCOPE_ATTR.&lt;key&gt;$',
+      '$DATA_POINT_ATTR.&lt;key&gt;$'
+    ]
+      .map((macro) => `<tt>${macro}</tt>`)
+      .join(', ')
+  ].join('<br>')
+)
+
+const appendedAttributesHelp = _t(
+  'The attribute values of each series are appended to this name, so that every series gets its own service, e.g. "http.server.duration GET - 200". Very long names are shortened and end in a short hash. Use "Group by" to append only the grouped attributes: this keeps the names short and stable, as every new attribute value creates a new service.'
+)
+
+const serviceNameFieldId = useId()
 const hostFieldId = useId()
-const serviceNameHelpId = useId()
 const assignmentLabelId = useId()
 const templateFieldId = useId()
 </script>
 
 <template>
   <div class="mode-custom-services-assign-host-step">
-    <CmkParagraph>{{ _t('Register this metric as a service on a host.') }}</CmkParagraph>
+    <CmkParagraph>{{ _t('Monitor this metric as a service on a host.') }}</CmkParagraph>
 
-    <label class="mode-custom-services-assign-host-step__field">
-      <span class="mode-custom-services-assign-host-step__label">{{ _t('Service name') }}</span>
-      <CmkInput
-        v-model="serviceName"
-        field-size="large"
-        :unit="appendedAttributes"
-        :described-by="appendSeriesAttributes ? serviceNameHelpId : undefined"
-      />
-    </label>
-    <CmkParagraph
-      v-if="appendSeriesAttributes"
-      :id="serviceNameHelpId"
-      class="mode-custom-services-assign-host-step__help"
-      >{{
-        _t(
-          'The attribute values of each series are appended to this name, so that every series gets its own service, e.g. "http.server.duration GET - 200". Very long names are shortened and end in a short hash. Use "Group by" to append only the grouped attributes: this keeps the names short and stable, as every new attribute value creates a new service.'
-        )
-      }}</CmkParagraph
-    >
+    <div class="mode-custom-services-assign-host-step__field">
+      <CmkLabel :for="serviceNameFieldId" :help="serviceNameMacroHelp"
+        ><span class="mode-custom-services-assign-host-step__label">{{ _t('Service name') }}</span
+        ><CmkLabelRequired space="before"
+      /></CmkLabel>
+      <div class="mode-custom-services-assign-host-step__service-name">
+        <CmkInput
+          :id="serviceNameFieldId"
+          v-model="serviceName"
+          field-size="large"
+          :unit="appendedAttributes"
+        />
+        <CmkHelpText
+          v-if="appendSeriesAttributes"
+          :aria-label="_t('About the appended attributes')"
+          :help="appendedAttributesHelp"
+        />
+      </div>
+    </div>
 
     <div class="mode-custom-services-assign-host-step__field">
       <span :id="assignmentLabelId" class="mode-custom-services-assign-host-step__label">{{
@@ -170,11 +195,14 @@ const templateFieldId = useId()
         <template #tab-contents>
           <CmkTabContent id="manual">
             <div class="mode-custom-services-assign-host-step__tab-form">
-              <CmkParagraph class="mode-custom-services-assign-host-step__tab-description">{{
-                _t('Select one host to add the service to.')
-              }}</CmkParagraph>
+              <CmkParagraph>{{ _t('Select one host to add the service(s) to.') }}</CmkParagraph>
               <div class="mode-custom-services-assign-host-step__field">
-                <CmkLabel variant="subtitle" :for="hostFieldId">{{ _t('Select host') }}</CmkLabel>
+                <CmkLabel :for="hostFieldId"
+                  ><span class="mode-custom-services-assign-host-step__label">{{
+                    _t('Select host')
+                  }}</span
+                  ><CmkLabelRequired space="before"
+                /></CmkLabel>
                 <FormAutocompleter
                   :id="hostFieldId"
                   :model-value="hostName"
@@ -190,22 +218,24 @@ const templateFieldId = useId()
           </CmkTabContent>
           <CmkTabContent id="automatic">
             <div class="mode-custom-services-assign-host-step__tab-form">
-              <CmkParagraph class="mode-custom-services-assign-host-step__tab-description">{{
+              <CmkParagraph>{{
                 _t(
                   'Derive the host from a host name template, so every matching host gets the service.'
                 )
               }}</CmkParagraph>
               <div class="mode-custom-services-assign-host-step__field">
                 <CmkLabel
-                  variant="subtitle"
                   :for="templateFieldId"
                   :help="
                     _t(
                       'Click an attribute to insert its placeholder. Every combination of attribute values the template references resolves to one host name. The service is created on the configured hosts the template resolves to when saving.'
                     )
                   "
-                  >{{ _t('Host name template') }}</CmkLabel
-                >
+                  ><span class="mode-custom-services-assign-host-step__label">{{
+                    _t('Host name template')
+                  }}</span
+                  ><CmkLabelRequired space="before"
+                /></CmkLabel>
                 <CmkInput
                   :id="templateFieldId"
                   :model-value="hostNameTemplate ?? ''"
@@ -216,27 +246,17 @@ const templateFieldId = useId()
                 />
               </div>
               <div class="mode-custom-services-assign-host-step__tab-notes">
-                <CmkParagraph
-                  v-if="templateAttributesError"
-                  class="mode-custom-services-assign-host-step__note"
-                  >{{ templateAttributesError }}</CmkParagraph
-                >
-                <CmkParagraph
-                  v-else-if="templateAttributes?.availability === 'series_merged'"
-                  class="mode-custom-services-assign-host-step__note"
-                  >{{
-                    _t(
-                      'The metric step combines all series into one, so no attribute can tell hosts apart. Group the series by the attributes the template should use.'
-                    )
-                  }}</CmkParagraph
-                >
-                <CmkParagraph
-                  v-else-if="templateAttributes?.availability === 'no_series'"
-                  class="mode-custom-services-assign-host-step__note"
-                  >{{
-                    _t('No series of this metric reported any attributes within the last hour.')
-                  }}</CmkParagraph
-                >
+                <CmkParagraph v-if="templateAttributesError">{{
+                  templateAttributesError
+                }}</CmkParagraph>
+                <CmkParagraph v-else-if="templateAttributes?.availability === 'series_merged'">{{
+                  _t(
+                    'The metric step combines all series into one, so no attribute can tell hosts apart. Group the series by the attributes the template should use.'
+                  )
+                }}</CmkParagraph>
+                <CmkParagraph v-else-if="templateAttributes?.availability === 'no_series'">{{
+                  _t('No series of this metric reported any attributes within the last hour.')
+                }}</CmkParagraph>
                 <div
                   v-else-if="templateAttributes"
                   class="mode-custom-services-assign-host-step__attributes"
@@ -250,11 +270,9 @@ const templateFieldId = useId()
                     @click="insertMacro(templateMacro(attribute))"
                     >+ {{ attribute.key }}</CmkButton
                   >
-                  <CmkParagraph
-                    v-if="templateAttributes.truncated"
-                    class="mode-custom-services-assign-host-step__note"
-                    >{{ _t('Only the first attributes of each kind are listed.') }}</CmkParagraph
-                  >
+                  <CmkParagraph v-if="templateAttributes.truncated">{{
+                    _t('Only the first attributes of each kind are listed.')
+                  }}</CmkParagraph>
                 </div>
               </div>
             </div>
@@ -269,8 +287,7 @@ const templateFieldId = useId()
       </span>
       <div v-if="hostName" class="mode-custom-services-assign-host-step__summary">
         <span
-          >{{ _t('Service:') }} <strong>{{ serviceName }}</strong>
-          <template v-if="appendedAttributes">{{ appendedAttributes }}</template></span
+          >{{ _t('Service:') }} <strong>{{ serviceName }}</strong> {{ appendedAttributes }}</span
         >
         <span
           >{{ _t('Target host:') }} <strong>{{ hostName }}</strong></span
@@ -302,7 +319,7 @@ const templateFieldId = useId()
 .mode-custom-services-assign-host-step__field {
   display: flex;
   flex-direction: column;
-  gap: var(--dimension-2);
+  gap: var(--dimension-4);
 }
 
 .mode-custom-services-assign-host-step__tab-form {
@@ -311,28 +328,20 @@ const templateFieldId = useId()
   gap: var(--dimension-5);
 }
 
-.mode-custom-services-assign-host-step__tab-description {
-  font-size: var(--font-size-small);
-}
-
 .mode-custom-services-assign-host-step__tab-notes {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-3);
 }
 
-.mode-custom-services-assign-host-step__note {
-  font-size: var(--font-size-small);
-}
-
 .mode-custom-services-assign-host-step__label {
   font-weight: bold;
-  font-size: var(--font-size-small);
 }
 
-.mode-custom-services-assign-host-step__help {
-  margin-top: calc(-1 * var(--dimension-3));
-  font-size: var(--font-size-small);
+.mode-custom-services-assign-host-step__service-name {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-3);
 }
 
 .mode-custom-services-assign-host-step__attributes {
@@ -353,6 +362,5 @@ const templateFieldId = useId()
   display: flex;
   flex-direction: column;
   gap: var(--dimension-2);
-  font-size: var(--font-size-small);
 }
 </style>

@@ -107,7 +107,6 @@ const {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-2);
-  font-size: var(--font-size-small);
   overflow-wrap: anywhere;
 }
 </style>

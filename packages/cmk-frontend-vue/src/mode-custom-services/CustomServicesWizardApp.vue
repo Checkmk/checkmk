@@ -160,8 +160,13 @@ async function saveService(target: string): Promise<void> {
           <CmkHeading type="h3">{{ _t('General configuration properties') }}</CmkHeading>
         </template>
         <template #content>
-          <CmkParagraph>{{ _t('Set the custom service configuration name.') }}</CmkParagraph>
-          <ConfigureNameStep ref="nameStep" v-model:configuration-name="model.configurationName" />
+          <div class="mode-custom-services-custom-services-wizard-app__name-step">
+            <CmkParagraph>{{ _t('Set the custom service configuration name.') }}</CmkParagraph>
+            <ConfigureNameStep
+              ref="nameStep"
+              v-model:configuration-name="model.configurationName"
+            />
+          </div>
         </template>
         <template #actions>
           <CmkWizardButton type="next" :validation-cb="validateNameStep" />
@@ -242,5 +247,11 @@ async function saveService(target: string): Promise<void> {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-3);
+}
+
+.mode-custom-services-custom-services-wizard-app__name-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
 }
 </style>

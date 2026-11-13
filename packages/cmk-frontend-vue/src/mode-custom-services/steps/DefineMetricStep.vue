@@ -55,7 +55,7 @@ const aggregator = defineModel<Aggregator | undefined>('aggregator', { required:
 .mode-custom-services-define-metric-step {
   display: flex;
   flex-direction: column;
-  gap: var(--dimension-3);
+  gap: var(--dimension-4);
 }
 
 .mode-custom-services-define-metric-step__form {

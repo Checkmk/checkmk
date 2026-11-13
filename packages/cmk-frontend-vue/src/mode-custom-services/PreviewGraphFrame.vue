@@ -59,49 +59,51 @@ function onPanelTimeRange(requested: RequestedTimeRange): void {
 </script>
 
 <template>
-  <div ref="graphContainer" class="mode-custom-services-preview-graph-frame">
+  <div class="mode-custom-services-preview-graph-frame">
     <GlobalTimePicker
       v-model="timePickerRange"
       :custom-time-ranges="timePicker.custom_time_ranges"
       :server-time-zone="timePicker.server_time_zone"
       :first-day-of-week="timePicker.first_day_of_week"
     />
-    <GraphPanel
-      :metrics="metrics"
-      :data-time-range="dataTimeRange"
-      :answered-time-range="answeredTimeRange"
-      :failed-time-range="failedTimeRange"
-      :horizontal-lines="horizontalLines"
-      :fit-horizontal-lines="fitHorizontalLines"
-      :requested-time-range="requestedTimeRange"
-      :panel-key="panelKey"
-      :range-change="rangeChange"
-      :title="title"
-      show-title
-      show-timestamp
-      show-legend
-      :figure-width="figureWidth"
-      :figure-height="200"
-      :interaction="{
-        brush: 'disabled',
-        burger: 'disabled',
-        hover: 'enabled',
-        panning: 'enabled',
-        zoom: 'enabled',
-        pin: 'disabled'
-      }"
-      @update:requested-time-range="onPanelTimeRange"
-      @inspect="emit('inspect')"
-    >
-      <template #notice>
-        <CmkSurfaceNotice
-          v-if="notice"
-          v-bind="notice"
-          class="mode-custom-services-preview-graph-frame__notice"
-          @retry="emit('retry')"
-        />
-      </template>
-    </GraphPanel>
+    <div ref="graphContainer" class="mode-custom-services-preview-graph-frame__box">
+      <GraphPanel
+        :metrics="metrics"
+        :data-time-range="dataTimeRange"
+        :answered-time-range="answeredTimeRange"
+        :failed-time-range="failedTimeRange"
+        :horizontal-lines="horizontalLines"
+        :fit-horizontal-lines="fitHorizontalLines"
+        :requested-time-range="requestedTimeRange"
+        :panel-key="panelKey"
+        :range-change="rangeChange"
+        :title="title"
+        show-title
+        show-timestamp
+        show-legend
+        :figure-width="figureWidth"
+        :figure-height="200"
+        :interaction="{
+          brush: 'disabled',
+          burger: 'disabled',
+          hover: 'enabled',
+          panning: 'enabled',
+          zoom: 'enabled',
+          pin: 'disabled'
+        }"
+        @update:requested-time-range="onPanelTimeRange"
+        @inspect="emit('inspect')"
+      >
+        <template #notice>
+          <CmkSurfaceNotice
+            v-if="notice"
+            v-bind="notice"
+            class="mode-custom-services-preview-graph-frame__notice"
+            @retry="emit('retry')"
+          />
+        </template>
+      </GraphPanel>
+    </div>
   </div>
 </template>
 
@@ -110,6 +112,13 @@ function onPanelTimeRange(requested: RequestedTimeRange): void {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
+}
+
+.mode-custom-services-preview-graph-frame__box {
+  position: relative;
+  padding: var(--dimension-7);
+  background: var(--ux-theme-3);
+  border-radius: var(--border-radius);
 }
 
 .mode-custom-services-preview-graph-frame__notice {

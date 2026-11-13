@@ -86,11 +86,7 @@ async function save(): Promise<void> {
     <div class="mode-custom-services-create-custom-service-slide-in">
       <div class="mode-custom-services-create-custom-service-slide-in__name">
         <CmkParagraph>{{ _t('Set the custom service configuration name.') }}</CmkParagraph>
-        <ConfigureNameStep
-          ref="nameStep"
-          v-model:configuration-name="model.configurationName"
-          stacked
-        />
+        <ConfigureNameStep ref="nameStep" v-model:configuration-name="model.configurationName" />
       </div>
       <AssignHostStep
         v-model:service-name="model.serviceName"

@@ -193,7 +193,7 @@ async function goToHostStepOfNewService(): Promise<void> {
   await userEvent.click(await screen.findByText('otel.http.duration (sum)'))
   await userEvent.click(await screen.findByRole('button', { name: 'Next step' }))
   await expectActiveStep('Assign to host')
-  const hostSelect = await screen.findByRole('combobox', { name: 'Select host' })
+  const hostSelect = await screen.findByRole('combobox', { name: /^Select host/ })
   await waitFor(() => expect(hostSelect).toBeEnabled())
   void userEvent.click(hostSelect)
   await userEvent.click(await screen.findByRole('option', { name: 'web01' }))

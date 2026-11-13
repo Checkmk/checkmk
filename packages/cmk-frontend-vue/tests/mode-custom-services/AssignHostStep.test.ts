@@ -148,6 +148,7 @@ test('selects a host from the injected autocompleter suggestions', async () => {
 test('summarizes the service to be created once a host is chosen', () => {
   renderStep('HTTP duration', 'web01')
   expect(screen.getByText(/Services to be created/)).toHaveTextContent('(1)')
+  expect(screen.getByText(/Service:/)).toHaveTextContent('Service: HTTP duration + all attributes')
   expect(screen.getByText('web01')).toBeTruthy()
 })
 
@@ -173,15 +174,16 @@ test('tells which group-by attribute values are appended to the service name', (
   expect(screen.getByText('+ http.method + http.status_code')).toBeTruthy()
 })
 
-test('explains that very long service names are shortened', () => {
+test('explains that very long service names are shortened', async () => {
   renderStep('HTTP duration')
-  expect(screen.getByText(/shortened and end in a short hash/)).toBeTruthy()
+  await userEvent.click(screen.getByRole('button', { name: 'About the appended attributes' }))
+  expect(await screen.findByRole('tooltip')).toHaveTextContent(/shortened and end in a short hash/)
 })
 
 test('a service name without appended attributes shows neither indicator nor explanation', () => {
   renderStep('Pod CPU usage', null, { appendSeriesAttributes: false })
   expect(screen.queryByText('+ all attributes')).toBeNull()
-  expect(screen.queryByText(/short hash/)).toBeNull()
+  expect(screen.queryByRole('button', { name: 'About the appended attributes' })).toBeNull()
 })
 
 test('choosing automatic assignment asks for a host name template instead of a host', async () => {
@@ -191,7 +193,7 @@ test('choosing automatic assignment asks for a host name template instead of a h
 
   expect(host.value).toBeNull()
   expect(template.value).toBe('')
-  expect(screen.getByLabelText('Host name template')).toBeTruthy()
+  expect(screen.getByLabelText(/^Host name template/)).toBeTruthy()
   expect(screen.queryByText('Select host')).toBeNull()
 })
 
@@ -207,7 +209,7 @@ test('edits the host name template', async () => {
   const { template } = renderStep('HTTP duration', null, { hostNameTemplate: '' })
 
   await userEvent.type(
-    screen.getByLabelText('Host name template'),
+    screen.getByLabelText(/^Host name template/),
     'pod-$RESOURCE_ATTR.k8s.pod.name$'
   )
 
@@ -222,7 +224,7 @@ test('switching back to manual assignment discards the host name template', asyn
   await userEvent.click(screen.getByRole('tab', { name: 'Manual' }))
 
   expect(template.value).toBeNull()
-  expect(screen.queryByLabelText('Host name template')).toBeNull()
+  expect(screen.queryByLabelText(/^Host name template/)).toBeNull()
 })
 
 test('shows why the host name template was refused at the template field', () => {

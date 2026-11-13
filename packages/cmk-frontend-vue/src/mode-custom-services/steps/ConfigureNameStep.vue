@@ -23,11 +23,6 @@ const NAME_PREFIX = 'custom_service_config_'
 
 const { _t } = usei18n()
 
-const { stacked = false } = defineProps<{
-  /** Label above a wide input, as in the slide-in, instead of the wizard's label beside the input. */
-  stacked?: boolean
-}>()
-
 const configurationNameId = useId()
 
 const configurationName = defineModel<string>('configurationName', { required: true })
@@ -78,18 +73,20 @@ defineExpose({ validate })
 <template>
   <div
     class="mode-custom-services-configure-name-step"
-    :class="{ 'mode-custom-services-configure-name-step--stacked': stacked }"
     role="group"
     :aria-label="_t('General configuration properties')"
   >
-    <CmkLabel :for="configurationNameId" :variant="stacked ? 'subtitle' : 'default'"
-      >{{ _t('Configuration name') }} <CmkLabelRequired
+    <CmkLabel :for="configurationNameId"
+      ><span class="mode-custom-services-configure-name-step__label">{{
+        _t('Configuration name')
+      }}</span
+      ><CmkLabelRequired space="before"
     /></CmkLabel>
     <CmkInput
       :id="configurationNameId"
       v-model="configurationName"
       type="text"
-      :field-size="stacked ? 'large' : 'medium'"
+      field-size="large"
       :placeholder="`${NAME_PREFIX}1`"
       :external-errors="allErrors"
       aria-required="true"
@@ -99,14 +96,12 @@ defineExpose({ validate })
 
 <style scoped>
 .mode-custom-services-configure-name-step {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--spacing) var(--dimension-6);
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
+}
 
-  &.mode-custom-services-configure-name-step--stacked {
-    grid-template-columns: 1fr;
-    row-gap: var(--dimension-2);
-  }
+.mode-custom-services-configure-name-step__label {
+  font-weight: bold;
 }
 </style>

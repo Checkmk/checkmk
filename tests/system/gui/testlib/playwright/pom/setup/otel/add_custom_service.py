@@ -86,7 +86,7 @@ class CustomServiceWizard(CmkPage):
 
     @property
     def host_select(self) -> Locator:
-        return self.active_step.get_by_role("combobox", name="Select host", exact=True)
+        return self.active_step.get_by_role("combobox", name=re.compile(r"^Select host\b"))
 
     def assign_host(self, host_name: str) -> None:
         """Search for `host_name` in the host dropdown and pick it."""

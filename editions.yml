@@ -14,7 +14,7 @@ common: &common
 
 # A reduced set of distros for the daily builds
 # Containing only the latest version of each supported OS
-# ubuntu-24.04 is used as base of the Docker image
+# ubuntu-26.04 is used as base of the Docker image
 daily_reduced: &daily_reduced
     - "almalinux-10"
     - "debian-13"
@@ -24,8 +24,8 @@ daily_reduced: &daily_reduced
     - "sles-16.0"
 
 daily_saas: &daily_saas
-    - "ubuntu-22.04"
     - "ubuntu-24.04"
+    - "ubuntu-26.04"
 
 # Builds for those distros will only be available internally for development purpose
 # ubuntu-22.04: CI jobs still run on it, to be removed with CMK-35236

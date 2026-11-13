@@ -23,6 +23,7 @@ import os
 import subprocess
 import tarfile
 from contextlib import suppress
+from datetime import datetime, UTC
 from pathlib import Path
 from socket import SocketIO
 from typing import Any, Final, Literal, Self, TypedDict
@@ -54,7 +55,7 @@ logger = logging.getLogger()
 
 build_path = repo_path() / "docker_image"
 image_prefix = "docker-tests"
-DISTRO_CODENAME: Final = "noble"  # ubuntu-24.04
+DISTRO_CODENAME: Final = "resolute"  # ubuntu-26.04
 cloud_config_root = Path("/tmp/cmk-docker-test/cse-config-volume")
 IMAGE_BUILD_TIMEOUT_SECS = 30 * 60
 
@@ -235,10 +236,12 @@ def build_checkmk(
         prepare_package(package_info)
 
     logger.info("Building docker image (or reuse existing): %s", image_name(package_info))
+    build_date = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     buildargs = {
         "CMK_VERSION": package_info.version.version,
         "CMK_EDITION": package_info.edition.long,
         "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
+        "BUILD_DATE": build_date,
     }
     try:
         # The Dockerfile needs BuildKit (RUN --mount), which docker-py does not support
@@ -313,7 +316,7 @@ def build_checkmk(
         "org.opencontainers.image.version": package_info.version.version,
         "maintainer": "feedback@checkmk.com",
         "org.opencontainers.image.description": "Checkmk is a leading tool for Infrastructure & Application Monitoring",
-        "org.opencontainers.image.ref.name": "ubuntu",  # TODO: investigate who sets this
+        "org.opencontainers.image.created": build_date,
         "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",
         "org.opencontainers.image.title": "Checkmk",
         "org.opencontainers.image.url": "https://checkmk.com/",
@@ -340,8 +343,9 @@ def build_checkmk(
             raise AssertionError(f"Image config {key!r} is {config[key]!r}, expected {value!r}")
     if "Healthcheck" not in config:
         raise AssertionError("Image config has no Healthcheck")
-    if (layers := len(attrs["RootFS"]["Layers"])) != 5:
-        raise AssertionError(f"Image has {layers} layers, expected 5")
+    # 2 from the Ubuntu 26.04 base image, 4 from our Dockerfile
+    if (layers := len(attrs["RootFS"]["Layers"])) != 6:
+        raise AssertionError(f"Image has {layers} layers, expected 6")
 
     return image
 

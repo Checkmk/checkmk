@@ -55,7 +55,7 @@ void main() {
 
     def all_editions = ["ultimate", "pro", "ultimatemt", "community", "cloud"];
     def distros_component_mk_oracle_test = ["almalinux-8"];
-    def distros_container_integration_test = ["ubuntu-22.04"];
+    def distros_container_integration_test = ["ubuntu-26.04"];
     def distros_system_agent_update_test = ["ubuntu-24.04", "almalinux-10"];
 
     def job_parameters_common = [

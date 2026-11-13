@@ -92,7 +92,7 @@ RUN set -e \
 ARG CMK_VERSION="3.0.0b1"
 ARG CMK_EDITION
 # Distro codename is used to find the corresponding .deb package
-ARG DISTRO_CODENAME="noble"
+ARG DISTRO_CODENAME="resolute"
 
 # Now install the Checkmk version specific things. The Checkmk package and the signing key
 # are read from the bind-mounted package-source stage, so they never end up in an image layer.
@@ -117,7 +117,12 @@ RUN --mount=type=bind,from=package-source,target=/build-context \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/*
 
+# Without this, the image would claim the base image's build date as its own. Declared this late
+# so the changing date does not invalidate the cache of the layers above.
+ARG BUILD_DATE
+
 LABEL \
+    org.opencontainers.image.created="${BUILD_DATE}" \
     org.opencontainers.image.title="Checkmk" \
     org.opencontainers.image.version="${CMK_VERSION}" \
     org.opencontainers.image.description="Checkmk is a leading tool for Infrastructure & Application Monitoring" \

@@ -48,6 +48,7 @@ import os
 import re
 import subprocess
 import sys
+from datetime import datetime, UTC
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
@@ -401,7 +402,11 @@ def check_for_local_image(
 
 
 def build_tar_gz(
-    args: argparse.Namespace, version_tag: str, docker_path: str, docker_repo_name: str
+    args: argparse.Namespace,
+    version_tag: str,
+    docker_path: str,
+    docker_repo_name: str,
+    build_date: str,
 ) -> None:
     """Build the check-mk-EDITION-docker-VERSION.tar.gz file"""
     if args.image_cmk_base in (None, "", "None", "null"):
@@ -419,6 +424,7 @@ def build_tar_gz(
         "CMK_VERSION": args.version,
         "CMK_EDITION": args.edition,
         "IMAGE_CMK_BASE": image_cmk_base,
+        "BUILD_DATE": build_date,
     }
     this_tag = f"{docker_repo_name}/check-mk-{args.edition}:{version_tag}"
     tar_name = f"check-mk-{args.edition}-docker-{args.version}.tar.gz"
@@ -508,7 +514,7 @@ def build_image(
     docker_image_archive = f"check-mk-{args.edition}-docker-{args.version}.tar.gz"
     pkg_name = f"check-mk-{args.edition}-{args.version}"
     architecture = run_cmd(cmd=["dpkg", "--print-architecture"]).stdout.strip()
-    pkg_file = f"{pkg_name}_0.noble_{architecture}.deb"
+    pkg_file = f"{pkg_name}_0.resolute_{architecture}.deb"
 
     LOG.debug("docker_path: %(docker_path)s", {"docker_path": docker_path})
     LOG.debug(
@@ -532,7 +538,7 @@ def build_image(
     if version_tag is None:
         raise Exception("Required VERSION_TAG is not set.")
     needed_packages(
-        mk_file="omd/distros/UBUNTU_24.04.mk", output_file=f"{docker_path}/needed-packages"
+        mk_file="omd/distros/UBUNTU_26.04.mk", output_file=f"{docker_path}/needed-packages"
     )
 
     build_tar_gz(
@@ -540,6 +546,7 @@ def build_image(
         version_tag=version_tag,
         docker_path=docker_path,
         docker_repo_name=docker_repo_name,
+        build_date=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
 
     LOG.info("Move Image-Tarball ...")

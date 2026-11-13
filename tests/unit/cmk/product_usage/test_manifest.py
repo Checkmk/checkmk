@@ -12,7 +12,12 @@ import jsonschema
 import pytest
 
 from cmk.product_usage.manifest import build_cloud_trial_manifest, build_manifest, main
-from cmk.product_usage.schema import CloudTrialPayload, GrafanaUsageData, ProductUsagePayload
+from cmk.product_usage.schema import (
+    CloudTrialPayload,
+    GrafanaUsageData,
+    InventoryData,
+    ProductUsagePayload,
+)
 
 type BuildManifest = Callable[[], dict[str, object]]
 
@@ -49,6 +54,7 @@ def _payload(
         },
         timestamp=1767700800,
         checks={"check_mk-df": {"count": 1, "count_hosts": 1, "count_disabled": 0}},
+        inventory=InventoryData(hosts_with_inventory=4),
         grafana=grafana,
     )
 

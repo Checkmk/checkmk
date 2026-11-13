@@ -14,12 +14,13 @@ import pytest
 
 import cmk.product_usage.cli as product_usage_cli
 import cmk.product_usage.collectors.checks as checks_collector
+import cmk.product_usage.collectors.inventory as inventory_collector
 import cmk.product_usage.collectors.site_info as site_info_collector
 from cmk.ccc.version import Edition
 from cmk.licensing.handler import LicenseState
 from cmk.product_usage.config import load_product_usage_config, ProductUsageAnalyticsSettings
 from cmk.product_usage.exceptions import ConfigError
-from cmk.product_usage.schema import SiteInfo
+from cmk.product_usage.schema import InventoryData, SiteInfo
 from cmk.utils import http_proxy_config, paths
 
 
@@ -183,6 +184,11 @@ def test_dry_run_writes_the_cloud_trial_payload_only_on_a_cloud_trial_site(
         ),
     )
     monkeypatch.setattr(checks_collector, "collect", MagicMock(return_value={}))
+    monkeypatch.setattr(
+        inventory_collector,
+        "collect",
+        MagicMock(return_value=InventoryData(hosts_with_inventory=0)),
+    )
 
     assert product_usage_cli.main(["--dry-run"]) == 0
 

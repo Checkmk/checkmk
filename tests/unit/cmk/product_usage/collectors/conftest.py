@@ -24,4 +24,5 @@ def local_connection(mocker: MockerFixture) -> MockType:
     lc_mock: MockType = mocker.Mock()
     mocker.patch("cmk.product_usage.collectors.checks.LocalConnection", return_value=lc_mock)
     mocker.patch("cmk.product_usage.collectors.site_info.LocalConnection", return_value=lc_mock)
+    mocker.patch("cmk.product_usage.collectors.inventory.LocalConnection", return_value=lc_mock)
     return lc_mock

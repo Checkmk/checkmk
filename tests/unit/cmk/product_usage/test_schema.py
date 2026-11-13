@@ -34,6 +34,7 @@ def _product_usage_data() -> dict[str, object]:
             },
         },
         "timestamp": int(datetime.datetime.now(tz=datetime.UTC).timestamp()),
+        "inventory": {"hosts_with_inventory": 4},
         "grafana": {
             "is_used": True,
             "version": "2.3.4",

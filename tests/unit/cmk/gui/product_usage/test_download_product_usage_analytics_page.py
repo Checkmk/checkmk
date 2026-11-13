@@ -19,7 +19,7 @@ from cmk.gui.product_usage_analytics.download import PageDownloadProductUsage
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.product_usage.schema import ProductUsagePayload
+from cmk.product_usage.schema import InventoryData, ProductUsagePayload
 
 
 @pytest.fixture(name="page_context")
@@ -59,6 +59,7 @@ def fixture_mock_product_usage_data() -> ProductUsagePayload:
             },
         },
         checks={},
+        inventory=InventoryData(hosts_with_inventory=4),
         grafana=None,
     )
 

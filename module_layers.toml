@@ -427,6 +427,7 @@ allows = []
 allows = [
   "cmk.ai_control_plane.lib.crash_reporting",
   "cmk.ai_control_plane.lib.paths",
+  "cmk.ai_control_plane.lib.usage_data",
   "cmk.ai_control_plane.protocols",
   "cmk.password_store.v1",
 ]

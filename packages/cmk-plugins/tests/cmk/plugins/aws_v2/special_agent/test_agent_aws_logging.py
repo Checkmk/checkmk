@@ -4,12 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Only the -v flag decides what the agent logs, and only failures are warnings."""
 
+import io
 import logging
+from argparse import Namespace as Args
 from collections.abc import Iterator
+from unittest import mock
 
 import pytest
 
 from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import agent_aws_main, parse_arguments
+from cmk.plugins.aws_v2.special_agent.config import AWSConfig, NamingConvention
+from cmk.plugins.aws_v2.special_agent.runner import AWSSectionsGeneric
+from cmk.plugins.aws_v2.special_agent.sections.s3 import ResultDistributorS3Limits
 
 ARGS = [
     "--hostname",
@@ -74,3 +80,21 @@ def test_three_verbose_flags_add_debug_output(capsys: pytest.CaptureFixture[str]
     agent_aws_main(parse_arguments([*ARGS, "-vvv"]))
 
     assert "[DEBUG]" in capsys.readouterr().err
+
+
+def test_failed_section_is_a_warning_naming_the_section(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.WARNING)
+    config = AWSConfig("aws-host", Args(), ([], []), NamingConvention.ip_region_instance)
+    config.add_single_service_config("ebs_names", None)
+    config.add_service_tags("ebs_tags", ([], []))
+    session = mock.Mock(**{"client.return_value.describe_volumes.side_effect": RuntimeError})
+    sections = AWSSectionsGeneric("aws-host", session, "333333333333", output=io.StringIO())
+    sections.init_sections(
+        ["ebs"], "eu-central-1", config.for_account("333333333333"), ResultDistributorS3Limits(None)
+    )
+
+    sections.run(use_cache=False)
+
+    assert ("WARNING", "ebs_summary: Collection failed: ") in [
+        (r.levelname, r.getMessage()) for r in caplog.records
+    ]

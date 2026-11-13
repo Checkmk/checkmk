@@ -52,13 +52,31 @@ COPY needed-packages /needed-packages
 # Also ensure that we apply the latest updates. The base image might not always
 # be up-to-date, especially when they are pinned in our build environment.
 #
+# Ubuntu 24.04 and later configure the APT sources in deb822 format in ubuntu.sources.
+#
+# The "ubuntu" user of the Ubuntu 24.04+ base images is removed to keep uid/gid 1000 free for
+# the site user, see docker-entrypoint.sh.
+#
+# dpkg-sig is gone since Ubuntu 24.04. There, systemd-standalone-sysusers satisfies cron's
+# sysusers dependency, which apt would otherwise resolve with the full systemd. With systemctl
+# present, the agent package sets up its systemd socket instead of the xinetd service that
+# docker-entrypoint.sh starts.
+#
 # hadolint ignore=SC2046,DL3008
 RUN set -e \
     && echo "exit 101" > /usr/sbin/policy-rc.d \
     && chmod +x /usr/sbin/policy-rc.d \
     && export DEBIAN_FRONTEND=noninteractive \
-    && cp /etc/apt/sources.list /etc/apt/sources.list.bak \
-    && sed -i "s|http://.*.ubuntu.com/ubuntu|http://apt.lan.checkmk.net/ubuntu|g" /etc/apt/sources.list \
+    && . /etc/os-release \
+    && if [ "${VERSION_CODENAME}" = "jammy" ]; then \
+        DISTRO_PACKAGES="dpkg-sig"; \
+       else \
+        DISTRO_PACKAGES="systemd-standalone-sysusers"; \
+       fi \
+    && APT_SOURCES=/etc/apt/sources.list.d/ubuntu.sources \
+    && if [ ! -e "${APT_SOURCES}" ]; then APT_SOURCES=/etc/apt/sources.list; fi \
+    && cp "${APT_SOURCES}" /etc/apt/sources.bak \
+    && sed -i "s|http://.*.ubuntu.com/ubuntu|http://apt.lan.checkmk.net/ubuntu|g" "${APT_SOURCES}" \
     && apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
@@ -70,15 +88,16 @@ RUN set -e \
         gnupg2 \
         openssh-client \
         iputils-ping \
-        dpkg-sig \
         net-tools \
         git \
+        ${DISTRO_PACKAGES} \
         $(cat needed-packages) \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/* \
     && rm needed-packages \
-    && mv /etc/apt/sources.list.bak /etc/apt/sources.list
+    && mv /etc/apt/sources.bak "${APT_SOURCES}" \
+    && if getent passwd ubuntu >/dev/null; then userdel --remove ubuntu; fi
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
 ARG CMK_VERSION="2.5.0p22"
@@ -109,7 +128,12 @@ RUN --mount=type=bind,from=package-source,target=/build-context \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/*
 
+# Without this, images on Ubuntu 26.04 would claim the base image's build date as their own.
+# Declared this late so the changing date does not invalidate the cache of the layers above.
+ARG BUILD_DATE
+
 LABEL \
+    org.opencontainers.image.created="${BUILD_DATE}" \
     org.opencontainers.image.title="Checkmk" \
     org.opencontainers.image.version="${CMK_VERSION}" \
     org.opencontainers.image.description="Checkmk is a leading tool for Infrastructure & Application Monitoring" \

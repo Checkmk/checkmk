@@ -48,6 +48,7 @@ import os
 import re
 import subprocess
 import sys
+from datetime import datetime, UTC
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
@@ -66,6 +67,27 @@ class RegistryConfig(NamedTuple):
     namespace: str
     username_env_var: str
     password_env_var: str
+
+
+class ImageDistro(NamedTuple):
+    codename: str
+    mk_file: str
+    base_image_alias: str
+
+
+IMAGE_DISTROS = {
+    "ubuntu-22.04": ImageDistro(
+        codename="jammy",
+        mk_file="omd/distros/UBUNTU_22.04.mk",
+        base_image_alias="IMAGE_CMK_BASE",
+    ),
+    # Only used for the cloud edition (see build-cmk-image.groovy)
+    "ubuntu-26.04": ImageDistro(
+        codename="resolute",
+        mk_file="omd/distros/UBUNTU_26.04.mk",
+        base_image_alias="IMAGE_UBUNTU_26_04",
+    ),
+}
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -130,7 +152,14 @@ def parse_arguments() -> argparse.Namespace:
         help="Flag to build image without docker cache",
     )
     parser.add_argument(
-        "--image_cmk_base", help="Custom CMK base image, defaults to checked in IMAGE_CMK_BASE"
+        "--image_cmk_base",
+        help="Custom CMK base image, defaults to the checked in image alias of --distro",
+    )
+    parser.add_argument(
+        "--distro",
+        choices=IMAGE_DISTROS,
+        default="ubuntu-22.04",
+        help="Distro whose Checkmk package and base image the image is built from",
     )
 
     return parser.parse_args()
@@ -360,7 +389,11 @@ def check_for_local_image(
 
 
 def build_tar_gz(
-    args: argparse.Namespace, version_tag: str, docker_path: str, docker_repo_name: str
+    args: argparse.Namespace,
+    version_tag: str,
+    docker_path: str,
+    docker_repo_name: str,
+    build_date: str,
 ) -> None:
     """Build the check-mk-EDITION-docker-VERSION.tar.gz file"""
     if args.image_cmk_base in (None, "", "None", "null"):
@@ -368,7 +401,7 @@ def build_tar_gz(
         image_cmk_base = run_cmd(
             cmd=[
                 f"{Path(__file__).parent.parent}/docker_image_aliases/resolve.py",
-                "IMAGE_CMK_BASE",
+                IMAGE_DISTROS[args.distro].base_image_alias,
             ]
         ).stdout.strip()
     else:
@@ -378,6 +411,8 @@ def build_tar_gz(
         "CMK_VERSION": args.version,
         "CMK_EDITION": args.edition,
         "IMAGE_CMK_BASE": image_cmk_base,
+        "DISTRO_CODENAME": IMAGE_DISTROS[args.distro].codename,
+        "BUILD_DATE": build_date,
     }
     this_tag = f"{docker_repo_name}/check-mk-{args.edition}:{version_tag}"
     tar_name = f"check-mk-{args.edition}-docker-{args.version}.tar.gz"
@@ -464,7 +499,8 @@ def build_image(
     docker_image_archive = f"check-mk-{args.edition}-docker-{args.version}.tar.gz"
     pkg_name = f"check-mk-{args.edition}-{args.version}"
     architecture = run_cmd(cmd=["dpkg", "--print-architecture"]).stdout.strip()
-    pkg_file = f"{pkg_name}_0.jammy_{architecture}.deb"
+    distro = IMAGE_DISTROS[args.distro]
+    pkg_file = f"{pkg_name}_0.{distro.codename}_{architecture}.deb"
 
     LOG.debug("docker_path: %s", docker_path)
     LOG.debug("docker_image_archive: %s", docker_image_archive)
@@ -484,15 +520,14 @@ def build_image(
     LOG.info("Building container image ...")
     if version_tag is None:
         raise Exception("Required VERSION_TAG is not set.")
-    needed_packages(
-        mk_file="omd/distros/UBUNTU_22.04.mk", output_file=f"{docker_path}/needed-packages"
-    )
+    needed_packages(mk_file=distro.mk_file, output_file=f"{docker_path}/needed-packages")
 
     build_tar_gz(
         args=args,
         version_tag=version_tag,
         docker_path=docker_path,
         docker_repo_name=docker_repo_name,
+        build_date=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
 
     LOG.info("Move Image-Tarball ...")

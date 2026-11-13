@@ -21,6 +21,7 @@ import os
 import subprocess
 import tarfile
 from contextlib import suppress
+from datetime import datetime, UTC
 from pathlib import Path
 from socket import SocketIO
 from typing import Any, Final, Literal, Self, TypedDict
@@ -230,10 +231,12 @@ def build_checkmk(
         prepare_package(package_info)
 
     logger.info("Building docker image (or reuse existing): %s", image_name(package_info))
+    build_date = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     buildargs = {
         "CMK_VERSION": package_info.version.version,
         "CMK_EDITION": package_info.edition.long,
         "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
+        "BUILD_DATE": build_date,
     }
     try:
         # The Dockerfile needs BuildKit (RUN --mount), which docker-py does not support
@@ -306,6 +309,7 @@ def build_checkmk(
         "org.opencontainers.image.version": package_info.version.version,
         "maintainer": "feedback@checkmk.com",
         "org.opencontainers.image.description": "Checkmk is a leading tool for Infrastructure & Application Monitoring",
+        "org.opencontainers.image.created": build_date,
         "org.opencontainers.image.ref.name": "ubuntu",  # TODO: investigate who sets this
         "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",
         "org.opencontainers.image.title": "Checkmk",

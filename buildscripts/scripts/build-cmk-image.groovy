@@ -47,6 +47,7 @@ void main() {
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
     def push_to_registry = params.PUSH_TO_REGISTRY == true;
+    def image_distro = params.EDITION == "cloud" ? "ubuntu-26.04" : "ubuntu-22.04";
 
     def package_dir = "${checkout_dir}/download";
     def source_dir = package_dir + "/" + cmk_version_rc_aware;
@@ -146,7 +147,7 @@ void main() {
                         CUSTOM_GIT_REF: effective_git_ref,
                         VERSION: params.VERSION,
                         EDITION: params.EDITION,
-                        DISTRO: "ubuntu-22.04",
+                        DISTRO: image_distro,
                         DISABLE_CACHE: disable_cache,
                         FAKE_ARTIFACTS: fake_artifacts,
                     ],
@@ -203,6 +204,7 @@ void main() {
                             --set_branch_latest_tag=${params.SET_BRANCH_LATEST_TAG} \
                             --no_cache=${params.BUILD_IMAGE_WITHOUT_CACHE} \
                             --image_cmk_base=${params.CUSTOM_CMK_BASE_IMAGE} \
+                            --distro=${image_distro} \
                             --action=build \
                             -vvv
                         """);

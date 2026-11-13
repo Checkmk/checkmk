@@ -82,6 +82,15 @@ def test_three_verbose_flags_add_debug_output(capsys: pytest.CaptureFixture[str]
     assert "[DEBUG]" in capsys.readouterr().err
 
 
+@pytest.mark.usefixtures("missing_aws_profile")
+def test_three_verbose_flags_add_botocore_debug_output(capsys: pytest.CaptureFixture[str]) -> None:
+    agent_aws_main(parse_arguments([*ARGS, "-vvv"]))
+
+    assert any(
+        "[botocore." in line and "[DEBUG]" in line for line in capsys.readouterr().err.splitlines()
+    )
+
+
 def test_failed_section_is_a_warning_naming_the_section(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.WARNING)
     config = AWSConfig("aws-host", Args(), ([], []), NamingConvention.ip_region_instance)

@@ -72,7 +72,7 @@ immediateWatch(
       <ResultItem
         v-for="(item, idx) in recentlyViewed"
         ref="recently-viewed-item"
-        :key="item.element.target.url"
+        :key="`${item.element.title}:${item.element.target.url}`"
         :idx="idx"
         :title="item.element.title"
         :context="item.element.context"

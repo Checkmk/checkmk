@@ -346,7 +346,7 @@ function isMonitoringSearch(): boolean {
         <ResultItem
           v-for="(item, idx) in results"
           ref="recently-viewed-item"
-          :key="item.target ? item.target.url : item.title"
+          :key="`${item.provider}:${item.topic}:${item.target ? item.target.url : item.title}`"
           :idx="idx"
           :title="item.title"
           :context="item.context"

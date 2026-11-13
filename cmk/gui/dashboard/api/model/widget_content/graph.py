@@ -13,7 +13,7 @@ from pydantic_core import core_schema, CoreSchema, ErrorDetails
 
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.dashboard.dashlet.dashlets.graph import (
-    default_dashlet_graph_render_options,
+    default_widget_graph_render_options,
     TemplateGraphDashletConfig,
 )
 from cmk.gui.dashboard.type_defs import (
@@ -25,6 +25,7 @@ from cmk.gui.dashboard.type_defs import (
     EmbeddedCustomGraphDashletConfig,
     ProblemsGraphDashletConfig,
     SingleTimeseriesDashletConfig,
+    WidgetGraphRenderOptions,
 )
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
@@ -36,7 +37,6 @@ from cmk.gui.type_defs import (
     DashboardEmbeddedViewSpec,
     GraphLegendStyle,
     GraphPresentation,
-    GraphRenderOptionsVS,
     SizePT,
     VerticalAxisWidth,
 )
@@ -119,7 +119,7 @@ class GraphRenderOptions:
         raise ValueError(f"Invalid vertical axis width: {value!r}")
 
     @classmethod
-    def from_internal(cls, graph_render_options: GraphRenderOptionsVS) -> Self | ApiOmitted:
+    def from_internal(cls, graph_render_options: WidgetGraphRenderOptions) -> Self | ApiOmitted:
         if not graph_render_options:
             return ApiOmitted()
 
@@ -142,8 +142,8 @@ class GraphRenderOptions:
             ),
         )
 
-    def to_internal(self) -> GraphRenderOptionsVS:
-        options = default_dashlet_graph_render_options()
+    def to_internal(self) -> WidgetGraphRenderOptions:
+        options = default_widget_graph_render_options()
         if not isinstance(self.show_title, ApiOmitted):
             # Transform "inline" to "inline", otherwise pass bool
             options["show_title"] = self.show_title
@@ -186,9 +186,9 @@ class _BaseGraphContent(BaseWidgetContent, ABC):
         default_factory=ApiOmitted,
     )
 
-    def _get_graph_render_options_internal(self) -> GraphRenderOptionsVS:
+    def _get_graph_render_options_internal(self) -> WidgetGraphRenderOptions:
         if isinstance(self.graph_render_options, ApiOmitted):
-            return default_dashlet_graph_render_options()
+            return default_widget_graph_render_options()
 
         return self.graph_render_options.to_internal()
 

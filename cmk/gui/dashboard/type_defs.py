@@ -14,10 +14,11 @@ from cmk.gui.type_defs import (
     FilterName,
     GraphLegendStyle,
     GraphPresentation,
-    GraphRenderOptionsVS,
+    GraphTitleFormatVS,
     InventoryJoinMacrosSpec,
     SingleInfos,
     SorterSpec,
+    VerticalAxisWidth,
     Visual,
     VisualContext,
 )
@@ -96,9 +97,24 @@ class DashboardWindow(TypedDict):
     type: Literal["dashboard"]
 
 
+class WidgetGraphRenderOptions(TypedDict, total=False):
+    legend_style: GraphLegendStyle
+    show_controls: bool
+    show_graph_time: bool
+    show_legend: bool
+    show_margin: bool
+    show_pin: bool
+    show_time_axis: bool
+    show_time_range_previews: bool
+    show_title: bool | Literal["inline"]
+    show_vertical_axis: bool
+    title_format: Sequence[GraphTitleFormatVS]
+    vertical_axis_width: VerticalAxisWidth
+
+
 class ABCGraphDashletConfig(DashletConfig):
     timerange: DashboardWindow | FixedWindow
-    graph_render_options: GraphRenderOptionsVS
+    graph_render_options: WidgetGraphRenderOptions
 
 
 class ProblemsGraphDashletConfig(ABCGraphDashletConfig): ...

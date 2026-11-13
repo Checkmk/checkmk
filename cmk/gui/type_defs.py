@@ -818,7 +818,6 @@ GraphLegendStyle = Literal["compact", "extended"]
 class GraphRenderOptionsVS(TypedDict, total=False):
     fixed_timerange: bool
     font_size: SizePT
-    legend_style: GraphLegendStyle
     resizable: bool
     show_controls: bool
     show_graph_time: bool

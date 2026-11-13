@@ -25,7 +25,12 @@ from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config, RequestCacheConfig
 from cmk.gui.dashboard.exceptions import WidgetRenderError
-from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig, ContextualLinkConfig, DashboardWindow
+from cmk.gui.dashboard.type_defs import (
+    ABCGraphDashletConfig,
+    ContextualLinkConfig,
+    DashboardWindow,
+    WidgetGraphRenderOptions,
+)
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import (
     build_template_graphs,
@@ -48,7 +53,7 @@ from cmk.gui.graphing import (
 )
 from cmk.gui.i18n import _
 from cmk.gui.permissions import all_permissions
-from cmk.gui.type_defs import GraphRenderOptionsVS, SingleInfos, VisualContext
+from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
     Timerange,
@@ -298,14 +303,13 @@ class TemplateGraphDashlet(
         yield "$SITE$"
 
 
-def default_dashlet_graph_render_options() -> GraphRenderOptionsVS:
-    return GraphRenderOptionsVS(
+def default_widget_graph_render_options() -> WidgetGraphRenderOptions:
+    return WidgetGraphRenderOptions(
         show_graph_time=False,
         show_margin=False,
         show_legend=False,
         show_title=False,
         show_controls=False,
-        resizable=False,
         show_time_range_previews=False,
     )
 

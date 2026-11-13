@@ -10,7 +10,7 @@ from ..registry import DashletRegistry
 from .custom_url import URLDashlet
 from .failed_notifications import FailedNotificationsDashlet
 from .graph import (
-    default_dashlet_graph_render_options,
+    default_widget_graph_render_options,
     GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID,
     graph_templates_autocompleter,
     TemplateGraphDashlet,
@@ -32,7 +32,7 @@ __all__ = [
     "StaticTextDashlet",
     "StatsDashletConfig",
     "copy_view_into_dashlet",
-    "default_dashlet_graph_render_options",
+    "default_widget_graph_render_options",
 ]
 
 

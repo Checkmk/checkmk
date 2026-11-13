@@ -9,7 +9,6 @@ import { type MonitoringPageLinkButton } from 'cmk-shared-typing/typescript/moni
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 
-import MonitoringSurveyLink from '@/monitoring/shared/components/MonitoringSurveyLink.vue'
 import { useTeleportPlacement } from '@/monitoring/shared/components/teleportPlacement'
 
 const props = defineProps<MonitoringPageLinkButton>()
@@ -23,34 +22,30 @@ function navigate(): void {
 
 <template>
   <Teleport defer :to="target">
-    <span
+    <CmkButton
       class="monitoring-page-link-button"
       :class="
         isDefault
           ? 'monitoring-page-link-button--page-state'
           : 'monitoring-page-link-button--inline'
       "
+      :size="isDefault ? 'medium' : 'small'"
+      @click="navigate"
     >
-      <MonitoringSurveyLink v-if="survey_url" :url="survey_url" />
-      <CmkButton :size="isDefault ? 'medium' : 'small'" @click="navigate">
-        <CmkMultitoneIcon
-          name="experiment"
-          primary-color="font"
-          secondary-color="hosts"
-          size="large"
-          class="monitoring-page-link-button__icon"
-        />
-        {{ title }}
-      </CmkButton>
-    </span>
+      <CmkMultitoneIcon
+        name="experiment"
+        primary-color="font"
+        secondary-color="hosts"
+        size="large"
+        class="monitoring-page-link-button__icon"
+      />
+      {{ title }}
+    </CmkButton>
   </Teleport>
 </template>
 
 <style scoped>
 .monitoring-page-link-button {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--dimension-4);
   white-space: nowrap;
 }
 

@@ -9,11 +9,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.monitor.services.page_url import host_services_url
 from cmk.shared_typing.monitoring.page_link_button import MonitoringPageLinkButton
-from cmk.web.utils.urls import makeuri_contextless
 
 _LEGACY_VIEW_NAME = "host"
-_LEGACY_ALL_SERVICES_VIEW_NAME = "allservices"
-_ALL_SERVICES_SURVEY_URL = "https://survey.checkmk.com/index.php/527348?lang=en"
 
 
 class HostServicesLinkButton:
@@ -32,26 +29,6 @@ class HostServicesLinkButton:
                     url=host_services_url(request, host_name=host_name, site_id=site_id),
                     title=_('Try the new "Services of host" view'),
                     teleport_target=self._teleport_target,
-                )
-            ),
-        )
-
-
-class AllServicesLinkButton:
-    def __init__(self, teleport_target: str | None = None) -> None:
-        self._teleport_target = teleport_target
-
-    def __call__(self, view_name: str) -> None:
-        if view_name != _LEGACY_ALL_SERVICES_VIEW_NAME:
-            return
-        html.vue_component(
-            "cmk-monitoring-page-link-button",
-            data=asdict(
-                MonitoringPageLinkButton(
-                    url=makeuri_contextless(request, [], filename="monitor_all_services.py"),
-                    title=_('Try the new "All services" view'),
-                    teleport_target=self._teleport_target,
-                    survey_url=_ALL_SERVICES_SURVEY_URL,
                 )
             ),
         )

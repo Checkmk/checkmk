@@ -350,11 +350,13 @@ class InternalPainter:
 
 @dataclass(frozen=True)
 class CellDrilldown:
-    """A link from a cell that its owner builds per row, for a cell without a link_spec."""
+    """A link from a cell that its owner builds per row, for a cell without a link_spec. A joined
+    cell's link also reads `joined_columns`, which only its joined row has."""
 
     columns: Sequence[ColumnName]
     url: Callable[[Row], str]
     includes_time_range: bool
+    joined_columns: Sequence[ColumnName] = ()
 
 
 def columns_of_cells(cells: Sequence[Cell], permitted_views: PermittedViewSpecs) -> set[ColumnName]:
@@ -551,7 +553,8 @@ class Cell:
         link_renderer: Callable[[str | HTML, Row, VisualLinkSpec], str | HTML] | None,
         user: LoggedInUser,
     ) -> tuple[str, str | HTML]:
-        # A drill-down reads the view's row, which a joined row may not carry.
+        # A drill-down reads the view's row, and of a joined row only its joined columns: the join
+        # query answers a column its table lacks with null.
         view_row = row
         row = join_row(row, self)
 
@@ -581,9 +584,12 @@ class Cell:
             and link_renderer
             and self.painter_context().url_renderer.display_options.enabled(DisplayOptions.I)
         ):
+            joined = {
+                column: row[column] for column in self._drilldown.joined_columns if column in row
+            }
             content = HTMLWriter.render_a(
                 content,
-                href=self._drilldown.url(view_row),
+                href=self._drilldown.url({**view_row, **joined}),
                 data_cmk_includes_time_range="" if self._drilldown.includes_time_range else None,
             )
 
@@ -789,6 +795,10 @@ class JoinCell(Cell):
     def export_title(self) -> str:
         serv_painter = re.sub(r"[^\w]", "_", self.title().lower())
         return f"{self._painter_name}.{serv_painter}"
+
+    def joined_columns(self) -> set[ColumnName]:
+        """The columns only the join query fetches: the view's own table may lack them."""
+        return set() if self._drilldown is None else set(self._drilldown.joined_columns)
 
 
 def join_row(row: Row, cell: Cell) -> Row:

@@ -127,6 +127,8 @@ def _get_needed_join_columns(
     join_cells: Sequence[JoinCell], sorters: Sequence[SorterEntry]
 ) -> list[ColumnName]:
     join_columns = columns_of_cells(join_cells, get_permitted_views())
+    for join_cell in join_cells:
+        join_columns.update(join_cell.joined_columns())
 
     # Columns needed for sorters
     # TODO: Move sorter parsing and logic to something like Cells()

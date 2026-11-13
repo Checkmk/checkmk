@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.gui.config import Config
+from cmk.gui.painter import CellDrilldown
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
@@ -20,7 +22,11 @@ from cmk.web.utils.request_cache import RequestCache
 from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
-def _with_painters(view: View, painters: list[ColumnSpec]) -> View:
+def _with_painters(
+    view: View,
+    painters: list[ColumnSpec],
+    column_drilldowns: Mapping[int, CellDrilldown] | None = None,
+) -> View:
     view_spec = copy.deepcopy(view.spec)
     view_spec["painters"] = painters
     return View(
@@ -29,6 +35,7 @@ def _with_painters(view: View, painters: list[ColumnSpec]) -> View:
         view_spec.get("context", {}),
         make_painter_context(UserPermissions({}, {}, {}, [])),
         RequestCache(Config()),
+        column_drilldowns=column_drilldowns,
     )
 
 
@@ -83,6 +90,35 @@ def test_a_host_row_carries_the_service_its_join_column_names(
         join_service_row_post_processor(joining_view, [], rows)
 
     assert rows[0]["JOIN"][join_value]["service_state"] == 2
+
+
+def test_a_host_row_carries_the_joined_columns_of_a_join_columns_drilldown(
+    view: View, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    mock_livestatus.add_table(
+        "services", [{**SERVICES[0], "service_labels": {"env": "prod"}}], site="local"
+    )
+    mock_livestatus.expect_query(
+        ["GET services", "Filter: service_description = CPU load", "Or: 1"], match_type="loose"
+    )
+    rows: list[Row] = [{"site": "local", "host_name": "alpha"}]
+    joining_view = _with_painters(
+        view,
+        [ColumnSpec(name="host"), ColumnSpec(name="service_state", join_value="CPU load")],
+        {
+            1: CellDrilldown(
+                columns=[],
+                url=lambda _row: "",
+                includes_time_range=False,
+                joined_columns=["service_labels"],
+            )
+        },
+    )
+
+    with mock_livestatus():
+        join_service_row_post_processor(joining_view, [], rows)
+
+    assert rows[0]["JOIN"]["CPU load"]["service_labels"] == {"env": "prod"}
 
 
 def test_a_view_without_join_columns_leaves_the_rows_alone(view: View) -> None:

@@ -89,13 +89,16 @@ def column_drilldowns(
                 if filter_name in carriable
                 and (drilldown := row_drilldown(data_source, filter_name)) is not None
             }
+            row_filters = [name for name in carried if row_has_columns(data_source, name)]
+            # A joined service row has every host and service column.
+            joined_filters = (
+                [name for name in carried if name not in row_filters]
+                if view_spec["painters"][index].column_type == "join_column"
+                else []
+            )
             drilldowns[index] = CellDrilldown(
-                columns=[
-                    column
-                    for filter_name, carried_filter in carried.items()
-                    if row_has_columns(data_source, filter_name)
-                    for column in carried_filter.drilldown.columns
-                ],
+                columns=_columns(carried, row_filters),
+                joined_columns=_columns(carried, joined_filters),
                 url=partial(
                     _custom_url,
                     location,
@@ -121,6 +124,12 @@ def column_drilldowns(
                 includes_time_range=link["include_time_range"],
             )
     return drilldowns
+
+
+def _columns(
+    carried: Mapping[FilterName, _CarriedFilter], filter_names: Sequence[FilterName]
+) -> list[ColumnName]:
+    return [column for name in filter_names for column in carried[name].drilldown.columns]
 
 
 def _object_columns(object_infos: Sequence[InfoName]) -> list[ColumnName]:

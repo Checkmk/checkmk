@@ -137,12 +137,64 @@ def test_join_cell_render_links_the_view_row_to_its_drilldown() -> None:
     assert str(content) == '<a href="dashboard.py?host=heute">heute</a>'
 
 
+def test_join_cell_render_links_the_joined_columns_over_the_view_row() -> None:
+    cell = _join_cell(
+        CellDrilldown(
+            columns=[],
+            url=lambda row: f"view.py?host={row['host_name']}&service={row['service_description']}",
+            joined_columns=["service_description"],
+            includes_time_range=False,
+        )
+    )
+    row: Row = {
+        "host_name": "heute",
+        "service_description": "",
+        "JOIN": {"CPU load": {"service_description": "CPU load"}},
+    }
+
+    _tdclass, content = cell.render(row, _link_to_view, Mock(spec=LoggedInUser))
+
+    assert str(content) == '<a href="view.py?host=heute&service=CPU load">heute</a>'
+
+
+def test_join_cell_render_keeps_the_view_rows_value_the_joined_row_answers_with_null() -> None:
+    cell = _join_cell(
+        CellDrilldown(
+            columns=["hostgroup_name"],
+            url=lambda row: f"view.py?hostgroup={row['hostgroup_name']}",
+            includes_time_range=False,
+        )
+    )
+    row: Row = {
+        "host_name": "heute",
+        "hostgroup_name": "linux",
+        "JOIN": {"CPU load": {"hostgroup_name": None}},
+    }
+
+    _tdclass, content = cell.render(row, _link_to_view, Mock(spec=LoggedInUser))
+
+    assert str(content) == '<a href="view.py?hostgroup=linux">heute</a>'
+
+
 def test_columns_of_cells_include_the_columns_of_a_join_cells_drilldown() -> None:
     cell = _join_cell(
         CellDrilldown(columns=["host_name"], url=lambda _row: "", includes_time_range=False)
     )
 
     assert columns_of_cells([cell], {}) == {"host_alias", "host_name"}
+
+
+def test_columns_of_cells_leave_out_the_columns_only_a_joined_row_has() -> None:
+    cell = _join_cell(
+        CellDrilldown(
+            columns=[],
+            url=lambda _row: "",
+            includes_time_range=False,
+            joined_columns=["service_description"],
+        )
+    )
+
+    assert columns_of_cells([cell], {}) == {"host_alias"}
 
 
 @pytest.mark.parametrize(

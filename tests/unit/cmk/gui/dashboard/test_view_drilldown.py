@@ -14,6 +14,7 @@ from cmk.gui.dashboard.view_drilldown import column_drilldowns
 from cmk.gui.http import request
 from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import (
+    ColumnSpec,
     ContextFilterConfig,
     ContextualLinkEntryConfig,
     ContextualLinkLocationConfig,
@@ -559,6 +560,28 @@ def test_column_drilldowns_custom_link_names_a_filter_it_cannot_carry(
     )
 
     assert variables["_dropped_filters"] == "log_class:not_available"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_column_drilldowns_custom_link_on_a_joined_service_reads_the_service_from_the_joined_row(
+    admin_permissions: UserPermissions,
+) -> None:
+    view_spec = _view_spec("allhosts")
+    view_spec["painters"] = [ColumnSpec("service_state", join_value="CPU load")]
+
+    drilldown = column_drilldowns(
+        view_spec,
+        {
+            0: _custom(
+                ContextFilterConfig(filter_id="host"), ContextFilterConfig(filter_id="service")
+            )
+        },
+        _CONTEXT,
+        admin_permissions,
+    )[0]
+
+    assert drilldown.columns == ["host_name"]
+    assert drilldown.joined_columns == ["service_description"]
 
 
 @pytest.mark.usefixtures("request_context")

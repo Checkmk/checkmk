@@ -139,12 +139,21 @@ Follow the existing naming: snake_case, ``count_*`` for counts, ``is_*`` for boo
 The existing site-wide fields (``count_hosts``, ``edition``, ...) and ``checks`` stay at the top level, since moving them would be a breaking change.
 
 **Receiving side.**
-The endpoint in ``checkmk-saas/checkmk-analytics`` validates uploads against its own copy of the model and accepts only fields that model knows.
-Its model must therefore be extended and deployed before the first Checkmk release that sends the new field, including stable patch releases; otherwise every upload from that release is rejected (see `Risks and technical debts`_).
+The endpoint in ``checkmk-saas/checkmk-analytics`` validates uploads against its own copy of the model.
+It stores the fields that model knows and drops unknown fields; the rest of the upload is processed as usual.
+A field sent before the endpoint knows it is therefore lost, not the upload.
+Extend and deploy the endpoint's model before the first Checkmk release that sends the new field, including stable patch releases, so that no data from that release is lost.
 
 **Manifest page.**
 The public manifest page is maintained by hand.
 After adding a field, give Marketing the new field's ``description`` and ``examples`` (or the regenerated ``manifest.json``) so the page lists it.
+
+**Werk.**
+Admins who already enabled analytics are not asked again: The consent popup only appears while the decision is ``not_decided``.
+After an update, their sites send the new field without any notice in the GUI.
+Add a werk with the change that adds the field, so these admins learn what their sites now transmit.
+The werk names the new field, describes its content in the words of the field's ``description``, and points to ``cmk-product-usage --dry-run`` and the manifest page.
+Use class ``feature`` and component ``wato``, like the other product usage analytics werks (e.g. werk 19605).
 
 **Limits.**
 A collector runs synchronously inside ``cmk-product-usage --cron`` and inside the admin download page request.
@@ -202,8 +211,12 @@ Risks and technical debts
 2. Grafana-usage detection is captured once and latched: ``store_usage_data`` returns immediately if ``grafana_usage.json`` already exists, and the file is cleared only once a transmission that included it succeeds.
    A site that toggles analytics off before ever successfully transmitting keeps a possibly stale snapshot (e.g. an outdated Grafana version) until it is eventually sent or the file is removed by hand.
 3. The client and the endpoint each have their own copy of the payload model, and nothing checks that they match.
-   If a release sends a field the endpoint does not know, the endpoint rejects the upload; the files stay in ``var/check_mk/product_usage/`` and are retried only at the next scheduled run.
+   If a release sends a field the endpoint does not know, the endpoint drops that field and keeps the rest; that field's data from the release is lost without an error on either side.
 4. The public manifest page (``https://analytics.checkmk.com/manifest``) is maintained by hand and does not yet read the generated ``manifest.json``, so it can differ from the data that is actually sent.
+5. Collection is not fail-open: ``collect_data()`` calls all collectors in one step, and an exception in any of them aborts the run.
+   Nothing is stored or uploaded in that run, including files left over from earlier failed uploads, and the next run is not planned, so every cron run (every 30 minutes) tries again until the error is gone.
+   The intended design is fail-open: a failure while gathering one data point must not prevent collecting and sending the others.
+   New collectors are built that way from now on.
 
 See Also
 ========

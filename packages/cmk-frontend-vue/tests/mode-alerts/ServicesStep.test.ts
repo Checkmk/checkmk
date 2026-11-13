@@ -45,7 +45,7 @@ function searchResult(
   for (const entry of found) {
     const known = units.find((unit) => unit.unit === entry.unit)
     if (known === undefined) {
-      units.push({ unit: entry.unit ?? null, count: 1, example: entry })
+      units.push({ unit: entry.unit ?? null, count: 1 })
     } else {
       known.count += 1
     }
@@ -376,7 +376,7 @@ test('services only on hosts the user cannot see still continue to the next step
   answer = searchResult([], {
     total: 1,
     hidden: 1,
-    units: [{ unit: 'ms', count: 1, example: null }]
+    units: [{ unit: 'ms', count: 1 }]
   })
   const { navigation } = renderStep({ servicePattern: 'HTTP request duration' })
 
@@ -450,8 +450,8 @@ test('a unit only on hosts the user cannot see is named too', async () => {
     total: 2,
     hidden: 1,
     units: [
-      { unit: 'ms', count: 1, example: service('web01', 'HTTP request duration', { unit: 'ms' }) },
-      { unit: 'B/s', count: 1, example: null }
+      { unit: 'ms', count: 1 },
+      { unit: 'B/s', count: 1 }
     ]
   })
   renderStep({ servicePattern: 'HTTP request duration' })

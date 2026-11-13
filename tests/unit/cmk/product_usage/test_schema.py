@@ -18,6 +18,7 @@ def _product_usage_data() -> dict[str, object]:
         "count_folders": 30,
         "edition": "community",
         "cmk_version": "1.2.3",
+        "os": "Ubuntu 24.04.3 LTS",
         "timestamp": int(datetime.datetime.now(tz=datetime.UTC).timestamp()),
         "grafana": {
             "is_used": True,

@@ -26,7 +26,7 @@ def wato_path() -> Path:
 def mock_checkmk_info(mocker: MockerFixture) -> None:
     mocker.patch(
         "cmk.ccc.version_info.get_general_version_infos",
-        return_value={"version": "2.2.0", "edition": "pro"},
+        return_value={"version": "2.2.0", "edition": "pro", "os": "Ubuntu 24.04.3 LTS"},
     )
 
 
@@ -47,6 +47,7 @@ def test_collect_and_number_of_folders(local_connection: MockType, wato_path: Pa
     assert data.count_folders == 5
     assert data.edition == "pro"
     assert data.cmk_version == "2.2.0"
+    assert data.os == "Ubuntu 24.04.3 LTS"
 
 
 @pytest.mark.usefixtures("mock_instance_id", "mock_checkmk_info")

@@ -38,6 +38,7 @@ def collect_data(
         count_folders=site_info.count_folders,
         edition=site_info.edition,
         cmk_version=site_info.cmk_version,
+        os=site_info.os,
         checks=checks_collector.collect(),
         grafana=grafana_collector.collect(var_dir),
     )

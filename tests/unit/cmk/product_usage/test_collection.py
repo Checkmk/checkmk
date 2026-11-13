@@ -221,6 +221,7 @@ def _product_usage_payload() -> ProductUsagePayload:
         count_folders=3,
         edition="cloud",
         cmk_version="2.5.0-2026.01.06",
+        os="Ubuntu 24.04.3 LTS",
         timestamp=1767790000,
         checks={},
         grafana=None,

@@ -178,6 +178,7 @@ def test_dry_run_writes_the_cloud_trial_payload_only_on_a_cloud_trial_site(
                 count_folders=3,
                 edition="cloud",
                 cmk_version="2.5.0-2026.01.06",
+                os="Ubuntu 24.04.3 LTS",
             )
         ),
     )

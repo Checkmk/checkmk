@@ -75,6 +75,7 @@ from cmk.utils.log import console
 from .agent_based import extract_plugin_selection, load_checks
 from .exit_code import state_exit_code
 from .options import (
+    CHECK_PLUGINS_VALUE,
     FAKE_DNS_VALUE,
     file_cache_request,
     FileCacheRequest,
@@ -396,7 +397,7 @@ def _discover_request(options: CLIReader) -> _DiscoverRequest:
         usewalk=options.flag(USEWALK_FLAG),
         snmp_backend=options.value(SNMP_BACKEND_VALUE),
         discover=options.count(_DISCOVER_COUNT),
-        plugin_selection=plugin_selection_request(options, CheckPluginName),
+        plugin_selection=plugin_selection_request(options, CHECK_PLUGINS_VALUE),
         only_host_labels=options.flag(_ONLY_HOST_LABELS_FLAG),
         fake_dns=options.value(FAKE_DNS_VALUE),
     )

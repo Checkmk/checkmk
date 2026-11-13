@@ -143,7 +143,7 @@ DETECT_SECTIONS_VALUE: Final = CLIValue(
 )
 
 
-def plugins_value[TName: (str, CheckPluginName, InventoryPluginName, SectionName)](
+def _plugins_value[TName: (str, CheckPluginName, InventoryPluginName, SectionName)](
     type_: type[TName],
 ) -> CLIValue[frozenset[TName]]:
     def _parse_plugins(argument: str) -> frozenset[TName]:
@@ -155,6 +155,11 @@ def plugins_value[TName: (str, CheckPluginName, InventoryPluginName, SectionName
         placeholder="P",
         parse=_parse_plugins,
     )
+
+
+CHECK_PLUGINS_VALUE: Final = _plugins_value(CheckPluginName)
+
+INVENTORY_PLUGINS_VALUE: Final = _plugins_value(InventoryPluginName)
 
 
 def _parse_detect_plugins(argument: str) -> frozenset[str]:
@@ -178,10 +183,10 @@ class PluginSelectionRequest[PluginName]:
 
 
 def plugin_selection_request[PluginName: (CheckPluginName, InventoryPluginName)](
-    options: CLIReader, type_: type[PluginName]
+    options: CLIReader, plugins: CLIValue[frozenset[PluginName]]
 ) -> PluginSelectionRequest[PluginName]:
     return PluginSelectionRequest(
         detect_sections=options.value(DETECT_SECTIONS_VALUE),
-        plugins=options.value(plugins_value(type_)),
+        plugins=options.value(plugins),
         detect_plugins=options.value(DETECT_PLUGINS_VALUE),
     )

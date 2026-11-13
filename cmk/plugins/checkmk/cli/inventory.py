@@ -64,6 +64,7 @@ from .options import (
     FAKE_DNS_VALUE,
     file_cache_request,
     FileCacheRequest,
+    INVENTORY_PLUGINS_VALUE,
     make_file_cache_options,
     plugin_selection_request,
     PluginSelectionRequest,
@@ -105,7 +106,7 @@ def _inventory_request(options: CLIReader) -> _InventoryRequest:
         usewalk=options.flag(USEWALK_FLAG),
         snmp_backend=options.value(SNMP_BACKEND_VALUE),
         force=options.flag(_FORCE_FLAG),
-        plugin_selection=plugin_selection_request(options, InventoryPluginName),
+        plugin_selection=plugin_selection_request(options, INVENTORY_PLUGINS_VALUE),
         fake_dns=options.value(FAKE_DNS_VALUE),
     )
 

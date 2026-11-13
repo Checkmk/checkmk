@@ -1510,8 +1510,12 @@ allows = [
   "cmk.ccc.log",
   "cmk.ccc.store",
   "cmk.ccc.version_info",
+  "cmk.product_usage.site_id",
   "cmk.utils.http_proxy_config",
 ]
+
+[components."cmk.product_usage.site_id"]
+allows = []
 
 [components."cmk.ruleset_matcher"]
 allows = ["@ccc", "@trace"]

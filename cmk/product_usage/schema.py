@@ -4,14 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import typing
-from uuid import UUID
 
 import pydantic
 import pydantic_core
 
 type Checks = dict[str, CheckData]
-
-ProductUsageSiteId = typing.NewType("ProductUsageSiteId", UUID)
 
 
 class CheckData(typing.TypedDict):

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from uuid import UUID
 
 import pytest
 from pytest_mock import MockerFixture, MockType
@@ -66,24 +65,6 @@ def test_collect_no_site_info(local_connection: MockType) -> None:
     local_connection.query.return_value = []
     with pytest.raises(SiteInfoInvalidError):
         site_info_collector.collect(check_mk_config_dir, var_dir, omd_root)
-
-
-def test_get_or_create_product_usage_site_id() -> None:
-    product_usage_site_id_fp = site_info_collector.product_usage_site_id_file_path(var_dir)
-
-    assert site_info_collector.get_product_usage_site_id(product_usage_site_id_fp) is None
-
-    product_usage_site_id = site_info_collector.get_or_create_product_usage_site_id(
-        product_usage_site_id_fp
-    )
-
-    assert isinstance(product_usage_site_id, UUID)
-
-    # We get the ID again to verify it was stored correctly
-    assert (
-        site_info_collector.get_product_usage_site_id(product_usage_site_id_fp)
-        == product_usage_site_id
-    )
 
 
 def test_get_site_status_query_can_be_answered_as_json(local_connection: MockType) -> None:

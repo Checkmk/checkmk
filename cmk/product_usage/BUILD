@@ -3,10 +3,24 @@ load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
+    name = "site_id",
+    srcs = ["site_id.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//non-free/packages/cmk-ai-control-plane:__pkg__",
+        "//tests:__subpackages__",
+    ],
+)
+
+py_library(
     name = "product_usage",
     srcs = glob(
         ["**/*.py"],
-        exclude = ["cli.py"],
+        exclude = [
+            "cli.py",
+            "site_id.py",
+        ],
     ),
     imports = ["../.."],
     visibility = [
@@ -14,6 +28,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":site_id",
         "//cmk/utils",
         "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:version-info",

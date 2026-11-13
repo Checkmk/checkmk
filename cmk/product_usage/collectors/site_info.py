@@ -7,7 +7,6 @@
 import os
 import typing
 from pathlib import Path
-from uuid import UUID, uuid4
 
 import cmk.ccc.version_info as cmk_version_info
 from cmk.livestatus_client import LocalConnection
@@ -17,7 +16,11 @@ from cmk.product_usage.exceptions import (
     SiteInfoInvalidError,
     SiteInfoItemsInvalidError,
 )
-from cmk.product_usage.schema import ProductUsageSiteId, SiteInfo
+from cmk.product_usage.schema import SiteInfo
+from cmk.product_usage.site_id import (
+    get_or_create_product_usage_site_id,
+    product_usage_site_id_file_path,
+)
 
 
 def collect(cmk_config_dir: Path, var_dir: Path, omd_root: Path) -> SiteInfo:
@@ -49,31 +52,6 @@ def get_number_of_folders(path: str) -> int:
                 count += 1
                 count += get_number_of_folders(entry.path)
     return count
-
-
-def product_usage_site_id_file_path(var_dir: Path) -> Path:
-    return var_dir / "product_usage" / "site_id"
-
-
-def get_product_usage_site_id(file_path: Path) -> ProductUsageSiteId | None:
-    try:
-        with file_path.open("r", encoding="utf-8") as fp:
-            return ProductUsageSiteId(UUID(fp.read()))
-    except FileNotFoundError, ValueError:
-        return None
-
-
-def store_product_usage_site_id(file_path: Path, site_id: ProductUsageSiteId) -> None:
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-    file_path.write_text(str(site_id))
-
-
-def get_or_create_product_usage_site_id(file_path: Path) -> ProductUsageSiteId:
-    site_id = get_product_usage_site_id(file_path)
-    if site_id is None:
-        site_id = ProductUsageSiteId(uuid4())
-        store_product_usage_site_id(file_path, site_id)
-    return site_id
 
 
 class SiteStatus(typing.NamedTuple):

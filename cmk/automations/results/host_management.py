@@ -142,6 +142,9 @@ class BakeryChangedTargetsResult(AutomationResult):
     # when typed objects are needed. Avoids pulling non-free types into this
     # open-source result module.
     changed: Sequence[str]
+    # The targets of each problem. A problem is the name of the failing bakery plug-in
+    # and its message. A problem that no plug-in caused has no name.
+    errors: Mapping[tuple[str | None, str], Sequence[str]]
 
     @staticmethod
     @override

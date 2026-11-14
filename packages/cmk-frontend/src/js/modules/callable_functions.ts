@@ -85,7 +85,11 @@ const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, C
   open_popup: (_node, options) => page_menu.open_popup(options.popup_id),
   form_submit: (_node, options) => page_menu.form_submit(options.form_name, options.button_name),
   fetch_hot_menu_entries: (_node, options) =>
-    page_menu.fetch_hot_menu_entries(options.url, options.entry_names),
+    page_menu.fetch_hot_menu_entries(
+      options.url,
+      options.entry_names,
+      options.message_container_id
+    ),
   init_filter_form: (_node, options) => page_menu.init_filter_form(options.filter_list_selected_id),
 
   // forms

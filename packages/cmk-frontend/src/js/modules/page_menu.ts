@@ -90,16 +90,35 @@ export function enable_menu_entry(id: string, enabled: boolean) {
 }
 
 // Used to keep a potentially slow check out of the page rendering.
-export function fetch_hot_menu_entries(url: string, entry_names: string[]) {
+export function fetch_hot_menu_entries(
+  url: string,
+  entry_names: string[],
+  message_container_id: string
+) {
+  // A failed check must not look as if there were nothing to do.
+  const mark_hot = () => {
+    for (const name of entry_names) {
+      document.getElementById('menu_entry_' + name)?.classList.add('hot')
+      document.getElementById('menu_suggestion_' + name)?.parentElement?.classList.add('hot')
+    }
+  }
   call_ajax(url, {
     method: 'GET',
     response_handler: (_handler_data: unknown, raw: string) => {
       const response = JSON.parse(raw)
-      if (response.result_code !== 0 || !response.result.hot) return
-      for (const name of entry_names) {
-        document.getElementById('menu_entry_' + name)?.classList.add('hot')
-        document.getElementById('menu_suggestion_' + name)?.parentElement?.classList.add('hot')
+      if (response.result_code !== 0) {
+        mark_hot()
+        return
       }
+      if (response.result.message) {
+        const container = document.getElementById(message_container_id)
+        if (container) container.innerHTML = response.result.message
+      }
+      if (response.result.hot) mark_hot()
+    },
+    // Status 0 means that the request was aborted, for example by leaving the page.
+    error_handler: (_handler_data: unknown, status: number) => {
+      if (status !== 0) mark_hot()
     }
   })
 }

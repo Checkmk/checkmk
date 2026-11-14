@@ -1525,6 +1525,22 @@ msgstr ""
 "レコードはこのビューに含まれていません。ソート順序が正しくない場合がありま"
 "す。"
 
+#, fuzzy
+msgid ""
+"<b>Experimental.</b> When enabled, the AI assistant sends usage information "
+"to Checkmk's central telemetry collector, so we can understand how the "
+"assistant is used and improve it.<br><br>We collect: when the assistant "
+"starts, the Checkmk version and edition, and the random site ID of product "
+"usage analytics.<br><br>We do not collect: your site name, host names, or "
+"the content of your prompts and the assistant's answers."
+msgstr ""
+"<b>実験的機能。</b> この機能を有効にすると、CheckmkはMCPリクエストの使用状況"
+"を収集し、Checkmkの中央Telemetryコレクターに転送します。これにより、MCPサー"
+"バーの使用状況を把握し、改善を図ることができます。<br><br>収集対象：呼び出さ"
+"れたツール、応答時間、応答サイズ、エラーコード、使用されたAIクライアントまた"
+"はツール、およびランダムなセッションID。<br><br>収集対象外：リクエストの内容"
+"やその結果。"
+
 msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
@@ -58430,6 +58446,10 @@ msgstr "並列化可能なスクリプトの実行方法を選択します"
 
 msgid "Send"
 msgstr "送信"
+
+#, fuzzy
+msgid "Send AI assistant usage data to Checkmk"
+msgstr "MCPの使用状況データをCheckmkに送信する"
 
 msgid "Send HTTP POST data"
 msgstr "HTTP POSTデータを送信する"

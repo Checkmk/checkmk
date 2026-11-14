@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-11-13 11:01+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -1553,6 +1553,15 @@ msgstr ""
 msgid ""
 "<b>Display limit reached:</b> This table shows only %s entries. Additional "
 "records are not included in this view. Sort order may not be correct."
+msgstr ""
+
+msgid ""
+"<b>Experimental.</b> When enabled, the AI assistant sends usage information "
+"to Checkmk's central telemetry collector, so we can understand how the "
+"assistant is used and improve it.<br><br>We collect: when the assistant "
+"starts, the Checkmk version and edition, and the random site ID of product "
+"usage analytics.<br><br>We do not collect: your site name, host names, or "
+"the content of your prompts and the assistant's answers."
 msgstr ""
 
 msgid ""
@@ -61853,6 +61862,10 @@ msgstr "Seleciona como os scripts paralelos são executados"
 msgid "Send"
 msgstr "Enviar"
 
+#, fuzzy
+msgid "Send AI assistant usage data to Checkmk"
+msgstr "Mapear o estado do GCP para verificar mk"
+
 msgid "Send HTTP POST data"
 msgstr "Enviar dados HTTP POST"
 
@@ -94822,7 +94835,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -95340,7 +95352,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""

@@ -1558,6 +1558,15 @@ msgid ""
 msgstr ""
 
 msgid ""
+"<b>Experimental.</b> When enabled, the AI assistant sends usage information "
+"to Checkmk's central telemetry collector, so we can understand how the "
+"assistant is used and improve it.<br><br>We collect: when the assistant "
+"starts, the Checkmk version and edition, and the random site ID of product "
+"usage analytics.<br><br>We do not collect: your site name, host names, or "
+"the content of your prompts and the assistant's answers."
+msgstr ""
+
+msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
 "filtered by those tags. Otherwise, all instances will be collected."
@@ -61825,6 +61834,10 @@ msgstr "Kiest hoe paralleliseerbare scripts worden uitgevoerd"
 
 msgid "Send"
 msgstr "Stuur"
+
+#, fuzzy
+msgid "Send AI assistant usage data to Checkmk"
+msgstr "Kaart GCP status te controleren mk"
 
 msgid "Send HTTP POST data"
 msgstr "HTTP POST-gegevens verzenden"

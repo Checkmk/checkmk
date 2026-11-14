@@ -1,0 +1,18 @@
+title: Raritan PX2/PX3: PDU Outlet Pole Measurements
+agents: snmp
+catalog: hw/environment/raritan
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the electrical measurements of individual outlet conductors
+ from the PDU2-MIB outletPoleSensorMeasurementsTable. Each sensor uses its own
+ scaling and state. Whole-outlet readings and output summaries remain independent.
+
+item:
+ The outletLabel, {{Phase}} and the actual outletPoleLine, for example
+ {{O3 Phase L1}} or {{3 Phase N}}. The service prefix is {{Output}}.
+ Missing labels use {{Outlet <ID>}} and missing line assignments use {{Pole <index>}}.
+ Multiple PDUs and repeated labels or lines include indices to avoid collisions.
+
+discovery:
+ One service per outlet pole with supported electrical measurements.

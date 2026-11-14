@@ -6,10 +6,12 @@ distribution: check_mk
 description:
  This check monitors temperature sensors connected to a Raritan PX2 device.
   No configuration is needed, the devices send their states by themselves.
-  Upper and lower levels are configurable via WATO.
+ Upper and lower levels are configurable via WATO. Device thresholds are
+ used only when their respective activation bits are set.
 
 item:
- The fixed statement {{Sensor}} followed by the sensor ID and the name of the sensor
+ Sensor followed by the sensor ID and name, e.g. Sensor 1.
+ The PDU ID is prefixed only when multiple PDUs are found, e.g. 1/Sensor 1.
 
 discovery:
  One service is created for each sensor.

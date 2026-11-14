@@ -5,8 +5,9 @@
 
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 from typing import ReadOnly, TypedDict
+
+from pydantic import Field
 
 from cmk.agent_based.v2 import (
     all_of,
@@ -14,6 +15,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    OIDEnd,
     Result,
     Service,
     SimpleSNMPSection,
@@ -22,13 +24,22 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.raritan.lib import PLUG_STATE_MAPPING
+from cmk.plugins.raritan.lib import ParsedModel, PLUG_STATE_MAPPING
 
 
-@dataclass(frozen=True, kw_only=True)
-class Plug:
+class PlugMeasurement(ParsedModel):
+    """One aligned SNMP row, in fetch order; state codes are mapped afterwards."""
+
+    index: str = Field(pattern=r"^\d+\.\d+$")
+    outlet_label: str
+    outlet_name: str
+    switching_state: str
+
+
+class Plug(ParsedModel):
     state: str
     outlet_name: str
+    outlet_label: str
 
 
 type Section = Mapping[str, Plug]
@@ -40,12 +51,18 @@ class CombinedParams(TypedDict, total=False):
 
 
 def parse_raritan_pdu_plugs(string_table: StringTable) -> Section:
+    measurements = [
+        PlugMeasurement.model_validate(dict(zip(PlugMeasurement.model_fields, row, strict=True)))
+        for row in string_table
+    ]
+    multiple_pdus = len({measurement.index.split(".")[0] for measurement in measurements}) > 1
     return {
-        outlet_label: Plug(
-            state=PLUG_STATE_MAPPING.get(outlet_state, "unknown"),
-            outlet_name=outlet_name,
+        (measurement.index.replace(".", "/") if multiple_pdus else measurement.index.split(".")[1]): Plug(
+            state=PLUG_STATE_MAPPING.get(measurement.switching_state, "unknown"),
+            outlet_name=measurement.outlet_name,
+            outlet_label=measurement.outlet_label,
         )
-        for outlet_label, outlet_name, outlet_state in string_table
+        for measurement in measurements
     }
 
 
@@ -61,6 +78,8 @@ def check_raritan_pdu_plugs(item: str, params: CombinedParams, section: Section)
 
     if plug.outlet_name:
         yield Result(state=State.OK, summary=plug.outlet_name)
+    if plug.outlet_label:
+        yield Result(state=State.OK, summary=f"Label: {plug.outlet_label}")
 
     expected_state = params["required_state"] or params["discovered_state"]
 
@@ -68,6 +87,29 @@ def check_raritan_pdu_plugs(item: str, params: CombinedParams, section: Section)
         yield Result(state=State.CRIT, summary=f"Status: {plug.state} (expected: {expected_state})")
     else:
         yield Result(state=State.OK, summary=f"Status: {plug.state}")
+
+
+def _plug_tree() -> SNMPTree:
+    """Fetch PDU2-MIB outlet labels, names and relay states for every PDU.
+
+    Base: .1.3.6.1.4.1.13742.6.
+    Outlet configuration entry: <base>.3.5.3.1.
+    Outlet switch control entry: <base>.4.1.2.1.
+    Each fetched column ends in .<pduId>.<outletId>.
+
+    Checkmk joins the columns by their complete shared OID suffix. The fetch
+    order matches PlugMeasurement.model_fields for zip() row mapping. Empty
+    labels/names remain valid; the PDU/outlet indices identify each plug.
+    """
+    return SNMPTree(
+        base=".1.3.6.1.4.1.13742.6",
+        oids=[
+            OIDEnd(),  # PlugMeasurement.index: pduId.outletId
+            "3.5.3.1.2",  # outletLabel: label printed on the PDU
+            "3.5.3.1.3",  # outletName: user-defined name
+            "4.1.2.1.3",  # outletSwitchingState: on(7)/off(8); other states map to unknown
+        ],
+    )
 
 
 snmp_section_raritan_pdu_plugs = SimpleSNMPSection(
@@ -79,10 +121,7 @@ snmp_section_raritan_pdu_plugs = SimpleSNMPSection(
             startswith(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1", "PX3"),
         ),
     ),
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.13742.6",
-        oids=["3.5.3.1.2", "3.5.3.1.3", "4.1.2.1.3"],
-    ),
+    fetch=_plug_tree(),
     parse_function=parse_raritan_pdu_plugs,
 )
 

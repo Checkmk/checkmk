@@ -7,6 +7,10 @@ description:
  This check monitors air pressure sensors connected to a Raritan EMX device.
  No configuration is needed, the devices send their states by themselves.
 
+ The displayed value retains the device unit. PSI readings and their metric
+ thresholds are converted to Pascal for the pressure_pa performance metric
+ using 1 psi = 6894.757293168 Pa. Pascal readings remain unchanged.
+
 item:
  The fixed statement {{Sensor}} followed by the sensor ID and the name of the sensor
 

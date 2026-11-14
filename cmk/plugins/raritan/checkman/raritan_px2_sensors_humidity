@@ -7,9 +7,11 @@ description:
  This check monitors humidity sensors connected to a Raritan PX2 device.
  No configuration is needed, the devices send their states by themselves.
  The levels for the check can be configured in the 'humidity' rule.
+ Device thresholds are used only when their respective activation bits are set.
 
 item:
- The fixed statement {{Sensor}} followed by the sensor ID and the name of the sensor
+ Sensor followed by the sensor ID and name, e.g. Sensor 1.
+ The PDU ID is prefixed only when multiple PDUs are found, e.g. 1/Sensor 1.
 
 discovery:
  One service is created for each sensor.

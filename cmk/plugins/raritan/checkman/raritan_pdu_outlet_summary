@@ -1,0 +1,22 @@
+title: Raritan PX2/PX3: PDU Outlet Summary
+agents: snmp
+catalog: hw/environment/raritan
+license: GPLv2
+distribution: check_mk
+description:
+ This check displays the native whole-outlet measurements from the PDU2-MIB
+ outletSensorMeasurementsTable. It monitors voltage, current, active power,
+ apparent power and active energy where provided by the device.
+ Each outlet has its own summary, independent of outlet pole and inlet services.
+ No values are calculated by summing poles or outlets. Electrical input services
+ and the independent plug switching-state services are not replaced.
+
+item:
+ The outletLabel, for example {{3}}, resulting in {{Output 3}}.
+ Missing labels use {{Outlet <ID>}}. Multiple PDUs include the PDU index.
+ Duplicate labels include the outlet identity to keep services distinct.
+
+discovery:
+ One {{Output <outletLabel>}} service per outlet with supported native
+ whole-outlet measurements. No service is created for empty, unsupported or
+ unavailable data. Pole measurements alone do not create a summary.

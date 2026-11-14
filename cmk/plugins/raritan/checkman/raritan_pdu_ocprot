@@ -10,8 +10,14 @@ description:
  device is taken into account, whereby the status open is interpreted
  as CRIT, closed as OK, and unavailable as UNKNOWN.
 
+ Current sensor availability and state are evaluated separately. An absent
+ or unavailable current sensor reports UNKNOWN and produces no current metric.
+ Device current alarms are retained alongside rule thresholds. Missing or
+ unknown protector states report UNKNOWN instead of causing a check exception.
+
 item:
- The ID of the overcurrent protector, e.g. C1.
+ The overcurrent protector ID, e.g. C1. When multiple PDUs are found,
+ the PDU ID is prefixed, e.g. 1/C1.
 
 discovery:
  One service is created for each overcurrent protector.

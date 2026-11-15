@@ -19,7 +19,7 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, final, Literal, TYPE_CHECKING
 
-from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 from cmk.ccc.store._file import (
     BytesSerializer,
@@ -135,17 +135,23 @@ def load_mk_file(path: Path, *, default: Mapping[str, object], lock: bool) -> Ma
             acquire_lock(path)
 
         try:
-            exec(compile(path.read_bytes(), path, "exec"), globals(), default)  # nosec B102 # BNS:aee528
+            source = path.read_bytes()
         except FileNotFoundError:
-            pass
-        except MKTerminate, MKTimeout:
-            raise
-        except Exception as e:
-            # TODO: How to handle debug mode or logging?
+            return default
+        except OSError as e:
             raise MKGeneralException(
                 _('Cannot read configuration file "%(path)s": %(e)s') % {"path": path, "e": e}
-            )
+            ) from e
 
+        try:
+            code = compile(source, path, "exec")
+        except (SyntaxError, ValueError) as e:
+            raise MKGeneralException(
+                _('Cannot read configuration file "%(path)s": %(e)s') % {"path": path, "e": e}
+            ) from e
+
+        # Errors raised by the code of the file are bugs in that code: let them through.
+        exec(code, globals(), default)  # nosec B102 # BNS:aee528
         return default
 
 

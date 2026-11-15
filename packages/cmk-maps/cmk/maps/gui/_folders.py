@@ -27,7 +27,6 @@ from pathlib import Path
 
 import cmk.utils.paths
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.log import logger
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.snapshot_artifacts import SnapshotArtifact, SnapshotArtifactRegistry
@@ -65,12 +64,14 @@ def _resolve_folder_skeleton(tree: FolderTree) -> list[FolderPermEntry]:
 
 
 def _is_written(path: Path, content: dict[str, object]) -> bool:
-    # A file that cannot be read counts as changed, so the next write repairs it.
+    # A file that cannot be loaded counts as changed, so the next write repairs it.
+    # We write this file ourselves: whatever fails while loading it, rewriting it is
+    # the fix, including content that compiles but fails when executed.
     try:
         written = store.load_mk_file(
             path, default={VAR_FOLDER_PERMS: [], VAR_FOLDER_HIDE_UNREADABLE: False}, lock=False
         )
-    except MKGeneralException:
+    except Exception:
         return False
     return dict(written) == content
 

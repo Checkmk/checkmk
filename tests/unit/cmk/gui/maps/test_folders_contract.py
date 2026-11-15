@@ -130,10 +130,17 @@ def test_an_unchanged_skeleton_is_not_rewritten(shared_omd_root: Path) -> None:
     assert path.stat().st_mtime_ns == 1
 
 
-def test_an_unreadable_skeleton_is_rewritten(shared_omd_root: Path) -> None:
+@pytest.mark.parametrize(
+    "content",
+    [
+        pytest.param("maps_folder_perms = [\n", id="invalid syntax"),
+        pytest.param("maps_folder_perms = undefined_name\n", id="fails when executed"),
+    ],
+)
+def test_an_unreadable_skeleton_is_rewritten(shared_omd_root: Path, content: str) -> None:
     path = _folders.folder_perms_path()
     path.parent.mkdir(parents=True)
-    path.write_text("maps_folder_perms = [\n")
+    path.write_text(content)
 
     _folders.write_folder_skeleton(_fake_tree([_FakeFolder("dc", "Datacenters", "dc-id", ["ops"])]))
 

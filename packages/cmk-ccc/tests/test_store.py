@@ -241,6 +241,20 @@ def test_save_bytes_to_file(tmp_path: Path, data: bytes) -> None:
     assert store.load_bytes_from_file(path, default=b"", debug=False) == data
 
 
+def test_load_mk_file_with_syntax_error_names_the_file(tmp_path: Path) -> None:
+    (path := tmp_path / "broken.mk").write_text("x = [", encoding="utf-8")
+
+    with pytest.raises(MKGeneralException, match="broken.mk"):
+        store.load_mk_file(path, default={}, lock=False)
+
+
+def test_load_mk_file_does_not_wrap_errors_raised_by_its_code(tmp_path: Path) -> None:
+    (path := tmp_path / "broken.mk").write_text("x = undefined_name", encoding="utf-8")
+
+    with pytest.raises(NameError):
+        store.load_mk_file(path, default={}, lock=False)
+
+
 def test_save_mk_file(tmp_path: Path) -> None:
     path = tmp_path / "lala"
     store.save_mk_file(path, "x = 1")

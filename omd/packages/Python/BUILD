@@ -1,6 +1,8 @@
 load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file")
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
 load("//bazel/rules:make_deployable.bzl", "string_replace")
 load("//bazel/rules:patchelf.bzl", "set_runpath", "set_runpath_tree")
@@ -290,4 +292,47 @@ py_library(
         "sitecustomize.py",
     ],
     deps = ["//packages/cmk-licensing/cmk/licensing/basics"],
+)
+
+# sitecustomize.py runs on startup of every site Python process, so its
+# first-party dependency closure has to stay small. This is exactly the set
+# of first-party Python libraries in that closure, sorted (data-only targets
+# like the py.typed marker of cmk-crypto are left out). The test below fails
+# if the two differ in either direction. Adding a dependency means
+# deliberately extending this list in the same change.
+_SITECUSTOMIZE_DEPS = [
+    "//omd/packages/Python:sitecustomize_py",
+    "//packages/cmk-ccc:exceptions",
+    "//packages/cmk-ccc:i18n",
+    "//packages/cmk-ccc:regex",
+    "//packages/cmk-ccc:site",
+    "//packages/cmk-ccc:store",
+    "//packages/cmk-ccc:version",
+    "//packages/cmk-crypto:cmk-crypto",
+    "//packages/cmk-licensing/cmk/licensing/basics:basics",
+    "//packages/cmk-trace:cmk-trace",
+]
+
+genquery(
+    name = "sitecustomize_deps",
+    expression = "kind(py_library, filter('^//', deps(//omd/packages/Python:sitecustomize_py)))",
+    opts = [
+        "--noimplicit_deps",
+        "--notool_deps",
+    ],
+    scope = [":sitecustomize_py"],
+)
+
+write_file(
+    name = "sitecustomize_expected_deps",
+    out = "sitecustomize_expected_deps.txt",
+    # genquery ends its output with a newline
+    content = _SITECUSTOMIZE_DEPS + [""],
+)
+
+diff_test(
+    name = "sitecustomize_deps_test",
+    failure_message = "The first-party dependencies of sitecustomize.py differ from _SITECUSTOMIZE_DEPS",
+    file1 = ":sitecustomize_deps",
+    file2 = ":sitecustomize_expected_deps",
 )

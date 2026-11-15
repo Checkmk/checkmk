@@ -17,7 +17,8 @@ py_library(
         "//packages/cmk-licensing:__subpackages__",
     ],
     deps = [
-        # NOTE: since this is used in sitecustomize.py, keep the deps to a minimum
+        # NOTE: since this is used in sitecustomize.py, keep the deps to a minimum.
+        # Enforced by //omd/packages/Python:sitecustomize_deps_test.
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",

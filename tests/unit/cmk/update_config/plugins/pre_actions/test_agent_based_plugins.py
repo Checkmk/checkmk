@@ -200,7 +200,7 @@ def test_problems_of_a_package_can_abort_the_update() -> None:
 
 
 def test_force_continues_despite_problems_of_a_package() -> None:
-    """The post-update step runs with FORCE: it must respect a "continue" of the pre-flight"""
+    """`omd update --pre-flight=ignore` runs with FORCE"""
     # Does not raise.
     report_plugin_problems(
         logging.getLogger(__name__),

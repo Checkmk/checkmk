@@ -18,6 +18,7 @@ import traceback
 from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from itertools import chain
+from pathlib import Path
 from typing import Literal
 
 # This special script needs persistence and conversion code from different
@@ -82,6 +83,8 @@ def main(
         exit_code = main_check_config(edition, logger, arguments.conflict, debug=arguments.debug)
         if exit_code != 0 or arguments.dry_run:
             return exit_code
+        if arguments.verified_marker is not None:
+            arguments.verified_marker.touch()
         return main_update_config(edition, logger, arguments.conflict, debug=arguments.debug)
 
 
@@ -158,6 +161,15 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
         "--dry-run",
         action="store_true",
         help="Executes `Verifying Checkmk configuration` only.",
+    )
+    p.add_argument(
+        "--verified-marker",
+        type=Path,
+        help=(
+            "Create this file once `Verifying Checkmk configuration` succeeded and before "
+            "`Updating Checkmk configuration` starts. `omd update` uses it to tell whether a "
+            "failed update can still be rolled back."
+        ),
     )
     p.add_argument(
         "--site-may-run",

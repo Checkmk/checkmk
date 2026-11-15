@@ -319,6 +319,54 @@ def test_backup_remove(tmp_path: Path) -> None:
     assert save == _list_non_backup_files(site_dir)
 
 
+def test_no_rollback_once_the_config_is_verified(tmp_path: Path) -> None:
+    new_skel = tmp_path / "new_skel"
+    old_skel = tmp_path / "old_skel"
+    site_dir = tmp_path / "site_dir"
+    new_skel.mkdir()
+    setup_skel(old_skel)
+    setup_skel(site_dir)
+    setup_user(site_dir)
+    save = _list_non_backup_files(site_dir)
+
+    with (
+        contextlib.suppress(TBaseException),
+        ManageUpdate(
+            "heute", "tmp_directory", site_dir, old_skel, new_skel, lambda _command: 0
+        ) as mu,
+    ):
+        for relpath in reversed(list(walk_managed(old_skel))):
+            with contextlib.suppress(OSError):
+                remove(site_dir, relpath)
+        mu.config_verified.touch()
+        raise TBaseException
+
+    assert save != _list_non_backup_files(site_dir)
+    assert not mu.backup_dir.exists()
+
+
+def test_failure_after_verification_reports_the_new_version(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    new_skel = tmp_path / "new_skel"
+    new_skel.mkdir()
+    old_skel = tmp_path / "old_skel"
+    old_skel.mkdir()
+    site_dir = tmp_path / "site_dir"
+    site_dir.mkdir()
+
+    with (
+        contextlib.suppress(TBaseException),
+        ManageUpdate(
+            "heute", "tmp_directory", site_dir, old_skel, new_skel, lambda _command: 0
+        ) as mu,
+    ):
+        mu.config_verified.touch()
+        raise TBaseException
+
+    assert "The site is on the new version" in capsys.readouterr().out
+
+
 def test_backup_add(tmp_path: Path) -> None:
     new_skel = tmp_path / "new_skel"
     old_skel = tmp_path / "old_skel"

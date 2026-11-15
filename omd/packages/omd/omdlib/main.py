@@ -2607,14 +2607,17 @@ def main_update(
 
             mu.update_active_mkps()
 
-            if conflict_mode != PreFlight.IGNORE:
-                command = ["cmk-update-config", "--conflict", conflict_mode.value, "--dry-run"]
-                sys.stdout.write(f"Executing '{subprocess.list2cmdline(command)}'")
-                returncode = _call_script(is_tty, update_env, command)
-                if returncode != 0:
-                    sys.exit(returncode)
-            else:
-                sys.stdout.write("Skipping pre-flight check")
+            command = [
+                "cmk-update-config",
+                "--conflict",
+                "force" if conflict_mode is PreFlight.IGNORE else conflict_mode.value,
+                "--verified-marker",
+                str(mu.config_verified),
+            ]
+            sys.stdout.write(f"Executing '{subprocess.list2cmdline(command)}'")
+            returncode = _call_script(is_tty, update_env, command)
+            if returncode != 0:
+                sys.exit(returncode)
             sys.stdout.write(
                 f"\nCompleted verifying site configuration. Your site now has version {to_version}.\n"
             )

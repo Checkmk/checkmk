@@ -41,17 +41,6 @@ pkg_files(
 )
 
 pkg_files(
-    name = "post_update",
-    srcs = [
-        "scripts/post-update/02_cmk-update-config",
-    ],
-    attributes = pkg_attributes(
-        mode = "0755",
-    ),
-    prefix = "lib/omd/scripts/post-update/",
-)
-
-pkg_files(
     name = "post_mv",
     srcs = [
         "scripts/00_certs",
@@ -205,7 +194,6 @@ pkg_tar(
         ":post_create",
         ":post_mv",
         ":post_restore",
-        ":post_update",
         ":skel",
         ":skel_755",
     ],
@@ -222,7 +210,6 @@ sh_library(
         "scripts/post-cp/01_cmk-post-rename-site",
         "scripts/post-mv/01_cmk-post-rename-site",
         "scripts/post-restore/01_cmk-post-rename-site",
-        "scripts/post-update/02_cmk-update-config",
         "skel/etc/init.d/automation-helper",
         "skel/etc/init.d/mkeventd",
         "skel/etc/init.d/piggyback-hub",

@@ -234,6 +234,7 @@ class ManageUpdate:
         self.populated_tmpfs = False
         self.updated_active_mkps = False
         self._active_mkps = self.backup_dir / "active_mkps"
+        self.config_verified = self.backup_dir / "config_verified"
         self._run = run
 
     def __enter__(self) -> Self:
@@ -280,7 +281,9 @@ class ManageUpdate:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> Literal[False]:
-        if exc_type is not None:
+        # The update actions cannot be undone. A rollback after they started would leave the old
+        # version with a partly migrated configuration.
+        if exc_type is not None and not self.config_verified.exists():
             try:
                 if self.updated_active_mkps:
                     restore_active_mkps(self._run, self._active_mkps)
@@ -303,6 +306,12 @@ class ManageUpdate:
                     "unknown state and both, restarting or updating the site, can have unknown effects.\n"
                 )
             sys.stdout.write("\nThe update was rolled back successfully.\n")
+        elif exc_type is not None:
+            sys.stdout.write(
+                "\nThe update failed after the configuration was verified and was not rolled "
+                "back.\nThe site is on the new version. Please repair the error and run "
+                "'cmk-update-config' before starting the site.\n"
+            )
         shutil.rmtree(self.backup_dir)
         return False  # Don't suppress the exception
 

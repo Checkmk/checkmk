@@ -1787,16 +1787,7 @@ class TestMonitorServiceOverview:
             "services",
             [{**_OVERVIEW_SERVICE_ROW, "description": service_name, **(row_overrides or {})}],
         )
-        mock_livestatus.expect_query(
-            [
-                "GET services",
-                f"Columns: {_SERVICE_OVERVIEW_COLUMNS}",
-                f"Filter: host_name = {_HOSTNAME}",
-                f"Filter: description = {service_name}",
-                "And: 2",
-            ],
-            sites=[_SITE_ID],
-        )
+        _expect_service_overview_query(mock_livestatus, service_name=service_name)
         with mock_livestatus(expect_status_query=True):
             resp = clients.MonitorHosts.get_service_overview(
                 hostname=_HOSTNAME, site_id=_SITE_ID, service_name=service_name
@@ -1929,6 +1920,53 @@ class TestMonitorServiceOverview:
                 )
                 is None
             )
+
+    @pytest.mark.parametrize(
+        "lacking",
+        [
+            pytest.param(("wato.use",), id="without Use Setup"),
+            pytest.param(
+                ("wato.hosts", "wato.seeall"),
+                id="without Host management and Read access to all modules",
+            ),
+        ],
+    )
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_discovery_link_for_a_user_who_may_not_run_a_discovery(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        lacking: tuple[str, ...],
+    ) -> None:
+        # The host is in Setup, so only the missing permissions can hide the link.
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+        _log_in_with_admin_role_lacking(clients, *lacking)
+
+        assert (
+            self._get_overview_link(
+                clients,
+                mock_livestatus,
+                field="legacy_service_discovery_link",
+                service_name="Check_MK Discovery",
+            )
+            is None
+        )
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_links_discovery_for_a_host_manager_without_read_access_to_all_modules(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+        _log_in_with_admin_role_lacking(clients, "wato.seeall")
+
+        assert self._get_overview_link(
+            clients,
+            mock_livestatus,
+            field="legacy_service_discovery_link",
+            service_name="Check_MK Discovery",
+        ) == (f"wato.py?mode=inventory&host={_HOSTNAME}")
 
     @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
     def test_passive_service_has_no_next_check(
@@ -2177,6 +2215,23 @@ class TestMonitorServiceOverview:
 
         assert resp.status_code == HTTPStatus.NOT_FOUND
 
+    def test_the_overview_queries_only_the_services_the_user_may_see(
+        self,
+        clients: ClientRegistry,
+        with_user: tuple[UserId, str],
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.MonitorHosts.set_credentials(*with_user)
+        mock_livestatus.add_table("services", [_OVERVIEW_SERVICE_ROW])
+        _expect_service_overview_query(mock_livestatus, auth_user=with_user[0])
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.get_service_overview(
+                hostname=_HOSTNAME, site_id=_SITE_ID, service_name=_SERVICE_DESCRIPTION
+            )
+
+        assert resp.json["name"] == _SERVICE_DESCRIPTION
+
     def test_unknown_site_is_rejected(self, clients: ClientRegistry) -> None:
         resp = clients.MonitorHosts.get_service_overview(
             hostname=_HOSTNAME,
@@ -2207,29 +2262,14 @@ class TestMonitorHostServicesReschedule:
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
-        mock_livestatus.add_table(
-            "services", [{"host_name": _HOSTNAME, "description": _SERVICE_DESCRIPTION, "state": 0}]
-        )
-        mock_livestatus.expect_query(
-            f"GET services\nColumns: host_name description state\n"
-            f"Filter: host_name = {_HOSTNAME}\nFilter: description = {_SERVICE_DESCRIPTION}\nAnd: 2",
-            sites=[_SITE_ID],
-        )
+        _expect_service_lookup(mock_livestatus, state=0)
         mock_livestatus.expect_query(
             f"COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;{_HOSTNAME};{_SERVICE_DESCRIPTION};...",
             match_type="ellipsis",
         )
 
         with mock_livestatus(expect_status_query=True):
-            resp = clients.MonitorHosts.reschedule_services(
-                services=[
-                    {
-                        "site_id": _SITE_ID,
-                        "host_name": _HOSTNAME,
-                        "name": _SERVICE_DESCRIPTION,
-                    }
-                ]
-            )
+            resp = clients.MonitorHosts.reschedule_services(services=[_SERVICE_REF])
 
         assert resp.json["rescheduled"] == 1
 
@@ -2263,11 +2303,7 @@ class TestMonitorHostServicesReschedule:
         with mock_livestatus(expect_status_query=True):
             resp = clients.MonitorHosts.reschedule_services(
                 services=[
-                    {
-                        "site_id": _SITE_ID,
-                        "host_name": _HOSTNAME,
-                        "name": _SERVICE_DESCRIPTION,
-                    },
+                    _SERVICE_REF,
                     {"site_id": _SITE_ID, "host_name": _HOSTNAME, "name": "Memory"},
                 ],
                 spread_minutes=5,
@@ -2287,7 +2323,7 @@ class TestMonitorHostServicesReschedule:
 
     def test_negative_spread_is_rejected(self, clients: ClientRegistry) -> None:
         resp = clients.MonitorHosts.reschedule_services(
-            services=[{"site_id": _SITE_ID, "host_name": _HOSTNAME, "name": _SERVICE_DESCRIPTION}],
+            services=[_SERVICE_REF],
             spread_minutes=-1,
             expect_ok=False,
         )
@@ -2299,7 +2335,7 @@ class TestMonitorHostServicesReschedule:
         client.set_credentials("foouser", "barpassword")
 
         resp = client.reschedule_services(
-            services=[{"site_id": _SITE_ID, "host_name": _HOSTNAME, "name": _SERVICE_DESCRIPTION}],
+            services=[_SERVICE_REF],
             expect_ok=False,
         )
 
@@ -2334,9 +2370,7 @@ class TestMonitorHostServicesReschedule:
 
         with set_config(roles=roles), mock_livestatus(expect_status_query=False):
             resp = clients.MonitorHosts.reschedule_services(
-                services=[
-                    {"site_id": _SITE_ID, "host_name": _HOSTNAME, "name": _SERVICE_DESCRIPTION}
-                ],
+                services=[_SERVICE_REF],
                 expect_ok=False,
             )
 
@@ -2382,12 +2416,59 @@ class TestMonitorHostServicesReschedule:
         ):
             resp = clients.MonitorHosts.reschedule_services(
                 services=[
-                    {"site_id": _SITE_ID, "host_name": _HOSTNAME, "name": _SERVICE_DESCRIPTION},
+                    _SERVICE_REF,
                     {"site_id": _OTHER_SITE_ID, "host_name": "gestern", "name": "Memory"},
                 ]
             )
 
         assert resp.json["rescheduled"] == 2
+
+
+class TestMonitorServiceActionsAsAUser:
+    """A normal user acts on a service they may see; each action looks it up as that user first."""
+
+    def test_a_user_acknowledges_the_problem_of_a_service(
+        self,
+        clients: ClientRegistry,
+        with_user: tuple[UserId, str],
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.MonitorHosts.set_credentials(*with_user)
+        _expect_service_lookup(mock_livestatus, state=2, auth_user=with_user[0])
+        mock_livestatus.expect_query(
+            f"COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;{_HOSTNAME};{_SERVICE_DESCRIPTION};...",
+            match_type="ellipsis",
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.acknowledge_services(
+                services=[_SERVICE_REF], comment="Working on it"
+            )
+
+        assert resp.json["acknowledged"] == 1
+
+    def test_a_user_schedules_a_downtime_for_a_service(
+        self,
+        clients: ClientRegistry,
+        with_user: tuple[UserId, str],
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.MonitorHosts.set_credentials(*with_user)
+        _expect_service_lookup(mock_livestatus, state=0, auth_user=with_user[0])
+        mock_livestatus.expect_query(
+            f"COMMAND [...] SCHEDULE_SVC_DOWNTIME;{_HOSTNAME};{_SERVICE_DESCRIPTION};...",
+            match_type="ellipsis",
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.schedule_service_downtime(
+                services=[_SERVICE_REF],
+                comment="Maintenance",
+                start_time="2026-07-21T17:00:00Z",
+                end_time="2026-07-21T19:00:00Z",
+            )
+
+        assert resp.json["scheduled"] == 1
 
 
 # The entries resolve their icons in the theme, which has no icon files here.
@@ -2687,6 +2768,7 @@ _SERVICE_OVERVIEW_COLUMNS = (
     "check_command pnpgraph_present check_type cached_at cache_interval host_labels "
     "host_filename"
 )
+_SERVICE_REF = {"site_id": _SITE_ID, "host_name": _HOSTNAME, "name": _SERVICE_DESCRIPTION}
 _LIMIT = 1000
 _OTHER_SITE_ID = "remote"
 _SERVICES_COLUMNS = (
@@ -2727,6 +2809,64 @@ def _expect_list_services_queries(
             f"Filter: host_name = {_HOSTNAME}",
         ],
         sites=[site],
+    )
+
+
+def _log_in_with_admin_role_lacking(clients: ClientRegistry, *permissions: str) -> None:
+    # Not the built-in admin role, which always holds "Use Setup".
+    clients.UserRole.clone(body={"role_id": "admin", "new_role_id": "restricted"})
+    clients.UserRole.edit(
+        role_id="restricted",
+        body={"new_permissions": dict.fromkeys(permissions, "no")},
+    )
+    clients.User.create(
+        username="restricted",
+        fullname="restricted",
+        roles=["restricted"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.MonitorHosts.set_credentials("restricted", "supersecretish")
+
+
+def _expect_service_overview_query(
+    mock_livestatus: MockLiveStatusConnection,
+    *,
+    service_name: str = _SERVICE_DESCRIPTION,
+    auth_user: UserId | None = None,
+) -> None:
+    # A user who may not see everything queries with an AuthUser line.
+    restriction = [] if auth_user is None else [f"AuthUser: {auth_user}"]
+    mock_livestatus.expect_query(
+        [
+            "GET services",
+            f"Columns: {_SERVICE_OVERVIEW_COLUMNS}",
+            f"Filter: host_name = {_HOSTNAME}",
+            f"Filter: description = {service_name}",
+            "And: 2",
+            *restriction,
+        ],
+        sites=[_SITE_ID],
+    )
+
+
+def _expect_service_lookup(
+    mock_livestatus: MockLiveStatusConnection, *, state: int, auth_user: UserId | None = None
+) -> None:
+    mock_livestatus.add_table(
+        "services",
+        [{"host_name": _HOSTNAME, "description": _SERVICE_DESCRIPTION, "state": state}],
+    )
+    restriction = [] if auth_user is None else [f"AuthUser: {auth_user}"]
+    mock_livestatus.expect_query(
+        [
+            "GET services",
+            "Columns: host_name description state",
+            f"Filter: host_name = {_HOSTNAME}",
+            f"Filter: description = {_SERVICE_DESCRIPTION}",
+            "And: 2",
+            *restriction,
+        ],
+        sites=[_SITE_ID],
     )
 
 

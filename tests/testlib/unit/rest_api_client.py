@@ -6067,6 +6067,39 @@ class MonitorHostsClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def acknowledge_services(
+        self,
+        services: list[dict[str, str]],
+        comment: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url="/monitor/services/actions/acknowledge",
+            body={"services": services, "comment": comment},
+            expect_ok=expect_ok,
+        )
+
+    def schedule_service_downtime(
+        self,
+        services: list[dict[str, str]],
+        comment: str,
+        start_time: str,
+        end_time: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url="/monitor/services/actions/schedule_downtime",
+            body={
+                "services": services,
+                "comment": comment,
+                "start_time": start_time,
+                "end_time": end_time,
+            },
+            expect_ok=expect_ok,
+        )
+
 
 class DisabledEndpointStubClient(RestApiClient):
     """Test-only client for verifying the disabled_endpoint mechanism returns 403."""

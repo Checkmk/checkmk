@@ -8,8 +8,6 @@ from functools import cache
 from pathlib import Path
 from typing import NewType
 
-from cmk.ccc.i18n import _
-
 SiteId = NewType("SiteId", str)
 
 OMDConfig = dict[str, str]
@@ -29,7 +27,7 @@ def omd_site() -> SiteId:
         return SiteId(os.environ["OMD_SITE"])
     except KeyError as exc:
         raise RuntimeError(
-            _("OMD_SITE environment variable not set. You can only execute this in an OMD site.")
+            "OMD_SITE environment variable not set. You can only execute this in an OMD site."
         ) from exc
 
 

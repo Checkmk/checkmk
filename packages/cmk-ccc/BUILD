@@ -133,9 +133,6 @@ py_library(
     srcs = ["cmk/ccc/site.py"],
     imports = ["."],
     visibility = ["//visibility:public"],
-    deps = [
-        "i18n",
-    ],
 )
 
 py_library(

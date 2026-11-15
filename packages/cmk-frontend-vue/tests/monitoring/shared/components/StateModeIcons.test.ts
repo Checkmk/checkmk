@@ -32,6 +32,14 @@ test('announces the stale icon to assistive technology', () => {
   expect(screen.getByRole('img', { name: 'Stale' })).toBeInTheDocument()
 })
 
+test('announces a mode without a link by its title', () => {
+  render(StateModeIcons, {
+    props: { modes: [{ icon_name: 'ack', title: 'Problem acknowledged' }] }
+  })
+
+  expect(screen.getByRole('img', { name: 'Problem acknowledged' })).toBeInTheDocument()
+})
+
 test('renders both icons together', () => {
   render(StateModeIcons, { props: { flapping: true, stale: true } })
 

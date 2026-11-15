@@ -691,6 +691,20 @@ test('leaves custom actions beyond two to the action menu', async () => {
   expect(await screen.findByRole('menuitem', { name: 'Open c' })).toBeInTheDocument()
 })
 
+test("keeps a custom action's link target in the action menu", async () => {
+  mountRow(
+    makeHost({ custom_icons: [customAction('a'), customAction('b'), customAction('c')] }),
+    makeTableRow()
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+  expect(await screen.findByRole('menuitem', { name: 'Open c' })).toHaveAttribute(
+    'target',
+    '_blank'
+  )
+})
+
 test('shows a custom icon without an action as an indicator, not as an action', () => {
   mountRow(makeHost({ custom_icons: [{ ident: 'plain', title: 'Plain icon', icon_name: 'wiki' }] }))
 

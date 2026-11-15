@@ -29,6 +29,20 @@ const DOWNTIME: ServiceMode = {
   title: 'In scheduled downtime'
 }
 
+const NOTIFICATIONS_OFF: ServiceMode = {
+  id: 'notifications_off',
+  icon_name: 'ndisabled',
+  link: '',
+  title: 'No notifications'
+}
+
+const ACTIVE_CHECKS_OFF: ServiceMode = {
+  id: 'active_checks_off',
+  icon_name: 'disabled',
+  link: '',
+  title: 'Active checks off'
+}
+
 describe('ServiceSlideInHeader', () => {
   it('shows the service name and its state', () => {
     render(ServiceSlideInHeader, { props: { service: makeService() } })
@@ -58,6 +72,22 @@ describe('ServiceSlideInHeader', () => {
 
     const downtime = screen.getByRole('link', { name: 'In scheduled downtime' })
     expect(downtime.compareDocumentPosition(screen.getByText('CPU load'))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    )
+  })
+
+  it('shows the downtime before the other mode icons', () => {
+    const modes = [NOTIFICATIONS_OFF, ACTIVE_CHECKS_OFF, DOWNTIME]
+
+    render(ServiceSlideInHeader, { props: { service: makeService({ modes }) } })
+
+    const downtime = screen.getByRole('link', { name: 'In scheduled downtime' })
+    const notificationsOff = screen.getByRole('img', { name: 'No notifications' })
+    const activeChecksOff = screen.getByRole('img', { name: 'Active checks off' })
+    expect(downtime.compareDocumentPosition(notificationsOff)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    )
+    expect(notificationsOff.compareDocumentPosition(activeChecksOff)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING
     )
   })

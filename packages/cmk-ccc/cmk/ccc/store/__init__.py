@@ -125,12 +125,10 @@ def load_mk_file(path: Path, *, default: Mapping[str, object], lock: bool) -> Ma
     with tracer.simple_span("load_mk_file", path):
         # leave this for now, we still have a lot of `Any`s flying around
         if default is None:  # type: ignore[comparison-overlap]
-            raise MKGeneralException(
-                _(
-                    "You need to provide a config dictionary to merge with the "
-                    "read configuration. The dictionary should have all expected "
-                    "keys and their default values set."
-                )
+            raise TypeError(
+                "You need to provide a config dictionary to merge with the "
+                "read configuration. The dictionary should have all expected "
+                "keys and their default values set."
             )
 
         if lock:

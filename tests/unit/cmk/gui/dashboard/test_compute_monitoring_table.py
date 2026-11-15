@@ -151,7 +151,7 @@ def test_a_site_that_does_not_answer_is_reported(
     assert response.json["value"]["unreachable_sites"] == ["remote"]
 
 
-_HOST_WITH_GRAPHS: dict[str, object] = {
+_HOST_ROW: dict[str, object] = {
     "name": "heute",
     "state": 0,
     "has_been_checked": 1,
@@ -175,13 +175,13 @@ _HOST_WITH_GRAPHS: dict[str, object] = {
 }
 
 
-def _compute_host_with_graphs(
+def _compute_host_table(
     clients: ClientRegistry,
     live: MockLiveStatusConnection,
     body: dict[str, object],
     *,
     headers: dict[str, str] | None = None,
-    host: dict[str, object] = _HOST_WITH_GRAPHS,
+    host: dict[str, object] = _HOST_ROW,
 ) -> Response:
     live.set_sites(["NO_SITE"])
     live.add_table("hosts", [host])
@@ -204,7 +204,7 @@ def fixture_saved_table_widget(
 def test_a_host_with_graphs_links_to_them_whichever_columns_are_shown(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+    response = _compute_host_table(clients, mock_livestatus, _body({}))
 
     assert [row.get("graphs_link") for row in response.json["value"]["rows"]] == [
         "view.py?view_name=host_graphs&site=NO_SITE&host=heute"
@@ -215,14 +215,9 @@ def test_a_host_with_graphs_links_to_them_whichever_columns_are_shown(
 def test_a_host_row_carries_the_custom_icons_of_the_host(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    mock_livestatus.set_sites(["NO_SITE"])
-    mock_livestatus.add_table("hosts", [{**_HOST_WITH_GRAPHS, "icon_image": "logo.png"}])
-    mock_livestatus.expect_query("GET hosts\nStats: state >= 0")
-    mock_livestatus.expect_query(
-        ["GET hosts", "OrderBy: name asc natural", "Limit: 100"], match_type="loose"
+    response = _compute_host_table(
+        clients, mock_livestatus, _body({}), host={**_HOST_ROW, "icon_image": "logo.png"}
     )
-    with mock_livestatus:
-        response = clients.DashboardClient.compute_widget("compute-monitoring-table", _body({}))
 
     assert [
         [icon["icon_name"] for icon in row.get("custom_icons", [])]
@@ -235,7 +230,7 @@ def test_a_shared_dashboard_links_no_host_to_its_graphs(
     mock_livestatus: MockLiveStatusConnection,
     saved_table_widget: SavedWidget,
 ) -> None:
-    response = _compute_host_with_graphs(
+    response = _compute_host_table(
         clients,
         mock_livestatus,
         {"source": saved_table_widget.source},
@@ -243,6 +238,23 @@ def test_a_shared_dashboard_links_no_host_to_its_graphs(
     )
 
     assert [row.get("graphs_link") for row in response.json["value"]["rows"]] == [None]
+
+
+@pytest.mark.usefixtures("icon_files")
+def test_a_shared_dashboard_shows_no_custom_icon_of_a_host(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    saved_table_widget: SavedWidget,
+) -> None:
+    response = _compute_host_table(
+        clients,
+        mock_livestatus,
+        {"source": saved_table_widget.source},
+        headers=saved_table_widget.headers,
+        host={**_HOST_ROW, "icon_image": "logo.png"},
+    )
+
+    assert [row.get("custom_icons") for row in response.json["value"]["rows"]] == [None]
 
 
 _SERVICES_CONTENT: dict[str, object] = {
@@ -253,7 +265,7 @@ _SERVICES_CONTENT: dict[str, object] = {
 }
 
 
-_SERVICE_WITH_GRAPHS: dict[str, object] = {
+_SERVICE_ROW: dict[str, object] = {
     "description": "CPU",
     "host_name": "heute",
     "state": 0,
@@ -288,15 +300,16 @@ _SERVICE_WITH_GRAPHS: dict[str, object] = {
 }
 
 
-def _compute_service_with_graphs(
+def _compute_service_table(
     clients: ClientRegistry,
     live: MockLiveStatusConnection,
     body: dict[str, object],
     *,
     headers: dict[str, str] | None = None,
+    service: dict[str, object] = _SERVICE_ROW,
 ) -> Response:
     live.set_sites(["NO_SITE"])
-    live.add_table("services", [_SERVICE_WITH_GRAPHS])
+    live.add_table("services", [service])
     live.expect_query("GET services\nStats: state >= 0")
     live.expect_query(
         ["GET services", "OrderBy: description asc natural", "Limit: 100"], match_type="loose"
@@ -318,7 +331,7 @@ def fixture_saved_services_widget(
 def test_a_service_with_graphs_links_to_them_whichever_columns_are_shown(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute_service_with_graphs(
+    response = _compute_service_table(
         clients,
         mock_livestatus,
         {"source": {"type": "explicit", "content": _SERVICES_CONTENT, "context": {}}},
@@ -329,12 +342,29 @@ def test_a_service_with_graphs_links_to_them_whichever_columns_are_shown(
     ]
 
 
+@pytest.mark.usefixtures("icon_files")
+def test_a_service_row_carries_the_custom_icons_of_the_service(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    response = _compute_service_table(
+        clients,
+        mock_livestatus,
+        _services_body(),
+        service={**_SERVICE_ROW, "icon_image": "logo.png"},
+    )
+
+    assert [
+        [icon["icon_name"] for icon in row.get("custom_icons", [])]
+        for row in response.json["value"]["rows"]
+    ] == [["logo"]]
+
+
 def test_a_shared_dashboard_links_no_service_to_its_graphs(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
     saved_services_widget: SavedWidget,
 ) -> None:
-    response = _compute_service_with_graphs(
+    response = _compute_service_table(
         clients,
         mock_livestatus,
         {"source": saved_services_widget.source},
@@ -344,12 +374,29 @@ def test_a_shared_dashboard_links_no_service_to_its_graphs(
     assert [row.get("graphs_link") for row in response.json["value"]["rows"]] == [None]
 
 
+@pytest.mark.usefixtures("icon_files")
+def test_a_shared_dashboard_shows_no_custom_icon_of_a_service(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    saved_services_widget: SavedWidget,
+) -> None:
+    response = _compute_service_table(
+        clients,
+        mock_livestatus,
+        {"source": saved_services_widget.source},
+        headers=saved_services_widget.headers,
+        service={**_SERVICE_ROW, "icon_image": "logo.png"},
+    )
+
+    assert [row.get("custom_icons") for row in response.json["value"]["rows"]] == [None]
+
+
 def test_a_services_widget_lists_the_services_of_a_user_who_may_reschedule_them(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
     # A service row checks whether its viewer may reschedule it, for the offer it carries, which
     # the endpoint has to declare.
-    response = _compute_service_with_graphs(
+    response = _compute_service_table(
         clients,
         mock_livestatus,
         {"source": {"type": "explicit", "content": _SERVICES_CONTENT, "context": {}}},
@@ -521,7 +568,7 @@ def _services_body() -> dict[str, object]:
 def test_a_hosts_table_offers_the_host_commands_of_the_reader(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+    response = _compute_host_table(clients, mock_livestatus, _body({}))
 
     assert "reschedule" in [action["ident"] for action in response.json["value"]["actions"]]
 
@@ -529,7 +576,7 @@ def test_a_hosts_table_offers_the_host_commands_of_the_reader(
 def test_a_hosts_table_offers_the_setup_links_of_the_reader(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+    response = _compute_host_table(clients, mock_livestatus, _body({}))
 
     assert [link["ident"] for link in response.json["value"]["links"]] == [
         "edit",
@@ -540,7 +587,7 @@ def test_a_hosts_table_offers_the_setup_links_of_the_reader(
 def test_a_hosts_table_offers_nothing_more_for_the_host_of_a_row(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+    response = _compute_host_table(clients, mock_livestatus, _body({}))
 
     value = response.json["value"]
     assert (value["host_actions"], value["host_links"]) == ([], [])
@@ -551,7 +598,7 @@ def test_a_reader_who_may_not_act_is_offered_no_commands(
 ) -> None:
     _log_in_with_admin_permissions_but(clients, {"general.act": "no"})
 
-    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+    response = _compute_host_table(clients, mock_livestatus, _body({}))
 
     assert response.json["value"]["actions"] == []
 
@@ -562,7 +609,7 @@ def test_a_reader_who_may_not_edit_rules_is_offered_no_link_to_the_parameters_of
     # Setup waives the rules permission for those who may see all of it.
     _log_in_with_admin_permissions_but(clients, {"wato.rulesets": "no", "wato.seeall": "no"})
 
-    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+    response = _compute_host_table(clients, mock_livestatus, _body({}))
 
     assert [link["ident"] for link in response.json["value"]["links"]] == ["edit"]
 
@@ -572,11 +619,11 @@ def test_a_row_of_a_setup_host_says_the_reader_may_open_it_there(
 ) -> None:
     clients.HostConfig.create(host_name="heute")
 
-    response = _compute_host_with_graphs(
+    response = _compute_host_table(
         clients,
         mock_livestatus,
         _body({}),
-        host={**_HOST_WITH_GRAPHS, "filename": "/wato/hosts.mk"},
+        host={**_HOST_ROW, "filename": "/wato/hosts.mk"},
     )
 
     assert [row.get("setup_access") for row in response.json["value"]["rows"]] == [True]
@@ -585,7 +632,7 @@ def test_a_row_of_a_setup_host_says_the_reader_may_open_it_there(
 def test_a_row_of_a_host_outside_setup_says_the_reader_may_not_open_it_there(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+    response = _compute_host_table(clients, mock_livestatus, _body({}))
 
     assert [row.get("setup_access") for row in response.json["value"]["rows"]] == [False]
 
@@ -594,7 +641,7 @@ def test_without_setup_links_no_row_says_whether_the_reader_may_open_it_there(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection, set_config: SetConfig
 ) -> None:
     with set_config(wato_enabled=False):
-        response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+        response = _compute_host_table(clients, mock_livestatus, _body({}))
 
     assert [row.get("setup_access") for row in response.json["value"]["rows"]] == [None]
 
@@ -604,7 +651,7 @@ def test_a_shared_dashboard_offers_nothing_to_do_with_a_host(
     mock_livestatus: MockLiveStatusConnection,
     saved_table_widget: SavedWidget,
 ) -> None:
-    response = _compute_host_with_graphs(
+    response = _compute_host_table(
         clients,
         mock_livestatus,
         {"source": saved_table_widget.source},
@@ -620,7 +667,7 @@ def test_a_shared_dashboard_says_of_no_host_whether_it_may_be_opened_in_setup(
     mock_livestatus: MockLiveStatusConnection,
     saved_table_widget: SavedWidget,
 ) -> None:
-    response = _compute_host_with_graphs(
+    response = _compute_host_table(
         clients,
         mock_livestatus,
         {"source": saved_table_widget.source},
@@ -633,7 +680,7 @@ def test_a_shared_dashboard_says_of_no_host_whether_it_may_be_opened_in_setup(
 def test_a_services_table_offers_the_service_commands_of_the_reader(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute_service_with_graphs(clients, mock_livestatus, _services_body())
+    response = _compute_service_table(clients, mock_livestatus, _services_body())
 
     assert "reschedule" in [action["ident"] for action in response.json["value"]["actions"]]
 
@@ -641,7 +688,7 @@ def test_a_services_table_offers_the_service_commands_of_the_reader(
 def test_a_services_table_offers_the_setup_links_of_the_reader_for_a_service(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute_service_with_graphs(clients, mock_livestatus, _services_body())
+    response = _compute_service_table(clients, mock_livestatus, _services_body())
 
     assert [link["ident"] for link in response.json["value"]["links"]] == ["parameters"]
 
@@ -652,7 +699,7 @@ def test_a_reader_who_may_not_edit_rules_is_offered_no_link_to_the_parameters_of
     # Setup waives the rules permission for those who may see all of it.
     _log_in_with_admin_permissions_but(clients, {"wato.rulesets": "no", "wato.seeall": "no"})
 
-    response = _compute_service_with_graphs(clients, mock_livestatus, _services_body())
+    response = _compute_service_table(clients, mock_livestatus, _services_body())
 
     assert response.json["value"]["links"] == []
 
@@ -660,7 +707,7 @@ def test_a_reader_who_may_not_edit_rules_is_offered_no_link_to_the_parameters_of
 def test_a_services_table_offers_the_host_commands_of_the_reader_for_the_host_of_a_row(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute_service_with_graphs(clients, mock_livestatus, _services_body())
+    response = _compute_service_table(clients, mock_livestatus, _services_body())
 
     assert "reschedule" in [action["ident"] for action in response.json["value"]["host_actions"]]
 
@@ -668,7 +715,7 @@ def test_a_services_table_offers_the_host_commands_of_the_reader_for_the_host_of
 def test_a_services_table_offers_the_setup_links_of_the_reader_for_the_host_of_a_row(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute_service_with_graphs(clients, mock_livestatus, _services_body())
+    response = _compute_service_table(clients, mock_livestatus, _services_body())
 
     assert [link["ident"] for link in response.json["value"]["host_links"]] == [
         "edit",
@@ -681,7 +728,7 @@ def test_a_shared_dashboard_offers_nothing_to_do_with_a_service_or_its_host(
     mock_livestatus: MockLiveStatusConnection,
     saved_services_widget: SavedWidget,
 ) -> None:
-    response = _compute_service_with_graphs(
+    response = _compute_service_table(
         clients,
         mock_livestatus,
         {"source": saved_services_widget.source},

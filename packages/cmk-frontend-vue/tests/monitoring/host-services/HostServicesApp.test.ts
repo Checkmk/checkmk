@@ -19,6 +19,7 @@ import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 
 import { pastDoubleClick, userOnFakeClock } from '../shared/deferredClick'
 import { layOutThePage } from '../shared/layOutThePage'
+import { columnIdsUnderHeaders } from '../shared/rowLayout'
 
 type ApiServiceEntry = components['schemas']['HostServiceEntry']
 type ApiHostEntry = components['schemas']['HostEntry']
@@ -1219,6 +1220,37 @@ describe('with the rows laid out', () => {
     await screen.findByRole('button', { name: 'More actions' })
 
     expect(screen.queryByRole('button', { name: 'Explain with AI' })).not.toBeInTheDocument()
+  })
+
+  const COLUMN_UNDER_HEADER = {
+    'Select all rows': 'select',
+    State: 'state',
+    Service: 'name',
+    Summary: 'summary',
+    Indicator: 'indicator',
+    'State age': 'last_state_change',
+    'Check age': 'last_check',
+    Labels: 'labels',
+    Tags: 'tags',
+    Contacts: 'contacts',
+    'Contact groups': 'contact_groups',
+    'Service groups': 'groups',
+    'Perf-O-Meter': 'perfometer',
+    Actions: 'actions'
+  }
+
+  test('puts each cell of a row in the position of its column header', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/monitor_host_services.py?host=web-1&site=local&cols=summary,indicator,last_state_change,' +
+        'last_check,labels,tags,contacts,contact_groups,groups,perfometer'
+    )
+    mockServices([makeApiEntry()])
+    renderApp({ actions: [ACKNOWLEDGE] })
+    await screen.findByRole('button', { name: 'CPU load' })
+
+    expect(columnIdsUnderHeaders(Object.keys(COLUMN_UNDER_HEADER))).toEqual(COLUMN_UNDER_HEADER)
   })
 })
 

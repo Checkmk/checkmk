@@ -19,6 +19,7 @@ import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 
 import { pastDoubleClick, userOnFakeClock } from '../shared/deferredClick'
 import { layOutThePage } from '../shared/layOutThePage'
+import { columnIdsUnderHeaders } from '../shared/rowLayout'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
@@ -354,13 +355,10 @@ test('leaves the listing alone after a command the site refused', async () => {
   expect(listingReads()).toBe(1)
 })
 
-test('re-reads the listing once the check a row rescheduled has run', async () => {
-  // The rows only render once the virtualiser sees a viewport.
-  const offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
-  const offsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
-  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
-  Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
-  try {
+describe('with the rows laid out, without slide-ins', () => {
+  layOutThePage({ slideIns: false })
+
+  test('re-reads the listing once the check a row rescheduled has run', async () => {
     mockBackend(false)
     renderApp('community', { actions: [RESCHEDULE] })
     const user = userEvent.setup({
@@ -378,23 +376,9 @@ test('re-reads the listing once the check a row rescheduled has run', async () =
     await vi.advanceTimersByTimeAsync(CHECK_POLL_INTERVAL_MS + ACTION_REFRESH_DELAY_MS)
 
     await waitFor(() => expect(listingReads()).toBe(2))
-  } finally {
-    if (offsetHeight) {
-      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', offsetHeight)
-    }
-    if (offsetWidth) {
-      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetWidth)
-    }
-  }
-})
+  })
 
-test('typing letters focuses the first host name containing them', async () => {
-  // The rows only render once the virtualiser sees a viewport.
-  const offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
-  const offsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
-  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
-  Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
-  try {
+  test('typing letters focuses the first host name containing them', async () => {
     mockHosts([makeHost({ name: 'dbnode' }), makeHost({ name: 'cpunode' })])
     renderApp('community')
     const target = await screen.findByRole('button', { name: 'cpunode' })
@@ -403,14 +387,50 @@ test('typing letters focuses the first host name containing them', async () => {
 
     expect(target).toHaveFocus()
     expect(screen.getByRole('status')).toHaveTextContent('cpu')
-  } finally {
-    if (offsetHeight) {
-      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', offsetHeight)
-    }
-    if (offsetWidth) {
-      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetWidth)
-    }
+  })
+
+  const COLUMN_UNDER_HEADER = {
+    'Select all rows': 'select',
+    State: 'state',
+    Host: 'name',
+    Relations: 'num_relations',
+    'Host alias': 'alias',
+    'IP address': 'address',
+    Indicator: 'indicator',
+    Folder: 'folder',
+    Site: 'site_id',
+    'Check age': 'last_check',
+    'State age': 'last_state_change',
+    Labels: 'labels',
+    Tags: 'tags',
+    Contacts: 'contacts',
+    'Contact groups': 'contact_groups',
+    'Host groups': 'groups',
+    'All services': 'num_services',
+    OK: 'num_services_ok',
+    Wa: 'num_services_warn',
+    Cr: 'num_services_crit',
+    Un: 'num_services_unknown',
+    Pd: 'num_services_pending',
+    Customer: 'customer',
+    Actions: 'actions'
   }
+
+  test('puts each cell of a row in the position of its column header', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/monitor_all_hosts.py?cols=num_relations,alias,address,indicator,folder,site_id,last_check,' +
+        'last_state_change,labels,tags,contacts,contact_groups,groups,num_services,' +
+        'num_services_ok,num_services_warn,num_services_crit,num_services_unknown,' +
+        'num_services_pending,customer'
+    )
+    mockHosts([makeHost()])
+    renderApp('ultimatemt', { show_relations: true, actions: [ACKNOWLEDGE] })
+    await screen.findByRole('button', { name: 'web-1' })
+
+    expect(columnIdsUnderHeaders(Object.keys(COLUMN_UNDER_HEADER))).toEqual(COLUMN_UNDER_HEADER)
+  })
 })
 
 /*

@@ -14,6 +14,8 @@ import AllServicesApp from '@/monitoring/all-services/AllServicesApp.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 
 import { pastDoubleClick, userOnFakeClock } from '../shared/deferredClick'
+import { layOutThePage } from '../shared/layOutThePage'
+import { columnIdsUnderHeaders } from '../shared/rowLayout'
 
 type MonitoringAction = NonNullable<MonitoringAllServicesApp['actions']>[number]
 
@@ -217,41 +219,19 @@ test('opens the slide-in of a service a link names by its site, host and name', 
 })
 
 describe('with the rows laid out', () => {
-  const originalOffsetHeight = Object.getOwnPropertyDescriptor(
-    HTMLElement.prototype,
-    'offsetHeight'
-  )
-  const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+  layOutThePage({ slideIns: false })
 
-  beforeEach(() => {
-    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
-    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
-  })
-
-  afterEach(() => {
-    if (originalOffsetHeight) {
-      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight)
-    }
-    if (originalOffsetWidth) {
-      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', originalOffsetWidth)
-    }
-  })
-
-  test('lays out the cells of each row under the headers of their columns', async () => {
+  test('puts the cells of a row in the position of their column headers', async () => {
     mockServices([makeApiEntry()])
     renderApp()
     await screen.findByText('web-2')
 
-    const headers = screen.getAllByRole('columnheader')
-    const cells = [...screen.getAllByRole('row')[1]!.querySelectorAll('[data-column-id]')]
-    const cellUnder = (header: string) =>
-      cells[headers.indexOf(screen.getByRole('columnheader', { name: header }))]
-
-    expect(cells).toHaveLength(headers.length)
-    expect(cellUnder('Service')).toHaveAttribute('data-column-id', 'name')
-    expect(cellUnder('Summary')).toHaveAttribute('data-column-id', 'summary')
-    expect(cellUnder('Host')).toHaveAttribute('data-column-id', 'host_name')
-    expect(cellUnder('Site')).toHaveAttribute('data-column-id', 'site_id')
+    expect(columnIdsUnderHeaders(['Service', 'Summary', 'Host', 'Site'])).toEqual({
+      Service: 'name',
+      Summary: 'summary',
+      Host: 'host_name',
+      Site: 'site_id'
+    })
   })
 
   function requestedFor(path: string, hostName: string, siteId: string): boolean {

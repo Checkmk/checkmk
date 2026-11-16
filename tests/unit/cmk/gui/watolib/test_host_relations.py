@@ -41,6 +41,7 @@ from cmk.gui.watolib.host_relations import (
     RelatedHost,
     relation_conflicts,
     RelationConflict,
+    relations_bulk_deletion_note,
     relations_deletion_note,
     relations_or_user_error,
     resolve_all_relations,
@@ -582,6 +583,63 @@ def test_relations_deletion_note_counts_the_hosts_it_does_not_list() -> None:
 @pytest.mark.parametrize("relations", [None, [], "not a list"])
 def test_relations_deletion_note_is_absent_without_own_relations(relations: object) -> None:
     assert relations_deletion_note(FakeHost("h1", relations), _edit_url) is None
+
+
+def test_relations_bulk_deletion_note_is_absent_without_relations() -> None:
+    hosts = [FakeHost("h1"), FakeHost("h2", []), FakeHost("h3", "garbage")]
+    assert relations_bulk_deletion_note(hosts, _edit_url) is None
+
+
+def test_relations_bulk_deletion_note_lists_only_the_hosts_with_relations() -> None:
+    hosts = [FakeHost("h1"), FakeHost("mgmt", [_relation_to("os2"), _relation_to("os1")])]
+    note = relations_bulk_deletion_note(hosts, _edit_url)
+    assert note is not None
+    assert "The following selected host has relations" in str(note)
+    assert "Deleting it removes these relations." in str(note)
+    assert (
+        "<ul><li>"
+        '<a href="wato.py?mode=edit_host&host=mgmt">mgmt</a> (related to '
+        '<a href="wato.py?mode=edit_host&host=os1">os1</a>, '
+        '<a href="wato.py?mode=edit_host&host=os2">os2</a>)'
+        "</li></ul>"
+    ) in str(note)
+
+
+def test_relations_bulk_deletion_note_is_absent_for_hosts_deleted_together() -> None:
+    hosts = [
+        FakeHost("mgmt", [_relation_to("os1")]),
+        FakeHost("os1", [_relation_to("mgmt", "parent")]),
+    ]
+    assert relations_bulk_deletion_note(hosts, _edit_url) is None
+
+
+def test_relations_bulk_deletion_note_leaves_out_relations_between_deleted_hosts() -> None:
+    hosts = [
+        FakeHost("mgmt", [_relation_to("os1"), _relation_to("os2")]),
+        FakeHost("os1", [_relation_to("mgmt", "parent")]),
+    ]
+    note = relations_bulk_deletion_note(hosts, lambda _host_name: None)
+    assert note is not None
+    assert "<ul><li>mgmt (related to os2)</li></ul>" in str(note)
+
+
+def test_relations_bulk_deletion_note_counts_the_hosts_it_does_not_list() -> None:
+    listed = MAX_LISTED_RELATED_HOSTS
+    hosts = [FakeHost(f"h{index:03d}", [_relation_to("os")]) for index in range(listed + 3)]
+    note = relations_bulk_deletion_note(hosts, _edit_url)
+    assert note is not None
+    assert str(note).count("<li>") == listed + 1
+    assert "<li>and 3 more</li>" in str(note)
+    assert "The following selected hosts have relations" in str(note)
+    assert "Deleting them removes these relations." in str(note)
+
+
+def test_relations_bulk_deletion_note_counts_the_related_hosts_it_does_not_list() -> None:
+    listed = MAX_LISTED_RELATED_HOSTS
+    related = [_relation_to(f"os{index:03d}") for index in range(listed + 2)]
+    note = relations_bulk_deletion_note([FakeHost("mgmt", related)], lambda _host_name: None)
+    assert note is not None
+    assert f"os{listed - 1:03d}, and 2 more)</li>" in str(note)
 
 
 @pytest.mark.parametrize(

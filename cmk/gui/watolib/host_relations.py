@@ -24,7 +24,7 @@ both sides.
 """
 
 from collections import defaultdict
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from typing import Literal, Protocol, TypedDict, TypeGuard
@@ -644,6 +644,24 @@ def resolve_all_relations(
 MAX_LISTED_RELATED_HOSTS = 10
 
 
+def _related_host_names(host: RelatedHost) -> set[HostName]:
+    return referenced_host_names(relations_or_empty(host.attributes.get("relations", [])))
+
+
+def _host_link(name: HostName, host_url: Callable[[HostName], str | None]) -> HTML:
+    url = host_url(name)
+    return HTMLWriter.render_a(name, href=url) if url is not None else HTML.with_escaping(name)
+
+
+def _listed(names: Collection[HostName], render: Callable[[HostName], HTML]) -> list[HTML]:
+    """The first of ``names`` rendered, and how many more there are."""
+    listed = sorted(names)[:MAX_LISTED_RELATED_HOSTS]
+    items = [render(name) for name in listed]
+    if unlisted := len(names) - len(listed):
+        items.append(HTML.with_escaping(_("and %(count)d more") % {"count": unlisted}))
+    return items
+
+
 def relations_deletion_note(
     host: RelatedHost, host_url: Callable[[HostName], str | None]
 ) -> HTML | None:
@@ -653,21 +671,9 @@ def relations_deletion_note(
     text - for a host the user may not see, or one that its counterpart still names although it
     no longer exists.
     """
-    if not (
-        related := referenced_host_names(relations_or_empty(host.attributes.get("relations", [])))
-    ):
+    if not (related := _related_host_names(host)):
         return None
-    listed = sorted(related)[:MAX_LISTED_RELATED_HOSTS]
-    items = [
-        HTMLWriter.render_li(
-            HTMLWriter.render_a(name, href=url)
-            if (url := host_url(name)) is not None
-            else HTML.with_escaping(name)
-        )
-        for name in listed
-    ]
-    if unlisted := len(related) - len(listed):
-        items.append(HTMLWriter.render_li(_("and %(count)d more") % {"count": unlisted}))
+    items = map(HTMLWriter.render_li, _listed(related, partial(_host_link, host_url=host_url)))
     heading = ungettext(
         "This host has %(count)d related host:",
         "This host has %(count)d related hosts:",
@@ -686,4 +692,54 @@ def relations_deletion_note(
             + HTML.with_escaping(footer)
         ),
         class_="confirm_warning_note",
+    )
+
+
+def relations_bulk_deletion_note(
+    hosts: Sequence[RelatedHost], host_url: Callable[[HostName], str | None]
+) -> HTML | None:
+    """Extra confirmation text for deleting ``hosts`` together, or ``None`` if no relation to a
+    host outside of them goes away with it.
+
+    A relation between two of ``hosts`` is not listed: nothing that stays is changed by it.
+    ``host_url`` as for :func:`relations_deletion_note`.
+    """
+    deleted = {host.name() for host in hosts}
+    remaining = {
+        host.name(): related for host in hosts if (related := _related_host_names(host) - deleted)
+    }
+    if not remaining:
+        return None
+
+    link = partial(_host_link, host_url=host_url)
+    line = str(HTML.with_escaping(_("%(host)s (related to %(related)s)")))
+    items = map(
+        HTMLWriter.render_li,
+        _listed(
+            remaining,
+            lambda name: HTML.without_escaping(
+                line
+                % {
+                    "host": link(name),
+                    "related": HTML.without_escaping(", ").join(_listed(remaining[name], link)),
+                }
+            ),
+        ),
+    )
+    heading = ungettext(
+        "The following selected host has relations to hosts that are not deleted:",
+        "The following selected hosts have relations to hosts that are not deleted:",
+        len(remaining),
+    )
+    return HTMLWriter.render_div(
+        HTMLWriter.render_span(_("Warning:"), class_="underline")
+        + " "
+        + heading
+        + HTMLWriter.render_ul(HTML.empty().join(items))
+        + ungettext(
+            "Deleting it removes these relations. The related hosts themselves are not deleted.",
+            "Deleting them removes these relations. The related hosts themselves are not deleted.",
+            len(remaining),
+        ),
+        class_="confirm_info",
     )

@@ -31,7 +31,7 @@ from cmk.gui.groups import GroupSpecs
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import mandatory_parameter, request
-from cmk.gui.i18n import _, ungettext
+from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     confirmed_form_submit_options,
@@ -53,6 +53,7 @@ from cmk.gui.quick_setup.html import quick_setup_source_cell
 from cmk.gui.table import show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -83,7 +84,10 @@ from cmk.gui.watolib.host_attributes import (
     collect_attributes,
     HostAttributes,
 )
-from cmk.gui.watolib.host_relations import relations_deletion_note
+from cmk.gui.watolib.host_relations import (
+    relations_bulk_deletion_note,
+    relations_deletion_note,
+)
 from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_folder_from_request,
     find_available_folder_name,
@@ -165,6 +169,14 @@ class FolderMenuEntryRegistry(Registry[FolderMenuEntry]):
 
 
 folder_menu_entry_registry = FolderMenuEntryRegistry()
+
+
+@dataclass(frozen=True)
+class _BulkDeleteConfirmation:
+    """The deletion of the selected hosts is asked back before it is done."""
+
+    host_count: int
+    relations_note: HTML | None
 
 
 @dataclass(frozen=True)
@@ -259,6 +271,7 @@ class ModeFolder(WatoMode):
             user.wato_folders_show_labels = request.get_ascii_input("_show_explicit_labels") == "1"
 
         self._hosts_known_in_monitoring: set[HostName] | None = None
+        self._bulk_delete_confirmation: _BulkDeleteConfirmation | None = None
 
     @override
     def title(self) -> str:
@@ -559,10 +572,9 @@ class ModeFolder(WatoMode):
             yield PageMenuEntry(
                 title=_("Delete hosts"),
                 icon_name=StaticIcon(IconNames.delete),
-                item=make_confirmed_form_submit_link(
+                item=make_form_submit_link(
                     form_name="hosts",
                     button_name="_bulk_delete",
-                    title=_("Delete selected hosts"),
                 ),
                 disabled_tooltip=add_host_or_subfolder_tooltip_text,
                 is_enabled=is_enabled,
@@ -808,7 +820,7 @@ class ModeFolder(WatoMode):
             return redirect(folder_url)
 
         # Deletion
-        if request.var("_bulk_delete"):
+        if request.var("_bulk_delete_confirmed"):
             return self._delete_hosts(
                 selected_host_names,
                 pprint_value=config.wato_pprint_config,
@@ -817,6 +829,17 @@ class ModeFolder(WatoMode):
                     config=config, local_site=omd_site(), acting_user=user.id
                 ),
             )
+
+        if request.var("_bulk_delete"):
+            hosts = self._folder.hosts()
+            self._bulk_delete_confirmation = _BulkDeleteConfirmation(
+                host_count=len(selected_host_names),
+                relations_note=relations_bulk_deletion_note(
+                    [hosts[host_name] for host_name in selected_host_names],
+                    host_url_resolver(self._tree, user),
+                ),
+            )
+            return None
 
         search_text = request.get_str_input_mandatory("search", "")
         for request_var, mode_name in [
@@ -856,6 +879,21 @@ class ModeFolder(WatoMode):
 
     @override
     def page(self, config: Config) -> None:
+        if (confirmation := self._bulk_delete_confirmation) is not None:
+            note = confirmation.relations_note
+            command_confirm_dialog(
+                [("1", "_bulk_delete_confirmed")],
+                ungettext(
+                    "Delete %(count)d selected host?",
+                    "Delete %(count)d selected hosts?",
+                    confirmation.host_count,
+                )
+                % {"count": confirmation.host_count},
+                HTML.empty() if note is None else note,
+                "question",
+                confirm_button=_l("Delete"),
+            )
+
         if not self._folder.permissions.may("read", user):
             reason = self._folder.permissions.reason_why_may_not("read", user)
             if reason:
@@ -1425,7 +1463,7 @@ class ModeFolder(WatoMode):
                     % json.dumps(
                         [
                             "hosts",
-                            "_bulk_delete",
+                            "_bulk_delete_confirmed",
                             delete_host_options,
                         ],
                     ),

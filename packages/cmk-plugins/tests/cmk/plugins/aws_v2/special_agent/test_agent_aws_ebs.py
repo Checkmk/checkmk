@@ -268,6 +268,34 @@ def test_agent_aws_ebs(
         assert len(result.content) >= 5
 
 
+class FakeEC2ClientWithoutVolumes(FakeEC2Client):
+    def __init__(self) -> None:
+        self.volume_descriptions = 0
+
+    @override
+    def describe_volumes(
+        self,
+        VolumeIds: object = None,
+        Filters: object = None,
+    ) -> Mapping[str, object]:
+        self.volume_descriptions += 1
+        return {"Volumes": []}
+
+
+def test_ebs_summary_does_not_describe_volumes_again_when_limits_found_none(
+    get_ebs_sections: EBSSections,
+) -> None:
+    client = FakeEC2ClientWithoutVolumes()
+    _ec2_summary, ebs_limits, ebs_summary, _ebs = get_ebs_sections(
+        None, (None, None), ec2_client=client
+    )
+
+    ebs_limits.run()
+    ebs_summary.run()
+
+    assert client.volume_descriptions == 1
+
+
 def test_agent_aws_ebs_summary_without_limits(
     get_ebs_sections: EBSSections,
 ) -> None:

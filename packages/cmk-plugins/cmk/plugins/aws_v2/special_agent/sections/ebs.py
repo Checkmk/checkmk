@@ -214,12 +214,7 @@ class EBSSummary(AWSSection):
 
     @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("ebs_limits")
-        volumes = []
-        max_cache_timestamp = 0.0
-        if colleague and colleague.content:
-            max_cache_timestamp = max(max_cache_timestamp, colleague.cache_timestamp)
-            volumes = colleague.content
+        volumes, max_cache_timestamp = self._received_inventory("ebs_limits")
 
         colleague = self._received_results.get("ec2_summary")
         instances = {}
@@ -249,13 +244,13 @@ class EBSSummary(AWSSection):
         return formatted_volumes
 
     def _fetch_volumes_filtered_by_names(self, col_volumes):
-        if col_volumes:
+        if col_volumes is not None:
             return [v for v in col_volumes if v["VolumeId"] in self._names]
         response = self._client.describe_volumes(VolumeIds=self._names)  # type: ignore[attr-defined]
         return self._get_response_content(response, "Volumes")
 
     def _fetch_volumes_filtered_by_tags(self, col_volumes):
-        if col_volumes:
+        if col_volumes is not None:
             tags = self.prepare_tags_for_api_response(self._tags)
             if tags:
                 return [v for v in col_volumes for tag in v.get("Tags", []) if tag in tags]
@@ -269,7 +264,7 @@ class EBSSummary(AWSSection):
         return volumes
 
     def _fetch_volumes_without_filter(self, col_volumes):
-        if col_volumes:
+        if col_volumes is not None:
             return col_volumes
         response = self._client.describe_volumes()  # type: ignore[attr-defined]
         return self._get_response_content(response, "Volumes")

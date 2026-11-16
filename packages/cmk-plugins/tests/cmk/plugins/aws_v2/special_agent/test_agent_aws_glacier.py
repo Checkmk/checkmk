@@ -58,6 +58,33 @@ class GetGlacierSections(Protocol):
     ) -> GlacierSections: ...
 
 
+class FakeEmptyGlacierClient:
+    def __init__(self) -> None:
+        self.vault_listings = 0
+
+    def list_vaults(self) -> Mapping[str, object]:
+        self.vault_listings += 1
+        return {"VaultList": []}
+
+
+def test_glacier_summary_does_not_list_vaults_again_when_limits_found_none() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("glacier_names", None)
+    config.add_service_tags("glacier_tags", (None, None))
+    client = FakeEmptyGlacierClient()
+    distributor = ResultDistributor()
+    glacier_limits = GlacierLimits(client, "region", config, distributor)
+    glacier_summary = GlacierSummary(client, "region", config, distributor)
+    distributor.add(glacier_limits.name, glacier_summary)
+
+    glacier_limits.run()
+    glacier_summary.run()
+
+    assert client.vault_listings == 1
+
+
 @pytest.fixture()
 def get_glacier_sections() -> GetGlacierSections:
     def _create_glacier_sections(

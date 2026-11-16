@@ -122,10 +122,7 @@ class GlacierSummary(AWSSection):
 
     @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("glacier_limits")
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents([], 0.0)
+        return self._received_inventory("glacier_limits")
 
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[object]:
@@ -177,7 +174,7 @@ class GlacierSummary(AWSSection):
         :param colleague_contents:
         :return:
         """
-        if colleague_contents.content:
+        if colleague_contents.content is not None:
             return colleague_contents.content
         return self._get_response_content(self._client.list_vaults(), "VaultList")  # type: ignore[attr-defined]
 

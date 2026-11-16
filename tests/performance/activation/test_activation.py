@@ -27,7 +27,12 @@ def test_performance_bulk_change_activation(
         args=[],
         setup=partial(scenario.setup_bulk_change_activation, perftest_dist),
         teardown=partial(scenario.teardown_bulk_change_activation, perftest_dist),
-        rounds=perftest_dist.rounds,
+        # The first activation after setting up the sites runs cold (about 20% slower than the
+        # rest on a typical night), so it is warmed up rather than measured. A round costs
+        # about 50s of untimed setup and teardown, and 8 rounds keep the mean as steady from
+        # night to night as 16.
+        rounds=perftest_dist.rounds_or(8),
+        warmup_rounds=max(1, perftest_dist.warmup_rounds),
         iterations=perftest_dist.iterations,
     )
 

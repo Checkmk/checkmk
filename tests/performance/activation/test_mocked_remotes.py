@@ -88,7 +88,9 @@ def test_performance_bulk_change_activation_mocked_remotes(
         args=[],
         setup=partial(scenario.setup_bulk_change_activation, perftest_mocked_dist),
         teardown=partial(scenario.teardown_bulk_change_activation, perftest_mocked_dist),
-        rounds=perftest_mocked_dist.rounds,
+        # A round costs about 50s of untimed setup and teardown, and 8 rounds keep the mean
+        # as steady from night to night as 16 did.
+        rounds=perftest_mocked_dist.rounds_or(8),
         iterations=perftest_mocked_dist.iterations,
     )
 
@@ -105,6 +107,7 @@ def test_performance_bulk_change_activation_mocked_remotes_distributed_piggyback
         args=[],
         setup=partial(scenario.setup_bulk_change_activation, perftest_mocked_dist),
         teardown=partial(scenario.teardown_bulk_change_activation, perftest_mocked_dist),
-        rounds=perftest_mocked_dist.rounds,
+        # Its mean held as steady in 8 rounds as in 16, like the test above.
+        rounds=perftest_mocked_dist.rounds_or(8),
         iterations=perftest_mocked_dist.iterations,
     )

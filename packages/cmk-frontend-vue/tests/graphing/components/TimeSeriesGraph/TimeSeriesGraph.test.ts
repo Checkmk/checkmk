@@ -806,6 +806,14 @@ describe('TimeSeriesGraph — hiding the tooltip', () => {
 
     expect(tooltipRow()).not.toBeInTheDocument()
   })
+
+  test('scrolling the page hides the tooltip', async () => {
+    await hoverPlot()
+
+    await fireEvent.scroll(window)
+
+    expect(tooltipRow()).not.toBeInTheDocument()
+  })
 })
 
 describe('TimeSeriesGraph — horizontal lines and the value axis', () => {

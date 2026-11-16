@@ -19,6 +19,8 @@ const props = defineProps<{
   hoverState: HoverState | null
 }>()
 
+const emit = defineEmits<{ dismiss: [] }>()
+
 // Only the hovered line's; every line's would outgrow the tooltip.
 const closestSample = computed(() =>
   props.hoverState?.samples.find((sample) => sample.isClosest && sample.attributes.length > 0)
@@ -49,7 +51,7 @@ const formattedTime = computed(() => {
 </script>
 
 <template>
-  <CmkPointerTooltip :pointer="hoverState">
+  <CmkPointerTooltip :pointer="hoverState" @dismiss="emit('dismiss')">
     <div v-if="hoverState" class="graphing-graph-tooltip">
       <div class="graphing-graph-tooltip__time">{{ formattedTime }}</div>
       <div class="graphing-graph-tooltip__rows">

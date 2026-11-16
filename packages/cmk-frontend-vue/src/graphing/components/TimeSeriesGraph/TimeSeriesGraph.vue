@@ -697,6 +697,7 @@ defineExpose({ showMaxZoomHint })
       :plot-height="plotHeight"
       :pin-x="pinX"
       :style="{ left: `${marginLeft}px`, top: `${plotTop}px` }"
+      @dismiss-hover="clearHover"
     />
     <div
       v-if="zoomBand"

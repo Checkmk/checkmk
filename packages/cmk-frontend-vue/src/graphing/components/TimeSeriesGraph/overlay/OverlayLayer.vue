@@ -19,6 +19,8 @@ const props = defineProps<{
   pinX: number | null
 }>()
 
+const emit = defineEmits<{ dismissHover: [] }>()
+
 const overlayRoot = ref<HTMLElement | null>(null)
 const overlayCanvas = ref<HTMLCanvasElement | null>(null)
 
@@ -133,7 +135,7 @@ watch(() => [props.plotWidth, props.plotHeight, props.hoverState, props.pinX], r
       :style="{ width: `${plotWidth}px`, height: `${plotHeight}px` }"
       aria-hidden="true"
     />
-    <GraphTooltip :hover-state="hoverState" />
+    <GraphTooltip :hover-state="hoverState" @dismiss="emit('dismissHover')" />
   </div>
 </template>
 

@@ -1,4 +1,4 @@
-title: OpenBSD Devices: Fan
+title: OpenBSD: Fans
 agents: snmp, openbsd
 catalog: os/hardware
 license: GPLv2

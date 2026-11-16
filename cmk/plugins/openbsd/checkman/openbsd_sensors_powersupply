@@ -1,4 +1,4 @@
-title: OpenBSD Devices: Power Supply
+title: OpenBSD: Power Supplies
 agents: snmp, openbsd
 catalog: os/hardware
 license: GPLv2

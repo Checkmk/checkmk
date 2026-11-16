@@ -1,4 +1,4 @@
-title: OpenBSD Devices: Voltage
+title: OpenBSD: Voltage
 agents: snmp, openbsd
 catalog: os/hardware
 license: GPLv2

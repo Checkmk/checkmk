@@ -1,4 +1,4 @@
-title: OpenBSD Devices: Drive
+title: OpenBSD: Drives
 agents: snmp, openbsd
 catalog: os/hardware
 license: GPLv2

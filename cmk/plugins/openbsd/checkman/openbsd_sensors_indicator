@@ -1,4 +1,4 @@
-title: OpenBSD Devices: Indicator Sensors
+title: OpenBSD: Indicator Sensors
 agents: snmp, openbsd
 catalog: os/hardware
 license: GPLv2

@@ -1,4 +1,4 @@
-title: OpenBSD Devices: Temperature
+title: OpenBSD: Temperature
 agents: snmp, openbsd
 catalog: os/hardware
 license: GPLv2

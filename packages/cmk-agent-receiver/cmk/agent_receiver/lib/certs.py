@@ -7,7 +7,6 @@ from functools import cache
 from pathlib import Path
 from uuid import UUID
 
-import anyio
 from dateutil.relativedelta import relativedelta
 
 from cmk.agent_receiver.lib.config import get_config
@@ -28,15 +27,26 @@ def site_root_certificate() -> Certificate:
     return Certificate.load_pem(CertificatePEM(config.site_ca_path.read_bytes()))
 
 
-async def is_revoked(crl_path: Path, serial_number: int) -> bool:
+_parsed_crls: dict[Path, tuple[tuple[int, int, int], CertificateRevocationList]] = {}
+
+
+def is_revoked(crl_path: Path, serial_number: int) -> bool:
+    """Checked on every mTLS request, on the event loop: a stat per call, a parse per change.
+
+    The stat makes a revocation take effect without a restart. cmk-cert rewrites the list in
+    place and every revocation grows it, so the key changes with every new revocation.
+    """
     try:
-        # Read on every call, so that a revocation takes effect without a restart.
-        crl_pem = await anyio.Path(crl_path).read_bytes()
+        stat = crl_path.stat()
     except FileNotFoundError:
         return False  # a CA that never revoked a certificate has no list
-    return CertificateRevocationList.load_pem(CertificateRevocationListPEM(crl_pem)).is_revoked(
-        serial_number
-    )
+    key = (stat.st_ino, stat.st_mtime_ns, stat.st_size)
+    if (cached := _parsed_crls.get(crl_path)) is None or cached[0] != key:
+        crl = CertificateRevocationList.load_pem(
+            CertificateRevocationListPEM(crl_path.read_bytes())
+        )
+        _parsed_crls[crl_path] = cached = (key, crl)
+    return cached[1].is_revoked(serial_number)
 
 
 def sign_csr(

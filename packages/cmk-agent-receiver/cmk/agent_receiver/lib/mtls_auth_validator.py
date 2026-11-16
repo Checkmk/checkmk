@@ -137,7 +137,7 @@ def mtls_authorization_dependency(
                     f"(issuer: {header_issuer_cn!r}, expected: {expected!r})"
                 ),
             )
-        if await is_revoked(_crl_path_of(expected_ca), int(header_serial, 16)):
+        if is_revoked(_crl_path_of(expected_ca), int(header_serial, 16)):
             logger.warning(
                 "uuid=%(uuid)s Rejected mTLS request: the %(expected_ca)s CA revoked the "
                 "certificate with serial number %(serial)s",

@@ -118,7 +118,6 @@ py_library(
         "//packages/cmk-crypto",
         "//packages/cmk-licensing/cmk/licensing/basics",
         "//packages/cmk-relay-protocols",
-        requirement("anyio"),
         requirement("fastapi"),
         requirement("gunicorn"),
         requirement("h11"),
@@ -164,7 +163,6 @@ py_wheel(
     name = "wheel",
     distribution = "cmk-agent-receiver",
     requires = [
-        "anyio",
         "cryptography",
         "fastapi",
         "gunicorn",

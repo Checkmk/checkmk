@@ -60,3 +60,15 @@ def test_agent_ca_revocation_rejects_only_the_revoked_certificate() -> None:
     status_code, body = _get(client, revoked)
     assert status_code == HTTP_403_FORBIDDEN
     assert "has been revoked" in body
+
+
+def test_revocation_takes_effect_without_restart() -> None:
+    # Serials of different lengths: cmk-cert only ever grows the list, so does this test.
+    first, later = 0xB0A710E5, 0xC0FFEE
+    revoke_serial_number(get_config().agent_ca_path, first)
+    client = _client()
+    assert _get(client, later)[0] == HTTPStatus.OK
+
+    revoke_serial_number(get_config().agent_ca_path, later)
+
+    assert _get(client, later)[0] == HTTP_403_FORBIDDEN

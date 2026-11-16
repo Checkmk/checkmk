@@ -1,0 +1,20 @@
+title: HWg-STE Ethernet Thermometer: Sensors without unit
+agents: snmp
+catalog: hw/environment/hwg
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors accessory sensors of the HWg-STE Ethernet thermometer
+ for which the device reports no unit, for example TVOC or air pressure
+ sensors. The value is shown as reported by the device, without a unit.
+
+ The service state follows the status that the device reports for the
+ sensor: OK if it is normal, CRIT if the value is out of range or in
+ alarm, and UNKNOWN if the sensor is invalid. You can also configure upper
+ and lower levels. The service is UNKNOWN if the value cannot be read.
+
+item:
+ The index of the sensor
+
+discovery:
+ One service is created for each valid sensor without unit.

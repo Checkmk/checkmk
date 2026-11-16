@@ -20,19 +20,10 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     State,
 )
-from cmk.plugins.hwg.agent_based.lib import parse_hwg
+from cmk.plugins.hwg.agent_based.lib import parse_hwg, READABLE_STATES
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 HWG_TEMP_DEFAULTLEVELS = {"levels": (30.0, 35.0)}
-
-READABLE_STATES: Mapping[str, State] = {
-    "invalid": State.UNKNOWN,
-    "normal": State.OK,
-    "out of range low": State.CRIT,
-    "out of range high": State.CRIT,
-    "alarm low": State.CRIT,
-    "alarm high": State.CRIT,
-}
 
 
 def discover_hwg_temp(section: Mapping[str, Mapping[str, Any]]) -> DiscoveryResult:
@@ -44,7 +35,7 @@ def discover_hwg_temp(section: Mapping[str, Mapping[str, Any]]) -> DiscoveryResu
 def check_hwg_temp(
     item: str, params: TempParamType, section: Mapping[str, Mapping[str, Any]]
 ) -> CheckResult:
-    if not (data := section.get(item)):
+    if not (data := section.get(item)) or "temperature" not in data:
         return
     state = READABLE_STATES.get(data["dev_status_name"], State.UNKNOWN)
     state_readable = data["dev_status_name"]

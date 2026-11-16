@@ -13,6 +13,14 @@ from cmk.plugins.hwg.agent_based.hwg_temp import check_hwg_temp, discover_hwg_te
 from cmk.plugins.hwg.agent_based.lib import parse_hwg
 from cmk.plugins.lib.temperature import TempParamType
 
+_STE2_WALK: StringTable = [
+    ["1", "Sensor 40437", "1", "22.6", "1"],
+    ["2", "Sensor 40937", "1", "43.8", "4"],
+    ["3", "TVOC", "1", "107", "0"],
+    ["4", "Press", "1", "948.9", "0"],
+    ["5", "Sensor 60612", "1", "22.3", "1"],
+]
+
 
 @pytest.fixture
 def patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -90,3 +98,17 @@ def test_check_hwg_temp(
 
     # Check the metric
     assert metric_objs[0].name == "temp"
+
+
+def test_discover_hwg_temp_skips_sensors_without_unit() -> None:
+    section = parse_hwg(_STE2_WALK)
+
+    services = list(discover_hwg_temp(section))
+
+    assert services == [Service(item="1"), Service(item="5")]
+
+
+def test_check_hwg_temp_ignores_sensor_without_unit() -> None:
+    section = parse_hwg(_STE2_WALK)
+
+    assert not list(check_hwg_temp("3", {"levels": (30.0, 35.0)}, section))

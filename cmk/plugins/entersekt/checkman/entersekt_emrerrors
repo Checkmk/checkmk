@@ -1,4 +1,4 @@
-title: Entersekt EMR: Number of HTTP Errors
+title: Entersekt: EMR HTTP Errors
 agents: snmp
 catalog: app/entersekt
 license: GPLv2

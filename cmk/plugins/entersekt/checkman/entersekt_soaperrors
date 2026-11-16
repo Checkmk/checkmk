@@ -1,4 +1,4 @@
-title: Entersekt Soap: Number of Errors
+title: Entersekt: SOAP Errors
 agents: snmp
 catalog: app/entersekt
 license: GPLv2

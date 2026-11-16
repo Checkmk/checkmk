@@ -1,4 +1,4 @@
-title: IIS Application Pool Status
+title: Microsoft IIS: Application Pool State
 agents: windows
 catalog: app/iis
 license: GPLv2

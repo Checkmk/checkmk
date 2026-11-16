@@ -1,4 +1,4 @@
-title: Windows: Time service (w32time) NTP sync status
+title: Time Synchronization: Windows Time Service
 agents: windows
 catalog: os/services
 license: GPLv2

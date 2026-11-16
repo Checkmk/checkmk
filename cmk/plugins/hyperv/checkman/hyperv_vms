@@ -1,4 +1,4 @@
-title: Hyper-V Server: State of VMs
+title: Hyper-V: VM State
 agents: windows
 catalog: os/services
 license: GPLv2

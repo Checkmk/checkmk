@@ -1,4 +1,4 @@
-title: Windows: Time service (w32time) peer summary status
+title: Time Synchronization: Windows Time Service Peers Summary
 agents: windows
 catalog: os/services
 license: GPLv2

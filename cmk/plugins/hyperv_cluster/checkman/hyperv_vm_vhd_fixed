@@ -1,4 +1,4 @@
-title: Hyper-V VM VHD
+title: Hyper-V: Cluster VM Fixed VHDs
 agents: windows
 catalog: os/storage
 license: GPLv2

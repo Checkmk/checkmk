@@ -1,4 +1,4 @@
-title: Hyper-V VM Checkpoints
+title: Hyper-V: Cluster VM Checkpoints
 agents: windows
 catalog: os/virtual
 license: GPLv2

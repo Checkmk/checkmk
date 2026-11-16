@@ -1,4 +1,4 @@
-title: Hyper-V VM Network Interface
+title: Hyper-V: Cluster VM Network Interfaces
 agents: windows
 catalog: os/networking
 license: GPLv2

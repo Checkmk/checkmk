@@ -1,4 +1,4 @@
-title: Microsoft Active Directory Replication between DCs: Status
+title: Microsoft Active Directory: Replication Between Domain Controllers
 agents: windows
 catalog: app/ad
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Number of hosts and services per state of Checkmk sites
+title: Checkmk Site: Hosts and Services per State
 agents: linux
 catalog: app/cmk
 license: GPLv2

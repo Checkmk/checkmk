@@ -1,4 +1,4 @@
-title: Checkmk: Performance and Settings
+title: Checkmk Site: Core Performance and Settings
 agents: linux
 catalog: app/cmk
 license: GPLv2

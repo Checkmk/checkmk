@@ -1,4 +1,4 @@
-title: Checkmk Agent: Deployment properties
+title: Checkmk Agent: Deployment Properties
 agents: solaris, aix, linux, freebsd, openwrt, windows
 catalog: app/cmk
 license: GPLv2

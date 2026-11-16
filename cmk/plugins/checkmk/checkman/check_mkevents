@@ -1,4 +1,4 @@
-title: Event Console Status for a Host or Application
+title: Checkmk Event Console: Events per Host or Application
 agents: active
 catalog: agentless
 license: GPLv2

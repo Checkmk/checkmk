@@ -1,4 +1,4 @@
-title: Checkmk Hardware/Software-Inventory
+title: Checkmk: HW/SW Inventory
 agents: active
 catalog: agentless
 license: GPLv2

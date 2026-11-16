@@ -1,4 +1,4 @@
-title: Checkmk Notification Spooler: Connection
+title: Checkmk Notification Spooler: Connection (deprecated)
 agents: linux
 catalog: app/cmk
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Local: Integrate Custom Checks via Arbitrary Scripts on the Agent
+title: Checkmk Agent: Local Checks
 agents: linux, windows, aix, solaris, freebsd, netbsd, openbsd
 catalog: generic
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Checkmk: Site Objects
+title: Checkmk Site: Object Counts
 agents: linux
 catalog: app/cmk
 license: GPLv2

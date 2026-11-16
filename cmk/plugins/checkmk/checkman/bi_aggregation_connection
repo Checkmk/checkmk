@@ -1,4 +1,4 @@
-title: Checkmk: Status Information for BI Aggregation Connection
+title: Checkmk BI: Aggregation Connection
 agents: BI
 catalog: app/cmk
 license: GPLv2

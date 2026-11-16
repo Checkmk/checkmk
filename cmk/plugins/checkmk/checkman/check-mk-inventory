@@ -1,4 +1,4 @@
-title: Checkmk: Discovery Procedure
+title: Checkmk: Service Discovery
 agents: aix, freebsd, hpux, linux, macosx, netbsd, openbsd, openwrt, solaris
 catalog: app/cmk
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Checkmk: State of BI Aggregation
+title: Checkmk BI: Aggregation State
 agents: BI
 catalog: app/cmk
 license: GPLv2

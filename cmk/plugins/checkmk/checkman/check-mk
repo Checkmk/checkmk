@@ -1,4 +1,4 @@
-title: Checkmk: Retrieval of Information
+title: Checkmk: Data Retrieval
 agents: linux, openvms, aix, netbsd, macosx, freebsd, openwrt, openbsd, hpux, solaris
 catalog: app/cmk
 license: GPLv2

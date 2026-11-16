@@ -1,4 +1,4 @@
-title: MRPE: MK's Remote Plugin Executor
+title: Checkmk Agent: MRPE
 agents: linux, aix, solaris, hpux, macosx, netbsd, openbsd, freebsd
 catalog: generic
 license: GPLv2

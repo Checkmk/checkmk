@@ -1,4 +1,4 @@
-title: Didactum Devices: Temperature
+title: Didactum: Temperature
 agents: snmp
 catalog: hw/environment/didactum
 license: GPLv2

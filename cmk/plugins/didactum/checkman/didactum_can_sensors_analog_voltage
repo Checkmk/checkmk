@@ -1,4 +1,4 @@
-title: Didactum Devices: Voltage CAN
+title: Didactum: CAN Voltage
 agents: snmp
 catalog: hw/environment/didactum
 license: GPLv2

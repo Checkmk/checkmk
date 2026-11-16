@@ -1,4 +1,4 @@
-title: Didactum Devices: Humidity CAN
+title: Didactum: CAN Humidity
 agents: snmp
 catalog: hw/environment/didactum
 license: GPLv2

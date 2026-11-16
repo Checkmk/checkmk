@@ -4,9 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { type Ref, onScopeDispose, ref, watch } from 'vue'
+import { type Ref, computed } from 'vue'
 
-import { resolveHostNameTemplate } from './api'
+import { type ResolveResult, resolveHostNameTemplate } from './api'
+import { type Lookup, useDebouncedLookup } from './debouncedLookup'
 import type { HostNameTemplateResolution, HostNameTemplateResolutionRequest } from './definition'
 import type { ServiceModel } from './types'
 
@@ -70,18 +71,25 @@ function requestOf(model: ServiceModel | null): HostNameTemplateResolutionReques
   }
 }
 
-function withSortedKeys(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(withSortedKeys)
+function previewOf(lookup: Lookup<ResolveResult>): TemplatePreview {
+  switch (lookup.status) {
+    case 'idle':
+    case 'loading':
+      return lookup
+    case 'done':
+      return lookup.result.ok
+        ? { status: 'resolved', resolution: lookup.result.resolution }
+        : { status: 'refused', error: lookup.result.refusal }
+    case 'failed':
+      return {
+        status: 'failed',
+        error: lookup.timedOut
+          ? _t('Looking up the matching hosts took too long.')
+          : lookup.error instanceof Error
+            ? lookup.error.message
+            : _t('The matching hosts could not be looked up.')
+      }
   }
-  if (typeof value === 'object' && value !== null) {
-    return Object.fromEntries(
-      Object.entries(value)
-        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-        .map(([key, entry]) => [key, withSortedKeys(entry)])
-    )
-  }
-  return value
 }
 
 /**
@@ -92,75 +100,9 @@ export function useHostNameTemplatePreview(
   getModel: () => ServiceModel | null,
   { debounceMs = DEFAULT_DEBOUNCE_MS, timeoutMs = DEFAULT_TIMEOUT_MS } = {}
 ): HostNameTemplatePreview {
-  const preview = ref<TemplatePreview>({ status: 'idle' })
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null
-  let inFlight: AbortController | null = null
-
-  function cancel(): void {
-    if (debounceTimer !== null) {
-      clearTimeout(debounceTimer)
-      debounceTimer = null
-    }
-    inFlight?.abort()
-    inFlight = null
-  }
-
-  async function load(body: HostNameTemplateResolutionRequest): Promise<void> {
-    const controller = new AbortController()
-    inFlight = controller
-    let timedOut = false
-    const timeout = setTimeout(() => {
-      timedOut = true
-      controller.abort()
-    }, timeoutMs)
-    try {
-      const result = await resolveHostNameTemplate(body, controller.signal)
-      if (inFlight === controller) {
-        preview.value = result.ok
-          ? { status: 'resolved', resolution: result.resolution }
-          : { status: 'refused', error: result.refusal }
-      }
-    } catch (error) {
-      if (inFlight !== controller) {
-        return
-      }
-      preview.value = {
-        status: 'failed',
-        error: timedOut
-          ? _t('Looking up the matching hosts took too long.')
-          : error instanceof Error
-            ? error.message
-            : _t('The matching hosts could not be looked up.')
-      }
-    } finally {
-      clearTimeout(timeout)
-      if (inFlight === controller) {
-        inFlight = null
-      }
-    }
-  }
-
-  function schedule(): void {
-    cancel()
-    const body = requestOf(getModel())
-    if (body === null) {
-      preview.value = { status: 'idle' }
-      return
-    }
-    // Shown at once, so no list of an earlier template is left standing during the debounce
-    preview.value = { status: 'loading' }
-    debounceTimer = setTimeout(() => {
-      debounceTimer = null
-      void load(body)
-    }, debounceMs)
-  }
-
-  // A serialized key with sorted keys, so an equal request in a new object or another key order
-  // does not ask again
-  watch(() => JSON.stringify(withSortedKeys(requestOf(getModel()))), schedule, {
-    immediate: true
+  const lookup = useDebouncedLookup(() => requestOf(getModel()), resolveHostNameTemplate, {
+    debounceMs,
+    timeoutMs
   })
-  onScopeDispose(cancel)
-
-  return { preview }
+  return { preview: computed(() => previewOf(lookup.value)) }
 }

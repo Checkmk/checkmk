@@ -266,7 +266,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--no-cache",
         action="store_true",
-        help="Execute all sections, do not rely on cached data. Cached data will not be overwritten.",
+        help="Execute all sections without reading cached data. The fresh data replaces the cached data.",
     )
     parser.add_argument(
         "--access-key-identity",

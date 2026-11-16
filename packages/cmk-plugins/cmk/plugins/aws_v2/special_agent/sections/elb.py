@@ -154,10 +154,7 @@ class ELBSummaryGeneric(AWSSection):
 
     @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("%s_limits" % self._resource)
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents([], 0.0)
+        return self._received_inventory(f"{self._resource}_limits")
 
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
@@ -184,7 +181,7 @@ class ELBSummaryGeneric(AWSSection):
         self, colleague_contents: AWSColleagueContents
     ) -> Sequence[dict[str, object]]:
         if self._names is not None:
-            if colleague_contents.content:
+            if colleague_contents.content is not None:
                 return [
                     load_balancer
                     for load_balancer in colleague_contents.content
@@ -195,7 +192,7 @@ class ELBSummaryGeneric(AWSSection):
             )
 
         else:
-            if colleague_contents.content:
+            if colleague_contents.content is not None:
                 return colleague_contents.content
             page_iterator = self._client.get_paginator("describe_load_balancers").paginate()
 

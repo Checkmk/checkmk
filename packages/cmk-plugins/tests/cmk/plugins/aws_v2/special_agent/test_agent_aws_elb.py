@@ -77,6 +77,41 @@ class FakeELBClient:
         raise NotImplementedError
 
 
+class EmptyPaginator:
+    def paginate(self, **kwargs: object) -> Iterator[Mapping[str, object]]:  # noqa: ARG002
+        yield {"LoadBalancerDescriptions": []}
+
+
+class FakeEmptyELBClient:
+    def __init__(self) -> None:
+        self.paginated_operations: list[str] = []
+
+    def describe_account_limits(self) -> Mapping[str, object]:
+        return FakeELBClient().describe_account_limits()
+
+    def get_paginator(self, operation_name: str) -> EmptyPaginator:
+        self.paginated_operations.append(operation_name)
+        return EmptyPaginator()
+
+
+def test_elb_summary_does_not_describe_load_balancers_again_when_limits_found_none() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("elb_names", None)
+    config.add_service_tags("elb_tags", (None, None))
+    client = FakeEmptyELBClient()
+    distributor = ResultDistributor()
+    elb_limits = ELBLimits(client, "region", config, distributor)
+    elb_summary = ELBSummaryGeneric(client, "region", config, distributor, resource="elb")
+    distributor.add(elb_limits.name, elb_summary)
+
+    elb_limits.run()
+    elb_summary.run()
+
+    assert client.paginated_operations.count("describe_load_balancers") == 1
+
+
 ELBSectionsOut = tuple[ELBLimits, ELBSummaryGeneric, ELBHealth, ELB]
 
 

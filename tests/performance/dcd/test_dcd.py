@@ -37,7 +37,9 @@ def test_performance_piggyback(perftest: PerformanceTest, benchmark: BenchmarkFi
         partial(scenario.scenario_performance_dcd_piggyback, perftest),
         setup=partial(scenario.setup_dcd_piggyback_round, perftest),
         teardown=partial(scenario.teardown_dcd_piggyback_round, perftest),
-        rounds=perftest.rounds,
+        # A round costs a minute of untimed setup for 4s of measurement, and 8 rounds keep
+        # the mean as steady from night to night as 16 did.
+        rounds=perftest.rounds_or(8),
         # The first forced DCD cycle after site/daemon start is always cold; warm up at
         # least once so that one-off cost is excluded from the measured rounds.
         warmup_rounds=max(1, perftest.warmup_rounds),

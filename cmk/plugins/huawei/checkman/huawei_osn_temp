@@ -1,4 +1,4 @@
-title: Huawei OSN: Board Temperature
+title: Huawei OptiX OSN: Board Temperature
 agents: snmp
 catalog: hw/network/huawei
 license: GPLv2

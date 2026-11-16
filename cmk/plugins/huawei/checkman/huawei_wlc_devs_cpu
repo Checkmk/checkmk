@@ -1,4 +1,4 @@
-title: Huawei WLAN Access Controller
+title: Huawei WLAN Access Controller: CPU Utilization
 agents: snmp
 catalog: hw/network/huawei
 license: GPLv2

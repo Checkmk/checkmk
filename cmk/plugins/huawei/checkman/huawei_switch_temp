@@ -1,4 +1,4 @@
-title: Huawei Switches: Temperature
+title: Huawei: Switch Temperature
 agents: snmp
 catalog: hw/network/huawei
 license: GPLv2

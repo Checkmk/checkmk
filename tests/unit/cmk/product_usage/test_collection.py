@@ -9,7 +9,9 @@ from pathlib import Path
 
 import pytest
 
+from cmk.livestatus_client import MKLivestatusSocketError
 from cmk.product_usage.collection import collect_cloud_trial_data
+from cmk.product_usage.collectors.host_services import ServicesPerHostReader
 from cmk.product_usage.schema import (
     AuditLog,
     AuditLogActorClass,
@@ -23,12 +25,7 @@ NO_ENTRIES = AuditLogActorClass(entries=0, last_entry_at=None)
 def test_cloud_trial_payload_carries_the_audit_log_of_the_site(tmp_path: Path) -> None:
     _write_audit_log_entry(tmp_path, user_id="-", time=1767790000)
 
-    payload = collect_cloud_trial_data(
-        _product_usage_payload(),
-        var_dir=tmp_path,
-        default_config_dir=tmp_path,
-        logger=logging.getLogger(__name__),
-    )
+    payload = _collect_from_site(tmp_path)
 
     assert payload.audit_log == AuditLog(
         interactive=NO_ENTRIES,
@@ -49,12 +46,7 @@ def test_cloud_trial_payload_counts_the_cloud_platform_users_as_platform(
 ) -> None:
     _write_audit_log_entry(tmp_path, user_id=user_id, time=1767790000)
 
-    payload = collect_cloud_trial_data(
-        _product_usage_payload(),
-        var_dir=tmp_path,
-        default_config_dir=tmp_path,
-        logger=logging.getLogger(__name__),
-    )
+    payload = _collect_from_site(tmp_path)
 
     assert payload.audit_log == AuditLog(
         interactive=NO_ENTRIES,
@@ -64,17 +56,12 @@ def test_cloud_trial_payload_counts_the_cloud_platform_users_as_platform(
 
 
 def test_cloud_trial_payload_has_no_audit_log_when_its_collection_fails(tmp_path: Path) -> None:
+    complete_payload = _collect_from_site(tmp_path)
     _write_corrupt_user_store(tmp_path)
-    product_usage = _product_usage_payload()
 
-    payload = collect_cloud_trial_data(
-        product_usage,
-        var_dir=tmp_path,
-        default_config_dir=tmp_path,
-        logger=logging.getLogger(__name__),
-    )
+    payload = _collect_from_site(tmp_path)
 
-    assert payload == CloudTrialPayload(**product_usage.model_dump())
+    assert payload == complete_payload.model_copy(update={"audit_log": None})
 
 
 def test_failed_audit_log_collection_logs_the_error(
@@ -82,12 +69,7 @@ def test_failed_audit_log_collection_logs_the_error(
 ) -> None:
     _write_corrupt_user_store(tmp_path)
 
-    collect_cloud_trial_data(
-        _product_usage_payload(),
-        var_dir=tmp_path,
-        default_config_dir=tmp_path,
-        logger=logging.getLogger(__name__),
-    )
+    _collect_from_site(tmp_path)
 
     assert [record.levelname for record in caplog.records] == ["ERROR"]
 
@@ -104,14 +86,62 @@ def test_cloud_trial_payload_contains_no_user_id_of_the_audit_log(
 ) -> None:
     _write_audit_log_entry(tmp_path, user_id=user_id, time=1767790000)
 
-    payload = collect_cloud_trial_data(
-        _product_usage_payload(),
-        var_dir=tmp_path,
-        default_config_dir=tmp_path,
-        logger=logging.getLogger(__name__),
-    )
+    payload = _collect_from_site(tmp_path)
 
     assert user_id not in payload.model_dump_with_metadata_json().decode()
+
+
+def test_cloud_trial_payload_carries_the_count_of_hosts_with_default_services_only(
+    tmp_path: Path,
+) -> None:
+    payload = _collect_from_site(
+        tmp_path, read_services_per_host=lambda: [["Check_MK", "Check_MK Discovery"]]
+    )
+
+    assert payload.count_hosts_default_services_only == 1
+
+
+def test_cloud_trial_payload_has_no_count_of_hosts_with_default_services_only_when_its_collection_fails(
+    tmp_path: Path,
+) -> None:
+    complete_payload = _collect_from_site(tmp_path)
+
+    payload = _collect_from_site(tmp_path, read_services_per_host=_raise_livestatus_error)
+
+    assert payload == complete_payload.model_copy(
+        update={"count_hosts_default_services_only": None}
+    )
+
+
+def test_failed_count_of_hosts_with_default_services_only_logs_the_error(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    _collect_from_site(tmp_path, read_services_per_host=_raise_livestatus_error)
+
+    assert [record.levelname for record in caplog.records] == ["ERROR"]
+
+
+def test_cloud_trial_payload_carries_the_product_usage_data(tmp_path: Path) -> None:
+    payload = _collect_from_site(tmp_path)
+
+    assert payload.model_dump(include=set(ProductUsagePayload.model_fields)) == (
+        _product_usage_payload().model_dump()
+    )
+
+
+def _collect_from_site(
+    site_dir: Path,
+    *,
+    read_services_per_host: ServicesPerHostReader = list,
+) -> CloudTrialPayload:
+    """Collect the Cloud trial data of a test site: no hosts, fixed product usage payload"""
+    return collect_cloud_trial_data(
+        _product_usage_payload(),
+        var_dir=site_dir,
+        default_config_dir=site_dir,
+        read_services_per_host=read_services_per_host,
+        logger=logging.getLogger(__name__),
+    )
 
 
 def _product_usage_payload() -> ProductUsagePayload:
@@ -139,3 +169,7 @@ def _write_corrupt_user_store(default_config_dir: Path) -> None:
     path = default_config_dir / "multisite.d/wato/users.mk"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("multisite_users = {")
+
+
+def _raise_livestatus_error() -> list[list[str]]:
+    raise MKLivestatusSocketError("connection refused")

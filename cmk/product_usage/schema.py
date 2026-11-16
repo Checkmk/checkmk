@@ -229,11 +229,11 @@ class CloudTrialPayload(ProductUsagePayload):
             }
         ],
     )
-    count_hosts_default_services_only: None = pydantic.Field(
+    count_hosts_default_services_only: int | None = pydantic.Field(
         default=None,
         description=(
             "The number of hosts with no services beyond Check_MK and Check_MK Discovery."
             " Hosts without services count too."
         ),
-        examples=[None],
+        examples=[2],
     )

@@ -55,7 +55,7 @@ The ``cmk-product-usage`` command-line tool (``cmk.product_usage.cli``) is the s
 A per-site cron job invokes it every 30 minutes, but a collection actually happens only about once every 30 days (7 days on a Cloud trial site) -- see `Collection and transmission`_.
 
 **Collectors.**
-Four collectors read from Livestatus and the filesystem: check usage (``collectors/checks.py``), site info (``collectors/site_info.py``), a previously recorded Grafana-usage snapshot (``collectors/grafana.py``), and, on a Cloud trial site only, the audit log entries per actor class (``collectors/audit_log.py``).
+Five collectors read from Livestatus and the filesystem: check usage (``collectors/checks.py``), site info (``collectors/site_info.py``), a previously recorded Grafana-usage snapshot (``collectors/grafana.py``), and, on a Cloud trial site only, the audit log entries per actor class (``collectors/audit_log.py``) and the number of hosts with default services only (``collectors/host_services.py``).
 
 **Config and consent.**
 The config module reads the site's consent decision and HTTP-proxy setting from ``product_usage_analytics.mk``, a Checkmk global-settings file that a GUI page also reads and writes.
@@ -103,9 +103,11 @@ The CLI checks whether a site is a Cloud trial (``is_cloud_trial``) once per run
 * The last recorded Grafana-usage snapshot, if any.
 * On a Cloud trial site only, the audit log entries per actor class -- interactive users, automation users, and the platform (the Cloud platform's users and the site itself) -- as a count and the time of the newest entry.
   The collector reads the current and the rotated audit logs and the GUI's user store; it sends no user IDs.
+* On a Cloud trial site only, the number of activated hosts whose only services are ``Check_MK`` and ``Check_MK Discovery``, or that have no services -- hosts that deliver no data yet.
+  The collector reads the services of each host from Livestatus's hosts table, so a host counts only after its changes are activated; it sends no host or service names.
 
 The result is wrapped in a ``SelfDescribingModel`` envelope (``{"metadata": {version, namespace, name}, "data": {...}}``) and stored as ``var/check_mk/product_usage/product_usage_<timestamp>.json``.
-A Cloud trial site sends ``CloudTrialPayload`` (``cloud_trial_analytics``) instead of ``ProductUsagePayload`` (``product_usage_analytics``): the same data plus trial signals; of these, only the audit log is collected so far, the others are still ``null``.
+A Cloud trial site sends ``CloudTrialPayload`` (``cloud_trial_analytics``) instead of ``ProductUsagePayload`` (``product_usage_analytics``): the same data plus trial signals; of these, only the audit log and the number of hosts with default services only are collected so far, the others are still ``null``.
 A trial signal whose collector fails is ``null``: the error goes to ``var/log/product_usage_analytics.log`` and the rest of the payload is sent as usual.
 
 **Transmission and retry.**
@@ -225,6 +227,9 @@ Risks and technical debts
 6. The audit log collector classifies users by rules of thumb.
    The Cloud platform's user IDs are fixed (``api_user``, ``agent_registration``), so the entries of a different registration user for the preconfigured agent count as automation.
    A deleted user counts as interactive only if its ID is an email address, like a Cognito user's ID; otherwise it counts as automation.
+7. The count of hosts with default services only knows these services by their fixed names, ``Check_MK`` and ``Check_MK Discovery``.
+   A site that still uses the legacy name ``Check_MK inventory`` counts such hosts as monitored; Cloud trial sites are new and use the new name.
+   In a cluster, the clustered services belong to the cluster host, so a node whose services are all clustered counts although it delivers data.
 
 See Also
 ========

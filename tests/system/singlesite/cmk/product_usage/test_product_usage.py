@@ -263,3 +263,17 @@ def test_unsuccessful_https_product_usage_data_transmission(
     assert json_files_before[0] == json_files_after[0], (
         "JSON file should be the same after failed transmission"
     )
+
+
+@pytest.mark.skip_if_not_edition("cloud")
+@pytest.mark.usefixtures("default_cfg")
+def test_cloud_trial_payload_counts_hosts_with_default_services_only(site: Site) -> None:
+    """A Cloud trial site sends the count of hosts with default services only."""
+    run_product_usage_collection(site)
+
+    data = json.loads(get_product_usage_json_content(site))["data"]
+
+    assert data["count_hosts_default_services_only"] == EXPECTED_HOST_COUNT, (
+        "Each test host has only the default services. A null count means that the collection"
+        " failed, see var/log/product_usage_analytics.log"
+    )

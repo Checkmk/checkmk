@@ -28,10 +28,15 @@ export function fixedTimeRangeVariables(range: DateTimeRange): TimeRangeVariable
   }
 }
 
+/** The variables that carry a live window of the last `seconds`. */
+export function liveTimeRangeVariables(seconds: number): TimeRangeVariables {
+  return { from: `now-${Math.round(seconds)}s`, to: NOW }
+}
+
 /** The variables that carry `range` along a link; a live rolling range travels as its duration. */
 export function linkTimeRangeVariables(range: DateTimeRange, live: boolean): TimeRangeVariables {
   if (live && isRolling(range)) {
-    return { from: `now-${Math.round(durationSeconds(range))}s`, to: NOW }
+    return liveTimeRangeVariables(durationSeconds(range))
   }
   return fixedTimeRangeVariables(range)
 }

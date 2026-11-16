@@ -13,7 +13,7 @@ import {
   useGlobalRefresh,
   useGlobalTimeRange
 } from '@/graphing/GlobalTimePicker/globalTimeState'
-import { rollingRange } from '@/graphing/GlobalTimePicker/private/timeRange'
+import { durationSeconds, rollingRange } from '@/graphing/GlobalTimePicker/private/timeRange'
 
 const HOUR = 3600
 
@@ -104,6 +104,35 @@ describe('useDashboardTimeControl', () => {
       from: String(picked.from.toDate().getTime()),
       to: String(picked.to.toDate().getTime())
     })
+  })
+
+  it('drops the default live range from the address bar', async () => {
+    window.history.replaceState({}, '', '?name=main&from=now-3600s&to=now')
+    useDashboardTimeControl(globalTimePicker(true))
+
+    useGlobalTimeRange().setActiveTimeRange(rollingRange(4 * HOUR), 'time_picker')
+    await nextTick()
+
+    expect(addressBarVariables()).toEqual({ name: 'main' })
+  })
+
+  it('hands out no variables for the default live range', () => {
+    const { timeRangeVariables } = useDashboardTimeControl(globalTimePicker(true))
+
+    useGlobalTimeRange().setActiveTimeRange(rollingRange(4 * HOUR), 'time_picker')
+
+    expect(timeRangeVariables.value).toBeNull()
+  })
+
+  it('a reset starts the default window live', () => {
+    const { resetTimeControl, updateTimeRange } = useDashboardTimeControl(globalTimePicker(true))
+    updateTimeRange(rollingRange(HOUR))
+
+    resetTimeControl()
+
+    const active = useGlobalTimeRange().activeTimeRange.value!
+    expect(durationSeconds(active)).toBe(4 * HOUR)
+    expect(useGlobalRefresh().refreshPaused.value).toBe(false)
   })
 
   it('leaves the address bar alone while a live range rolls on', async () => {

@@ -133,10 +133,17 @@ export type TimeStart =
   | { type: 'linked_fixed'; range: DateTimeRange }
 
 export interface GlobalTimeInit {
-  /** `null` keeps the default. */
+  /** `null` means the default. */
   intervalSeconds: number | null
   start: TimeStart
   strategy?: RefreshStrategy
+}
+
+export interface GlobalTimeRestart {
+  /** `null` means the default. */
+  intervalSeconds: number | null
+  seconds: number
+  live: boolean
 }
 
 /** Start the page's time and refresh, once - a late-mounting host must not clobber what the user
@@ -152,10 +159,20 @@ export function initGlobalTime({
   }
   initialised = true
   strategy = refresh ?? null
+  applyStart(intervalSeconds, start)
+}
+
+/** Start the page's time and refresh over, on the last `seconds`. Never refreshes. */
+export function restartGlobalTime({ intervalSeconds, seconds, live }: GlobalTimeRestart): void {
+  applyStart(intervalSeconds, { type: 'linked_rolling', seconds, live })
+}
+
+function applyStart(intervalSeconds: number | null, start: TimeStart): void {
   // Defensive: the props carrying the interval are untrusted.
-  if (intervalSeconds !== null && Number.isFinite(intervalSeconds) && intervalSeconds > 0) {
-    intervalSecondsState.value = intervalSeconds
-  }
+  intervalSecondsState.value =
+    intervalSeconds !== null && Number.isFinite(intervalSeconds) && intervalSeconds > 0
+      ? intervalSeconds
+      : DEFAULT_INTERVAL_SECONDS
   switch (start.type) {
     case 'page_default':
       pausedState.value = !start.live
@@ -172,6 +189,7 @@ export function initGlobalTime({
   // The interval runs from what the server just rendered, so coming back to the tab inside it is
   // not a missed refresh.
   lastRefreshAtMs = Date.now()
+  restartTimer()
 }
 
 /** Only tests need this: a page load starts from a fresh module. */

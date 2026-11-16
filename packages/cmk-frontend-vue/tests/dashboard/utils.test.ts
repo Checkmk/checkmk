@@ -131,10 +131,12 @@ describe('urlHandler', () => {
       })
     })
 
-    it('leaves the URL as it is without a time range', () => {
-      const input = new URL('https://example.com/dashboard.py?name=foo&host=web01')
+    it('removes the time range without one and keeps the other variables', () => {
+      const input = new URL('https://example.com/dashboard.py?name=foo&from=1&to=2&host=web01')
 
-      expect(urlHandler.withTimeRange(input, null).toString()).toBe(input.toString())
+      const url = urlHandler.withTimeRange(input, null)
+
+      expect(Object.fromEntries(url.searchParams)).toEqual({ name: 'foo', host: 'web01' })
     })
   })
 

@@ -12,6 +12,7 @@ import {
   type RefreshStrategy,
   initGlobalTime,
   resetGlobalTimeState,
+  restartGlobalTime,
   useGlobalRefresh,
   useGlobalTimeRange
 } from '@/graphing/GlobalTimePicker/globalTimeState'
@@ -302,6 +303,47 @@ describe('wiring the page', () => {
     })
 
     expect(activeTimeRange.value).toEqual(range(9, 10))
+  })
+})
+
+describe('starting the page over', () => {
+  test('a restart replaces the start the page arrived with, without a refresh', () => {
+    const { activeTimeRange } = useGlobalTimeRange()
+    const { refreshPaused, refreshTick } = useGlobalRefresh()
+    initGlobalTime({ intervalSeconds: 60, start: { type: 'linked_fixed', range: range(9, 10) } })
+
+    restartGlobalTime({ intervalSeconds: 60, seconds: 4 * 3600, live: true })
+
+    expect(durationSeconds(activeTimeRange.value!)).toBe(4 * 3600)
+    expect(endsNow(activeTimeRange.value!)).toBe(true)
+    expect(refreshPaused.value).toBe(false)
+    expect(refreshTick.value).toBe(0)
+  })
+
+  test('the next refresh comes one interval after the restart', () => {
+    const { refreshTick } = useGlobalRefresh()
+    initGlobalTime({
+      intervalSeconds: 60,
+      start: { type: 'linked_rolling', seconds: 3600, live: true }
+    })
+    vi.advanceTimersByTime(30 * 1000)
+
+    restartGlobalTime({ intervalSeconds: 60, seconds: 3600, live: true })
+    vi.advanceTimersByTime(59 * 1000)
+    expect(refreshTick.value).toBe(0)
+
+    vi.advanceTimersByTime(1000)
+    expect(refreshTick.value).toBe(1)
+  })
+
+  test('a restart without an interval goes back to the default one', () => {
+    const { refreshIntervalSeconds, setRefreshIntervalSeconds } = useGlobalRefresh()
+    const theDefault = refreshIntervalSeconds.value
+    setRefreshIntervalSeconds(2 * theDefault)
+
+    restartGlobalTime({ intervalSeconds: null, seconds: 3600, live: false })
+
+    expect(refreshIntervalSeconds.value).toBe(theDefault)
   })
 })
 

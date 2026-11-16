@@ -70,7 +70,12 @@ export function useDashboardsManager() {
   }
 
   let loadGeneration = 0
-  async function loadDashboard(key: DashboardKey, layoutType: DashboardLayout): Promise<void> {
+  /** Loads and activates a dashboard; `beforeActivation` runs in the same tick, before any render. */
+  async function loadDashboard(
+    key: DashboardKey,
+    layoutType: DashboardLayout,
+    beforeActivation?: () => void
+  ): Promise<void> {
     const thisGeneration = ++loadGeneration
     let dashboardPromise
     if (layoutType === DashboardLayout.RELATIVE_GRID) {
@@ -89,6 +94,7 @@ export function useDashboardsManager() {
     }
 
     const dashboard = createDashboardModel(dashboardResp, layoutType)
+    beforeActivation?.()
     setActiveDashboard(key, dashboard, metadata)
   }
 

@@ -269,11 +269,15 @@ watch(
   { immediate: true }
 )
 
-const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: DashboardLayout) => {
+const setAsActiveDashboard = async (
+  dashboardKey: DashboardKey,
+  layout: DashboardLayout,
+  beforeActivation: () => void
+) => {
   isDashboardLoading.value = true
   loadingError.value = null
   try {
-    await dashboardsManager.loadDashboard(dashboardKey, layout)
+    await dashboardsManager.loadDashboard(dashboardKey, layout, beforeActivation)
   } catch (e) {
     loadingError.value = e instanceof Error ? e : new Error(String(e))
   } finally {
@@ -294,14 +298,14 @@ const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
     name: dashboard.name,
     owner: dashboard.owner || '' // built-in conversion: null -> ""
   }
-  await setAsActiveDashboard(key, dashboard.layout_type as DashboardLayout)
-  // After the load, otherwise the title computation runs once for the dashboard we left
-  dashboardFilters.handleResetRuntimeFilters()
+  await setAsActiveDashboard(key, dashboard.layout_type as DashboardLayout, () => {
+    // before the new dashboard renders, must stay sync!
+    resetTimeControl()
+    dashboardFilters.handleResetRuntimeFilters()
+    urlHandler.pushCurrentUrl(urlHandler.getDashboardUrl(key, {}))
+  })
   selectedDashboardBreadcrumb.value =
     dashboardsManager.activeDashboard.value?.metadata?.display?.topic?.breadcrumb ?? null
-  urlHandler.pushCurrentUrl(
-    urlHandler.withTimeRange(urlHandler.getDashboardUrl(key, {}), timeRangeVariables.value)
-  )
 
   if (!dashboardFilters.areAllMandatoryFiltersApplied.value) {
     openDashboardFilterSettings.value = true
@@ -705,10 +709,8 @@ const reviewFilters = () => {
   openDashboardFilterSettings.value = true
 }
 
-const { range, refreshTick, timeRangeVariables, updateTimeRange } = useDashboardTimeControl(
-  props.global_time_picker,
-  true
-)
+const { range, refreshTick, timeRangeVariables, updateTimeRange, resetTimeControl } =
+  useDashboardTimeControl(props.global_time_picker, true)
 </script>
 
 <template>

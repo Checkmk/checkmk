@@ -630,10 +630,14 @@ export const urlHandler = {
     )
   },
 
-  /** A copy of `url` that carries `timeRange`; without a time range, the copy stays as it is. */
+  /** A copy of `url` that carries `timeRange`; without a time range, the copy carries none. */
   withTimeRange(url: URL, timeRange: TimeRangeVariables | null): URL {
     const result = new URL(url)
-    if (timeRange !== null) {
+    if (timeRange === null) {
+      for (const variable of TIME_RANGE_VARIABLES) {
+        result.searchParams.delete(variable)
+      }
+    } else {
       setTimeRangeVariables(result.searchParams, timeRange)
     }
     return result

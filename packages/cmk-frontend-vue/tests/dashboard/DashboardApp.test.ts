@@ -21,15 +21,18 @@ import {
 } from '@/dashboard/types/dashboard'
 import type { DashboardPageProperties } from '@/dashboard/types/page'
 import type {
+  AlertOverview,
   ComputedMonitoringTable,
   ResponsiveGridWidgetLayout,
-  ResponsiveGridWidgetLayouts
+  ResponsiveGridWidgetLayouts,
+  WidgetTimeRange
 } from '@/dashboard/types/widget'
 import {
   resetGlobalTimeState,
   useGlobalRefresh,
   useGlobalTimeRange
 } from '@/graphing/GlobalTimePicker/globalTimeState'
+import { durationSeconds, endsNow } from '@/graphing/GlobalTimePicker/private/timeRange'
 
 import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
 
@@ -92,7 +95,8 @@ const constants: DashboardConstants = {
   },
   widgets: {
     static_text: widgetConstants,
-    monitoring_table: widgetConstants
+    monitoring_table: widgetConstants,
+    alert_overview: widgetConstants
   }
 }
 
@@ -214,6 +218,39 @@ const hostsTableDashboards = {
       }
     }
   }
+}
+
+// An alert overview over the dashboard's window, the whole dashboard wide.
+const alertOverviewDashboard = {
+  ...sourceDashboard,
+  widgets: {
+    alerts: {
+      general_settings: {
+        title: { text: 'Alerts', render_mode: 'with_background' },
+        render_background: true
+      },
+      content: { type: 'alert_overview', time_range: 'dashboard' },
+      filter_context: { uses_infos: [], filters: {} },
+      layout: { type: 'relative_grid', position: { x: 1, y: 1 }, size: { width: 80, height: 40 } }
+    }
+  }
+}
+
+const alertOverview: AlertOverview = {
+  elements: [
+    {
+      site_id: 'heute',
+      host_name: 'heute',
+      service_description: 'CPU load',
+      num_ok: 1,
+      num_warn: 1,
+      num_crit: 1,
+      num_unknown: 0,
+      num_problems: 2,
+      links: [],
+      link_properties: { links: [] }
+    }
+  ]
 }
 
 const hostsTable: ComputedMonitoringTable = {
@@ -533,7 +570,7 @@ describe('DashboardApp on a switch to another dashboard', () => {
     window.history.replaceState({}, '', pageUrl)
   })
 
-  function serveTheOtherDashboard(): void {
+  function serveTheOtherDashboard(otherDashboard: object = sourceDashboard): void {
     server.use(
       http.get(`${API}/domain-types/dashboard_metadata/collections/all`, () =>
         HttpResponse.json({
@@ -561,32 +598,99 @@ describe('DashboardApp on a switch to another dashboard', () => {
           domainType: 'dashboard_relative_grid',
           id: OTHER_ID,
           links: [],
-          extensions: sourceDashboard
+          extensions: otherDashboard
         })
       )
     )
   }
 
-  it('keeps the time range in the address bar', async () => {
-    serveTheOtherDashboard()
+  /** Both dashboards show an alert overview; returns the windows that the overviews fetch for. */
+  function serveAlertOverviewsOnBoth(): WidgetTimeRange[] {
+    const fetchedWindows: WidgetTimeRange[] = []
+    serveTheOtherDashboard(alertOverviewDashboard)
+    server.use(
+      http.get(`${API}/objects/dashboard_relative_grid/${SOURCE_ID}`, () =>
+        HttpResponse.json({
+          domainType: 'dashboard_relative_grid',
+          id: SOURCE_ID,
+          links: [],
+          extensions: alertOverviewDashboard
+        })
+      ),
+      http.post(
+        `${API}/domain-types/dashboard/actions/compute-alert-overview/invoke`,
+        async ({ request }) => {
+          const body = (await request.json()) as { time_range: WidgetTimeRange }
+          fetchedWindows.push(body.time_range)
+          return HttpResponse.json({ domainType: 'widget-compute', value: alertOverview })
+        }
+      )
+    )
+    return fetchedWindows
+  }
+
+  it('fetches the other dashboard once, for the default window', async () => {
+    const fetchedWindows = serveAlertOverviewsOnBoth()
+    FakeResizeObserver.instances = []
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
     render(DashboardApp, { props: pageProperties })
-    await screen.findByText(SOURCE_TEXT)
-    const [start, end] = [Date.parse('2026-01-01T00:00:00Z'), Date.parse('2026-01-01T04:00:00Z')]
+    await screen.findByPlaceholderText(SOURCE_TITLE)
+    const [start, end] = [Date.parse('2026-01-01T00:00:00Z'), Date.parse('2026-01-01T01:00:00Z')]
     useGlobalTimeRange().setActiveTimeRange(
       { from: fromDate(new Date(start), 'UTC'), to: fromDate(new Date(end), 'UTC') },
       'time_picker'
     )
-    useGlobalRefresh().pauseRefresh()
+    await waitFor(() => {
+      expect(fetchedWindows.map((window) => Date.parse(window.start))).toContain(start)
+    })
+    fetchedWindows.length = 0
+
+    await fireEvent.focus(screen.getByPlaceholderText(SOURCE_TITLE))
+    await fireEvent.click(await screen.findByText(OTHER_TITLE))
+    await waitFor(() => {
+      expect(new URL(window.location.href).searchParams.get('name')).toBe(OTHER_ID)
+    })
+    await waitFor(() => {
+      deliverSize(800, 400)
+      expect(screen.getByRole('figure', { name: '1 object with alerts' })).toBeInTheDocument()
+    })
+
+    expect(
+      fetchedWindows.map((window) => (Date.parse(window.end) - Date.parse(window.start)) / 1000)
+    ).toEqual([pageProperties.global_time_picker.default_time_range])
+  })
+
+  it('starts the other dashboard the way a link to it starts', async () => {
+    serveTheOtherDashboard()
+    render(DashboardApp, { props: pageProperties })
+    await screen.findByText(SOURCE_TEXT)
+    const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
+    const { refreshIntervalSeconds, refreshPaused, pauseRefresh, setRefreshIntervalSeconds } =
+      useGlobalRefresh()
+    const defaultInterval = refreshIntervalSeconds.value
+    const [start, end] = [Date.parse('2026-01-01T00:00:00Z'), Date.parse('2026-01-01T04:00:00Z')]
+    setActiveTimeRange(
+      { from: fromDate(new Date(start), 'UTC'), to: fromDate(new Date(end), 'UTC') },
+      'time_picker'
+    )
+    pauseRefresh()
+    setRefreshIntervalSeconds(2 * defaultInterval)
 
     await fireEvent.focus(screen.getByPlaceholderText(SOURCE_TITLE))
     await fireEvent.click(await screen.findByText(OTHER_TITLE))
 
     await waitFor(() => {
-      expect(Object.fromEntries(new URL(window.location.href).searchParams)).toMatchObject({
-        name: OTHER_ID,
-        from: String(start),
-        to: String(end)
-      })
+      expect(new URL(window.location.href).searchParams.get('name')).toBe(OTHER_ID)
     })
+    expect(Object.fromEntries(new URL(window.location.href).searchParams)).toEqual({
+      name: OTHER_ID,
+      owner: OWNER
+    })
+    expect(durationSeconds(activeTimeRange.value!)).toBe(
+      pageProperties.global_time_picker.default_time_range
+    )
+    expect(endsNow(activeTimeRange.value!)).toBe(true)
+    expect(refreshPaused.value).toBe(false)
+    expect(refreshIntervalSeconds.value).toBe(defaultInterval)
   })
 })

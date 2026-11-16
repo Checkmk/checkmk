@@ -309,22 +309,47 @@ def fixture_plugin_states(monkeypatch):
     return mk_sap.states
 
 
-@pytest.mark.usefixtures("plugin_states")
-def test_alert_is_sent_again_until_the_retention_period_has_passed() -> None:
-    alerts = [_alert("100000", "ALERT-A")]
-    _logwatch_lines(_FakeConnection(), alerts, now=1000)
+_LATER_ALERTS = pytest.mark.parametrize(
+    "later_alerts",
+    [
+        pytest.param([_alert("100000", "ALERT-A")], id="still returned by SAP"),
+        pytest.param([], id="no longer returned by SAP"),
+    ],
+)
 
-    lines = _logwatch_lines(None, alerts, now=1000 + mk_sap.retention_period)
+
+@_LATER_ALERTS
+@pytest.mark.usefixtures("plugin_states")
+def test_alert_is_sent_again_until_the_retention_period_has_passed(later_alerts):
+    # type: (list[dict[str, str]]) -> None
+    _logwatch_lines(_FakeConnection(), [_alert("100000", "ALERT-A")], now=1000)
+    _logwatch_lines(None, later_alerts, now=1060)
+
+    lines = _logwatch_lines(None, later_alerts, now=1000 + mk_sap.retention_period)
 
     assert lines == ["BATCH: 20261007100000-290addf3eba47f75", "W 2026-10-07 10:00:00 ALERT-A"]
 
 
+@_LATER_ALERTS
 @pytest.mark.usefixtures("plugin_states")
-def test_alert_is_not_sent_after_the_retention_period() -> None:
-    alerts = [_alert("100000", "ALERT-A")]
-    _logwatch_lines(_FakeConnection(), alerts, now=1000)
+def test_alert_is_not_sent_after_the_retention_period(later_alerts):
+    # type: (list[dict[str, str]]) -> None
+    _logwatch_lines(_FakeConnection(), [_alert("100000", "ALERT-A")], now=1000)
 
-    lines = _logwatch_lines(None, alerts, now=1000 + mk_sap.retention_period + 1)
+    lines = _logwatch_lines(None, later_alerts, now=1000 + mk_sap.retention_period + 1)
+
+    assert lines == []
+
+
+@pytest.mark.usefixtures("plugin_states")
+def test_expired_alert_is_not_sent_again_when_the_retention_period_is_raised(monkeypatch):
+    # type: (pytest.MonkeyPatch) -> None
+    retention_period = mk_sap.retention_period
+    _logwatch_lines(_FakeConnection(), [_alert("100000", "ALERT-A")], now=1000)
+    _logwatch_lines(None, [_alert("100000", "ALERT-A")], now=1000 + retention_period + 1)
+    monkeypatch.setattr(mk_sap, "retention_period", 2 * retention_period)
+
+    lines = _logwatch_lines(None, [], now=1000 + retention_period + 1)
 
     assert lines == []
 
@@ -404,3 +429,13 @@ def test_systems_with_the_same_sid_keep_separate_states(option):  # type: ignore
     lines = _logwatch_lines(None, alerts, now=1060, cfg_entry=first_system)
 
     assert lines == [ANY, "W 2026-10-07 10:00:00 ALERT-A"]
+
+
+@pytest.mark.usefixtures("plugin_states")
+def test_alerts_of_a_system_without_prefix_are_not_sent_for_a_prefixed_system_with_the_same_sid():
+    # type: () -> None
+    _logwatch_lines(_FakeConnection(), [_alert("100000", "ALERT-A")], now=1000)
+
+    logs = _process_alerts(None, {"user": "cmkmon", "host_prefix": "B_"}, [], 1000)
+
+    assert logs["PRD"][_LOGFILE] == []

@@ -401,8 +401,12 @@ def process_alerts(conn, cfg_entry, logs, ms_name, mon_name, node, alerts, now):
 
     logs.setdefault(sid, {})
     logs[hostname][logfile] = []
-    # Older versions keyed the state by the sid only
-    previous_state = states.get(state_key, states.get((hostname, logfile)))
+    previous_state = states.get(state_key)
+    legacy_state = states.get((hostname, logfile))
+    if previous_state is None and isinstance(legacy_state, datetime.datetime):
+        # Older versions keyed the state by the sid only. Dicts under that key
+        # belong to a system without host prefix and suffix.
+        previous_state = legacy_state
     # batch ID -> (time first sent, logwatch line or None once expired)
     sent_alerts = {}  # type: dict[str, tuple[int, str | None]]
     for alert in alerts:
@@ -431,6 +435,14 @@ def process_alerts(conn, cfg_entry, logs, ms_name, mon_name, node, alerts, now):
             line = None
         sent_alerts[batch_id] = (first_sent, line)
         if line is not None:
+            logs[hostname][logfile].extend(("BATCH: %s" % batch_id, line))
+
+    if isinstance(previous_state, dict):
+        # Keep sending alerts that SAP no longer returns
+        for batch_id, (first_sent, line) in previous_state.items():
+            if batch_id in sent_alerts or line is None or now - first_sent > retention_period:
+                continue
+            sent_alerts[batch_id] = (first_sent, line)
             logs[hostname][logfile].extend(("BATCH: %s" % batch_id, line))
 
     if sent_alerts != previous_state:

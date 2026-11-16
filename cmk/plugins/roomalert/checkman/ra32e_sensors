@@ -1,4 +1,4 @@
-title: AVTECH Room Alert 32E: Sensor Temperature
+title: AVTECH Room Alert 32E: Temperature
 agents: snmp
 catalog: hw/environment/avtech
 license: GPLv2

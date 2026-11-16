@@ -1,4 +1,4 @@
-title: AVTECH Room Alert 3S: Sensor Voltage
+title: AVTECH Room Alert 3S: Voltage
 agents: snmp
 catalog: hw/environment/avtech
 license: GPLv2

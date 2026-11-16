@@ -1,4 +1,4 @@
-title: AVTECH Room Alert 3S: Sensor Humidity
+title: AVTECH Room Alert 3S: Humidity
 agents: snmp
 catalog: hw/environment/avtech
 license: GPLv2

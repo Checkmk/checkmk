@@ -1,4 +1,4 @@
-title: AVTECH Room Alert 32E: Sensor Humidity
+title: AVTECH Room Alert 32E: Humidity
 agents: snmp
 catalog: hw/environment/avtech
 license: GPLv2

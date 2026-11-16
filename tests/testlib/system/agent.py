@@ -152,9 +152,9 @@ def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
 
 
 def download_agent_package(
-    site: Site, package_type: Literal["linux_deb", "linux_rpm"], target_dir: Path
+    site: Site, package_type: Literal["linux_deb", "linux_rpm", "windows_msi"], target_dir: Path
 ) -> Path:
-    """Download the Linux agent package that the site serves.
+    """Download the agent package that the site serves.
 
     The Community edition has no bakery, so its endpoint hands out the prebuilt package that
     ships with the site. The other editions bake an agent for the "generic" target, so for them

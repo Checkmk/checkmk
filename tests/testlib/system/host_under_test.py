@@ -5,9 +5,12 @@
 
 """The machine a system test installs the agent on, and the only way to reach it.
 
-Today that machine is the container pytest runs in. Cases that need kernel enforcement, or
-Windows, will run against a virtual machine reached over SSH instead. A test that goes through
-HostUnderTest keeps working when that happens. A test that calls subprocess directly does not.
+Today that machine is the container pytest runs in. Cases that need kernel enforcement will run
+against a virtual machine reached over SSH instead. A test that goes through HostUnderTest keeps
+working when that happens. A test that calls subprocess directly does not.
+
+A Windows machine does not fit this protocol. Its paths are Windows paths, and sudo and user
+mean nothing in an elevated SSH session. WindowsHost in windows_host.py reaches it instead.
 """
 
 import os

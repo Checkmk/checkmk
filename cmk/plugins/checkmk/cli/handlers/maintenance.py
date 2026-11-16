@@ -22,7 +22,6 @@ from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.inventory.paths import InventoryPaths
 from cmk.piggyback import backend as piggyback_backend
-from cmk.plugins.checkmk.cli.agent_based import load_checks
 from cmk.plugins.checkmk.cli.maintenance import (
     cli_command_cleanup_piggyback,
     cli_command_flush,
@@ -31,6 +30,8 @@ from cmk.plugins.checkmk.cli.maintenance import (
 from cmk.plugins.checkmk.cli.options import host_addresses
 from cmk.plugins.checkmk.cli.output import write_stdout
 from cmk.utils import ip_lookup
+
+from .agent_based import load_checks
 
 
 def _mode_update_dns_cache(

@@ -34,7 +34,6 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
-from cmk.plugins.checkmk.cli.agent_based import load_checks
 from cmk.plugins.checkmk.cli.dump import (
     cli_command_dump,
     cli_command_dump_agent,
@@ -47,6 +46,8 @@ from cmk.server_side_calls_backend import ExecutableFinder, load_secrets_file
 from cmk.utils import ip_lookup, timeperiod
 from cmk.utils.ip_lookup import ConfiguredIPLookup
 from cmk.utils.log import console
+
+from .agent_based import load_checks
 
 
 def _mode_dump_agent(

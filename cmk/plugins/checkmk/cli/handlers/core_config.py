@@ -24,7 +24,6 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
-from cmk.plugins.checkmk.cli.agent_based import load_checks
 from cmk.plugins.checkmk.cli.core_config import (
     cli_command_nagios_config,
     cli_command_reload,
@@ -36,6 +35,8 @@ from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import config_warnings, ip_lookup, timeperiod
 from cmk.utils.log import console
+
+from .agent_based import load_checks
 
 
 def _mode_dump_nagios_config(

@@ -20,7 +20,6 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
-from cmk.plugins.checkmk.cli.agent_based import extract_plugin_selection, load_checks
 from cmk.plugins.checkmk.cli.check import (
     CheckingRequest,
     cli_command_check,
@@ -29,6 +28,7 @@ from cmk.plugins.checkmk.cli.options import make_file_cache_options
 from cmk.server_side_calls_backend import load_secrets_file
 
 from ._exit_code import state_exit_code
+from .agent_based import extract_plugin_selection, load_checks
 
 _HOST_AND_ADDRESS: Final = 2
 

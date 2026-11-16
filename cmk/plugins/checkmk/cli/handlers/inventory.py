@@ -48,7 +48,6 @@ from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.store import InventoryStore
-from cmk.plugins.checkmk.cli.agent_based import extract_plugin_selection, load_checks
 from cmk.plugins.checkmk.cli.inventory import (
     cli_command_inventorize_marked_hosts,
     cli_command_inventory,
@@ -61,6 +60,8 @@ from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.log import console, section
+
+from .agent_based import extract_plugin_selection, load_checks
 
 
 def _mode_inventory(

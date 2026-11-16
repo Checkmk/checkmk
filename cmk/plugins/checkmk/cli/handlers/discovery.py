@@ -60,7 +60,6 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
-from cmk.plugins.checkmk.cli.agent_based import extract_plugin_selection, load_checks
 from cmk.plugins.checkmk.cli.discovery import (
     CheckDiscoveryRequest,
     cli_command_check_discovery,
@@ -74,6 +73,7 @@ from cmk.utils import ip_lookup
 from cmk.utils.log import console
 
 from ._exit_code import state_exit_code
+from .agent_based import extract_plugin_selection, load_checks
 
 
 def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:

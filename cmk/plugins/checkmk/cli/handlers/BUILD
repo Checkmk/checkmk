@@ -36,6 +36,7 @@ py_library(
         "//packages/cmk-check-engine:sources",
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
+        "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-licensing/cmk/licensing/basics",

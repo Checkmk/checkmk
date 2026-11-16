@@ -30,7 +30,6 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.discover_plugins import discover_families, PluginGroup
-from cmk.plugins.checkmk.cli.agent_based import load_checks
 from cmk.plugins.checkmk.cli.list_config import (
     cli_command_list_checks,
     cli_command_list_hosts,
@@ -43,6 +42,8 @@ from cmk.ruleset_matcher.tuple_rulesets import hosttags_match_taglist
 from cmk.server_side_calls_backend import (
     load_active_checks,
 )
+
+from .agent_based import load_checks
 
 
 def _list_all_hosts(

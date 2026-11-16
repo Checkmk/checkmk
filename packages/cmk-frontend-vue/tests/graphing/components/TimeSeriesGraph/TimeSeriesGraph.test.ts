@@ -756,6 +756,58 @@ describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
   })
 })
 
+describe('TimeSeriesGraph — hiding the tooltip', () => {
+  const tooltipRow = (): HTMLElement | null => screen.queryByText(LINE_METRIC.metadata.title)
+  const addPinHandle = (): HTMLElement => screen.getByRole('button', { name: 'Add pin' })
+
+  async function hoverPlot(): Promise<HTMLElement> {
+    renderComponent({ pinEnabled: true })
+    const plot = screen.getByRole('img')
+    await fireEvent.mouseMove(plot, { clientX: 200, clientY: 100 })
+    return plot
+  }
+
+  test('leaving the plot hides the tooltip at once', async () => {
+    const plot = await hoverPlot()
+
+    await fireEvent.mouseLeave(plot, { relatedTarget: document.body })
+
+    expect(tooltipRow()).not.toBeInTheDocument()
+  })
+
+  test('moving from the plot onto the add-pin marker keeps the tooltip', async () => {
+    const plot = await hoverPlot()
+
+    await fireEvent.mouseLeave(plot, { relatedTarget: addPinHandle() })
+
+    expect(tooltipRow()).toBeInTheDocument()
+  })
+
+  test('moving from the add-pin marker back onto the plot keeps the tooltip', async () => {
+    const plot = await hoverPlot()
+
+    await fireEvent.mouseLeave(addPinHandle(), { relatedTarget: plot })
+
+    expect(tooltipRow()).toBeInTheDocument()
+  })
+
+  test('clicking the add-pin marker hides the tooltip', async () => {
+    await hoverPlot()
+
+    await fireEvent.click(addPinHandle())
+
+    expect(tooltipRow()).not.toBeInTheDocument()
+  })
+
+  test('leaving the add-pin marker elsewhere hides the tooltip at once', async () => {
+    await hoverPlot()
+
+    await fireEvent.mouseLeave(addPinHandle(), { relatedTarget: document.body })
+
+    expect(tooltipRow()).not.toBeInTheDocument()
+  })
+})
+
 describe('TimeSeriesGraph — horizontal lines and the value axis', () => {
   // The data runs from 1 to 5, so a line at 40 is far above it.
   const FAR_ABOVE_THE_DATA: HorizontalLine = {

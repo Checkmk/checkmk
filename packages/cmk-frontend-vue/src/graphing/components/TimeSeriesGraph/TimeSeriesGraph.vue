@@ -103,6 +103,7 @@ const M4_MAX_BUCKETS = 4000
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 const resetButton = ref<InstanceType<typeof CmkButton> | null>(null)
+const addPinHandle = ref<InstanceType<typeof PinHandle> | null>(null)
 const axesContainer = ref<SVGGElement | null>(null)
 
 const measureLabel = (text: string): number => measureAxisLabel(text, axesContainer.value)
@@ -204,14 +205,7 @@ const {
   isMirroredGraph
 )
 
-const {
-  hoverState,
-  recordDrawnGeometry,
-  moveHoverTo,
-  clearHover,
-  cancelPendingHoverClear,
-  clearHoverAfterDelay
-} = useHover({
+const { hoverState, recordDrawnGeometry, moveHoverTo, clearHover } = useHover({
   metrics: () => props.metrics,
   dataTimeRange: () => timeRangeTheValuesSpan(),
   consolidation: () => consolidationFn.value,
@@ -451,16 +445,28 @@ function onMouseMove(ev: MouseEvent): void {
   moveHoverTo(point && { ...point, clientX: ev.clientX, clientY: ev.clientY })
 }
 
+function leaveHoverZone(ev: MouseEvent): void {
+  const next = ev.relatedTarget
+  const hoverZone = [canvas.value, addPinHandle.value?.element]
+  if (!(next instanceof Node && hoverZone.some((element) => element?.contains(next)))) {
+    clearHover()
+  }
+}
+
 function onPlotMouseDown(ev: MouseEvent): void {
   clearHover()
   startZoomSelection(ev)
 }
 
-function onPinAddClick(): void {
+function createPinAtHover(): void {
   const snapTime = hoverState.value?.snapTime
   if (typeof snapTime === 'number') {
     emit('pinCreate', { time: snapTime })
   }
+}
+function onPinAddClick(): void {
+  createPinAtHover()
+  clearHover()
 }
 // The press cleared the hover to keep the crosshair out of a zoom drag, so it is recomputed
 // here for the time to pin.
@@ -469,7 +475,7 @@ function setPinAtCursor(ev: MouseEvent): void {
     return
   }
   onMouseMove(ev)
-  onPinAddClick()
+  createPinAtHover()
 }
 function onPinActionClick(): void {
   if (typeof props.pinTime === 'number') {
@@ -680,7 +686,7 @@ defineExpose({ showMaxZoomHint })
         cursor: plotCursor
       }"
       @mousemove="onMouseMove"
-      @mouseleave="clearHoverAfterDelay"
+      @mouseleave="leaveHoverZone"
       @mousedown="onPlotMouseDown"
       @keydown="onPlotKeydown"
       @contextmenu.prevent
@@ -786,14 +792,14 @@ defineExpose({ showMaxZoomHint })
     />
     <PinHandle
       v-if="pinEnabled && hoverState && !hoverAtPin"
+      ref="addPinHandle"
       variant="add"
       :style="{
         left: `${marginLeft + crosshairCentreX(hoverState.snapX)}px`,
         top: `${plotTop}px`
       }"
       @action="onPinAddClick"
-      @mouseenter="cancelPendingHoverClear"
-      @mouseleave="clearHoverAfterDelay"
+      @mouseleave="leaveHoverZone"
     />
   </div>
 </template>

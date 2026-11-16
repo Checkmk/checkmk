@@ -5,7 +5,7 @@
  */
 import { bisector } from 'd3-array'
 import type { ScaleLinear, ScaleTime } from 'd3-scale'
-import { type Ref, onBeforeUnmount, ref } from 'vue'
+import { type Ref, ref } from 'vue'
 
 import type { TimeInterval } from '../../types'
 import type { ConsolidationFn } from '../consolidation'
@@ -21,7 +21,6 @@ import type { StackedColumn, StackedSeries } from './render/stacked'
 import type { Metric, TimeRange, UnitFormat } from './types'
 import { valueRenderer } from './valueRenderer'
 
-const HOVER_CLEAR_DELAY_MS = 150
 const CLOSEST_METRIC_REACH_PX = 24
 const LINE_HIT_BUFFER = 6
 
@@ -344,41 +343,21 @@ export function useHover(options: HoverOptions) {
     }
   }
 
-  let hoverClearTimer: ReturnType<typeof setTimeout> | null = null
-  function cancelPendingHoverClear(): void {
-    if (hoverClearTimer !== null) {
-      clearTimeout(hoverClearTimer)
-      hoverClearTimer = null
-    }
-  }
-  function clearHoverAfterDelay(): void {
-    cancelPendingHoverClear()
-    hoverClearTimer = setTimeout(() => {
-      hoverState.value = null
-      hoverClearTimer = null
-    }, HOVER_CLEAR_DELAY_MS)
-  }
   function clearHover(): void {
-    cancelPendingHoverClear()
     hoverState.value = null
   }
 
   function moveHoverTo(point: HoverPoint | null): void {
-    cancelPendingHoverClear()
     if (!point) {
       return
     }
     hoverState.value = computeHover(point)
   }
 
-  onBeforeUnmount(cancelPendingHoverClear)
-
   return {
     hoverState,
     recordDrawnGeometry,
     moveHoverTo,
-    clearHover,
-    cancelPendingHoverClear,
-    clearHoverAfterDelay
+    clearHover
   }
 }

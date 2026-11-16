@@ -6,11 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { useId } from 'vue'
+import { useId, useTemplateRef } from 'vue'
 
 defineProps<{ variant: 'add' | 'remove' }>()
 
 const emit = defineEmits<{ action: [] }>()
+
+const element = useTemplateRef<HTMLButtonElement>('element')
+defineExpose({ element })
 
 const { _t } = usei18n()
 const addPinLabel = _t('Add pin')
@@ -47,6 +50,7 @@ function onClick(): void {
 
 <template>
   <button
+    ref="element"
     type="button"
     class="graphing-pin-handle"
     :class="`graphing-pin-handle--${variant}`"

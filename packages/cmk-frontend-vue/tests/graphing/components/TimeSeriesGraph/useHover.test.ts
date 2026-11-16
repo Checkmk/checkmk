@@ -5,7 +5,7 @@
  */
 import { render } from '@testing-library/vue'
 import { scaleLinear, scaleTime } from 'd3-scale'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
 import type { Metric } from '@/graphing/components/TimeSeriesGraph'
@@ -629,10 +629,6 @@ describe('useHover — sample order', () => {
 })
 
 describe('useHover — clearing', () => {
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
   test('clearHover drops the state immediately', () => {
     const hover = mountHover([makeLineMetric('low', constantPoints(10))])
     hover.moveHoverTo(pointAt(50, 85))
@@ -640,42 +636,6 @@ describe('useHover — clearing', () => {
     hover.clearHover()
 
     expect(hover.hoverState.value).toBeNull()
-  })
-
-  test('clearHoverAfterDelay drops the state only once the delay elapsed', () => {
-    vi.useFakeTimers()
-    const hover = mountHover([makeLineMetric('low', constantPoints(10))])
-    hover.moveHoverTo(pointAt(50, 85))
-
-    hover.clearHoverAfterDelay()
-
-    expect(hover.hoverState.value).not.toBeNull()
-    vi.advanceTimersByTime(150)
-    expect(hover.hoverState.value).toBeNull()
-  })
-
-  test('cancelPendingHoverClear keeps the state alive past the delay', () => {
-    vi.useFakeTimers()
-    const hover = mountHover([makeLineMetric('low', constantPoints(10))])
-    hover.moveHoverTo(pointAt(50, 85))
-    hover.clearHoverAfterDelay()
-
-    hover.cancelPendingHoverClear()
-
-    vi.advanceTimersByTime(1000)
-    expect(hover.hoverState.value).not.toBeNull()
-  })
-
-  test('moving the hover cancels a pending clear', () => {
-    vi.useFakeTimers()
-    const hover = mountHover([makeLineMetric('low', constantPoints(10))])
-    hover.moveHoverTo(pointAt(50, 85))
-    hover.clearHoverAfterDelay()
-
-    hover.moveHoverTo(pointAt(60, 85))
-
-    vi.advanceTimersByTime(1000)
-    expect(hover.hoverState.value).not.toBeNull()
   })
 })
 

@@ -1,4 +1,4 @@
-title: Extreme VSP Switch: Power Supply state
+title: Extreme VSP: Power Supplies
 agents: snmp
 catalog: hw/network/netextreme
 license: GPLv2

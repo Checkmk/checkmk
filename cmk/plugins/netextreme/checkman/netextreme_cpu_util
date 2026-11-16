@@ -1,4 +1,4 @@
-title: Extreme Networks Switch: CPU Utilization
+title: Extreme Networks: CPU Utilization
 agents: snmp
 catalog: hw/network/netextreme
 license: GPLv2

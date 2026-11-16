@@ -1,4 +1,4 @@
-title: Extreme Networks Switch: Fan State and Speed
+title: Extreme Networks: Fans
 agents: snmp
 catalog: hw/network/netextreme
 license: GPLv2

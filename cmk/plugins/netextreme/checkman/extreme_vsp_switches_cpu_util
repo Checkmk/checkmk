@@ -1,4 +1,4 @@
-title: Extreme VSP Switch: CPU Utilization
+title: Extreme VSP: CPU Utilization
 agents: snmp
 catalog: hw/network/netextreme
 license: GPLv2

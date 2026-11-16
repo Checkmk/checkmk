@@ -1,4 +1,4 @@
-title: Extreme Networks Switch: Temperature
+title: Extreme Networks: Temperature
 agents: snmp
 catalog: hw/network/netextreme
 license: GPLv2

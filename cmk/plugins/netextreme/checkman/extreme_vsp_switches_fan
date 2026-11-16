@@ -1,4 +1,4 @@
-title: Extreme VSP Switch: Fan State and Speed
+title: Extreme VSP: Fans
 agents: snmp
 catalog: hw/network/netextreme
 license: GPLv2

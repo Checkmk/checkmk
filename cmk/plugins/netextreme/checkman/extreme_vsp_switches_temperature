@@ -1,4 +1,4 @@
-title: Extreme VSP Switch: Temperature
+title: Extreme VSP: Temperature
 agents: snmp
 catalog: hw/network/netextreme
 license: GPLv2

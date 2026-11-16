@@ -190,10 +190,7 @@ class S3Summary(AWSSection):
 
     @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("s3_limits")
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents([], 0.0)
+        return self._received_inventory("s3_limits")
 
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
@@ -228,7 +225,11 @@ class S3Summary(AWSSection):
         self, colleague_contents: AWSColleagueContents
     ) -> Sequence[dict[str, object]]:
         # use previous fetched data or fetch it now
-        bucket_list: Any = colleague_contents.content or S3BucketHelper.list_buckets(self._client)
+        bucket_list: Any = (
+            S3BucketHelper.list_buckets(self._client)
+            if colleague_contents.content is None
+            else colleague_contents.content
+        )
 
         # filter buckets by region
         bucket_list = [

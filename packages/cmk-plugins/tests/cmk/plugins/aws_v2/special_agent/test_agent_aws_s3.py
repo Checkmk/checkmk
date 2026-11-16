@@ -77,6 +77,33 @@ class CreateS3Sections(Protocol):
     ) -> S3Sections: ...
 
 
+class FakeEmptyS3Client:
+    def __init__(self) -> None:
+        self.bucket_listings = 0
+
+    def list_buckets(self) -> Mapping[str, object]:
+        self.bucket_listings += 1
+        return {"Buckets": []}
+
+
+def test_s3_summary_does_not_list_buckets_again_when_limits_found_none() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("s3_names", None)
+    config.add_service_tags("s3_tags", (None, None))
+    client = FakeEmptyS3Client()
+    distributor = ResultDistributor()
+    s3_limits = S3Limits(client, "region", config, distributor)
+    s3_summary = S3Summary(client, "region", config, distributor)
+    distributor.add(s3_limits.name, s3_summary)
+
+    s3_limits.run()
+    s3_summary.run()
+
+    assert client.bucket_listings == 1
+
+
 @pytest.fixture()
 def get_s3_sections(monkeypatch: pytest.MonkeyPatch) -> CreateS3Sections:
     def _create_s3_sections(

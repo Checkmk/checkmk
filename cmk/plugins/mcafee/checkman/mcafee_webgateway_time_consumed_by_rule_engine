@@ -1,4 +1,4 @@
-title: McAfee Web Gateway: Time consumed by the rule engine
+title: McAfee Web Gateway: Rule Engine Processing Time
 agents: snmp
 catalog: app/mcafee
 license: GPLv2

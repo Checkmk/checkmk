@@ -1,4 +1,4 @@
-title: McAfee Email Gateway: AV McAfee
+title: McAfee Email Gateway: McAfee AV Engine
 agents: snmp
 catalog: app/mcafee
 license: GPLv2

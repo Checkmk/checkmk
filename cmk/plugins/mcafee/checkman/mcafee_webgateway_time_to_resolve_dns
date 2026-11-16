@@ -1,4 +1,4 @@
-title: McAfee Web Gateway: Time to resolve DNS
+title: McAfee Web Gateway: DNS Resolution Time
 agents: snmp
 catalog: app/mcafee
 license: GPLv2

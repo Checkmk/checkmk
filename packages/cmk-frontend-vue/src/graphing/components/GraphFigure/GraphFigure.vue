@@ -18,7 +18,7 @@ import { fetchGraphDataByDefinition, useGraphData } from '../../composables/useG
 import { useGraphInteraction } from '../../composables/useGraphInteraction'
 import { hasPlottableData, useGraphNotice, useNoDataNotice } from '../../composables/useGraphNotice'
 import { useGraphVisibility } from '../../composables/useGraphVisibility'
-import type { RequestedTimeRange, TimeRangeCommitKind } from '../../types.ts'
+import type { RequestedTimeRange, SampleIndexRange, TimeRangeCommitKind } from '../../types.ts'
 import {
   binnedTimeAxis,
   committedTimeRange,
@@ -206,6 +206,12 @@ const baselineTimeRange = computed<TimeRange | undefined>(() => {
   return held
     ? timeAxis.value.drawnTimeRange(held.answer.request, held.answer.dataTimeRange)
     : undefined
+})
+
+const drawnSamples = computed<SampleIndexRange | null>(() => {
+  const held = graph.value
+  const drawn = baselineTimeRange.value
+  return held && drawn ? timeAxis.value.drawnSamples(drawn, held.answer.dataTimeRange) : null
 })
 
 const {
@@ -449,6 +455,7 @@ onBeforeUnmount(() => {
         :hidden-line-names="hiddenLineNames"
         :value-resolution="valueResolution"
         :axis-unit="graphOptions.y_axis?.unit ?? null"
+        :drawn-samples="drawnSamples"
         @update:hidden-metric-names="hiddenMetricNames = $event"
         @update:hidden-line-names="hiddenLineNames = $event"
         @hover-metrics="highlightedMetricNames = $event"

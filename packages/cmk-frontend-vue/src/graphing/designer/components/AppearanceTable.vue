@@ -24,6 +24,7 @@ import type { Metric, UnitFormat } from '../../components/TimeSeriesGraph'
 import { type MetricStats, metricStats } from '../../components/legend/legendUtils'
 import { attributesOf, hasAttributes } from '../../components/metricAttributes'
 import { orderMetricsTopToBottom } from '../../components/metricOrder'
+import type { SampleIndexRange } from '../../types'
 import { type GraphItemsStore, retainKnownRows } from '../composables/useGraphItems'
 import { useRowLabels } from '../composables/useRowLabels'
 import type { DesignerItem } from '../drafts'
@@ -36,7 +37,8 @@ const {
   metricsBySource,
   resolvedTitles,
   valueResolution = null,
-  axisUnit = null
+  axisUnit = null,
+  drawnSamples = null
 } = defineProps<{
   store: GraphItemsStore
   /** Fetched series per data-source row, for the live-data columns. */
@@ -47,6 +49,7 @@ const {
   valueResolution?: number | null
   /** The unit the preview labels its value axis in; null leaves each series in its own unit. */
   axisUnit?: UnitFormat | null
+  drawnSamples?: SampleIndexRange | null
 }>()
 
 const emit = defineEmits<{
@@ -105,7 +108,7 @@ const statsBySource = computed(() => {
   const stats = new Map<ItemId, MetricStats>()
   for (const [id, series] of metricsBySource) {
     if (series.length === 1) {
-      stats.set(id, metricStats(series[0]!, valueResolution, axisUnit))
+      stats.set(id, metricStats(series[0]!, valueResolution, axisUnit, drawnSamples))
     }
   }
   return stats
@@ -119,7 +122,7 @@ const linesBySource = computed(() => {
       id,
       orderMetricsTopToBottom([...series]).map((metric) => ({
         metric,
-        stats: metricStats(metric, valueResolution, axisUnit)
+        stats: metricStats(metric, valueResolution, axisUnit, drawnSamples)
       }))
     )
   }

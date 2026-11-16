@@ -5,7 +5,7 @@
  */
 import { fromAbsolute, toCalendarDate, toZoned } from '@internationalized/date'
 
-import type { TimeInterval, TimeRange } from '../types'
+import type { SampleIndexRange, TimeInterval, TimeRange } from '../types'
 
 export type BinUnit = 'hour' | 'day'
 export type BinAggregation = 'sum'
@@ -223,4 +223,17 @@ export function foldIntoBins(
     }
   }
   return bins
+}
+
+export function foldedSampleIndices(edges: number[], grid: TimeRange): SampleIndexRange | null {
+  const bins = emptyBins(edges, grid)
+  const firstBin = bins[0]
+  const lastBin = bins.at(-1)
+  if (firstBin === undefined || lastBin === undefined) {
+    return null
+  }
+  return {
+    firstIndex: Math.max(0, Math.floor((firstBin.start - grid.start) / grid.step)),
+    lastIndex: Math.ceil((lastBin.end - grid.start) / grid.step) - 1
+  }
 }

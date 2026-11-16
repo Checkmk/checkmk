@@ -1,4 +1,4 @@
-title: AWS WAFV2: Web ACL Requests
+title: AWS WAF: Web ACL Requests
 agents: aws
 catalog: cloud/aws
 license: GPLv2

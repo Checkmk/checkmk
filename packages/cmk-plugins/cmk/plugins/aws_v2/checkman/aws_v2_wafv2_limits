@@ -1,4 +1,4 @@
-title: AWS v2 WAFV2: Limits
+title: AWS WAF: Limits (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

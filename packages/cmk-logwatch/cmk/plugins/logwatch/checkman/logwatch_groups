@@ -1,4 +1,4 @@
-title: Grouping of Logfiles
+title: Logwatch: Log File Groups
 agents: linux, windows, aix, solaris
 catalog: os/files
 license: GPLv2

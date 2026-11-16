@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { render, screen, within } from '@testing-library/vue'
 import type { MonitoringAllServicesApp } from 'cmk-shared-typing/typescript/monitoring/all_services'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
@@ -116,7 +116,7 @@ function renderApp(overrides: Partial<MonitoringAllServicesApp> = {}) {
   })
 }
 
-test('lists the services of every host sorted by site, host and service by default', async () => {
+test('lists the services sorted by site, host and service by default with a remote site', async () => {
   mockServices([makeApiEntry()])
   renderApp()
 
@@ -157,6 +157,32 @@ test('hides the site column by default without a remote site', async () => {
 
   expect(await screen.findByRole('columnheader', { name: 'Host' })).toBeInTheDocument()
   expect(screen.queryByRole('columnheader', { name: 'Site' })).not.toBeInTheDocument()
+})
+
+test('lists the services sorted by host and service by default without a remote site', async () => {
+  mockServices([makeApiEntry()])
+  renderApp({ sites: [{ id: 'local', alias: 'Local site' }] })
+
+  await vi.waitUntil(() => servicesPost.mock.calls.length > 0)
+
+  expect(servicesPost).toHaveBeenLastCalledWith(
+    SERVICES_PATH,
+    expect.objectContaining({
+      body: expect.objectContaining({ sort: ['host_name:asc', 'name:asc'] })
+    })
+  )
+})
+
+test('numbers the sort of the host first and the service second without a remote site', async () => {
+  mockServices([makeApiEntry()])
+  renderApp({ sites: [{ id: 'local', alias: 'Local site' }] })
+
+  const hostHeader = await screen.findByRole('columnheader', { name: 'Host' })
+
+  expect(within(hostHeader).getByText('1')).toBeInTheDocument()
+  expect(
+    within(screen.getByRole('columnheader', { name: 'Service' })).getByText('2')
+  ).toBeInTheDocument()
 })
 
 test('requests the services by host name alone on a click of the Host header', async () => {

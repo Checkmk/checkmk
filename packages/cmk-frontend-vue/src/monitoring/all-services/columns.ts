@@ -30,6 +30,11 @@ const HIDDEN_BY_DEFAULT: ReadonlySet<string> = new Set<keyof ServiceEntry>([
   'perfometer'
 ])
 
+/** The site only tells services apart when there is more than one. */
+export function distinguishesSites(sites: readonly Site[]): boolean {
+  return sites.length > 1
+}
+
 export function buildAllServicesColumnPinning({
   includeSelect
 }: HostServicesColumnOptions): ColumnPinningState {
@@ -79,7 +84,7 @@ export function useAllServicesColumns({
     sortDescFirst: false,
     minSize: 100,
     maxSize: 300,
-    meta: { filter: siteFilter, hidden: sites.length < 2 }
+    meta: { filter: siteFilter, hidden: !distinguishesSites(sites) }
   }
 
   const serviceColumns = useHostServicesColumns<ServiceEntry>(options).map((column) =>

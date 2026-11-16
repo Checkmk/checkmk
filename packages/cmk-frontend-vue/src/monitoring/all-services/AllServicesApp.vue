@@ -78,7 +78,7 @@ import { IMMEDIATE_SERVICE_COMMAND_IDS } from '@/monitoring/shared/useServiceAct
 import { useTypeToFocus } from '@/monitoring/shared/useTypeToFocus'
 
 import { AllServicesApi } from './api/services'
-import { buildAllServicesColumnPinning, useAllServicesColumns } from './columns'
+import { buildAllServicesColumnPinning, distinguishesSites, useAllServicesColumns } from './columns'
 import { AllServicesService } from './services/AllServicesService'
 
 const { _t } = usei18n()
@@ -107,8 +107,10 @@ const schema = buildTableStateSchema({
   columns,
   limitTiers: props.limit_tiers,
   mayRemoveLimit: props.may_ignore_hard_limit ?? false,
+  // Sorting by the site first would number the sort of the shown columns from 2 when the site
+  // column is hidden.
   defaultSort: [
-    { id: 'site_id', desc: false },
+    ...(distinguishesSites(props.sites) ? [{ id: 'site_id', desc: false }] : []),
     { id: 'host_name', desc: false },
     { id: 'name', desc: false }
   ]

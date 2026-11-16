@@ -15,6 +15,7 @@ from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import GraphPanel
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 from tests.system.gui.testlib.playwright.pom.setup.otel.alerts import Alerts
+from tests.system.gui.testlib.playwright.pom.setup.otel.suggestions import Suggestions
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +97,7 @@ class AlertWizard(CmkPage):
     def select_match_type(self, match_type: MatchType) -> None:
         logger.info("Match the service name by '%s'", match_type)
         self.match_type_select.click()
-        self._pick_suggestion(match_type)
+        self._suggestions.pick(match_type)
         expect(
             self.match_type_select, f"Match type {match_type!r} was not selected"
         ).to_contain_text(match_type)
@@ -105,8 +106,8 @@ class AlertWizard(CmkPage):
         """Choose a discovered service name, or commit `name` as typed if none matches."""
         logger.info("Select service name '%s'", name)
         self.service_name_select.click()
-        self._open_suggestions.get_by_role("textbox", name="filter").fill(name)
-        self._pick_suggestion(name)
+        self._suggestions.search(name)
+        self._suggestions.pick(name)
         expect(
             self.service_name_select,
             message=f"Service name '{name}' was not selected",
@@ -135,7 +136,7 @@ class AlertWizard(CmkPage):
         """
         logger.info("Select folder '%s'", folder_title)
         self.folder_select.click()
-        option = self._open_suggestions.get_by_role(
+        option = self._suggestions.listbox.get_by_role(
             "option", name=re.compile(rf"^(\s*└─ )?{re.escape(folder_title)}$")
         )
         expect(option, f"No folder titled {folder_title!r} was offered").to_be_visible()
@@ -230,7 +231,7 @@ class AlertWizard(CmkPage):
         self.levels_checkbox(bound).check()
         levels_type = self.levels_type_select(bound)
         levels_type.click()
-        self._pick_suggestion("Fixed levels")
+        self._suggestions.pick("Fixed levels")
         expect(levels_type, f"Fixed {bound.lower()} levels were not selected").to_contain_text(
             "Fixed levels"
         )
@@ -241,17 +242,8 @@ class AlertWizard(CmkPage):
     # Dropdowns of every step
 
     @property
-    def _open_suggestions(self) -> Locator:
-        """The option list of the currently open dropdown.
-
-        The dropdown teleports it to the document body, which `main_area` covers.
-        """
-        return self.main_area.locator().get_by_role("listbox")
-
-    def _pick_suggestion(self, title: str) -> None:
-        option = self._open_suggestions.get_by_role("option", name=title, exact=True)
-        expect(option, f"No suggestion titled {title!r} was offered").to_be_visible()
-        option.click()
+    def _suggestions(self) -> Suggestions:
+        return Suggestions(self.main_area)
 
 
 class AddAlert(AlertWizard):

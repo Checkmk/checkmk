@@ -15,6 +15,7 @@ from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import GraphPanel
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 from tests.system.gui.testlib.playwright.pom.setup.otel.custom_services import CustomServices
+from tests.system.gui.testlib.playwright.pom.setup.otel.suggestions import Suggestions
 from tests.system.gui.testlib.playwright.pom.setup.otel.telemetry_metrics_query_form import (
     TelemetryMetricsQueryForm,
 )
@@ -92,8 +93,8 @@ class CustomServiceWizard(CmkPage):
         """Search for `host_name` in the host dropdown and pick it."""
         logger.info("Select host '%s'", host_name)
         self.host_select.click()
-        self._search_suggestions(host_name)
-        self._pick_suggestion(host_name)
+        self._suggestions.search(host_name)
+        self._suggestions.pick(host_name)
         expect(self.host_select, f"Host {host_name!r} was not selected").to_contain_text(host_name)
 
     def assignment_tab(self, title: str) -> Locator:
@@ -136,17 +137,8 @@ class CustomServiceWizard(CmkPage):
     # Dropdowns of every step
 
     @property
-    def _open_suggestions(self) -> Locator:
-        """The option list of the open dropdown; teleported to the body, not under its field."""
-        return self.main_area.locator().get_by_role("listbox")
-
-    def _search_suggestions(self, text: str) -> None:
-        self._open_suggestions.get_by_role("textbox", name="filter").fill(text)
-
-    def _pick_suggestion(self, title: str) -> None:
-        option = self._open_suggestions.get_by_role("option", name=title, exact=True)
-        expect(option, f"No suggestion titled {title!r} was offered").to_be_visible()
-        option.click()
+    def _suggestions(self) -> Suggestions:
+        return Suggestions(self.main_area)
 
 
 class AddCustomService(CustomServiceWizard):

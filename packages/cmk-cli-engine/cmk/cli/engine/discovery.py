@@ -16,7 +16,7 @@ from cmk.cli.internal import Handler as CLIHandler
 from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
 
-from .commands import bind, DiscoveredCommand
+from .commands import binder, DiscoveredCommand
 from .options import Positional
 from .readers import record
 
@@ -90,7 +90,7 @@ def make_command[R](command: CLICommand[R], load: Callable[[], CLIHandler[R]]) -
         positional=recorded.positional,
         description=command.description,
         options=recorded.options,
-        load=lambda: partial(bind, command, load().run),
+        bind=binder(command, lambda: load().run),
         default=command.default,
     )
 

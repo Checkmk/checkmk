@@ -13,6 +13,7 @@ from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.commands import requires_argument as cli_requires_argument
 from cmk.cli.engine.discovery import _named_after_its_variable as _cli_named_after_its_variable
 from cmk.cli.engine.discovery import load_handler as cli_load_handler
+from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.readers import parsed as cli_parsed
 from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
@@ -67,6 +68,23 @@ def test_make_command_records_the_options_a_command_declares() -> None:
     assert command.options == [_OID_VALUE, _VERBOSE_COUNT]
 
 
+def test_binding_a_command_does_not_load_its_handler() -> None:
+    loaded: list[str] = []
+
+    def load() -> CLIHandler[tuple[str | None, int]]:
+        loaded.append("handler")
+        raise AssertionError("loaded")
+
+    cli_make_command(
+        CLICommand(
+            name="snmpwalk", handler=HANDED_IN, long="snmpwalk", request=_walk_request, help="Walk"
+        ),
+        load,
+    ).bind(cli_parsed([("--oid", "iso")], {}, null_logger()))
+
+    assert loaded == []
+
+
 def test_a_commands_handler_receives_its_request_parsed() -> None:
     seen: list[tuple[str | None, int]] = []
 
@@ -84,7 +102,7 @@ def test_a_commands_handler_receives_its_request_parsed() -> None:
         ),
         _record,
     )
-    bound = command.load()(
+    bound = command.bind(
         cli_parsed([("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], {}, null_logger())
     )
 

@@ -52,13 +52,16 @@ class DiscoveredCommand:
     positional: Sequence[Positional]
     description: Sequence[str]
     options: Sequence[Option]
-    load: Callable[[], Binder]
+    bind: Binder
     default: bool
 
 
-def bind[R](command: CLICommand[R], run: Run[R], reader: CLIReader) -> BoundCommand:
-    request = command.request(reader)
-    return lambda context: run(context, request)
+def binder[R](command: CLICommand[R], load: Callable[[], Run[R]]) -> Binder:
+    def bind(reader: CLIReader) -> BoundCommand:
+        request = command.request(reader)
+        return lambda context: load()(context, request)
+
+    return bind
 
 
 def requires_argument(command: DiscoveredCommand) -> bool:

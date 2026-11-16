@@ -820,3 +820,19 @@ def test_bazel_cache_agent_output_without_version_when_tags_are_rate_limited(
     assert [r.getMessage() for r in caplog.records if r.levelname == "WARNING"] == [
         "Skipping version information: 403 Client Error: rate limit exceeded"
     ]
+
+
+def test_version_lookup_requests_a_hundred_tags_per_page(
+    patched_environment: None,  # noqa: ARG001
+) -> None:
+    requested_params = []
+
+    def recording_get(url: str, **kwargs: object) -> MockResponse:
+        if "tags" in url:
+            requested_params.append(kwargs.get("params"))
+        return default_requests_mock_get(url, **kwargs)
+
+    with mock.patch("cmk.plugins.bazel.lib.agent.requests.get", recording_get):
+        agent_bazel_cache_main(args=parse_arguments(["--host", "bazel-cache.tld"]))
+
+    assert requested_params == [{"per_page": 100}]

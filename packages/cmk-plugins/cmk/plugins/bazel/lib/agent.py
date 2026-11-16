@@ -33,6 +33,7 @@ LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 CAMEL_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 DEFAULT_VERSION_CACHE_INTERVAL = 8 * 3600
+TAGS_PER_PAGE = 100  # GitHub maximum
 PASSWORD_OPTION = "password"
 
 
@@ -78,7 +79,7 @@ class VersionCache:
         self, tags_url: str, commit_hash: str
     ) -> BazelVersionInfo | None:
         try:
-            resp = requests.get(tags_url, timeout=30)
+            resp = requests.get(tags_url, params={"per_page": TAGS_PER_PAGE}, timeout=30)
             resp.raise_for_status()
         except requests.exceptions.RequestException as e:
             LOGGER.warning("Skipping version information: %(error)s", {"error": e})

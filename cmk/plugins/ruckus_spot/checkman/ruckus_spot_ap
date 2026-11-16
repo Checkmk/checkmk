@@ -1,11 +1,11 @@
-title: Ruckus Spot: Access Points
+title: Ruckus SPoT: Access Points
 agents: ruckus
 catalog: app/ruckus
 license: GPLv2
 distribution: check_mk
 description:
  This check outputs information of the access points for the 2.4 GHz and 5 GHz bands
- taken from the Ruckus Spot web interface. It shows the number of total devices
+ taken from the Ruckus SPoT web interface. It shows the number of total devices
  and the amount of access points with time drift and not responding problems.
  For each problem type you can configure warn and crit levels.
 

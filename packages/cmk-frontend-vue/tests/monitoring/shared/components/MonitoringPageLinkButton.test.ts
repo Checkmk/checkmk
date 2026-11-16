@@ -42,3 +42,19 @@ test('renders into the given teleport target', () => {
 
   expect(shortcuts).toContainElement(screen.getByRole('button', { name: /All hosts/ }))
 })
+
+test('offers no feedback link without a survey URL', () => {
+  render(MonitoringPageLinkButton, { props: PROPS })
+
+  expect(screen.queryByRole('link', { name: /Give feedback/ })).toBeNull()
+})
+
+test('offers a feedback link next to the button when given a survey URL', () => {
+  render(MonitoringPageLinkButton, {
+    props: { ...PROPS, survey_url: 'https://survey.example.com/1' }
+  })
+
+  const link = screen.getByRole('link', { name: /Give feedback/ })
+  expect(link).toHaveAttribute('href', 'https://survey.example.com/1')
+  expect(pageState).toContainElement(link)
+})

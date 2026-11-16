@@ -54,7 +54,7 @@ class AllHosts(CmkPage):
         rather than from the app, and never from the page: a site still serving
         its content in the main iframe keeps it out of the top-level document.
         """
-        return self.main_area.locator("button.monitoring-page-link-button")
+        return self.main_area.locator(".monitoring-page-link-button button")
 
     @property
     def page_menu_shortcuts(self) -> Locator:
@@ -68,7 +68,7 @@ class AllHosts(CmkPage):
     @property
     def try_the_new_view_in_page_menu(self) -> Locator:
         """The switch button as mounted inside the page menu bar's shortcut area."""
-        return self.page_menu_shortcuts.locator("button.monitoring-page-link-button")
+        return self.page_menu_shortcuts.locator(".monitoring-page-link-button button")
 
     @property
     def drill_up_button(self) -> Locator:

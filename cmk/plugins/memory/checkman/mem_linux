@@ -1,4 +1,4 @@
-title: Linux: Detailed Usage of RAM, Swap, VMalloc and other Memory Areas
+title: Linux: Detailed Memory Usage
 agents: linux
 catalog: os/kernel
 license: GPLv2

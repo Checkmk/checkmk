@@ -30,6 +30,8 @@ export interface SaveResult {
   error?: string
   /** Why the endpoint refused the host name template, to be shown at the template field. */
   templateError?: string
+  /** The endpoint refused to create the new hosts the save needs, so it saved nothing. */
+  hostsRefused?: true
 }
 
 export type LoadResult =
@@ -56,7 +58,20 @@ function templateErrorOf(body: unknown): string | undefined {
     : undefined
 }
 
+function refusesNewHosts(body: unknown): boolean {
+  const ext = (body as { ext?: unknown } | null | undefined)?.ext
+  return typeof ext === 'object' && ext !== null && 'new_host_names' in ext
+}
+
+function detailOf(body: unknown): string | undefined {
+  const detail = (body as { detail?: unknown } | null | undefined)?.detail
+  return typeof detail === 'string' ? detail : undefined
+}
+
 function refusal(error: CmkApiError): SaveResult {
+  if (refusesNewHosts(error.body)) {
+    return { ok: false, error: detailOf(error.body) ?? error.message, hostsRefused: true }
+  }
   const templateError = templateErrorOf(error.body)
   return templateError === undefined
     ? { ok: false, error: error.message }

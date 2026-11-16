@@ -390,6 +390,79 @@ test('a host name template that resolves only to new hosts can be saved', async 
   expect(screen.getByRole('button', { name: 'Save & activate changes' })).toBeEnabled()
 })
 
+const NEW_HOSTS_REFUSED = {
+  status: 403,
+  title: 'Some hosts could not be created',
+  detail: 'Sorry, the hosts in the folder Main are locked.',
+  ext: { new_host_names: ['pod-cart'] }
+}
+
+const SOME_HOSTS_NOT_CREATED =
+  'Some hosts could not be created. Try again, or verify your configuration.'
+
+async function saveStoredTemplateService(): Promise<void> {
+  serveStoredTemplateService()
+  renderWizard()
+  await goToHostStep()
+  const save = await screen.findByRole('button', { name: 'Save & activate changes' })
+  await waitFor(() => expect(save).toBeEnabled())
+  await userEvent.click(save)
+}
+
+test('a save that creates hosts shows the host creation while it runs', async () => {
+  let answer = (): void => {}
+  server.use(
+    http.put(
+      OBJECT_URL,
+      () =>
+        new Promise<Response>((resolve) => {
+          answer = () => resolve(HttpResponse.json({ extensions: STORED_EXTENSIONS }))
+        })
+    )
+  )
+
+  serveResolution(['pod-cart'])
+  await saveStoredTemplateService()
+
+  expect(await screen.findByText('New host creation')).toBeTruthy()
+  answer()
+})
+
+test('a save that creates no host shows no host creation', async () => {
+  await saveStoredTemplateService()
+
+  await waitFor(() => expect(updateRequests).toBe(1))
+  expect(screen.queryByText('New host creation')).toBeNull()
+})
+
+test('a refused new host says that some hosts could not be created', async () => {
+  server.use(http.put(OBJECT_URL, () => HttpResponse.json(NEW_HOSTS_REFUSED, { status: 403 })))
+
+  serveResolution(['pod-cart'])
+  await saveStoredTemplateService()
+
+  expect(await screen.findByText(SOME_HOSTS_NOT_CREATED)).toBeTruthy()
+})
+
+test('a refused new host shows why the server refused it', async () => {
+  server.use(http.put(OBJECT_URL, () => HttpResponse.json(NEW_HOSTS_REFUSED, { status: 403 })))
+
+  serveResolution(['pod-cart'])
+  await saveStoredTemplateService()
+
+  expect(await screen.findByText('Sorry, the hosts in the folder Main are locked.')).toBeTruthy()
+})
+
+test('after a refused new host the save can be tried again', async () => {
+  server.use(http.put(OBJECT_URL, () => HttpResponse.json(NEW_HOSTS_REFUSED, { status: 403 })))
+
+  serveResolution(['pod-cart'])
+  await saveStoredTemplateService()
+
+  await screen.findByText(SOME_HOSTS_NOT_CREATED)
+  expect(screen.getByRole('button', { name: 'Save & activate changes' })).toBeEnabled()
+})
+
 test('a user who may not add alerts is not offered to add one', async () => {
   renderNewServiceWizard(null)
   await goToHostStepOfNewService()

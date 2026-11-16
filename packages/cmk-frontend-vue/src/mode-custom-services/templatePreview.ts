@@ -48,6 +48,11 @@ export function templatePreviewBlocksSave(preview: TemplatePreview): boolean {
   }
 }
 
+/** Whether saving creates hosts, as far as the preview knows. */
+export function templatePreviewCreatesHosts(preview: TemplatePreview): boolean {
+  return preview.status === 'resolved' && preview.resolution.unmatched_host_names.length > 0
+}
+
 function requestOf(model: ServiceModel | null): HostNameTemplateResolutionRequest | null {
   if (model === null) {
     return null

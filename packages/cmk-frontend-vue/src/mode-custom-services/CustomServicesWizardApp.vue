@@ -13,13 +13,24 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 
+import NewHostCreationStatus from './NewHostCreationStatus.vue'
 import { loadCustomServiceDefinition } from './api'
 import { serviceModelFrom } from './definition'
-import { type SaveResult, createCustomService, updateCustomService } from './save'
+import {
+  type HostCreationStatus,
+  type SaveResult,
+  createCustomService,
+  hostCreationAfter,
+  updateCustomService
+} from './save'
 import AssignHostStep from './steps/AssignHostStep.vue'
 import ConfigureNameStep from './steps/ConfigureNameStep.vue'
 import DefineMetricStep from './steps/DefineMetricStep.vue'
-import { templatePreviewBlocksSave, useHostNameTemplatePreview } from './templatePreview'
+import {
+  templatePreviewBlocksSave,
+  templatePreviewCreatesHosts,
+  useHostNameTemplatePreview
+} from './templatePreview'
 import { type ServiceModel, emptyService, isMetricSelected, isReadyToCreate } from './types'
 
 const props = defineProps<CustomServicesWizard>()
@@ -32,6 +43,7 @@ const currentStep = ref(editing ? 2 : 1)
 const model = ref<ServiceModel>(emptyService())
 const saving = ref(false)
 const saveError = ref<string | null>(null)
+const hostCreation = ref<HostCreationStatus | null>(null)
 const templateErrors = ref<string[]>([])
 const editETag = ref<string | null>(null)
 const loading = ref(editing)
@@ -128,9 +140,12 @@ function alertUrlFor(createAlertUrl: string): string {
 async function saveService(target: string): Promise<void> {
   saveError.value = null
   saving.value = true
+  const creatingHosts = templatePreviewCreatesHosts(templatePreview.preview.value)
+  hostCreation.value = creatingHosts ? 'creating' : null
+  let result: SaveResult | null = null
   let leaving = false
   try {
-    const result = await persist()
+    result = await persist()
     if (result.templateError !== undefined) {
       templateErrors.value = [result.templateError]
       return
@@ -144,6 +159,7 @@ async function saveService(target: string): Promise<void> {
   } catch {
     saveError.value = failureMessage.value
   } finally {
+    hostCreation.value = hostCreationAfter(creatingHosts, result)
     // The buttons stay disabled while the next page loads, so a second click cannot save the
     // service again.
     saving.value = leaving
@@ -216,6 +232,7 @@ async function saveService(target: string): Promise<void> {
             :aggregator="model.aggregator"
             :append-series-attributes="model.appendSeriesAttributes"
           />
+          <NewHostCreationStatus v-if="hostCreation !== null" :status="hostCreation" />
           <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
         </template>
         <template #actions>

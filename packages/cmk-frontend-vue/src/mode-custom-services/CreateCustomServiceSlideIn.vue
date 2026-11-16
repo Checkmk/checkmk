@@ -12,10 +12,20 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
-import { createCustomService } from './save'
+import NewHostCreationStatus from './NewHostCreationStatus.vue'
+import {
+  type HostCreationStatus,
+  type SaveResult,
+  createCustomService,
+  hostCreationAfter
+} from './save'
 import AssignHostStep from './steps/AssignHostStep.vue'
 import ConfigureNameStep from './steps/ConfigureNameStep.vue'
-import { templatePreviewBlocksSave, useHostNameTemplatePreview } from './templatePreview'
+import {
+  templatePreviewBlocksSave,
+  templatePreviewCreatesHosts,
+  useHostNameTemplatePreview
+} from './templatePreview'
 import { type ServiceModel, isReadyToCreate } from './types'
 
 const { open, initial } = defineProps<{
@@ -36,6 +46,7 @@ const { _t } = usei18n()
 const model = ref<ServiceModel>({ ...initial })
 const saving = ref(false)
 const saveError = ref<string | null>(null)
+const hostCreation = ref<HostCreationStatus | null>(null)
 const templateErrors = ref<string[]>([])
 const nameStepRef = useTemplateRef<InstanceType<typeof ConfigureNameStep>>('nameStep')
 
@@ -55,11 +66,15 @@ watch(
 async function save(): Promise<void> {
   saveError.value = null
   saving.value = true
+  hostCreation.value = null
+  const creatingHosts = templatePreviewCreatesHosts(templatePreview.preview.value)
+  let result: SaveResult | null = null
   try {
     if (!((await nameStepRef.value?.validate()) ?? false)) {
       return
     }
-    const result = await createCustomService(model.value)
+    hostCreation.value = creatingHosts ? 'creating' : null
+    result = await createCustomService(model.value)
     if (result.templateError !== undefined) {
       templateErrors.value = [result.templateError]
       return
@@ -72,6 +87,7 @@ async function save(): Promise<void> {
   } catch {
     saveError.value = _t('Failed to create the custom service.')
   } finally {
+    hostCreation.value = hostCreationAfter(creatingHosts, result)
     saving.value = false
   }
 }
@@ -100,6 +116,7 @@ async function save(): Promise<void> {
         :template-errors="templateErrors"
         :template-preview="templatePreview.preview.value"
       />
+      <NewHostCreationStatus v-if="hostCreation !== null" :status="hostCreation" />
       <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
       <div class="mode-custom-services-create-custom-service-slide-in__actions">
         <CmkButton variant="primary" :disabled="!canSave || saving" @click="save">

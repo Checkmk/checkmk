@@ -242,3 +242,41 @@ test('a host name template that resolves only to new hosts can be saved', async 
   expect(await screen.findByText(/New hosts/)).toHaveTextContent('pod-cart')
   expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
 })
+
+test('a refused new host keeps the dialog open and says why', async () => {
+  server.use(
+    http.post(RESOLVE_URL, () =>
+      HttpResponse.json({
+        matching_hosts: [],
+        unmatched_host_names: ['pod-cart'],
+        hidden_match_count: 0,
+        truncated: false
+      })
+    ),
+    http.post(CREATE_URL, () =>
+      HttpResponse.json(
+        {
+          status: 403,
+          title: 'Some hosts could not be created',
+          detail: 'Sorry, the hosts in the folder Main are locked.',
+          ext: { new_host_names: ['pod-cart'] }
+        },
+        { status: 403 }
+      )
+    )
+  )
+  const { emitted } = renderSlideIn(
+    initialModel({ hostNameTemplate: '$RESOURCE_ATTR.service.name$' })
+  )
+  const save = await screen.findByRole('button', { name: 'Save' })
+  await waitFor(() => expect(save).toBeEnabled())
+  await userEvent.click(save)
+
+  expect(
+    await screen.findByText(
+      'Some hosts could not be created. Try again, or verify your configuration.'
+    )
+  ).toBeTruthy()
+  expect(screen.getByText('Sorry, the hosts in the folder Main are locked.')).toBeTruthy()
+  expect(emitted('close')).toBeUndefined()
+})

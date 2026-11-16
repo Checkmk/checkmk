@@ -37,6 +37,7 @@ Options:
     --dbuser                 Database user (default: performance).
     --dbhost                 Database host (default: None).
     --dbport                 Database port (default: 5432).
+    --require-database       Fail if the database can not be reached.
     --validate-baselines     Whether to perform baseline validation.
     --alert-on-failure       Whether to alert on failed baseline validation.
     --warn-only              Report failed baseline validation without a non-zero exit code.
@@ -745,6 +746,8 @@ class PerftestPlotArgs(argparse.Namespace):
         dbhost (str): Hostname or IP address of the database server.
         dbport (int): Port number for the database connection.
         dbcheck (bool): If True, DB connection is checked only (nothing else is done).
+        require_database (bool): Fail instead of falling back to the filesystem when the
+            database can not be reached.
         validate_baselines (bool): Enable performance baseline validation.
         alert_on_failure (bool): Enable Jira alerter on baseline validation failure.
         warn_only (bool): Report a failed baseline validation without exiting non-zero.
@@ -780,6 +783,7 @@ class PerftestPlotArgs(argparse.Namespace):
     dbhost: str
     dbport: int
     dbcheck: bool
+    require_database: bool
     validate_baselines: bool
     alert_on_failure: bool
     warn_only: bool
@@ -844,6 +848,8 @@ class PerftestPlot:
                 )
                 print("A connection was successfully established with the database!")
             except psycopg.OperationalError as excp:
+                if self.args.require_database:
+                    sys_exit(f'Could not connect to database "{self.args.dbname}"!\n\n{excp}')
                 print(
                     f'Could not connect to database "{self.args.dbname}"; '
                     f"switching to filesystem mode!\n\n{excp}",
@@ -1904,6 +1910,14 @@ def parse_args() -> PerftestPlotArgs:
         dest="dbcheck",
         default=False,
         help="Specifies if the DB connection should be checked only (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--require-database",
+        action=argparse.BooleanOptionalAction,
+        dest="require_database",
+        default=False,
+        help="Specifies to fail instead of falling back to the filesystem when the database"
+        " can not be reached (default: %(default)s).",
     )
     parser.add_argument(
         "--validate-baselines",

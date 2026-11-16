@@ -41,7 +41,7 @@ for target in $(bazel query --output=label "tests(//tests/performance:bazel_perf
     if [ -n "${CI}" ]; then
         PLOT_ARGS=(
             --branch-version="${BRANCH}" --root-dir="${ROOT_DIR}"
-            --dbname="${database}" --dbhost=qa.lan.checkmk.net
+            --dbname="${database}" --dbhost=qa.lan.checkmk.net --require-database
             --log-level=INFO --validate-baselines
         )
         # update database; generate report and check weekly baseline

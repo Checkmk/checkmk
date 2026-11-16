@@ -1,4 +1,4 @@
-title: ICMP Echo Request (Ping)
+title: Active Checks: ICMP Ping
 agents: active
 catalog: agentless
 license: GPLv2

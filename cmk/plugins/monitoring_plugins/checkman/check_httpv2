@@ -1,4 +1,4 @@
-title: HTTP/HTTPS Service
+title: Active Checks: HTTP/HTTPS Connection
 agents: active
 catalog: agentless
 license: GPLv2

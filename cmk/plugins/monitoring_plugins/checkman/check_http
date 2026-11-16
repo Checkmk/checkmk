@@ -1,4 +1,4 @@
-title: HTTP/HTTPS Connection
+title: Active Checks: HTTP/HTTPS Connection (deprecated)
 agents: active
 catalog: agentless
 license: GPLv2

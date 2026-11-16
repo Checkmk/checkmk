@@ -1,4 +1,4 @@
-title: FTP Server
+title: Active Checks: FTP Server
 agents: active
 catalog: agentless
 license: GPLv2

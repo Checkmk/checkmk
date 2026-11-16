@@ -34,12 +34,12 @@ from .run import CommandTracer, CrashReporter, run, Runtime
 tracer = trace.get_tracer()
 
 
-def enable_file_logging(path: Path, logger: logging.Logger) -> None:
+def _enable_file_logging(path: Path, logger: logging.Logger) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     log_to_watched_file(logger, path)
 
 
-def configure_logging() -> logging.Logger:
+def _configure_logging() -> logging.Logger:
     logger = logging.getLogger("cmk")
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(
@@ -50,7 +50,7 @@ def configure_logging() -> logging.Logger:
     return logger
 
 
-def saving_crash_reporter(
+def _saving_crash_reporter(
     omd_root: Path, argv: Sequence[str], environ: Mapping[str, str]
 ) -> CrashReporter:
     def report() -> str:
@@ -70,7 +70,7 @@ def saving_crash_reporter(
     return report
 
 
-def tracing(environ: Mapping[str, str]) -> CommandTracer:
+def _tracing(environ: Mapping[str, str]) -> CommandTracer:
     @contextmanager
     def traced(context: CLIContext, run_command: RunCommand) -> Iterator[None]:
         omd_config = get_omd_config(context.omd_root)
@@ -117,14 +117,14 @@ def main() -> int:
                 os.environ,
                 Runtime(
                     discover=discover_commands,
-                    trace_command=tracing(os.environ),
+                    trace_command=_tracing(os.environ),
                     on_sigint=signal.default_int_handler,
-                    crash_reporter_for=saving_crash_reporter,
+                    crash_reporter_for=_saving_crash_reporter,
                     enable_profiling=profiling.enable,
-                    log_to_file=enable_file_logging,
+                    log_to_file=_enable_file_logging,
                     write_profile=_write_profile,
                     page=partial(write_paged, environ=os.environ),
                     write_error=write_stderr,
-                    logger=configure_logging(),
+                    logger=_configure_logging(),
                 ),
             )

@@ -97,7 +97,6 @@ def test_performance_bulk_change_activation_distributed_piggyback(
         args=[],
         setup=perftest_dist.setup_bulk_change_activation,
         teardown=perftest_dist.teardown_bulk_change_activation,
-        # Its mean held as steady in 8 rounds as in 16, like the test above.
-        rounds=perftest_dist.rounds_or(8),
+        rounds=perftest_dist.rounds,
         iterations=perftest_dist.iterations,
     )

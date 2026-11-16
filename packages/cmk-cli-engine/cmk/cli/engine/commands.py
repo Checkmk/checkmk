@@ -64,7 +64,7 @@ def binder[R](command: CLICommand[R], load: Callable[[], Run[R]]) -> Binder:
     return bind
 
 
-def requires_argument(command: DiscoveredCommand) -> bool:
+def takes_value(command: DiscoveredCommand) -> bool:
     return placeholder(command.selector) is not None
 
 
@@ -138,7 +138,7 @@ def _default_command(commands: Sequence[DiscoveredCommand]) -> DiscoveredCommand
     match [command for command in commands if command.default]:
         case []:
             return None
-        case [command] if requires_argument(command):
+        case [command] if takes_value(command):
             raise ValueError(f"The default command {command.name!r} cannot require an argument")
         case [command]:
             return command

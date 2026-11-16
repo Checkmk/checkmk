@@ -10,7 +10,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from .commands import Commands, DiscoveredCommand, requires_argument
+from .commands import Commands, DiscoveredCommand, takes_value
 from .options import GetoptOptions, GlobalOptions, HELP_OPTION, read_global_options, spellings
 from .readers import parsed
 
@@ -34,7 +34,7 @@ class InvalidArguments:
 
 
 def _args(command: DiscoveredCommand, argument: str, positional: Sequence[str]) -> Sequence[str]:
-    if requires_argument(command):
+    if takes_value(command):
         return [argument, *positional]
     return positional
 

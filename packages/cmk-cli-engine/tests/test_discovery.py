@@ -10,7 +10,7 @@ from typing import Final
 import pytest
 
 from cmk.cli.engine.commands import Commands as CLICommands
-from cmk.cli.engine.commands import requires_argument as cli_requires_argument
+from cmk.cli.engine.commands import takes_value as cli_takes_value
 from cmk.cli.engine.discovery import _named_after_its_variable as _cli_named_after_its_variable
 from cmk.cli.engine.discovery import load_handler as cli_load_handler
 from cmk.cli.engine.discovery import make_command as cli_make_command
@@ -180,13 +180,13 @@ _NUMBERS_ARGUMENTS = CLIArguments(placeholder="N...", parse=int)
 def test_a_single_required_argument_is_the_command_options_value() -> None:
     command = command_reading(lambda options: options.argument(_HOST_ARGUMENT))
 
-    assert cli_requires_argument(command)
+    assert cli_takes_value(command)
 
 
 def test_more_arguments_are_the_rest_of_the_command_line() -> None:
     command = command_reading(lambda options: options.arguments(_NUMBERS_ARGUMENTS))
 
-    assert not cli_requires_argument(command)
+    assert not cli_takes_value(command)
 
 
 def test_the_help_brackets_the_arguments_a_command_line_may_leave_out() -> None:

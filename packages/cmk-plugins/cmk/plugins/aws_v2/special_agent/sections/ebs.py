@@ -236,10 +236,11 @@ class EBSSummary(AWSSection):
             volumes = self._fetch_volumes_without_filter(col_volumes)
 
         formatted_volumes = {v["VolumeId"]: v for v in volumes}
-        for vol_id, vol in formatted_volumes.items():
-            response = self._client.describe_volume_status(VolumeIds=[vol_id])  # type: ignore[attr-defined]
+        # With volume IDs, AWS answers in one page. 100 IDs keep the request small.
+        for chunk in chunks(list(formatted_volumes), length=100):
+            response = self._client.describe_volume_status(VolumeIds=chunk)  # type: ignore[attr-defined]
             for state in self._get_response_content(response, "VolumeStatuses"):
-                if state["VolumeId"] == vol_id:
+                if (vol := formatted_volumes.get(state["VolumeId"])) is not None:
                     vol.setdefault("VolumeStatus", state["VolumeStatus"])
         return formatted_volumes
 

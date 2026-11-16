@@ -18,7 +18,10 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsOption,
 )
 from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
-from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
+from cmk.plugins.aws_v2.special_agent.sections.core import (
+    AWSColleagueContents,
+    ResultDistributor,
+)
 from cmk.plugins.aws_v2.special_agent.sections.ebs import EBS, EBSLimits, EBSSummary
 from cmk.plugins.aws_v2.special_agent.sections.ec2 import EC2Summary
 
@@ -294,6 +297,53 @@ def test_ebs_summary_does_not_describe_volumes_again_when_limits_found_none(
     ebs_summary.run()
 
     assert client.volume_descriptions == 1
+
+
+class FakeEC2ClientWithManyVolumes(FakeEC2Client):
+    def __init__(self, amount: int) -> None:
+        self._volumes = EC2DescribeVolumesIB.create_instances(amount=amount)
+        self.status_request_sizes: list[int] = []
+
+    @override
+    def describe_volumes(
+        self,
+        VolumeIds: object = None,
+        Filters: object = None,
+    ) -> Mapping[str, object]:
+        return {"Volumes": self._volumes}
+
+    @override
+    def describe_volume_status(
+        self,
+        VolumeIds: object = None,
+        Filters: object = None,
+    ) -> Mapping[str, object]:
+        assert isinstance(VolumeIds, list)
+        self.status_request_sizes.append(len(VolumeIds))
+        return {
+            "VolumeStatuses": [
+                {"VolumeId": volume_id, "VolumeStatus": {"Status": f"status of {volume_id}"}}
+                for volume_id in VolumeIds
+            ]
+        }
+
+
+def test_ebs_summary_fetches_the_status_of_100_volumes_per_request(
+    get_ebs_sections: EBSSections,
+) -> None:
+    client = FakeEC2ClientWithManyVolumes(amount=150)
+    _ec2_summary, _ebs_limits, ebs_summary, _ebs = get_ebs_sections(
+        None, (None, None), ec2_client=client
+    )
+
+    volumes = ebs_summary.get_live_data(AWSColleagueContents((None, {}), 0.0))
+
+    assert client.status_request_sizes == [100, 50]
+    assert len(volumes) == 150
+    assert all(
+        volume["VolumeStatus"] == {"Status": f"status of {volume_id}"}
+        for volume_id, volume in volumes.items()
+    )
 
 
 def test_agent_aws_ebs_summary_without_limits(

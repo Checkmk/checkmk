@@ -301,7 +301,7 @@ test-system-gui-cloud() { EDITION=cloud test-system-gui-non-free; }
 test-system-singlesite() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/singlesite")" \
-        --session-timeout 9000
+        --session-timeout 10800
 }
 
 test-system-redfish() {

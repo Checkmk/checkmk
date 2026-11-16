@@ -78,9 +78,9 @@ void main() {
             faked_artifacts: fake_artifacts,
             force_build: force_build,
             disable_cache: disable_cache,
-            // can hit 5min during the heavy chain runs (without wait time)
-            // using FoS of 3
-            timeout: 15,
+            // 11-13min incl. Bazel and site setup, up to ~15min on the slower
+            // Zen 4 nodes (build-fra-007..013) when the pool is busy
+            timeout: 25,
         ]);
     }
 

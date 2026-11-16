@@ -11,8 +11,9 @@ import cmk.product_usage.collectors.audit_log as audit_log_collector
 import cmk.product_usage.collectors.checks as checks_collector
 import cmk.product_usage.collectors.grafana as grafana_collector
 import cmk.product_usage.collectors.host_services as host_services_collector
+import cmk.product_usage.collectors.sessions as sessions_collector
 import cmk.product_usage.collectors.site_info as site_info_collector
-from cmk.product_usage.schema import AuditLog, CloudTrialPayload, ProductUsagePayload
+from cmk.product_usage.schema import AuditLog, CloudTrialPayload, ProductUsagePayload, Session
 
 
 def collect_data(
@@ -65,6 +66,7 @@ def collect_cloud_trial_data(
 ) -> CloudTrialPayload:
     return CloudTrialPayload(
         **dict(product_usage),
+        sessions=_collect_sessions(var_dir, logger),
         audit_log=_collect_audit_log(var_dir, default_config_dir, logger),
         count_hosts_default_services_only=_count_hosts_with_only_default_services(
             read_services_per_host, logger
@@ -91,4 +93,12 @@ def _count_hosts_with_only_default_services(
         return host_services_collector.collect(read_services_per_host())
     except Exception:
         logger.exception("Could not count the hosts with default services only, sending no count")
+        return None
+
+
+def _collect_sessions(var_dir: Path, logger: logging.Logger) -> list[Session] | None:
+    try:
+        return sessions_collector.collect(var_dir)
+    except Exception:
+        logger.exception("Could not collect the sessions, sending no sessions")
         return None

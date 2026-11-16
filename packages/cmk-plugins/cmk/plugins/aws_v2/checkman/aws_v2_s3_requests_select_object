@@ -1,4 +1,4 @@
-title: AWS v2 S3: SELECT Object
+title: AWS S3: SELECT Object (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

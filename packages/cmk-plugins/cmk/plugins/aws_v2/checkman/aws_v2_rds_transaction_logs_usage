@@ -1,4 +1,4 @@
-title: AWS v2 RDS: Transaction Logs
+title: AWS RDS: Transaction Logs (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

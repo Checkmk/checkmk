@@ -1,4 +1,4 @@
-title: AWS NetworkELB: LCUs
+title: AWS Network Load Balancer: LCUs
 agents: aws
 catalog: cloud/aws
 license: GPLv2

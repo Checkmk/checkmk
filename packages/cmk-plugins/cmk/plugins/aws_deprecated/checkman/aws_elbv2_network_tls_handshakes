@@ -1,4 +1,4 @@
-title: AWS NetworkELB: TLS Handshakes
+title: AWS Network Load Balancer: TLS Handshakes
 agents: aws
 catalog: cloud/aws
 license: GPLv2

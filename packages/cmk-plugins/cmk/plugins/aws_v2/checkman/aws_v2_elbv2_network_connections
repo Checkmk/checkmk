@@ -1,4 +1,4 @@
-title: AWS v2 NetworkELB: Connections
+title: AWS Network Load Balancer: Connections (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

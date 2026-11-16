@@ -1,4 +1,4 @@
-title: AWS v2 RDS: Replication Slot
+title: AWS RDS: Replication Slot Usage (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

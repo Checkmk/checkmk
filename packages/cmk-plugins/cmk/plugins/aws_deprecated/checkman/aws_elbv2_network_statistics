@@ -1,4 +1,4 @@
-title: AWS NetworkELB: Statistics
+title: AWS Network Load Balancer: Statistics
 agents: aws
 catalog: cloud/aws
 license: GPLv2

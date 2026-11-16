@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
 from cmk.plugins.prism.agent_based.prism_protection_policies import (
     check_protection_policy,
     DEFAULT_PARAMS,
@@ -69,6 +69,21 @@ def _section(*policies: dict[str, object]) -> StringTable:
     return [[json.dumps(list(policies))]]
 
 
+def _run_check(
+    item: str,
+    string_table: StringTable,
+    params: Params,
+    value_store: dict[str, object] | None,
+) -> CheckResult:
+    return check_protection_policy(
+        item,
+        params,
+        parse_prism_protection_policies(string_table),
+        {} if value_store is None else value_store,
+        NOW.timestamp(),
+    )
+
+
 def _check(
     item: str,
     string_table: StringTable,
@@ -77,14 +92,20 @@ def _check(
 ) -> list[Result]:
     return [
         result
-        for result in check_protection_policy(
-            item,
-            params,
-            parse_prism_protection_policies(string_table),
-            {} if value_store is None else value_store,
-            NOW.timestamp(),
-        )
+        for result in _run_check(item, string_table, params, value_store)
         if isinstance(result, Result)
+    ]
+
+
+def _metrics(
+    item: str,
+    string_table: StringTable,
+    params: Params = DEFAULT_PARAMS,
+) -> list[Metric]:
+    return [
+        metric
+        for metric in _run_check(item, string_table, params, None)
+        if isinstance(metric, Metric)
     ]
 
 
@@ -372,6 +393,66 @@ def test_synchronous_replication_only_has_no_age_levels() -> None:
         Result(state=State.OK, summary="RPO: 0 (synchronous replication)"),
         Result(state=State.OK, notice="stale: newest recovery point: 3 hours 0 minutes"),
     )
+
+
+def test_policy_without_vms_has_no_age_metric() -> None:
+    assert _metrics(CROSS_CLUSTER, RECORDED_SECTION) == [Metric("prism_protection_policy_vms", 0)]
+
+
+def test_number_of_protected_vms_is_a_metric() -> None:
+    metrics = _metrics(HOURLY, _section(_policy([_vm("app", None), _vm("db", None)])))
+
+    assert metrics[0] == Metric("prism_protection_policy_vms", 2)
+
+
+def test_highest_recovery_point_age_is_a_metric_with_the_age_levels() -> None:
+    metrics = _metrics(
+        HOURLY,
+        _section(
+            _policy([_vm("fresh", "2026-11-11T15:30:00Z"), _vm("stale", "2026-11-11T13:00:00Z")])
+        ),
+    )
+
+    assert metrics[-1] == Metric("backup_age", 3 * HOUR, levels=(1.5 * HOUR, 2 * HOUR))
+
+
+def test_age_metric_has_no_levels_when_they_are_switched_off() -> None:
+    metrics = _metrics(
+        HOURLY,
+        _section(_policy([_vm("stale", "2026-11-11T13:00:00Z")])),
+        Params(
+            recovery_point_age=("no_levels", None),
+            replication_states=DEFAULT_PARAMS["replication_states"],
+            replication_paused=DEFAULT_PARAMS["replication_paused"],
+        ),
+    )
+
+    assert metrics[-1] == Metric("backup_age", 3 * HOUR)
+
+
+def test_vm_with_an_unknown_recovery_point_is_left_out_of_the_age_metric() -> None:
+    metrics = _metrics(
+        HOURLY,
+        _section(
+            _policy(
+                [
+                    _vm("app", "2026-11-11T15:30:00Z"),
+                    {"extId": "id-db", "name": "db", "recoveryPointUnknown": True},
+                ]
+            )
+        ),
+    )
+
+    assert metrics[-1] == Metric("backup_age", 0.5 * HOUR, levels=(1.5 * HOUR, 2 * HOUR))
+
+
+def test_policy_whose_recovery_points_are_all_unknown_has_no_age_metric() -> None:
+    metrics = _metrics(
+        HOURLY,
+        _section(_policy([{"extId": "id-db", "name": "db", "recoveryPointUnknown": True}])),
+    )
+
+    assert metrics == [Metric("prism_protection_policy_vms", 1)]
 
 
 def test_empty_section_discovers_nothing() -> None:

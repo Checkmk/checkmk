@@ -10,6 +10,7 @@ UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.IECNotation("B/s"))
 UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
+UNIT_COUNT = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(0))
 
 metric_pd_exclusivesnapshot = metrics.Metric(
     name="pd_exclusivesnapshot",
@@ -52,4 +53,10 @@ metric_prism_cluster_iolatency = metrics.Metric(
     title=Title("Latency"),
     unit=UNIT_TIME,
     color=metrics.Color.LIGHT_GREEN,
+)
+metric_prism_protection_policy_vms = metrics.Metric(
+    name="prism_protection_policy_vms",
+    title=Title("Protected VMs"),
+    unit=UNIT_COUNT,
+    color=metrics.Color.BLUE,
 )

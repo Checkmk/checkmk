@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     FixedLevelsT,
     get_value_store,
+    Metric,
     NoLevelsT,
     render,
     Result,
@@ -286,6 +287,7 @@ def check_protection_policy(
         rpo_text = render.timespan(rpo) + (" (and synchronous replication)" if synchronous else "")
     yield Result(state=State.OK, summary=f"RPO: {rpo_text}")
     yield Result(state=State.OK, summary=f"Protected VMs: {len(policy.vms)}")
+    yield Metric("prism_protection_policy_vms", len(policy.vms))
     remotes = _remote_locations(configurations)
     yield Result(
         state=State.OK,
@@ -310,6 +312,7 @@ def check_protection_policy(
             age_levels = None
     remembered_vms = _forget_gone_vms(policy, now, value_store)
     vms = sorted(policy.vms, key=lambda vm: vm.name)
+    ages = []
     for vm in vms:
         if vm.recovery_point_unknown:
             yield Result(
@@ -319,12 +322,19 @@ def check_protection_policy(
         # A VM without any recovery point gets the same levels, counted from when the check
         # first saw it. Nutanix takes the first recovery point when it starts protecting a VM.
         age = _recovery_point_age(vm, now, remembered_vms[vm.ext_id])
+        ages.append(age.seconds)
         yield from check_levels(
             age.seconds,
             levels_upper=age_levels,
             render_func=render.timespan,
             label=_AGE_LABELS[age.source].format(vm=vm.name),
             notice_only=True,
+        )
+    if ages:
+        yield Metric(
+            "backup_age",
+            max(ages),
+            levels=None if age_levels is None else age_levels[1],
         )
     yield from _replication_results(params["replication_states"], vms, parsed.replications)
 

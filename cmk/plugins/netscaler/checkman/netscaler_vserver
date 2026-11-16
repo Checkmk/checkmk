@@ -1,4 +1,4 @@
-title: Citrix Netscaler: VServer Status
+title: Citrix NetScaler: VServer Status
 agents: snmp
 catalog: app/netscaler
 license: GPLv2

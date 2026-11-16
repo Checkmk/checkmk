@@ -1,4 +1,4 @@
-title: Citrix Netscaler SSL Certificates: Age Validation
+title: Citrix NetScaler: SSL Certificate Age
 agents: snmp
 catalog: app/netscaler
 license: GPLv2

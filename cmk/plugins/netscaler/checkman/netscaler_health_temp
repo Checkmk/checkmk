@@ -1,4 +1,4 @@
-title: Citrix Netscaler Loadbalancer: Temperature Sensors
+title: Citrix NetScaler: Temperature
 agents: snmp
 catalog: app/netscaler
 license: GPLv2

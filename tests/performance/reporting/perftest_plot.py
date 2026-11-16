@@ -45,6 +45,9 @@ Options:
     --edition                Set the default edition.
     job_names                List of job names to process.
 
+Without --update-db or --append-db, a run of a job that is stored already with other results is
+stored as a further job, named after the job with the suffix "_2", "_3" and so on.
+
 Example:
     python perftest_plot.py --dbhost qa.lan.checkmk.net 2.5.0-2025.09.10.ultimate
 """
@@ -359,6 +362,32 @@ class PerformanceDb:
                 (job_name,),
             )
         return cursor.rowcount > 0
+
+    def job_run_name(self, job_name: str, end_timestamp: Datetime) -> str:
+        """Return the job name to store a run under.
+
+        The first run keeps the job name, further runs get the suffix "_2", "_3" and so on.
+        A run that is stored already, as one of these jobs ended at the same time, keeps the
+        name of that job, so its missing scenarios are added to it.
+        """
+        with self._cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT job_name, end_timestamp = %s
+                FROM jobs
+                WHERE job_name = %s OR job_name LIKE %s
+                """,
+                (end_timestamp, job_name, f"{job_name}\\_%"),
+            )
+            runs = cursor.fetchall()
+        run_numbers = []
+        for run_name, stored in runs:
+            if not (match := re.fullmatch(rf"{re.escape(job_name)}(?:_([0-9]+))?", run_name)):
+                continue
+            if stored:
+                return str(run_name)
+            run_numbers.append(int(match.group(1) or 1))
+        return f"{job_name}_{max(run_numbers) + 1}" if run_numbers else job_name
 
     def delete_test(self, job_name: str, scenario_name: str) -> None:
         """Delete the test results of one scenario of a job from the database."""
@@ -1568,11 +1597,16 @@ class PerftestPlot:
                         for performance_data in new_scenario_data.values()
                     )
                 )
+                db_job_name = job_name
+                if not (self.update_db or self.append_db):
+                    db_job_name = self.database.job_run_name(job_name, job_endtime)
+                    if db_job_name != job_name:
+                        logger.info('Storing job "%s" as "%s".', job_name, db_job_name)
                 for scenario_name, performance_data in new_scenario_data.items():
                     if self.append_db:
                         self.database.delete_test(job_name=job_name, scenario_name=scenario_name)
                     self.database.write_scenario_data(
-                        job_name=job_name,
+                        job_name=db_job_name,
                         job_starttime=job_starttime,
                         job_endtime=job_endtime,
                         product_release=self.args.product_release,
@@ -1836,7 +1870,7 @@ def parse_args() -> PerftestPlotArgs:
     repo_root_dir = Path(__file__).parent.parent.parent.parent
 
     def job_name() -> Callable:
-        pattern = r"[0-9](\.[0-9]){2}-[0-9]{4}(\.[0-9]{2}){2}\.[a-z]*"
+        pattern = r"[0-9](\.[0-9]){2}-[0-9]{4}(\.[0-9]{2}){2}\.[a-z]*(_[0-9]+)?"
 
         def validator(value: str) -> str:
             if not (match := re.search(pattern, value)):

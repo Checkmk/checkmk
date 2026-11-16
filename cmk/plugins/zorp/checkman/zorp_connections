@@ -1,4 +1,4 @@
-title: Monitoring for zorp firewall connections
+title: Zorp: Firewall Connections
 agents: linux
 catalog: os/kernel
 license: GPLv2

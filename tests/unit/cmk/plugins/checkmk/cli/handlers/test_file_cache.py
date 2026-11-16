@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.checkengine.filecache import FileCacheOptions
-from cmk.plugins.checkmk.cli.options import FileCacheRequest, make_file_cache_options
+from cmk.plugins.checkmk.cli.handlers._file_cache import make_file_cache_options
+from cmk.plugins.checkmk.cli.options import FileCacheRequest
 
 
 def test_without_cache_options_the_defaults_stand() -> None:

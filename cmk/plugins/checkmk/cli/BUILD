@@ -16,7 +16,6 @@ py_library(
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:version",
-        "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-plugin-apis:cli",

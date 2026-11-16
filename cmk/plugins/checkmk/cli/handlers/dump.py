@@ -39,7 +39,7 @@ from cmk.plugins.checkmk.cli.dump import (
     cli_command_dump_agent,
     DumpAgentRequest,
 )
-from cmk.plugins.checkmk.cli.options import host_address, host_addresses, make_file_cache_options
+from cmk.plugins.checkmk.cli.options import host_address, host_addresses
 from cmk.plugins.checkmk.cli.output import write_stdout
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import ExecutableFinder, load_secrets_file
@@ -47,6 +47,7 @@ from cmk.utils import ip_lookup, timeperiod
 from cmk.utils.ip_lookup import ConfiguredIPLookup
 from cmk.utils.log import console
 
+from ._file_cache import make_file_cache_options
 from .agent_based import load_checks
 
 

@@ -24,10 +24,10 @@ from cmk.plugins.checkmk.cli.check import (
     CheckingRequest,
     cli_command_check,
 )
-from cmk.plugins.checkmk.cli.options import make_file_cache_options
 from cmk.server_side_calls_backend import load_secrets_file
 
 from ._exit_code import state_exit_code
+from ._file_cache import make_file_cache_options
 from .agent_based import extract_plugin_selection, load_checks
 
 _HOST_AND_ADDRESS: Final = 2

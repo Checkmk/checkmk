@@ -66,13 +66,14 @@ from cmk.plugins.checkmk.cli.discovery import (
     cli_command_discover,
     DiscoverRequest,
 )
-from cmk.plugins.checkmk.cli.options import host_address, make_file_cache_options
+from cmk.plugins.checkmk.cli.options import host_address
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
 from cmk.utils.log import console
 
 from ._exit_code import state_exit_code
+from ._file_cache import make_file_cache_options
 from .agent_based import extract_plugin_selection, load_checks
 
 

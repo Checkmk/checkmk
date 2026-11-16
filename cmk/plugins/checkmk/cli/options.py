@@ -10,7 +10,6 @@ from typing import Final
 
 from cmk.ccc.exceptions import MKBailOut
 from cmk.ccc.hostaddress import HostAddress, HostNameValidationError
-from cmk.checkengine.filecache import FileCacheOptions
 from cmk.checkengine.plugins import (
     CheckPluginName,
     InventoryPluginName,
@@ -53,29 +52,6 @@ class FileCacheRequest:
     cache: bool
     no_cache: bool
     no_tcp: bool
-
-
-def make_file_cache_options(
-    request: FileCacheRequest, *, defaults: FileCacheOptions | None = None
-) -> FileCacheOptions:
-    file_cache_options = defaults or FileCacheOptions()
-
-    if request.cache:
-        file_cache_options = dataclasses.replace(
-            file_cache_options, disabled=False, use_outdated=True
-        )
-
-    if request.no_cache:
-        file_cache_options = dataclasses.replace(
-            file_cache_options, disabled=True, use_outdated=False
-        )
-
-    if request.no_tcp:
-        file_cache_options = dataclasses.replace(
-            file_cache_options, disabled=False, use_outdated=True, use_only_cache=True
-        )
-
-    return file_cache_options
 
 
 CACHE_FLAG: Final = CLIFlag(

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fromDate } from '@internationalized/date'
-import { fireEvent, render } from '@testing-library/vue'
+import { fireEvent, render, screen } from '@testing-library/vue'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
@@ -12,7 +12,7 @@ import DashboardContentIFrame from '@/dashboard/components/DashboardContent/Dash
 import type { IFrameContent } from '@/dashboard/types/widget'
 import { resetGlobalTimeState, useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState'
 
-import { makeContentProps } from '@tests/dashboard/contentProps'
+import { TEST_WIDGET_TITLE, makeContentProps } from '@tests/dashboard/contentProps'
 
 const URL_ONLY: IFrameContent = {
   type: 'url',
@@ -27,11 +27,19 @@ const FILTER_CONTEXT = {
   filters: { site: { site: 'prod' } }
 }
 
+function embeddedFrame(): HTMLIFrameElement {
+  const frame = screen.getByTitle(TEST_WIDGET_TITLE)
+  if (!(frame instanceof HTMLIFrameElement)) {
+    throw new Error(`Expected a frame titled "${TEST_WIDGET_TITLE}", got <${frame.tagName}>`)
+  }
+  return frame
+}
+
 function iframeSource(content: IFrameContent): URL {
-  const { container } = render(DashboardContentIFrame, {
+  render(DashboardContentIFrame, {
     props: makeContentProps(content, { effective_filter_context: FILTER_CONTEXT })
   })
-  return new URL(container.querySelector('iframe')!.getAttribute('src')!)
+  return new URL(embeddedFrame().getAttribute('src')!)
 }
 
 describe('DashboardContentIFrame', () => {
@@ -64,10 +72,8 @@ describe('DashboardContentIFrame', () => {
   })
 
   it('tells the loaded page the time range, the tick and whether the dashboard is live', async () => {
-    const { container } = render(DashboardContentIFrame, {
-      props: makeContentProps(URL_ONLY, { tick: 3 })
-    })
-    const iframe = container.querySelector('iframe')!
+    render(DashboardContentIFrame, { props: makeContentProps(URL_ONLY, { tick: 3 }) })
+    const iframe = embeddedFrame()
     const postMessage = vi.spyOn(iframe.contentWindow!, 'postMessage')
 
     await fireEvent.load(iframe)
@@ -85,9 +91,8 @@ describe('DashboardContentIFrame', () => {
 
   it('tells the page about every tick and range change', async () => {
     const props = makeContentProps(URL_ONLY)
-    const { container, rerender } = render(DashboardContentIFrame, { props })
-    const iframe = container.querySelector('iframe')!
-    const postMessage = vi.spyOn(iframe.contentWindow!, 'postMessage')
+    const { rerender } = render(DashboardContentIFrame, { props })
+    const postMessage = vi.spyOn(embeddedFrame().contentWindow!, 'postMessage')
 
     await rerender({ ...props, tick: 1 })
     await rerender({
@@ -109,8 +114,8 @@ describe('DashboardContentIFrame', () => {
   })
 
   it('tells the page when the dashboard resumes or pauses', async () => {
-    const { container } = render(DashboardContentIFrame, { props: makeContentProps(URL_ONLY) })
-    const postMessage = vi.spyOn(container.querySelector('iframe')!.contentWindow!, 'postMessage')
+    render(DashboardContentIFrame, { props: makeContentProps(URL_ONLY) })
+    const postMessage = vi.spyOn(embeddedFrame().contentWindow!, 'postMessage')
     const { pauseRefresh, resumeRefresh } = useGlobalRefresh()
 
     resumeRefresh()
@@ -132,4 +137,24 @@ describe('DashboardContentIFrame', () => {
     expect(container.querySelector('iframe')).toBeNull()
     expect(container).not.toHaveTextContent('Invalid URL')
   })
+
+  it('names the frame by the widget title', () => {
+    render(DashboardContentIFrame, {
+      props: makeContentProps(URL_ONLY, { effectiveTitle: 'Weather report' })
+    })
+
+    expect(screen.getByTitle('Weather report')).toBeInstanceOf(HTMLIFrameElement)
+  })
+
+  it.each([
+    { titleState: 'unknown', effectiveTitle: undefined },
+    { titleState: 'empty', effectiveTitle: '' }
+  ])(
+    'names the frame "Embedded page" while the widget title is $titleState',
+    ({ effectiveTitle }) => {
+      render(DashboardContentIFrame, { props: makeContentProps(URL_ONLY, { effectiveTitle }) })
+
+      expect(screen.getByTitle('Embedded page')).toBeInstanceOf(HTMLIFrameElement)
+    }
+  )
 })

@@ -327,7 +327,7 @@ describe('ResponsiveGrid', () => {
       await flushPromises()
       await nextTick()
 
-      expect(wrapper.findAll('[aria-label="Widget"]').length).toBe(1)
+      expect(wrapper.findAll('[aria-roledescription="Widget"]').length).toBe(1)
 
       wrapper.unmount()
     })

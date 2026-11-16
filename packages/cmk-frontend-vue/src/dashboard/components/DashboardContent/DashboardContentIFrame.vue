@@ -85,6 +85,7 @@ watch(() => [range, tick, refreshPaused.value], postTimeRange)
         :key="src"
         ref="iframe"
         class="db-content-i-frame__iframe"
+        :title="effectiveTitle || _t('Embedded page')"
         allowtransparency="true"
         :src="src"
         @load="postTimeRange"

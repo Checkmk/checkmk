@@ -37,7 +37,9 @@ defineEmits<
     :id="`widget-${spec.widget_id}`"
     class="db-responsive-grid-widget__frame"
     :class="{ 'db-responsive-grid-widget__frame--edit': isEditing }"
-    :aria-label="_t('Widget')"
+    role="group"
+    :aria-roledescription="_t('Widget')"
+    :aria-label="spec.effectiveTitle"
   >
     <div v-if="isEditing" class="db-responsive-grid-widget__edit-controls">
       <div

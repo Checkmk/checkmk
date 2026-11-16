@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render } from '@testing-library/vue'
+import { render, screen } from '@testing-library/vue'
 import { describe, expect, it, onTestFinished } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
@@ -11,7 +11,7 @@ import DashboardContentEmbeddedView from '@/dashboard/components/DashboardConten
 import { useProvideDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
 import type { EmbeddedViewContent } from '@/dashboard/types/widget'
 
-import { makeContentProps } from '@tests/dashboard/contentProps'
+import { TEST_WIDGET_TITLE, makeContentProps } from '@tests/dashboard/contentProps'
 
 const EMBEDDED_VIEW: EmbeddedViewContent = {
   type: 'embedded_view',
@@ -29,8 +29,8 @@ function iframeVariables(drillDownSource: string | null): URLSearchParams {
       return () => h(DashboardContentEmbeddedView, makeContentProps(EMBEDDED_VIEW))
     }
   })
-  const { container } = render(dashboard)
-  const source = container.querySelector('iframe')!.getAttribute('src')!
+  render(dashboard)
+  const source = screen.getByTitle(TEST_WIDGET_TITLE).getAttribute('src')!
   return new URL(source, window.location.href).searchParams
 }
 

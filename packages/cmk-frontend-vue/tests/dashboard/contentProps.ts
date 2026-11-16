@@ -12,6 +12,8 @@ const TEST_RANGE = {
   to: fromDate(new Date('2026-01-01T01:00:00Z'), 'UTC')
 }
 
+export const TEST_WIDGET_TITLE = 'Test'
+
 export function makeContentProps<T>(
   content: T,
   overrides: Partial<Omit<ContentProps<T>, 'content'>> = {}
@@ -19,11 +21,11 @@ export function makeContentProps<T>(
   return {
     widget_id: 'test-widget',
     general_settings: {
-      title: { text: 'Test', render_mode: 'with_background' },
+      title: { text: TEST_WIDGET_TITLE, render_mode: 'with_background' },
       render_background: true
     },
     content,
-    effectiveTitle: 'Test',
+    effectiveTitle: TEST_WIDGET_TITLE,
     effective_filter_context: { uses_infos: [], filters: {}, restricted_to_single: [] },
     dashboardKey: { owner: 'cmkadmin', name: 'main' },
     tick: 0,

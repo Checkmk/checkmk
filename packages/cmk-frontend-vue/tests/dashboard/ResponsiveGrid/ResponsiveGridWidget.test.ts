@@ -38,10 +38,13 @@ describe('ResponsiveGridWidget', () => {
     expect(screen.queryAllByRole('button')).toHaveLength(0)
   })
 
-  it('has aria-label "Widget"', () => {
-    renderWidget({ spec: makeContentProps(), isEditing: false })
+  it('names the widget by its title', () => {
+    renderWidget({
+      spec: { ...makeContentProps(), effectiveTitle: 'Host overview' },
+      isEditing: false
+    })
 
-    expect(screen.getByLabelText('Widget')).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Host overview' })).toBeInTheDocument()
   })
 
   it('allows clicking all edit buttons without errors', async () => {

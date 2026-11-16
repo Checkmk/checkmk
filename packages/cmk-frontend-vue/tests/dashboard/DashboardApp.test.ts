@@ -593,6 +593,13 @@ describe('DashboardApp', () => {
       expect(failure).toHaveTextContent('Could not reschedule the checks for the selected hosts')
     }
   )
+
+  it('names each widget by its title', async () => {
+    render(DashboardApp, { props: pageProperties })
+
+    const widget = await screen.findByRole('group', { name: 'Bottom' })
+    expect(widget).toHaveTextContent(SOURCE_TEXT)
+  })
 })
 
 describe('DashboardApp on a switch to another dashboard', () => {

@@ -160,7 +160,7 @@ class BaseDashboard(CmkPage):
     @property
     def widgets(self) -> Locator:
         """Locator property for every widget on the dashboard."""
-        return self.main_area.locator().get_by_label("Widget", exact=True)
+        return self.main_area.locator().locator('[aria-roledescription="Widget"]')
 
     def get_widget(self, widget_title: str) -> Locator:
         """Get the Locator of the widget with the given title.
@@ -171,11 +171,7 @@ class BaseDashboard(CmkPage):
         Returns:
             The locator of the widget with the given title.
         """
-        return (
-            self.main_area.locator()
-            .get_by_label("Widget")
-            .filter(has=self.page.get_by_role("heading", name=widget_title, exact=True))
-        )
+        return self.main_area.locator().get_by_role("group", name=widget_title, exact=True)
 
     def get_widget_table(self, widget_title: str, iframed: bool = False) -> Locator:
         """Get the table inside a widget.

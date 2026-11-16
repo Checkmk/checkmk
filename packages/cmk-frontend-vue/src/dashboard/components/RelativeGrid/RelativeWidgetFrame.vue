@@ -88,7 +88,9 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
     :id="`db-relative-grid-frame-${contentProps.widget_id}`"
     class="db-relative-grid-frame db-widget-theme"
     :style="{ ...containerStyle }"
-    :aria-label="_t('Widget')"
+    role="group"
+    :aria-roledescription="_t('Widget')"
+    :aria-label="contentProps.effectiveTitle"
   >
     <div :style="{ position: 'relative', height: '100%', width: '100%' }">
       <MissingFiltersMsg :effective-filter-context="contentProps.effective_filter_context">

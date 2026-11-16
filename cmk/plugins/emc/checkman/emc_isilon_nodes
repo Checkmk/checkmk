@@ -1,4 +1,4 @@
-title: EMC Isilon: Online Status of Nodes
+title: EMC Isilon: Node Online Status
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPLv2

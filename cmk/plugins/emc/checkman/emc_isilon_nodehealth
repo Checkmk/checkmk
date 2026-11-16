@@ -1,4 +1,4 @@
-title: EMC Isilon: NodeHealth
+title: EMC Isilon: Node Health
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPLv2

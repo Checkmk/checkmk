@@ -1,4 +1,4 @@
-title: EMC Isilon: Report Cluster and Node Name
+title: EMC Isilon: Cluster and Node Name
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPLv2

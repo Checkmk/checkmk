@@ -1,4 +1,4 @@
-title: EMC Datadomain: Power Modules
+title: EMC Data Domain: Power Modules
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPLv2

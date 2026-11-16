@@ -1,4 +1,4 @@
-title: EMC Isilon: ClusterHealth
+title: EMC Isilon: Cluster Health
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPLv2

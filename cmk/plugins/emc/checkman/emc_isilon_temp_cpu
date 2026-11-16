@@ -1,4 +1,4 @@
-title: EMC Isilon: Temperature of CPUs
+title: EMC Isilon: CPU Temperature
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPLv2

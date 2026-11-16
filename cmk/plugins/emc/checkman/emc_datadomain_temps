@@ -1,4 +1,4 @@
-title: EMC Datadomain: Temperature Sensors
+title: EMC Data Domain: Temperature Sensors
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPLv2

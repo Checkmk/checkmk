@@ -1,4 +1,4 @@
-title: EMC Datadomain: Battery Status of NVRAM
+title: EMC Data Domain: NVRAM Batteries
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPLv2

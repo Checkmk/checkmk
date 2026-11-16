@@ -1,4 +1,4 @@
-title: EMC Datadomain: Hard Disk State
+title: EMC Data Domain: Disks
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Windows CPU Load
+title: Windows: CPU Load via WMI
 agents: windows
 catalog: os/services
 license: GPLv2

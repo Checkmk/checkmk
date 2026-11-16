@@ -1,4 +1,4 @@
-title: Windows: Broadcom Bonding Network Interface
+title: Windows: Broadcom Network Interface Bonding
 agents: windows
 catalog: os/networking
 license: GPLv2

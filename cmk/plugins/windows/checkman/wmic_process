@@ -1,4 +1,4 @@
-title: Windows Processes: Resource Consumption
+title: Windows: Process Resource Consumption via WMIC (deprecated)
 agents: windows
 catalog: os/ps
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Microsoft WebServices
+title: Windows: Web Service Connections via WMI
 agents: windows
 catalog: os/services
 license: GPLv2

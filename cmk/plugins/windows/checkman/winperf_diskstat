@@ -1,4 +1,4 @@
-title: Windows: Disk IO
+title: Windows: Disk I/O (deprecated)
 agents: windows
 catalog: os/storage
 license: GPLv2

@@ -263,7 +263,8 @@ def _run_update(context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs
         return CLIExitCode.UNKNOWN
 
 
-def _mode_restart(
+def _mode_activate(
+    action: core_interface.CoreAction,
     omd_root: Path,
     global_options: CLIGlobalOptions,
     fake_dns: HostAddress | None,
@@ -295,7 +296,7 @@ def _mode_restart(
     core, core_client = app.create_core(loaded_config)
 
     core_interface.build_and_activate_monitoring_config(
-        core_interface.CoreAction.RESTART,
+        action,
         loading_result.config_cache,
         core_objects_config,
         hosts_config,
@@ -348,7 +349,13 @@ def _mode_restart(
 
 def _run_restart(context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_restart(context.omd_root, context.global_options, fake_dns, args)
+        return _mode_activate(
+            core_interface.CoreAction.RESTART,
+            context.omd_root,
+            context.global_options,
+            fake_dns,
+            args,
+        )
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -356,92 +363,15 @@ def _run_restart(context: CLIContext, fake_dns: HostAddress | None, args: CLIArg
         return CLIExitCode.UNKNOWN
 
 
-def _mode_reload(
-    omd_root: Path,
-    global_options: CLIGlobalOptions,
-    fake_dns: HostAddress | None,
-    raw_host_names: CLIArgs,
-) -> CLIExitCode:
-    app = make_app(omd_root)
-    args = host_addresses(raw_host_names)
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
-    loaded_config = loading_result.loaded_config
-    ruleset_matcher = loading_result.config_cache.ruleset_matcher
-    label_manager = loading_result.config_cache.label_manager
-    core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
-    hosts_config = loading_result.hosts_config
-
-    ip_lookup_config = loading_result.config_cache.ip_lookup_config(fake_dns=fake_dns)
-
-    ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        allow_empty=hosts_config.clusters,
-        error_handler=ip_lookup.CollectFailedHosts(),
-    )
-    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
-    final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
-    passive_service_name_config = loading_result.config_cache.make_passive_service_name_config(
-        final_service_name_config
-    )
-
-    core, core_client = app.create_core(loaded_config)
-
-    core_interface.build_and_activate_monitoring_config(
-        core_interface.CoreAction.RELOAD,
-        loading_result.config_cache,
-        core_objects_config,
-        hosts_config,
-        loading_result.host_tags,
-        final_service_name_config,
-        passive_service_name_config,
-        config.EnforcedServicesTable(
-            BundledHostRulesetMatcher(
-                loaded_config.static_checks,
-                ruleset_matcher,
-                label_manager.labels_of_host,
-            ),
-            passive_service_name_config,
-            plugins.check_plugins,
-            label_manager.labels_of_service,
-        ),
-        ip_lookup_config.ip_stack_config,
-        ip_lookup_config.default_address_family,
-        ip_address_of,
-        ip_address_of_mgmt,
-        core_client,
-        plugins,
-        config_builders=core_interface.config_builders(core),
-        hosts_to_update=set(args) if args else None,
-        locking_mode=loaded_config.restart_locking,
-        service_depends_on=config.ServiceDependsOn(
-            tag_list=loading_result.host_tags.tag_list,
-            service_dependencies=loaded_config.service_dependencies,
-            debug=global_options.debug,
-        ),
-        duplicates=sorted(
-            hosts_config.duplicates(
-                lambda hn: (
-                    loading_result.config_cache.is_active(hn)
-                    and loading_result.config_cache.is_online(hn)
-                )
-            ),
-        ),
-        notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
-        licensing_handler_factory=app.licensing_handler_factory,
-        edition=app.edition,
-        loaded_config=loaded_config,
-        make_fetcher_trigger=app.make_fetcher_trigger,
-        debug=global_options.debug,
-    )
-    for warning in ip_address_of.error_handler.format_errors():
-        console.warning(tty.format_warning(f"\n{warning}"))
-    return CLIExitCode.SUCCESS
-
-
 def _run_reload(context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_reload(context.omd_root, context.global_options, fake_dns, args)
+        return _mode_activate(
+            core_interface.CoreAction.RELOAD,
+            context.omd_root,
+            context.global_options,
+            fake_dns,
+            args,
+        )
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:

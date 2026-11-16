@@ -17,9 +17,7 @@ from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.cli.internal import Values as CLIValues
 
-from .options import GetoptOptions, Option, spellings
-
-type Positional = CLIArgument[object] | CLIArguments[object]
+from .options import GetoptOptions, Option, Positional, spellings
 
 
 @dataclass(frozen=True, kw_only=True)

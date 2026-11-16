@@ -26,11 +26,11 @@ from .options import (
     long_getopt_specs,
     Option,
     placeholder,
+    Positional,
     short_getopt_spec,
     short_help_text,
     spellings,
 )
-from .readers import Positional
 
 type BoundCommand = Callable[[CLIContext], CLIExitCode]
 

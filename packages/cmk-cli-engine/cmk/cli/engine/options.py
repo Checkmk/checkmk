@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from cmk.cli.internal import Argument as CLIArgument
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Count as CLICount
 from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import Reader as CLIReader
@@ -19,6 +21,8 @@ from cmk.cli.internal import Values as CLIValues
 type GetoptOptions = Sequence[tuple[str, str]]
 
 type Option = CLIFlag | CLICount | CLIValue[object] | CLIValues[object]
+
+type Positional = CLIArgument[object] | CLIArguments[object]
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -17,7 +17,8 @@ from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
 
 from .commands import bind, DiscoveredCommand
-from .readers import Positional, record
+from .options import Positional
+from .readers import record
 
 
 def _selector[R](

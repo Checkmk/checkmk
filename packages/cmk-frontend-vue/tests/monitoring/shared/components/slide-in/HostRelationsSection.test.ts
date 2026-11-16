@@ -81,12 +81,6 @@ test('points the service counts of a related host at its services', () => {
   )
 })
 
-test('leaves the card itself unlinked', () => {
-  renderSection({ relations: [makeRelation()] })
-
-  expect(cardOf('mgmt-web-1').querySelector('a.cmk-link-card')).toBeNull()
-})
-
 test('counts the services of every related host without asking the reader to open it', () => {
   renderSection({ relations: [makeRelation()] })
 

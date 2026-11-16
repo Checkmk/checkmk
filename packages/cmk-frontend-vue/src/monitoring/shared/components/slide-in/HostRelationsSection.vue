@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
-import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
 import StateTag from 'cmk-ui-library/components/StateTag.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
@@ -17,6 +16,7 @@ import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import type { HostOverview, HostRef } from '@/monitoring/shared/api/types'
 import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vue'
 import ServiceSummaryBar from '@/monitoring/shared/components/ServiceSummaryBar.vue'
+import RelatedHostCard from '@/monitoring/shared/components/slide-in/RelatedHostCard.vue'
 
 type Relation = HostOverview['relations'][number]
 
@@ -125,13 +125,9 @@ watch(
         class="monitoring-host-relations-section__list"
       >
         <li v-for="relation in shownRelations" :key="relationKey(relation)">
-          <CmkLinkCard
-            borders="borderless"
-            contrast="high"
+          <RelatedHostCard
             :title="untranslated(relation.host_name)"
             :subtitle="_t('Relation type: %{type}', { type: relation.relation_type })"
-            subtitle-color="secondary"
-            :open-in-new-tab="false"
           >
             <template #leading>
               <HostStateDisplay
@@ -156,7 +152,7 @@ watch(
             <CmkParagraph v-else class="monitoring-host-relations-section__unavailable">
               {{ siteUnavailableNotice(relation) }}
             </CmkParagraph>
-          </CmkLinkCard>
+          </RelatedHostCard>
         </li>
       </ul>
       <CmkButton

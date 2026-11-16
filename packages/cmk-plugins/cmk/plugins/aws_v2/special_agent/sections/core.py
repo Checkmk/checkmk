@@ -500,7 +500,10 @@ class AWSSectionLimits(AWSSection):
             return
 
         paginator = self._quota_client.get_paginator("list_service_quotas")
-        for page in paginator.paginate(ServiceCode=service_code):
+        # Without a page size, AWS sends few quotas per page, and EC2 alone needs dozens of pages.
+        for page in paginator.paginate(
+            ServiceCode=service_code, PaginationConfig={"PageSize": 100}
+        ):
             for quota in self._get_response_content(page, "Quotas"):
                 yield Quota(**quota)
 

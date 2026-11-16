@@ -175,6 +175,36 @@ def test_ecs_summary_does_not_list_clusters_again_when_limits_found_none() -> No
     assert client.cluster_listings == 1
 
 
+class PageSizeRecordingQuotaClient:
+    def __init__(self) -> None:
+        self.page_sizes: list[object] = []
+
+    def get_paginator(self, operation_name: str) -> PageSizeRecordingQuotaClient:
+        assert operation_name == "list_service_quotas"
+        return self
+
+    def paginate(
+        self, ServiceCode: str, PaginationConfig: Mapping[str, object]
+    ) -> Iterator[Mapping[str, object]]:
+        assert ServiceCode == "ecs"
+        self.page_sizes.append(PaginationConfig["PageSize"])
+        yield {"Quotas": []}
+
+
+def test_ecs_limits_ask_for_100_quotas_per_page() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("ecs_names", None)
+    config.add_service_tags("ecs_tags", (None, None))
+    quota_client = PageSizeRecordingQuotaClient()
+    ecs_limits = ECSLimits(FakeEmptyECSClient(), "region", config, None, quota_client)
+
+    ecs_limits.run()
+
+    assert quota_client.page_sizes == [100]
+
+
 ECSSectionsOut = tuple[ECSLimits, ECSSummary, ECS]
 
 

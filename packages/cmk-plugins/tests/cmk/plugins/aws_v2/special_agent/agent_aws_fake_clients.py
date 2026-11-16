@@ -3164,7 +3164,11 @@ class FakeCloudwatchClientLogsClient:
 
 
 class QuotaPaginator:
-    def paginate(self, ServiceCode: str = "") -> Iterator[Mapping[str, object]]:
+    def paginate(
+        self,
+        ServiceCode: str = "",
+        PaginationConfig: object = None,  # noqa: ARG002
+    ) -> Iterator[Mapping[str, object]]:
         if ServiceCode == "ec2":
             q_val = Float("Value")
             yield {

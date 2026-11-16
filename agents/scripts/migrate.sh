@@ -149,6 +149,22 @@ _migrate_home() {
     }
 }
 
+# Print the installation directory the agent user was created for, if it is
+# another one than this package installs to.
+#
+# The home of the agent user is the only record of that directory. The scripts
+# of the previous package have removed its systemd units and its links in
+# /usr/bin by the time this script runs.
+_previous_installdir() {
+    agent_homedir="$(getent passwd "${AGENT_USER}" | cut -d: -f6)"
+
+    case "${agent_homedir}" in
+        "${MK_INSTALLDIR}/runtime/controller") return 1 ;;
+        */runtime/controller) printf "%s\n" "${agent_homedir%/runtime/controller}" ;;
+        *) return 1 ;;
+    esac
+}
+
 main() {
     [ -n "${MK_INSTALLDIR}" ] && {
         _migrate_runtime_dir "${OLD_MK_VARDIR}" "${MK_INSTALLDIR}/runtime"
@@ -156,6 +172,15 @@ main() {
         # directory only ever exists on Linux.
         _migrate_controller_registration "${LEGACY_HOMEDIR}" "${MK_INSTALLDIR}/runtime/controller"
         _migrate_home "${LEGACY_HOMEDIR}" "${MK_INSTALLDIR}/runtime/controller"
+
+        previous_installdir="$(_previous_installdir)" && {
+            _migrate_runtime_dir "${previous_installdir}/runtime" "${MK_INSTALLDIR}/runtime"
+            # The home may still name a directory that an earlier run has
+            # emptied and removed, because usermod refused back then.
+            _migrate_home "${previous_installdir}/runtime/controller" "${MK_INSTALLDIR}/runtime/controller"
+            # The package manager kept the directory for the runtime files in it.
+            rmdir "${previous_installdir}" 2>/dev/null
+        }
     }
 
     # We're called from package manager scriptlets, where a non-zero exit code may abort the

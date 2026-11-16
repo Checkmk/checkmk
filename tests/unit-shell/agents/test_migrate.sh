@@ -8,7 +8,8 @@
 # shell's "*" does not match, a directory that exists on both sides, and the
 # modes of such a directory, which the package sets and the migration must not
 # undo. Further cases cover the controller registration and the home directory
-# of the agent user, which the legacy layout kept in /var/lib/cmk-agent.
+# of the agent user, which the legacy layout kept in /var/lib/cmk-agent, and a
+# host whose installation directory changes from one package to the next.
 #
 # The script also runs on Solaris, from an SVR4 postinstall script. The last two
 # cases cover what that adds: another shell, and an exit code that must not
@@ -268,6 +269,85 @@ test_second_run_changes_nothing() {
     _migrate >/dev/null
 
     assertEquals "the files changed" "${after_first_run}" "$(_snapshot)"
+    assertFalse "a command was called" "[ -s '${CALLS}' ]"
+}
+
+# A host that has the single-directory layout already, in another installation
+# directory than the one this package brings. The package manager has removed
+# the files of the previous package and kept what the agent wrote at runtime.
+_previous_installation() {
+    PREVIOUS="${WORK}/opt/checkmk/agent-old/default"
+    rm -rf "${OLD_VARDIR}"
+    mkdir -p "${PREVIOUS}/runtime/controller" "${PREVIOUS}/runtime/cmk-update-agent"
+    printf '{"push": {}}\n' >"${PREVIOUS}/runtime/controller/registered_connections.json"
+    printf '{"source": {}}\n' >"${PREVIOUS}/runtime/controller/agent-update-state.json"
+    printf 'host_secret\n' >"${PREVIOUS}/runtime/cmk-update-agent/cmk-update-agent.state"
+    printf '%s\n' "${PREVIOUS}/runtime/controller" >"${STUBS}/home"
+}
+
+test_runtime_files_of_a_previous_installation_directory_are_migrated() {
+    # CMK-42087
+    _previous_installation
+
+    _migrate >/dev/null
+
+    assertEquals "content of the registry" '{"push": {}}' \
+        "$(cat "${CONTROLLER}/registered_connections.json")"
+    assertEquals "content of the update state" '{"source": {}}' \
+        "$(cat "${CONTROLLER}/agent-update-state.json")"
+    assertEquals "content of the Python updater's state" "host_secret" \
+        "$(cat "${RUNTIME}/cmk-update-agent/cmk-update-agent.state")"
+    assertFalse "the previous installation directory survived" "[ -e '${PREVIOUS}' ]"
+}
+
+test_home_directory_follows_the_installation_directory() {
+    # CMK-42087
+    _previous_installation
+
+    _migrate >/dev/null
+
+    assertEquals "home of the agent user" "${CONTROLLER}" "$(cat "${STUBS}/home")"
+}
+
+test_runtime_files_are_migrated_while_usermod_refuses() {
+    # CMK-42087
+    _previous_installation
+    printf '' >"${STUBS}/agent_user_busy"
+    printf '' >"${STUBS}/ignores_term"
+
+    _migrate >/dev/null 2>&1
+
+    assertEquals "exit code" "0" "$?"
+    assertEquals "content of the registry" '{"push": {}}' \
+        "$(cat "${CONTROLLER}/registered_connections.json")"
+}
+
+test_home_in_a_removed_installation_directory_is_corrected() {
+    # CMK-42087
+    # What a run leaves behind in which usermod refused: the files are in the
+    # new tree, and the home still names the directory they came from.
+    _previous_installation
+    printf '' >"${STUBS}/agent_user_busy"
+    printf '' >"${STUBS}/ignores_term"
+    _migrate >/dev/null 2>&1
+    rm "${STUBS}/agent_user_busy" "${STUBS}/ignores_term"
+
+    _migrate >/dev/null
+
+    assertEquals "home of the agent user" "${CONTROLLER}" "$(cat "${STUBS}/home")"
+}
+
+test_home_outside_an_installation_directory_is_left_alone() {
+    # CMK-42087
+    # The rule "Customize agent package" can name a user the package does not
+    # create, and such a user has whatever home its administrator gave it.
+    rm -rf "${OLD_VARDIR}"
+    printf '%s\n' "${WORK}/var/home/monitoring" >"${STUBS}/home"
+    before="$(_snapshot)"
+
+    _migrate >/dev/null
+
+    assertEquals "the files changed" "${before}" "$(_snapshot)"
     assertFalse "a command was called" "[ -s '${CALLS}' ]"
 }
 

@@ -130,6 +130,7 @@ if (model.value.length === 0) {
                 :autocompleter="autocompleter"
                 :placeholder="_t('Select label...')"
                 :size="20"
+                width="fill"
                 @update:model-value="(value: string | null) => updateLabel(index, value)"
               />
             </div>
@@ -157,7 +158,7 @@ if (model.value.length === 0) {
 
 .cmk-label-group__simple-list {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: var(--dimension-4);
   align-items: center;
 }
@@ -194,5 +195,9 @@ if (model.value.length === 0) {
 
 .cmk-label-group__item-operator {
   width: 70px;
+}
+
+.cmk-label-group__item-label {
+  min-width: 0;
 }
 </style>

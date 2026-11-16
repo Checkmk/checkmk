@@ -1,4 +1,4 @@
-title: HTTP Accelerator Statistics via Varnishstat on Linux: Cache Hit Ratio
+title: Varnish: Cache Hit Ratio
 agents: linux
 catalog: os/networking
 license: GPLv2

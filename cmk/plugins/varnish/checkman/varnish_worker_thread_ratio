@@ -1,4 +1,4 @@
-title: HTTP Accelerator Statistics via Varnishstat on Linux: Worker Thread Ratio
+title: Varnish: Worker Thread Ratio
 agents: linux
 catalog: os/networking
 license: GPLv2

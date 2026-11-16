@@ -1,4 +1,4 @@
-title: HTTP Accelerator Statistics via Varnishstat on Linux: Backend Success Ratio
+title: Varnish: Backend Success Ratio
 agents: linux
 catalog: os/networking
 license: GPLv2

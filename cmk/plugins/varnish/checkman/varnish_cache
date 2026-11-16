@@ -1,4 +1,4 @@
-title: HTTP Accelerator Statistics via Varnishstat on Linux: Cache
+title: Varnish: Cache
 agents: linux
 catalog: os/networking
 license: GPLv2

@@ -1,4 +1,4 @@
-title: HTTP Accelerator Statistics via Varnishstat on Linux: Worker
+title: Varnish: Worker
 agents: linux
 catalog: os/networking
 license: GPLv2

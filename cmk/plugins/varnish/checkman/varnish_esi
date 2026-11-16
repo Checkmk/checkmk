@@ -1,4 +1,4 @@
-title: HTTP Accelerator Statistics via Varnishstat on Linux: ESI
+title: Varnish: ESI
 agents: linux
 catalog: os/networking
 license: GPLv2

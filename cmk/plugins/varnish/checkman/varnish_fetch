@@ -1,4 +1,4 @@
-title: HTTP Accelerator Statistics via Varnishstat on Linux: Fetch
+title: Varnish: Fetch
 agents: linux
 catalog: os/networking
 license: GPLv2

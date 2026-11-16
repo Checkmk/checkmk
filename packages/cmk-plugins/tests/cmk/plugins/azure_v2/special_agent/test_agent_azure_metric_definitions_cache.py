@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import MetricNamesCache
+from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import MetricDefinitionsCache
 from cmk.plugins.azure_v2.special_agent.azure_api_client import BaseAsyncApiClient
 
 _NOW = 1_794_484_800.0
@@ -26,13 +26,13 @@ def _api_client(*names: str) -> AsyncMock:
 
 
 async def _names_at(now: float, api_client: AsyncMock, *, use_cache: bool = True) -> Sequence[str]:
-    cache = MetricNamesCache(
+    cache = MetricDefinitionsCache(
         subscription="sub123456",
         resource_type="Microsoft.Web/sites",
         cache_id="azure_host",
         clock=lambda: now,
     )
-    names: Sequence[str] = await cache.get_data(api_client, _RESOURCE_ID, use_cache=use_cache)
+    names: Sequence[str] = list(await cache.get_data(api_client, _RESOURCE_ID, use_cache=use_cache))
     return names
 
 

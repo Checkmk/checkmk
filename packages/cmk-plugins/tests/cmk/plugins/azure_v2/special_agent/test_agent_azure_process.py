@@ -29,6 +29,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     filter_tags,
     get_otel_identity_labels_section,
     get_otel_only_resources,
+    get_otel_primary_aggregations_sections,
     get_resource_groups,
     get_resource_host_labels_section,
     process_app_registrations,
@@ -430,6 +431,48 @@ def _otel_resources(*names: str) -> Sequence[AzureResource]:
         )
         for name in names
     ]
+
+
+@pytest.mark.usefixtures("storage_path")
+@pytest.mark.asyncio
+async def test_otel_primary_aggregations_need_no_extra_call() -> None:
+    api_client = AsyncMock(spec=BaseAsyncApiClient)
+    api_client.request_async.side_effect = [
+        [{"name": {"value": "Percentage CPU"}, "primaryAggregationType": "Average"}],
+        _get_batch_answer(vm1=1.0, vm2=1.0),
+    ]
+    resources = await filter_otel_resources_reporting_metrics(
+        api_client,
+        _otel_resources("vm1", "vm2"),
+        "sub",
+        "azure_host",
+        datetime.datetime.now(datetime.UTC),
+        debug=False,
+    )
+
+    sections = await get_otel_primary_aggregations_sections(
+        api_client, resources, "sub", "azure_host", debug=False
+    )
+
+    # the definitions call of the filter and its getBatch call, nothing more
+    assert api_client.request_async.call_count == 2
+    assert [(s._piggytargets, s._cont) for s in sections] == [  # noqa: SLF001
+        (["vm1"], ['{"Percentage CPU": "Average"}\n']),
+        (["vm2"], ['{"Percentage CPU": "Average"}\n']),
+    ]
+
+
+@pytest.mark.usefixtures("storage_path")
+@pytest.mark.asyncio
+async def test_otel_primary_aggregations_without_definitions() -> None:
+    api_client = AsyncMock(spec=BaseAsyncApiClient)
+    api_client.request_async.side_effect = ApiError("denied")
+
+    sections = await get_otel_primary_aggregations_sections(
+        api_client, _otel_resources("vm1"), "sub", "azure_host", debug=False
+    )
+
+    assert sections == []
 
 
 @pytest.mark.parametrize(

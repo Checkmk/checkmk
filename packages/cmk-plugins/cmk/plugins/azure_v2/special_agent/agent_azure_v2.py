@@ -2193,7 +2193,10 @@ def _has_metric_values(resource_metrics: Mapping[str, Any]) -> bool:
     )
 
 
-async def _get_metric_names(api_client: BaseAsyncApiClient, resource_id: str) -> list[str]:
+async def _get_metric_definitions(
+    api_client: BaseAsyncApiClient, resource_id: str
+) -> Mapping[str, str]:
+    """Return the metric names, each with the aggregation that Azure suggests (e.g. "Average")"""
     _empty, _subscriptions, _subscription_id, resource_path = resource_id.split("/", 3)
     definitions = await api_client.request_async(
         "GET",
@@ -2201,7 +2204,10 @@ async def _get_metric_names(api_client: BaseAsyncApiClient, resource_id: str) ->
         params={"api-version": "2023-10-01"},
         key="value",
     )
-    return [definition["name"]["value"] for definition in definitions]
+    return {
+        definition["name"]["value"]: definition.get("primaryAggregationType", "")
+        for definition in definitions
+    }
 
 
 async def _get_resources_reporting_metrics(
@@ -2250,10 +2256,11 @@ async def _get_resources_reporting_metrics(
     return reported
 
 
-class MetricNamesCache(AzureAsyncCache):
-    """Metric names of one subscription and resource type, kept for a day
+class MetricDefinitionsCache(AzureAsyncCache):
+    """Metric names and their primary aggregations of one subscription and resource type,
+    kept for a day
 
-    One file per type, "<subscription[:6]>_<resource_type>_metric_names" with "/" in
+    One file per type, "<subscription[:6]>_<resource_type>_metric_definitions" with "/" in
     the type replaced by "_". The names are taken from one resource of the type.
     """
 
@@ -2270,7 +2277,7 @@ class MetricNamesCache(AzureAsyncCache):
         super().__init__(
             host_name=cache_id,
             agent=f"agent_{AGENT}",
-            key=f"{subscription[:6]}_{resource_type.replace('/', '_')}_metric_names",
+            key=f"{subscription[:6]}_{resource_type.replace('/', '_')}_metric_definitions",
             debug=debug,
             clock=clock,
         )
@@ -2281,12 +2288,12 @@ class MetricNamesCache(AzureAsyncCache):
         return _METRICS_REPORT_CACHE_INTERVAL
 
     @override
-    async def get_live_data(self, *args: Any) -> Sequence[str]:
+    async def get_live_data(self, *args: Any) -> Mapping[str, str]:
         api_client: BaseAsyncApiClient = args[0]
         resource_id: str = args[1]
-        if not (metric_names := await _get_metric_names(api_client, resource_id)):
+        if not (definitions := await _get_metric_definitions(api_client, resource_id)):
             raise ApiErrorMissingData(f"No metric definitions for {self._resource_type}")
-        return metric_names
+        return definitions
 
 
 class MetricsReportCache:
@@ -2311,7 +2318,7 @@ class MetricsReportCache:
         self._region = region
         self._resource_type = resource_type
         self._debug = debug
-        self._metric_names = MetricNamesCache(
+        self._metric_definitions = MetricDefinitionsCache(
             subscription=subscription, resource_type=resource_type, cache_id=cache_id, debug=debug
         )
         self._storage = Storage(cache_id, f"agent_{AGENT}")
@@ -2344,7 +2351,9 @@ class MetricsReportCache:
         answers = self._read(now)
         if unanswered := [r for r in resource_ids if r.lower() not in answers]:
             try:
-                metric_names = await self._metric_names.get_data(api_client, unanswered[0])
+                metric_names = list(
+                    await self._metric_definitions.get_data(api_client, unanswered[0])
+                )
                 reported = await _get_resources_reporting_metrics(
                     api_client, self._region, self._resource_type, metric_names, unanswered, now
                 )
@@ -2410,6 +2419,60 @@ async def filter_otel_resources_reporting_metrics(
             {"name": resource.name, "type": resource.info["type"], "reason": reason},
         )
     return kept
+
+
+async def get_otel_primary_aggregations_sections(
+    api_client: BaseAsyncApiClient,
+    otel_resources: Sequence[AzureResource],
+    subscription_id: str,
+    cache_id: str,
+    debug: bool,
+) -> list[AzureSection]:
+    """Tell the check of each OTel resource the aggregation that Azure suggests for a metric
+
+    The definitions are the same for all resources of a type. They come from the cache that
+    filter_otel_resources_reporting_metrics fills, so Azure is asked at most once per day and type.
+    """
+    if not otel_resources:
+        return []
+
+    resource_id_by_type: dict[str, str] = {}
+    for resource in otel_resources:
+        resource_id_by_type.setdefault(resource.info["type"], resource.info["id"])
+
+    # Get the definitions of each type, in parallel
+    answers = await asyncio.gather(
+        *(
+            MetricDefinitionsCache(
+                subscription=subscription_id,
+                resource_type=resource_type,
+                cache_id=cache_id,
+                debug=debug,
+            ).get_data(api_client, resource_id)
+            for resource_type, resource_id in resource_id_by_type.items()
+        ),
+        return_exceptions=True,
+    )
+    # Keep the types with definitions, skip the failed ones
+    primary_aggregations_by_type: dict[str, Mapping[str, str]] = {}
+    for resource_type, answer in zip(resource_id_by_type, answers):
+        if isinstance(answer, BaseException):
+            if debug:
+                raise answer
+            LOGGER.warning(
+                "Cannot get the metric definitions of %(type)s: %(error)s",
+                {"type": resource_type, "error": answer},
+            )
+            continue
+        primary_aggregations_by_type[resource_type] = answer
+
+    sections = []
+    for resource in otel_resources:
+        if primary_aggregations := primary_aggregations_by_type.get(resource.info["type"]):
+            section = AzureSection("otel_primary_aggregations", [resource.piggytarget], separator=0)
+            section.add(json.dumps(primary_aggregations))
+            sections.append(section)
+    return sections
 
 
 def write_resource_groups_sections(resource_groups: Mapping[str, AzureResourceGroup]) -> None:
@@ -3118,6 +3181,9 @@ async def process_resources(
             groups_with_monitored_resources,
             monitored_resources_by_id,
             otel_resources,
+        ),
+        get_otel_primary_aggregations_sections(
+            mgmt_client, otel_resources, subscription.id, args.cache_id, args.debug
         ),
     }
 

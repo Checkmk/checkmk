@@ -6,12 +6,12 @@ py_cmk_test(
     srcs = glob(["**/*.py"]),
     args = ["tests/integration/docker"],
     tags = [
-        "deballast-keep=//cmk/plugins:plugins",  # agent sections are found at runtime by discover_all_plugins
+        "deballast-keep=//packages/cmk-plugins/cmk/plugins/docker",  # agent sections are found at runtime by discover_all_plugins
     ],
     deps = [
         "//agents/plugins:agent-plugins-python",
-        "//cmk/plugins",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-plugins/cmk/plugins/docker",
     ],
 )

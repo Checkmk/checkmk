@@ -27,6 +27,7 @@ py_cmk_test(
         "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugins:azure_deprecated",
         "//packages/cmk-plugins:azure_v2",
+        "//packages/cmk-plugins:docker",
         "//packages/cmk-plugins:proxmox_ve",
         "//tests/testlib/common",
         "//tests/testlib/unit:bakelet_testing",

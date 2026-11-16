@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { computed } from 'vue'
 
 const propsCva = cva('', {
   variants: {
@@ -58,18 +59,40 @@ export interface CmkTagProps {
   value?: string | undefined
   /** Native tooltip, e.g. the full text when a consumer clips the tag to its column. */
   title?: string
-  interactive?: boolean
+  /** What a click on the tag does; without one the tag is plain text. */
+  action?: CmkTagAction | undefined
 }
 
-defineProps<CmkTagProps>()
+/**
+ * `button` makes the tag a button its click listener acts on, `link` a link to `href`,
+ * opened in `target` (e.g. `_top` to leave a frame).
+ */
+export type CmkTagAction =
+  | { type: 'button' }
+  | { type: 'link'; href: string; target?: string | undefined }
+
+const props = defineProps<CmkTagProps>()
+
+const element = computed(() => {
+  if (props.action?.type === 'link') {
+    return { tag: 'a', attributes: { href: props.action.href, target: props.action.target } }
+  }
+  if (props.action?.type === 'button') {
+    return { tag: 'button', attributes: { type: 'button' } }
+  }
+  return { tag: 'span', attributes: {} }
+})
 </script>
 
 <template>
   <component
-    :is="interactive ? 'button' : 'span'"
-    :type="interactive ? 'button' : undefined"
+    :is="element.tag"
+    v-bind="element.attributes"
     class="cmk-tag"
-    :class="[propsCva({ size, color, variant, spacing }), { 'cmk-tag--interactive': interactive }]"
+    :class="[
+      propsCva({ size, color, variant, spacing }),
+      { 'cmk-tag--interactive': action !== undefined }
+    ]"
     :title="title"
   >
     <template v-if="value !== undefined"
@@ -93,6 +116,7 @@ defineProps<CmkTagProps>()
   font: inherit;
   letter-spacing: inherit;
   vertical-align: baseline;
+  text-decoration: none;
   cursor: pointer;
 
   &:focus-visible {

@@ -81,10 +81,16 @@ defineProps<{ screenshotMode: boolean }>()
   <CmkTag variant="weighted" content="Weighted"></CmkTag>
 
   <h2>Interactive</h2>
-  <CmkTag interactive variant="fill" content="Fill"></CmkTag>
-  <CmkTag interactive variant="outline" content="Outline"></CmkTag>
-  <CmkTag interactive variant="weighted" content="Weighted"></CmkTag>
-  <CmkTag interactive variant="fill" color="label" content="os" value="linux"></CmkTag>
+  <CmkTag :action="{ type: 'button' }" variant="fill" content="Fill"></CmkTag>
+  <CmkTag :action="{ type: 'button' }" variant="outline" content="Outline"></CmkTag>
+  <CmkTag :action="{ type: 'button' }" variant="weighted" content="Weighted"></CmkTag>
+  <CmkTag
+    :action="{ type: 'button' }"
+    variant="fill"
+    color="label"
+    content="os"
+    value="linux"
+  ></CmkTag>
 </template>
 
 <style scoped>

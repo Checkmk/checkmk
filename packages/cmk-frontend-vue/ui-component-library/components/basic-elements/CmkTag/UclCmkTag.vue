@@ -5,7 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
+import type { ListPropDef } from '@ucl/_ucl/types/prop-def'
 import {
+  type CmkTagAction,
   type Colors,
   type Sizes,
   type Spacings,
@@ -13,6 +15,15 @@ import {
 } from 'cmk-ui-library/components/CmkTag.vue'
 
 import codeExample from './UclCmkTagCodeExample.vue?raw'
+
+type ActionPreset = 'none' | 'button' | 'internalLink' | 'externalLink'
+
+const actionPresets: Record<ActionPreset, CmkTagAction | undefined> = {
+  none: undefined,
+  button: { type: 'button' },
+  internalLink: { type: 'link', href: 'view.py?view_name=allhosts', target: '_top' },
+  externalLink: { type: 'link', href: 'https://checkmk.com', target: '_blank' }
+}
 
 export const panelConfig = {
   content: {
@@ -78,13 +89,21 @@ export const panelConfig = {
     initialState: '',
     help: 'Native tooltip shown on hover, e.g. the full text when the tag is clipped.'
   },
-  interactive: {
-    type: 'boolean' as const,
-    title: 'Interactive',
-    initialState: false,
-    help: 'Renders a button with hover and press states, for a tag a click acts on.'
+  action: {
+    type: 'list' as const,
+    title: 'Action',
+    options: listOptions<ActionPreset>({
+      none: 'None',
+      button: 'Button',
+      internalLink: 'Internal link',
+      externalLink: 'External link'
+    }),
+    initialState: 'none' as const,
+    help: 'Button and links render with hover and press states. An internal link leaves the frame (_top), an external one opens in a new tab (_blank).'
   }
-} satisfies PanelConfigFor<typeof CmkTag>
+} satisfies PanelConfigFor<typeof CmkTag, 'action'> & {
+  action: ListPropDef<ActionPreset>
+}
 </script>
 
 <script setup lang="ts">
@@ -99,12 +118,15 @@ import {
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 import CmkTag from 'cmk-ui-library/components/CmkTag.vue'
+import { computed } from 'vue'
 
 import UclCmkTagDev from './UclCmkTagDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<typeof CmkTag>().createRef(panelConfig)
+const propState = new PanelStateCreator<typeof CmkTag, 'action'>().createRef(panelConfig)
+
+const action = computed(() => actionPresets[propState.value.action])
 </script>
 
 <template>
@@ -119,7 +141,7 @@ const propState = new PanelStateCreator<typeof CmkTag>().createRef(panelConfig)
         :color="propState.color"
         :variant="propState.variant"
         :spacing="propState.spacing"
-        :interactive="propState.interactive"
+        :action="action"
       />
 
       <template #properties>

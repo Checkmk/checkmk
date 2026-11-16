@@ -50,7 +50,7 @@ function narrow(): void {
     :color="item.color ?? 'default'"
     :content="labelItemContent(item)"
     :value="labelItemValue(item)"
-    :interactive="interactive"
+    :action="interactive ? { type: 'button' } : undefined"
     :title="
       interactive ? _t('Filter by %{entry}', { entry: labelItemText(item) }) : labelItemText(item)
     "

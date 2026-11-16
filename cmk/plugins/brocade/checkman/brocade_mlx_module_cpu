@@ -1,4 +1,4 @@
-title: Brocade NetIron MLX Devices: CPU Utilization
+title: Brocade NetIron: Module CPU Utilization
 agents: snmp
 catalog: hw/network/brocade
 license: GPLv2

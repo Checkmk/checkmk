@@ -1,4 +1,4 @@
-title: Brocade FibreChannel Switches: CPU
+title: Brocade Fibre Channel: CPU Utilization
 catalog: hw/network/brocade
 agents: snmp
 license: GPLv2

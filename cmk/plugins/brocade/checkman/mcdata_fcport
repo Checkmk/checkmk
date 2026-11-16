@@ -1,4 +1,4 @@
-title: McData FibreChannel Switches: Traffic and Status of Ports
+title: McData: FC Port Traffic and Status
 agents: snmp
 catalog: hw/storagehw/mcdata
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Brocade NetIron MLX / ADX / FGS / ICX Devices: Module Overall Status
+title: Brocade NetIron: Module Status
 agents: snmp
 catalog: hw/network/brocade
 license: GPLv2

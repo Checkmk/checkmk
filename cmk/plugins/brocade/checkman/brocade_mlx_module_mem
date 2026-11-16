@@ -1,4 +1,4 @@
-title: Brocade NetIron MLX Devices: NI-MLX or BR-MLX Module Memory (RAM Usage)
+title: Brocade NetIron: Module Memory
 agents: snmp
 catalog: hw/environment/brocade
 license: GPLv2

@@ -18,7 +18,7 @@ from cmk.cli.internal import Values as CLIValues
 
 type GetoptOptions = Sequence[tuple[str, str]]
 
-type Declaration = CLIFlag | CLICount | CLIValue[object] | CLIValues[object]
+type Option = CLIFlag | CLICount | CLIValue[object] | CLIValues[object]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -50,17 +50,17 @@ _LOG_FILE_OPTION: Final = CLIValue(
     parse=Path,
 )
 
-_GENERAL_OPTIONS: Final[Sequence[Declaration]] = (
+_GENERAL_OPTIONS: Final[Sequence[Option]] = (
     _VERBOSE_OPTION,
     _DEBUG_OPTION,
     _PROFILE_OPTION,
     _LOG_FILE_OPTION,
 )
 
-ENGINE_OPTIONS: Final[Sequence[Declaration]] = (HELP_OPTION, *_GENERAL_OPTIONS)
+ENGINE_OPTIONS: Final[Sequence[Option]] = (HELP_OPTION, *_GENERAL_OPTIONS)
 
 
-def spellings(option: Declaration) -> Sequence[str]:
+def spellings(option: Option) -> Sequence[str]:
     return [
         *([] if option.short is None else [f"-{option.short}"]),
         f"--{option.long}",
@@ -68,7 +68,7 @@ def spellings(option: Declaration) -> Sequence[str]:
     ]
 
 
-def placeholder(option: Declaration) -> str | None:
+def placeholder(option: Option) -> str | None:
     match option:
         case CLIValue() | CLIValues():
             return option.placeholder
@@ -76,13 +76,13 @@ def placeholder(option: Declaration) -> str | None:
             return None
 
 
-def short_getopt_spec(option: Declaration) -> str:
+def short_getopt_spec(option: Option) -> str:
     if option.short is None:
         return ""
     return option.short if placeholder(option) is None else f"{option.short}:"
 
 
-def long_getopt_specs(option: Declaration) -> Sequence[str]:
+def long_getopt_specs(option: Option) -> Sequence[str]:
     suffix = "" if placeholder(option) is None else "="
     return [f"{name}{suffix}" for name in (option.long, *sorted(option.deprecated_names))]
 
@@ -101,7 +101,7 @@ class HelpColumn:
         )
 
 
-def short_help_text(option: Declaration, column: HelpColumn) -> str:
+def short_help_text(option: Option, column: HelpColumn) -> str:
     argument = placeholder(option)
     spelled = " " + ", ".join(spellings(option)) + ("" if argument is None else f" {argument}")
     return column.fill(spelled, option.help)

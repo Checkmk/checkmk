@@ -17,14 +17,14 @@ from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.cli.internal import Values as CLIValues
 
-from .options import Declaration, GetoptOptions, spellings
+from .options import GetoptOptions, Option, spellings
 
 type Positional = CLIArgument[object] | CLIArguments[object]
 
 
 @dataclass(frozen=True, kw_only=True)
 class Recorded:
-    options: Sequence[Declaration]
+    options: Sequence[Option]
     positional: Sequence[Positional]
 
 
@@ -68,9 +68,7 @@ def assign(
     return assigned
 
 
-def _given_option(
-    options: GetoptOptions, option: Declaration, logger: logging.Logger
-) -> Sequence[str]:
+def _given_option(options: GetoptOptions, option: Option, logger: logging.Logger) -> Sequence[str]:
     option_spellings = spellings(option)
     given = []
     for spec, argument in options:

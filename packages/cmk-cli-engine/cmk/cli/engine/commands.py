@@ -19,12 +19,12 @@ from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 
 from .options import (
-    Declaration,
     ENGINE_OPTIONS,
     GetoptOptions,
     HELP_WIDTH,
     HelpColumn,
     long_getopt_specs,
+    Option,
     placeholder,
     short_getopt_spec,
     short_help_text,
@@ -51,7 +51,7 @@ class DiscoveredCommand:
     selector: CLIFlag | CLIValue[str]
     positional: Sequence[Positional]
     description: Sequence[str]
-    options: Sequence[Declaration]
+    options: Sequence[Option]
     load: Callable[[], Binder]
     default: bool
 
@@ -126,11 +126,11 @@ def _map_commands(commands: Sequence[DiscoveredCommand]) -> Mapping[str, Discove
     return mapped
 
 
-def _check_arguments(declarations: Sequence[Declaration]) -> None:
+def _check_arguments(options: Sequence[Option]) -> None:
     declared: dict[str, bool] = {}
-    for declaration in declarations:
-        with_argument = placeholder(declaration) is not None
-        for spelling in spellings(declaration):
+    for option in options:
+        with_argument = placeholder(option) is not None
+        for spelling in spellings(option):
             if declared.setdefault(spelling, with_argument) != with_argument:
                 raise ValueError(f"{spelling!r} is declared both with and without an argument")
 
@@ -156,12 +156,12 @@ class Commands:
         self._commands = commands
         self._command_map = _map_commands(commands)
         self.default = _default_command(commands)
-        self._declarations: Sequence[Declaration] = [
+        self._options: Sequence[Option] = [
             *(command.selector for command in commands),
             *ENGINE_OPTIONS,
             *(option for command in commands for option in command.options),
         ]
-        _check_arguments(self._declarations)
+        _check_arguments(self._options)
 
     def find(self, spelling: str) -> DiscoveredCommand | None:
         return self._command_map.get(spelling)
@@ -169,8 +169,8 @@ class Commands:
     def getopt(self, args: Sequence[str]) -> tuple[GetoptOptions, Sequence[str]]:
         return getopt.getopt(
             list(args),
-            "".join(short_getopt_spec(declaration) for declaration in self._declarations),
-            [spec for declaration in self._declarations for spec in long_getopt_specs(declaration)],
+            "".join(short_getopt_spec(option) for option in self._options),
+            [spec for option in self._options for spec in long_getopt_specs(option)],
         )
 
     def help(self) -> str:

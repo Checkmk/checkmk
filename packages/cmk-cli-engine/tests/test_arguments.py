@@ -14,8 +14,8 @@ from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.arguments import ShowHelp as CLIShowHelp
 from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.options import _GENERAL_OPTIONS as CLI_GENERAL_OPTIONS
-from cmk.cli.engine.options import Declaration as CLIDeclaration
 from cmk.cli.engine.options import GlobalOptions as CLIEngineGlobalOptions
+from cmk.cli.engine.options import Option as CLIOption
 from cmk.cli.engine.options import placeholder as cli_placeholder
 from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
@@ -143,7 +143,7 @@ def _parse(argv: Sequence[str]) -> CLIRunCommand | CLIShowHelp | CLIInvalidArgum
     return cli_parse(_COMMANDS, argv, null_logger())
 
 
-def _general_option_argv(option: CLIDeclaration) -> Sequence[str]:
+def _general_option_argv(option: CLIOption) -> Sequence[str]:
     if cli_placeholder(option) is not None:
         return [f"--{option.long}={_ARGUMENT_EVERY_CONVERSION_ACCEPTS}"]
     return [f"--{option.long}"]
@@ -273,7 +273,7 @@ def test_the_rejection_names_the_program_as_it_was_called() -> None:
 
 
 @pytest.mark.parametrize("option", CLI_GENERAL_OPTIONS, ids=lambda option: option.long)
-def test_a_general_option_does_not_select_a_command(option: CLIDeclaration) -> None:
+def test_a_general_option_does_not_select_a_command(option: CLIOption) -> None:
     parsed = _parse(["cmk", *_general_option_argv(option), "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
@@ -281,7 +281,7 @@ def test_a_general_option_does_not_select_a_command(option: CLIDeclaration) -> N
 
 
 @pytest.mark.parametrize("option", CLI_GENERAL_OPTIONS, ids=lambda option: option.long)
-def test_a_general_option_is_handed_back_for_processing(option: CLIDeclaration) -> None:
+def test_a_general_option_is_handed_back_for_processing(option: CLIOption) -> None:
     parsed = _parse(["cmk", *_general_option_argv(option), "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)

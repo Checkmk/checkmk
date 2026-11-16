@@ -1,4 +1,4 @@
-title: EMKA Electronic Locking & Monitoring: Temperature Sensor
+title: EMKA: Temperature
 agents: snmp
 catalog: hw/environment/emka
 license: GPLv2

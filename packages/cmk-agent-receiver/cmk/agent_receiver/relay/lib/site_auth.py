@@ -2,59 +2,28 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import Generator
 from http import HTTPStatus
 from typing import Final, final, override
 
 import httpx2
 from pydantic import SecretStr
 
-from cmk.agent_receiver.lib.auth import async_internal_credentials, internal_credentials
+from cmk.agent_receiver.lib.auth import internal_credentials
 
 SUPPORTED_AUTH_PREFIXES: Final = ("Bearer ", "CMK-TOKEN ")
 
 
 @final
 class InternalAuth(httpx2.Auth):
-    def __init__(self) -> None:
-        self._cached_token: str | None = None
-
-    def _get_auth_header_sync(self) -> str:
-        if self._cached_token is None:
-            self._cached_token = f"InternalToken {internal_credentials()}"
-        return self._cached_token
-
-    async def _get_auth_header_async(self) -> str:
-        if self._cached_token is None:
-            token = await async_internal_credentials()
-            self._cached_token = f"InternalToken {token}"
-        return self._cached_token
-
-    def _invalidate_cache(self) -> None:
-        self._cached_token = None
-
     @override
-    def sync_auth_flow(self, request: httpx2.Request) -> Generator[httpx2.Request, httpx2.Response]:
-        request.headers["Authorization"] = self._get_auth_header_sync()
+    def auth_flow(self, request: httpx2.Request) -> Generator[httpx2.Request, httpx2.Response]:
+        request.headers["Authorization"] = f"InternalToken {internal_credentials()}"
         response = yield request
 
-        # Handle credential rotation on unauthorized responses
+        # The secret may have been regenerated while the request was on its way.
         if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
-            self._invalidate_cache()
-            request.headers["Authorization"] = self._get_auth_header_sync()
-            yield request
-
-    @override
-    async def async_auth_flow(
-        self, request: httpx2.Request
-    ) -> AsyncGenerator[httpx2.Request, httpx2.Response]:
-        request.headers["Authorization"] = await self._get_auth_header_async()
-        response = yield request
-
-        # Handle credential rotation on unauthorized responses
-        if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
-            self._invalidate_cache()
-            request.headers["Authorization"] = await self._get_auth_header_async()
+            request.headers["Authorization"] = f"InternalToken {internal_credentials()}"
             yield request
 
 

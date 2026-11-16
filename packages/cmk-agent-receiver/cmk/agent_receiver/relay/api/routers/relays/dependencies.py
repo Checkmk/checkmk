@@ -65,8 +65,8 @@ async def get_forward_monitoring_data_handler(
 
 @cache
 def get_crash_extraction_executor() -> concurrent.futures.ThreadPoolExecutor:
-    # Own threads: the default executor is shared with the credential lookup in
-    # lib.auth, so a burst of uploads would delay every other request.
+    # Own threads, as an extraction past its timeout keeps running: only a pool caps the
+    # threads, a limiter around a shared one releases its slot on the timeout already.
     return concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix="crash-extract")
 
 

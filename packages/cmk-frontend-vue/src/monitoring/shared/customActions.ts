@@ -70,12 +70,15 @@ export function useInlineCustomActionCount(
   rows: () => readonly RowWithCustomIcons[]
 ): ComputedRef<number> {
   const most = ref(0)
+  // A reduce, not a spread: a listing without a limit can exceed the engine's argument limit.
   watchEffect(() => {
-    most.value = Math.max(
-      most.value,
-      ...rows().map((row) =>
-        Math.min(MAX_INLINE_CUSTOM_ACTIONS, customActions(row.custom_icons ?? undefined).length)
-      )
+    most.value = rows().reduce(
+      (acc, row) =>
+        Math.max(
+          acc,
+          Math.min(MAX_INLINE_CUSTOM_ACTIONS, customActions(row.custom_icons ?? undefined).length)
+        ),
+      most.value
     )
   })
   return computed(() => most.value)

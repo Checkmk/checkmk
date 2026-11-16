@@ -39,6 +39,12 @@ test('the Actions column makes room for the inline custom actions of its fullest
   expect(useInlineCustomActionCount(() => rows.value).value).toBe(MAX_INLINE_CUSTOM_ACTIONS)
 })
 
+test('the Actions column counts the custom actions of a listing beyond the argument limit', () => {
+  const rows = [...Array<RowWithCustomIcons>(1_000_000).fill({}), { custom_icons: [action('a')] }]
+
+  expect(useInlineCustomActionCount(() => rows).value).toBe(1)
+})
+
 test('the Actions column keeps its room when a batch without custom actions arrives', async () => {
   const rows = ref<RowWithCustomIcons[]>([{ custom_icons: [action('a')] }])
   const count = useInlineCustomActionCount(() => rows.value)

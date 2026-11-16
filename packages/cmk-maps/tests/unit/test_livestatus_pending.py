@@ -8,17 +8,15 @@ import asyncio
 import pytest
 
 from cmk.maps.backend.connections import livestatus
-
-
-async def _no_folders() -> livestatus.WatoFolders:
-    return livestatus.WatoFolders([], hide_unreadable=False)
+from cmk.maps.backend.integrations.checkmk_folders import FolderSkeleton
 
 
 def _connection(
     monkeypatch: pytest.MonkeyPatch, rows: list[list[object]]
 ) -> livestatus.LivestatusConnection:
-    monkeypatch.setattr(livestatus, "_load_wato_folders", _no_folders)
-    conn = livestatus.LivestatusConnection(socket_path="/var/run/live", host="10.0.0.1")
+    conn = livestatus.LivestatusConnection(
+        socket_path="/var/run/live", host="10.0.0.1", load_folder_perms=FolderSkeleton
+    )
 
     async def _query(_query: str) -> list[list[object]]:
         return rows

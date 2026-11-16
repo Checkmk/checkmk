@@ -21,14 +21,10 @@ from datetime import datetime, UTC
 from functools import lru_cache
 from http import HTTPStatus
 from pathlib import Path
-from typing import cast, Literal, NamedTuple, override, TYPE_CHECKING
+from typing import cast, Literal, NamedTuple, override, Protocol, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from cmk.livestatus_client import (
-        Query,
-        SingleSiteConnection,
-        SiteConfiguration,
-    )
+    from cmk.livestatus_client import Query, SiteConfiguration
 
 import httpx2
 
@@ -38,6 +34,7 @@ from cmk.livestatus_client import (
     lqencode,
     MKLivestatusQueryError,
     MultiSiteConnection,
+    SingleSiteConnection,
     SiteConfigurations,
 )
 from cmk.maps.backend.connections.base import (
@@ -220,14 +217,11 @@ def _folder_path_from_filename(filename: str) -> str:
 # effective read-permitted contact groups come from the GUI-prepared skeleton
 # (``maps.d/wato/folder_perms.mk``, written by cmk.maps.gui._folders via the real
 # ``Folder.groups()``), not from Livestatus (which only knows folders that contain
-# hosts). Cached on the file mtime — the skeleton changes only on activation, but
-# the read would otherwise run on every state tick.
+# hosts). Cached on the file version — the skeleton changes only on activation,
+# but the read would otherwise run on every state tick.
 class WatoFolders(NamedTuple):
     folders: list[FolderInfo]
     hide_unreadable: bool
-
-
-_wato_folders_cache: dict[tuple[int, int, int] | None, WatoFolders] = {}
 
 
 def _folder_info_from_entry(entry: dict[str, object]) -> FolderInfo | None:
@@ -253,35 +247,6 @@ def _folder_info_from_entry(entry: dict[str, object]) -> FolderInfo | None:
     if isinstance(fid, str) and fid:
         info["folder_id"] = fid
     return info
-
-
-async def _load_wato_folders() -> WatoFolders:
-    """Cached, off-event-loop read of the GUI-prepared SETUP-folder skeleton.
-
-    A file that cannot be read raises and is not cached, so it is read again.
-    """
-    version = _cmk_folders.folder_perms_version()
-    cached = _wato_folders_cache.get(version)
-    if cached is not None:
-        return cached
-    skeleton = await asyncio.to_thread(_cmk_folders.load_folder_perms)
-    loaded = WatoFolders(
-        [
-            info
-            for entry in skeleton.folders
-            if (info := _folder_info_from_entry(entry)) is not None
-        ],
-        skeleton.hide_unreadable,
-    )
-    logger.debug(
-        "Folder-tree: loaded %(folder_count)d prepared WATO folders",
-        {"folder_count": len(loaded.folders)},
-    )
-    # Single-entry cache: a new activation changes the version and invalidates
-    # the previous skeleton.
-    _wato_folders_cache.clear()
-    _wato_folders_cache[version] = loaded
-    return loaded
 
 
 # State-code maps + severity ranking are the shared GUI↔daemon vocabulary
@@ -546,6 +511,20 @@ def _trusted_cas(ca_file: str, _mtime: int) -> ssl.SSLContext:
     return context
 
 
+class _SiteConnect(Protocol):
+    def __call__(
+        self, socketurl: str, *, tls: bool, verify: bool, ca_file_path: str | None
+    ) -> SingleSiteConnection: ...
+
+
+def _prepared_sites() -> dict[str, dict[str, object]] | None:
+    return _cmk_sites.load_sites()
+
+
+def _prepared_sites_mtime() -> float:
+    return _cmk_sites.sites_mk_mtime()
+
+
 class LivestatusConnection(ConnectionBase):
     """Connects to a Livestatus socket (Unix or TCP) and queries host/service states."""
 
@@ -562,6 +541,22 @@ class LivestatusConnection(ConnectionBase):
         checkmk_url: str | None = None,
         automation_user: str | None = None,
         automation_secret: str | None = None,
+        *,
+        clock: Callable[[], float] = time.monotonic,
+        make_site_connection: _SiteConnect = SingleSiteConnection,
+        make_federated_connection: Callable[
+            [SiteConfigurations], MultiSiteConnection
+        ] = MultiSiteConnection,
+        load_sites: Callable[[], dict[str, dict[str, object]] | None] = _prepared_sites,
+        sites_mtime: Callable[[], float] = _prepared_sites_mtime,
+        load_folder_perms: Callable[[], _cmk_folders.FolderSkeleton] = (
+            _cmk_folders.load_folder_perms
+        ),
+        folder_perms_version: Callable[[], tuple[int, int, int] | None] = (
+            _cmk_folders.folder_perms_version
+        ),
+        query_timeout: float | None = None,
+        federated_connections: int | None = None,
     ) -> None:
         # TLS only applies to the TCP path. OMD's `LIVESTATUS_TLS=on` wraps the
         # 6557 listener in stunnel, so the cmk client must speak TLS there;
@@ -572,6 +567,17 @@ class LivestatusConnection(ConnectionBase):
         self._checkmk_url = checkmk_url
         self._automation_user = automation_user
         self._automation_secret = automation_secret
+        self._clock = clock
+        self._make_site_connection = make_site_connection
+        self._make_federated_connection = make_federated_connection
+        self._load_sites = load_sites
+        self._sites_mtime = sites_mtime
+        self._load_folder_perms = load_folder_perms
+        self._folder_perms_version = folder_perms_version
+        self._query_timeout = (
+            settings.connection_query_timeout if query_timeout is None else query_timeout
+        )
+        self._wato_folders: tuple[tuple[int, int, int] | None, WatoFolders] | None = None
         # Own threads: a query that never gets an answer keeps its thread after
         # the timeout, and the default executor also resolves the GUI's address.
         self._query_executor = ThreadPoolExecutor(
@@ -608,7 +614,7 @@ class LivestatusConnection(ConnectionBase):
         # after startup (see _adopt_sites_if_appeared).
         self._federation_eligible = _is_central_local_socket(host, socket_path)
         self._sites: dict[str, dict[str, object]] | None = (
-            _cmk_sites.load_sites() if self._federation_eligible else None
+            self._load_sites() if self._federation_eligible else None
         )
         # Last sitespecs mtime seen while still on the single-socket path; lets the
         # absent->present adoption skip re-parsing an unchanged (or absent) file.
@@ -617,7 +623,11 @@ class LivestatusConnection(ConnectionBase):
         # queries on one of them. Connections of an older generation (other
         # site specs, or before a dead-site retry) are closed on their return.
         self._mc_idle: list[MultiSiteConnection] = []
-        self._mc_slots = threading.BoundedSemaphore(settings.multisite_connections)
+        self._mc_slots = threading.BoundedSemaphore(
+            settings.multisite_connections
+            if federated_connections is None
+            else federated_connections
+        )
         self._mc_generation = 0
         self._mc_mtime: float | None = None
         self._mc_built_at: float = 0.0
@@ -1539,7 +1549,7 @@ class LivestatusConnection(ConnectionBase):
         # Host rows tagged with their WATO folder (from ``filename``) + a
         # service-count summary for worst-state bubbling. Real folder titles,
         # empty folders and the effective read-permitted contact groups come from
-        # the GUI-prepared skeleton (``_load_wato_folders`` → ``folder_perms.mk``),
+        # the GUI-prepared skeleton (``_folder_skeleton`` → ``folder_perms.mk``),
         # not from a ``.wato`` walk here.
         state_col = "last_hard_state" if only_hard else "state"
         tagged = await self._query_with_site(
@@ -1590,7 +1600,7 @@ class LivestatusConnection(ConnectionBase):
             only_hard,
             tuple(sorted(sites)) if sites else None,
         )
-        now = time.monotonic()
+        now = self._clock()
         # The rows of a dead site are not set again, so they would be evicted first.
         # Of every dead site: the monitored sites differ from user to user.
         dead = self._mc_dead
@@ -1616,7 +1626,7 @@ class LivestatusConnection(ConnectionBase):
         # every host yet must not see SETUP folder names outside their groups.
         # No scope permits no folder. The state service then hides the folders
         # the user may not read as Setup does.
-        wato_folders = await _load_wato_folders()
+        wato_folders = await self._folder_skeleton()
         scope = _folder_scope_ctx.get()
         scoped: list[FolderInfo] = [
             cast(
@@ -1796,6 +1806,30 @@ class LivestatusConnection(ConnectionBase):
         """Run a Livestatus query, stripping the federated site_id prefix."""
         return [row for _, row in await self._query_with_site(query)]
 
+    async def _folder_skeleton(self) -> WatoFolders:
+        """Cached, off-event-loop read of the GUI-prepared SETUP-folder skeleton.
+
+        A file that cannot be read raises and is not cached, so it is read again.
+        """
+        version = self._folder_perms_version()
+        if self._wato_folders is not None and self._wato_folders[0] == version:
+            return self._wato_folders[1]
+        skeleton = await asyncio.to_thread(self._load_folder_perms)
+        loaded = WatoFolders(
+            [
+                info
+                for entry in skeleton.folders
+                if (info := _folder_info_from_entry(entry)) is not None
+            ],
+            skeleton.hide_unreadable,
+        )
+        logger.debug(
+            "Folder-tree: loaded %(folder_count)d prepared WATO folders",
+            {"folder_count": len(loaded.folders)},
+        )
+        self._wato_folders = (version, loaded)
+        return loaded
+
     def _adopt_sites_if_appeared(self) -> None:
         """Switch a federation-eligible connection to multisite when the prepared
         sitespecs file appears after startup.
@@ -1812,11 +1846,11 @@ class LivestatusConnection(ConnectionBase):
         """
         if self._sites or not self._federation_eligible:
             return
-        mtime = _cmk_sites.sites_mk_mtime()
+        mtime = self._sites_mtime()
         if mtime in (0.0, self._single_mode_mtime):
             return
         self._single_mode_mtime = mtime
-        loaded = _cmk_sites.load_sites()
+        loaded = self._load_sites()
         if loaded:
             self._sites = loaded
             logger.info(
@@ -1859,7 +1893,7 @@ class LivestatusConnection(ConnectionBase):
             # Closed because the connection was reconfigured; it answers no more.
             raise QueryTimeoutError from None
         try:
-            return await asyncio.wait_for(future, timeout=settings.connection_query_timeout)
+            return await asyncio.wait_for(future, timeout=self._query_timeout)
         except TimeoutError:
             raise QueryTimeoutError from None
 
@@ -1887,9 +1921,7 @@ class LivestatusConnection(ConnectionBase):
 
     def _make_singlesite_connection(self) -> SingleSiteConnection:
         """Fresh connection per call so no socket is shared across worker threads."""
-        from cmk.livestatus_client import SingleSiteConnection
-
-        conn = SingleSiteConnection(
+        conn = self._make_site_connection(
             self._ss_socketurl,
             tls=self._use_tls,
             verify=self._tls_verify,
@@ -1936,22 +1968,22 @@ class LivestatusConnection(ConnectionBase):
     def _new_mc_generation(self) -> None:
         """Close the idle connections; those in use are closed on their return."""
         self._mc_generation += 1
-        self._mc_built_at = time.monotonic()
+        self._mc_built_at = self._clock()
         for mc in self._mc_idle:
             with contextlib.suppress(Exception):
                 mc.disconnect()
         self._mc_idle = []
 
     def _follow_site_specs(self) -> None:
-        current_mtime = _cmk_sites.sites_mk_mtime()
+        current_mtime = self._sites_mtime()
         if current_mtime != self._mc_mtime:
             if self._mc_mtime is not None:
                 logger.info("Site specs changed — reloading enabled sites")
         elif not (
-            self._mc_dead and time.monotonic() - self._mc_built_at > self._MC_DEAD_RETRY_SECONDS
+            self._mc_dead and self._clock() - self._mc_built_at > self._MC_DEAD_RETRY_SECONDS
         ):
             return
-        self._sites = _cmk_sites.load_sites()
+        self._sites = self._load_sites()
         self._mc_mtime = current_mtime
         # Deliberately NOT clearing _mc_dead while sites remain: a still-dead
         # site must stay marked until the post-query dead_sites() refresh, or
@@ -1963,8 +1995,8 @@ class LivestatusConnection(ConnectionBase):
     def _new_multisite_connection(
         self, sites: Mapping[str, Mapping[str, object]]
     ) -> MultiSiteConnection:
-        mc = MultiSiteConnection(
-            sites=SiteConfigurations(cast("dict[SiteId, SiteConfiguration]", dict(sites)))
+        mc = self._make_federated_connection(
+            SiteConfigurations(cast("dict[SiteId, SiteConfiguration]", dict(sites)))
         )
         mc.set_prepend_site(True)
         return mc
@@ -1988,7 +2020,7 @@ class LivestatusConnection(ConnectionBase):
         """
         if not self._sites:
             return []
-        if not self._mc_slots.acquire(timeout=settings.connection_query_timeout):
+        if not self._mc_slots.acquire(timeout=self._query_timeout):
             raise QueryTimeoutError
         try:
             with self._mc_lock:

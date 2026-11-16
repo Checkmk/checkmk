@@ -9,13 +9,16 @@ import threading
 from collections.abc import Iterator, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
+from cmk.livestatus_client import MultiSiteConnection, SingleSiteConnection
 from cmk.maps.backend.connections import livestatus
 from cmk.maps.backend.connections.base import MonitoringScope, QueryTimeoutError
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations import checkmk_sites
+from cmk.maps.backend.schemas.state import ObjectState
 
 
 class _Client:
@@ -66,126 +69,137 @@ def test_a_query_without_an_answer_leaves_the_default_executor_free(
     assert asyncio.run(scenario()) == "free"
 
 
-def test_a_query_on_a_closed_connection_times_out(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, answer: threading.Event
-) -> None:
+def _site_answering_when(answer: threading.Event, headers: list[str]) -> SingleSiteConnection:
+    def _query(_query: object, add_headers: str = "") -> list[object]:
+        headers.append(add_headers)
+        answer.wait()
+        return []
+
+    site = Mock(spec=SingleSiteConnection)
+    site.query.side_effect = _query
+    return site
+
+
+def _tcp_connection(
+    answer: threading.Event, headers: list[str] | None = None
+) -> livestatus.LivestatusConnection:
+    site = _site_answering_when(answer, [] if headers is None else headers)
+    return livestatus.LivestatusConnection(
+        host="10.0.0.1", make_site_connection=lambda *_args, **_kwargs: site
+    )
+
+
+def test_a_query_on_a_closed_connection_times_out(answer: threading.Event) -> None:
     answer.set()
-    conn = _connection(monkeypatch, tmp_path, _Client(answer))
+    conn = _tcp_connection(answer)
     conn.close()
 
     with pytest.raises(QueryTimeoutError):
-        asyncio.run(conn._query_with_site("GET hosts\nColumns: name\n"))  # noqa: SLF001
+        asyncio.run(conn.get_all_hosts_states())
 
 
-def test_the_user_reaches_the_query_thread(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, answer: threading.Event
-) -> None:
+def test_the_user_reaches_the_query_thread(answer: threading.Event) -> None:
     answer.set()
-    client = _Client(answer)
-    conn = _connection(monkeypatch, tmp_path, client)
+    headers: list[str] = []
+    conn = _tcp_connection(answer, headers)
 
     async def scenario() -> None:
-        livestatus._scope_ctx.set(MonitoringScope("jdoe"))  # noqa: SLF001
-        await conn._query_with_site("GET hosts\nColumns: name\n")  # noqa: SLF001
+        async with conn.with_monitoring_scope(MonitoringScope("jdoe")):
+            await conn.get_all_hosts_states()
 
     asyncio.run(scenario())
 
-    assert client.headers == ["AuthUser: jdoe\n"]
+    assert headers == ["AuthUser: jdoe\n"]
 
 
-class _Remote:
-    """A federated connection whose sites answer once ``answer`` is set."""
-
-    def __init__(
-        self,
-        answer: threading.Event | None,
-        asked: threading.Event,
-        dead_sites: Iterator[Mapping[str, object]] | None = None,
-    ) -> None:
-        self._answer = answer
-        self._asked = asked
-        self._dead_sites = itertools.repeat({}) if dead_sites is None else dead_sites
-        self.connections: list[object] = []
-        self.deadsites: dict[str, object] = {}
-
-    def set_only_sites(self, _sites: object) -> None: ...
-
-    def query(self, _query: object, add_headers: str = "") -> list[object]:  # noqa: ARG002
-        self._asked.set()
-        if self._answer is not None:
-            self._answer.wait()
+def _remote_answering_when(
+    answer: threading.Event,
+    asked: threading.Event,
+    dead_sites: Iterator[Mapping[str, Mapping[str, object]]] | None = None,
+) -> MultiSiteConnection:
+    def _query(_query: object, add_headers: str = "") -> list[object]:  # noqa: ARG001
+        asked.set()
+        answer.wait()
         return []
 
-    def dead_sites(self) -> Mapping[str, object]:
-        return next(self._dead_sites)
+    remote = Mock(spec=MultiSiteConnection)
+    remote.connections = []
+    remote.query.side_effect = _query
+    remote.dead_sites.side_effect = itertools.repeat({}) if dead_sites is None else dead_sites
+    return remote
 
-    def disconnect(self) -> None: ...
+
+def _answered() -> threading.Event:
+    answered = threading.Event()
+    answered.set()
+    return answered
 
 
 def _federated(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, remotes: Iterator[_Remote]
-) -> tuple[livestatus.LivestatusConnection, list[_Remote]]:
-    monkeypatch.setattr(settings, "checkmk_omd_root", str(tmp_path))
-    monkeypatch.setattr(settings, "connection_query_timeout", 1)
-    monkeypatch.setattr(checkmk_sites, "sites_mk_mtime", lambda: 1.0)
-    monkeypatch.setattr(checkmk_sites, "load_sites", lambda: {"central": {}, "remote1": {}})
-    conn = livestatus.LivestatusConnection(
-        socket_path=str(tmp_path / "tmp" / "run" / "live"), host=None
-    )
-    built: list[_Remote] = []
+    remotes: Iterator[MultiSiteConnection], *, federated_connections: int = 4
+) -> tuple[livestatus.LivestatusConnection, list[MultiSiteConnection]]:
+    built: list[MultiSiteConnection] = []
 
-    def _connect(_sites: object) -> _Remote:
+    def _connect(*_args: object, **_kwargs: object) -> MultiSiteConnection:
         built.append(remote := next(remotes))
         return remote
 
-    monkeypatch.setattr(conn, "_new_multisite_connection", _connect)
+    conn = livestatus.LivestatusConnection(
+        socket_path=str(Path(settings.checkmk_omd_root) / "tmp" / "run" / "live"),
+        host=None,
+        make_federated_connection=_connect,
+        load_sites=lambda: {"central": {}, "remote1": {}},
+        sites_mtime=lambda: 1.0,
+        query_timeout=1,
+        federated_connections=federated_connections,
+    )
     return conn, built
 
 
-_QUERY = "GET hosts\nColumns: name\n"
-
-
-def test_a_slow_remote_site_holds_up_no_other_query(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, answer: threading.Event
-) -> None:
+def test_a_slow_remote_site_holds_up_no_other_query(answer: threading.Event) -> None:
     asked = threading.Event()
     conn, _built = _federated(
-        monkeypatch, tmp_path, iter([_Remote(answer, asked), _Remote(None, threading.Event())])
+        iter(
+            [
+                _remote_answering_when(answer, asked),
+                _remote_answering_when(_answered(), threading.Event()),
+            ]
+        )
     )
 
-    async def scenario() -> list[object]:
-        slow = asyncio.create_task(conn._query_with_site(_QUERY))  # noqa: SLF001
+    async def scenario() -> dict[str, ObjectState]:
+        slow = asyncio.create_task(conn.get_all_hosts_states())
         await asyncio.to_thread(asked.wait, 1)
-        fast = await conn._query_with_site(_QUERY)  # noqa: SLF001
+        fast = await conn.get_all_hosts_states()
         answer.set()
         await slow
-        return list(fast)
+        return fast
 
-    assert asyncio.run(scenario()) == []
+    assert asyncio.run(scenario()) == {}
 
 
 def test_a_connection_busy_while_a_site_recovers_does_not_mark_it_dead_again(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, answer: threading.Event
+    answer: threading.Event,
 ) -> None:
     asked = threading.Event()
     dead = {"remote1": {"exception": "timed out"}}
     conn, _built = _federated(
-        monkeypatch,
-        tmp_path,
         iter(
             [
-                _Remote(answer, asked, itertools.repeat(dead)),
-                _Remote(None, threading.Event(), itertools.chain([dead], itertools.repeat({}))),
+                _remote_answering_when(answer, asked, itertools.repeat(dead)),
+                _remote_answering_when(
+                    _answered(), threading.Event(), itertools.chain([dead], itertools.repeat({}))
+                ),
             ]
-        ),
+        )
     )
 
     async def scenario() -> list[str]:
-        slow = asyncio.create_task(conn._query_with_site(_QUERY))  # noqa: SLF001
+        slow = asyncio.create_task(conn.get_all_hosts_states())
         await asyncio.to_thread(asked.wait, 1)
-        await conn._query_with_site(_QUERY)  # noqa: SLF001
+        await conn.get_all_hosts_states()
         seen_dead = conn.dead_sites()
-        await conn._query_with_site(_QUERY)  # noqa: SLF001
+        await conn.get_all_hosts_states()
         answer.set()
         await slow
         return seen_dead
@@ -194,23 +208,46 @@ def test_a_connection_busy_while_a_site_recovers_does_not_mark_it_dead_again(
     assert conn.dead_sites() == []
 
 
-def test_the_federated_connections_are_bounded(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, answer: threading.Event
+def test_a_query_finding_every_federated_connection_busy_times_out(
+    answer: threading.Event,
 ) -> None:
-    monkeypatch.setattr(settings, "multisite_connections", 2)
-    conn, built = _federated(
-        monkeypatch,
-        tmp_path,
-        (_Remote(answer, threading.Event()) for _ in itertools.count()),
+    asked = threading.Event()
+    conn, _built = _federated(
+        iter(
+            [
+                _remote_answering_when(answer, asked),
+                _remote_answering_when(_answered(), threading.Event()),
+            ]
+        ),
+        federated_connections=1,
     )
 
-    async def scenario() -> list[object]:
-        return await asyncio.gather(
-            *(conn._query_with_site(_QUERY) for _ in range(3)),  # noqa: SLF001
-            return_exceptions=True,
+    async def scenario() -> None:
+        slow = asyncio.create_task(conn.get_all_hosts_states())
+        await asyncio.to_thread(asked.wait, 1)
+        try:
+            await conn.get_all_hosts_states()
+        finally:
+            answer.set()
+            await asyncio.gather(slow, return_exceptions=True)
+
+    with pytest.raises(QueryTimeoutError):
+        asyncio.run(scenario())
+
+
+def test_no_more_federated_connections_are_opened_than_configured(
+    answer: threading.Event,
+) -> None:
+    conn, built = _federated(
+        (_remote_answering_when(answer, threading.Event()) for _ in itertools.count()),
+        federated_connections=2,
+    )
+
+    async def scenario() -> None:
+        await asyncio.gather(
+            *(conn.get_all_hosts_states() for _ in range(3)), return_exceptions=True
         )
 
-    results = asyncio.run(scenario())
+    asyncio.run(scenario())
 
-    assert [type(r) for r in results] == [QueryTimeoutError] * 3
     assert len(built) == 2

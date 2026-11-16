@@ -8,11 +8,8 @@ import asyncio
 import pytest
 
 from cmk.maps.backend.connections import livestatus
+from cmk.maps.backend.integrations.checkmk_folders import FolderSkeleton
 from cmk.maps.backend.schemas.state import ObjectState, ServicesSummary
-
-
-async def _no_folders() -> livestatus.WatoFolders:
-    return livestatus.WatoFolders([], hide_unreadable=False)
 
 
 def _connection(
@@ -20,8 +17,9 @@ def _connection(
     member_rows: list[list[object]],
     service_rows: list[list[object]] | None = None,
 ) -> tuple[livestatus.LivestatusConnection, list[str]]:
-    monkeypatch.setattr(livestatus, "_load_wato_folders", _no_folders)
-    conn = livestatus.LivestatusConnection(socket_path="/var/run/live", host="10.0.0.1")
+    conn = livestatus.LivestatusConnection(
+        socket_path="/var/run/live", host="10.0.0.1", load_folder_perms=FolderSkeleton
+    )
     queries: list[str] = []
 
     async def _query(query: str) -> list[list[object]]:

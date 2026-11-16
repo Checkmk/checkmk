@@ -455,11 +455,11 @@ def test_authuser_header_is_lqencoded(monkeypatch: pytest.MonkeyPatch, tmp_path:
 
     monkeypatch.setattr(conn, "_make_singlesite_connection", _FakeClient)
 
-    token = livestatus._scope_ctx.set(MonitoringScope("evil\nStats: state = 0"))  # noqa: SLF001
-    try:
-        conn._run_singlesite_sync("GET hosts\nColumns: name\n")  # noqa: SLF001
-    finally:
-        livestatus._scope_ctx.reset(token)  # noqa: SLF001
+    async def _query_as_evil() -> None:
+        async with conn.with_monitoring_scope(MonitoringScope("evil\nStats: state = 0")):
+            await conn.get_all_hosts_states()
+
+    asyncio.run(_query_as_evil())
 
     headers = captured["headers"]
     assert headers.startswith("AuthUser: ")

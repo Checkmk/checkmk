@@ -24,15 +24,18 @@ import socket
 import threading
 from collections.abc import Awaitable, Callable, Iterator
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
-from cmk.livestatus_client import MKLivestatusQueryError
+from cmk.livestatus_client import MKLivestatusQueryError, MultiSiteConnection, SingleSiteConnection
 from cmk.maps.backend.connections import livestatus
 from cmk.maps.backend.connections.base import FolderTreeData, MonitoringScope, QueryRefusedError
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations import checkmk_sites
 from cmk.maps.backend.integrations.checkmk import FolderScope
+from cmk.maps.backend.integrations.checkmk_folders import FolderSkeleton
+from cmk.maps.backend.schemas.state import ObjectState
 
 
 def _local_socket_path(omd_root: Path) -> str:
@@ -81,26 +84,31 @@ def test_unchanged_mtime_is_not_reparsed(monkeypatch: pytest.MonkeyPatch, tmp_pa
     assert calls == 1
 
 
-def test_a_user_who_may_not_see_the_own_site_gets_no_rows_from_its_socket(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    monkeypatch.setattr(settings, "checkmk_omd_root", str(tmp_path))
-    monkeypatch.setattr(checkmk_sites, "load_sites", lambda: None)
-    conn = livestatus.LivestatusConnection(socket_path=_local_socket_path(tmp_path), host=None)
+def _central_socket() -> str:
+    """The central site's own Livestatus socket, which a connection federates from."""
+    return str(Path(settings.checkmk_omd_root) / "tmp" / "run" / "live")
+
+
+def test_a_user_who_may_not_see_the_own_site_gets_no_rows_from_its_socket() -> None:
     connected: list[bool] = []
 
-    def _connect() -> object:
+    def _connect(*_args: object, **_kwargs: object) -> SingleSiteConnection:
         connected.append(True)
         raise ConnectionRefusedError
 
-    monkeypatch.setattr(conn, "_make_singlesite_connection", _connect)
-    token = livestatus._scope_ctx.set(MonitoringScope("alice", frozenset({"other"})))  # noqa: SLF001
-    try:
-        rows = conn._run_singlesite_sync("GET hosts\nColumns: name\n")  # noqa: SLF001
-    finally:
-        livestatus._scope_ctx.reset(token)  # noqa: SLF001
+    conn = livestatus.LivestatusConnection(
+        socket_path=_central_socket(),
+        host=None,
+        make_site_connection=_connect,
+        load_sites=lambda: None,
+        sites_mtime=lambda: 0.0,
+    )
 
-    assert (rows, connected) == ([], [])
+    async def _hosts() -> dict[str, ObjectState]:
+        async with conn.with_monitoring_scope(MonitoringScope("alice", frozenset({"other"}))):
+            return await conn.get_all_hosts_states()
+
+    assert (asyncio.run(_hosts()), connected) == ({}, [])
 
 
 def test_explicit_tcp_target_never_federates(
@@ -119,47 +127,9 @@ def test_explicit_tcp_target_never_federates(
     assert conn._sites is None  # noqa: SLF001
 
 
-def _write_folder_perms(omd_root: Path, content: str) -> None:
-    path = omd_root / "etc" / "check_mk" / "maps.d" / "wato" / "folder_perms.mk"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content)
-
-
-def test_an_unreadable_folder_file_is_read_again_until_it_is_repaired(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    monkeypatch.setattr(settings, "checkmk_omd_root", str(tmp_path))
-    monkeypatch.setattr(livestatus, "_wato_folders_cache", {})
-    _write_folder_perms(tmp_path, "maps_folder_perms = [\n")
-
-    with pytest.raises(SyntaxError):
-        asyncio.run(livestatus._load_wato_folders())  # noqa: SLF001
-
-    _write_folder_perms(tmp_path, "maps_folder_perms = [{'path': 'dc', 'title': 'DC'}]\n")
-    loaded = asyncio.run(livestatus._load_wato_folders())  # noqa: SLF001
-
-    assert [f["path"] for f in loaded.folders] == ["dc"]
-
-
-def test_a_missing_folder_file_is_no_skeleton(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    monkeypatch.setattr(settings, "checkmk_omd_root", str(tmp_path))
-    monkeypatch.setattr(livestatus, "_wato_folders_cache", {})
-
-    loaded = asyncio.run(livestatus._load_wato_folders())  # noqa: SLF001
-
-    assert loaded == livestatus.WatoFolders([], hide_unreadable=False)
-
-
 # --------------------------------------------------------------------------- #
 # Per-site trust: dead-site stale replay in get_folder_tree
 # --------------------------------------------------------------------------- #
-
-
-async def _no_folders() -> livestatus.WatoFolders:
-    """Skip the GUI-prepared folder skeleton (file access) — irrelevant here."""
-    return livestatus.WatoFolders([], hide_unreadable=False)
 
 
 def _host_row(
@@ -182,42 +152,56 @@ def _rows_from(
     return _fake
 
 
-def _tcp_connection(monkeypatch: pytest.MonkeyPatch) -> livestatus.LivestatusConnection:
-    """A non-federated (TCP) connection — construction touches no site files.
-    Federation state is then set explicitly per test via ``_sites``/``_mc_dead``."""
-    monkeypatch.setattr(livestatus, "_load_wato_folders", _no_folders)
-    return livestatus.LivestatusConnection(socket_path="/var/run/live", host="10.0.0.1")
+def _tcp_connection(
+    load_folder_perms: Callable[[], FolderSkeleton] = FolderSkeleton,
+) -> livestatus.LivestatusConnection:
+    """A non-federated (TCP) connection to a site without hosts."""
+    site = Mock(spec=SingleSiteConnection)
+    site.query.return_value = []
+    return livestatus.LivestatusConnection(
+        socket_path="/var/run/live",
+        host="10.0.0.1",
+        make_site_connection=lambda *_args, **_kwargs: site,
+        load_folder_perms=load_folder_perms,
+    )
 
 
 def _fetch_tree_as(conn: livestatus.LivestatusConnection, auth_user: str | None) -> FolderTreeData:
     """Run ``get_folder_tree`` inside *auth_user*'s scope (the replay cache key)."""
 
     async def _coro() -> FolderTreeData:
-        token = livestatus._scope_ctx.set(MonitoringScope(auth_user))  # noqa: SLF001
-        try:
+        async with conn.with_monitoring_scope(MonitoringScope(auth_user)):
             return await conn.get_folder_tree()
-        finally:
-            livestatus._scope_ctx.reset(token)  # noqa: SLF001
 
     return asyncio.run(_coro())
 
 
-def test_a_folder_tree_without_a_folder_scope_permits_no_folder(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    conn = _tcp_connection(monkeypatch)
-
-    async def _folders() -> livestatus.WatoFolders:
-        return livestatus.WatoFolders(
-            [{"path": "dc", "title": "DC", "permitted_groups": []}], hide_unreadable=False
-        )
-
-    monkeypatch.setattr(livestatus, "_load_wato_folders", _folders)
-    monkeypatch.setattr(conn, "_query_with_site", _rows_from([]))
+def test_a_folder_tree_without_a_folder_scope_permits_no_folder() -> None:
+    conn = _tcp_connection(
+        lambda: FolderSkeleton([{"path": "dc", "title": "DC", "permitted_groups": []}])
+    )
 
     tree = asyncio.run(conn.get_folder_tree())
 
     assert {f["path"]: f.get("permitted") for f in tree.folders}["dc"] is False
+
+
+def test_an_unreadable_folder_skeleton_is_read_again() -> None:
+    reads: list[int] = []
+
+    def _load() -> FolderSkeleton:
+        reads.append(len(reads))
+        if len(reads) == 1:
+            raise SyntaxError("unreadable")
+        return FolderSkeleton([{"path": "dc", "title": "DC"}])
+
+    conn = _tcp_connection(_load)
+
+    with pytest.raises(SyntaxError):
+        asyncio.run(conn.get_folder_tree())
+    tree = asyncio.run(conn.get_folder_tree())
+
+    assert [f["path"] for f in tree.folders] == ["dc"]
 
 
 def _staleness(tree: FolderTreeData) -> tuple[set[str], set[str]]:
@@ -227,7 +211,7 @@ def _staleness(tree: FolderTreeData) -> tuple[set[str], set[str]]:
 
 
 def test_dead_federation_site_rows_are_replayed_stale(monkeypatch: pytest.MonkeyPatch) -> None:
-    conn = _tcp_connection(monkeypatch)
+    conn = _tcp_connection()
     conn._sites = {"central": {}, "remote_fra": {}}  # federation active  # noqa: SLF001
 
     # First fetch: both sites answer, none dead -> cache primed, nothing stale.
@@ -256,7 +240,7 @@ def test_dead_federation_site_rows_are_replayed_stale(monkeypatch: pytest.Monkey
 
 
 def test_dead_site_replay_is_scoped_to_the_auth_user(monkeypatch: pytest.MonkeyPatch) -> None:
-    conn = _tcp_connection(monkeypatch)
+    conn = _tcp_connection()
     conn._sites = {"central": {}, "remote_fra": {}}  # noqa: SLF001
 
     # Alice primes her scope's cache while remote_fra is alive.
@@ -280,38 +264,56 @@ def test_dead_site_replay_is_scoped_to_the_auth_user(monkeypatch: pytest.MonkeyP
     assert stale == {"alice-only-h"}
 
 
+class _Federation:
+    """Federated sites that answer with ``rows`` (site first) while ``dead`` are dead."""
+
+    def __init__(self) -> None:
+        self.rows: list[list[object]] = []
+        self.dead: set[str] = set()
+        self.connection = Mock(spec=MultiSiteConnection)
+        self.connection.connections = []
+        self.connection.query.side_effect = lambda *_args, **_kwargs: list(self.rows)
+        self.connection.dead_sites.side_effect = lambda: {
+            site: {"exception": None} for site in self.dead
+        }
+
+
 def _stale_after_remote_died(
-    conn: livestatus.LivestatusConnection,
-    monkeypatch: pytest.MonkeyPatch,
     *,
     primed: tuple[FolderScope | None, bool],
     asked: tuple[FolderScope | None, bool],
+    dead_for: float = 0.0,
 ) -> set[str]:
     """The stale hosts of a request ``asked`` after one ``primed`` while the remote site lived."""
+    federation = _Federation()
+    now = [0.0]
+    conn = livestatus.LivestatusConnection(
+        socket_path=_central_socket(),
+        host=None,
+        clock=lambda: now[0],
+        make_federated_connection=lambda *_args, **_kwargs: federation.connection,
+        load_sites=lambda: {"central": {}, "remote_fra": {}},
+        sites_mtime=lambda: 1.0,
+        load_folder_perms=FolderSkeleton,
+    )
 
     async def _tree(folder_scope: FolderScope | None, only_hard: bool) -> FolderTreeData:
         async with conn.with_folder_scope(folder_scope):
             return await conn.get_folder_tree(only_hard=only_hard)
 
-    conn._sites = {"central": {}, "remote_fra": {}}  # noqa: SLF001
-    conn._mc_dead = set()  # noqa: SLF001
-    monkeypatch.setattr(conn, "_query_with_site", _rows_from([("remote_fra", _host_row("h"))]))
+    federation.rows = [["remote_fra", *_host_row("h")]]
     asyncio.run(_tree(*primed))
-    conn._mc_dead = {"remote_fra"}  # noqa: SLF001
-    monkeypatch.setattr(conn, "_query_with_site", _rows_from([]))
-    tree = asyncio.run(_tree(*asked))
-    assert tree.dead_sites == ["remote_fra"]
-    return _staleness(tree)[1]
+    federation.rows = []
+    federation.dead = {"remote_fra"}
+    now[0] += dead_for
+    return _staleness(asyncio.run(_tree(*asked)))[1]
 
 
 _OPS = FolderScope(see_all=False, groups=frozenset({"ops"}))
 
 
-def test_the_same_request_gets_the_rows_of_a_dead_site(monkeypatch: pytest.MonkeyPatch) -> None:
-    conn = _tcp_connection(monkeypatch)
-    assert _stale_after_remote_died(
-        conn, monkeypatch, primed=(_OPS, False), asked=(_OPS, False)
-    ) == {"h"}
+def test_the_same_request_gets_the_rows_of_a_dead_site() -> None:
+    assert _stale_after_remote_died(primed=(_OPS, False), asked=(_OPS, False)) == {"h"}
 
 
 @pytest.mark.parametrize(
@@ -322,26 +324,29 @@ def test_the_same_request_gets_the_rows_of_a_dead_site(monkeypatch: pytest.Monke
     ],
 )
 def test_another_request_gets_no_rows_of_a_dead_site(
-    monkeypatch: pytest.MonkeyPatch, asked: tuple[FolderScope | None, bool]
+    asked: tuple[FolderScope | None, bool],
 ) -> None:
-    conn = _tcp_connection(monkeypatch)
-    assert _stale_after_remote_died(conn, monkeypatch, primed=(_OPS, False), asked=asked) == set()
+    assert _stale_after_remote_died(primed=(_OPS, False), asked=asked) == set()
 
 
-def test_rows_of_a_site_dead_for_long_are_not_shown(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(livestatus, "_FOLDER_TREE_REPLAY_FOR", -1.0)
-    conn = _tcp_connection(monkeypatch)
+def test_rows_of_a_site_dead_for_long_are_not_shown() -> None:
     assert (
-        _stale_after_remote_died(conn, monkeypatch, primed=(_OPS, False), asked=(_OPS, False))
+        _stale_after_remote_died(primed=(_OPS, False), asked=(_OPS, False), dead_for=24 * 3600.0)
         == set()
     )
 
 
-def test_a_dead_site_keeps_its_rows_while_more_requests_come_than_are_kept(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    conn = _tcp_connection(monkeypatch)
+def test_a_dead_site_keeps_its_rows_while_more_requests_come_than_are_kept() -> None:
+    federation = _Federation()
     live = [f"site{i}" for i in range(100)]
+    conn = livestatus.LivestatusConnection(
+        socket_path=_central_socket(),
+        host=None,
+        make_federated_connection=lambda *_args, **_kwargs: federation.connection,
+        load_sites=lambda: dict.fromkeys(["remote_fra", *live], {}),
+        sites_mtime=lambda: 1.0,
+        load_folder_perms=FolderSkeleton,
+    )
 
     async def _tree(folder_scope: FolderScope) -> FolderTreeData:
         async with conn.with_folder_scope(folder_scope):
@@ -351,23 +356,17 @@ def test_a_dead_site_keeps_its_rows_while_more_requests_come_than_are_kept(
         for i in range(livestatus._FOLDER_TREE_ROWS_KEPT // len(live) + 1):  # noqa: SLF001
             await _tree(FolderScope(see_all=False, groups=frozenset({f"group{i}"})))
 
-    conn._sites = dict.fromkeys(["remote_fra", *live], {})  # noqa: SLF001
-    conn._mc_dead = set()  # noqa: SLF001
-    monkeypatch.setattr(conn, "_query_with_site", _rows_from([("remote_fra", _host_row("h"))]))
+    federation.rows = [["remote_fra", *_host_row("h")]]
     asyncio.run(_tree(_OPS))
-    conn._mc_dead = {"remote_fra"}  # noqa: SLF001
-    monkeypatch.setattr(
-        conn,
-        "_query_with_site",
-        _rows_from([(site, _host_row(f"host-{site}")) for site in live]),
-    )
+    federation.rows = [[site, *_host_row(f"host-{site}")] for site in live]
+    federation.dead = {"remote_fra"}
     asyncio.run(_trees_of_other_requests())
 
     assert _staleness(asyncio.run(_tree(_OPS)))[1] == {"h"}
 
 
 def test_single_site_connection_never_reports_dead_sites(monkeypatch: pytest.MonkeyPatch) -> None:
-    conn = _tcp_connection(monkeypatch)
+    conn = _tcp_connection()
     assert conn._sites is None  # not federated  # noqa: SLF001
 
     # Even with a populated dead set, a non-federated connection has no sites to
@@ -384,7 +383,7 @@ def test_single_site_connection_never_reports_dead_sites(monkeypatch: pytest.Mon
 def test_folder_tree_shows_a_host_never_checked_as_pending(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    conn = _tcp_connection(monkeypatch)
+    conn = _tcp_connection()
     monkeypatch.setattr(
         conn,
         "_query_with_site",
@@ -401,7 +400,7 @@ def test_folder_tree_shows_a_host_never_checked_as_pending(
 def test_geo_hosts_are_asked_for_once_per_user_within_a_tick(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    conn = _tcp_connection(monkeypatch)
+    conn = _tcp_connection()
     queries: list[str] = []
 
     async def _query(query: str) -> list[list[object]]:
@@ -411,11 +410,8 @@ def test_geo_hosts_are_asked_for_once_per_user_within_a_tick(
     monkeypatch.setattr(conn, "_query", _query)
 
     async def _as(auth_user: str | None) -> list[str]:
-        token = livestatus._scope_ctx.set(MonitoringScope(auth_user))  # noqa: SLF001
-        try:
+        async with conn.with_monitoring_scope(MonitoringScope(auth_user)):
             return [h["name"] for h in await conn.get_hosts_with_geo()]
-        finally:
-            livestatus._scope_ctx.reset(token)  # noqa: SLF001
 
     async def _ticks() -> list[list[str]]:
         return [await _as("alice"), await _as("alice"), await _as("bob")]
@@ -510,45 +506,62 @@ def test_a_site_alone_refusing_a_query_drops_out(
 
 def _hosts_as(
     federated: livestatus.LivestatusConnection, scope: MonitoringScope
-) -> list[list[object]]:
-    token = livestatus._scope_ctx.set(scope)  # noqa: SLF001
-    try:
-        return sorted(federated._run_multisite_sync("GET hosts\nColumns: name\n"))  # noqa: SLF001
-    finally:
-        livestatus._scope_ctx.reset(token)  # noqa: SLF001
+) -> list[list[str | None]]:
+    async def _hosts() -> dict[str, ObjectState]:
+        async with federated.with_monitoring_scope(scope):
+            return await federated.get_all_hosts_states()
+
+    return sorted([state.site_id, name] for name, state in asyncio.run(_hosts()).items())
 
 
-@pytest.mark.parametrize(
-    "monitored, rows",
-    [
-        pytest.param(None, [["central", "central-h"], ["remote", "remote-h"]], id="all sites"),
-        pytest.param(frozenset({"remote"}), [["remote", "remote-h"]], id="one site"),
-        pytest.param(frozenset({"gone"}), [], id="no configured site"),
-        pytest.param(frozenset(), [], id="no site"),
-    ],
-)
+_SITES_OF_THE_USER = [
+    pytest.param(None, ["central", "remote"], id="all sites"),
+    pytest.param(frozenset({"remote"}), ["remote"], id="one site"),
+    pytest.param(frozenset({"gone"}), [], id="no configured site"),
+    pytest.param(frozenset(), [], id="no site"),
+]
+
+
+@pytest.mark.parametrize("monitored, seen", _SITES_OF_THE_USER)
 def test_a_user_sees_the_rows_of_their_monitored_sites(
+    federated: livestatus.LivestatusConnection,
+    monitored: frozenset[str] | None,
+    seen: list[str],
+) -> None:
+    rows = _hosts_as(federated, MonitoringScope("alice", monitored))
+
+    assert rows == [[site, f"{site}-h"] for site in seen]
+
+
+@pytest.mark.parametrize("monitored, seen", _SITES_OF_THE_USER)
+def test_only_the_sites_a_user_may_see_are_asked(
     federated: livestatus.LivestatusConnection,
     sites: dict[str, _FakeSite],
     monitored: frozenset[str] | None,
-    rows: list[list[str]],
+    seen: list[str],
 ) -> None:
-    assert _hosts_as(federated, MonitoringScope("alice", monitored)) == rows
+    _hosts_as(federated, MonitoringScope("alice", monitored))
+
     asked = {sid for sid, site in sites.items() if any(b"GET hosts" in q for q in site.queries)}
-    assert asked == {row[0] for row in rows}
+    assert asked == set(seen)
 
 
-def test_a_dead_site_the_user_may_not_see_is_not_named(
-    federated: livestatus.LivestatusConnection,
+@pytest.mark.parametrize(
+    "scope, named",
+    [
+        pytest.param(MonitoringScope("alice", frozenset({"central"})), [], id="may not see"),
+        pytest.param(MonitoringScope("alice"), ["remote"], id="may see"),
+    ],
+)
+def test_a_dead_site_is_named_only_to_who_may_see_it(
+    federated: livestatus.LivestatusConnection, scope: MonitoringScope, named: list[str]
 ) -> None:
-    federated._run_multisite_sync("GET hosts\nColumns: name\nFilter: new_column = a\n")  # noqa: SLF001
-
-    async def _dead_as(scope: MonitoringScope) -> list[str]:
+    async def _dead_as() -> list[str]:
+        await federated.get_dyngroup_state("host", "Filter: new_column = a\n")
         async with federated.with_monitoring_scope(scope):
             return federated.dead_sites()
 
-    assert asyncio.run(_dead_as(MonitoringScope("alice", frozenset({"central"})))) == []
-    assert asyncio.run(_dead_as(MonitoringScope("alice"))) == ["remote"]
+    assert asyncio.run(_dead_as()) == named
 
 
 def _ask_refused_as(federated: livestatus.LivestatusConnection, *auth_users: str) -> None:

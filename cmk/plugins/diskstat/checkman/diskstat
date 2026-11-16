@@ -1,4 +1,4 @@
-title: Disk Throughput
+title: Disk I/O: Throughput, Latency and Queue Length
 agents: linux, freebsd
 catalog: os/storage
 license: GPLv2

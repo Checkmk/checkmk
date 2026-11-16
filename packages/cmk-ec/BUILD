@@ -86,13 +86,40 @@ py_pytest_main(
 py_test(
     name = "unit",
     size = "small",
-    srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
+    srcs = glob(
+        ["tests/**/*.py"],
+        exclude = ["tests/component/**"],
+    ) + [":__test__.py"],
     main = "__test__.py",
     deps = [
         ":__test__",
         ":cmk-ec",
         requirement("pytest"),
         requirement("time-machine"),
+    ],
+)
+
+py_pytest_main(
+    name = "__component_test__",
+    deps = [
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "component",
+    size = "small",
+    srcs = glob(["tests/component/**/*.py"]) + [":__component_test__.py"],
+    data = [
+        "//bin:mkevent",
+    ],
+    env = {
+        "MKEVENT": "$(rootpath //bin:mkevent)",
+    },
+    main = "__component_test__.py",
+    deps = [
+        ":__component_test__",
+        requirement("pytest"),
     ],
 )
 

@@ -40,21 +40,26 @@ int file_exists(const std::string &path) {
     return static_cast<int>(stat(path.c_str(), &st) == 0);
 }
 
-char *append_str(const char *str, char *dest) {
-    size_t len = strlen(str);
-    memcpy(dest, str, len);
-    return dest + len;
+// Like with the old message buffer of 8192 bytes, including the NUL
+constexpr std::string::size_type max_message_length = 8191;
+
+// Is the byte a continuation byte (10xxxxxx) of a UTF-8 character?
+bool is_continuation_byte(char byte) {
+    return (static_cast<unsigned char>(byte) & 0xC0U) == 0x80U;
 }
 
-char *append_int(long n, char *dest) {
-    static char digits[] = "0123456789";
-    char buf[32];
-    buf[31] = 0;
-    char *b = buf + 31;
-    do {
-        *(--b) = digits[n % 10];
-    } while ((n /= 10) > 0);
-    return append_str(b, dest);
+// The length of the message cut off after at most max_message_length bytes,
+// but not within a UTF-8 character
+std::string::size_type truncated_length(const std::string &message) {
+    if (message.size() <= max_message_length) {
+        return message.size();
+    }
+    // Cut off the start of a split character, too, which has at most 4 bytes.
+    auto length = max_message_length;
+    for (int i = 0; i < 3 && is_continuation_byte(message[length]); ++i) {
+        --length;
+    }
+    return length;
 }
 
 int main(int argc, char **argv) {
@@ -84,7 +89,7 @@ int main(int argc, char **argv) {
     }
 
     /* Nagios notification mode is triggered with option -n */
-    char message[8192];
+    std::string message;
     const char *remote = "";
 
     if (argc > 9 && (strcmp(argv[1], "-n") == 0)) {
@@ -129,28 +134,22 @@ int main(int argc, char **argv) {
             }
         }
 
-        char *w = message;
-        *w++ = '<';
-        w = append_int((static_cast<long>(facility) << 3) + priority, w);
-        *w++ = '>';
-        *w++ = '@';
-        w = append_int(time(nullptr), w);
-        *w++ = ';';
-        w = append_int(sl, w);
-        *w++ = ';';
-        w = append_str(contact, w);
-        *w++ = ';';
-        *w++ = ' ';
-        w = append_str(hostname, w);
-        *w++ = ' ';
-        w = append_str(service[0] != 0 ? service : "HOST", w);
-        *w++ = ':';
-        *w++ = ' ';
-        w = append_str(text, w);
-        *w = 0;
+        message =
+            "<" +
+            std::to_string((static_cast<long>(facility) << 3) + priority) +
+            ">@" + std::to_string(time(nullptr)) + ";" + std::to_string(sl) +
+            ";";
+        message += contact;
+        message += "; ";
+        message += hostname;
+        message += " ";
+        message += service[0] != 0 ? service : "HOST";
+        message += ": ";
+        message += text;
     } else {
-        strncpy(message, argv[1], sizeof(message) - 1);
+        message = argv[1];
     }
+    message.resize(truncated_length(message));
 
     /* If we have a remote host, send the message via syslog to the remote host. */
     int fd;
@@ -170,7 +169,7 @@ int main(int argc, char **argv) {
         servaddr.sin_family = AF_INET;
         servaddr.sin_addr.s_addr = inet_addr(remote);
         servaddr.sin_port = htons(514);
-        ::sendto(fd, message, strlen(message), 0,
+        ::sendto(fd, message.data(), message.size(), 0,
                  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
                  reinterpret_cast<struct sockaddr *>(&servaddr),
                  sizeof(servaddr));
@@ -183,7 +182,7 @@ int main(int argc, char **argv) {
             exit(1);
         }
         // TODO(sp) Handle errors and partial writes.
-        if (::write(fd, message, strlen(message)) < 0 ||
+        if (::write(fd, message.data(), message.size()) < 0 ||
             ::write(fd, "\n", 1) < 0) {
         }
     }

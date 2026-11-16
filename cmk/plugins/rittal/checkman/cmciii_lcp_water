@@ -1,4 +1,4 @@
-title: Rittal CMC-III LCP: Water In/Out Temperature
+title: Rittal CMC-III: LCP Water In/Out Temperature (deprecated)
 agents: snmp
 catalog: hw/environment/rittal
 license: GPLv2

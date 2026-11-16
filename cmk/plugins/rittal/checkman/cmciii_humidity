@@ -1,4 +1,4 @@
-title: Rittal CMC-III Units: Humidity
+title: Rittal CMC-III: Humidity
 agents: snmp
 catalog: hw/environment/rittal
 license: GPLv2

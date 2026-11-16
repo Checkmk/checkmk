@@ -1,4 +1,4 @@
-title: Rittal CMC-TC LCP: Temperature
+title: Rittal CMC-TC: LCP Temperature
 agents: snmp
 catalog: hw/environment/rittal
 license: GPLv2

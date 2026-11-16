@@ -1,4 +1,4 @@
-title: Rittal CMC-III PDUs: Input Phases
+title: Rittal CMC-III: PDU Input Phases
 agents: snmp
 catalog: hw/power/rittal
 license: GPLv2

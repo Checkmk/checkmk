@@ -1,4 +1,4 @@
-title: Rittal CMC-TC LCP: Blower Total State
+title: Rittal CMC-TC: LCP Blower Total State
 agents: snmp
 catalog: hw/environment/rittal
 license: GPLv2

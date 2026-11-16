@@ -1,4 +1,4 @@
-title: Rittal CMC-TC LCP: Humidty
+title: Rittal CMC-TC: LCP Humidity
 agents: snmp
 catalog: hw/environment/rittal
 license: GPLv2

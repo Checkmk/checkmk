@@ -1,4 +1,4 @@
-title: Rittal CMC-TC PSM-M: Sensor State
+title: Rittal CMC-TC: PSM-M Sensors
 agents: snmp
 catalog: hw/environment/rittal
 license: GPLv2

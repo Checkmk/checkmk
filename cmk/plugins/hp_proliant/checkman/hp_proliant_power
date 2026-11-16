@@ -1,4 +1,4 @@
-title: HPE Proliant Servers: Power Meter
+title: HPE ProLiant: Power Meter
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

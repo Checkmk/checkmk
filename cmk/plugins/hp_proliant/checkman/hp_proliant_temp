@@ -1,4 +1,4 @@
-title: HPE Proliant Servers: Temperature Sensors
+title: HPE ProLiant: Temperature Sensors
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

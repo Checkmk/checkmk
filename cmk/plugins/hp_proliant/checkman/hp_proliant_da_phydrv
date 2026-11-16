@@ -1,4 +1,4 @@
-title: HPE Proliant Servers: Physical Drives in Drive Arrays
+title: HPE ProLiant: Drive Array Physical Drives
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

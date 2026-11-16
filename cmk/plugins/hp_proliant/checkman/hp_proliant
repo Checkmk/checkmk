@@ -1,4 +1,4 @@
-title: HPE Proliant Servers: General Status
+title: HPE ProLiant: General Status
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

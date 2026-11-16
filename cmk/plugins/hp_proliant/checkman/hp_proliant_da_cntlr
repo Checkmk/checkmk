@@ -1,4 +1,4 @@
-title: HPE Proliant Servers: RAID Controllers
+title: HPE ProLiant: RAID Controllers
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

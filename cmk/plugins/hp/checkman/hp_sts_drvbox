@@ -1,4 +1,4 @@
-title: HPE Proliant Servers: Storage System Drive Box Groups
+title: HPE ProLiant: Storage System Drive Box Groups
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

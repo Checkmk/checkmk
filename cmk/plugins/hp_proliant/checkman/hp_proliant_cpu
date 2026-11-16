@@ -1,4 +1,4 @@
-title: HPE Proliant Servers: Physical CPU State
+title: HPE ProLiant: Physical CPU State
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

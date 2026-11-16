@@ -1,4 +1,4 @@
-title: HPE Proliant Servers: FANs
+title: HPE ProLiant: Fans
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

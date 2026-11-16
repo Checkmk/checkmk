@@ -1,4 +1,4 @@
-title: HPE Proliant Servers: Memory Modules
+title: HPE ProLiant: Memory Modules
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

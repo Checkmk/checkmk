@@ -224,16 +224,13 @@ class SNSSummary(AWSSection):
 
     @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("sns_limits")
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents([], 0.0)
+        return self._received_inventory("sns_limits")
 
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[object]:
         (colleague_contents,) = args
 
-        if colleague_contents.content:
+        if colleague_contents.content is not None:
             topics_arn = [topic["arn"] for topic in colleague_contents.content]
         else:
             topics_arn = [topic.to_arn() for topic in self._sns_topics_fetcher.fetch_all_topics()]

@@ -313,6 +313,15 @@ class AWSSection(DataCache):
     def receive(self, sender: AWSSection, content: AWSComputedContent) -> None:
         self._received_results.setdefault(sender.name, content)
 
+    def _received_inventory(self, sender_name: str) -> AWSColleagueContents:
+        """The resources a colleague already fetched. The content is None if it sent nothing.
+
+        An empty inventory is a valid answer, so the receiver must not fetch it again.
+        """
+        if (colleague := self._received_results.get(sender_name)) is None:
+            return AWSColleagueContents(None, 0.0)
+        return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+
     def run(self, use_cache: bool = False) -> AWSSectionResults:
         colleague_contents = self._get_colleague_contents()
 

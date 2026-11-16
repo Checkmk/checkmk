@@ -104,8 +104,10 @@ class FakeSNSClient:
         for idx in range(n_fifo_topics):
             self._topics[-(idx + 1)]["TopicArn"] += ".fifo"
         self._subscriptions = SNSListSubscriptionsIB.create_instances(amount=n_subs)
+        self.paginated_operations: list[str] = []
 
     def get_paginator(self, operation_name: str) -> PaginatorTopics | PaginatorSubscriptions:
+        self.paginated_operations.append(operation_name)
         if operation_name == "list_topics":
             return PaginatorTopics(self._topics)
         if operation_name == "list_subscriptions":
@@ -157,6 +159,25 @@ def test_sns_limits_of_one_account_are_not_cached_for_another() -> None:
 
     limits_topics_standard: AWSRegionLimit = results[0].content[0]
     assert limits_topics_standard.amount == 2
+
+
+def test_sns_summary_does_not_list_topics_again_when_limits_found_none() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("sns_names", None)
+    config.add_service_tags("sns_tags", (None, None))
+    client = FakeSNSClient(n_std_topics=0, n_fifo_topics=0, n_subs=0)
+    fetcher = SNSTopicsFetcher(client, FakeTaggingClient(), "region", config)
+    distributor = ResultDistributor()
+    sns_limits = SNSLimits(client, "region", config, fetcher, distributor)
+    sns_summary = SNSSummary(client, "region", config, fetcher, distributor)
+    distributor.add(sns_limits.name, sns_summary)
+
+    sns_limits.run()
+    sns_summary.run()
+
+    assert client.paginated_operations.count("list_topics") == 1
 
 
 SNSSectionsOut = tuple[SNSSummary, SNSSMS, SNS, SNSTopicCloudwatch]

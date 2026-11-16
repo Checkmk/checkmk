@@ -1,4 +1,4 @@
-title: Avaya Devices: Chassis Temperature
+title: Avaya: Chassis Temperature
 agents: snmp
 catalog: hw/network/avaya
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Systemd Timesyncd
+title: Time Synchronization: systemd-timesyncd
 agents: linux
 catalog: os/services
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Chrony: NTP Time Synchronization
+title: Time Synchronization: Chrony
 agents: linux
 catalog: os/services
 license: GPLv2

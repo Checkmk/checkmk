@@ -1,4 +1,4 @@
-title: Synchronization of Operating System Time
+title: Time Synchronization: System Time Offset
 agents: windows, vsphere, netapp
 catalog: os/misc
 license: GPLv2

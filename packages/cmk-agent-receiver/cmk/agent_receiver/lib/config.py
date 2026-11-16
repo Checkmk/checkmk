@@ -5,7 +5,7 @@
 
 
 import os
-from functools import cache
+from functools import cache, cached_property
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -116,7 +116,9 @@ class Config(BaseModel):
     def raw_data_socket(self) -> Path:
         return self.omd_root / "tmp/run/raw-data"
 
-    @property
+    # Changing the Apache address or port requires stopping the site, so the receiver
+    # restarts with it.
+    @cached_property
     def base_url(self) -> str:
         address = "localhost"
         port = 80

@@ -63,7 +63,13 @@ class VersionCache:
         self.ttl = ttl
 
     def get_or_update(self, url: str, commit: str) -> BazelVersionInfo | None:
-        return self._get_cached_version_info() or self._renew_cached_version_info(url, commit)
+        if info := self._get_cached_version_info():
+            return info
+        try:
+            return self._renew_cached_version_info(url, commit)
+        except (requests.exceptions.RequestException, ValueError, KeyError, TypeError) as e:
+            LOGGER.warning("Skipping version information: %(error)s", {"error": e})
+            return None
 
     def _get_cached_version_info(self) -> BazelVersionInfo | None:
         if not (raw := self.storage.read(self.VERSION_CACHE_KEY, None)):
@@ -78,12 +84,8 @@ class VersionCache:
     def _renew_cached_version_info(
         self, tags_url: str, commit_hash: str
     ) -> BazelVersionInfo | None:
-        try:
-            resp = requests.get(tags_url, params={"per_page": TAGS_PER_PAGE}, timeout=30)
-            resp.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            LOGGER.warning("Skipping version information: %(error)s", {"error": e})
-            return None
+        resp = requests.get(tags_url, params={"per_page": TAGS_PER_PAGE}, timeout=30)
+        resp.raise_for_status()
         timestamp = time.time()
         items = resp.json()
         versions = {

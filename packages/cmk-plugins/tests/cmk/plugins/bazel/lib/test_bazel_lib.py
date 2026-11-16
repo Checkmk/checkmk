@@ -10,7 +10,7 @@ import time
 from collections.abc import Callable
 from http import HTTPStatus
 from pathlib import Path
-from typing import override
+from typing import override, Protocol
 from unittest import mock
 
 import pytest
@@ -836,3 +836,50 @@ def test_version_lookup_requests_a_hundred_tags_per_page(
         agent_bazel_cache_main(args=parse_arguments(["--host", "bazel-cache.tld"]))
 
     assert requested_params == [{"per_page": 100}]
+
+
+class _NonJsonResponse(MockResponse):
+    @override
+    def json(self) -> dict[str, object] | list[object]:
+        raise requests.JSONDecodeError("Expecting value", "<html>", 0)
+
+
+def non_json_tags_get(url: str, **kwargs: object) -> MockResponse:
+    if "tags" in url:
+        return _NonJsonResponse([])
+    return default_requests_mock_get(url, **kwargs)
+
+
+def non_semver_tag_get(url: str, **kwargs: object) -> MockResponse:
+    if "tags" in url:
+        return MockResponse(
+            [{"name": "latest", "commit": {"sha": "c5bf6e13938aa89923c637b5a4f01c2203a3c9f8"}}]
+        )
+    return default_requests_mock_get(url, **kwargs)
+
+
+class _RequestsGet(Protocol):
+    def __call__(self, url: str, **kwargs: object) -> MockResponse: ...
+
+
+@pytest.mark.parametrize(
+    "tags_get",
+    [
+        pytest.param(non_json_tags_get, id="non-json"),
+        pytest.param(non_semver_tag_get, id="non-semver-tag"),
+    ],
+)
+def test_bazel_cache_agent_output_without_version_on_unexpected_tags_response(
+    tags_get: _RequestsGet,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+    patched_environment: None,  # noqa: ARG001
+) -> None:
+    with mock.patch("cmk.plugins.bazel.lib.agent.requests.get", tags_get):
+        agent_bazel_cache_main(args=parse_arguments(["--host", "bazel-cache.tld"]))
+
+    output = capsys.readouterr().out.rstrip().split("\n")
+    assert "<<<bazel_cache_status:sep(0)>>>" in output
+    assert not any(line.startswith(VERSION_SECTION_PREFIX) for line in output)
+    [warning] = [r.getMessage() for r in caplog.records if r.levelname == "WARNING"]
+    assert warning.startswith("Skipping version information: ")

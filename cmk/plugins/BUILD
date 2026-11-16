@@ -9,6 +9,16 @@ package(default_visibility = [
 
 py_library(
     name = "plugins",
+    # Agent plug-ins are payload: we ship them to run on the monitored hosts,
+    # but the site does not run them. Each agents directory with Python
+    # plug-ins is a Bazel package of its own with two targets:
+    #  - ":files" puts the plug-in files into the wheel via ":agents" below,
+    #  - the py_library ":agents" declares the third-party modules the
+    #    plug-ins import on the monitored host (rados, pymongo, ...). Only
+    #    tests may depend on it, so these modules do not become dependencies
+    #    of this target or of anything we ship.
+    # The glob stops at those package boundaries; the check below makes sure
+    # there are no other agent plug-ins.
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
@@ -16,20 +26,7 @@ py_library(
             "**/community/**",
             "**/nonfree/**",
         ],
-    ) + [
-        "//cmk/plugins/ceph/agents",
-        "//cmk/plugins/collection/agents",
-        "//cmk/plugins/files/agents",
-        "//cmk/plugins/inotify/agents",
-        "//cmk/plugins/jolokia/agents",
-        "//cmk/plugins/mongodb/agents",
-        "//cmk/plugins/mtr/agents",
-        "//cmk/plugins/nginx/agents",
-        "//cmk/plugins/plesk/agents",
-        "//cmk/plugins/postgres/agents",
-        "//cmk/plugins/sap/agents",
-        "//cmk/plugins/unitrends/agents",
-    ],
+    ),
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -41,6 +38,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/plugins/jolokia/agents",  # imported by the special agent
         "//cmk/utils",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:site",
@@ -71,7 +69,6 @@ py_library(
         requirement("psycopg2-binary"),  # missing wheel
         requirement("pyasn1"),
         requirement("pydantic"),
-        requirement("pymongo"),
         requirement("pymssql"),
         requirement("pymysql"),
         requirement("pysmb"),
@@ -82,6 +79,15 @@ py_library(
         requirement("requests-oauthlib"),
     ],
 )
+
+# See the comment on the srcs of ":plugins".
+[
+    fail(msg = "%s: Python agent plug-ins need a BUILD file in their agents directory." % f)
+    for f in glob(
+        ["**/agents/**/*.py"],
+        allow_empty = True,
+    )
+]
 
 filegroup(
     name = "checkman",
@@ -99,7 +105,6 @@ filegroup(
     srcs = glob(
         include = ["**/agents/**/*"],
         exclude = [
-            "**/agents/**/*.py",
             "oracle/agents/.gitignore",
             "oracle/agents/README.md",
         ],

@@ -12,6 +12,16 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 # Each subdirectory in cmk/plugins/ is considered a family.
 # In most cases it should be sufficient to add the two targets `:<family>` and `:<family>-test`
 # Sorting them alphabetically would be nice. Thank you :-)
+#
+# Agent plug-ins are payload: the family wheel ships them to run on the monitored
+# hosts, but the site does not run them. If a family has Python agent plug-ins,
+# make cmk/plugins/<family>/agents a Bazel package of its own with two targets:
+#  - a filegroup ":files", which puts the plug-in files into the wheel via the
+#    family's ":agents" filegroup,
+#  - a py_library ":agents", which declares the third-party modules the plug-ins
+#    import on the monitored host (rados, pymongo, ...), visible to tests only.
+# The family's library does not pick the plug-ins up then, so neither its wheel
+# nor what we ship depends on those modules.
 
 FAMILIES = [
     pkg.removeprefix("cmk/plugins/")

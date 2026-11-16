@@ -210,12 +210,6 @@ py_requirements_test(
         "ibm-db",  # cmk/plugins/sql/active_check/check_sql.py
         "ibm-db-dbi",  # cmk/plugins/sql/active_check/check_sql.py
         "sqlanydb",  # cmk/plugins/sql/active_check/check_sql.py
-        "rados",  # cmk/plugins/ceph/agents/mk_ceph.py
-        "mysqldb",  # cmk/plugins/plesk/agents/plesk_backups.py
-        "pymongo",  # cmk/plugins/mongodb/agents/mk_mongodb.py
-        "bson",  # cmk/plugins/mongodb/agents/mk_mongodb.py
-        "pyrfc",  # cmk/plugins/sap/agents/mk_sap.py
-        "pyinotify",  # cmk/plugins/inotify/agents/mk_inotify.py
         "rrdtool",  # is built as part of the project
         "git",  # cmk/utils/werks/mail/__init__.py, dev-only werks tooling
     ],

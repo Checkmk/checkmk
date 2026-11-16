@@ -6,10 +6,8 @@ py_library(
         "plesk_backups.py",
         "plesk_domains.py",
     ],
-    visibility = [
-        "//cmk/plugins:__subpackages__",
-        "//tests:__subpackages__",
-    ],
+    # Only tests use the agent plug-ins as Python code, see //cmk/plugins:plugins.
+    visibility = ["//tests:__subpackages__"],
 )
 
 filegroup(

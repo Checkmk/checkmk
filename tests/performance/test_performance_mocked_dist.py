@@ -106,6 +106,8 @@ def test_performance_bulk_change_activation_mocked_remotes_distributed_piggyback
         args=[],
         setup=perftest_mocked_dist.setup_bulk_change_activation,
         teardown=perftest_mocked_dist.teardown_bulk_change_activation,
-        rounds=perftest_mocked_dist.rounds,
+        # A round costs about a minute of untimed setup and teardown, and 8 rounds keep the
+        # mean as steady from night to night as 16 did.
+        rounds=perftest_mocked_dist.rounds_or(8),
         iterations=perftest_mocked_dist.iterations,
     )

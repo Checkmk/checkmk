@@ -62,7 +62,9 @@ def test_performance_bulk_change_activation(
         args=[],
         setup=perftest_dist.setup_bulk_change_activation,
         teardown=perftest_dist.teardown_bulk_change_activation,
-        rounds=perftest_dist.rounds,
+        # A round costs about a minute of untimed setup and teardown, and 8 rounds keep the
+        # mean as steady from night to night as 16 did.
+        rounds=perftest_dist.rounds_or(8),
         iterations=perftest_dist.iterations,
     )
 
@@ -95,6 +97,7 @@ def test_performance_bulk_change_activation_distributed_piggyback(
         args=[],
         setup=perftest_dist.setup_bulk_change_activation,
         teardown=perftest_dist.teardown_bulk_change_activation,
-        rounds=perftest_dist.rounds,
+        # Its mean held as steady in 8 rounds as in 16, like the test above.
+        rounds=perftest_dist.rounds_or(8),
         iterations=perftest_dist.iterations,
     )

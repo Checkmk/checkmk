@@ -7,6 +7,7 @@
 from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence
 from datetime import datetime as dt
+from types import SimpleNamespace
 from typing import Protocol
 
 import pytest
@@ -460,3 +461,29 @@ def test_list_buckets_reads_every_page() -> None:
     buckets = S3BucketHelper.list_buckets(PagedS3Client())
 
     assert [bucket["Name"] for bucket in buckets] == ["bucket-0", "bucket-1", "bucket-2"]
+
+
+class AccessDeniedError(Exception):
+    pass
+
+
+class PolicyDeniedS3Client:
+    """A bucket whose bucket policy denies GetBucketLocation."""
+
+    exceptions = SimpleNamespace(ClientError=AccessDeniedError)
+
+    def list_buckets(self, MaxBuckets: int) -> Mapping[str, object]:  # noqa: ARG002
+        return {"Buckets": [{"Name": "private", "BucketRegion": "eu-central-1"}]}
+
+    def get_bucket_location(self, Bucket: str) -> Mapping[str, object]:
+        raise AccessDeniedError(f"Access Denied: {Bucket}")
+
+
+def test_list_buckets_takes_the_region_from_the_list() -> None:
+    [bucket] = S3BucketHelper.list_buckets(PolicyDeniedS3Client())
+
+    assert bucket == {
+        "Name": "private",
+        "BucketRegion": "eu-central-1",
+        "LocationConstraint": "eu-central-1",
+    }

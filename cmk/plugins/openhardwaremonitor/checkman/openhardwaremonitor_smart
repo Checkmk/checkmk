@@ -1,4 +1,4 @@
-title: Hardware Sensors via OpenHardwareMonitor: S.M.A.R.T.
+title: OpenHardwareMonitor: S.M.A.R.T.
 agents: windows
 catalog: os/hardware
 license: GPLv2

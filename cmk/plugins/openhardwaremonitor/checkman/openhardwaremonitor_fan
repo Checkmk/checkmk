@@ -1,4 +1,4 @@
-title: Hardware Sensors via OpenHardwareMonitor: Fans
+title: OpenHardwareMonitor: Fans
 agents: windows
 catalog: os/hardware
 license: GPLv2

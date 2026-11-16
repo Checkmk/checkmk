@@ -1,4 +1,4 @@
-title: Hardware Sensors via OpenHardwareMonitor: Temperature
+title: OpenHardwareMonitor: Temperature
 agents: windows
 catalog: os/hardware
 license: GPLv2

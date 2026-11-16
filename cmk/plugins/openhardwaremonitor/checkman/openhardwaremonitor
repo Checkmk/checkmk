@@ -1,4 +1,4 @@
-title: Hardware Sensors via OpenHardwareMonitor: Clock
+title: OpenHardwareMonitor: Clock
 agents: windows
 catalog: os/hardware
 license: GPLv2

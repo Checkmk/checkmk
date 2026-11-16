@@ -50,10 +50,11 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         action="store",
         type=int,
         help=(
-            "The number of rounds (i.e. batches) of iterations used for each scenario. "
-            "Any setup and teardown logic will per executed once per round."
+            "The number of rounds (i.e. batches) of iterations used for each scenario, "
+            "overriding the scenario's own. "
+            "Any setup and teardown logic is executed once per round."
         ),
-        default=16,
+        default=None,
     )
     parser.addoption(
         "--warmup-rounds",

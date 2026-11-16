@@ -15,6 +15,8 @@ py_cmk_test(
     ],
     args = [
         "tests/performance/monitoring_views/in_process",
+        "-p",
+        "tests.performance.benchmark_json",
         # The comparison table this suite prints at the end is the result; pytest-benchmark's
         # own per-round chatter only buries it.
         "--benchmark-quiet",
@@ -49,6 +51,7 @@ py_cmk_test(
         "//cmk/plugins",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
+        "//tests/performance:benchmark_json",
         "//tests/performance/monitoring_views:livestatus_fake",
         "//tests/testlib/unit",
         requirement("flask"),

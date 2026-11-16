@@ -13,6 +13,7 @@ py_library(
         ["**/*.py"],
         exclude = [
             "__init__.py",
+            "benchmark_json.py",
             "sysmon.py",
         ],
     ),
@@ -55,6 +56,25 @@ py_library(
         "//tests:pkg_marker",
         "//tests/testlib/common",
         requirement("psutil"),
+    ],
+)
+
+py_library(
+    name = "benchmark_json",
+    testonly = True,
+    srcs = [
+        "__init__.py",
+        "benchmark_json.py",
+    ],
+    imports = ["../.."],
+    # Loaded by the Bazel-based performance suites with `-p tests.performance.benchmark_json`.
+    visibility = [
+        "//non-free/packages/cmk-data-backend:__pkg__",
+        "//tests/performance:__subpackages__",
+    ],
+    deps = [
+        "//tests:pkg_marker",
+        requirement("pytest"),
     ],
 )
 

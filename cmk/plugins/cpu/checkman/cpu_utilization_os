@@ -1,4 +1,4 @@
-title: Cpu Utilization OS
+title: CPU: Utilization of LXC and Docker Containers
 agents: linux
 catalog: os/kernel
 license: GPLv2

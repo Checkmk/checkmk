@@ -12,7 +12,6 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import UUID4
 from pytest_mock import MockerFixture
-from starlette.routing import Mount
 
 from cmk.agent_receiver.agent_receiver.checkmk_rest_api import ControllerCertSettings
 from cmk.agent_receiver.lib.certs import agent_root_ca, get_local_site_cn, relay_root_ca
@@ -66,11 +65,13 @@ def mock_controller_certificate_settings(mocker: MockerFixture) -> None:
 
 
 @pytest.fixture(name="client")
-def fixture_client(setup_site_context: Config) -> TestClient:  # noqa: ARG001 - needs the site
-    app = main_app()
-    assert len(app.routes) == 2
-    assert isinstance(mount := app.routes[1], Mount)
-    return TestClient(mount.app)
+def fixture_client(setup_site_context: Config) -> Iterator[TestClient]:
+    # Through the main app, so that its lifespan runs as in production.
+    with TestClient(
+        main_app(),
+        base_url=f"http://testserver/{setup_site_context.site_name}/agent-receiver",
+    ) as client:
+        yield client
 
 
 @pytest.fixture(name="uuid", scope="session")

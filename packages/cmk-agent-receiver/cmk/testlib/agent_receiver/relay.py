@@ -4,13 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import uuid
-from http import HTTPStatus
-
-import httpx2
 
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
-from cmk.agent_receiver.relay.lib.site_auth import SiteAuth
-from cmk.agent_receiver.relay.lib.site_client import CheckmkAPIError
 
 logger = logging.getLogger(__name__)
 
@@ -18,16 +13,3 @@ logger = logging.getLogger(__name__)
 def random_relay_id() -> RelayID:
     """Generates a random RelayID for testing purposes."""
     return RelayID(str(uuid.uuid4()))
-
-
-async def site_has_relay(client: httpx2.AsyncClient, relay_id: RelayID, auth: SiteAuth) -> bool:
-    resp = await client.get(url=f"/objects/relay/{relay_id}", auth=auth)
-    if resp.status_code == HTTPStatus.NOT_FOUND:
-        return False
-    if resp.status_code == HTTPStatus.OK:
-        return True
-    logger.error(
-        "could not check if relay exists %(status_code)s : %(text)s",
-        {"status_code": resp.status_code, "text": resp.text},
-    )
-    raise CheckmkAPIError(resp.text)

@@ -43,6 +43,7 @@ def test_client(
     for key, value in ar_site.env.items():
         monkeypatch.setenv(key, value)
     get_config.cache_clear()
-    yield TestClient(main_app())
+    with TestClient(main_app()) as client:
+        yield client
 
     print(ar_site.config.log_path.read_text())  # noqa: T201  # It's OK for test/script helpers to print()

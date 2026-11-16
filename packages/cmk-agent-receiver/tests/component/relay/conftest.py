@@ -44,9 +44,8 @@ def site_context(ar_site: AgentReceiverSite, monkeypatch: pytest.MonkeyPatch) ->
 
 @pytest.fixture()
 def test_client(site_context: Config) -> Iterator[TestClient]:
-    app = main_app()
-    client = TestClient(app)
-    yield client
+    with TestClient(main_app()) as client:
+        yield client
 
     print(site_context.log_path.read_text())  # noqa: T201  # It's OK for test/script helpers to print()
 

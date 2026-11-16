@@ -5,7 +5,6 @@
 
 from uuid import uuid4
 
-import httpx2
 import pytest
 from pydantic import SecretStr
 
@@ -15,11 +14,11 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import 
 )
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.agent_receiver.relay.lib.site_auth import SecretAuth, UnsupportedAuthFormatError
+from cmk.agent_receiver.relay.lib.site_client import SiteRelaysClient
 from cmk.relay_protocols.relays import RelayRegistrationRequest
 from cmk.testlib.agent_receiver.certs import (
     generate_csr_pair,
 )
-from cmk.testlib.agent_receiver.relay import site_has_relay
 
 # The handler reads the site config itself.
 pytestmark = pytest.mark.usefixtures("site_context")
@@ -29,7 +28,7 @@ pytestmark = pytest.mark.usefixtures("site_context")
 async def test_process_adds_new_relay_id_to_registry(
     register_relay_handler: RegisterRelayHandler,
     test_user: SecretAuth,
-    site_api_client: httpx2.AsyncClient,
+    site_relays_client: SiteRelaysClient,
 ) -> None:
     relay_id = RelayID(str(uuid4()))
     response = await register_relay_handler.process(
@@ -41,14 +40,14 @@ async def test_process_adds_new_relay_id_to_registry(
         ),
     )
     assert relay_id == response.relay_id
-    assert await site_has_relay(site_api_client, RelayID(response.relay_id), test_user)
+    assert await site_relays_client.relay_exists(test_user, RelayID(response.relay_id))
 
 
 @pytest.mark.asyncio
 async def test_process_creates_multiple_relays(
     register_relay_handler: RegisterRelayHandler,
     test_user: SecretAuth,
-    site_api_client: httpx2.AsyncClient,
+    site_relays_client: SiteRelaysClient,
 ) -> None:
     aliases = ["relay1", "relay2", "relay3"]
     relay_ids = []
@@ -65,11 +64,11 @@ async def test_process_creates_multiple_relays(
         )
         relay_ids.append(relay_id)
         assert relay_id == response.relay_id
-        assert await site_has_relay(site_api_client, relay_id, test_user)
+        assert await site_relays_client.relay_exists(test_user, relay_id)
 
     # Verify all relays are still registered
     for relay_id in relay_ids:
-        assert await site_has_relay(site_api_client, relay_id, test_user)
+        assert await site_relays_client.relay_exists(test_user, relay_id)
 
 
 @pytest.mark.asyncio

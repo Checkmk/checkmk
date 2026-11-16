@@ -3,38 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+from http import HTTPStatus
 
 from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.lib.config import get_config
-from cmk.testlib.agent_receiver.site_mock import SiteMock
 
 
-def test_middleware_adds_request_id_to_logs(
-    site: SiteMock,
-    test_client: TestClient,
-) -> None:
-    """Verify that the middleware correctly binds the request ID to the logging context for request tracing.
-
-    Test steps:
-    1. Send request with custom trace ID header
-    2. Verify response includes matching request ID
-    3. Verify trace ID appears in log file
-    """
+def test_log_lines_of_a_request_carry_its_trace_id(site_name: str, test_client: TestClient) -> None:
     trace_id = "test-logging-integration-12345"
-    response = test_client.get(
-        f"/{site.site_name}/agent-receiver/openapi.json", headers={"x-trace-id": trace_id}
-    )
-    assert response.headers["x-request-id"] == trace_id
 
-    # Flush logging handlers to ensure logs are written to file
+    response = test_client.post(
+        f"/{site_name}/relays/activate-config",
+        headers={"x-trace-id": trace_id},
+    )
+
+    assert response.status_code == HTTPStatus.FORBIDDEN, response.text
     for handler in logging.getLogger("agent-receiver").handlers:
         handler.flush()
-
-    # The log file should exist and contain the request ID
-    # Note: The openapi.json endpoint may not generate application logs,
-    # but middleware should still bind the request_id to the logging context
-    config = get_config()
-    logfile = config.log_path
-    if logfile.exists() and (log_content := logfile.read_text().strip()):
-        assert trace_id in log_content, f"Request ID {trace_id} not found in logs: {log_content}"
+    # The rejection of the non-local client is logged; other lines may stem from the startup.
+    assert any(
+        "activate-config" in line and trace_id in line
+        for line in get_config().log_path.read_text().splitlines()
+    )

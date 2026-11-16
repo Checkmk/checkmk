@@ -1,4 +1,4 @@
-title: Wireless LAN Controller (WLC): Number of Wifi Connections
+title: Wireless LAN Controllers: Connected Clients
 agents: snmp
 catalog: hw/network/generic
 license: GPLv2

@@ -1,4 +1,4 @@
-title: UCS Bladecenter: Fault Instances
+title: Cisco UCS Bladecenter: Fault Instances
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
 license: GPLv2

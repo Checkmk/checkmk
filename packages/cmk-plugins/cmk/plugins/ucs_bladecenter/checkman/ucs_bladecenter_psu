@@ -1,4 +1,4 @@
-title: UCS Bladecenter: Chassis Voltage
+title: Cisco UCS Bladecenter: Chassis Voltage
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
 license: GPLv2

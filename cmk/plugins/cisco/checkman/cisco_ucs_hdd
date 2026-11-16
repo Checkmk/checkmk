@@ -1,4 +1,4 @@
-title: Cisco UCS: HDD Operation Status
+title: Cisco UCS: HDD Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

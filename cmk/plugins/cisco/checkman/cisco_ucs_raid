@@ -1,4 +1,4 @@
-title: Cisco UCS: RAID Controller Operation Status
+title: Cisco UCS: RAID Controller Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

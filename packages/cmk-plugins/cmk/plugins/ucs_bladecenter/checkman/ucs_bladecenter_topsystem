@@ -1,4 +1,4 @@
-title: UCS Bladecenter: TopSystem Info
+title: Cisco UCS Bladecenter: TopSystem Information
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
 license: GPLv2

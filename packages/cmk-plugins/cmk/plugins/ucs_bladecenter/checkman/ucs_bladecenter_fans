@@ -1,4 +1,4 @@
-title: UCS Bladecenter Fans: Health Status of Fans
+title: Cisco UCS Bladecenter: Fans
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
 license: GPLv2

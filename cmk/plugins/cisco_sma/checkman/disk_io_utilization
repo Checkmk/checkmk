@@ -1,4 +1,4 @@
-title: Disk IO Utilization
+title: Disk I/O: Utilization
 agents: snmp
 catalog: os/storage
 license: GPLv2

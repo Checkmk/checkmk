@@ -1,4 +1,4 @@
-title: Cisco Unified Survivable Remote Site Telephony (SRST): Registered Phones
+title: Cisco Unified SRST: Registered Phones
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

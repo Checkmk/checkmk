@@ -1,4 +1,4 @@
-title: Cisco UCS: Fault summary
+title: Cisco UCS: Fault Summary
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Cisco UCS: LUN Operation Status
+title: Cisco UCS: LUN Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

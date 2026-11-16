@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
-import dataclasses
 import itertools
 import sys
 import time
 from collections.abc import Container, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Protocol
 
@@ -123,7 +122,7 @@ def _inventorize(request: InventoryRequest, *, omd_root: Path, debug: bool) -> N
         else contextlib.nullcontext()
     ):
         if request.force:
-            file_cache_options = dataclasses.replace(file_cache_options, keep_outdated=True)
+            file_cache_options = replace(file_cache_options, keep_outdated=True)
 
         selected_sections, run_plugin_names = extract_plugin_selection(
             detect_plugins=request.plugin_selection.detect_plugins,

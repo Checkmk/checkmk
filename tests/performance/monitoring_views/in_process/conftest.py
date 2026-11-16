@@ -64,6 +64,7 @@ from tests.performance.monitoring_views.remotes import (  # noqa: E402
 )
 from tests.performance.monitoring_views.report import Report  # noqa: E402
 from tests.performance.monitoring_views.scenarios import LimitTier, TIERS  # noqa: E402
+from tests.performance.sysmon import track_resources  # noqa: E402
 from tests.testlib.unit.gui.common_fixtures import (  # noqa: E402
     create_flask_app,
     create_wsgi_app,
@@ -164,6 +165,17 @@ def pytest_addoption(parser: pytest.Parser) -> None:
             "pages load additional entries - neither fetches more as you scroll."
         ),
     )
+
+
+@pytest.fixture(name="track_system_resources")
+def _track_system_resources(request: pytest.FixtureRequest) -> Iterator[None]:
+    """Sample the machine's resource usage while the test runs.
+
+    The upload stores a scenario's benchmark only together with these samples, filed
+    under the test's name.
+    """
+    with track_resources(request.node.name):
+        yield
 
 
 # .

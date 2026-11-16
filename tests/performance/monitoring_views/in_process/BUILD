@@ -52,6 +52,7 @@ py_cmk_test(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//tests/performance:benchmark_json",
+        "//tests/performance:sysmon",
         "//tests/performance/monitoring_views:livestatus_fake",
         "//tests/testlib/unit",
         requirement("flask"),

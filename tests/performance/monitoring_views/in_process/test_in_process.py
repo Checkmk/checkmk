@@ -322,6 +322,7 @@ def _timed(
 
 
 @pytest.mark.parametrize("page", PAGES, ids=lambda page: page.id)
+@pytest.mark.usefixtures("track_system_resources")
 def test_page_load_duration(
     benchmark: BenchmarkFixture,
     probe: Probe,
@@ -345,6 +346,7 @@ def test_page_load_duration(
 
 
 @pytest.mark.parametrize("page", PAGES, ids=lambda page: page.id)
+@pytest.mark.usefixtures("track_system_resources")
 def test_page_refresh_duration(
     benchmark: BenchmarkFixture,
     probe: Probe,

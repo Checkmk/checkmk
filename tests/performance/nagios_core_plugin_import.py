@@ -103,7 +103,7 @@ class NagiosCorePluginImport:
         """Creates a host check file which loads all agent based plugins"""
 
         template_file: Path = (
-            self.omd_root / "lib/python3/cmk/base/core/nagios/_host_check_template.py"
+            self.omd_root / "lib/python3/cmk/base/core_nagios/_host_check_template.py"
         )
 
         plugin_locations = [

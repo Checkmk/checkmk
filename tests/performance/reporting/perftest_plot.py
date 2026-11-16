@@ -44,6 +44,7 @@ Options:
     --dbport                 Database port (default: 5432).
     --require-database       Fail if the database can not be reached.
     --product-release        The product release of the stored jobs.
+    --append-db              Replace only the uploaded scenarios of existing jobs.
     --validate-baselines     Whether to perform baseline validation.
     --alert-on-failure       Whether to alert on failed baseline validation.
     --warn-only              Report failed baseline validation without a non-zero exit code.
@@ -358,6 +359,21 @@ class PerformanceDb:
                 (job_name,),
             )
         return cursor.rowcount > 0
+
+    def delete_test(self, job_name: str, scenario_name: str) -> None:
+        """Delete the test results of one scenario of a job from the database."""
+        with self._cursor() as cursor:
+            cursor.execute(
+                """
+                DELETE FROM tests
+                USING jobs, scenarios
+                WHERE tests.job_id = jobs.job_id
+                    AND tests.scenario_id = scenarios.scenario_id
+                    AND jobs.job_name = %s
+                    AND scenarios.scenario_name = %s
+                """,
+                (job_name, scenario_name),
+            )
 
     def check_job(self, job_name: str) -> bool:
         """
@@ -770,6 +786,7 @@ class PerftestPlotArgs(argparse.Namespace):
         update_db (bool): If True, update existing job data in the database.
         purge_db (bool): If True, delete existing job data from the database.
         product_release (str): The product release of the stored jobs.
+        append_db (bool): If True, replace only the uploaded scenarios of existing jobs.
         baseline_offset (int): The offset for the baseline validation.
         cpu_tolerance (float): The tolerance level for the CPU baseline validation.
         mem_tolerance (float): The tolerance level for the memory baseline validation.
@@ -807,6 +824,7 @@ class PerftestPlotArgs(argparse.Namespace):
     update_db: bool
     purge_db: bool
     product_release: str
+    append_db: bool
     baseline_offset: int
     cpu_tolerance: float
     mem_tolerance: float
@@ -837,6 +855,7 @@ class PerftestPlot:
         self.root_dir.mkdir(parents=True, exist_ok=True)
         self.update_db = self.args.update_db and len(self.args.job_names) > 0
         self.purge_db = self.args.purge_db and len(self.args.job_names) > 0
+        self.append_db = self.args.append_db
         self.read_from_database = not (
             self.args.skip_database_reads or self.update_db or self.purge_db
         )
@@ -1397,6 +1416,12 @@ class PerftestPlot:
             },
         }
 
+    def _scenario_on_disk(self, job_name: str, scenario_name: str) -> bool:
+        """Return whether the scenario data of a job is read from the filesystem."""
+        return (
+            self.read_from_filesystem and self.scenario_file_path(job_name, scenario_name).exists()
+        )
+
     def _read_scenario_data(self, job_name: str) -> dict[str, MeasurementsList]:
         """
         Reads measurement data for each scenario associated with a given job name from either the
@@ -1416,7 +1441,7 @@ class PerftestPlot:
         scenario_data: dict[str, MeasurementsList] = {}
         for scenario_name in self.scenario_names:
             scenario_file_path = self.scenario_file_path(job_name, scenario_name)
-            if scenario_file_path.exists() and self.read_from_filesystem:
+            if self._scenario_on_disk(job_name, scenario_name):
                 # read measurements from file
                 scenario_data[scenario_name] = (
                     data if isinstance(data := self._read_json(scenario_file_path), list) else []
@@ -1522,10 +1547,11 @@ class PerftestPlot:
                     self.database.delete_job(job_name=job_name)
                 if self.purge_db:
                     continue
+                # Scenarios read back from the database are stored already.
                 new_scenario_data = {
                     scenario_name: performance_data
                     for scenario_name, performance_data in scenario_data.items()
-                    if performance_data
+                    if performance_data and self._scenario_on_disk(job_name, scenario_name)
                 }
                 if not new_scenario_data:
                     continue
@@ -1543,6 +1569,8 @@ class PerftestPlot:
                     )
                 )
                 for scenario_name, performance_data in new_scenario_data.items():
+                    if self.append_db:
+                        self.database.delete_test(job_name=job_name, scenario_name=scenario_name)
                     self.database.write_scenario_data(
                         job_name=job_name,
                         job_starttime=job_starttime,
@@ -2047,7 +2075,8 @@ def parse_args() -> PerftestPlotArgs:
         default="cee",
         help="The default edition for jobs (default: %(default)s).",
     )
-    parser.add_argument(
+    db_writes = parser.add_mutually_exclusive_group()
+    db_writes.add_argument(
         "--update-db",
         action=argparse.BooleanOptionalAction,
         dest="update_db",
@@ -2055,13 +2084,23 @@ def parse_args() -> PerftestPlotArgs:
         default=False,
         help="Specifies if the DB will be updated, even if job data for that job exists already.",
     )
-    parser.add_argument(
+    db_writes.add_argument(
         "--purge-db",
         action=argparse.BooleanOptionalAction,
         dest="purge_db",
         type=bool,
         default=False,
         help="Specifies if the DB will be purged, if job data for a selected job exists already.",
+    )
+    db_writes.add_argument(
+        "--append-db",
+        action=argparse.BooleanOptionalAction,
+        dest="append_db",
+        default=False,
+        help=(
+            "Specifies if the scenarios will be added to existing jobs, replacing only the stored"
+            " results of the same scenarios."
+        ),
     )
     parser.add_argument(
         "--product-release",

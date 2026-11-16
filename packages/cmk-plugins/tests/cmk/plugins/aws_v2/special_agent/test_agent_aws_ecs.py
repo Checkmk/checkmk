@@ -23,6 +23,7 @@ from cmk.plugins.aws_v2.special_agent.sections.core import (
     AWSSectionResult,
     AWSSectionResults,
     ResultDistributor,
+    ServiceQuotas,
 )
 from cmk.plugins.aws_v2.special_agent.sections.ecs import ECS, ECSLimits, ECSSummary, StatusEnum
 
@@ -203,6 +204,21 @@ def test_ecs_limits_ask_for_100_quotas_per_page() -> None:
     ecs_limits.run()
 
     assert quota_client.page_sizes == [100]
+
+
+def test_ecs_limits_use_the_stored_quotas() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("ecs_names", None)
+    config.add_service_tags("ecs_tags", (None, None))
+    ServiceQuotas(PageSizeRecordingQuotaClient(), config, "region", "ecs").get_data()
+    quota_client = PageSizeRecordingQuotaClient()
+    ecs_limits = ECSLimits(FakeEmptyECSClient(), "region", config, None, quota_client)
+
+    ecs_limits.run(use_cache=True)
+
+    assert not quota_client.page_sizes
 
 
 ECSSectionsOut = tuple[ECSLimits, ECSSummary, ECS]

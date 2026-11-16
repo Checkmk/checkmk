@@ -455,6 +455,48 @@ class AWSSection(DataCache):
         }
 
 
+# AWS changes a quota only when someone asks for an increase and AWS approves it. Reading the
+# quotas once a day is enough, and it keeps the agent far below the low rate limit of the
+# Service Quotas API. An approved increase shows up in the limits at most one day later.
+QUOTA_CACHE_INTERVAL = 86400
+
+
+class ServiceQuotas(DataCache):
+    """The quotas of one AWS service in one region of one account."""
+
+    def __init__(
+        self, client: BaseClient, config: AWSConfig, region: str, service_code: str
+    ) -> None:
+        super().__init__(
+            host_name=config.hostname,
+            agent=f"agent_{AGENT}",
+            key=f"{config.account_id}-{region}-service_quotas-{service_code}",
+        )
+        self._client = client
+        self._service_code = service_code
+
+    @property
+    @override
+    def cache_interval(self) -> int:
+        return QUOTA_CACHE_INTERVAL
+
+    @override
+    def get_validity_from_args(self, *args: object) -> bool:
+        return True
+
+    @override
+    def get_live_data(self, *args: object) -> list[dict[str, object]]:
+        quotas: list[dict[str, object]] = []
+        paginator = self._client.get_paginator("list_service_quotas")
+        # Without a page size, AWS sends few quotas per page, and EC2 alone needs dozens of pages.
+        for page in paginator.paginate(
+            ServiceCode=self._service_code, PaginationConfig={"PageSize": 100}
+        ):
+            for quota in page.get("Quotas", []):
+                quotas.append(Quota(**quota).model_dump())
+        return quotas
+
+
 class AWSSectionLimits(AWSSection):
     def __init__(
         self,
@@ -467,6 +509,12 @@ class AWSSectionLimits(AWSSection):
         super().__init__(client, region, config, distributor=distributor)
         self._quota_client = quota_client
         self._limits: dict[TargetHost, list[AWSRegionLimit]] = {}
+        self._use_cache = False
+
+    @override
+    def run(self, use_cache: bool = False) -> AWSSectionResults:
+        self._use_cache = use_cache
+        return super().run(use_cache)
 
     def _add_limit(
         self,
@@ -499,13 +547,9 @@ class AWSSectionLimits(AWSSection):
         if self._quota_client is None:
             return
 
-        paginator = self._quota_client.get_paginator("list_service_quotas")
-        # Without a page size, AWS sends few quotas per page, and EC2 alone needs dozens of pages.
-        for page in paginator.paginate(
-            ServiceCode=service_code, PaginationConfig={"PageSize": 100}
-        ):
-            for quota in self._get_response_content(page, "Quotas"):
-                yield Quota(**quota)
+        quotas = ServiceQuotas(self._quota_client, self._config, self._region, service_code)
+        for quota in quotas.get_data(use_cache=self._use_cache):
+            yield Quota(**quota)
 
 
 class AWSSectionCloudwatch(AWSSection):

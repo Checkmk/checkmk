@@ -80,7 +80,6 @@ def _translate_walk(walk_name: str) -> Sequence[tuple[bytes, bytes]]:
     )
 
     data_translated = completed_process.stdout.split(b"\n")
-    # remove last empty line (some tools add a '\n' at the end of the file, others not)
     if data_translated[-1] == b"":
         del data_translated[-1]
 
@@ -168,7 +167,6 @@ def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend, debug: bool
 
 
 def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
-    """Create the configured backend, reporting an unavailable one as user error"""
     try:
         return make_backend(snmp_config)
     except BackendError as exc:

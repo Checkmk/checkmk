@@ -17,14 +17,12 @@ _AUTH = SecretAuth(SecretStr("Bearer test-token"))
 
 
 def _site_answering(status: HTTPStatus) -> SiteRelaysClient:
-    transport = httpx2.MockTransport(lambda _: httpx2.Response(status))
     return SiteRelaysClient(
         client=httpx2.AsyncClient(
-            base_url="http://localhost/site/check_mk/api/1.0", transport=transport
+            transport=httpx2.MockTransport(lambda _: httpx2.Response(status))
         ),
-        internal_client=httpx2.AsyncClient(
-            base_url="http://localhost/site/check_mk/api/internal", transport=transport
-        ),
+        rest_api_url="http://localhost/site/check_mk/api/1.0",
+        internal_rest_api_url="http://localhost/site/check_mk/api/internal",
         siteid="site",
     )
 

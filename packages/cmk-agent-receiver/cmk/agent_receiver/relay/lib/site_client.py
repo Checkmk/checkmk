@@ -31,48 +31,30 @@ default_num_fetchers = 13
 default_log_level = "INFO"
 
 
+# FIXME: increased timeout due to flacky test test_tasks.py::test_max_tasks_per_relay
+_TIMEOUT = 20
+
+
 @final
 class SiteRelaysClient:
     def __init__(
         self,
         *,
         client: httpx2.AsyncClient,
-        internal_client: httpx2.AsyncClient,
+        rest_api_url: str,
+        internal_rest_api_url: str,
         siteid: str,
     ) -> None:
         self.client = client
-        self.internal_client = internal_client
+        self.rest_api_url = rest_api_url
+        self.internal_rest_api_url = internal_rest_api_url
         self.siteid = siteid
 
-    @classmethod
-    def from_site(
-        cls,
-        *,
-        site_url: str,
-        internal_site_url: str,
-        site_name: str,
-    ) -> SiteRelaysClient:
-        """Create SiteRelaysClient from site configuration."""
-        headers = {
-            "Content-Type": "application/json",
-            "User-Agent": "Checkmk Agent Receiver",
-        }
-        # FIXME: increased timeout due to flacky test test_tasks.py::test_max_tasks_per_relay
-        timeout = 20
-        client = httpx2.AsyncClient(base_url=site_url, headers=headers, timeout=timeout)
-        internal_client = httpx2.AsyncClient(
-            base_url=internal_site_url, headers=headers, timeout=timeout
-        )
-        return cls(
-            client=client,
-            internal_client=internal_client,
-            siteid=site_name,
-        )
-
     async def add_relay(self, auth: SiteAuth, relay_id: RelayID, alias: str) -> RelayID:
-        resp = await self.internal_client.post(
-            "/domain-types/relay/collections/all",
+        resp = await self.client.post(
+            f"{self.internal_rest_api_url}/domain-types/relay/collections/all",
             auth=auth,
+            timeout=_TIMEOUT,
             json={
                 "relay_id": str(relay_id),
                 "alias": alias,
@@ -92,7 +74,9 @@ class SiteRelaysClient:
 
     async def relay_exists(self, auth: SiteAuth, relay_id: RelayID) -> bool:
         """Check if a relay exists by querying the REST API."""
-        resp = await self.client.get(f"/objects/relay/{relay_id}", auth=auth)
+        resp = await self.client.get(
+            f"{self.rest_api_url}/objects/relay/{relay_id}", auth=auth, timeout=_TIMEOUT
+        )
         if resp.status_code >= HTTPStatus.INTERNAL_SERVER_ERROR:
             raise CheckmkAPIError(resp.text)
         if resp.status_code == HTTPStatus.NOT_FOUND:

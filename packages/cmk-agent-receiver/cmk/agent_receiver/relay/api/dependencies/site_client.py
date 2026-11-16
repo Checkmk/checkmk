@@ -4,16 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import AsyncIterator
 
+import httpx2
+
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.relay.lib.site_client import SiteRelaysClient
 
 
 async def get_site_relays_client() -> AsyncIterator[SiteRelaysClient]:
     config = get_config()
-    site_client = SiteRelaysClient.from_site(
-        site_url=config.rest_api_url,
-        internal_site_url=config.internal_rest_api_url,
-        site_name=config.site_name,
-    )
-    async with site_client.client, site_client.internal_client:
-        yield site_client
+    async with httpx2.AsyncClient(headers={"User-Agent": "Checkmk Agent Receiver"}) as client:
+        yield SiteRelaysClient(
+            client=client,
+            rest_api_url=config.rest_api_url,
+            internal_rest_api_url=config.internal_rest_api_url,
+            siteid=config.site_name,
+        )

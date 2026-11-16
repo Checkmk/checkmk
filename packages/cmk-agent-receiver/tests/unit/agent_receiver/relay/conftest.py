@@ -86,49 +86,16 @@ def test_user() -> SecretAuth:
     return SecretAuth(SecretStr("Bearer test-token"))
 
 
-@pytest.fixture()
-def _relay_mock_transport() -> httpx2.MockTransport:
-    """Shared mock transport so both clients see the same relay state."""
-    return create_relay_mock_transport()
-
-
 @pytest_asyncio.fixture()
-async def site_api_client(
-    _relay_mock_transport: httpx2.MockTransport,
-) -> AsyncIterator[httpx2.AsyncClient]:
-    """Provides an httpx2.AsyncClient configured for the site API (v1)."""
-    async with httpx2.AsyncClient(
-        base_url="http://test.com/test/check_mk/api/1.0",
-        headers={"Content-Type": "application/json"},
-        transport=_relay_mock_transport,
-    ) as client:
-        yield client
-
-
-@pytest_asyncio.fixture()
-async def internal_api_client(
-    _relay_mock_transport: httpx2.MockTransport,
-) -> AsyncIterator[httpx2.AsyncClient]:
-    """Provides an httpx2.AsyncClient configured for the internal API."""
-    async with httpx2.AsyncClient(
-        base_url="http://test.com/test/check_mk/api/internal",
-        headers={"Content-Type": "application/json"},
-        transport=_relay_mock_transport,
-    ) as client:
-        yield client
-
-
-@pytest.fixture()
-def site_relays_client(
-    site_api_client: httpx2.AsyncClient, internal_api_client: httpx2.AsyncClient
-) -> Iterator[SiteRelaysClient]:
+async def site_relays_client() -> AsyncIterator[SiteRelaysClient]:
     """Provides a SiteRelaysClient with mock transport for testing."""
-    repository = SiteRelaysClient(
-        client=site_api_client,
-        internal_client=internal_api_client,
-        siteid="test-site",
-    )
-    yield repository
+    async with httpx2.AsyncClient(transport=create_relay_mock_transport()) as client:
+        yield SiteRelaysClient(
+            client=client,
+            rest_api_url="http://test.com/test/check_mk/api/1.0",
+            internal_rest_api_url="http://test.com/test/check_mk/api/internal",
+            siteid="test-site",
+        )
 
 
 @pytest.fixture()

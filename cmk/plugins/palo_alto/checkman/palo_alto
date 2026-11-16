@@ -1,4 +1,4 @@
-title: Palo Alto Firewall: Status
+title: Palo Alto Networks: Firewall Status
 agents: snmp
 catalog: hw/network/palo_alto
 license: GPLv2

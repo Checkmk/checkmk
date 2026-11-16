@@ -1,4 +1,4 @@
-title: GlobalProtect: Utilization
+title: Palo Alto Networks: GlobalProtect Utilization
 agents: snmp
 catalog: hw/network/palo_alto
 license: GPLv2

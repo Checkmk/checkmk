@@ -1,4 +1,4 @@
-title: Palo Alto Firewall: Users
+title: Palo Alto Networks: Users
 agents: snmp
 catalog: hw/network/palo_alto
 license: GPLv2

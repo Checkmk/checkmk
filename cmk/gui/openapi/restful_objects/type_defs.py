@@ -233,6 +233,7 @@ CmkEndpointName = Literal[
     "cmk/rename",
     "cmk/resolve_maps_access",
     "cmk/resolve_maps_link_targets",
+    "cmk/resolve_services",
     "cmk/run_maps_command",
     "cmk/show",
     "cmk/show_dashboard_relative_grid",

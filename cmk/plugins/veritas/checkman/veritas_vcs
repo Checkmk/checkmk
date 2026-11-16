@@ -1,11 +1,11 @@
-title: Veritas Cluster Service: Cluster State
+title: Veritas Cluster Server: Cluster State
 agents: linux
 catalog: os/services
 license: GPLv2
 distribution: check_mk
 description:
  This check needs the {check_mk_agent.linux} agent which provides information
- about the Veritas Cluster Service if it is installed.
+ about the Veritas Cluster Server if it is installed.
 
  The check determines the state of the Veritas Cluster based on the following
  priorities:

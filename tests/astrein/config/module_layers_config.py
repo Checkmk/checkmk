@@ -382,9 +382,11 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.ai_control_plane.usage_data"): _allow(
         *PACKAGE_CCC,
+        *PACKAGE_CRYPTO,
         *PACKAGE_TRACE,
         "cmk.ai_control_plane.llm",
         "cmk.ai_control_plane.protocols",
+        "cmk.ai_control_plane.site",
     ),
     Component("cmk.ai_control_plane"): _allow(),
     Component("cmk.automations"): _allow(

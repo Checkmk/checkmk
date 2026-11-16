@@ -3,17 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 from pathlib import Path
 
 import pytest
 
 from cmk.astrein.checkers.localization_named_placeholder import LocalizationNamedPlaceholderChecker
+from cmk.astrein.engine import run_checkers
 
 
 def _errors(code: str) -> list[str]:
-    checker = LocalizationNamedPlaceholderChecker(Path("test/test.py"), Path("test"), code)
-    return [error.message for error in checker.check(ast.parse(code))]
+    errors = run_checkers(
+        Path("test/test.py"), Path("test"), [LocalizationNamedPlaceholderChecker], source_code=code
+    )
+    return [error.message for error in errors]
 
 
 @pytest.mark.parametrize(

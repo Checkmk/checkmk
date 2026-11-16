@@ -203,9 +203,7 @@ def _make_checker(errors_by_file: dict[Path, list[CheckerError]]) -> type[ASTVis
         checker_id = "custom-checker"
 
         @override
-        def check(
-            self, tree: ast.AST, suppressions: Sequence[Suppression] | None = None
-        ) -> list[CheckerError]:
+        def check(self, tree: ast.AST, suppressions: Sequence[Suppression]) -> list[CheckerError]:
             return errors_by_file.get(self.file_path, [])
 
     return CustomChecker

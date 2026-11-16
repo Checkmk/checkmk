@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 from pathlib import Path
 
 from cmk.astrein.checkers.key_size_unit_test import KeySizeUnitTestChecker
+from cmk.astrein.engine import run_checkers
 from cmk.astrein.framework import CheckerError
 
 _UNIT_TEST_PATH = Path("/repo/tests/unit/test_foo.py")
@@ -15,8 +15,7 @@ _NON_TEST_PATH = Path("/repo/cmk/some_module.py")
 
 
 def _check(code: str, file_path: Path = _UNIT_TEST_PATH) -> list[CheckerError]:
-    checker = KeySizeUnitTestChecker(file_path, _REPO_ROOT, code)
-    return checker.check(ast.parse(code))
+    return run_checkers(file_path, _REPO_ROOT, [KeySizeUnitTestChecker], source_code=code)
 
 
 def test_ignores_non_unit_test_files() -> None:

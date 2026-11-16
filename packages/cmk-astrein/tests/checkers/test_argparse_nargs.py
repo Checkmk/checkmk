@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 from pathlib import Path
 
 import pytest
 
 from cmk.astrein.checkers.argparse_nargs import ArgparseNargsChecker
+from cmk.astrein.engine import run_checkers
 from cmk.astrein.framework import CheckerError
 
 _REPO_ROOT = Path("/repo")
@@ -16,8 +16,7 @@ _AGENT_PATH = Path("/repo/cmk/plugins/foo/special_agent/agent_foo.py")
 
 
 def _check(code: str, file_path: Path = _AGENT_PATH) -> list[CheckerError]:
-    checker = ArgparseNargsChecker(file_path, _REPO_ROOT, code)
-    return checker.check(ast.parse(code))
+    return run_checkers(file_path, _REPO_ROOT, [ArgparseNargsChecker], source_code=code)
 
 
 @pytest.mark.parametrize("nargs", ['"*"', '"+"', "2", "argparse.ZERO_OR_MORE"])

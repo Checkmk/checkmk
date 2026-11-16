@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
+from functools import partial
 from pathlib import Path
 from typing import Protocol
 
@@ -16,10 +16,16 @@ from cmk.astrein.checkers.module_layers.config import (
     load_config,
     ModuleLayersConfig,
 )
+from cmk.astrein.engine import run_checkers
+from cmk.astrein.framework import CheckerError
 
 
 class _MakeChecker(Protocol):
-    def __call__(self, file_path: str, source_code: str = "") -> ModuleLayersChecker: ...
+    def __call__(self, file_path: str) -> ModuleLayersChecker: ...
+
+
+class _CheckImports(Protocol):
+    def __call__(self, file_path: str, source_code: str) -> list[CheckerError]: ...
 
 
 def _find_repo_root() -> Path:
@@ -44,11 +50,24 @@ def module_config(repo_root: Path) -> ModuleLayersConfig:
 
 @pytest.fixture(scope="module")
 def make_checker(repo_root: Path, module_config: ModuleLayersConfig) -> _MakeChecker:
-    def _make(file_path: str, source_code: str = "") -> ModuleLayersChecker:
+    def _make(file_path: str) -> ModuleLayersChecker:
         full_path = repo_root / file_path
-        return ModuleLayersChecker(full_path, repo_root, source_code, config=module_config)
+        return ModuleLayersChecker(full_path, repo_root, "", config=module_config)
 
     return _make
+
+
+@pytest.fixture(scope="module")
+def check_imports(repo_root: Path, module_config: ModuleLayersConfig) -> _CheckImports:
+    def _check(file_path: str, source_code: str) -> list[CheckerError]:
+        return run_checkers(
+            repo_root / file_path,
+            repo_root,
+            [partial(ModuleLayersChecker, config=module_config)],
+            source_code=source_code,
+        )
+
+    return _check
 
 
 def test_no_component_masked_by_more_general_component(
@@ -66,7 +85,7 @@ def test_no_component_masked_by_more_general_component(
         seen.add(component)
 
 
-def test_inline_suppression_support(repo_root: Path, module_config: ModuleLayersConfig) -> None:
+def test_inline_suppression_support(check_imports: _CheckImports) -> None:
     """Test that inline suppressions are respected by the checker."""
     # Test code with suppressed and unsuppressed violations
     source_code = """from cmk.base.config import something  # astrein: disable=module-layers
@@ -77,12 +96,7 @@ from cmk.gui.something import other
 from cmk.checkengine.plugins import Plugin
 """
 
-    # Parse and check
-    tree = ast.parse(source_code)
-    test_file_path = repo_root / "cmk" / "test_suppression.py"
-
-    checker = ModuleLayersChecker(test_file_path, repo_root, source_code, config=module_config)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/test_suppression.py", source_code)
 
     # Only the last import (line 6) should produce an error
     assert len(errors) == 1
@@ -149,256 +163,206 @@ def test_component_for_file_without_component(make_checker: _MakeChecker) -> Non
     assert checker.component is None
 
 
-def test_allowed_import_same_component_gui(make_checker: _MakeChecker) -> None:
+def test_allowed_import_same_component_gui(check_imports: _CheckImports) -> None:
     source_code = "from cmk.gui.pages import Page"
-    checker = make_checker("cmk/gui/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/gui/test_module.py", source_code)
 
     assert len(errors) == 0
 
 
-def test_allowed_import_gui_from_ccc(make_checker: _MakeChecker) -> None:
+def test_allowed_import_gui_from_ccc(check_imports: _CheckImports) -> None:
     source_code = "from cmk.ccc.version import Version"
-    checker = make_checker("cmk/gui/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/gui/test_module.py", source_code)
 
     assert len(errors) == 0
 
 
-def test_allowed_import_gui_from_utils(make_checker: _MakeChecker) -> None:
+def test_allowed_import_gui_from_utils(check_imports: _CheckImports) -> None:
     source_code = "from cmk.utils.paths import omd_root"
-    checker = make_checker("cmk/gui/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/gui/test_module.py", source_code)
 
     assert len(errors) == 0
 
 
-def test_allowed_import_gui_from_livestatus_client(make_checker: _MakeChecker) -> None:
+def test_allowed_import_gui_from_livestatus_client(check_imports: _CheckImports) -> None:
     source_code = "from cmk.livestatus_client import Query"
-    checker = make_checker("cmk/gui/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/gui/test_module.py", source_code)
 
     assert len(errors) == 0
 
 
-def test_disallowed_import_gui_from_legacy_livestatus(make_checker: _MakeChecker) -> None:
+def test_disallowed_import_gui_from_legacy_livestatus(check_imports: _CheckImports) -> None:
     """The legacy alias is fully migrated; even components that may use
     cmk.livestatus_client must not import it."""
     source_code = "from livestatus import SiteConfiguration"
-    checker = make_checker("cmk/gui/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/gui/test_module.py", source_code)
 
     assert len(errors) == 1
     assert "livestatus" in errors[0].message
 
 
-def test_disallowed_import_ccc_from_legacy_livestatus(make_checker: _MakeChecker) -> None:
+def test_disallowed_import_ccc_from_legacy_livestatus(check_imports: _CheckImports) -> None:
     source_code = "import livestatus"
-    checker = make_checker("cmk/ccc/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/ccc/test_module.py", source_code)
 
     assert len(errors) == 1
     assert "livestatus" in errors[0].message
 
 
-def test_disallowed_import_ccc_from_gui(make_checker: _MakeChecker) -> None:
+def test_disallowed_import_ccc_from_gui(check_imports: _CheckImports) -> None:
     source_code = "from cmk.gui.pages import Page"
-    checker = make_checker("cmk/ccc/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/ccc/test_module.py", source_code)
 
     assert len(errors) == 1
     assert "cmk.gui.pages" in errors[0].message
 
 
-def test_disallowed_import_ccc_from_base(make_checker: _MakeChecker) -> None:
+def test_disallowed_import_ccc_from_base(check_imports: _CheckImports) -> None:
     source_code = "from cmk.base.config import load_config"
-    checker = make_checker("cmk/ccc/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/ccc/test_module.py", source_code)
 
     assert len(errors) == 1
     assert "cmk.base.config" in errors[0].message
 
 
-def test_clean_plugin_allowed_imports(make_checker: _MakeChecker) -> None:
+def test_clean_plugin_allowed_imports(check_imports: _CheckImports) -> None:
     source_code = """from cmk.agent_based.v2 import AgentSection
 from cmk.rulesets.v1 import form_specs
 """
-    checker = make_checker("cmk/plugins/aws_deprecated/agent_based/test_check.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/plugins/aws_deprecated/agent_based/test_check.py", source_code)
 
     assert len(errors) == 0
 
 
-def test_clean_plugin_disallowed_import_from_utils(make_checker: _MakeChecker) -> None:
+def test_clean_plugin_disallowed_import_from_utils(check_imports: _CheckImports) -> None:
     source_code = "from cmk.utils.paths import omd_root"
-    checker = make_checker("cmk/plugins/aws_deprecated/agent_based/test_check.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/plugins/aws_deprecated/agent_based/test_check.py", source_code)
 
     assert len(errors) == 1
     assert "cmk.utils.paths" in errors[0].message
 
 
-def test_gui_excludes_gui_plugins(make_checker: _MakeChecker) -> None:
+def test_gui_excludes_gui_plugins(check_imports: _CheckImports) -> None:
     source_code = "from cmk.gui.plugins.views import register"
-    checker = make_checker("cmk/gui/views.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/gui/views.py", source_code)
 
     assert len(errors) == 1
     assert "cmk.gui.plugins" in errors[0].message
 
 
-def test_simple_import_statement(make_checker: _MakeChecker) -> None:
+def test_simple_import_statement(check_imports: _CheckImports) -> None:
     source_code = "import cmk.base.config"
-    checker = make_checker("cmk/ccc/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/ccc/test_module.py", source_code)
 
     assert len(errors) == 1
     assert "cmk.base.config" in errors[0].message
 
 
-def test_from_import_statement(make_checker: _MakeChecker) -> None:
+def test_from_import_statement(check_imports: _CheckImports) -> None:
     source_code = "from cmk.gui.pages import Page"
-    checker = make_checker("cmk/ccc/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/ccc/test_module.py", source_code)
 
     assert len(errors) == 1
     assert "cmk.gui.pages" in errors[0].message
 
 
-def test_multiple_names_from_import(make_checker: _MakeChecker) -> None:
+def test_multiple_names_from_import(check_imports: _CheckImports) -> None:
     source_code = "from cmk.gui.pages import Page, register_page, make_header"
-    checker = make_checker("cmk/ccc/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/ccc/test_module.py", source_code)
 
     assert len(errors) == 3
     for error in errors:
         assert "cmk.gui.pages" in error.message
 
 
-def test_relative_import_level_one(make_checker: _MakeChecker) -> None:
+def test_relative_import_level_one(check_imports: _CheckImports) -> None:
     source_code = "from . import local_module"
-    checker = make_checker("cmk/gui/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/gui/test_module.py", source_code)
 
     assert len(errors) == 0
 
 
-def test_relative_import_level_two(make_checker: _MakeChecker) -> None:
+def test_relative_import_level_two(check_imports: _CheckImports) -> None:
     source_code = "from .. import parent_module"
-    checker = make_checker("cmk/gui/subdir/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/gui/subdir/test_module.py", source_code)
 
     assert len(errors) == 0
 
 
-def test_external_stdlib_imports(make_checker: _MakeChecker) -> None:
+def test_external_stdlib_imports(check_imports: _CheckImports) -> None:
     source_code = """import sys
 import os
 from pathlib import Path
 """
-    checker = make_checker("cmk/gui/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/gui/test_module.py", source_code)
 
     assert len(errors) == 0
 
 
-def test_external_third_party_imports(make_checker: _MakeChecker) -> None:
+def test_external_third_party_imports(check_imports: _CheckImports) -> None:
     source_code = """import pytest
 from typing import Any
 import requests
 """
-    checker = make_checker("cmk/gui/test_module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("cmk/gui/test_module.py", source_code)
 
     assert len(errors) == 0
 
 
-def test_package_tests_directory_excluded(make_checker: _MakeChecker) -> None:
+def test_package_tests_directory_excluded(check_imports: _CheckImports) -> None:
     source_code = """from cmk.base.config import load_config
 from cmk.gui.pages import Page
 """
-    checker = make_checker("packages/cmk-agent-based/tests/test_something.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("packages/cmk-agent-based/tests/test_something.py", source_code)
 
     assert len(errors) == 0
 
 
-def test_package_cmk_code_checked(make_checker: _MakeChecker) -> None:
+def test_package_cmk_code_checked(check_imports: _CheckImports) -> None:
     source_code = "from cmk.gui.pages import Page"
-    checker = make_checker("packages/cmk-ccc/cmk/ccc/module.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("packages/cmk-ccc/cmk/ccc/module.py", source_code)
 
     assert len(errors) == 1
     assert "cmk.gui.pages" in errors[0].message
 
 
-def test_nonfree_package_tests_excluded(make_checker: _MakeChecker) -> None:
+def test_nonfree_package_tests_excluded(check_imports: _CheckImports) -> None:
     source_code = "from cmk.base.config import load_config"
-    checker = make_checker("non-free/packages/cmk-bla/tests/test_something.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("non-free/packages/cmk-bla/tests/test_something.py", source_code)
 
     assert len(errors) == 0
 
 
-def test_top_level_tests_excluded(make_checker: _MakeChecker) -> None:
+def test_top_level_tests_excluded(check_imports: _CheckImports) -> None:
     source_code = """from cmk.base.config import load_config
 from cmk.gui.pages import Page
 """
-    checker = make_checker("tests/unit/cmk/gui/test_foo.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("tests/unit/cmk/gui/test_foo.py", source_code)
 
     assert len(errors) == 0
 
 
-def test_top_level_tests_non_cmk_subdir_excluded(make_checker: _MakeChecker) -> None:
+def test_top_level_tests_non_cmk_subdir_excluded(check_imports: _CheckImports) -> None:
     source_code = "from cmk.gui.watolib.rulespecs import Rulespec"
-    checker = make_checker(
+    errors = check_imports(
         "tests/integration/plugin_consistency/nonfree/pro/test_bar.py", source_code
     )
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
 
     assert len(errors) == 0
 
 
-def test_non_free_top_level_tests_excluded(make_checker: _MakeChecker) -> None:
+def test_non_free_top_level_tests_excluded(check_imports: _CheckImports) -> None:
     source_code = """from cmk.data_backend.config import Foo
 from cmk.testlib.data_backend.telemetry_metrics.data import bar
 """
-    checker = make_checker("non-free/tests/system/data_backend/test_ttl.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("non-free/tests/system/data_backend/test_ttl.py", source_code)
 
     assert len(errors) == 0
 
 
-def test_file_without_component_rejects_cmk_imports(make_checker: _MakeChecker) -> None:
+def test_file_without_component_rejects_cmk_imports(check_imports: _CheckImports) -> None:
     source_code = "from cmk.utils.paths import omd_root"
-    checker = make_checker("some_random_script.py", source_code)
-    tree = ast.parse(source_code)
-    errors = checker.check(tree)
+    errors = check_imports("some_random_script.py", source_code)
 
     assert len(errors) == 1
     assert "cmk.utils.paths" in errors[0].message

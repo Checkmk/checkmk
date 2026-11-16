@@ -3,12 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 from pathlib import Path
 
 import pytest
 
 from cmk.astrein.checkers.localization import LocalizationChecker
+from cmk.astrein.engine import run_checkers
+from cmk.astrein.framework import CheckerError
+
+
+def _check(code: str) -> list[CheckerError]:
+    return run_checkers(Path("test/test.py"), Path("test"), [LocalizationChecker], source_code=code)
 
 
 @pytest.mark.parametrize(
@@ -27,9 +32,7 @@ def test_literal_string_checker(
     is_error: bool,
 ) -> None:
     """Test that localization functions must be called with literal strings."""
-    checker = LocalizationChecker(Path("test/test.py"), Path("test"), code)
-    tree = ast.parse(code)
-    errors = checker.check(tree)
+    errors = _check(code)
 
     if is_error:
         assert len(errors) > 0, f"Expected error for: {code}"
@@ -61,9 +64,7 @@ def test_html_tags_checker(
     is_error: bool,
 ) -> None:
     """Test that HTML tags in localization strings must be from allowed set."""
-    checker = LocalizationChecker(Path("test/test.py"), Path("test"), code)
-    tree = ast.parse(code)
-    errors = checker.check(tree)
+    errors = _check(code)
 
     if is_error:
         assert len(errors) > 0, f"Expected error for: {code}"
@@ -80,9 +81,7 @@ _(variable)
 _l('<script>bad</script>')
 _('another valid string')
 """
-    checker = LocalizationChecker(Path("test/test.py"), Path("test"), code)
-    tree = ast.parse(code)
-    errors = checker.check(tree)
+    errors = _check(code)
 
     # Should find 2 errors: variable usage and forbidden HTML tag
     assert len(errors) == 2
@@ -94,9 +93,7 @@ def test_non_translation_function() -> None:
 print(variable)
 some_function(x)
 """
-    checker = LocalizationChecker(Path("test/test.py"), Path("test"), code)
-    tree = ast.parse(code)
-    errors = checker.check(tree)
+    errors = _check(code)
 
     assert len(errors) == 0
 
@@ -115,9 +112,7 @@ def test_all_translation_functions() -> None:
 
     for func_name in translation_functions:
         code = f"{func_name}(variable)"
-        checker = LocalizationChecker(Path("test/test.py"), Path("test"), code)
-        tree = ast.parse(code)
-        errors = checker.check(tree)
+        errors = _check(code)
 
         assert len(errors) > 0, f"Expected error for translation function: {func_name}"
         assert "non-literal string" in errors[0].message

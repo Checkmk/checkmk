@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar
 
-from cmk.astrein.suppressions import parse_suppressions, Suppression
+from cmk.astrein.suppressions import Suppression
 
 
 @dataclass(frozen=True)
@@ -61,12 +61,7 @@ class ASTVisitorChecker(ast.NodeVisitor):
             )
         )
 
-    def check(
-        self, tree: ast.AST, suppressions: Sequence[Suppression] | None = None
-    ) -> list[CheckerError]:
-        """Record used suppressions; pass ``suppressions`` to share one parse across checkers."""
-        if suppressions is None:
-            suppressions = parse_suppressions(self.source_code)
+    def check(self, tree: ast.AST, suppressions: Sequence[Suppression]) -> list[CheckerError]:
         self.suppressions = [s for s in suppressions if s.checker_id == self.checker_id]
         self.used_suppressions = set()
         self.errors = []

@@ -3,19 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 from pathlib import Path
 
 import pytest
 
 from cmk.astrein.checkers.conftest_import import ConftestImportChecker
+from cmk.astrein.engine import run_checkers
 from cmk.astrein.framework import CheckerError
 
 
 def _check(code: str) -> list[CheckerError]:
     repo_root = Path("/repo")
-    checker = ConftestImportChecker(repo_root / "tests" / "test_x.py", repo_root, code)
-    return checker.check(ast.parse(code))
+    return run_checkers(
+        repo_root / "tests" / "test_x.py", repo_root, [ConftestImportChecker], source_code=code
+    )
 
 
 @pytest.mark.parametrize(

@@ -3,16 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 from pathlib import Path
 
 from cmk.astrein.checkers.html_debug import HTMLDebugChecker
+from cmk.astrein.engine import run_checkers
 from cmk.astrein.framework import CheckerError
 
 
 def _check_html_debug(code: str) -> list[CheckerError]:
-    checker = HTMLDebugChecker(Path("test/test.py"), Path("test"), code)
-    return checker.check(ast.parse(code))
+    return run_checkers(Path("test/test.py"), Path("test"), [HTMLDebugChecker], source_code=code)
 
 
 def test_html_debug_rejects_call_with_args() -> None:

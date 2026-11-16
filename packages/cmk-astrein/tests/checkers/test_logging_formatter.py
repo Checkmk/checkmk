@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 from collections.abc import Sequence
+from functools import partial
 from pathlib import Path
 
 import pytest
@@ -14,6 +14,7 @@ from cmk.astrein.checkers.logging_formatter import (
     _INCLUDED_GLOBS,
     LoggingFormatterChecker,
 )
+from cmk.astrein.engine import run_checkers
 from cmk.astrein.framework import CheckerError
 
 _CHECKED_FILE = Path("/repo/checked/module.py")
@@ -27,14 +28,10 @@ def _check(
     excluded_globs: Sequence[str] = _EXCLUDED_GLOBS,
     included_globs: Sequence[str] = _INCLUDED_GLOBS,
 ) -> list[CheckerError]:
-    checker = LoggingFormatterChecker(
-        file_path,
-        repo_root,
-        code,
-        excluded_globs=excluded_globs,
-        included_globs=included_globs,
+    factory = partial(
+        LoggingFormatterChecker, excluded_globs=excluded_globs, included_globs=included_globs
     )
-    return checker.check(ast.parse(code))
+    return run_checkers(file_path, repo_root, [factory], source_code=code)
 
 
 @pytest.mark.parametrize(

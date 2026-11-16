@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
+from functools import partial
 from http import HTTPStatus
 from pathlib import Path, PurePosixPath
 
@@ -14,6 +14,7 @@ from cmk.astrein.checkers.http_status_literal import (
     LEGACY_PYTHON_SOURCES,
     load_legacy_python_files,
 )
+from cmk.astrein.engine import run_checkers
 from cmk.astrein.framework import CheckerError
 
 _REPO_ROOT = Path("/repo")
@@ -25,10 +26,8 @@ def _check(
     file_path: Path = _CHECKED_FILE,
     legacy_python_files: frozenset[PurePosixPath] = frozenset(),
 ) -> list[CheckerError]:
-    checker = HTTPStatusLiteralChecker(
-        file_path, _REPO_ROOT, code, legacy_python_files=legacy_python_files
-    )
-    return checker.check(ast.parse(code))
+    factory = partial(HTTPStatusLiteralChecker, legacy_python_files=legacy_python_files)
+    return run_checkers(file_path, _REPO_ROOT, [factory], source_code=code)
 
 
 def _suggestions(code: str) -> list[str]:

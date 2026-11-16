@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 from pathlib import Path
 
 from cmk.astrein.checkers.tarfile_open_read import TarfileOpenReadChecker
+from cmk.astrein.engine import run_checkers
 from cmk.astrein.framework import CheckerError
 
 
@@ -15,8 +15,7 @@ def _check_tarfile(
     file_path: Path = Path("/repo/cmk/some_module.py"),
     repo_root: Path = Path("/repo"),
 ) -> list[CheckerError]:
-    checker = TarfileOpenReadChecker(file_path, repo_root, code)
-    return checker.check(ast.parse(code))
+    return run_checkers(file_path, repo_root, [TarfileOpenReadChecker], source_code=code)
 
 
 def test_tarfile_rejects_open_no_mode() -> None:

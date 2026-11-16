@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 from collections.abc import Sequence
+from functools import partial
 from pathlib import Path
 
 from cmk.astrein.checkers.logging_named_placeholder import (
@@ -12,6 +12,7 @@ from cmk.astrein.checkers.logging_named_placeholder import (
     _INCLUDED_PATHS,
     LoggingNamedPlaceholderChecker,
 )
+from cmk.astrein.engine import run_checkers
 from cmk.astrein.framework import CheckerError
 
 
@@ -22,14 +23,12 @@ def _check_logging(
     excluded_prefixes: Sequence[str] = (),
     included_paths: Sequence[str] = (),
 ) -> list[CheckerError]:
-    checker = LoggingNamedPlaceholderChecker(
-        file_path,
-        repo_root,
-        code,
+    factory = partial(
+        LoggingNamedPlaceholderChecker,
         excluded_prefixes=excluded_prefixes,
         included_paths=included_paths,
     )
-    return checker.check(ast.parse(code))
+    return run_checkers(file_path, repo_root, [factory], source_code=code)
 
 
 def test_logging_rejects_positional_placeholder() -> None:

@@ -3,16 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 from pathlib import Path
 
 from cmk.astrein.checkers.request_input import RequestValidatedInputChecker
+from cmk.astrein.engine import run_checkers
 from cmk.astrein.framework import CheckerError
 
 
 def _check(code: str) -> list[CheckerError]:
-    checker = RequestValidatedInputChecker(Path("test/test.py"), Path("test"), code)
-    return checker.check(ast.parse(code))
+    return run_checkers(
+        Path("test/test.py"), Path("test"), [RequestValidatedInputChecker], source_code=code
+    )
 
 
 def test_direct_userid_from_request_var() -> None:

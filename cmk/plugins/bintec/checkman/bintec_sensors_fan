@@ -1,4 +1,4 @@
-title: Bintec Routers: Fan Speed
+title: Bintec: Fan Speed
 agents: snmp
 catalog: hw/environment/bintec
 license: GPLv2

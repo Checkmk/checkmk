@@ -1,4 +1,4 @@
-title: Bintec Devices: CPU Utilization
+title: Bintec: CPU Utilization
 agents: snmp
 catalog: hw/network/bintec
 license: GPLv2

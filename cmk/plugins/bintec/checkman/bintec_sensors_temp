@@ -1,4 +1,4 @@
-title: Bintec Routers: Temperature Sensors
+title: Bintec: Temperature
 agents: snmp
 catalog: hw/environment/bintec
 license: GPLv2

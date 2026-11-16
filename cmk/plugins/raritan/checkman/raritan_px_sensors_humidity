@@ -1,4 +1,4 @@
-title: Raritan PX Devices Sensors: Humidity
+title: Raritan PX: Humidity Sensors
 agents: snmp
 catalog: hw/environment/raritan
 license: GPLv2

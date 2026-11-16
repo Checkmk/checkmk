@@ -1,4 +1,4 @@
-title: Raritan EMX Devices: Temperature
+title: Raritan EMX: Temperature
 agents: snmp
 catalog: hw/environment/raritan
 license: GPLv2

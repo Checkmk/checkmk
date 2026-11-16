@@ -1,4 +1,4 @@
-title: Raritan PX2 Devices External Sensors: Humidity
+title: Raritan PX2: External Humidity Sensors
 agents: snmp
 catalog: hw/environment/raritan
 license: GPLv2

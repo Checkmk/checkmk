@@ -1,4 +1,4 @@
-title: Raritan PX Devices Outlets: Voltage, Current, Power, Apparent Power, Energy
+title: Raritan PX: Outlets
 agents: snmp
 catalog: hw/environment/raritan
 license: GPLv2

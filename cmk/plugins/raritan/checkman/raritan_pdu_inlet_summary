@@ -1,4 +1,4 @@
-title: Raritan PX-2000 Family: PDU Inlet Sensor State (summary)
+title: Raritan PX2: Inlet Sensor Summary
 agents: snmp
 catalog: hw/environment/raritan
 license: GPLv2

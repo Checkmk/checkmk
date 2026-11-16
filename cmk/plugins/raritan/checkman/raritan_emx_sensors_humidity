@@ -1,4 +1,4 @@
-title: Raritan EMX Devices External Sensors: Humidity
+title: Raritan EMX: External Humidity Sensors
 agents: snmp
 catalog: hw/environment/raritan
 license: GPLv2

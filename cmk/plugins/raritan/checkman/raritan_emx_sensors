@@ -1,4 +1,4 @@
-title: Raritan EMX Devices External Sensors: Contact
+title: Raritan EMX: External Contact Sensors
 agents: snmp
 catalog: hw/environment/raritan
 license: GPLv2

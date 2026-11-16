@@ -1,4 +1,4 @@
-title: Raritan PX2 Devices External Sensors: Pressure
+title: Raritan PX2: External Pressure Sensors
 agents: snmp
 catalog: hw/environment/raritan
 license: GPLv2

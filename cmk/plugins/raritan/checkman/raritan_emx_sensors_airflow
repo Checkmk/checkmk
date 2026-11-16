@@ -1,4 +1,4 @@
-title: Raritan EMX Devices External Sensors: Air Flow
+title: Raritan EMX: External Air Flow Sensors
 agents: snmp
 catalog: hw/environment/raritan
 license: GPLv2

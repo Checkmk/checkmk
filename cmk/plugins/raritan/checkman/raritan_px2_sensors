@@ -1,4 +1,4 @@
-title: Raritan PX2 Devices External Sensors: Temperature
+title: Raritan PX2: External Temperature Sensors
 agents: snmp
 catalog: hw/environment/raritan
 license: GPLv2

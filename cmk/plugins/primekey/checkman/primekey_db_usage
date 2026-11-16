@@ -1,4 +1,4 @@
-title: PrimekeyAppliance: DB Usage
+title: PrimeKey: Database Usage
 agents: snmp
 catalog: hw/primekey
 license: GPLv2

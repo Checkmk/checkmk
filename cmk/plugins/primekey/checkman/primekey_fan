@@ -1,4 +1,4 @@
-title: PrimekeyAppliance: Fan Speed
+title: PrimeKey: Fan Speed
 agents: snmp
 catalog: hw/primekey
 license: GPLv2

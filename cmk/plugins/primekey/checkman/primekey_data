@@ -1,4 +1,4 @@
-title: PrimeKey Appliance: VMs, RAID, EJBCA, Signserver, HSM status
+title: PrimeKey: VMs, RAID, EJBCA, SignServer and HSM Status
 agents: snmp
 catalog: hw/primekey
 license: GPLv2

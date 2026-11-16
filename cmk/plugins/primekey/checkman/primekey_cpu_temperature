@@ -1,4 +1,4 @@
-title: PrimekeyAppliance: CPU Temperature
+title: PrimeKey: CPU Temperature
 agents: snmp
 catalog: hw/primekey
 license: GPLv2

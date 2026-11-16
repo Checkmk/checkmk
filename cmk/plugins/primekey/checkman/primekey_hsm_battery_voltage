@@ -1,4 +1,4 @@
-title: PrimekeyAppliance: hsm battery voltage
+title: PrimeKey: HSM Battery Voltage
 agents: snmp
 catalog: hw/primekey
 license: GPLv2

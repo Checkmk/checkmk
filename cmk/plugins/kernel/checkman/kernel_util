@@ -1,4 +1,4 @@
-title: CPU Utilization
+title: Linux: CPU Utilization
 agents: linux
 catalog: os/kernel
 license: GPLv2

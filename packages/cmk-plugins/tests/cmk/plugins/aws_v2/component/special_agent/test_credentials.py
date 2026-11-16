@@ -5,6 +5,7 @@
 
 import json
 import stat
+import tracemalloc
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -121,6 +122,24 @@ def test_every_spoke_account_gets_a_session_of_that_account() -> None:
         ("333333333333", "333333333333"),
         ("444444444444", "444444444444"),
     ]
+
+
+@pytest.mark.xfail(strict=True, reason="Every session parses the service models again")
+@pytest.mark.usefixtures("fake_sts")
+def test_another_spoke_account_adds_little_memory() -> None:
+    credentials = AwsCredentials(
+        HubCredentials(AccessKey("AKIAHUB", "secret")), "us-east-1", None, SPOKES
+    )
+    first, second = credentials.monitored_account_ids()
+    clients = [credentials.open_account(first).session.client("ec2")]
+    tracemalloc.start()
+
+    clients.append(credentials.open_account(second).session.client("ec2"))
+    added, _peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+
+    # Without shared service models, every account parses the EC2 model again (> 20 MiB).
+    assert added < 5 * 1024 * 1024
 
 
 def test_spoke_roles_are_assumed_directly_from_the_login(fake_sts: FakeSts) -> None:

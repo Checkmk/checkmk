@@ -1729,6 +1729,35 @@ class RelationMirrorBatch:
             )
 
 
+class CheckedHostCreation:
+    """Hosts of ``folder`` that Folder.check_create_hosts() accepted, created by create()."""
+
+    def __init__(
+        self,
+        folder: Folder,
+        validated: Sequence[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
+        mirror: RelationMirrorBatch,
+        *,
+        acting_user: LoggedInUser,
+    ) -> None:
+        self._folder = folder
+        self._validated = validated
+        self._mirror = mirror
+        self._acting_user = acting_user
+
+    def create(self, *, pprint_value: bool, pending_changes: PendingChanges) -> None:
+        # create_validated_hosts() must stay a phase that cannot fail, because the configuration
+        # bundles rely on that.
+        self._mirror.write()
+        self._folder.create_validated_hosts(
+            self._validated,
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
+            acting_user=self._acting_user,
+        )
+        self._mirror.save(pprint_value=pprint_value, pending_changes=pending_changes)
+
+
 def _drop_relations_to(
     resolve_host: Callable[[HostName], Host | None],
     gone: HostName,
@@ -3504,7 +3533,21 @@ class Folder:
             - MKGeneralException: When something happened during permission check.
 
         """
-        # 1. Check preconditions
+        self.check_create_hosts(entries, acting_user=acting_user).create(
+            pprint_value=pprint_value, pending_changes=pending_changes
+        )
+
+    def check_create_hosts(
+        self,
+        entries: Sequence[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
+        *,
+        acting_user: LoggedInUser,
+    ) -> CheckedHostCreation:
+        """Refuse the hosts as create_hosts() does, without writing anything.
+
+        Raises the same exceptions as create_hosts(). Creating the checked hosts later on cannot
+        be refused anymore, so a caller can check them before it writes anything else.
+        """
         self.prepare_create_hosts(acting_user=acting_user)
         for validate in self.validators.create_hosts:
             validate(entries, self.site_id(), SiteConfigurations(self.tree.config.sites))
@@ -3522,20 +3565,10 @@ class Folder:
             for host_name, attributes, _cluster_nodes in entries
         ]
 
-        # Every entry before any counterpart is mutated: create_validated_hosts() must stay a
-        # phase that cannot fail, because the configuration bundles rely on that.
         mirror = RelationMirrorBatch(self, acting_user=acting_user)
         for host_name, attributes, _cluster_nodes in validated:
             mirror.need_created(host_name, attributes)
-        mirror.write()
-
-        self.create_validated_hosts(
-            validated,
-            pprint_value=pprint_value,
-            pending_changes=pending_changes,
-            acting_user=acting_user,
-        )
-        mirror.save(pprint_value=pprint_value, pending_changes=pending_changes)
+        return CheckedHostCreation(self, validated, mirror, acting_user=acting_user)
 
     def create_validated_hosts(
         self,

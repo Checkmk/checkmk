@@ -2215,6 +2215,47 @@ def test_create_host_refuses_a_relation_to_a_host_that_does_not_exist(tree: Fold
     assert tree.host(HostName("board")) is None
 
 
+def test_check_create_hosts_refuses_a_host_that_exists(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1")
+
+    with pytest.raises(MKUserError, match="os1"):
+        root.check_create_hosts([(HostName("os1"), HostAttributes(), [])], acting_user=_SUPERUSER)
+
+
+def test_checked_hosts_are_written_only_when_created(tree: FolderTree) -> None:
+    """Callers check the hosts before they write anything else, so checking writes nothing."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    recorded: list[ChangeSpec] = []
+    checked = root.check_create_hosts(
+        [
+            (
+                HostName("board"),
+                HostAttributes(
+                    {
+                        "relations": [
+                            {"kind": "management", "direction": "parent", "host": HostName("os1")}
+                        ]
+                    }
+                ),
+                [],
+            )
+        ],
+        acting_user=_SUPERUSER,
+    )
+    assert tree.host(HostName("board")) is None
+    assert "relations" not in os1.attributes
+
+    checked.create(pprint_value=False, pending_changes=_recording_pending_changes(recorded))
+
+    assert tree.host(HostName("board")) is not None
+    assert _relations_of(tree, HostName("os1")) == [
+        {"kind": "management", "direction": "child", "host": "board"}
+    ]
+    assert [entry["action_name"] for entry in recorded] == ["create-host", "mirror-relation"]
+
+
 def test_relation_to_a_host_the_user_may_not_see_is_refused_like_a_missing_one(
     tree: FolderTree,
 ) -> None:

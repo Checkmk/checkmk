@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import gzip
-from base64 import b64encode
 from typing import assert_never
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
@@ -25,11 +24,13 @@ class TaskResponseSerializer:
         spec: tasks_protocol.TaskResponseSpec | None = None
         match task.spec:
             case RelayConfigSpec():
-                spec = tasks_protocol.RelayConfigTask(
+                # Constructed without validation: validating tar_data would decode base64,
+                # only for the dump to encode it again, on the loop and per relay.
+                spec = tasks_protocol.RelayConfigTask.model_construct(
                     serial=task.spec.serial.value,
                     # The archive is stored gzip compressed, as current relays want it.
                     # Only relays predating X-CMK-CONFIG-ENCODING get it decompressed.
-                    tar_data=b64encode(
+                    tar_data=(
                         task.spec.tar_data
                         if config_encoding is tasks_protocol.ConfigEncoding.GZIP
                         else gzip.decompress(task.spec.tar_data)

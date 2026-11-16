@@ -37,7 +37,7 @@ ACCOUNT_HOST = TargetHost("123456789012")
 
 
 class FakeS3Client:
-    def list_buckets(self) -> Mapping[str, object]:
+    def list_buckets(self, MaxBuckets: int = 10000) -> Mapping[str, object]:  # noqa: ARG002
         return {
             "Buckets": S3ListBucketsIB.create_instances(amount=4),
             "Owner": {
@@ -81,7 +81,11 @@ class FakeEmptyS3Client:
     def __init__(self) -> None:
         self.bucket_listings = 0
 
-    def list_buckets(self) -> Mapping[str, object]:
+    def list_buckets(
+        self,
+        MaxBuckets: int | None = None,  # noqa: ARG002
+        ContinuationToken: str | None = None,  # noqa: ARG002
+    ) -> Mapping[str, object]:
         self.bucket_listings += 1
         return {"Buckets": []}
 

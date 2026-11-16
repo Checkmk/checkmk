@@ -79,8 +79,17 @@ class S3BucketHelper:
         """
         Get all buckets with LocationConstraint
         """
-        bucket_list = client.list_buckets()  # type: ignore[attr-defined]
-        for bucket in bucket_list["Buckets"]:
+        # AWS rejects requests without MaxBuckets if the bucket quota is above 10,000.
+        buckets: list[Any] = []
+        page: dict[str, object] = {"MaxBuckets": 10000}
+        while True:
+            response = client.list_buckets(**page)  # type: ignore[attr-defined]
+            buckets += response["Buckets"]
+            if not (token := response.get("ContinuationToken")):
+                break
+            page["ContinuationToken"] = token
+
+        for bucket in buckets:
             bucket_name = bucket["Name"]
 
             # request additional LocationConstraint information
@@ -101,7 +110,7 @@ class S3BucketHelper:
                 else:
                     location_constraint = response["LocationConstraint"]
                 bucket["LocationConstraint"] = location_constraint
-        return bucket_list["Buckets"] if bucket_list else []
+        return buckets
 
 
 class S3Limits(AWSSectionLimits):

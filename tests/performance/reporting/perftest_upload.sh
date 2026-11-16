@@ -44,8 +44,8 @@ for target in $(bazel query --output=label "tests(//tests/performance:bazel_perf
             --dbname="${database}" --dbhost=qa.lan.checkmk.net --require-database
             --log-level=INFO --validate-baselines
         )
-        # update database; generate report and check weekly baseline
-        "${SCRIPT_DIR}/perftest_plot.py" --update "${PLOT_ARGS[@]}" || exit 200
+        # add this suite to the release's job; generate report and check weekly baseline
+        "${SCRIPT_DIR}/perftest_plot.py" --append-db "${PLOT_ARGS[@]}" || exit 200
         # check monthly baseline
         "${SCRIPT_DIR}/perftest_plot.py" "${PLOT_ARGS[@]}" \
             --skip-filesystem-writes --skip-database-writes --baseline-offset=30 || exit 200

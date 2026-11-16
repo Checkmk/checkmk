@@ -221,10 +221,7 @@ class ECSSummary(AWSSection):
 
     @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("ecs_limits")
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0.0)
+        return self._received_inventory("ecs_limits")
 
     def _get_cluster_ids(self) -> Iterable[str]:
         if self._selection.names is not None:
@@ -233,8 +230,8 @@ class ECSSummary(AWSSection):
 
         yield from get_ecs_cluster_arns(self._client)
 
-    def _fetch_clusters(self, clusters: Sequence[Cluster]) -> Iterable[Cluster]:
-        if clusters:
+    def _fetch_clusters(self, clusters: Sequence[Cluster] | None) -> Iterable[Cluster]:
+        if clusters is not None:
             yield from clusters
         else:
             yield from get_ecs_clusters(self._client, list(self._get_cluster_ids()))

@@ -142,6 +142,39 @@ class FakeECSClient:
         }
 
 
+class EmptyPaginator:
+    def paginate(self) -> Iterator[Mapping[str, object]]:
+        yield {"clusterArns": []}
+
+
+class FakeEmptyECSClient:
+    def __init__(self) -> None:
+        self.cluster_listings = 0
+
+    def get_paginator(self, function: str) -> EmptyPaginator:
+        assert function == "list_clusters"
+        self.cluster_listings += 1
+        return EmptyPaginator()
+
+
+def test_ecs_summary_does_not_list_clusters_again_when_limits_found_none() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("ecs_names", None)
+    config.add_service_tags("ecs_tags", (None, None))
+    client = FakeEmptyECSClient()
+    distributor = ResultDistributor()
+    ecs_limits = ECSLimits(client, "region", config, distributor, FakeServiceQuotasClient())
+    ecs_summary = ECSSummary(client, "region", config, distributor)
+    distributor.add(ecs_limits.name, ecs_summary)
+
+    ecs_limits.run()
+    ecs_summary.run()
+
+    assert client.cluster_listings == 1
+
+
 ECSSectionsOut = tuple[ECSLimits, ECSSummary, ECS]
 
 

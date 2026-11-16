@@ -198,6 +198,17 @@ class UserCount(pydantic.BaseModel):
     )
 
 
+class Session(pydantic.BaseModel):
+    started_at: int = pydantic.Field(
+        description="Unix timestamp in seconds of when the session started.",
+        examples=[1767789000],
+    )
+    last_activity: int = pydantic.Field(
+        description="Unix timestamp in seconds of the last activity in the session.",
+        examples=[1767790000],
+    )
+
+
 class CloudTrialPayload(ProductUsagePayload):
     metadata: typing.ClassVar[Metadata] = {
         "version": "v1",
@@ -219,13 +230,13 @@ class CloudTrialPayload(ProductUsagePayload):
         ),
         examples=[{"business": 2, "non_business": 1}],
     )
-    sessions: None = pydantic.Field(
+    sessions: list[Session] | None = pydantic.Field(
         default=None,
         description=(
             "Every stored login session with its start and last activity timestamps."
             " Sessions are not attributed to a user."
         ),
-        examples=[None],
+        examples=[[{"started_at": 1767789000, "last_activity": 1767790000}]],
     )
     audit_log: AuditLog | None = pydantic.Field(
         default=None,

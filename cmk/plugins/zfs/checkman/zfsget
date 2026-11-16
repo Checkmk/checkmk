@@ -1,4 +1,4 @@
-title: ZFS Pools/Filesystems: Used Space
+title: ZFS: Pool and Filesystem Used Space
 agents: linux, solaris, freebsd
 catalog: os/storage
 license: GPLv2

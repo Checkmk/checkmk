@@ -1,4 +1,4 @@
-title: ORACLE tablespaces: perfomance data for DB time
+title: Oracle Database: Performance DB Time
 agents: linux, hpux, solaris, windows
 catalog: app/oracle
 license: GPLv2

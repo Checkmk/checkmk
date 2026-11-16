@@ -1,4 +1,4 @@
-title: Oracle Tablespaces: Perfomance Data
+title: Oracle Database: Performance Data
 agents: linux, hpux, solaris, windows
 catalog: app/oracle
 license: GPLv2

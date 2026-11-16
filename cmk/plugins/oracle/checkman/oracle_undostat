@@ -1,4 +1,4 @@
-title: Oracle Instance: Undo Retention
+title: Oracle Database: Undo Retention
 agents: linux, aix, hpux, solaris
 catalog: app/oracle
 license: GPLv2

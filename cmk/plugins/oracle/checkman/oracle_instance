@@ -1,4 +1,4 @@
-title: Oracle Instance: Status of Database
+title: Oracle Database: Instance Status
 agents: linux, aix, hpux, solaris, windows
 distribution: check_mk
 catalog: app/oracle

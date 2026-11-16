@@ -1,4 +1,4 @@
-title: ORACLE tablespaces: perfomance data for file IO (Bytes read/written)
+title: Oracle Database: Performance File I/O Bytes
 agents: linux, hpux, solaris, windows
 catalog: app/oracle
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Oracle: Checkpoint and User Managed Backup State of Datafiles
+title: Oracle Database: Datafile Checkpoint and Backup State
 agents: linux, aix, hpux, solaris
 catalog: app/oracle
 license: GPLv2

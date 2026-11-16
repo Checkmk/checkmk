@@ -1,4 +1,4 @@
-title: Oracle Clusterware: Voting Check
+title: Oracle Clusterware: Voting Disks
 agents: linux, aix, solaris, hpux
 catalog: app/oracle
 license: GPLv2

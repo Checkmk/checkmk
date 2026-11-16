@@ -1,4 +1,4 @@
-title: Oracle Data-Guard: Apply and Transport Lag
+title: Oracle Database: Data Guard Apply and Transport Lag
 agents: linux, aix
 catalog: app/oracle
 license: GPLv2

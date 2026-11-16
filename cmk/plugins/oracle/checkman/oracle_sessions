@@ -1,4 +1,4 @@
-title: Oracle Database: Number of Active Sessions
+title: Oracle Database: Active Sessions
 agents: linux, hpux, solaris
 catalog: app/oracle
 license: GPLv2

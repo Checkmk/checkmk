@@ -1,4 +1,4 @@
-title: Oracle: RMAN Backup Status
+title: Oracle Database: RMAN Backups
 agents: linux, aix, hpux, solaris
 catalog: app/oracle
 license: GPLv2

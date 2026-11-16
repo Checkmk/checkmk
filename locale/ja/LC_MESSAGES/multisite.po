@@ -1889,6 +1889,18 @@ msgstr ""
 "あります。"
 
 msgid ""
+"<b>Experimental.</b> When enabled, the AI assistant sends usage information "
+"to Checkmk's central telemetry collector, so we can understand how the "
+"assistant is used and improve it.<br><br>We collect: which AI provider and "
+"model the assistant uses, which of its actions and tools are used, how long "
+"they take and whether they fail, the tokens used per question, and the "
+"Checkmk version and edition.<br><br>We do not collect: your site name, host "
+"names, the assistant instructions, or the content of your prompts and the "
+"assistant's answers.<br><br>For the full list of fields, see "
+"LINK_PLACEHOLDER."
+msgstr ""
+
+msgid ""
 "<b>Gather all service instances and restrict by overall AWS tags:</b><br>If "
 "overall tags are specified, then all service instances will be filtered by "
 "those tags. Otherwise, all instances will be collected.<br><br><b>Use "
@@ -7858,9 +7870,9 @@ msgstr ""
 "リージョン名"
 
 msgid ""
-"An IAM role name has 1 to 64 characters: letters, digits and _+=,.@-. A path "
-"in front of it ends with a slash and does not start with one, for example "
-"monitoring/CheckmkMonitoring."
+"An IAM role name contains up to 64 characters: letters, digits and _+=,.@-. "
+"You can put a path in front of the name. The path must end with a slash and "
+"must not start with one, for example monitoring/CheckmkMonitoring."
 msgstr ""
 
 msgid ""
@@ -26749,6 +26761,10 @@ msgstr "予想される仮想スイッチ"
 msgid "Expected virtual switch name"
 msgstr "予想される仮想スイッチ名"
 
+#, fuzzy
+msgid "Experimental flags"
+msgstr "Vueの実験的機能"
+
 msgid "Experimental flags (for testing only)"
 msgstr "実験的フラグ（テスト用のみ）"
 
@@ -36820,6 +36836,10 @@ msgstr "インデックススペースが無駄になります"
 msgid "India"
 msgstr "インド"
 
+#, fuzzy
+msgid "Indicator"
+msgstr "イニシエータ"
+
 msgid "Indices"
 msgstr "インデックス"
 
@@ -38214,6 +38234,10 @@ msgstr "発行された"
 
 msgid "Issuer"
 msgstr "発行者"
+
+#, fuzzy
+msgid "It does not exist."
+msgstr "存在しない"
 
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
@@ -61300,6 +61324,10 @@ msgstr "並列化可能なスクリプトの実行方法を選択します"
 msgid "Send"
 msgstr "送信"
 
+#, fuzzy
+msgid "Send AI assistant usage data to Checkmk"
+msgstr "MCPの使用状況データをCheckmkに送信する"
+
 msgid "Send HTTP POST data"
 msgstr "HTTP POSTデータを送信する"
 
@@ -70505,6 +70533,12 @@ msgstr "アドホックダウンタイムで自動的に送信されるコメン
 msgid "The complete hardware and software inventory of a host"
 msgstr "ホストの完全なハードウェアおよびソフトウェアインベントリ"
 
+#, fuzzy, python-format
+msgid ""
+"The conditions of the custom service \"%(name)s\" could not be taken over. "
+"%(reason)s"
+msgstr "カスタムサービス \"%(name)s\" は現在存在しません。"
+
 #, python-format
 msgid "The configuration bundle %(bundle_id)s does not exist"
 msgstr "接続バンドル%(bundle_id)sが存在しません"
@@ -73892,6 +73926,10 @@ msgid ""
 msgstr ""
 "cAdvisorから取得した情報は、選択されたエンティティレベルに従って集約されま"
 "す。結果のサービスは、作成されたCheckmkピギーバックホストにわりあてられます。"
+
+#, fuzzy
+msgid "The role name must not start or end with whitespace characters."
+msgstr "指定されたテキストにはASCII文字のみが含まれている必要があります。"
 
 msgid "The role of the primary device"
 msgstr "プライマリデバイスの役割"
@@ -93831,6 +93869,14 @@ msgstr ""
 "ただし、サブフォルダーに対するアクセス許可がある場合と同様に、そのフォルダー"
 "にアクセスできる可能性があります。"
 
+#, fuzzy
+msgid "You may not see custom services."
+msgstr "カスタムサービスの作成に失敗しました。"
+
+#, fuzzy
+msgid "You may not see the folder of its rule."
+msgstr "このルールを保存することはできません。"
+
 msgid "You may only use paths relative to the report archive base directory"
 msgstr "レポートアーカイブのベースディレクトリからの相対パスのみを使用できます"
 
@@ -98118,6 +98164,10 @@ msgstr "少なくとも1つの要素を選択してください"
 #, fuzzy
 msgid "Hide tooltip"
 msgstr "非表示タイトル"
+
+#, fuzzy
+msgid "Contextual links"
+msgstr "コンテキストヘルプアイコン"
 
 msgid "Widget"
 msgstr "ウィジェット"
@@ -103663,6 +103713,11 @@ msgstr ""
 msgid "Match service name by"
 msgstr "サービスラベルと一致する"
 
+msgid ""
+"This service name may also match other custom services on these hosts. "
+"Review it before you continue."
+msgstr ""
+
 #, fuzzy
 msgid "No matching services. Only discovered services can be selected."
 msgstr "検出済みのカスタムサービスのみが一致対象となります。"
@@ -105876,6 +105931,10 @@ msgid "Actions for selected hosts"
 msgstr "選択したホスト上"
 
 #, fuzzy
+msgid "Has comments"
+msgstr "ホストのコメント"
+
+#, fuzzy
 msgid "Shows hosts with at least one service."
 msgstr "少なくとも1つのサービスを追加してください。"
 
@@ -105918,8 +105977,8 @@ msgid "Shows hosts with no pending service."
 msgstr "保留中のサービスがないホストを表示します。"
 
 #, fuzzy
-msgid "Has comments"
-msgstr "ホストのコメント"
+msgid "Combine selections with"
+msgstr "ファイル選択"
 
 #, fuzzy
 msgid "Active checks disabled"
@@ -106568,6 +106627,10 @@ msgid "Toggle details"
 msgstr "結果の詳細を切り替える"
 
 #, fuzzy
+msgid "Show all %{count} indicators"
+msgstr "全てのトピックを表示"
+
+#, fuzzy
 msgid "Show all %{count} entries"
 msgstr "全てのトピックを表示"
 
@@ -106602,11 +106665,23 @@ msgid "Select all"
 msgstr "すべて見る"
 
 #, fuzzy
+msgid "Combine status flag selections with"
+msgstr "連絡先の選択"
+
+#, fuzzy
 msgid "Search column"
 msgstr "列に表示"
 
 msgid "Clear the filter on %{column} before hiding it"
 msgstr "%{column} を非表示にする前に、そのフィルターをクリアしてください"
+
+#, fuzzy
+msgid "AND"
+msgstr "警告"
+
+#, fuzzy
+msgid "OR"
+msgstr "O"
 
 #, fuzzy
 msgid "Choose the earliest date & time"
@@ -107055,6 +107130,20 @@ msgstr "%{selected} 件中 %{total} 件を選択しました"
 msgid "Back to %{title}"
 msgstr "表示に戻る"
 
+msgctxt ""
+"%{link} is a link to the product usage analytics manifest with the text "
+"\"manifest\""
+msgid ""
+"We believe in only receiving data you explicitly choose to share (see %"
+"{link})."
+msgstr ""
+
+#, fuzzy
+msgctxt ""
+"%{link} is a link to the global setting with the text \"global settings\""
+msgid "You can change your decision at any time in %{link}."
+msgstr "この設定は、プロフィール設定からいつでも変更できます。"
+
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"
 
@@ -107120,23 +107209,28 @@ msgstr ""
 msgid "Product usage analytics is turned off by default. "
 msgstr "製品利用状況分析。 "
 
-msgid ""
-"We believe in only receiving data you explicitly choose to share. You can "
-"enable sharing analytics data any time from global settings. \n"
-"            If you do not wish to be reminded, please manage your "
-"preferences in global settings."
+msgid "manifest"
 msgstr ""
-"当社は、お客様が明示的に共有を選択されたデータのみを受け取ることを原則として"
-"います。分析データの共有は、いつでもグローバル設定から有効にすることができま"
-"す。\n"
-"リマインダーを受け取りたくない場合は、グローバル設定で設定を変更してくださ"
-"い。"
+
+#, fuzzy
+msgid "global settings"
+msgstr "グローバル設定"
+
+#, fuzzy
+msgid "Thank you! Product usage analytics is enabled."
+msgstr "製品利用状況の分析レポート"
+
+#, fuzzy
+msgid "Activate the pending changes to start the collection."
+msgstr "変更を有効化して、ライブ監視に適用します。"
+
+msgid ""
+"Product usage analytics could not be enabled. Please try again or enable it "
+"in global settings."
+msgstr ""
 
 msgid "Remind me again in 30 days"
 msgstr "30日後にリマインドする"
-
-msgid "Manage in global settings"
-msgstr "グローバル設定で管理する"
 
 #, fuzzy
 msgid "Save actions"
@@ -108749,6 +108843,21 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "取り上げるトピック"
+
+#~ msgid ""
+#~ "We believe in only receiving data you explicitly choose to share. You can "
+#~ "enable sharing analytics data any time from global settings. \n"
+#~ "            If you do not wish to be reminded, please manage your "
+#~ "preferences in global settings."
+#~ msgstr ""
+#~ "当社は、お客様が明示的に共有を選択されたデータのみを受け取ることを原則とし"
+#~ "ています。分析データの共有は、いつでもグローバル設定から有効にすることがで"
+#~ "きます。\n"
+#~ "リマインダーを受け取りたくない場合は、グローバル設定で設定を変更してくださ"
+#~ "い。"
+
+#~ msgid "Manage in global settings"
+#~ msgstr "グローバル設定で管理する"
 
 #, python-format
 #~ msgid "Note: To authenticate with an IAM role, please use the %(link)s."
@@ -116611,9 +116720,6 @@ msgstr "取り上げるトピック"
 #, fuzzy
 #~ msgid "2-5 min"
 #~ msgstr "5分"
-
-#~ msgid "Activate changes to apply them to live monitoring."
-#~ msgstr "変更を有効化して、ライブ監視に適用します。"
 
 #, fuzzy
 #~ msgid "5-7 min"

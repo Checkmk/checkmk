@@ -1895,6 +1895,18 @@ msgid ""
 "correct."
 msgstr ""
 
+msgid ""
+"<b>Experimental.</b> When enabled, the AI assistant sends usage information "
+"to Checkmk's central telemetry collector, so we can understand how the "
+"assistant is used and improve it.<br><br>We collect: which AI provider and "
+"model the assistant uses, which of its actions and tools are used, how long "
+"they take and whether they fail, the tokens used per question, and the "
+"Checkmk version and edition.<br><br>We do not collect: your site name, host "
+"names, the assistant instructions, or the content of your prompts and the "
+"assistant's answers.<br><br>For the full list of fields, see "
+"LINK_PLACEHOLDER."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "<b>Gather all service instances and restrict by overall AWS tags:</b><br>If "
@@ -8285,9 +8297,9 @@ msgstr ""
 "delante de los recursos de CloudFront"
 
 msgid ""
-"An IAM role name has 1 to 64 characters: letters, digits and _+=,.@-. A path "
-"in front of it ends with a slash and does not start with one, for example "
-"monitoring/CheckmkMonitoring."
+"An IAM role name contains up to 64 characters: letters, digits and _+=,.@-. "
+"You can put a path in front of the name. The path must end with a slash and "
+"must not start with one, for example monitoring/CheckmkMonitoring."
 msgstr ""
 
 #, fuzzy
@@ -28504,6 +28516,10 @@ msgid "Expected virtual switch name"
 msgstr "Estado esperado de la bandera"
 
 #, fuzzy
+msgid "Experimental flags"
+msgstr "Característica de la empresa"
+
+#, fuzzy
 msgid "Experimental flags (for testing only)"
 msgstr "Característica de la empresa"
 
@@ -39383,6 +39399,10 @@ msgstr "Espacio de índice desperdiciado"
 msgid "India"
 msgstr "Índices"
 
+#, fuzzy
+msgid "Indicator"
+msgstr "Iniciador"
+
 msgid "Indices"
 msgstr "Índices"
 
@@ -40881,6 +40901,10 @@ msgstr "Emitido a"
 
 msgid "Issuer"
 msgstr "Emisor"
+
+#, fuzzy
+msgid "It does not exist."
+msgstr "No existe"
 
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
@@ -65839,6 +65863,10 @@ msgstr "Selecciona cómo se ejecutan los scripts paralelizables"
 msgid "Send"
 msgstr "Enviar"
 
+#, fuzzy
+msgid "Send AI assistant usage data to Checkmk"
+msgstr "Mapa del estado de GCP para comprobar mk"
+
 msgid "Send HTTP POST data"
 msgstr "Enviar datos HTTP POST"
 
@@ -75603,6 +75631,12 @@ msgid "The complete hardware and software inventory of a host"
 msgstr "El inventario completo de hardware y software de un host"
 
 #, fuzzy, python-format
+msgid ""
+"The conditions of the custom service \"%(name)s\" could not be taken over. "
+"%(reason)s"
+msgstr "El conjunto de reglas \"%s\" no existe."
+
+#, fuzzy, python-format
 msgid "The configuration bundle %(bundle_id)s does not exist"
 msgstr "El sitio \"%s\" no existe."
 
@@ -78914,6 +78948,10 @@ msgstr ""
 "La información recuperada del cAdvisor se agregará según el nivel de entidad "
 "seleccionado. Los servicios resultantes se asignarán a los hosts piggyback "
 "Checkmk creados."
+
+#, fuzzy
+msgid "The role name must not start or end with whitespace characters."
+msgstr "El texto dado debe contener sólo caracteres ASCII."
 
 msgid "The role of the primary device"
 msgstr "El papel del dispositivo primario"
@@ -100200,6 +100238,14 @@ msgstr ""
 "Sin embargo, puedes entrar en la carpeta como si tuvieras permiso en una "
 "subcarpeta."
 
+#, fuzzy
+msgid "You may not see custom services."
+msgstr "Nombre del servicio personalizado"
+
+#, fuzzy
+msgid "You may not see the folder of its rule."
+msgstr "No se puede guardar esta regla."
+
 msgid "You may only use paths relative to the report archive base directory"
 msgstr ""
 "Sólo puede utilizar rutas relativas al directorio base del archivo de "
@@ -104699,6 +104745,10 @@ msgstr "Seleccione al menos un elemento"
 #, fuzzy
 msgid "Hide tooltip"
 msgstr "Título de la página"
+
+#, fuzzy
+msgid "Contextual links"
+msgstr "Información contextual"
 
 #, fuzzy
 msgid "Widget"
@@ -110377,6 +110427,11 @@ msgstr ""
 msgid "Match service name by"
 msgstr "Coincidir con las labels de servicio"
 
+msgid ""
+"This service name may also match other custom services on these hosts. "
+"Review it before you continue."
+msgstr ""
+
 #, fuzzy
 msgid "No matching services. Only discovered services can be selected."
 msgstr "Mostrar etiquetas de servicios descubiertos"
@@ -112468,6 +112523,10 @@ msgid "Actions for selected hosts"
 msgstr "En los hosts seleccionados"
 
 #, fuzzy
+msgid "Has comments"
+msgstr "Comentarios del host"
+
+#, fuzzy
 msgid "Shows hosts with at least one service."
 msgstr "Por favor, añada al menos un nodo hijo."
 
@@ -112516,8 +112575,8 @@ msgid "Shows hosts with no pending service."
 msgstr "Mostrar hosts y servicios antiguos"
 
 #, fuzzy
-msgid "Has comments"
-msgstr "Comentarios del host"
+msgid "Combine selections with"
+msgstr "Selección de carpetas"
 
 #, fuzzy
 msgid "Active checks disabled"
@@ -113216,6 +113275,10 @@ msgid "Toggle details"
 msgstr "Alternar los detalles de los resultados"
 
 #, fuzzy
+msgid "Show all %{count} indicators"
+msgstr "Mostrar todos los temas"
+
+#, fuzzy
 msgid "Show all %{count} entries"
 msgstr "Mostrar todos los temas"
 
@@ -113251,11 +113314,23 @@ msgid "Select all"
 msgstr "Eliminar todo"
 
 #, fuzzy
+msgid "Combine status flag selections with"
+msgstr "Selección de contactos"
+
+#, fuzzy
 msgid "Search column"
 msgstr "Mostrar en la columna"
 
 msgid "Clear the filter on %{column} before hiding it"
 msgstr ""
+
+#, fuzzy
+msgid "AND"
+msgstr "WARN"
+
+#, fuzzy
+msgid "OR"
+msgstr "O"
 
 #, fuzzy
 msgid "Choose the earliest date & time"
@@ -113689,6 +113764,20 @@ msgstr "Añadir nueva etiqueta"
 msgid "Back to %{title}"
 msgstr "Volver a la vista"
 
+msgctxt ""
+"%{link} is a link to the product usage analytics manifest with the text "
+"\"manifest\""
+msgid ""
+"We believe in only receiving data you explicitly choose to share (see %"
+"{link})."
+msgstr ""
+
+#, fuzzy
+msgctxt ""
+"%{link} is a link to the global setting with the text \"global settings\""
+msgid "You can change your decision at any time in %{link}."
+msgstr "Los usuarios pueden cambiar este atributo en su configuración personal"
+
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""
 
@@ -113742,19 +113831,28 @@ msgstr ""
 msgid "Product usage analytics is turned off by default. "
 msgstr ""
 
+msgid "manifest"
+msgstr ""
+
+#, fuzzy
+msgid "global settings"
+msgstr "Configuración global"
+
+#, fuzzy
+msgid "Thank you! Product usage analytics is enabled."
+msgstr "elemento de informe"
+
+#, fuzzy
+msgid "Activate the pending changes to start the collection."
+msgstr "Activar cambios para la consola de eventos"
+
 msgid ""
-"We believe in only receiving data you explicitly choose to share. You can "
-"enable sharing analytics data any time from global settings. \n"
-"            If you do not wish to be reminded, please manage your "
-"preferences in global settings."
+"Product usage analytics could not be enabled. Please try again or enable it "
+"in global settings."
 msgstr ""
 
 msgid "Remind me again in 30 days"
 msgstr ""
-
-#, fuzzy
-msgid "Manage in global settings"
-msgstr "Editar la configuración global"
 
 #, fuzzy
 msgid "Save actions"
@@ -115249,6 +115347,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "La prueba ha caducado"
+
+#, fuzzy
+#~ msgid "Manage in global settings"
+#~ msgstr "Editar la configuración global"
 
 #, fuzzy
 #~ msgid "not disabled"
@@ -122291,10 +122393,6 @@ msgstr "La prueba ha caducado"
 #, fuzzy
 #~ msgid "2-5 min"
 #~ msgstr "5 minutos"
-
-#, fuzzy
-#~ msgid "Activate changes to apply them to live monitoring."
-#~ msgstr "Activar cambios para la consola de eventos"
 
 #, fuzzy
 #~ msgid "5-7 min"

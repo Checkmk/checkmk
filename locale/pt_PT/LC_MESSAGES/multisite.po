@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-11-13 11:20+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -1900,6 +1900,18 @@ msgid ""
 "<b>Display limit reached:</b> This table shows only %(limit)s entries. "
 "Additional records are not included in this view. Sort order may not be "
 "correct."
+msgstr ""
+
+msgid ""
+"<b>Experimental.</b> When enabled, the AI assistant sends usage information "
+"to Checkmk's central telemetry collector, so we can understand how the "
+"assistant is used and improve it.<br><br>We collect: which AI provider and "
+"model the assistant uses, which of its actions and tools are used, how long "
+"they take and whether they fail, the tokens used per question, and the "
+"Checkmk version and edition.<br><br>We do not collect: your site name, host "
+"names, the assistant instructions, or the content of your prompts and the "
+"assistant's answers.<br><br>For the full list of fields, see "
+"LINK_PLACEHOLDER."
 msgstr ""
 
 #, fuzzy
@@ -8236,9 +8248,9 @@ msgstr ""
 "frente aos recursos CloudFront"
 
 msgid ""
-"An IAM role name has 1 to 64 characters: letters, digits and _+=,.@-. A path "
-"in front of it ends with a slash and does not start with one, for example "
-"monitoring/CheckmkMonitoring."
+"An IAM role name contains up to 64 characters: letters, digits and _+=,.@-. "
+"You can put a path in front of the name. The path must end with a slash and "
+"must not start with one, for example monitoring/CheckmkMonitoring."
 msgstr ""
 
 #, fuzzy
@@ -28297,6 +28309,10 @@ msgid "Expected virtual switch name"
 msgstr "Estado de bandeira esperado"
 
 #, fuzzy
+msgid "Experimental flags"
+msgstr "Característica da empresa"
+
+#, fuzzy
 msgid "Experimental flags (for testing only)"
 msgstr "Características experimentais"
 
@@ -39111,6 +39127,10 @@ msgstr "Espaço de índice desperdiçado"
 msgid "India"
 msgstr "Índices"
 
+#, fuzzy
+msgid "Indicator"
+msgstr "Iniciador"
+
 msgid "Indices"
 msgstr "Índices"
 
@@ -40594,6 +40614,10 @@ msgstr "Emitido para"
 
 msgid "Issuer"
 msgstr "Emissor"
+
+#, fuzzy
+msgid "It does not exist."
+msgstr "Não existe"
 
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
@@ -65356,6 +65380,10 @@ msgstr "Seleciona como os scripts paralelos são executados"
 msgid "Send"
 msgstr "Enviar"
 
+#, fuzzy
+msgid "Send AI assistant usage data to Checkmk"
+msgstr "Mapear o estado do GCP para verificar mk"
+
 msgid "Send HTTP POST data"
 msgstr "Enviar dados HTTP POST"
 
@@ -75030,6 +75058,12 @@ msgid "The complete hardware and software inventory of a host"
 msgstr "O inventário completo de hardware e software de um host"
 
 #, fuzzy, python-format
+msgid ""
+"The conditions of the custom service \"%(name)s\" could not be taken over. "
+"%(reason)s"
+msgstr "O conjunto de regras \"%s\" não existe."
+
+#, fuzzy, python-format
 msgid "The configuration bundle %(bundle_id)s does not exist"
 msgstr "O site \"%s\" não existe."
 
@@ -78303,6 +78337,10 @@ msgstr ""
 "A informação recuperada do cAdvisor será agregada de acordo com o nível da "
 "entidade selecionada. Os serviços resultantes serão alocados para os "
 "hospedeiros Checkmk piggyback criados."
+
+#, fuzzy
+msgid "The role name must not start or end with whitespace characters."
+msgstr "O texto dado deve conter apenas caracteres ASCII."
 
 msgid "The role of the primary device"
 msgstr "O papel do dispositivo principal"
@@ -99418,6 +99456,14 @@ msgstr ""
 "No entanto, você pode entrar na pasta como pode ter permissão em uma "
 "subpastas."
 
+#, fuzzy
+msgid "You may not see custom services."
+msgstr "Nome do serviço personalizado"
+
+#, fuzzy
+msgid "You may not see the folder of its rule."
+msgstr "Você não pode salvar esta regra."
+
 msgid "You may only use paths relative to the report archive base directory"
 msgstr ""
 "Você só pode usar caminhos relativos ao diretório base do arquivo de "
@@ -100439,7 +100485,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -100925,7 +100970,6 @@ msgstr ""
 msgid "hosts"
 msgstr "hospedeiros"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -103887,6 +103931,10 @@ msgstr "Por favor, selecione pelo menos um elemento"
 #, fuzzy
 msgid "Hide tooltip"
 msgstr "Título da página"
+
+#, fuzzy
+msgid "Contextual links"
+msgstr "Informações de Contexto"
 
 #, fuzzy
 msgid "Widget"
@@ -109560,6 +109608,11 @@ msgstr ""
 msgid "Match service name by"
 msgstr "Combinar etiquetas de serviço"
 
+msgid ""
+"This service name may also match other custom services on these hosts. "
+"Review it before you continue."
+msgstr ""
+
 #, fuzzy
 msgid "No matching services. Only discovered services can be selected."
 msgstr "Mostrar as etiquetas de serviço descobertas"
@@ -111640,6 +111693,10 @@ msgid "Actions for selected hosts"
 msgstr "Em anfitriões seleccionados"
 
 #, fuzzy
+msgid "Has comments"
+msgstr "Comentários do anfitrião"
+
+#, fuzzy
 msgid "Shows hosts with at least one service."
 msgstr "Por favor, acrescente pelo menos um nó de criança."
 
@@ -111688,8 +111745,8 @@ msgid "Shows hosts with no pending service."
 msgstr "Mostrar hospedeiros e serviços obsoletos"
 
 #, fuzzy
-msgid "Has comments"
-msgstr "Comentários do anfitrião"
+msgid "Combine selections with"
+msgstr "Seleção de Pasta"
 
 #, fuzzy
 msgid "Active checks disabled"
@@ -112381,6 +112438,10 @@ msgid "Toggle details"
 msgstr "Alternar os detalhes do resultado"
 
 #, fuzzy
+msgid "Show all %{count} indicators"
+msgstr "Mostrar todos os tópicos"
+
+#, fuzzy
 msgid "Show all %{count} entries"
 msgstr "Mostrar todos os tópicos"
 
@@ -112416,11 +112477,23 @@ msgid "Select all"
 msgstr "Remover tudo"
 
 #, fuzzy
+msgid "Combine status flag selections with"
+msgstr "Selecção de contactos"
+
+#, fuzzy
 msgid "Search column"
 msgstr "Mostrar na coluna"
 
 msgid "Clear the filter on %{column} before hiding it"
 msgstr ""
+
+#, fuzzy
+msgid "AND"
+msgstr "ADVERTÊNCIA"
+
+#, fuzzy
+msgid "OR"
+msgstr "O"
 
 #, fuzzy
 msgid "Choose the earliest date & time"
@@ -112852,6 +112925,20 @@ msgstr "Adicionar nova etiqueta"
 msgid "Back to %{title}"
 msgstr "Voltar para ver"
 
+msgctxt ""
+"%{link} is a link to the product usage analytics manifest with the text "
+"\"manifest\""
+msgid ""
+"We believe in only receiving data you explicitly choose to share (see %"
+"{link})."
+msgstr ""
+
+#, fuzzy
+msgctxt ""
+"%{link} is a link to the global setting with the text \"global settings\""
+msgid "You can change your decision at any time in %{link}."
+msgstr "Os usuários podem alterar este atributo em suas configurações pessoais"
+
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""
 
@@ -112905,19 +112992,28 @@ msgstr ""
 msgid "Product usage analytics is turned off by default. "
 msgstr ""
 
+msgid "manifest"
+msgstr ""
+
+#, fuzzy
+msgid "global settings"
+msgstr "Configurações globais"
+
+#, fuzzy
+msgid "Thank you! Product usage analytics is enabled."
+msgstr "elemento do relatório"
+
+#, fuzzy
+msgid "Activate the pending changes to start the collection."
+msgstr "Activar alterações para a consola de eventos"
+
 msgid ""
-"We believe in only receiving data you explicitly choose to share. You can "
-"enable sharing analytics data any time from global settings. \n"
-"            If you do not wish to be reminded, please manage your "
-"preferences in global settings."
+"Product usage analytics could not be enabled. Please try again or enable it "
+"in global settings."
 msgstr ""
 
 msgid "Remind me again in 30 days"
 msgstr ""
-
-#, fuzzy
-msgid "Manage in global settings"
-msgstr "Editar cenário global"
 
 #, fuzzy
 msgid "Save actions"
@@ -114414,6 +114510,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "O julgamento expirou"
+
+#, fuzzy
+#~ msgid "Manage in global settings"
+#~ msgstr "Editar cenário global"
 
 #, fuzzy
 #~ msgid "not disabled"
@@ -121383,10 +121483,6 @@ msgstr "O julgamento expirou"
 #, fuzzy
 #~ msgid "2-5 min"
 #~ msgstr "5 minutos"
-
-#, fuzzy
-#~ msgid "Activate changes to apply them to live monitoring."
-#~ msgstr "Activar alterações para a consola de eventos"
 
 #, fuzzy
 #~ msgid "5-7 min"

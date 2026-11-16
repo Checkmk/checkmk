@@ -1918,6 +1918,18 @@ msgstr ""
 "Weitere Datensätze sind in dieser Ansicht nicht enthalten. Die "
 "Sortierreihenfolge ist möglicherweise nicht korrekt."
 
+msgid ""
+"<b>Experimental.</b> When enabled, the AI assistant sends usage information "
+"to Checkmk's central telemetry collector, so we can understand how the "
+"assistant is used and improve it.<br><br>We collect: which AI provider and "
+"model the assistant uses, which of its actions and tools are used, how long "
+"they take and whether they fail, the tokens used per question, and the "
+"Checkmk version and edition.<br><br>We do not collect: your site name, host "
+"names, the assistant instructions, or the content of your prompts and the "
+"assistant's answers.<br><br>For the full list of fields, see "
+"LINK_PLACEHOLDER."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "<b>Gather all service instances and restrict by overall AWS tags:</b><br>If "
@@ -8119,9 +8131,9 @@ msgstr ""
 "CloudFront-Ressourcen"
 
 msgid ""
-"An IAM role name has 1 to 64 characters: letters, digits and _+=,.@-. A path "
-"in front of it ends with a slash and does not start with one, for example "
-"monitoring/CheckmkMonitoring."
+"An IAM role name contains up to 64 characters: letters, digits and _+=,.@-. "
+"You can put a path in front of the name. The path must end with a slash and "
+"must not start with one, for example monitoring/CheckmkMonitoring."
 msgstr ""
 
 msgid ""
@@ -27604,6 +27616,10 @@ msgid "Expected virtual switch name"
 msgstr "Erwarteter virtueller Switch-Name"
 
 #, fuzzy
+msgid "Experimental flags"
+msgstr "Experimentelle Funktionen von Vue"
+
+#, fuzzy
 msgid "Experimental flags (for testing only)"
 msgstr "Experimentelle Funktionen"
 
@@ -37988,6 +38004,10 @@ msgstr "Ungenutzter Indexbereich"
 msgid "India"
 msgstr "Indien"
 
+#, fuzzy
+msgid "Indicator"
+msgstr "Urheber"
+
 msgid "Indices"
 msgstr "Indizes"
 
@@ -39425,6 +39445,10 @@ msgstr "Ausgestellt an"
 
 msgid "Issuer"
 msgstr "Herausgeben"
+
+#, fuzzy
+msgid "It does not exist."
+msgstr "existiert nicht"
 
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
@@ -63058,6 +63082,10 @@ msgstr "Legt fest, wie die Skripts parallelisiert werden sollen"
 msgid "Send"
 msgstr "Senden"
 
+#, fuzzy
+msgid "Send AI assistant usage data to Checkmk"
+msgstr "Traces von Checkmk senden"
+
 msgid "Send HTTP POST data"
 msgstr "HTTP POST Daten senden"
 
@@ -72610,6 +72638,12 @@ msgstr "Der Kommentar, der bei Ad-hoc-Wartungszeiten automatisch gesendet wird"
 msgid "The complete hardware and software inventory of a host"
 msgstr "Das vollständige Hardware- und Softwareinventar eines Hosts"
 
+#, fuzzy, python-format
+msgid ""
+"The conditions of the custom service \"%(name)s\" could not be taken over. "
+"%(reason)s"
+msgstr "Der Regelsatz \"%(name)s\" existiert nicht."
+
 #, python-format
 msgid "The configuration bundle %(bundle_id)s does not exist"
 msgstr "Das Konfigurationsbündel %(bundle_id)s existiert nicht"
@@ -76106,6 +76140,10 @@ msgstr ""
 "Die vom cAdvisor erhaltenen Informationen werden entsprechend der gewählten "
 "Entitätsebene aggregiert. Die daraus resultierenden Services werden den "
 "erstellten Checkmk-Piggyback-Hosts zugewiesen."
+
+#, fuzzy
+msgid "The role name must not start or end with whitespace characters."
+msgstr "Der Text darf nur ASCII-Zeichen enthalten."
 
 msgid "The role of the primary device"
 msgstr "Die Rolle des primären Geräts"
@@ -96695,6 +96733,14 @@ msgstr ""
 "Sie können den Ordner eingeben, da Sie die Berechtigung für einen "
 "Unterordner haben könnten."
 
+#, fuzzy
+msgid "You may not see custom services."
+msgstr "Name des benutzerdefinierten Service"
+
+#, fuzzy
+msgid "You may not see the folder of its rule."
+msgstr "Sie können diese Regel nicht speichern."
+
 msgid "You may only use paths relative to the report archive base directory"
 msgstr ""
 "Sie dürfen nur Pfade relativ zum Basisverzeichnis des Berichtsarchivs "
@@ -101019,6 +101065,10 @@ msgstr "Wählen Sie mindestens ein Element aus"
 #, fuzzy
 msgid "Hide tooltip"
 msgstr "Titel verbergen"
+
+#, fuzzy
+msgid "Contextual links"
+msgstr "Kontextabhängiges Hilfesymbol"
 
 msgid "Widget"
 msgstr "Widget"
@@ -106519,6 +106569,11 @@ msgstr ""
 msgid "Match service name by"
 msgstr "Service-Labels abgleichen"
 
+msgid ""
+"This service name may also match other custom services on these hosts. "
+"Review it before you continue."
+msgstr ""
+
 #, fuzzy
 msgid "No matching services. Only discovered services can be selected."
 msgstr "Aktive, erkannte Service-Labels anzeigen"
@@ -108665,6 +108720,10 @@ msgid "Actions for selected hosts"
 msgstr "Aktionen für ausgewählte Hosts"
 
 #, fuzzy
+msgid "Has comments"
+msgstr "Hostkommentare"
+
+#, fuzzy
 msgid "Shows hosts with at least one service."
 msgstr "Bitte fügen Sie mindestens einen Service hinzu."
 
@@ -108713,8 +108772,8 @@ msgid "Shows hosts with no pending service."
 msgstr "Alle veralteten Hosts und Services zeigen"
 
 #, fuzzy
-msgid "Has comments"
-msgstr "Hostkommentare"
+msgid "Combine selections with"
+msgstr "Dateiauswahl"
 
 #, fuzzy
 msgid "Active checks disabled"
@@ -109432,6 +109491,10 @@ msgid "Toggle details"
 msgstr "Service-Ausgabe umschalten"
 
 #, fuzzy
+msgid "Show all %{count} indicators"
+msgstr "Alle Themen anzeigen"
+
+#, fuzzy
 msgid "Show all %{count} entries"
 msgstr "Alle Themen anzeigen"
 
@@ -109465,11 +109528,23 @@ msgid "Select all"
 msgstr "Alle auswählen"
 
 #, fuzzy
+msgid "Combine status flag selections with"
+msgstr "Kontaktauswahl"
+
+#, fuzzy
 msgid "Search column"
 msgstr "In Spalte anzeigen"
 
 msgid "Clear the filter on %{column} before hiding it"
 msgstr ""
+
+#, fuzzy
+msgid "AND"
+msgstr "WARN"
+
+#, fuzzy
+msgid "OR"
+msgstr "O"
 
 #, fuzzy
 msgid "Choose the earliest date & time"
@@ -109904,6 +109979,20 @@ msgstr "%{selected} von %{total} ausgewählt"
 msgid "Back to %{title}"
 msgstr "Zurück zu Ansicht"
 
+msgctxt ""
+"%{link} is a link to the product usage analytics manifest with the text "
+"\"manifest\""
+msgid ""
+"We believe in only receiving data you explicitly choose to share (see %"
+"{link})."
+msgstr ""
+
+#, fuzzy
+msgctxt ""
+"%{link} is a link to the global setting with the text \"global settings\""
+msgid "You can change your decision at any time in %{link}."
+msgstr "Sie können dies jederzeit in Ihren Profileinstellungen ändern."
+
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""
 "Helfen Sie uns, Checkmk mit der Analyse der Produktnutzung zu verbessern"
@@ -109974,23 +110063,29 @@ msgstr ""
 msgid "Product usage analytics is turned off by default. "
 msgstr "Die Analyse der Produktnutzung ist standardmäßig ausgeschaltet. "
 
-msgid ""
-"We believe in only receiving data you explicitly choose to share. You can "
-"enable sharing analytics data any time from global settings. \n"
-"            If you do not wish to be reminded, please manage your "
-"preferences in global settings."
+msgid "manifest"
 msgstr ""
-"Wir sind davon überzeugt, dass wir nur Daten erhalten sollten, die Sie "
-"ausdrücklich mit uns teilen wollen. Sie können die Freigabe von Analysedaten "
-"jederzeit in den globalen Einstellungen aktivieren. \n"
-"            Wenn Sie keine Erinnerungen erhalten möchten, passen Sie bitte "
-"Ihre Einstellungen in den globalen Einstellungen an."
+
+#, fuzzy
+msgid "global settings"
+msgstr "Globale Einstellungen"
+
+#, fuzzy
+msgid "Thank you! Product usage analytics is enabled."
+msgstr "Manifest zur Analyse der Produktnutzung"
+
+#, fuzzy
+msgid "Activate the pending changes to start the collection."
+msgstr ""
+"Aktivieren Sie die Änderungen, um sie auf das Live-Monitoring anzuwenden."
+
+msgid ""
+"Product usage analytics could not be enabled. Please try again or enable it "
+"in global settings."
+msgstr ""
 
 msgid "Remind me again in 30 days"
 msgstr "Erinnere mich in 30 Tagen noch einmal daran"
-
-msgid "Manage in global settings"
-msgstr "In den globalen Einstellungen verwalten"
 
 msgid "Save actions"
 msgstr "Aktionen speichern"
@@ -111489,6 +111584,21 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Erkundete Themen"
+
+#~ msgid ""
+#~ "We believe in only receiving data you explicitly choose to share. You can "
+#~ "enable sharing analytics data any time from global settings. \n"
+#~ "            If you do not wish to be reminded, please manage your "
+#~ "preferences in global settings."
+#~ msgstr ""
+#~ "Wir sind davon überzeugt, dass wir nur Daten erhalten sollten, die Sie "
+#~ "ausdrücklich mit uns teilen wollen. Sie können die Freigabe von "
+#~ "Analysedaten jederzeit in den globalen Einstellungen aktivieren. \n"
+#~ "            Wenn Sie keine Erinnerungen erhalten möchten, passen Sie "
+#~ "bitte Ihre Einstellungen in den globalen Einstellungen an."
+
+#~ msgid "Manage in global settings"
+#~ msgstr "In den globalen Einstellungen verwalten"
 
 #, fuzzy, python-format
 #~ msgid "Note: To authenticate with an IAM role, please use the %(link)s."
@@ -118999,10 +119109,6 @@ msgstr "Erkundete Themen"
 #~ msgstr ""
 #~ "Änderungen werden zunächst in einer temporären Umgebung gespeichert, \n"
 #~ "                sodass Sie diese sicher überprüfen und anpassen können."
-
-#~ msgid "Activate changes to apply them to live monitoring."
-#~ msgstr ""
-#~ "Aktivieren Sie die Änderungen, um sie auf das Live-Monitoring anzuwenden."
 
 #~ msgid "5-7 min"
 #~ msgstr "5-7 Minuten"

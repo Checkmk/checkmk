@@ -1904,6 +1904,18 @@ msgid ""
 "correct."
 msgstr ""
 
+msgid ""
+"<b>Experimental.</b> When enabled, the AI assistant sends usage information "
+"to Checkmk's central telemetry collector, so we can understand how the "
+"assistant is used and improve it.<br><br>We collect: which AI provider and "
+"model the assistant uses, which of its actions and tools are used, how long "
+"they take and whether they fail, the tokens used per question, and the "
+"Checkmk version and edition.<br><br>We do not collect: your site name, host "
+"names, the assistant instructions, or the content of your prompts and the "
+"assistant's answers.<br><br>For the full list of fields, see "
+"LINK_PLACEHOLDER."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "<b>Gather all service instances and restrict by overall AWS tags:</b><br>If "
@@ -8213,9 +8225,9 @@ msgstr ""
 "CloudFront-bronnen staan"
 
 msgid ""
-"An IAM role name has 1 to 64 characters: letters, digits and _+=,.@-. A path "
-"in front of it ends with a slash and does not start with one, for example "
-"monitoring/CheckmkMonitoring."
+"An IAM role name contains up to 64 characters: letters, digits and _+=,.@-. "
+"You can put a path in front of the name. The path must end with a slash and "
+"must not start with one, for example monitoring/CheckmkMonitoring."
 msgstr ""
 
 #, fuzzy
@@ -28289,6 +28301,10 @@ msgid "Expected virtual switch name"
 msgstr "Verwachte vlaggenstaat"
 
 #, fuzzy
+msgid "Experimental flags"
+msgstr "Ondernemingsfunctie"
+
+#, fuzzy
 msgid "Experimental flags (for testing only)"
 msgstr "Ondernemingsfunctie"
 
@@ -39094,6 +39110,10 @@ msgstr "Verspilde indexruimte"
 msgid "India"
 msgstr "Indexen"
 
+#, fuzzy
+msgid "Indicator"
+msgstr "Initiatiefnemer"
+
 msgid "Indices"
 msgstr "Indexen"
 
@@ -40582,6 +40602,10 @@ msgstr "Uitgegeven aan"
 
 msgid "Issuer"
 msgstr "Emittent"
+
+#, fuzzy
+msgid "It does not exist."
+msgstr "Bestaat niet"
 
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
@@ -65322,6 +65346,10 @@ msgstr "Kiest hoe paralleliseerbare scripts worden uitgevoerd"
 msgid "Send"
 msgstr "Stuur"
 
+#, fuzzy
+msgid "Send AI assistant usage data to Checkmk"
+msgstr "Kaart GCP status te controleren mk"
+
 msgid "Send HTTP POST data"
 msgstr "HTTP POST-gegevens verzenden"
 
@@ -75000,6 +75028,12 @@ msgid "The complete hardware and software inventory of a host"
 msgstr "De volledige hardware- en software-inventaris van een host"
 
 #, fuzzy, python-format
+msgid ""
+"The conditions of the custom service \"%(name)s\" could not be taken over. "
+"%(reason)s"
+msgstr "De regelset \"%s\" bestaat niet."
+
+#, fuzzy, python-format
 msgid "The configuration bundle %(bundle_id)s does not exist"
 msgstr "De site \"%s\" bestaat niet."
 
@@ -78300,6 +78334,10 @@ msgstr ""
 "De opgehaalde informatie van de cAdvisor zal worden geaggregeerd volgens het "
 "geselecteerde entiteitniveau. De resulterende diensten zullen worden "
 "toegewezen aan de aangemaakte Checkmk piggyback hosts."
+
+#, fuzzy
+msgid "The role name must not start or end with whitespace characters."
+msgstr "De opgegeven tekst mag alleen ASCII-tekens bevatten."
 
 msgid "The role of the primary device"
 msgstr "De rol van het primaire apparaat"
@@ -99468,6 +99506,14 @@ msgid ""
 msgstr ""
 "U mag de map wel invoeren zoals u misschien rechten heeft op een submap."
 
+#, fuzzy
+msgid "You may not see custom services."
+msgstr "Naam van de aangepaste dienst"
+
+#, fuzzy
+msgid "You may not see the folder of its rule."
+msgstr "U kunt deze regel niet opslaan."
+
 msgid "You may only use paths relative to the report archive base directory"
 msgstr ""
 "U mag alleen paden relatief aan de basismap van het rapportarchief gebruiken"
@@ -103937,6 +103983,10 @@ msgstr "Selecteer ten minste één element"
 #, fuzzy
 msgid "Hide tooltip"
 msgstr "Titel van de pagina"
+
+#, fuzzy
+msgid "Contextual links"
+msgstr "Context Info"
 
 #, fuzzy
 msgid "Widget"
@@ -109609,6 +109659,11 @@ msgstr ""
 msgid "Match service name by"
 msgstr "Overeenkomende dienst labels"
 
+msgid ""
+"This service name may also match other custom services on these hosts. "
+"Review it before you continue."
+msgstr ""
+
 #, fuzzy
 msgid "No matching services. Only discovered services can be selected."
 msgstr "Ontdekte service labels tonen"
@@ -111691,6 +111746,10 @@ msgid "Actions for selected hosts"
 msgstr "Op geselecteerde hosts"
 
 #, fuzzy
+msgid "Has comments"
+msgstr "Opmerkingen gastheer"
+
+#, fuzzy
 msgid "Shows hosts with at least one service."
 msgstr "Voeg ten minste één kindknooppunt toe."
 
@@ -111739,8 +111798,8 @@ msgid "Shows hosts with no pending service."
 msgstr "Toon verouderde hosts en diensten"
 
 #, fuzzy
-msgid "Has comments"
-msgstr "Opmerkingen gastheer"
+msgid "Combine selections with"
+msgstr "Map Selectie"
 
 #, fuzzy
 msgid "Active checks disabled"
@@ -112424,6 +112483,10 @@ msgid "Toggle details"
 msgstr "Toggle resultaat details"
 
 #, fuzzy
+msgid "Show all %{count} indicators"
+msgstr "Toon alle onderwerpen"
+
+#, fuzzy
 msgid "Show all %{count} entries"
 msgstr "Toon alle onderwerpen"
 
@@ -112459,11 +112522,23 @@ msgid "Select all"
 msgstr "Verwijder alle"
 
 #, fuzzy
+msgid "Combine status flag selections with"
+msgstr "Contact selectie"
+
+#, fuzzy
 msgid "Search column"
 msgstr "Toon in kolom"
 
 msgid "Clear the filter on %{column} before hiding it"
 msgstr ""
+
+#, fuzzy
+msgid "AND"
+msgstr "WARN"
+
+#, fuzzy
+msgid "OR"
+msgstr "O"
 
 #, fuzzy
 msgid "Choose the earliest date & time"
@@ -112896,6 +112971,21 @@ msgstr "Nieuw etiket toevoegen"
 msgid "Back to %{title}"
 msgstr "Terug naar overzicht"
 
+msgctxt ""
+"%{link} is a link to the product usage analytics manifest with the text "
+"\"manifest\""
+msgid ""
+"We believe in only receiving data you explicitly choose to share (see %"
+"{link})."
+msgstr ""
+
+#, fuzzy
+msgctxt ""
+"%{link} is a link to the global setting with the text \"global settings\""
+msgid "You can change your decision at any time in %{link}."
+msgstr ""
+"Gebruikers kunnen dit kenmerk in hun persoonlijke instellingen wijzigen"
+
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""
 
@@ -112949,19 +113039,28 @@ msgstr ""
 msgid "Product usage analytics is turned off by default. "
 msgstr ""
 
+msgid "manifest"
+msgstr ""
+
+#, fuzzy
+msgid "global settings"
+msgstr "Globale instellingen"
+
+#, fuzzy
+msgid "Thank you! Product usage analytics is enabled."
+msgstr "rapportelement"
+
+#, fuzzy
+msgid "Activate the pending changes to start the collection."
+msgstr "Activeer wijzigingen voor gebeurtenissenconsole"
+
 msgid ""
-"We believe in only receiving data you explicitly choose to share. You can "
-"enable sharing analytics data any time from global settings. \n"
-"            If you do not wish to be reminded, please manage your "
-"preferences in global settings."
+"Product usage analytics could not be enabled. Please try again or enable it "
+"in global settings."
 msgstr ""
 
 msgid "Remind me again in 30 days"
 msgstr ""
-
-#, fuzzy
-msgid "Manage in global settings"
-msgstr "Globale instelling wijzigen"
 
 #, fuzzy
 msgid "Save actions"
@@ -114458,6 +114557,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Proef vervallen"
+
+#, fuzzy
+#~ msgid "Manage in global settings"
+#~ msgstr "Globale instelling wijzigen"
 
 #, fuzzy
 #~ msgid "not disabled"
@@ -121387,10 +121490,6 @@ msgstr "Proef vervallen"
 #, fuzzy
 #~ msgid "2-5 min"
 #~ msgstr "5 minuten"
-
-#, fuzzy
-#~ msgid "Activate changes to apply them to live monitoring."
-#~ msgstr "Activeer wijzigingen voor gebeurtenissenconsole"
 
 #, fuzzy
 #~ msgid "5-7 min"

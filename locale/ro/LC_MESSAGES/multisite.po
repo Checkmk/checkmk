@@ -1921,6 +1921,18 @@ msgid ""
 "correct."
 msgstr ""
 
+msgid ""
+"<b>Experimental.</b> When enabled, the AI assistant sends usage information "
+"to Checkmk's central telemetry collector, so we can understand how the "
+"assistant is used and improve it.<br><br>We collect: which AI provider and "
+"model the assistant uses, which of its actions and tools are used, how long "
+"they take and whether they fail, the tokens used per question, and the "
+"Checkmk version and edition.<br><br>We do not collect: your site name, host "
+"names, the assistant instructions, or the content of your prompts and the "
+"assistant's answers.<br><br>For the full list of fields, see "
+"LINK_PLACEHOLDER."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "<b>Gather all service instances and restrict by overall AWS tags:</b><br>If "
@@ -8248,9 +8260,9 @@ msgstr ""
 "urile din fața resurselor CloudFront"
 
 msgid ""
-"An IAM role name has 1 to 64 characters: letters, digits and _+=,.@-. A path "
-"in front of it ends with a slash and does not start with one, for example "
-"monitoring/CheckmkMonitoring."
+"An IAM role name contains up to 64 characters: letters, digits and _+=,.@-. "
+"You can put a path in front of the name. The path must end with a slash and "
+"must not start with one, for example monitoring/CheckmkMonitoring."
 msgstr ""
 
 #, fuzzy
@@ -28430,6 +28442,10 @@ msgid "Expected virtual switch name"
 msgstr "Starea așteptată a steagului"
 
 #, fuzzy
+msgid "Experimental flags"
+msgstr "Caracteristica Enterprise"
+
+#, fuzzy
 msgid "Experimental flags (for testing only)"
 msgstr "Caracteristici experimentale"
 
@@ -39274,6 +39290,10 @@ msgstr "Spațiu de indexare irosit"
 msgid "India"
 msgstr "Indicii"
 
+#, fuzzy
+msgid "Indicator"
+msgstr "Inițiator"
+
 msgid "Indices"
 msgstr "Indicii"
 
@@ -40769,6 +40789,10 @@ msgstr "Eliberat pentru"
 
 msgid "Issuer"
 msgstr "Emitent"
+
+#, fuzzy
+msgid "It does not exist."
+msgstr "Nu există"
 
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
@@ -65558,6 +65582,10 @@ msgstr "Selectează modul în care sunt executate scripturile paralelizabile"
 msgid "Send"
 msgstr "Trimiteți"
 
+#, fuzzy
+msgid "Send AI assistant usage data to Checkmk"
+msgstr "Starea GCP pentru a verifica mk"
+
 msgid "Send HTTP POST data"
 msgstr "Trimiteți date HTTP POST"
 
@@ -75304,6 +75332,12 @@ msgid "The complete hardware and software inventory of a host"
 msgstr "Inventarul complet hardware și software al unei gazde"
 
 #, fuzzy, python-format
+msgid ""
+"The conditions of the custom service \"%(name)s\" could not be taken over. "
+"%(reason)s"
+msgstr "Setul de reguli \"%s\" nu există."
+
+#, fuzzy, python-format
 msgid "The configuration bundle %(bundle_id)s does not exist"
 msgstr "Site-ul \"%s\" nu există."
 
@@ -78623,6 +78657,10 @@ msgstr ""
 "Informațiile recuperate de la cAdvisor vor fi agregate în funcție de nivelul "
 "de entitate selectat. Serviciile rezultate vor fi alocate gazdelor Piggyback "
 "Checkmk create."
+
+#, fuzzy
+msgid "The role name must not start or end with whitespace characters."
+msgstr "Textul dat trebuie să conțină numai caractere ASCII."
 
 msgid "The role of the primary device"
 msgstr "Rolul dispozitivului primar"
@@ -99833,6 +99871,14 @@ msgstr ""
 "Totuși, puteți introduce dosarul ca și cum ați avea permisiunea de a accesa "
 "un subdosar."
 
+#, fuzzy
+msgid "You may not see custom services."
+msgstr "Denumirea serviciului personalizat"
+
+#, fuzzy
+msgid "You may not see the folder of its rule."
+msgstr "Nu puteți salva această regulă."
+
 msgid "You may only use paths relative to the report archive base directory"
 msgstr ""
 "Puteți utiliza numai căi de acces relative la directorul de bază al arhivei "
@@ -104336,6 +104382,10 @@ msgstr "Vă rugăm să selectați cel puțin un element"
 #, fuzzy
 msgid "Hide tooltip"
 msgstr "Titlul paginii"
+
+#, fuzzy
+msgid "Contextual links"
+msgstr "Informații de context"
 
 #, fuzzy
 msgid "Widget"
@@ -110043,6 +110093,11 @@ msgstr ""
 msgid "Match service name by"
 msgstr "Potriviți etichetele de serviciu"
 
+msgid ""
+"This service name may also match other custom services on these hosts. "
+"Review it before you continue."
+msgstr ""
+
 #, fuzzy
 msgid "No matching services. Only discovered services can be selected."
 msgstr "Etichete de serviciu descoperite"
@@ -112163,6 +112218,10 @@ msgid "Actions for selected hosts"
 msgstr "Pe gazdele selectate"
 
 #, fuzzy
+msgid "Has comments"
+msgstr "Comentarii ale gazdei"
+
+#, fuzzy
 msgid "Shows hosts with at least one service."
 msgstr "Vă rugăm să adăugați cel puțin un nod copil."
 
@@ -112211,8 +112270,8 @@ msgid "Shows hosts with no pending service."
 msgstr "Afișați gazdele și serviciile expirate"
 
 #, fuzzy
-msgid "Has comments"
-msgstr "Comentarii ale gazdei"
+msgid "Combine selections with"
+msgstr "Selecția fișierelor"
 
 #, fuzzy
 msgid "Active checks disabled"
@@ -112957,6 +113016,10 @@ msgid "Toggle details"
 msgstr "Comutați detaliile rezultatului"
 
 #, fuzzy
+msgid "Show all %{count} indicators"
+msgstr "Afișați toate subiectele"
+
+#, fuzzy
 msgid "Show all %{count} entries"
 msgstr "Afișați toate subiectele"
 
@@ -112992,11 +113055,23 @@ msgid "Select all"
 msgstr "Eliminați toate"
 
 #, fuzzy
+msgid "Combine status flag selections with"
+msgstr "Selecție de contact"
+
+#, fuzzy
 msgid "Search column"
 msgstr "Afișați în coloană"
 
 msgid "Clear the filter on %{column} before hiding it"
 msgstr ""
+
+#, fuzzy
+msgid "AND"
+msgstr "WARN"
+
+#, fuzzy
+msgid "OR"
+msgstr "O"
 
 #, fuzzy
 msgid "Choose the earliest date & time"
@@ -113437,6 +113512,20 @@ msgstr "Adăugați o nouă etichetă"
 msgid "Back to %{title}"
 msgstr "Înapoi la vizualizare"
 
+msgctxt ""
+"%{link} is a link to the product usage analytics manifest with the text "
+"\"manifest\""
+msgid ""
+"We believe in only receiving data you explicitly choose to share (see %"
+"{link})."
+msgstr ""
+
+#, fuzzy
+msgctxt ""
+"%{link} is a link to the global setting with the text \"global settings\""
+msgid "You can change your decision at any time in %{link}."
+msgstr "Utilizatorii pot modifica acest atribut în setările personale"
+
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""
 
@@ -113490,19 +113579,28 @@ msgstr ""
 msgid "Product usage analytics is turned off by default. "
 msgstr ""
 
+msgid "manifest"
+msgstr ""
+
+#, fuzzy
+msgid "global settings"
+msgstr "Setări globale"
+
+#, fuzzy
+msgid "Thank you! Product usage analytics is enabled."
+msgstr "element de raport"
+
+#, fuzzy
+msgid "Activate the pending changes to start the collection."
+msgstr "Activați modificările pentru consola de evenimente"
+
 msgid ""
-"We believe in only receiving data you explicitly choose to share. You can "
-"enable sharing analytics data any time from global settings. \n"
-"            If you do not wish to be reminded, please manage your "
-"preferences in global settings."
+"Product usage analytics could not be enabled. Please try again or enable it "
+"in global settings."
 msgstr ""
 
 msgid "Remind me again in 30 days"
 msgstr ""
-
-#, fuzzy
-msgid "Manage in global settings"
-msgstr "Editarea setării globale"
 
 #, fuzzy
 msgid "Save actions"
@@ -115004,6 +115102,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Procesul a expirat"
+
+#, fuzzy
+#~ msgid "Manage in global settings"
+#~ msgstr "Editarea setării globale"
 
 #~ msgid "not disabled"
 #~ msgstr "nu este dezactivat"
@@ -122083,10 +122185,6 @@ msgstr "Procesul a expirat"
 #, fuzzy
 #~ msgid "2-5 min"
 #~ msgstr "5 minute"
-
-#, fuzzy
-#~ msgid "Activate changes to apply them to live monitoring."
-#~ msgstr "Activați modificările pentru consola de evenimente"
 
 #, fuzzy
 #~ msgid "5-7 min"

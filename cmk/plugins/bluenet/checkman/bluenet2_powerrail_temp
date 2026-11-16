@@ -1,4 +1,4 @@
-title: Bachmann Bluenet2 Powerrail: Temperature Sensors
+title: Bachmann BlueNet2: Temperature
 agents: snmp
 catalog: hw/environment/bachmann
 license: GPLv2

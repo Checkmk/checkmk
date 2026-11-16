@@ -1,4 +1,4 @@
-title: Bachmann Bluenet2 Powerrail: Humidity Sensors
+title: Bachmann BlueNet2: Humidity
 agents: snmp
 catalog: hw/environment/bachmann
 license: GPLv2

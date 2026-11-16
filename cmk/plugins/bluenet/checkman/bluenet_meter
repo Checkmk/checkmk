@@ -1,4 +1,4 @@
-title: Bachmann Bluenet: Monitored PLC Voltage, Current and Power
+title: Bachmann BlueNet: Voltage, Current and Power
 agents: snmp
 catalog: hw/environment/bachmann
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Splunk: License
+title: Splunk: License State
 agents: splunk
 catalog: app/splunk
 license: GPLv2

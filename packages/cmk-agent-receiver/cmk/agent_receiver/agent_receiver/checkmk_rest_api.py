@@ -21,6 +21,7 @@ from cmk.agent_receiver.agent_receiver.models import (
     UpdateStatusResponse,
 )
 from cmk.agent_receiver.lib.auth import B64SiteInternalSecret
+from cmk.agent_receiver.lib.certs import site_ssl_context
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
 
@@ -69,7 +70,7 @@ async def _request(
     json_body: dict[str, object] | None = None,
     timeout: int = 30,
 ) -> httpx2.Response:
-    async with httpx2.AsyncClient(timeout=timeout) as client:
+    async with httpx2.AsyncClient(timeout=timeout, verify=site_ssl_context()) as client:
         # Answered as HTTPException, so log_http_exception logs it, not as a bare 500.
         try:
             return await client.request(method, url, headers=headers, json=json_body)

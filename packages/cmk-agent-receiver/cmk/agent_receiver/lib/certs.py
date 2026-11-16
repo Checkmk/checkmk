@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ssl
 from functools import cache
 from pathlib import Path
 from uuid import UUID
@@ -87,6 +88,13 @@ def validate_csr(csr: CertificateSigningRequest | str) -> CertificateSigningRequ
         raise ValueError(f"CN {cn} is not a valid version-4 UUID") from e
 
     return csr
+
+
+@cache
+def site_ssl_context() -> ssl.SSLContext:
+    # Loading the CA bundle of the system costs milliseconds of CPU on the event loop,
+    # too much to repeat for every client of the site.
+    return ssl.create_default_context()
 
 
 @cache

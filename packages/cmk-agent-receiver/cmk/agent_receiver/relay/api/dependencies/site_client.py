@@ -6,13 +6,16 @@ from collections.abc import AsyncIterator
 
 import httpx2
 
+from cmk.agent_receiver.lib.certs import site_ssl_context
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.relay.lib.site_client import SiteRelaysClient
 
 
 async def get_site_relays_client() -> AsyncIterator[SiteRelaysClient]:
     config = get_config()
-    async with httpx2.AsyncClient(headers={"User-Agent": "Checkmk Agent Receiver"}) as client:
+    async with httpx2.AsyncClient(
+        headers={"User-Agent": "Checkmk Agent Receiver"}, verify=site_ssl_context()
+    ) as client:
         yield SiteRelaysClient(
             client=client,
             rest_api_url=config.rest_api_url,

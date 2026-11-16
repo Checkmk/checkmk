@@ -6,7 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 from argparse import Namespace as Args
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import Any, override, Unpack
 
 import pytest
@@ -454,4 +454,45 @@ def test_agent_aws_lambda_function_hosts_get_the_function_arn() -> None:
     assert all(
         result.piggyback_host_labels == expected_labels[str(result.piggyback_hostname)]
         for result in results
+    )
+
+
+class UnitRecordingCloudwatchClient(FakeCloudwatchClient):
+    def __init__(self) -> None:
+        self.units: dict[str, str] = {}
+
+    @override
+    def get_metric_data(
+        self,
+        MetricDataQueries: Iterable[Mapping[str, Any]],
+        StartTime: str = "START",
+        EndTime: str = "END",
+    ) -> Mapping[str, Any]:
+        queries = list(MetricDataQueries)
+        for query in queries:
+            self.units[query["MetricStat"]["Metric"]["MetricName"]] = query["MetricStat"]["Unit"]
+        return super().get_metric_data(queries, StartTime, EndTime)
+
+
+def test_agent_aws_lambda_asks_for_the_durations_in_milliseconds() -> None:
+    # CloudWatch filters by the unit: with another unit it returns no values.
+    cloudwatch = UnitRecordingCloudwatchClient()
+    _limits, summary, provisioned_concurrency, lambda_cloudwatch, _insights = (
+        _create_lamdba_sections(
+            FakeLambdaClient(),
+            cloudwatch,
+            FakeCloudwatchClientLogsClient(),
+            "region",
+            create_config(None, (None, None), TagsImportPatternOption.import_all),
+            ResultDistributor(),
+        )
+    )
+    summary.run()
+    provisioned_concurrency.run()
+
+    lambda_cloudwatch.run()
+
+    durations = ("Duration", "IteratorAge", "PostRuntimeExtensionsDuration")
+    assert {name: cloudwatch.units[name] for name in durations} == dict.fromkeys(
+        durations, "Milliseconds"
     )

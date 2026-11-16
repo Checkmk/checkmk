@@ -315,7 +315,7 @@ allows = [
   "cmk.telemetry.series_unit",
   # the service name a series gets, shared with the alert wizard's preview
   "cmk.telemetry.service_name_parts",
-  "cmk.telemetry.service_name_template",
+  "cmk.telemetry.service_name_rendering",
 ]
 
 [plugin_families.violations.datadog]
@@ -2280,7 +2280,8 @@ allows = [
   "cmk.telemetry.host_name_template_validation",
   "cmk.telemetry.series_unit",
   "cmk.telemetry.service_name_parts",
-  "cmk.telemetry.service_name_template",
+  "cmk.telemetry.service_name_pattern",
+  "cmk.telemetry.service_name_rendering",
   "cmk.utils.global_ident_type",
   "cmk.utils.paths",
 ]

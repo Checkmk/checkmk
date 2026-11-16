@@ -9,8 +9,8 @@
 # registered in //tests/performance:bazel_performance, run beforehand via
 # `bazel test` — from bazel-testlogs into a result directory per suite
 # (results/performance-<suite>/<RELEASE>). When running in CI, additionally
-# upload each suite to its own performance database (performance_<suite>),
-# keeping the suites' scenarios and baselines separate.
+# upload each suite to its performance database: the data backend to its own,
+# every other (component) suite to performance_component.
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 REPO_PATH="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel)"
 BRANCH="$(make --no-print-directory --file="${REPO_PATH}/defines.make" print-BRANCH_VERSION)"
@@ -23,6 +23,11 @@ for target in $(bazel query --output=label "tests(//tests/performance:bazel_perf
     package="${target%:*}"
     suite="$(basename "${package}")"
     suite="${suite#cmk-}"
+    case "${suite}" in
+        data-backend) database="performance_data_backend" ;;
+        # The default. A suite that needs another database gets its own entry here.
+        *) database="performance_component" ;;
+    esac
     testlog_dir="${TESTLOGS}/${package#//}/${target##*:}"
     if [ ! -d "${testlog_dir}/test.outputs" ]; then
         echo "No test outputs for ${target} under ${testlog_dir} - skipping"
@@ -36,7 +41,7 @@ for target in $(bazel query --output=label "tests(//tests/performance:bazel_perf
     if [ -n "${CI}" ]; then
         PLOT_ARGS=(
             --branch-version="${BRANCH}" --root-dir="${ROOT_DIR}"
-            --dbname="performance_${suite//-/_}" --dbhost=qa.lan.checkmk.net
+            --dbname="${database}" --dbhost=qa.lan.checkmk.net
             --log-level=INFO --validate-baselines
         )
         # update database; generate report and check weekly baseline

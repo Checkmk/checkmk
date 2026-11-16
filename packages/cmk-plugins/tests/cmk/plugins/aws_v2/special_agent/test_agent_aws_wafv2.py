@@ -71,6 +71,42 @@ class FakeWAFV2Client:
         return {"TagInfoForResource": tags, "NextMarker": "string"}
 
 
+class FakeEmptyWAFV2Client:
+    def __init__(self) -> None:
+        self.web_acl_listings = 0
+
+    def list_web_acls(self, Scope: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
+        self.web_acl_listings += 1
+        return {"WebACLs": []}
+
+    def list_rule_groups(self, Scope: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
+        return {"RuleGroups": []}
+
+    def list_ip_sets(self, Scope: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
+        return {"IPSets": []}
+
+    def list_regex_pattern_sets(self, Scope: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
+        return {"RegexPatternSets": []}
+
+
+def test_wafv2_summary_does_not_list_web_acls_again_when_limits_found_none() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("wafv2_names", None)
+    config.add_service_tags("wafv2_tags", (None, None))
+    client = FakeEmptyWAFV2Client()
+    distributor = ResultDistributor()
+    wafv2_limits = WAFV2Limits(client, "region", config, "REGIONAL", distributor=distributor)
+    wafv2_summary = WAFV2Summary(client, "region", config, "REGIONAL", distributor=distributor)
+    distributor.add(wafv2_limits.name, wafv2_summary)
+
+    wafv2_limits.run()
+    wafv2_summary.run()
+
+    assert client.web_acl_listings == 1
+
+
 Wafv2Sections = Mapping[str, WAFV2Limits | WAFV2Summary | WAFV2WebACL]
 
 

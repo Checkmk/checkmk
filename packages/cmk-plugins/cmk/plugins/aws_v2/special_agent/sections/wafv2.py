@@ -262,10 +262,7 @@ class WAFV2Summary(AWSSection):
 
     @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("wafv2_limits")
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents([], 0.0)
+        return self._received_inventory("wafv2_limits")
 
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[object]:
@@ -292,11 +289,11 @@ class WAFV2Summary(AWSSection):
         self, colleague_contents: AWSColleagueContents
     ) -> Sequence[dict[str, object]]:
         if self._names is None:
-            if colleague_contents.content:
+            if colleague_contents.content is not None:
                 return colleague_contents.content
             return _get_wafv2_web_acls(self._client, self._scope, self._get_response_content)
 
-        if colleague_contents.content:
+        if colleague_contents.content is not None:
             return [
                 web_acl for web_acl in colleague_contents.content if web_acl["Name"] in self._names
             ]

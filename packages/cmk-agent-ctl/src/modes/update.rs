@@ -660,9 +660,10 @@ mod tests {
             UpdateStatusResponse,
         };
         use crate::config::test_helpers::TestRegistry;
-        use crate::config::{ConnectionMode, JSONLoader, TrustedConnection};
+        use crate::config::{ConnectionMode, JSONLoader, TrustedConnection, UpdaterRegistration};
         use crate::environment::SetupMode;
-        use crate::updater::{UpdateSource, UpdateState};
+        use crate::modes::delete_connection;
+        use crate::updater::{after_connection_changes, UpdateSource, UpdateState};
         use std::cell::RefCell;
         use std::fs;
 
@@ -830,6 +831,19 @@ mod tests {
                 )
             }
 
+            /// The two steps of the `delete` mode, for the connection of the update source.
+            fn delete_the_source_connection(&mut self) {
+                delete_connection::delete(&mut self.registry.registry, SOURCE_UUID).unwrap();
+                after_connection_changes(
+                    &self.paths,
+                    &[],
+                    &UpdaterRegistration::default(),
+                    None,
+                    &self.registry.registry,
+                )
+                .unwrap();
+            }
+
             fn state(&self) -> UpdateState {
                 UpdateState::load(&self.paths.updater_state_path).unwrap()
             }
@@ -927,6 +941,58 @@ mod tests {
             assert_eq!(first_501_then_upgraded.reported_errors().len(), 1);
             let state = host.state();
             assert!(!state.source.as_ref().unwrap().available, "{state:?}");
+        }
+
+        /// TC-AU-025: a removed TLS registration is refused with 403
+        #[test]
+        fn test_a_refusal_with_403_is_recorded_and_keeps_the_source() {
+            let host = Host::new();
+            let refusing = ScriptedApi::new(vec![Err(ApiError::ResponseStatus {
+                status: http::StatusCode::FORBIDDEN,
+                body: Some(String::from(r#"{"detail": "Host is not registered"}"#)),
+            })]);
+
+            let refused = host.cycle(&refusing);
+
+            assert!(refused.is_err(), "{refused:?}");
+            let state = host.state();
+            let error = state.last_error.unwrap_or_default();
+            assert!(
+                error.contains("403 Forbidden: Host is not registered"),
+                "{error:?}"
+            );
+            assert_eq!(
+                state.source,
+                Some(UpdateSource {
+                    uuid: SOURCE_UUID.parse().unwrap(),
+                    available: true,
+                })
+            );
+        }
+
+        /// TC-AU-078: after `cmk-agent-ctl delete`, the host has no update source and no
+        /// error against one
+        #[test]
+        fn test_a_deleted_source_connection_leaves_no_source_and_no_error() {
+            let mut host = Host::new();
+            UpdateState {
+                last_error: Some(String::from(
+                    "Agent update status request to server/site failed",
+                )),
+                ..host.state()
+            }
+            .save(&host.paths.updater_state_path)
+            .unwrap();
+            let site = ScriptedApi::new(vec![]);
+
+            host.delete_the_source_connection();
+            let cycle = host.cycle(&site);
+
+            assert!(cycle.is_ok(), "{cycle:?}");
+            assert!(site.reported_errors().is_empty());
+            let state = host.state();
+            assert_eq!(state.source, None);
+            assert_eq!(state.last_error, None);
         }
 
         /// CMK-39502, TC-AU-090: the Python updater registered the host under

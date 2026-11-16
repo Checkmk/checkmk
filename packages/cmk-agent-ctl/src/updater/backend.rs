@@ -949,6 +949,8 @@ impl Updater {
             updater.state.source
         );
         updater.state.source = source;
+        // Without a source no cycle runs, so nothing else would drop the error of the earlier one.
+        updater.state.last_error = None;
         updater.state.save(&updater.state_path)
     }
 

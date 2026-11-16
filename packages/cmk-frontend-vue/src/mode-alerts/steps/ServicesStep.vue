@@ -462,11 +462,7 @@ const unitsError = computed(() => {
           />
         </div>
 
-        <CmkAlert
-          v-if="unitsError"
-          :variant="displayErrors ? 'error' : 'warning'"
-          :text="untranslated(unitsError)"
-        />
+        <CmkAlert v-if="unitsError" variant="error" :text="untranslated(unitsError)" />
       </div>
     </template>
 

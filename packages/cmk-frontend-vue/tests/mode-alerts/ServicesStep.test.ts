@@ -400,7 +400,7 @@ test('services in different units block navigation and name the units', async ()
   expect(navigation.next).not.toHaveBeenCalled()
 })
 
-test('services in different units say so without waiting for the next step', async () => {
+test('services in different units show an error without waiting for the next step', async () => {
   answer = searchResult([
     service('web01', 'HTTP request duration', { unit: 'ms' }),
     service('web01', 'HTTP queue length', { unit: '' })
@@ -409,11 +409,15 @@ test('services in different units say so without waiting for the next step', asy
 
   await typeServiceName('HTTP')
 
-  expect(await screen.findByText(/different units/)).toBeInTheDocument()
+  const message = await screen.findByText(/different units/)
+  expect(message.closest('[role="alert"]')).toHaveAttribute(
+    'style',
+    expect.stringContaining('--cmk-alert-box-error-bg-color')
+  )
   expect(navigation.next).not.toHaveBeenCalled()
 })
 
-test('narrowing the service name to one unit clears the unit warning', async () => {
+test('narrowing the service name to one unit clears the units error', async () => {
   answer = searchResult([
     service('web01', 'HTTP request duration', { unit: 'ms' }),
     service('web01', 'HTTP queue length', { unit: '' })

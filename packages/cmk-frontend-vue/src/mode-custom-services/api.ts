@@ -13,6 +13,8 @@ import type {
   HostNameTemplateResolution,
   HostNameTemplateResolutionRequest,
   HostOpenTelemetryData,
+  ServicesToCreate,
+  ServicesToCreateRequest,
   TemplateAttributes,
   TemplateAttributesRequest
 } from './definition'
@@ -180,6 +182,19 @@ export async function resolveHostNameTemplate(
     }
     throw error
   }
+}
+
+export async function resolveServices(
+  request: ServicesToCreateRequest,
+  signal: AbortSignal
+): Promise<ServicesToCreate> {
+  return unwrap(
+    await client.POST('/domain-types/custom_service/actions/resolve_services/invoke', {
+      params: { header: { 'Content-Type': 'application/json' } },
+      body: request,
+      signal
+    })
+  )
 }
 
 export async function fetchOpenTelemetryData(

@@ -40,6 +40,15 @@ export type HostNameTemplateResolutionRequest = NonNullable<
 export type HostNameTemplateResolution =
   paths[ResolveHostNameTemplatePath]['post']['responses'][200]['content']['application/json']
 
+type ResolveServicesPath = '/domain-types/custom_service/actions/resolve_services/invoke'
+
+export type ServicesToCreateRequest = NonNullable<
+  paths[ResolveServicesPath]['post']['requestBody']
+>['content']['application/json']
+
+export type ServicesToCreate =
+  paths[ResolveServicesPath]['post']['responses'][200]['content']['application/json']
+
 type OpenTelemetryDataPath = '/domain-types/custom_service/actions/opentelemetry_data/invoke'
 
 export type HostOpenTelemetryData =
@@ -165,6 +174,17 @@ export function buildCustomServiceDefinition(model: CompleteModel): CustomServic
 
 export function buildCustomServiceUpdate(model: CompleteModel): CustomServiceUpdate {
   return customServiceBody(model)
+}
+
+/** ``configurationName`` is the stored custom service being edited, if any. */
+export function buildResolveServicesRequest(
+  model: CompleteModel,
+  configurationName: string | null
+): ServicesToCreateRequest {
+  return {
+    ...customServiceBody(model),
+    ...(configurationName === null ? {} : { configuration_name: configurationName })
+  }
 }
 
 export function serviceModelFrom(

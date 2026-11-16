@@ -32,8 +32,17 @@ void main() {
         docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD
     );
 
+    /// Set by the medium chain: the image the "this-distro-container" runs, with
+    /// checkout, venv and package in place, see run_make_target_k8s(). Not in
+    /// check_job_parameters, the other jobs on this script have no such parameter.
+    def system_test_image = params.CIPARAM_SYSTEM_TEST_IMAGE ?: "";
+
     dir("${checkout_dir}") {
-        stage("Fetch Checkmk package") {
+        smart_stage(
+            name: "Fetch Checkmk package",
+            condition: !system_test_image,
+            raiseOnError: true,
+        ) {
             single_tests.fetch_package(
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
                 disable_cache: disable_cache,
@@ -73,7 +82,8 @@ void main() {
 
                 // test environment specific configs
                 disable_hot_cache: true,
-                prepare_fake_git_overlay: true,
+                prepare_fake_git_overlay: !system_test_image,
+                system_test_image: system_test_image,
                 creds_usernames: [
                     [credentialsId: "cmk-credentials", location: "/etc/.cmk-credentials"],
                 ],

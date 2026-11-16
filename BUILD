@@ -524,6 +524,7 @@ sh_library(
         "buildscripts/infrastructure/build-nodes/scripts/install-pyenv.sh",
         "buildscripts/infrastructure/build-nodes/scripts/install-python.sh",
         "buildscripts/infrastructure/build-nodes/scripts/install-valgrind.sh",
+        "buildscripts/infrastructure/build-nodes/system-test-image/stage-venv.sh",
         "defines/dev-images/entrypoint.sh",
         "defines/dev-images/populate-build-context.sh",
         "defines/dev-images/reference-image-id",

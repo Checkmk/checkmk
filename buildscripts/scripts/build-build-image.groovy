@@ -17,6 +17,7 @@ void main() {
     ]);
 
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+    def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def all_distros = [];
@@ -68,6 +69,15 @@ void main() {
         ],
     ];
     def tag_suffix = branch_base_folder.startsWith("Testing") ? "-testing" : "";
+    /// The image the system test shards of the medium chain run in, one per run:
+    /// the checkout, its venv and the package the medium chain pre-built,
+    /// installed. See trigger-pre-submit-test-cascade-medium.groovy, which names
+    /// the run in CIPARAM_OVERRIDE_DOCKER_TAG_BUILD and builds the package for
+    /// this distro.
+    def system_test_image = "mc-system-tests";
+    def system_test_distro = "ubuntu-24.04";
+    def system_test_context = "${env.WORKSPACE}/mc-system-tests-context";
+    def system_test_commit = "";
 
     print(
         """
@@ -93,6 +103,53 @@ void main() {
                 mkdir temp-build-context
                 defines/dev-images/populate-build-context.sh temp-build-context
             """);
+        }
+    }
+
+    /// The context of the system test image, see its Dockerfile:
+    /// - git/: the checkout as git has it, .git included (tests/testlib runs git
+    ///   commands), and the package. Not the checkout directory: its
+    ///   .dockerignore drops .git, and untracked files like remote.bazelrc, which
+    ///   holds credentials, must not get into the image.
+    /// - venv-build/remote.bazelrc: the remote cache for the venv stage only,
+    ///   empty when the job has none (DISABLE_CACHE).
+    smart_stage(
+        name: "Prepare system test image context",
+        condition: distro == system_test_image,
+        raiseOnError: true,
+    ) {
+        if (!params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD) {
+            raise("${system_test_image} is built per medium chain run, CIPARAM_OVERRIDE_DOCKER_TAG_BUILD names it");
+        }
+        dir("${checkout_dir}") {
+            single_tests.fetch_package(
+                bisect_comment: params.CIPARAM_BISECT_COMMENT,
+                disable_cache: params.DISABLE_CACHE,
+                disable_signing: params.DISABLE_CMK_DISTRO_PACKAGE_SIGNING,
+                distro: system_test_distro,
+                docker_tag: "${safe_branch_name}-latest",
+                download_dir: "package_download",
+                edition: params.EDITION,
+                fake_artifacts: params.FAKE_ARTIFACTS,
+                // the package the medium chain built, never another one
+                force_build: false,
+                safe_branch_name: safe_branch_name,
+            );
+            inside_container_minimal(safe_branch_name: safe_branch_name) {
+                system_test_commit = cmd_output("git rev-parse HEAD");
+                sh("""
+                    rm -rf '${system_test_context}'
+                    mkdir -p '${system_test_context}/git'
+                    git checkout-index --all --prefix='${system_test_context}/git/'
+                    cp -a .git package_download '${system_test_context}/git/'
+                    mkdir -p '${system_test_context}/venv-build'
+                    if [ -f remote.bazelrc ]; then
+                        cp remote.bazelrc '${system_test_context}/venv-build/'
+                    else
+                        touch '${system_test_context}/venv-build/remote.bazelrc'
+                    fi
+                """);
+            }
         }
     }
 
@@ -171,6 +228,28 @@ void main() {
 
                     + " --destination ${docker_registry_no_http}/${image_name}"
                     + " --destination ${docker_registry_no_http}/${details.tag_name}:latest${tag_suffix}"
+                );
+            } else if (distro == system_test_image) {
+                def cmk_version = versioning.strip_rc_number_from_version(
+                    versioning.get_cmk_version(safe_branch_name, branch_version, "daily")
+                );
+                // per run, no "latest" and no suffix: the tag is unique already
+                image_name = "${system_test_image}:${vers_tag}";
+                distro_base_image_id = "${docker_registry_no_http}/${system_test_distro}:${safe_branch_name}-latest";
+
+                docker_build_args = (""
+                    + " --build-arg IMAGE_BASE='${distro_base_image_id}'"
+                    + " --build-arg EDITION='${params.EDITION}'"
+                    + " --build-arg VERSION='${cmk_version}'"
+                    + " --build-arg BRANCH='${safe_branch_name}'"
+                    // the Bazel mirror of the CI pods, for the venv stage
+                    + " --build-arg BAZELISK_BASE_URL='${env.BAZELISK_BASE_URL ?: ""}'"
+                    + " --label com.checkmk.git_commit_sha='${system_test_commit}'"
+
+                    + " --dockerfile '${checkout_dir}/buildscripts/infrastructure/build-nodes/system-test-image/Dockerfile'"
+                    + " --context '${system_test_context}'"
+
+                    + " --destination ${docker_registry_no_http}/${image_name}"
                 );
             } else if (distro == "reference-image") {
                 // use the a few moments earlier built image

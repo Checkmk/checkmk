@@ -291,6 +291,48 @@ String resolveShardDurations(Map args) {
     return reference;
 }
 
+/// Deletes image_ref (<registry>/<name>:<tag>) from Nexus: the manifest the
+/// tag points to, Nexus' cleanup tasks take care of the blobs only it used.
+/// Nothing to do when the image is not there.
+void deleteImage(String image_ref) {
+    def registry = image_ref.substring(0, image_ref.indexOf("/"));
+    def name = image_ref.substring(image_ref.indexOf("/") + 1, image_ref.lastIndexOf(":"));
+    def tag = image_ref.substring(image_ref.lastIndexOf(":") + 1);
+    def manifests = "https://${registry}/v2/${name}/manifests";
+    // The types kaniko pushes, the registry only names the digest for those.
+    def accept = [
+        "application/vnd.oci.image.manifest.v1+json",
+        "application/vnd.docker.distribution.manifest.v2+json",
+    ].join(", ");
+    withNexusCredentials {
+        // The credentials go in through stdin, not the command line.
+        sh("""#!/bin/bash
+            set -eo pipefail
+            credentials() {
+                printf 'user = "%s:%s"\\n' "\$NEXUS_USERNAME" "\$NEXUS_PASSWORD"
+            }
+            head="\$(credentials |
+                curl --config - --silent --head --output /dev/null --dump-header - \
+                    --write-out 'http_code: %{http_code}\\n' \
+                    --header 'Accept: ${accept}' '${manifests}/${tag}' |
+                tr -d '\\r')"
+            code="\$(sed -n 's/^http_code: //p' <<< "\$head")"
+            digest="\$(sed -n 's/^docker-content-digest: *//Ip' <<< "\$head")"
+            if [ "\$code" = 404 ]; then
+                echo "${image_ref}: not there, nothing to delete"
+                exit 0
+            fi
+            if [ "\$code" != 200 ] || [ -z "\$digest" ]; then
+                echo "${image_ref}: lookup failed (HTTP \$code)" >&2
+                exit 1
+            fi
+            credentials |
+                curl --config - --silent --show-error --fail --request DELETE "${manifests}/\$digest"
+            echo "${image_ref}: deleted \$digest"
+        """);
+    }
+}
+
 /// The entries of the medium cascade: stage label -> what to trigger for it.
 ///
 /// Labels have to stay unique, the same job runs once per shard.
@@ -342,8 +384,9 @@ Map cascadeJobSpecs(Map args) {
             specs["${job_name} [${label_parts.join(', ')}]".toString()] = [
                 job_name: job_name,
                 build_params: build_params,
-                build_params_no_check: skip_qa_submodule,
-                start_delay: shard == 0 ? 0 : args.package_visibility_delay,
+                build_params_no_check: skip_qa_submodule + [
+                    CIPARAM_SYSTEM_TEST_IMAGE: args.system_test_image,
+                ],
             ];
         }
     };
@@ -404,10 +447,15 @@ void main() {
     def durations_job_multisite = "${branch_base_folder}/heavy/test-system-multisite-ultimatemt";
     /// Tests that cannot work pre-submit carry "skip_if_medium_chain".
     def medium_chain_option = "--medium-chain";
-    /// The pre-build below waits for the package, but every shard still does its
-    /// own ci-artifacts lookup. Let the first go and hold the rest back briefly,
-    /// so that lookup finds the pre-built package instead of racing for it.
-    def package_visibility_delay = 60;
+    /// The shards run in this image: checkout, venv and the pre-built package
+    /// installed, see the "mc-system-tests" entry of build-build-image.groovy.
+    /// One per run, the tag names it.
+    def system_test_image_tag = "${env.BUILD_TAG}".replaceFirst(/^jenkins-/, "").replaceAll(/[^A-Za-z0-9_.-]/, "-");
+    if (system_test_image_tag.length() > 128) {
+        // the maximum length of a tag, the build number is at the end
+        system_test_image_tag = system_test_image_tag.substring(system_test_image_tag.length() - 128);
+    }
+    def system_test_image = "${docker_registry_no_http}/mc-system-tests:${system_test_image_tag}";
     def job_specs = [:];
     def new_patchset_revision = effective_git_ref;
     def medium_chain_hashtag = "medium-chain-running";
@@ -438,6 +486,7 @@ void main() {
         |durations_job_s:... │${durations_job_singlesite}│
         |durations_job_m:... │${durations_job_multisite}│
         |safe_branch_name:.. │${safe_branch_name}│
+        |system_test_image:. │${system_test_image}│
         |===================================================
         """.stripMargin());
 
@@ -526,7 +575,7 @@ void main() {
                     singlesite_marker: singlesite_marker,
                     multisite_marker: multisite_marker,
                     medium_chain_option: medium_chain_option,
-                    package_visibility_delay: package_visibility_delay,
+                    system_test_image: system_test_image,
                     shard_durations_build_singlesite: (singlesite_shards < 2) ? "" : resolveShardDurations(job: durations_job_singlesite),
                     shard_durations_build_multisite: (multisite_shards < 2) ? "" : resolveShardDurations(job: durations_job_multisite),
                 );
@@ -551,16 +600,41 @@ void main() {
                     force_build: force_build,
                 );
             }
+
+            smart_stage(
+                name: "Build system test image",
+                raiseOnError: true,
+            ) {
+                smart_build(
+                    // see global-defaults.yml, needs to run in minimal container
+                    use_upstream_build: true,
+                    force_build: force_build,
+                    relative_job_name: "${branch_base_folder}/builders/build-build-image",
+                    build_params: [
+                        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: system_test_image_tag,
+                        CUSTOM_GIT_REF: new_patchset_revision,
+                        DISTRO: "mc-system-tests",
+                        PUBLISH_IMAGES: true,
+                        // to fetch the package pre-built above
+                        EDITION: edition_medium_chain,
+                        DISABLE_CACHE: force_build,
+                        DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
+                        FAKE_ARTIFACTS: fake_artifacts,
+                    ],
+                    build_params_no_check: [
+                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                    ],
+                    no_remove_others: true, // do not delete other files in the dest dir
+                    download: false,    // use copyArtifacts to avoid nested directories
+                );
+            }
         }
 
         def stages = job_specs.collectEntries { stage_label, spec ->
             [(stage_label) : {
                 sleep(1 * timeOffsetForOrder++);
-                if (spec.start_delay) {
-                    println("Holding ${stage_label} for ${spec.start_delay}s so the pre-built " +
-                            "package is visible to ci-artifacts before this shard asks for it");
-                    sleep(spec.start_delay);
-                }
 
                 smart_stage(
                     name: "Trigger ${stage_label}",
@@ -580,8 +654,21 @@ void main() {
             }]
         }
 
-        inside_container_minimal(safe_branch_name: safe_branch_name) {
-            currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
+        try {
+            inside_container_minimal(safe_branch_name: safe_branch_name) {
+                currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
+            }
+        } finally {
+            /// Only this run's shards use the image, it can go right after them,
+            /// whatever their result.
+            smart_stage(
+                name: "Delete system test image",
+                raiseOnError: false,
+            ) {
+                inside_container_minimal(safe_branch_name: safe_branch_name) {
+                    deleteImage(system_test_image);
+                }
+            }
         }
 
         smart_stage(

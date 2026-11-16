@@ -172,6 +172,12 @@ void run_make_target(Map args) {
     }
 }
 
+/// @system_test_image: set for a shard the medium chain started with
+///     CIPARAM_SYSTEM_TEST_IMAGE. global-defaults.yml (checkmk_ci) then runs the
+///     "this-distro-container" from that image: /git has the checkout, .venv
+///     and the installed package, owned by testuser (see
+///     buildscripts/infrastructure/build-nodes/system-test-image/Dockerfile).
+///     The tests run in there as testuser, with the venv as it is.
 void run_make_target_k8s(Map args) {
     withAugmentedTimeout([
         timeout: args.timeout,
@@ -181,6 +187,24 @@ void run_make_target_k8s(Map args) {
         def mk_oracle_binary_path_arg = args.mk_oracle_binary_path ? "MK_ORACLE_BINARY_PATH='${args.mk_oracle_binary_path}'" : "";
         def run_tests_script = args.run_tests_script ?: "tests/run_tests.sh";
         def working_dir = "${checkout_dir}";
+        def run_as = "";
+
+        if (args.system_test_image) {
+            sh("""
+                # A job definition without the image switch runs the plain distro image.
+                if ! [ -x /git/.venv/bin/python ] || ! id testuser >/dev/null 2>&1; then
+                    echo "this-distro-container does not run ${args.system_test_image}," \
+                        "is global-defaults.yml up to date?" >&2
+                    exit 1
+                fi
+                mkdir -p ${args.result_path}
+                chown testuser: ${args.result_path}
+            """);
+            working_dir = "/git";
+            // runuser keeps the environment, the credentials included.
+            // SKIP_MAKEFILE_CALL: run-uvenv would rebuild the venv first.
+            run_as = "SKIP_MAKEFILE_CALL=1 runuser -u testuser --";
+        }
 
         if (args.prepare_fake_git_overlay) {
             sh("""
@@ -218,11 +242,12 @@ void run_make_target_k8s(Map args) {
                 OTEL_SDK_DISABLED='${env.OTEL_SDK_DISABLED}' \
                 OTEL_EXPORTER_OTLP_ENDPOINT='${env.OTEL_EXPORTER_OTLP_ENDPOINT}' \
                 ${mk_oracle_binary_path_arg} \
+                ${run_as} \
                 ${run_tests_script} ${args.make_target}
             """);
         } finally {
             // these lines are mandatory to prevent a broken archiveArtifacts step
-            if (args.prepare_fake_git_overlay) {
+            if (args.prepare_fake_git_overlay || args.system_test_image) {
                 sh("""
                     cd ${checkout_dir}
                     chmod -R 555 ${args.result_path}

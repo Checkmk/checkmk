@@ -9,7 +9,6 @@ from typing import Final
 
 import pytest
 
-from cmk.cli.engine.commands import inline_run as cli_inline_run
 from cmk.cli.engine.discovery import _named_after_its_variable as _cli_named_after_its_variable
 from cmk.cli.engine.discovery import load_handler as cli_load_handler
 from cmk.cli.engine.readers import parsed as cli_parsed
@@ -25,7 +24,7 @@ from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import PluginLocation
 
-from ._commands import inline_command
+from ._commands import command_with, HANDED_IN
 from ._logger import null_logger
 
 # The engine only hands this through to the command's handler.
@@ -52,14 +51,15 @@ def _handler(_context: CLIContext, _request: tuple[str | None, int], _args: CLIA
 
 
 def test_make_command_records_the_options_a_command_declares() -> None:
-    command = inline_command(
+    command = command_with(
         CLICommand(
             name="snmpwalk",
+            handler=HANDED_IN,
             long="snmpwalk",
             request=_walk_request,
-            handler=_handler,
             help="Walk",
-        )
+        ),
+        _handler,
     )
     assert command.options == [_OID_VALUE, _VERBOSE_COUNT]
 
@@ -73,14 +73,15 @@ def test_a_commands_handler_receives_its_request_parsed() -> None:
         seen.append(request)
         return CLIExitCode.SUCCESS
 
-    command = inline_command(
+    command = command_with(
         CLICommand(
             name="snmpwalk",
+            handler=HANDED_IN,
             long="snmpwalk",
             request=_walk_request,
-            handler=_record,
             help="Walk",
-        )
+        ),
+        _record,
     )
     bound = command.load_handler()(
         cli_parsed([("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], null_logger())
@@ -97,9 +98,9 @@ def test_a_commands_handler_receives_its_request_parsed() -> None:
 def test_a_command_not_named_after_its_variable_is_rejected() -> None:
     command = CLICommand(
         name="demo",
+        handler=HANDED_IN,
         long="demo",
-        request=cli_no_options,
-        handler=lambda *_args: CLIExitCode.SUCCESS,
+        request=_walk_request,
         help="Demonstrate",
     )
 
@@ -107,19 +108,6 @@ def test_a_command_not_named_after_its_variable_is_rejected() -> None:
         _cli_named_after_its_variable(
             "cli_command_", PluginLocation("family.cli.demo", "cli_command_other"), command
         )
-
-
-def test_a_command_with_a_handler_reference_cannot_run_on_its_own() -> None:
-    command = CLICommand(
-        name="demo",
-        handler="family.cli.handlers.demo:cli_handler_demo",
-        long="demo",
-        request=cli_no_options,
-        help="Demonstrate",
-    )
-
-    with pytest.raises(LookupError, match="--demo has a handler plug-in instead"):
-        cli_inline_run(command)
 
 
 def _greeting(name: str, handler: str) -> CLICommand[None]:
@@ -157,12 +145,3 @@ def test_a_reference_to_something_else_is_reported() -> None:
 def test_the_handler_of_another_command_is_rejected() -> None:
     with pytest.raises(ValueError, match="handles 'greet', not 'farewell'"):
         cli_load_handler(_greeting("farewell", f"{__name__}:cli_handler_greet"))
-
-
-def test_a_command_carrying_its_handler_function_has_no_handler_to_load() -> None:
-    command = CLICommand(
-        name="greet", handler=_greet, long="greet", request=cli_no_options, help="Greet"
-    )
-
-    with pytest.raises(LookupError, match="'greet' carries its handler function itself"):
-        cli_load_handler(command)

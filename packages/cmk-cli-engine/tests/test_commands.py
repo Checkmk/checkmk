@@ -17,7 +17,7 @@ from cmk.cli.internal import no_options as cli_no_options
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 
-from ._commands import inline_command
+from ._commands import command_with, HANDED_IN
 
 
 def _never(*_args: object, **_kwargs: object) -> NoReturn:
@@ -32,17 +32,18 @@ def _command(
     arguments: CLIArguments | None = None,
     default: bool = False,
 ) -> CLIDiscoveredCommand:
-    return inline_command(
+    return command_with(
         CLICommand(
             name=long.replace("-", "_"),
+            handler=HANDED_IN,
             long=long,
             short=short,
             request=request,
-            handler=_never,
             help="a command under test",
             arguments=arguments,
             default=default,
-        )
+        ),
+        _never,
     )
 
 

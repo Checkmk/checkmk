@@ -30,7 +30,7 @@ from cmk.cli.internal import no_options as cli_no_options
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 
-from ._commands import inline_command
+from ._commands import command_with, HANDED_IN
 from ._logger import null_logger
 
 _CRASH_MESSAGE = "Boom: it broke - please submit a crash report! (Crash-ID: 42)"
@@ -147,10 +147,15 @@ def test_an_interruption_says_so_in_the_log(caplog: pytest.LogCaptureFixture) ->
 
 
 def _command(handler: Callable[[CLIContext, None, CLIArgs], CLIExitCode]) -> CLIDiscoveredCommand:
-    return inline_command(
+    return command_with(
         CLICommand(
-            name="demo", long="demo", request=cli_no_options, handler=handler, help="Demonstrate"
-        )
+            name="demo",
+            handler=HANDED_IN,
+            long="demo",
+            request=cli_no_options,
+            help="Demonstrate",
+        ),
+        handler,
     )
 
 
@@ -227,14 +232,15 @@ def _number_request(options: CLIReader) -> int | None:
 def _numbered(
     handler: Callable[[CLIContext, int | None, CLIArgs], CLIExitCode],
 ) -> CLIDiscoveredCommand:
-    return inline_command(
+    return command_with(
         CLICommand(
             name="demo",
+            handler=HANDED_IN,
             long="demo",
             request=_number_request,
-            handler=handler,
             help="Demonstrate",
-        )
+        ),
+        handler,
     )
 
 
@@ -337,7 +343,7 @@ def test_a_handler_that_fails_to_load_is_a_crash() -> None:
     command = cli_make_command(
         CLICommand(
             name="demo",
-            handler="family.cli.handlers.demo:cli_handler_demo",
+            handler=HANDED_IN,
             long="demo",
             request=cli_no_options,
             help="Demonstrate",

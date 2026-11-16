@@ -209,10 +209,8 @@ class Command[R]:
     to learn which options the command has, and once per run with the parsed
     command line.
     """
-    handler: Callable[[Context, R, Args], ExitCode] | str
-    """Where the command's :class:`Handler` lives, as ``module:object``, imported when the command
-    runs; or the command's handler function, until its family has moved it into a handler.
-    """
+    handler: str
+    """Where the command's :class:`Handler` lives, as ``module:object``, imported when the command runs"""
     short: str | None = None
     arguments: Arguments | None = None
     description: Sequence[str] = ()

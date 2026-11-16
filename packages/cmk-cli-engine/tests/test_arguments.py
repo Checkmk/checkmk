@@ -29,7 +29,7 @@ from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.cli.internal import Values as CLIValues
 
-from ._commands import inline_command
+from ._commands import command_with, HANDED_IN
 from ._logger import null_logger
 
 
@@ -41,36 +41,39 @@ _COMMAND_ARGUMENT: Final = "myhost"
 
 _ARGUMENT_EVERY_CONVERSION_ACCEPTS: Final = "inline"
 
-_PLAIN: Final = inline_command(
+_PLAIN: Final = command_with(
     CLICommand(
         name="plain",
+        handler=HANDED_IN,
         long="plain",
         short="p",
         request=cli_no_options,
-        handler=_unreachable,
         help="takes no argument",
-    )
+    ),
+    _unreachable,
 )
 
-_OTHER_PLAIN: Final = inline_command(
+_OTHER_PLAIN: Final = command_with(
     CLICommand(
         name="other_plain",
+        handler=HANDED_IN,
         long="other-plain",
         request=cli_no_options,
-        handler=_unreachable,
         help="takes no argument either",
-    )
+    ),
+    _unreachable,
 )
 
-_WITH_ARGUMENT: Final = inline_command(
+_WITH_ARGUMENT: Final = command_with(
     CLICommand(
         name="with_argument",
+        handler=HANDED_IN,
         long="with-argument",
         request=cli_no_options,
-        handler=_unreachable,
         arguments=CLIArguments("HOST"),
         help="needs exactly one argument",
-    )
+    ),
+    _unreachable,
 )
 
 _FLAG: Final = CLIFlag(long="flag", help="a flag")
@@ -106,17 +109,18 @@ def _default_request(
     )
 
 
-_DEFAULT: Final = inline_command(
+_DEFAULT: Final = command_with(
     CLICommand(
         name="default",
+        handler=HANDED_IN,
         long="default",
         short="c",
         request=_default_request,
-        handler=lambda *_args: CLIExitCode.SUCCESS,
         arguments=CLIArguments("HOSTS", optional=True),
         default=True,
         help="the default command",
-    )
+    ),
+    lambda *_args: CLIExitCode.SUCCESS,
 )
 
 _COMMANDS: Final = CLICommands(commands=[_PLAIN, _OTHER_PLAIN, _WITH_ARGUMENT, _DEFAULT])

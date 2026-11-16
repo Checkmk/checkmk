@@ -1,4 +1,4 @@
-title: Redfish Environment Metrics
+title: Redfish: Environment Metrics
 agents: agent_redfish
 catalog: hw/server/redfish
 license: GPLv2

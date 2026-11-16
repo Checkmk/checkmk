@@ -1,4 +1,4 @@
-title: Redfish storage controllers
+title: Redfish: Storage Controllers
 agents: agent_redfish
 catalog: hw/server/redfish
 license: GPLv2

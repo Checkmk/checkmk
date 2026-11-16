@@ -1,4 +1,4 @@
-title: Redfish Network Adapters
+title: Redfish: Network Adapters
 agents: agent_redfish
 catalog: hw/server/redfish
 license: GPLv2

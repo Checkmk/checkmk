@@ -1,4 +1,4 @@
-title: Redfish Mains Outlets
+title: Redfish: Mains Outlets
 agents: agent_redfish_power
 catalog: hw/server/redfish
 license: GPLv2

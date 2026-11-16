@@ -1,4 +1,4 @@
-title: Redfish Memory Summary
+title: Redfish: Memory Summary
 agents: agent_redfish, agent_redfish_power
 catalog: hw/server/redfish
 license: GPLv2

@@ -1906,18 +1906,19 @@ class EC2(AWSSectionCloudwatch):
         metrics: Metrics = []
         for idx, (instance_name, instance) in enumerate(colleague_contents.content.items()):
             instance_id = instance["InstanceId"]
-            for metric_name, unit in [
-                ("CPUCreditUsage", "Count"),
-                ("CPUCreditBalance", "Count"),
-                ("CPUUtilization", "Percent"),
-                ("DiskReadOps", "Count"),
-                ("DiskWriteOps", "Count"),
-                ("DiskReadBytes", "Bytes"),
-                ("DiskWriteBytes", "Bytes"),
-                ("NetworkIn", "Bytes"),
-                ("NetworkOut", "Bytes"),
-                ("StatusCheckFailed_Instance", "Count"),
-                ("StatusCheckFailed_System", "Count"),
+            for metric_name, unit, stat in [
+                ("CPUCreditUsage", "Count", "Average"),
+                ("CPUCreditBalance", "Count", "Average"),
+                ("CPUUtilization", "Percent", "Average"),
+                ("DiskReadOps", "Count", "Average"),
+                ("DiskWriteOps", "Count", "Average"),
+                ("DiskReadBytes", "Bytes", "Average"),
+                ("DiskWriteBytes", "Bytes", "Average"),
+                ("NetworkIn", "Bytes", "Average"),
+                ("NetworkOut", "Bytes", "Average"),
+                # A status check fails if any sample in the period failed.
+                ("StatusCheckFailed_Instance", "Count", "Maximum"),
+                ("StatusCheckFailed_System", "Count", "Maximum"),
             ]:
                 metrics.append(
                     {
@@ -1935,7 +1936,7 @@ class EC2(AWSSectionCloudwatch):
                                 ],
                             },
                             "Period": self.period,
-                            "Stat": "Average",
+                            "Stat": stat,
                             "Unit": unit,
                         },
                     }

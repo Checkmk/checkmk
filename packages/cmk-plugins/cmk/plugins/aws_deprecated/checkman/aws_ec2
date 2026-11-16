@@ -10,6 +10,8 @@ description:
  special agent {Amazon Web Services (AWS)}.
 
  If both tests (system and instance) have passed the check is {OK} otherwise {CRIT}.
+ AWS runs both status checks once per minute. The check reports a test
+ as failed if it failed at least once in the last ten minutes.
 
 discovery:
  One service is created if all required metrics (StatusCheckFailed_System, StatusCheckFailed_Instance) are given.

@@ -33,6 +33,7 @@ LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 CAMEL_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 DEFAULT_VERSION_CACHE_INTERVAL = 8 * 3600
+FAILED_LOOKUP_RETRY_INTERVAL = 3600
 TAGS_PER_PAGE = 100  # GitHub maximum
 PASSWORD_OPTION = "password"
 
@@ -69,6 +70,7 @@ TAGS = TypeAdapter(list[Tag])
 
 class VersionCache:
     VERSION_CACHE_KEY = "bazel_version_cache"
+    LOOKUP_FAILED_KEY = "bazel_version_lookup_failed"
 
     def __init__(self, storage: Storage, ttl: float, *, debug: bool) -> None:
         self.storage = storage
@@ -78,13 +80,18 @@ class VersionCache:
     def get_or_update(self, url: str, commit: str) -> BazelVersionInfo | None:
         if info := self._get_cached_version_info():
             return info
+        if not self.debug and self._lookup_failed_recently():
+            return None
         try:
-            return self._renew_cached_version_info(url, commit)
+            info = self._renew_cached_version_info(url, commit)
         except (requests.exceptions.RequestException, ValidationError) as e:
             if self.debug:
                 raise
             LOGGER.warning("Skipping version information: %(error)s", {"error": e})
-            return None
+            info = None
+        if info is None:
+            self.storage.write(self.LOOKUP_FAILED_KEY, str(time.time()))
+        return info
 
     def _get_cached_version_info(self) -> BazelVersionInfo | None:
         if not (raw := self.storage.read(self.VERSION_CACHE_KEY, None)):
@@ -95,6 +102,14 @@ class VersionCache:
             LOGGER.warning("Discarding corrupted version cache: %(error)r", {"error": e})
             return None
         return info if 0 < (time.time() - info.timestamp) < self.ttl else None
+
+    def _lookup_failed_recently(self) -> bool:
+        try:
+            failed_at = float(self.storage.read(self.LOOKUP_FAILED_KEY, ""))
+        except ValueError:
+            return False
+        retry_interval = min(self.ttl, FAILED_LOOKUP_RETRY_INTERVAL)
+        return 0 < (time.time() - failed_at) < retry_interval
 
     def _renew_cached_version_info(
         self, tags_url: str, commit_hash: str
@@ -111,6 +126,10 @@ class VersionCache:
         current_version = versions.get(commit_hash)
 
         if current_version is None:
+            LOGGER.warning(
+                "Skipping version information: commit %(commit)s not found among tags",
+                {"commit": commit_hash},
+            )
             return None
 
         newer_versions = {v for v in versions.values() if v > current_version}

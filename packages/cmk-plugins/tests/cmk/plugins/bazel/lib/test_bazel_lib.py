@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import datetime
 import json
 import re
 import time
@@ -15,11 +16,13 @@ from unittest import mock
 
 import pytest
 import requests
+import time_machine
 
 from cmk.plugins.bazel.lib.agent import (
     agent_bazel_cache_main,
     BazelVersion,
     BazelVersionInfo,
+    FAILED_LOOKUP_RETRY_INTERVAL,
     parse_arguments,
     VersionCache,
 )
@@ -934,3 +937,111 @@ def test_bazel_cache_agent_debug_mode_raises_version_lookup_errors(
         pytest.raises(error),
     ):
         agent_bazel_cache_main(args=args)
+
+
+class _TagsRequestCounter:
+    def __init__(self, get: _RequestsGet) -> None:
+        self._get = get
+        self.tags_requests = 0
+
+    def __call__(self, url: str, **kwargs: object) -> MockResponse:
+        if "tags" in url:
+            self.tags_requests += 1
+        return self._get(url, **kwargs)
+
+
+FAILING_TAGS_LOOKUPS = [
+    pytest.param(rate_limited_tags_get, id="http-error"),
+    pytest.param(no_version_mock_get, id="commit-not-found"),
+    pytest.param(non_json_tags_get, id="non-json"),
+]
+
+
+@pytest.mark.parametrize("tags_get", FAILING_TAGS_LOOKUPS)
+def test_failed_version_lookup_is_not_retried_within_an_hour(
+    tags_get: _RequestsGet,
+    patched_environment: None,  # noqa: ARG001
+) -> None:
+    counter = _TagsRequestCounter(tags_get)
+    args = parse_arguments(["--host", "bazel-cache.tld"])
+
+    with (
+        mock.patch("cmk.plugins.bazel.lib.agent.requests.get", counter),
+        time_machine.travel(datetime.datetime(2026, 1, 1, tzinfo=datetime.UTC), tick=False) as t,
+    ):
+        agent_bazel_cache_main(args=args)
+        t.shift(FAILED_LOOKUP_RETRY_INTERVAL - 1)
+        agent_bazel_cache_main(args=args)
+
+    assert counter.tags_requests == 1
+
+
+@pytest.mark.parametrize("tags_get", FAILING_TAGS_LOOKUPS)
+def test_failed_version_lookup_is_retried_after_an_hour(
+    tags_get: _RequestsGet,
+    patched_environment: None,  # noqa: ARG001
+) -> None:
+    counter = _TagsRequestCounter(tags_get)
+    args = parse_arguments(["--host", "bazel-cache.tld"])
+
+    with (
+        mock.patch("cmk.plugins.bazel.lib.agent.requests.get", counter),
+        time_machine.travel(datetime.datetime(2026, 1, 1, tzinfo=datetime.UTC), tick=False) as t,
+    ):
+        agent_bazel_cache_main(args=args)
+        t.shift(FAILED_LOOKUP_RETRY_INTERVAL + 1)
+        agent_bazel_cache_main(args=args)
+
+    assert counter.tags_requests == 2
+
+
+@pytest.mark.parametrize(
+    "version_cache",
+    [
+        pytest.param(FAILED_LOOKUP_RETRY_INTERVAL // 2, id="shorter-than-an-hour"),
+        pytest.param(0, id="no-caching"),
+    ],
+)
+def test_failed_version_lookup_is_retried_after_a_shorter_version_cache_interval(
+    version_cache: int,
+    patched_environment: None,  # noqa: ARG001
+) -> None:
+    counter = _TagsRequestCounter(rate_limited_tags_get)
+    args = parse_arguments(["--host", "bazel-cache.tld", "--version-cache", str(version_cache)])
+
+    with (
+        mock.patch("cmk.plugins.bazel.lib.agent.requests.get", counter),
+        time_machine.travel(datetime.datetime(2026, 1, 1, tzinfo=datetime.UTC), tick=False) as t,
+    ):
+        agent_bazel_cache_main(args=args)
+        t.shift(version_cache + 1)
+        agent_bazel_cache_main(args=args)
+
+    assert counter.tags_requests == 2
+
+
+def test_bazel_cache_agent_debug_mode_raises_despite_recently_failed_lookup(
+    patched_environment: None,  # noqa: ARG001
+) -> None:
+    with (
+        mock.patch("cmk.plugins.bazel.lib.agent.requests.get", rate_limited_tags_get),
+        time_machine.travel(datetime.datetime(2026, 1, 1, tzinfo=datetime.UTC), tick=False) as t,
+    ):
+        agent_bazel_cache_main(args=parse_arguments(["--host", "bazel-cache.tld"]))
+        t.shift(FAILED_LOOKUP_RETRY_INTERVAL - 1)
+
+        with pytest.raises(requests.HTTPError):
+            agent_bazel_cache_main(args=parse_arguments(["--host", "bazel-cache.tld", "--debug"]))
+
+
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", no_version_mock_get)
+def test_bazel_cache_agent_warns_when_commit_is_not_among_tags(
+    caplog: pytest.LogCaptureFixture,
+    patched_environment: None,  # noqa: ARG001
+) -> None:
+    agent_bazel_cache_main(args=parse_arguments(["--host", "bazel-cache.tld"]))
+
+    commit = "c5bf6e13938aa89923c637b5a4f01c2203a3c9f8"
+    assert [r.getMessage() for r in caplog.records if r.levelname == "WARNING"] == [
+        f"Skipping version information: commit {commit} not found among tags"
+    ]

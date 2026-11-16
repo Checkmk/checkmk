@@ -24,6 +24,7 @@ from cmk.checkengine.snmplib import (
     OID,
     oids_to_walk,
     SNMPBackend,
+    SNMPBackendEnum,
     SNMPContext,
     SNMPDecodedString,
     SNMPHostConfig,
@@ -174,6 +175,29 @@ def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
         raise MKGeneralException(str(exc)) from exc
 
 
+def _snmp_backend(
+    config_cache: config.ConfigCache,
+    ip_lookup_config: ip_lookup.IPLookupConfig,
+    ip_address_of: ip_lookup.IPLookup,
+    hostname: HostName,
+    *,
+    override: SNMPBackendEnum | None,
+) -> SNMPBackend:
+    if ip_lookup_config.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
+        raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
+
+    ip_family = ip_lookup_config.default_address_family(hostname)
+    ipaddress = ip_address_of(hostname, ip_family)
+    if not ipaddress:
+        raise MKGeneralException("Failed to gather IP address of %s" % hostname)
+
+    return _make_backend(
+        config_cache.make_snmp_config(
+            hostname, ip_family, ipaddress, SourceType.HOST, backend_override=override
+        )
+    )
+
+
 class _WalkHosts(Protocol):
     def __call__(self, request: WalkRequest, *, debug: bool) -> None: ...
 
@@ -190,18 +214,10 @@ def _walk_hosts(request: WalkRequest, *, debug: bool) -> None:
     ip_address_of = ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
     for hostname in request.hosts:
-        if ip_lookup_config.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
-            raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
-
-        ip_family = ip_lookup_config.default_address_family(hostname)
-        ipaddress = ip_address_of(hostname, ip_family)
-        if not ipaddress:
-            raise MKGeneralException("Failed to gather IP address of %s" % hostname)
-
-        snmp_config = config_cache.make_snmp_config(
-            hostname, ip_family, ipaddress, SourceType.HOST, backend_override=request.backend
+        backend = _snmp_backend(
+            config_cache, ip_lookup_config, ip_address_of, hostname, override=request.backend
         )
-        _do_snmpwalk(walk_options, backend=_make_backend(snmp_config), debug=debug)
+        _do_snmpwalk(walk_options, backend=backend, debug=debug)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -253,22 +269,9 @@ def _get_oid_values(oid: OID, request: GetRequest, *, debug: bool) -> Iterator[_
     ]
 
     for hostname in hostnames:
-        if ip_lookup_config.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
-            raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
-
-        ip_family = ip_lookup_config.default_address_family(hostname)
-        ipaddress = ip_address_of(hostname, ip_family)
-        if not ipaddress:
-            raise MKGeneralException("Failed to gather IP address of %s" % hostname)
-
-        snmp_config = config_cache.make_snmp_config(
-            hostname,
-            ip_family,
-            ipaddress,
-            SourceType.HOST,
-            backend_override=request.backend,
+        backend = _snmp_backend(
+            config_cache, ip_lookup_config, ip_address_of, hostname, override=request.backend
         )
-        backend = _make_backend(snmp_config)
         yield _OIDValue(
             backend.hostname,
             backend.address,

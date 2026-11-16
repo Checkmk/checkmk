@@ -8,14 +8,20 @@
 import re
 from dataclasses import dataclass
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
+from typing import Final
 from uuid import UUID
 
 from cryptography import x509 as pyca_x509
 
-from cmk.ccc.regex import REGEX_ID
 from cmk.ccc.site import SiteId
 
 X509NameOid = pyca_x509.oid.NameOID
+
+# Copies of patterns in cmk.ccc.regex, so that this package does not depend on that module: it is
+# loaded on startup of every site Python process (see sitecustomize). tests/integration/crypto
+# keeps them equal.
+SITE_NAME_PATTERN: Final = r"^[a-zA-Z_][a-zA-Z_0-9]{0,15}\Z"  # cmk.ccc.regex.SITE_ID_PATTERN
+CUSTOMER_ID_PATTERN: Final = r"^[^\d\W][-\w]*$"  # cmk.ccc.regex.REGEX_ID
 
 
 @dataclass
@@ -161,9 +167,13 @@ class SAN:
         Traceback (most recent call last):
             ...
         ValueError: Invalid site name: 'Invalid Space Site'
+
+        >>> SAN.checkmk_site(SiteId("testsite\\n"))
+        Traceback (most recent call last):
+            ...
+        ValueError: Invalid site name: 'testsite\\n'
         """
-        # Validation is duplicated from omd/omdlib/site_name.py
-        if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", name):
+        if not re.match(SITE_NAME_PATTERN, name):
             raise ValueError(f"Invalid site name: {name!r}")
 
         return cls(pyca_x509.UniformResourceIdentifier(f"urn:checkmk-site:{name}"))
@@ -187,8 +197,15 @@ class SAN:
         Traceback (most recent call last):
             ...
         ValueError: Invalid customer ID: '0testinvalidcustomer'
+
+        Customer IDs are ASCII only, as validated when a customer is created:
+
+        >>> SAN.customer_id("kundä")
+        Traceback (most recent call last):
+            ...
+        ValueError: Invalid customer ID: 'kundä'
         """
-        if not re.match(REGEX_ID, customer_id):
+        if not re.match(CUSTOMER_ID_PATTERN, customer_id, re.ASCII):
             raise ValueError(f"Invalid customer ID: {customer_id!r}")
 
         return cls(pyca_x509.UniformResourceIdentifier(f"urn:customer-id:{customer_id}"))

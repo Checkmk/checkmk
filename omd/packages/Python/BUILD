@@ -304,7 +304,6 @@ _SITECUSTOMIZE_DEPS = [
     "//omd/packages/Python:sitecustomize_py",
     "//packages/cmk-ccc:exceptions",
     "//packages/cmk-ccc:i18n",
-    "//packages/cmk-ccc:regex",
     "//packages/cmk-ccc:site",
     "//packages/cmk-ccc:store",
     "//packages/cmk-ccc:version",

@@ -6,8 +6,6 @@
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 
-import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
-
 export type ComputedWidgetSpecResponse =
   components['schemas']['ComputedWidgetResponse_ComputedWidgetSpec_']
 export type ComputedTopList = components['schemas']['TopList']
@@ -140,9 +138,4 @@ export interface WidgetInteractionState {
 
 export interface WidgetEmitTimeRange {
   updateTimeRange: [range: DateTimeRange]
-}
-
-export interface WidgetEmitActionOutcome {
-  /** An action the reader ran in the widget, and how it went. */
-  actionOutcome: [outcome: ActionOutcome]
 }

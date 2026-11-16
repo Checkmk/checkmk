@@ -27,7 +27,6 @@ import type {
   DashboardModel
 } from '@/dashboard/types/dashboard'
 import type { WidgetLayout } from '@/dashboard/types/widget'
-import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 
 interface DashboardProps {
   tick: number
@@ -50,7 +49,6 @@ defineEmits<{
   'widget:delete': [widgetId: string]
   'widget:clone': [oldWidgetId: string, newLayout: WidgetLayout]
   'widget:updateTimeRange': [widgetId: string, range: DateTimeRange]
-  'widget:actionOutcome': [widgetId: string, outcome: ActionOutcome]
 }>()
 
 const widgetContentProps = computed<ContentPropsRecord>(() => {
@@ -109,9 +107,6 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         @widget:update-time-range="
           (widgetId, range) => $emit('widget:updateTimeRange', widgetId, range)
         "
-        @widget:action-outcome="
-          (widgetId, outcome) => $emit('widget:actionOutcome', widgetId, outcome)
-        "
       />
       <RelativeGrid
         v-else-if="dashboard.content.layout.type === 'relative_grid'"
@@ -125,9 +120,6 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
         @widget:update-time-range="
           (widgetId, range) => $emit('widget:updateTimeRange', widgetId, range)
-        "
-        @widget:action-outcome="
-          (widgetId, outcome) => $emit('widget:actionOutcome', widgetId, outcome)
         "
       />
     </div>

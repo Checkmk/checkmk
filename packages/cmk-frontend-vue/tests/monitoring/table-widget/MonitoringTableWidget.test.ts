@@ -6,18 +6,24 @@
 import type { ColumnDef } from '@tanstack/vue-table'
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
-import { describe, expect, it } from 'vitest'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
+import { describe, expect, it, vi } from 'vitest'
 import { type Component, type PropType, defineComponent, h } from 'vue'
 
 import type { HostEntry, HostRef, ServiceEntry } from '@/monitoring/shared/api/types'
+import type { ActionRun } from '@/monitoring/shared/components/action/run'
+import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import { MODE_COLUMN_ID, MODE_COLUMN_MAX_WIDTH } from '@/monitoring/shared/components/modeColumn'
+import { useActionFeedbackStack } from '@/monitoring/shared/services/useActionFeedbackStack'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import MonitoringTableWidget from '@/monitoring/table-widget/MonitoringTableWidget.vue'
 import { WidgetTableState } from '@/monitoring/table-widget/WidgetTableState'
 import {
   HostsTableDescriptor,
-  type MonitoringTableDescriptor,
+  type MonitoringTableActionOffer,
+  MonitoringTableDescriptor,
+  type MonitoringTableRowActions,
   ServicesTableDescriptor
 } from '@/monitoring/table-widget/tableDescriptors'
 
@@ -143,6 +149,80 @@ function renderWidget(
   return readOnlySeen
 }
 
+const RAN: ActionOutcome = { variant: 'success', message: untranslated('The check has run') }
+const GAVE_UP: ActionOutcome = { variant: 'warning', message: untranslated('Stopped waiting') }
+
+const commandRowStub = defineComponent({
+  props: { row: { type: Object as PropType<HostEntry>, required: true } },
+  emits: ['command'],
+  setup:
+    (props, { emit }) =>
+    () =>
+      h(
+        'button',
+        { onClick: () => emit('command', { id: 'reschedule', target: props.row }) },
+        `Reschedule ${props.row.name}`
+      )
+})
+
+/** A table of hosts whose rows run `run`, whatever command is picked. */
+class CommandTableDescriptor extends MonitoringTableDescriptor<HostEntry, HostEntry> {
+  readonly rowComponent: Component = commandRowStub
+  readonly detailsComponent: Component = defineComponent({ render: () => null })
+  readonly columnIds = ['name']
+
+  constructor(private readonly run: ActionRun) {
+    super()
+  }
+
+  protected allColumns(): ColumnDef<HostEntry>[] {
+    return [{ id: 'name' }]
+  }
+
+  rowKey(row: HostEntry): string {
+    return row.name
+  }
+
+  truncatedHint(): string {
+    return ''
+  }
+
+  rowActions(): MonitoringTableRowActions<HostEntry, HostEntry> {
+    return { rowProps: () => ({}), resolve: () => this.run }
+  }
+
+  rowListeners(): object {
+    return {}
+  }
+}
+
+/** A widget whose host row runs `run` once clicked, telling how it goes in `stack`. */
+function renderCommandWidget(
+  run: ActionRun,
+  stack: ReturnType<typeof useActionFeedbackStack>
+): { performed: ReturnType<typeof vi.fn>; unmount: () => void } {
+  const performed = vi.fn()
+  const { unmount } = render(
+    defineComponent({
+      setup: () => () =>
+        h(widget, {
+          descriptor: new CommandTableDescriptor(run),
+          columnIds: ['name'],
+          rows: [HOST],
+          tableState: new WidgetTableState([]),
+          displayOptions: DEFAULT_DISPLAY_OPTIONS,
+          actions: { offer: {} as MonitoringTableActionOffer, feedback: stack },
+          readOnly: false,
+          onPerformed: performed
+        })
+    }),
+    {
+      global: { stubs: { MonitoringTable: rowsStub } }
+    }
+  )
+  return { performed, unmount }
+}
+
 describe('MonitoringTableWidget', () => {
   it('caps the mode column like the full pages', () => {
     const modes = tableColumns(['name', MODE_COLUMN_ID]).find(
@@ -181,5 +261,80 @@ describe('MonitoringTableWidget', () => {
 
     expect(screen.getByText('Details of host web-1')).toBeInTheDocument()
     expect(screen.queryByText('Details of service CPU load')).not.toBeInTheDocument()
+  })
+
+  it('tells the page around that the command picked in a row runs', async () => {
+    const stack = useActionFeedbackStack()
+    renderCommandWidget(
+      { pending: untranslated('Waiting'), perform: () => new Promise<ActionOutcome>(() => {}) },
+      stack
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Reschedule web-1' }))
+
+    expect(stack.items.value.map((item) => item.feedback)).toEqual([
+      { variant: 'loading', message: untranslated('Waiting') }
+    ])
+  })
+
+  it('tells the page around how the command picked in a row went', async () => {
+    const stack = useActionFeedbackStack()
+    renderCommandWidget(
+      { pending: untranslated('Waiting'), perform: () => Promise.resolve(RAN) },
+      stack
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Reschedule web-1' }))
+
+    await vi.waitFor(() => expect(stack.items.value.map((item) => item.feedback)).toEqual([RAN]))
+  })
+
+  it('runs a command picked again on the same object while it runs only once', async () => {
+    const stack = useActionFeedbackStack()
+    const perform = vi.fn(() => new Promise<ActionOutcome>(() => {}))
+    renderCommandWidget(
+      { pending: untranslated('Waiting'), perform, key: 'reschedule@local/web-1' },
+      stack
+    )
+    const reschedule = screen.getByRole('button', { name: 'Reschedule web-1' })
+    await userEvent.click(reschedule)
+
+    await userEvent.click(reschedule)
+
+    expect(perform).toHaveBeenCalledTimes(1)
+    expect(stack.items.value).toHaveLength(1)
+  })
+
+  it('waits for the command picked in a row for as long as the page around is there', async () => {
+    const stack = useActionFeedbackStack()
+    let settle: (outcome: ActionOutcome) => void = () => {}
+    const { unmount } = renderCommandWidget(
+      {
+        pending: untranslated('Waiting'),
+        perform: (signal) =>
+          new Promise((resolve) => {
+            settle = resolve
+            signal?.addEventListener('abort', () => resolve(GAVE_UP))
+          })
+      },
+      stack
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Reschedule web-1' }))
+
+    unmount()
+    settle(RAN)
+
+    await vi.waitFor(() => expect(stack.items.value.map((item) => item.feedback)).toEqual([RAN]))
+  })
+
+  it('hands on how the command picked in a row went', async () => {
+    const { performed } = renderCommandWidget(
+      { pending: untranslated('Waiting'), perform: () => Promise.resolve(RAN) },
+      useActionFeedbackStack()
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Reschedule web-1' }))
+
+    await vi.waitFor(() => expect(performed).toHaveBeenCalledWith(RAN))
   })
 })

@@ -10,10 +10,7 @@ import { computed, provide, shallowRef } from 'vue'
 import MonitoringEmptyState from '@/monitoring/shared/components/MonitoringEmptyState.vue'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import { MONITORING_TABLE_STATE } from '@/monitoring/shared/components/MonitoringTableContext'
-import {
-  type RowCommand,
-  useRowCommandRunner
-} from '@/monitoring/shared/components/action/rowCommand'
+import type { RowCommand } from '@/monitoring/shared/components/action/rowCommand'
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import {
   type RowWithModes,
@@ -26,7 +23,7 @@ import { sizeActionsColumn, useInlineCustomActionCount } from '@/monitoring/shar
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 import type { WidgetTableState } from './WidgetTableState'
-import type { MonitoringTableActionOffer, MonitoringTableDescriptor } from './tableDescriptors'
+import type { MonitoringTableActions, MonitoringTableDescriptor } from './tableDescriptors'
 
 const props = defineProps<{
   descriptor: MonitoringTableDescriptor<T, Target, Subject>
@@ -34,8 +31,11 @@ const props = defineProps<{
   rows: T[]
   tableState: WidgetTableState
   displayOptions: DisplayOptions
-  /** What the reader may do with the rows. Without it, the rows offer no actions. */
-  actionOffer?: MonitoringTableActionOffer | undefined
+  /**
+   * What the reader may do with the rows, and the alerts of the page around that tell how the
+   * commands picked in them go, one alert per command. Without it, the rows offer no actions.
+   */
+  actions?: MonitoringTableActions | undefined
   readOnly: boolean
 }>()
 
@@ -47,7 +47,7 @@ const emit = defineEmits<{
 provide(MONITORING_TABLE_STATE, props.tableState)
 
 const rowActions = computed(() =>
-  props.actionOffer === undefined ? null : props.descriptor.rowActions(props.actionOffer)
+  props.actions === undefined ? null : props.descriptor.rowActions(props.actions.offer)
 )
 
 const modeColumnWidth = useModeColumnWidth(() => props.rows)
@@ -73,8 +73,6 @@ const columnPinning = computed<ColumnPinningState>(() => ({
   right: rowActions.value === null ? [] : [ACTIONS_COLUMN_ID]
 }))
 
-const rowCommands = useRowCommandRunner()
-
 const subject = shallowRef<Subject | null>(null)
 
 function open(opened: Subject): void {
@@ -85,14 +83,15 @@ function close(): void {
   subject.value = null
 }
 
+// The page around waits for the commands picked in the rows while the table reloads. A command
+// picked again on the object it runs on, from the same row or another, is not run again.
 async function onCommand(row: T, command: RowCommand<Target>): Promise<void> {
-  const actions = rowActions.value
-  if (actions === null) {
+  const feedback = props.actions?.feedback
+  const run = rowActions.value?.resolve(row, command)
+  if (!run || !feedback) {
     return
   }
-  const outcome = await rowCommands.run(props.descriptor.rowKey(row), (signal) =>
-    actions.run(row, command, signal)
-  )
+  const outcome = await feedback.track(run)
   if (outcome) {
     emit('performed', outcome)
   }
@@ -118,7 +117,6 @@ async function onCommand(row: T, command: RowCommand<Target>): Promise<void> {
           :table-row="tableRow"
           :display-options="displayOptions"
           :read-only="readOnly"
-          :busy="rowCommands.isBusy(descriptor.rowKey(row))"
           v-on="descriptor.rowListeners(row, open)"
           @command="(command: RowCommand<Target>) => onCommand(row, command)"
         />
@@ -130,7 +128,7 @@ async function onCommand(row: T, command: RowCommand<Target>): Promise<void> {
     <component
       :is="descriptor.detailsComponent"
       :subject="subject"
-      :offer="actionOffer"
+      :offer="actions?.offer"
       :display-options="displayOptions"
       @close="close"
       @performed="(outcome: ActionOutcome) => emit('performed', outcome)"

@@ -4,35 +4,24 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import ActionFeedback from '@/monitoring/shared/components/action/ActionFeedback.vue'
-import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
+import ActionFeedbackAlerts from '@/monitoring/shared/components/action/ActionFeedbackAlerts.vue'
+import type { ActionFeedbackStack } from '@/monitoring/shared/services/useActionFeedbackStack'
 
 defineProps<{
-  /** How the last action run in a widget went, such as rescheduling a check from a table row. */
-  outcome: ActionOutcome
+  /** The actions run in the widgets, such as rescheduling a check from a table row. */
+  stack: ActionFeedbackStack
 }>()
-
-const open = defineModel<boolean>('open', { required: true })
 </script>
 
 <template>
-  <div v-if="open" class="db-widget-action-alert">
-    <ActionFeedback
-      v-model:open="open"
-      class="db-widget-action-alert__feedback"
-      :feedback="outcome"
-    />
+  <div v-if="stack.items.value.length > 0" class="db-widget-action-alert">
+    <ActionFeedbackAlerts :stack="stack" />
   </div>
 </template>
 
 <style scoped>
 .db-widget-action-alert {
-  padding-left: var(--dimension-4);
-  padding-right: var(--dimension-4);
-}
-
-/* The dashboard below keeps its own distance. */
-.db-widget-action-alert__feedback {
-  margin-bottom: 0;
+  /* The dashboard below keeps its own distance. */
+  padding: var(--dimension-5) var(--dimension-4) 0;
 }
 </style>

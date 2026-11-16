@@ -4,7 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { type ComputedRef, computed, getCurrentScope, onScopeDispose, reactive, ref } from 'vue'
+import {
+  type ComputedRef,
+  type InjectionKey,
+  computed,
+  getCurrentScope,
+  onScopeDispose,
+  reactive,
+  ref
+} from 'vue'
 
 import { commandFailed } from '@/monitoring/shared/components/action/actions/feedback'
 import type { ActionRun } from '@/monitoring/shared/components/action/run'
@@ -166,3 +174,10 @@ export function useActionFeedbackStack(): ActionFeedbackStack {
     clear
   }
 }
+
+/**
+ * The feedback alerts a page offers the actions run deep within it, e.g. a dashboard to the rows of
+ * its table widgets.
+ */
+export const ACTION_FEEDBACK_STACK: InjectionKey<ActionFeedbackStack> =
+  Symbol('actionFeedbackStack')

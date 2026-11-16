@@ -66,8 +66,6 @@ const props = withDefaults(
     displayOptions: DisplayOptions
     aiExplain?: boolean
     readOnly?: boolean
-    /** A command picked in the row still runs. */
-    busy?: boolean
   }>(),
   {
     rowActions: () => [],
@@ -75,8 +73,7 @@ const props = withDefaults(
     serviceHost: undefined,
     loadActionMenu: undefined,
     aiExplain: false,
-    readOnly: false,
-    busy: false
+    readOnly: false
   }
 )
 
@@ -303,7 +300,6 @@ const groupAction = narrowing.actionFor(groupCondition)
     :actions="actionButtons.actions"
     :max-visible="actionButtons.maxVisible"
     :load="actionMenuLoader"
-    :busy="busy"
     @select="onActionSelect"
   />
 </template>

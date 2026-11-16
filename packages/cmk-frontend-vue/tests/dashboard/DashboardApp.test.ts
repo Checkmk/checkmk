@@ -691,6 +691,30 @@ describe('DashboardApp on a switch to another dashboard', () => {
     )
   }
 
+  it('takes the alerts of the actions run in its widgets away', async () => {
+    const props = showHostsTableFailingToReschedule('relative_grid')
+    serveTheOtherDashboard()
+    const user = userEvent.setup()
+    await renderHostsTable(props)
+    await user.click(screen.getByRole('button', { name: 'More actions' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Reschedule' }))
+    await screen.findByText('Could not reschedule the checks for the selected hosts')
+
+    await fireEvent.focus(screen.getByPlaceholderText(SOURCE_TITLE))
+    await fireEvent.click(await screen.findByText(OTHER_TITLE))
+
+    await waitFor(() => {
+      expect(new URL(window.location.href).searchParams.get('name')).toBe(OTHER_ID)
+    })
+    await waitFor(() => {
+      deliverSize(800, 400)
+      expect(screen.getByText('heute')).toBeInTheDocument()
+    })
+    expect(
+      screen.queryByText('Could not reschedule the checks for the selected hosts')
+    ).not.toBeInTheDocument()
+  })
+
   /** Both dashboards show an alert overview; returns the windows that the overviews fetch for. */
   function serveAlertOverviewsOnBoth(): WidgetTimeRange[] {
     const fetchedWindows: WidgetTimeRange[] = []

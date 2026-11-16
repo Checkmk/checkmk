@@ -54,10 +54,8 @@ const props = withDefaults(
     loadActionMenu?: ((host: HostRef) => Promise<CellAction[]>) | undefined
     displayOptions: DisplayOptions
     readOnly?: boolean
-    /** A command picked in the row still runs. */
-    busy?: boolean
   }>(),
-  { rowActions: () => [], loadActionMenu: undefined, readOnly: false, busy: false }
+  { rowActions: () => [], loadActionMenu: undefined, readOnly: false }
 )
 
 const emit = defineEmits<{
@@ -321,7 +319,6 @@ const lastStateChange = computed(() =>
     :actions="actionButtons.actions"
     :max-visible="actionButtons.maxVisible"
     :load="loadActionMenu ? () => loadActionMenu!(hostRef) : undefined"
-    :busy="busy"
     @select="onActionSelect"
   />
 </template>

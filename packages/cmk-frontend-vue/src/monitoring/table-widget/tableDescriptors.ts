@@ -18,10 +18,11 @@ import type { HostEntry, ServiceEntry } from '@/monitoring/shared/api/types'
 import type { HostSlideInSubject } from '@/monitoring/shared/components/HostSlideIn.vue'
 import {
   type RowCommand,
-  performRowCommand
+  resolveRowCommand
 } from '@/monitoring/shared/components/action/rowCommand'
-import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
-import { hostRefOfService, serviceCommand } from '@/monitoring/shared/objectRefs'
+import type { ActionRun } from '@/monitoring/shared/components/action/run'
+import { hostRefOfService, refKey, serviceCommand } from '@/monitoring/shared/objectRefs'
+import type { ActionFeedbackStack } from '@/monitoring/shared/services/useActionFeedbackStack'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 import { useHostActions } from '@/monitoring/shared/useHostActions'
 import { useServiceActions } from '@/monitoring/shared/useServiceActions'
@@ -42,15 +43,18 @@ export type MonitoringTableActionOffer = Pick<
   'actions' | 'links' | 'host_actions' | 'host_links'
 >
 
+/** The actions offered on the rows of a table, and the alerts of the page that tell how they go. */
+export interface MonitoringTableActions {
+  offer: MonitoringTableActionOffer
+  feedback: ActionFeedbackStack
+}
+
 /** How the rows of a table get their actions, and what a command picked in a row acts on. */
 export interface MonitoringTableRowActions<T, Target> {
   /** The props that hand a row its action buttons and its action menu. */
   rowProps(row: T): object
-  /**
-   * Run the command picked in a row, and tell how it went; null for a command not run. The signal
-   * aborts once no one waits for the outcome any more.
-   */
-  run(row: T, command: RowCommand<Target>, signal?: AbortSignal): Promise<ActionOutcome | null>
+  /** The run of the command picked in a row; null for a command not to run. */
+  resolve(row: T, command: RowCommand<Target>): ActionRun | null
 }
 
 /**
@@ -195,7 +199,7 @@ export class HostsTableDescriptor extends MonitoringTableDescriptor<
     return {
       rowProps: () =>
         ({ rowActions, loadActionMenu }) satisfies Partial<ComponentProps<typeof HostRow>>,
-      run: (_row, command, signal) => performRowCommand(registry, command, signal)
+      resolve: (_row, command) => resolveRowCommand(registry, command, refKey)
     }
   }
 
@@ -270,8 +274,8 @@ export class ServicesTableDescriptor extends MonitoringTableDescriptor<
           loadActionMenu: (service: string) =>
             loadActionMenu(hostRefOfService(row), service, menuOptions)
         }) satisfies Partial<ComponentProps<typeof HostServicesRow>>,
-      run: (row, command, signal) =>
-        performRowCommand(registry, serviceCommand(hostRefOfService(row), command), signal)
+      resolve: (row, command) =>
+        resolveRowCommand(registry, serviceCommand(hostRefOfService(row), command), refKey)
     }
   }
 

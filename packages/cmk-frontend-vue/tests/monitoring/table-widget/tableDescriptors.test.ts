@@ -5,9 +5,12 @@
  */
 import { describe, expect, it } from 'vitest'
 
+import type { HostEntry, ServiceEntry } from '@/monitoring/shared/api/types'
+import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 import {
   HostsTableDescriptor,
+  type MonitoringTableActionOffer,
   ServicesTableDescriptor
 } from '@/monitoring/table-widget/tableDescriptors'
 
@@ -51,7 +54,31 @@ const SORTABLE_COLUMNS = [
   'last_state_change'
 ]
 
+// A table on which the backend offers the reader no actions and no links.
+const NO_ACTIONS: MonitoringTableActionOffer = {
+  actions: [],
+  links: [],
+  host_actions: [],
+  host_links: []
+}
+
 describe('HostsTableDescriptor', () => {
+  function runKey(site: string, name: string): string | undefined {
+    const { resolve } = new HostsTableDescriptor().rowActions(NO_ACTIONS)
+    return resolve({ site_id: site, name } as HostEntry, {
+      id: RESCHEDULE_ACTION_ID,
+      target: { site_id: site, name }
+    })?.key
+  }
+
+  it('runs a command picked again for a host under the same key', () => {
+    expect(runKey('local', 'web-1')).toBe(runKey('local', 'web-1'))
+  })
+
+  it('runs a command picked for hosts of one name on two sites under keys of their own', () => {
+    expect(runKey('local', 'web-1')).not.toBe(runKey('remote', 'web-1'))
+  })
+
   it('offers exactly the columns the backend offers for the hosts table', () => {
     const offered = new HostsTableDescriptor().catalog().map((column) => column.id)
 
@@ -100,6 +127,28 @@ const SORTABLE_SERVICE_COLUMNS = [
 ]
 
 describe('ServicesTableDescriptor', () => {
+  // Rows of services that the host's "Check_MK" service updates reschedule that one.
+  const RESCHEDULE_CHECK_MK = { id: RESCHEDULE_ACTION_ID, target: 'Check_MK' }
+
+  function serviceRow(host: string, name: string): ServiceEntry {
+    return { name, host_name: host, site_id: 'local' } as ServiceEntry
+  }
+
+  function runKey(row: ServiceEntry): string | undefined {
+    const { resolve } = new ServicesTableDescriptor().rowActions(NO_ACTIONS)
+    return resolve(row, RESCHEDULE_CHECK_MK)?.key
+  }
+
+  it('runs a command picked in two rows on the same service of a host under one key', () => {
+    expect(runKey(serviceRow('web-1', 'CPU load'))).toBe(runKey(serviceRow('web-1', 'Memory')))
+  })
+
+  it('runs a command picked in rows of two hosts under keys of their own', () => {
+    expect(runKey(serviceRow('web-1', 'CPU load'))).not.toBe(
+      runKey(serviceRow('web-2', 'CPU load'))
+    )
+  })
+
   it('offers exactly the columns the backend offers for the services table', () => {
     const offered = new ServicesTableDescriptor().catalog().map((column) => column.id)
 

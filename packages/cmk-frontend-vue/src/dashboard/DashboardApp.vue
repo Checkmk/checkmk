@@ -78,7 +78,10 @@ import type {
   WidgetSpec
 } from '@/dashboard/types/widget'
 import { type CloneResult, dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
-import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
+import {
+  ACTION_FEEDBACK_STACK,
+  useActionFeedbackStack
+} from '@/monitoring/shared/services/useActionFeedbackStack'
 import { PageHeader } from '@/page-header'
 
 import CloneFailedAlert from './components/CloneFailedAlert.vue'
@@ -116,23 +119,15 @@ const showCloneSuccessAlert = ref(false)
 const clonedAsResponsive = ref(false)
 const cloneFailure = ref<string | null>(null)
 const droppedFiltersWarning = ref<string | null>(null)
-// The outcome of the last action run in a widget, such as rescheduling a check from a table row.
-const actionOutcome = ref<ActionOutcome | null>(null)
-const actionFeedbackOpen = ref(false)
-// Counts the outcomes, so that each shows afresh: a success fades out six seconds after its own
-// arrival, not after the one it replaces.
-const actionOutcomeCount = ref(0)
+// The actions run in the widgets, such as rescheduling a check from a table row: one alert per
+// action still running, and how the last one went.
+const actionFeedback = useActionFeedbackStack()
+provide(ACTION_FEEDBACK_STACK, actionFeedback)
 // Another dashboard picked here was not drilled to, so it offers no way back.
 const drillUp = ref(props.drill_up)
 
-function showActionFeedback(outcome: ActionOutcome): void {
-  actionOutcome.value = outcome
-  actionOutcomeCount.value += 1
-  actionFeedbackOpen.value = true
-}
-
 watch(
-  [showCloneSuccessAlert, cloneFailure, droppedFiltersWarning, actionFeedbackOpen, actionOutcome],
+  [showCloneSuccessAlert, cloneFailure, droppedFiltersWarning, actionFeedback.items],
   async () => {
     await nextTick()
     window.dispatchEvent(new Event('resize'))
@@ -292,8 +287,7 @@ const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
   showCloneSuccessAlert.value = false
   cloneFailure.value = null
   droppedFiltersWarning.value = null
-  actionOutcome.value = null
-  actionFeedbackOpen.value = false
+  actionFeedback.clear()
   drillUp.value = null
 
   const key: DashboardKey = {
@@ -884,12 +878,7 @@ const { range, refreshTick, timeRangeVariables, updateTimeRange, resetTimeContro
             :warning="droppedFiltersWarning"
             @dismiss="droppedFiltersWarning = null"
           />
-          <WidgetActionAlert
-            v-if="actionOutcome"
-            :key="actionOutcomeCount"
-            v-model:open="actionFeedbackOpen"
-            :outcome="actionOutcome"
-          />
+          <WidgetActionAlert :stack="actionFeedback" />
           <AddWidgetPage
             v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
             :workflow-items="dashboardWidgetWorkflows"
@@ -913,7 +902,6 @@ const { range, refreshTick, timeRangeVariables, updateTimeRange, resetTimeContro
             @widget:delete="dashboardWidgets.deleteWidget($event)"
             @widget:clone="(oldWidgetId, newLayout) => cloneWidget(oldWidgetId, newLayout)"
             @widget:update-time-range="(_widgetId, newRange) => updateTimeRange(newRange)"
-            @widget:action-outcome="(_widgetId, outcome) => showActionFeedback(outcome)"
           />
         </template>
         <template v-else>

@@ -9,7 +9,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import DashboardContent from '@/dashboard/components/DashboardContent/DashboardContent.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import MissingFiltersMsg from '@/dashboard/components/DashboardFilterSettings/MissingFiltersMsg.vue'
-import type { WidgetEmitActionOutcome, WidgetEmitTimeRange } from '@/dashboard/types/widget'
+import type { WidgetEmitTimeRange } from '@/dashboard/types/widget'
 
 import ResponsiveGridWidgetButton from './ResponsiveGridWidgetButton.vue'
 
@@ -27,8 +27,7 @@ defineEmits<
     'click:edit': []
     'click:clone': []
     'click:delete': []
-  } & WidgetEmitTimeRange &
-    WidgetEmitActionOutcome
+  } & WidgetEmitTimeRange
 >()
 </script>
 
@@ -68,7 +67,6 @@ defineEmits<
         v-bind="spec"
         class="db-responsive-grid-widget__content"
         @update-time-range="$emit('updateTimeRange', $event)"
-        @action-outcome="$emit('actionOutcome', $event)"
       />
     </MissingFiltersMsg>
   </div>

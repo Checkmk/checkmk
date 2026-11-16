@@ -18,6 +18,10 @@ import type { ComputedMonitoringTable, MonitoringTableContent } from '@/dashboar
 import type { HostOverview } from '@/monitoring/shared/api/types'
 import { CHECK_POLL_INTERVAL_MS } from '@/monitoring/shared/components/action/actions/reschedule'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import {
+  ACTION_FEEDBACK_STACK,
+  useActionFeedbackStack
+} from '@/monitoring/shared/services/useActionFeedbackStack'
 
 import { makeContentProps } from '@tests/dashboard/contentProps'
 import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
@@ -190,13 +194,17 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+/** Renders the widget on a page that tells how the actions run in it go, as a dashboard does. */
 async function renderWidget(content: MonitoringTableContent = CONTENT) {
+  const feedback = useActionFeedbackStack()
   const rendered = render(DashboardContentMonitoringTable, {
-    props: makeContentProps(content)
+    props: makeContentProps(content),
+    global: { provide: { [ACTION_FEEDBACK_STACK as symbol]: feedback } }
   })
   await nextTick()
   deliverSize(800, 400)
-  return rendered
+  const told = () => feedback.items.value.map((item) => item.feedback)
+  return { ...rendered, told }
 }
 
 async function renderInSharedDashboard(content: MonitoringTableContent = CONTENT) {
@@ -476,12 +484,12 @@ describe('DashboardContentMonitoringTable', () => {
     )
   })
 
-  it('keeps the menu of a row shut while the check it rescheduled has not run', async () => {
+  it('offers the menu of a row while the check it rescheduled has not run', async () => {
     const { user } = await rescheduleHeute()
 
-    expect(screen.getByRole('button', { name: 'More actions' })).toBeDisabled()
     await user.click(screen.getByRole('button', { name: 'More actions' }))
-    expect(screen.queryByRole('menuitem')).not.toBeInTheDocument()
+
+    expect(await screen.findAllByRole('menuitem')).not.toHaveLength(0)
   })
 
   it('shows the rows anew once the check a row rescheduled has run', async () => {
@@ -492,27 +500,31 @@ describe('DashboardContentMonitoringTable', () => {
     await waitFor(() => expect(requests).toHaveLength(2))
   })
 
+  it('tells that the check a row rescheduled is awaited while it has not run', async () => {
+    const { told } = await rescheduleHeute()
+
+    expect(told()).toEqual([
+      { variant: 'loading', message: 'Waiting for the check of heute to finish' }
+    ])
+  })
+
   it('tells that the check a row rescheduled has run', async () => {
-    const { emitted } = await rescheduleHeute()
+    const { told } = await rescheduleHeute()
 
     await vi.advanceTimersByTimeAsync(CHECK_POLL_INTERVAL_MS)
 
     await waitFor(() =>
-      expect(emitted()['actionOutcome']).toEqual([
-        [{ variant: 'success', message: 'The check of heute has run' }]
-      ])
+      expect(told()).toEqual([{ variant: 'success', message: 'The check of heute has run' }])
     )
   })
 
   it('leaves the rows as they are when the rescheduled check does not run in time', async () => {
     hostLastCheck = SCHEDULED_AT - 60
-    await rescheduleHeute()
+    const { told } = await rescheduleHeute()
 
     await vi.advanceTimersByTimeAsync(11 * CHECK_POLL_INTERVAL_MS + ACTION_REFRESH_DELAY_MS)
 
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'More actions' })).not.toBeDisabled()
-    )
+    await waitFor(() => expect(told()).toMatchObject([{ variant: 'warning' }]))
     expect(requests).toHaveLength(1)
   })
 
@@ -522,21 +534,19 @@ describe('DashboardContentMonitoringTable', () => {
         response.untyped(HttpResponse.json({ title: 'Internal error' }, { status: 500 }))
       )
     )
-    const { emitted } = await renderWidget()
+    const { told } = await renderWidget()
     await screen.findByText('heute')
 
     await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Reschedule' }))
 
     await waitFor(() =>
-      expect(emitted()['actionOutcome']).toEqual([
-        [
-          {
-            variant: 'error',
-            heading: 'Could not reschedule the checks for the selected hosts',
-            message: 'Retry the command. If it keeps failing, check whether the site is running.'
-          }
-        ]
+      expect(told()).toEqual([
+        {
+          variant: 'error',
+          heading: 'Could not reschedule the checks for the selected hosts',
+          message: 'Retry the command. If it keeps failing, check whether the site is running.'
+        }
       ])
     )
   })
@@ -593,6 +603,15 @@ describe('DashboardContentMonitoringTable', () => {
     render(DashboardContentMonitoringTable, {
       props: makeContentProps(CONTENT, { isPreview: true })
     })
+    await nextTick()
+    deliverSize(800, 400)
+    await screen.findByText('heute')
+
+    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
+  })
+
+  it('offers no row actions outside a dashboard that tells how they go', async () => {
+    render(DashboardContentMonitoringTable, { props: makeContentProps(CONTENT) })
     await nextTick()
     deliverSize(800, 400)
     await screen.findByText('heute')

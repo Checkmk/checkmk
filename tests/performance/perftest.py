@@ -66,7 +66,11 @@ class PerformanceTest:
         self.central_site = central_site
         self.remote_sites = remote_sites or []
 
-        self.rounds = val if isinstance((val := pytestconfig.getoption("rounds")), int) else 16
+        #: The round count given on the command line. It overrides every scenario's own.
+        self.rounds_option = (
+            val if isinstance((val := pytestconfig.getoption("rounds")), int) else None
+        )
+        self.rounds = self.rounds_or(16)
         self.warmup_rounds = (
             val if isinstance((val := pytestconfig.getoption("warmup_rounds")), int) else 0
         )
@@ -92,6 +96,10 @@ class PerformanceTest:
         # (used with mocked remote sites) instead of self.sites.
         self.bulk_change_target_site_ids: list[str] | None = None
         self._dcd_piggyback_rule_id = ""
+
+    def rounds_or(self, default: int) -> int:
+        """`--rounds` if given on the command line, else this scenario's own `default`."""
+        return default if self.rounds_option is None else self.rounds_option
 
     @property
     def sites(self) -> list[Site]:

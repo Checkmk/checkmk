@@ -129,6 +129,13 @@ def test_get_diagnostics_skips_when_no_repo_root() -> None:
     assert result is None
 
 
+def test_get_diagnostics_skips_files_outside_repo_root(tmp_path: Path) -> None:
+    result = get_diagnostics(
+        f"file://{tmp_path}/outside.py", repo_root=tmp_path / "repo", source=""
+    )
+    assert result is None
+
+
 def test_get_diagnostics_returns_none_for_nonexistent_file(tmp_path: Path) -> None:
     result = get_diagnostics(f"file://{tmp_path}/nonexistent.py", repo_root=tmp_path)
     assert result is None

@@ -79,7 +79,7 @@ def main() -> int:
     factories = _bind_configs(selected, workspace_dir)
 
     try:
-        files_to_check = _collect_files(args.paths, work_dir)
+        files_to_check = _collect_files(args.paths, work_dir, workspace_dir)
     except ValueError as e:
         sys.stderr.write(f"{e}\n")
         return 1
@@ -135,12 +135,14 @@ def _select_checkers(
     return selected
 
 
-def _collect_files(paths: Sequence[Path], workspace_dir: Path) -> list[Path]:
+def _collect_files(paths: Sequence[Path], work_dir: Path, repo_root: Path) -> list[Path]:
     files_to_check: list[Path] = []
 
     for path in paths:
-        if not path.is_absolute():
-            path = workspace_dir / path
+        path = Path(os.path.normpath(work_dir / path))
+
+        if not path.is_relative_to(repo_root):
+            raise ValueError(f"Error: Path outside of repository root {repo_root}: {path}")
 
         if not path.exists():
             raise ValueError(f"Error: Path not found: {path}")

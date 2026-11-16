@@ -59,7 +59,7 @@ def test_collect_files_with_single_python_file(tmp_path: Path) -> None:
     test_file = tmp_path / "test.py"
     test_file.write_text("# test file")
 
-    files = _collect_files([test_file], tmp_path)
+    files = _collect_files([test_file], tmp_path, tmp_path)
 
     assert len(files) == 1
     assert files[0] == test_file
@@ -72,7 +72,7 @@ def test_collect_files_with_directory(tmp_path: Path) -> None:
     subdir.mkdir()
     (subdir / "file3.py").write_text("# file 3")
 
-    files = _collect_files([tmp_path], tmp_path)
+    files = _collect_files([tmp_path], tmp_path, tmp_path)
 
     assert len(files) == 3
     assert tmp_path / "file1.py" in files
@@ -91,7 +91,7 @@ def test_collect_files_excludes_hidden_directories(tmp_path: Path) -> None:
     venv_dir.mkdir()
     (venv_dir / "venv.py").write_text("# venv")
 
-    files = _collect_files([tmp_path], tmp_path)
+    files = _collect_files([tmp_path], tmp_path, tmp_path)
 
     assert len(files) == 1
     assert tmp_path / "visible.py" in files
@@ -103,7 +103,12 @@ def test_collect_files_with_nonexistent_path(tmp_path: Path) -> None:
     nonexistent = tmp_path / "does_not_exist.py"
 
     with pytest.raises(ValueError, match="Error: Path not found"):
-        _collect_files([nonexistent], tmp_path)
+        _collect_files([nonexistent], tmp_path, tmp_path)
+
+
+def test_collect_files_rejects_path_outside_repo_root(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="Error: Path outside of repository root"):
+        _collect_files([Path("../outside.py")], tmp_path, tmp_path)
 
 
 def test_collect_files_with_non_python_file(tmp_path: Path) -> None:
@@ -111,7 +116,7 @@ def test_collect_files_with_non_python_file(tmp_path: Path) -> None:
     text_file.write_text("not python")
 
     with pytest.raises(ValueError, match="Error: Not a Python file"):
-        _collect_files([text_file], tmp_path)
+        _collect_files([text_file], tmp_path, tmp_path)
 
 
 def test_collect_files_with_relative_path(tmp_path: Path) -> None:
@@ -120,7 +125,7 @@ def test_collect_files_with_relative_path(tmp_path: Path) -> None:
     test_file = subdir / "test.py"
     test_file.write_text("# test")
 
-    files = _collect_files([Path("subdir/test.py")], tmp_path)
+    files = _collect_files([Path("subdir/test.py")], tmp_path, tmp_path)
 
     assert len(files) == 1
     assert files[0] == test_file
@@ -130,7 +135,7 @@ def test_collect_files_deduplicates_files(tmp_path: Path) -> None:
     test_file = tmp_path / "test.py"
     test_file.write_text("# test")
 
-    files = _collect_files([test_file, test_file], tmp_path)
+    files = _collect_files([test_file, test_file], tmp_path, tmp_path)
 
     assert len(files) == 1
     assert files[0] == test_file
@@ -141,7 +146,7 @@ def test_collect_files_sorts_results(tmp_path: Path) -> None:
     (tmp_path / "a.py").write_text("# a")
     (tmp_path / "b.py").write_text("# b")
 
-    files = _collect_files([tmp_path], tmp_path)
+    files = _collect_files([tmp_path], tmp_path, tmp_path)
 
     assert len(files) == 3
     assert files[0] == tmp_path / "a.py"

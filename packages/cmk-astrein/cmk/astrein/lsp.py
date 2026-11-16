@@ -211,6 +211,13 @@ def get_diagnostics(
         logger.warning("repo_root not set, skipping validation")
         return None
 
+    if not file_path.is_relative_to(repo_root):
+        logger.info(
+            "File outside of repo root %(repo_root)s, skipping validation: %(file_path)s",
+            {"repo_root": repo_root, "file_path": file_path},
+        )
+        return None
+
     checker_classes = list(all_checkers().values())
     factories = _bind_configs(checker_classes, repo_root)
     report_unknown_suppressions = len(factories) == len(checker_classes)

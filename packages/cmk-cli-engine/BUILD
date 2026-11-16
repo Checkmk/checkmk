@@ -24,7 +24,7 @@ py_library(
         "cmk/cli/engine/readers.py",
     ],
     imports = ["."],
-    visibility = ["//visibility:public"],
+    visibility = ["//cmk/editions:__pkg__"],
     deps = [
         "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:discover_plugins",
@@ -35,7 +35,6 @@ py_library(
     name = "run",
     srcs = ["cmk/cli/engine/run.py"],
     imports = ["."],
-    visibility = ["//visibility:public"],
     deps = [
         ":engine",
         "//packages/cmk-ccc:log",
@@ -47,7 +46,7 @@ py_library(
     name = "main",
     srcs = ["cmk/cli/engine/main.py"],
     imports = ["."],
-    visibility = ["//visibility:public"],
+    visibility = ["//cmk/editions:__pkg__"],
     deps = [
         ":engine",
         ":run",

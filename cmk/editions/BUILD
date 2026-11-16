@@ -82,6 +82,8 @@ py_library(
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:snmplib",
+        "//packages/cmk-cli-engine:engine",
+        "//packages/cmk-cli-engine:main",
         "//packages/cmk-crash:crash",
         "//packages/cmk-crash:plugins",
         "//packages/cmk-crypto",

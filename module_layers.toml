@@ -211,7 +211,6 @@ allows = [
   "cmk.base.diagnostics",
   "cmk.ccc.exceptions",
   "cmk.ccc.i18n",
-  "cmk.cli.engine",
   "cmk.diagnostics.automation_types",
   "cmk.diagnostics.engine",
   "cmk.utils.log",
@@ -231,7 +230,6 @@ allows = [
   # The "cmk" commands (cli) drive the whole base: automations, man pages
   # (feature filter), plug-in discovery, profiling and tracing.
   "cmk.automations",
-  "cmk.cli.engine",
   "cmk.discover_plugins",
   "cmk.inventory",
   "cmk.licensing.basics.finder",
@@ -590,7 +588,6 @@ allows = [
   "@plugin_apis",
   "cmk.bakery.base",
   "cmk.base",
-  "cmk.cli.engine",
   "cmk.check_helper_protocol",
   "cmk.checkengine",
   "cmk.events",
@@ -640,7 +637,6 @@ allows = ["cmk.bakery", "cmk.base.api.bakery", "cmk.utils"]
 
 [components."cmk.base"]
 allows = [
-  "cmk.cli.engine",
   "cmk.diagnostics.automation_types",
   "cmk.diagnostics.engine",
   "cmk.monitoring_config",

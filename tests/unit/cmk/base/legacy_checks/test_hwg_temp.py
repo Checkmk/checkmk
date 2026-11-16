@@ -12,8 +12,16 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.base.check_legacy_includes.hwg import parse_hwg
 from cmk.base.legacy_checks.hwg_temp import check_hwg_temp, inventory_hwg_temp
+from cmk.plugins.hwg.agent_based.lib import parse_hwg
+
+_STE2_WALK: StringTable = [
+    ["1", "Sensor 40437", "1", "22.6", "1"],
+    ["2", "Sensor 40937", "1", "43.8", "4"],
+    ["3", "TVOC", "1", "107", "0"],
+    ["4", "Press", "1", "948.9", "0"],
+    ["5", "Sensor 60612", "1", "22.3", "1"],
+]
 
 
 @pytest.mark.parametrize(
@@ -70,3 +78,17 @@ def test_check_hwg_temp(
     parsed = parse_hwg(info)
     result = list(check_hwg_temp(item, params, parsed))
     assert result == expected_results
+
+
+def test_inventory_hwg_temp_skips_sensors_without_unit() -> None:
+    parsed = parse_hwg(_STE2_WALK)
+
+    discovered = list(inventory_hwg_temp(parsed))
+
+    assert discovered == [("1", {}), ("5", {})]
+
+
+def test_check_hwg_temp_ignores_sensor_without_unit() -> None:
+    parsed = parse_hwg(_STE2_WALK)
+
+    assert not list(check_hwg_temp("3", {"levels": (30.0, 35.0)}, parsed))

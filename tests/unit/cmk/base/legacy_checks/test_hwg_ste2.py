@@ -11,7 +11,6 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from cmk.base.check_legacy_includes.hwg import parse_hwg
 from cmk.base.legacy_checks.hwg_humidity import (
     check_hwg_humidity,
     inventory_hwg_humidity,
@@ -20,6 +19,7 @@ from cmk.base.legacy_checks.hwg_temp import (
     check_hwg_temp,
     inventory_hwg_temp,
 )
+from cmk.plugins.hwg.agent_based.lib import parse_hwg
 
 
 def test_hwg_ste2_parse() -> None:

@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
+from collections.abc import Mapping
 from typing import NotRequired, TypedDict
+
+from cmk.agent_based.v2 import State
 
 
 class HwgSensorData(TypedDict, total=False):
@@ -13,8 +14,12 @@ class HwgSensorData(TypedDict, total=False):
     humidity: float
     temperature: NotRequired[float | None]
     dev_unit: NotRequired[str | None]
+    value: NotRequired[float | None]
     dev_status_name: str
     dev_status: str
+
+
+type SectionHwg = Mapping[str, HwgSensorData]
 
 
 map_units = {"1": "c", "2": "f", "3": "k", "4": "%"}
@@ -28,8 +33,17 @@ map_dev_states = {
     "5": "alarm high",
 }
 
+READABLE_STATES: Mapping[str, State] = {
+    "invalid": State.UNKNOWN,
+    "normal": State.OK,
+    "out of range low": State.CRIT,
+    "out of range high": State.CRIT,
+    "alarm low": State.CRIT,
+    "alarm high": State.CRIT,
+}
 
-def parse_hwg(info: list[list[str]]) -> dict[str, HwgSensorData]:
+
+def parse_hwg(info: list[list[str]]) -> SectionHwg:
     parsed: dict[str, HwgSensorData] = {}
 
     for index, descr, sensorstatus, current, unit in info:
@@ -46,21 +60,35 @@ def parse_hwg(info: list[list[str]]) -> dict[str, HwgSensorData]:
             )
 
         # Parse Temperature
-        else:
-            try:
-                tempval: float | None = float(current)
-            except ValueError:
-                tempval = None
-
+        elif unit in map_units:
             parsed.setdefault(
                 index,
                 {
                     "descr": descr,
                     "dev_unit": map_units.get(unit),
-                    "temperature": tempval,
+                    "temperature": _parse_float(current),
+                    "dev_status_name": map_dev_states.get(sensorstatus, ""),
+                    "dev_status": sensorstatus,
+                },
+            )
+
+        # No or unknown unit: the device does not tell what is measured (e.g. TVOC, pressure)
+        else:
+            parsed.setdefault(
+                index,
+                {
+                    "descr": descr,
+                    "value": _parse_float(current),
                     "dev_status_name": map_dev_states.get(sensorstatus, ""),
                     "dev_status": sensorstatus,
                 },
             )
 
     return parsed
+
+
+def _parse_float(raw: str) -> float | None:
+    try:
+        return float(raw)
+    except ValueError:
+        return None

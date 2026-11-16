@@ -12,8 +12,8 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.base.check_legacy_includes.hwg import parse_hwg
 from cmk.base.legacy_checks.hwg_humidity import check_hwg_humidity, inventory_hwg_humidity
+from cmk.plugins.hwg.agent_based.lib import parse_hwg
 
 
 @pytest.mark.parametrize(

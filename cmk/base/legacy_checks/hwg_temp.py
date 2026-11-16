@@ -8,8 +8,8 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree
-from cmk.base.check_legacy_includes.hwg import parse_hwg
 from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.plugins.hwg.agent_based.lib import parse_hwg
 
 check_info = {}
 
@@ -32,7 +32,7 @@ def inventory_hwg_temp(parsed):
 
 
 def check_hwg_temp(item, params, parsed):
-    if not (data := parsed.get(item)):
+    if not (data := parsed.get(item)) or "temperature" not in data:
         return
     state = READABLE_STATES.get(data["dev_status_name"], 3)
     state_readable = data["dev_status_name"]

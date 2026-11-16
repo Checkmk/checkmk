@@ -93,8 +93,12 @@ async def _relay_not_found(_request: Request, error: Exception) -> JSONResponse:
     )
 
 
-async def _site_api_failed(_request: Request, error: Exception) -> JSONResponse:
+async def _site_api_failed(request: Request, error: Exception) -> JSONResponse:
     assert isinstance(error, CheckmkAPIError)
+    logger.error(
+        "%(method)s %(path)s: the site API failed: %(error)s",
+        {"method": request.method, "path": request.url.path, "error": error.msg},
+    )
     return JSONResponse(status_code=status.HTTP_502_BAD_GATEWAY, content={"detail": error.msg})
 
 

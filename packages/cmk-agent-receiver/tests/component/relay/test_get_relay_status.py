@@ -14,6 +14,7 @@ from http import HTTPStatus
 
 from fastapi.testclient import TestClient
 
+from cmk.agent_receiver.lib.config import Config
 from cmk.relay_protocols.relays import RelayState, RelayStatusResponse
 from cmk.testlib.agent_receiver.clients import RelayClient, RelayRegistrationClient
 from cmk.testlib.agent_receiver.relay import random_relay_id
@@ -144,6 +145,7 @@ def test_get_relay_status_returns_502_on_api_error(
     site: SiteMock,
     test_client: TestClient,
     user: User,
+    site_context: Config,
 ) -> None:
     """Verify that GET /{relay_id}/status returns 502 when CMK API returns an error.
 
@@ -171,6 +173,7 @@ def test_get_relay_status_returns_502_on_api_error(
     resp = relay.get_status()
 
     assert resp.status_code == HTTPStatus.BAD_GATEWAY
+    assert "Internal server error" in site_context.log_path.read_text()
 
 
 def test_get_relay_status_returns_502_on_bad_request(

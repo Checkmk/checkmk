@@ -40,3 +40,19 @@ async def test_relay_exists_as_the_site_answers(status: HTTPStatus, exists: bool
 async def test_relay_exists_raises_on_other_errors_of_the_site(status: HTTPStatus) -> None:
     with pytest.raises(CheckmkAPIError):
         await _site_answering(status).relay_exists(_AUTH, RelayID("relay"))
+
+
+@pytest.mark.asyncio
+async def test_relay_exists_raises_when_the_site_is_unreachable() -> None:
+    def fail(_request: httpx2.Request) -> httpx2.Response:
+        raise httpx2.ConnectError("refused")
+
+    site = SiteRelaysClient(
+        client=httpx2.AsyncClient(transport=httpx2.MockTransport(fail)),
+        rest_api_url="http://localhost/site/check_mk/api/1.0",
+        internal_rest_api_url="http://localhost/site/check_mk/api/internal",
+        siteid="site",
+    )
+
+    with pytest.raises(CheckmkAPIError):
+        await site.relay_exists(_AUTH, RelayID("relay"))

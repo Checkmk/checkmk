@@ -30,6 +30,8 @@ class Response(BaseModel):
     base64Body: str | None = None
     headers: Mapping[str, str] = Field(default_factory=dict)
     fixedDelayMilliseconds: int | None = None
+    # E.g. CONNECTION_RESET_BY_PEER, see https://wiremock.org/docs/simulating-faults/
+    fault: str | None = None
 
     @model_validator(mode="after")
     def _at_most_one_body(self) -> Self:

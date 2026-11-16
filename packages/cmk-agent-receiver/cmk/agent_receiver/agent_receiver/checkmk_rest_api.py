@@ -70,7 +70,17 @@ async def _request(
     timeout: int = 30,
 ) -> httpx2.Response:
     async with httpx2.AsyncClient(timeout=timeout) as client:
-        return await client.request(method, url, headers=headers, json=json_body)
+        # Answered as HTTPException, so log_http_exception logs it, not as a bare 500.
+        try:
+            return await client.request(method, url, headers=headers, json=json_body)
+        except httpx2.TimeoutException as e:
+            raise HTTPException(
+                status_code=HTTPStatus.GATEWAY_TIMEOUT, detail=f"The site did not answer: {e!r}"
+            ) from e
+        except httpx2.TransportError as e:
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_GATEWAY, detail=f"The site is unreachable: {e!r}"
+            ) from e
 
 
 async def _forward_get(

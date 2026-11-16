@@ -50,11 +50,19 @@ class SiteRelaysClient:
         self.internal_rest_api_url = internal_rest_api_url
         self.siteid = siteid
 
+    async def _request(
+        self, method: str, url: str, auth: SiteAuth, json: object = None
+    ) -> httpx2.Response:
+        try:
+            return await self.client.request(method, url, auth=auth, json=json, timeout=_TIMEOUT)
+        except httpx2.TransportError as e:
+            raise CheckmkAPIError(f"The site is unreachable: {e!r}") from e
+
     async def add_relay(self, auth: SiteAuth, relay_id: RelayID, alias: str) -> RelayID:
-        resp = await self.client.post(
+        resp = await self._request(
+            "POST",
             f"{self.internal_rest_api_url}/domain-types/relay/collections/all",
-            auth=auth,
-            timeout=_TIMEOUT,
+            auth,
             json={
                 "relay_id": str(relay_id),
                 "alias": alias,
@@ -74,9 +82,7 @@ class SiteRelaysClient:
 
     async def relay_exists(self, auth: SiteAuth, relay_id: RelayID) -> bool:
         """Check if a relay exists by querying the REST API."""
-        resp = await self.client.get(
-            f"{self.rest_api_url}/objects/relay/{relay_id}", auth=auth, timeout=_TIMEOUT
-        )
+        resp = await self._request("GET", f"{self.rest_api_url}/objects/relay/{relay_id}", auth)
         if resp.status_code >= HTTPStatus.INTERNAL_SERVER_ERROR:
             raise CheckmkAPIError(resp.text)
         if resp.status_code == HTTPStatus.NOT_FOUND:

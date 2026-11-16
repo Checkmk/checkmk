@@ -256,6 +256,25 @@ def test_status_passes_a_refusal_of_the_site_through(
     }
 
 
+def test_status_reports_an_unreachable_site_as_bad_gateway(
+    test_client: TestClient,
+    wiremock: Wiremock,
+    ar_site: AgentReceiverSite,
+    registered_uuid: UUID,
+) -> None:
+    _site_answers(
+        wiremock,
+        ar_site,
+        "status",
+        Response(status=HTTPStatus.OK, fault="CONNECTION_RESET_BY_PEER"),
+    )
+
+    response = _request_status(test_client, ar_site, registered_uuid, STATUS_REQUEST)
+
+    assert response.status_code == HTTPStatus.BAD_GATEWAY
+    assert "Querying the agent update status failed" in ar_site.config.log_path.read_text()
+
+
 def test_agent_answers_with_the_package_of_the_site(
     test_client: TestClient,
     wiremock: Wiremock,

@@ -29,6 +29,7 @@ at the repository root.
 | Integration | The `install-agent` mode, with stand-ins for `dpkg` and `rpm`                         | `tests/scripts/smoke-install-agent.sh`                                                        | `//packages/cmk-agent-ctl:smoke_install_agent`                              |
 | System      | The deployment of the site's agent package on a host with systemd                     | `non-free/tests/system/agent_updates/`                                                        | `non-free/tests/run_tests.sh test-system-agent-updates-docker`              |
 | System      | Privileged install step: trust anchors, unit lifetime, privileges, update permission  | `non-free/tests/system/agent_updates/install_step/`                                           | `non-free/tests/run_tests.sh test-system-agent-updates-docker`              |
+| System      | The agent MSI and the registration of the controller on a real Windows host           | `non-free/tests/system/agent_updates/windows/`                                                | `non-free/tests/run_tests.sh test-system-agent-updates-docker`              |
 | System      | Registration and status against real sites                                            | `tests/system/multisite/agents/`, `tests/system/multisite/controller_site_interactions/`      | `tests/run_tests.sh test-system-multisite-docker`                           |
 
 Several other system suites install the agent as a prerequisite, through the helpers in
@@ -69,5 +70,8 @@ The documents under `docs/` are the maintained overview of the controller's test
   script here) → update [`docs/ci-jobs.md`](docs/ci-jobs.md) in the same change.
 - Changing a test container or the nodes it needs → update
   [`docs/test-systems.md`](docs/test-systems.md).
+- Changing the Windows test host, its access or its scripts → update the section "The Windows
+  test host" in [`docs/test-systems.md`](docs/test-systems.md) and
+  `non-free/tests/system/agent_updates/windows/README.md`.
 - Open questions are marked as `TODO` comments inside the documents. Resolve them when the answer
   is known.

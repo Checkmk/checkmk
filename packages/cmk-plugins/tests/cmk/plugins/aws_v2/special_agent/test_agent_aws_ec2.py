@@ -5,8 +5,9 @@
 
 
 from argparse import Namespace as Args
-from collections.abc import Collection, Mapping, Sequence
-from typing import override, Protocol
+from collections.abc import Callable, Collection, Mapping, Sequence
+from statistics import mean as statistics_mean
+from typing import override, Protocol, TypedDict
 
 import pytest
 
@@ -570,3 +571,80 @@ def test_agent_aws_ec2_instance_hosts_get_the_resource_labels(
         "cmk/aws/tag/Key-1": "Value-1",
         "cmk/aws/tag/Key-2": "Value-2",
     }
+
+
+class _Metric(TypedDict):
+    MetricName: str
+
+
+class _MetricStat(TypedDict):
+    Metric: _Metric
+    Stat: str
+
+
+class _MetricDataQuery(TypedDict):
+    Id: str
+    Label: str
+    MetricStat: _MetricStat
+
+
+_STATISTICS: Mapping[str, Callable[[Sequence[float]], float]] = {
+    "Average": statistics_mean,
+    "Maximum": max,
+}
+
+
+class SampledCloudwatchClient:
+    """Answers each query with its statistic over one period of samples, as AWS does."""
+
+    def __init__(self, samples: Mapping[str, Sequence[float]]) -> None:
+        self._samples = samples
+
+    def get_metric_data(
+        self,
+        MetricDataQueries: Sequence[_MetricDataQuery],
+        StartTime: object = None,  # noqa: ARG002
+        EndTime: object = None,  # noqa: ARG002
+    ) -> Mapping[str, object]:
+        results = []
+        for query in MetricDataQueries:
+            stat = query["MetricStat"]
+            samples = self._samples.get(stat["Metric"]["MetricName"], [0.0])
+            results.append(
+                {
+                    "Id": query["Id"],
+                    "Label": query["Label"],
+                    "Values": [_STATISTICS[stat["Stat"]](samples)],
+                }
+            )
+        return {"MetricDataResults": results}
+
+
+def test_agent_aws_ec2_reports_a_status_check_that_failed_once_in_the_period() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("ec2_names", None)
+    config.add_service_tags("ec2_tags", (None, None))
+    distributor = ResultDistributor()
+    ec2_summary = EC2Summary(FakeEC2Client(), "region", config, distributor)
+    ec2 = EC2(
+        SampledCloudwatchClient(
+            {
+                "StatusCheckFailed_System": [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "StatusCheckFailed_Instance": [0.0] * 10,
+            }
+        ),
+        "region",
+        config,
+    )
+    distributor.add(ec2_summary.name, ec2)
+    ec2_summary.run()
+
+    results = ec2.run().results
+
+    assert results
+    for result in results:
+        values = {row["Id"].split("_", 2)[2]: row["Values"] for row in result.content}
+        assert values["StatusCheckFailed_System"] == [(1.0, None)]
+        assert values["StatusCheckFailed_Instance"] == [(0.0, None)]

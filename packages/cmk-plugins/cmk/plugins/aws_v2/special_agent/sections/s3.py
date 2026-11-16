@@ -91,6 +91,11 @@ class S3BucketHelper:
 
         for bucket in buckets:
             bucket_name = bucket["Name"]
+            # Requests with MaxBuckets get the region with each bucket. GetBucketLocation
+            # is only a fallback: a bucket policy can deny it.
+            if region := bucket.get("BucketRegion"):
+                bucket["LocationConstraint"] = region
+                continue
 
             # request additional LocationConstraint information
             try:

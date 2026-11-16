@@ -14,12 +14,14 @@
 
 import abc
 import re
+import time
 from collections import defaultdict
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from typing import Any, Literal, NamedTuple, NotRequired, override, TypedDict
 
 from botocore.client import BaseClient
+from botocore.exceptions import ClientError
 from pydantic import BaseModel
 
 from ..config import AGENT, AWSConfig, LOGGER, RawTags, Tags, TagsImportPatternOption
@@ -459,6 +461,16 @@ class AWSSection(DataCache):
 # quotas once a day is enough, and it keeps the agent far below the low rate limit of the
 # Service Quotas API. An approved increase shows up in the limits at most one day later.
 QUOTA_CACHE_INTERVAL = 86400
+# When AWS throttles the quota requests, the stored quotas are good enough for this long.
+STORED_QUOTAS_MAX_AGE = 2 * QUOTA_CACHE_INTERVAL
+
+_THROTTLING_ERROR_CODES = frozenset(
+    {"TooManyRequestsException", "ThrottlingException", "Throttling", "RequestLimitExceeded"}
+)
+
+
+def _is_throttling(error: ClientError) -> bool:
+    return error.response.get("Error", {}).get("Code") in _THROTTLING_ERROR_CODES
 
 
 class ServiceQuotas(DataCache):
@@ -495,6 +507,44 @@ class ServiceQuotas(DataCache):
             for quota in page.get("Quotas", []):
                 quotas.append(Quota(**quota).model_dump())
         return quotas
+
+    def get(self, use_cache: bool, now: float | None = None) -> list[dict[str, object]]:
+        """The quotas from the cache if it is valid, otherwise from AWS.
+
+        If AWS throttles the request, the stored quotas are used while they are younger than
+        STORED_QUOTAS_MAX_AGE.
+        """
+        timestamp = self.cache_timestamp
+        age = None if timestamp is None else (time.time() if now is None else now) - timestamp
+        if use_cache and age is not None and 0 <= age < self.cache_interval:
+            try:
+                cached: list[dict[str, object]] = self.get_cached_data()
+                return cached
+            except (OSError, ValueError) as exc:
+                LOGGER.warning("Failed to read the stored quotas: %(error)s", {"error": exc})
+
+        try:
+            live = self.get_live_data()
+        except ClientError as error:
+            if not (use_cache and _is_throttling(error)):
+                raise
+            if age is None or not 0 <= age <= STORED_QUOTAS_MAX_AGE:
+                raise
+            LOGGER.warning(
+                "AWS throttled the %(key)s request, using the stored quotas: %(error)s",
+                {"key": self._key, "error": error},
+            )
+            try:
+                stored: list[dict[str, object]] = self.get_cached_data()
+            except OSError, ValueError:
+                raise error from None
+            return stored
+
+        try:
+            self._write_to_cache(live)
+        except (OSError, TypeError) as exc:
+            LOGGER.info("Failed to write the quotas to the cache: %(error)s", {"error": exc})
+        return live
 
 
 class AWSSectionLimits(AWSSection):
@@ -548,8 +598,8 @@ class AWSSectionLimits(AWSSection):
             return
 
         quotas = ServiceQuotas(self._quota_client, self._config, self._region, service_code)
-        for quota in quotas.get_data(use_cache=self._use_cache):
-            yield Quota(**quota)
+        for quota in quotas.get(self._use_cache):
+            yield Quota.model_validate(quota)
 
 
 class AWSSectionCloudwatch(AWSSection):

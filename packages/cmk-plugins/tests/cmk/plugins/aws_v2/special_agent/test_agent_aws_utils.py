@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import importlib
+import time
 from argparse import Namespace as Args
 from collections.abc import Iterator, Mapping
 
@@ -123,16 +125,81 @@ class CountingQuotaClient:
         yield {"Quotas": [{"QuotaName": "Clusters per account", "Value": 42.0}]}
 
 
+# The mypy setup of this test target does not see botocore, so we load it at run time.
+ClientError = importlib.import_module("botocore.exceptions").ClientError
+
+QUOTAS = [{"QuotaName": "Clusters per account", "Value": 42.0}]
+
+
+class FailingQuotaClient:
+    def __init__(self, error_code: str) -> None:
+        self._error_code = error_code
+
+    def get_paginator(self, operation_name: str) -> FailingQuotaClient:
+        assert operation_name == "list_service_quotas"
+        return self
+
+    def paginate(
+        self,
+        ServiceCode: str,  # noqa: ARG002
+        PaginationConfig: Mapping[str, object],  # noqa: ARG002
+    ) -> Iterator[Mapping[str, object]]:
+        raise ClientError(
+            {"Error": {"Code": self._error_code, "Message": "nope"}}, "ListServiceQuotas"
+        )
+
+
+def _config() -> AWSConfig:
+    return AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance).for_account(
+        "123456789012"
+    )
+
+
 def test_service_quotas_are_read_from_aws_once_a_day() -> None:
-    config = AWSConfig(
-        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
-    ).for_account("123456789012")
     client = CountingQuotaClient()
-    ServiceQuotas(client, config, "region", "ecs").get_data(use_cache=True)
-    quotas = ServiceQuotas(client, config, "region", "ecs")
+    ServiceQuotas(client, _config(), "region", "ecs").get(use_cache=True)
 
-    cached = quotas.get_data(use_cache=True)
+    cached = ServiceQuotas(client, _config(), "region", "ecs").get(
+        use_cache=True, now=time.time() + 23 * 3600
+    )
 
-    assert cached == [{"QuotaName": "Clusters per account", "Value": 42.0}]
+    assert cached == QUOTAS
     assert client.listings == 1
-    assert quotas.cache_interval == 24 * 3600
+
+
+def test_service_quotas_are_read_from_aws_again_after_a_day() -> None:
+    client = CountingQuotaClient()
+    ServiceQuotas(client, _config(), "region", "ecs").get(use_cache=True)
+
+    ServiceQuotas(client, _config(), "region", "ecs").get(
+        use_cache=True, now=time.time() + 25 * 3600
+    )
+
+    assert client.listings == 2
+
+
+def test_service_quotas_fall_back_to_stored_quotas_when_aws_throttles() -> None:
+    ServiceQuotas(CountingQuotaClient(), _config(), "region", "ecs").get(use_cache=True)
+    quotas = ServiceQuotas(
+        FailingQuotaClient("TooManyRequestsException"), _config(), "region", "ecs"
+    )
+
+    stored = quotas.get(use_cache=True, now=time.time() + 30 * 3600)
+
+    assert stored == QUOTAS
+
+
+@pytest.mark.parametrize(
+    "error_code, hours, use_cache",
+    [
+        pytest.param("TooManyRequestsException", 49, True, id="stored quotas too old"),
+        pytest.param("AccessDeniedException", 30, True, id="not throttled"),
+        pytest.param("TooManyRequestsException", 30, False, id="cache disabled"),
+    ],
+)
+def test_service_quotas_report_the_aws_error(error_code: str, hours: int, use_cache: bool) -> None:
+    ServiceQuotas(CountingQuotaClient(), _config(), "region", "ecs").get(use_cache=True)
+    quotas = ServiceQuotas(FailingQuotaClient(error_code), _config(), "region", "ecs")
+
+    with pytest.raises(ClientError):
+        quotas.get(use_cache=use_cache, now=time.time() + hours * 3600)

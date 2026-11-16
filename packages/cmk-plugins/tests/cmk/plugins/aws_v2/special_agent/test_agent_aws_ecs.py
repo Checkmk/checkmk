@@ -212,7 +212,7 @@ def test_ecs_limits_use_the_stored_quotas() -> None:
     ).for_account("123456789012")
     config.add_single_service_config("ecs_names", None)
     config.add_service_tags("ecs_tags", (None, None))
-    ServiceQuotas(PageSizeRecordingQuotaClient(), config, "region", "ecs").get_data()
+    ServiceQuotas(PageSizeRecordingQuotaClient(), config, "region", "ecs").get(use_cache=True)
     quota_client = PageSizeRecordingQuotaClient()
     ecs_limits = ECSLimits(FakeEmptyECSClient(), "region", config, None, quota_client)
 

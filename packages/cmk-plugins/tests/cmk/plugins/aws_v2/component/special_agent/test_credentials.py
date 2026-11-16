@@ -124,7 +124,6 @@ def test_every_spoke_account_gets_a_session_of_that_account() -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True, reason="Every session parses the service models again")
 @pytest.mark.usefixtures("fake_sts")
 def test_another_spoke_account_adds_little_memory() -> None:
     credentials = AwsCredentials(

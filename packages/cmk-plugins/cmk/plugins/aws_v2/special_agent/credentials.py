@@ -24,6 +24,7 @@ listing says nothing about the accounts themselves, and without their data Check
 show their services as vanished.
 """
 
+import functools
 import json
 import threading
 from collections.abc import Mapping, Sequence
@@ -31,6 +32,8 @@ from dataclasses import dataclass
 
 import boto3
 import botocore
+import botocore.loaders
+import botocore.session
 
 from cmk.server_side_programs.v1 import Storage
 
@@ -95,6 +98,45 @@ def role_session_name(site: str | None) -> str:
     return f"checkmk-{site}" if site else "checkmk"
 
 
+@functools.cache
+def _model_loader() -> botocore.loaders.Loader:
+    """The loader of the AWS service models, shared by every session of the run.
+
+    Each botocore session would otherwise parse and keep its own copy of the models. The
+    EC2 model alone takes about 24 MiB, which a run over many accounts paid per account.
+    The models are only read, so the sessions can share them.
+    """
+    return botocore.loaders.create_loader(
+        botocore.session.get_session().get_config_variable("data_path")
+    )
+
+
+def _new_session(
+    region: str,
+    *,
+    access_key_id: str | None = None,
+    secret_access_key: str | None = None,
+    session_token: str | None = None,
+    profile_name: str | None = None,
+) -> boto3.session.Session:
+    loader = _model_loader()
+    botocore_session = botocore.session.get_session()
+    botocore_session.register_component("data_loader", loader)
+    # Under the lock: boto3 appends its own data path to the shared loader, which other
+    # threads read while they create clients.
+    with CLIENT_LOCK:
+        session = boto3.session.Session(
+            aws_access_key_id=access_key_id,
+            aws_secret_access_key=secret_access_key,
+            aws_session_token=session_token,
+            region_name=region,
+            botocore_session=botocore_session,
+            profile_name=profile_name,
+        )
+        loader.search_paths[:] = dict.fromkeys(loader.search_paths)
+    return session
+
+
 def _login_session(
     login: AccessKey | DefaultCredentials | NamedProfile, region: str
 ) -> boto3.session.Session:
@@ -102,15 +144,11 @@ def _login_session(
     # BotoCoreError here. The callers build the session inside their own try.
     match login:
         case AccessKey(key_id=key_id, secret=secret):
-            return boto3.session.Session(
-                aws_access_key_id=key_id,
-                aws_secret_access_key=secret,
-                region_name=region,
-            )
+            return _new_session(region, access_key_id=key_id, secret_access_key=secret)
         case DefaultCredentials():
-            return boto3.session.Session(region_name=region)
+            return _new_session(region)
         case NamedProfile(name=name):
-            return boto3.session.Session(profile_name=name, region_name=region)
+            return _new_session(region, profile_name=name)
 
 
 def _assume_role(
@@ -132,11 +170,11 @@ def _assume_role(
     credentials = assumed_role_object["Credentials"]
     # arn:<partition>:sts::<account>:assumed-role/<role>/<session>
     account_id = assumed_role_object["AssumedRoleUser"]["Arn"].split(":")[4]
-    return boto3.session.Session(
-        aws_access_key_id=credentials["AccessKeyId"],
-        aws_secret_access_key=credentials["SecretAccessKey"],
-        aws_session_token=credentials["SessionToken"],
-        region_name=region,
+    return _new_session(
+        region,
+        access_key_id=credentials["AccessKeyId"],
+        secret_access_key=credentials["SecretAccessKey"],
+        session_token=credentials["SessionToken"],
     ), account_id
 
 

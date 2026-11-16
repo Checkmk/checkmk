@@ -8,6 +8,7 @@ import type { StageInformation } from 'cmk-shared-typing/typescript/welcome'
 import { defineComponent, h, ref } from 'vue'
 
 import WelcomeSnapin from '@/welcome/components/snapin/WelcomeSnapin.vue'
+import { resetSharedStageInformation } from '@/welcome/composables/useSharedStageInformation'
 
 import { createMockCards } from '../../mockCards'
 
@@ -33,6 +34,8 @@ vi.mock('cmk-ui-library/components/CmkSlideInDialog.vue', () => ({
     }
   })
 }))
+
+afterEach(() => resetSharedStageInformation())
 
 test('clicking "Continue exploration" button on sidebar snapin opens slideout with welcome steps', async () => {
   const mockCards = createMockCards()

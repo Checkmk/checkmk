@@ -12,7 +12,6 @@ import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTab
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
-import { refreshSidebarSnapin } from '@/sidebar/lib/snapin-refresh'
 import FurtherGuides from '@/welcome/components/FurtherGuides.vue'
 import NextSteps from '@/welcome/components/NextSteps.vue'
 import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
@@ -26,6 +25,7 @@ import {
 import WelcomeBanner from './components/WelcomeBanner.vue'
 import WelcomeFooter from './components/WelcomeFooter.vue'
 import { countCompletedSteps, totalSteps } from './components/steps/stepComponents'
+import { useSharedStageInformation } from './composables/useSharedStageInformation'
 
 const { _t } = usei18n()
 
@@ -35,7 +35,7 @@ const props = defineProps<{
   is_start_url: boolean
 }>()
 
-const currentStageInformation = ref(props.stage_information)
+const currentStageInformation = useSharedStageInformation(props.stage_information)
 const completedSteps = computed(() => countCompletedSteps(currentStageInformation.value.finished))
 const openedTab = ref<string>('explore')
 
@@ -45,8 +45,6 @@ async function stepCompleted(stepId: StepId): Promise<void> {
       (await getWelcomeStageInformation(props.cards.get_stage_information)) ||
       currentStageInformation.value
   })
-
-  refreshSidebarSnapin('a_welcome')
 }
 </script>
 

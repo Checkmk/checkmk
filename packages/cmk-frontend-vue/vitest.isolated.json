@@ -64,5 +64,6 @@
   "tests/ui-component-library/code-example-pages.test.ts",
   "tests/ui-component-library/component-pages.test.ts",
   "tests/welcome/WelcomeApp.test.ts",
+  "tests/welcome/WelcomeStageSync.test.ts",
   "tests/welcome/components/snapin/WelcomeSnapin.test.ts"
 ]

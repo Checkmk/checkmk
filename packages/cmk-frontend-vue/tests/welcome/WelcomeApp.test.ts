@@ -8,6 +8,7 @@ import type { StageInformation } from 'cmk-shared-typing/typescript/welcome'
 
 import WelcomeApp from '@/welcome/WelcomeApp.vue'
 import { getWelcomeStageInformation } from '@/welcome/components/steps/utils'
+import { resetSharedStageInformation } from '@/welcome/composables/useSharedStageInformation'
 
 import { createMockCards } from './mockCards'
 
@@ -15,7 +16,6 @@ vi.mock('@/welcome/components/steps/utils', () => ({
   markStepAsComplete: vi.fn(async () => {}),
   getWelcomeStageInformation: vi.fn()
 }))
-vi.mock('@/sidebar/lib/snapin-refresh', () => ({ refreshSidebarSnapin: vi.fn() }))
 
 const ASSIGN = 'Assign responsibilities with contact groups'
 const ONBOARDING_DONE: StageInformation['finished'] = [
@@ -29,7 +29,10 @@ const renderApp = (finished: StageInformation['finished']) =>
     props: { cards: createMockCards(), stage_information: { finished }, is_start_url: false }
   })
 
-afterEach(() => localStorage.clear())
+afterEach(() => {
+  localStorage.clear()
+  resetSharedStageInformation()
+})
 
 test('further guides stay hidden until the onboarding is complete', () => {
   renderApp(['add_host', 'enable_notifications'])

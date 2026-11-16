@@ -13,6 +13,7 @@ import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
+import { useSharedStageInformation } from '../../composables/useSharedStageInformation'
 import StepsProgressBar from '../StepsProgressBar.vue'
 import { countCompletedSteps, totalSteps } from '../steps/stepComponents'
 import WelcomeSnapinSlideout from './WelcomeSnapinSlideout.vue'
@@ -24,7 +25,7 @@ const props = defineProps<{
   stage_information: StageInformation
 }>()
 
-const currentStageInformation = ref(props.stage_information)
+const currentStageInformation = useSharedStageInformation(props.stage_information)
 const completedSteps = computed(() => countCompletedSteps(currentStageInformation.value.finished))
 const completed = computed(() => completedSteps.value === totalSteps)
 const slideoutOpen = ref<boolean>(false)

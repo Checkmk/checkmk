@@ -1780,16 +1780,16 @@ marshmallow-oneofschema==3.2.0 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   apispec-oneofschema
-mcp==2.0.0 \
-    --hash=sha256:0f440e735c13ece8bb19bc62cf0b86f4313448432fbb77d35e14034f4e050728 \
-    --hash=sha256:1cb4c75d2d2c7b8c1d756355e5d82a39f2822cc7f13e22a2051d7ca3592349d6
+mcp==2.3.0 \
+    --hash=sha256:8b147a50441cf059dc88c684e0aeed3687f0aa0f39c6cde7b90330effd2b34d8 \
+    --hash=sha256:dd0c44c089d16453e8ae31a3877a0054d7a2314caaa81f5e0541b9b1734b2377
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
-mcp-types==2.0.0 \
-    --hash=sha256:6b2de797ca2797f568b79529e1b25948e34de511bcc0bd82fef1039a6d1b8eb0 \
-    --hash=sha256:d7d939b9285c9961ae8866ba75ef85da34d12bafe276efbf4eb6a131786d8379
+mcp-types==2.3.0 \
+    --hash=sha256:968efdbdaedfab06adae40d378a34395f1090c5921d4be3c9cde283aaf76d91d \
+    --hash=sha256:d1e46549edb35ee19a94940fcee6d1addd7e589ab7ea92dda83f5d84781fc362
     # via
     #   -c requirements.txt
     #   mcp

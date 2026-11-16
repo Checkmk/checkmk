@@ -17,7 +17,7 @@ type AlertsColumn = Literal["Alert name", "Service match", "Thresholds"]
 
 
 class Alerts(CmkPage):
-    """Represent the page `Setup -> Events -> Alerts`."""
+    """Represent the page `Setup -> Telemetry -> Alerts`."""
 
     page_title = "Alerts"
     main_menu_name = "Alerts"

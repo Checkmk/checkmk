@@ -255,7 +255,7 @@ class AlertWizard(CmkPage):
 
 
 class AddAlert(AlertWizard):
-    """Represent the page `Setup -> Events -> Alerts -> Add alert`."""
+    """Represent the page `Setup -> Telemetry -> Alerts -> Add alert`."""
 
     page_title = "Add alert"
 
@@ -285,7 +285,7 @@ class AddAlert(AlertWizard):
 
 
 class EditAlert(AlertWizard):
-    """Represent the page `Setup -> Events -> Alerts -> Edit alert`."""
+    """Represent the page `Setup -> Telemetry -> Alerts -> Edit alert`."""
 
     page_title = "Edit alert"
 

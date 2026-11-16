@@ -59,6 +59,42 @@ class Exceptions:
         self.ResourceNotFoundException = ResourceNotFoundException
 
 
+class EmptyPaginatorTables:
+    def paginate(self) -> Iterator[Mapping[str, list[str]]]:
+        yield {"TableNames": []}
+
+
+class FakeEmptyDynamoDBClient:
+    def __init__(self) -> None:
+        self.table_listings = 0
+
+    def describe_limits(self) -> Mapping[str, object]:
+        return DynamoDBDescribeLimitsIB.create_instances(amount=1)[0]
+
+    def get_paginator(self, operation_name: str) -> EmptyPaginatorTables:
+        assert operation_name == "list_tables"
+        self.table_listings += 1
+        return EmptyPaginatorTables()
+
+
+def test_dynamodb_summary_does_not_list_tables_again_when_limits_found_none() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("dynamodb_names", None)
+    config.add_service_tags("dynamodb_tags", (None, None))
+    client = FakeEmptyDynamoDBClient()
+    distributor = ResultDistributor()
+    dynamodb_limits = DynamoDBLimits(client, "region", config, distributor)
+    dynamodb_summary = DynamoDBSummary(client, "region", config, distributor)
+    distributor.add(dynamodb_limits.name, dynamodb_summary)
+
+    dynamodb_limits.run()
+    dynamodb_summary.run()
+
+    assert client.table_listings == 1
+
+
 class FakeDynamoDBClient:
     def __init__(self) -> None:
         self._tables = DynamoDBDescribeTableIB.create_instances(amount=3)

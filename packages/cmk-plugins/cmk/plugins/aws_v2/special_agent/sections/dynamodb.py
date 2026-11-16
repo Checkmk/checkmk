@@ -265,10 +265,7 @@ class DynamoDBSummary(AWSSection):
 
     @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("dynamodb_limits")
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents([], 0.0)
+        return self._received_inventory("dynamodb_limits")
 
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[object]:
@@ -299,11 +296,11 @@ class DynamoDBSummary(AWSSection):
         self, colleague_contents: AWSColleagueContents
     ) -> Sequence[dict[str, object]]:
         if self._names is None:
-            if colleague_contents.content:
+            if colleague_contents.content is not None:
                 return colleague_contents.content
             return _describe_dynamodb_tables(self._client, self._get_response_content)
 
-        if colleague_contents.content:
+        if colleague_contents.content is not None:
             return [
                 table for table in colleague_contents.content if table["TableName"] in self._names
             ]

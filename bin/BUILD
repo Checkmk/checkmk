@@ -15,6 +15,7 @@ cc_binary(
         "static_libstdcpp",
     ],
     tags = ["no-lint"],
+    visibility = ["//packages/cmk-ec:__pkg__"],
 )
 
 cc_binary(

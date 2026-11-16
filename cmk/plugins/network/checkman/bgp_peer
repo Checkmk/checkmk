@@ -1,4 +1,4 @@
-title: BGP peer
+title: BGP: Peers
 agents: snmp
 catalog: hw/network/arista
 license: GPLv2

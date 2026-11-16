@@ -1,4 +1,4 @@
-title: Windows: Intel Bonding Network Interface
+title: Windows: Intel Network Interface Bonding
 agents: windows
 catalog: os/networking
 license: GPLv2

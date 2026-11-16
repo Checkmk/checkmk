@@ -1,4 +1,4 @@
-title: UCD SNMP Daemon: Processes
+title: Processes: State and Count via Net-SNMP
 agents: snmp
 catalog: os/kernel
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Monitor Network Interfaces via Standard MIB Using 64-Bit Counters
+title: Network Interfaces: 64-bit Traffic and Status
 agents: snmp
 catalog: hw/network/generic
 license: GPLv2

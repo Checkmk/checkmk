@@ -1,4 +1,4 @@
-title: Errors and Traffic over Network Interfaces
+title: Linux: Network Interface Errors and Traffic (deprecated)
 agents: linux
 catalog: os/networking
 license: GPLv2

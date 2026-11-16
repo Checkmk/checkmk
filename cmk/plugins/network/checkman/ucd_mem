@@ -1,4 +1,4 @@
-title: UCD SNMP Daemon: Memory Check
+title: Memory: Usage via Net-SNMP
 agents: snmp
 catalog: os/storage
 license: GPLv2

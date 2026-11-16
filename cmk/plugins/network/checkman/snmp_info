@@ -1,4 +1,4 @@
-title: SNMP: Informational Data about Host
+title: System: Information via SNMP
 agents: snmp
 catalog: os/misc
 license: GPLv2

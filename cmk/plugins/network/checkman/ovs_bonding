@@ -1,4 +1,4 @@
-title: Network interface bonds (Open vSwitch)
+title: Open vSwitch: Network Interface Bonding
 agents: linux
 catalog: os/networking
 license: GPLv2

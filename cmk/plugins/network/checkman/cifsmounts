@@ -1,4 +1,4 @@
-title: Health of CIFS Mounts Mounted on UNIX/ Linux
+title: Filesystems: CIFS Mounts
 agents: linux, aix
 catalog: os/services
 license: GPLv2

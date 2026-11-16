@@ -1,4 +1,4 @@
-title: Traffic and Status of Network Interfaces
+title: Network Interfaces: Traffic and Status
 agents: snmp, hpux, solaris, openvms, agent_ucs_bladecenter, aix, hp_msa
 catalog: hw/network/generic
 license: GPLv2

@@ -1,4 +1,4 @@
-title: HAProxy: Status of the Frontends
+title: HAProxy: Frontend Status
 agents: freebsd, linux
 catalog: app/haproxy
 license: GPLv2

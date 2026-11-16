@@ -60,6 +60,19 @@ beforeEach(() => {
 
 afterEach(() => {
   resetGlobalTimeState()
+  vi.useRealTimers()
+})
+
+const A_MOMENT = 1_800_000_000
+
+const answeringAnyRange: GraphDataFetcher = async () => ({
+  title: 'CPU',
+  metrics: [],
+  timeRange: { start: 0, end: 3_600, step: 60 },
+  horizontalLines: [],
+  shadedRegions: [],
+  errors: [],
+  warnings: []
 })
 
 // The resize debounce registers onUnmounted, so this needs a mounted component.
@@ -393,7 +406,19 @@ test('a resolved graph reports the range it was asked for, not the one it was an
   }, asked)
 
   await waitFor(() => expect(loads.value[0]!.graph).not.toBeNull())
-  expect(loads.value[0]!.graph!.requestedTimeRange).toEqual(asked)
+  expect(loads.value[0]!.graph!.answer.request).toMatchObject(asked)
+})
+
+test('a resolved graph is answered as of the moment it was requested, not when the answer came', async () => {
+  vi.useFakeTimers({ now: A_MOMENT * 1000, toFake: ['Date'] })
+
+  const { loads } = renderWithFetcher(async (definition, params) => {
+    vi.setSystemTime((A_MOMENT + 90) * 1000)
+    return answeringAnyRange(definition, params)
+  })
+
+  await waitFor(() => expect(loads.value[0]!.graph).not.toBeNull())
+  expect(loads.value[0]!.graph!.answer.request.requestedAt).toBe(A_MOMENT)
 })
 
 test('a fetcher that reports no diagnostics fields leaves them empty', async () => {
@@ -483,6 +508,21 @@ describe('useGraphData — graphs away from the view', () => {
     await waitFor(() => expect(fetchedGraphs()).toEqual(['{"graph": 0}']))
     expect(loads.value[1]!.graph).not.toBeNull()
   })
+
+  test('a graph that comes near later is answered as of the moment its range was requested', async () => {
+    vi.useFakeTimers({ now: A_MOMENT * 1000, toFake: ['Date'] })
+    const nearView = ref([true, false])
+    const { loads } = renderNearView(nearView)
+    await waitFor(() => expect(loads.value[0]!.graph).not.toBeNull())
+    vi.setSystemTime((A_MOMENT + 120) * 1000)
+
+    nearView.value = [true, true]
+
+    await waitFor(() => expect(loads.value[1]!.graph).not.toBeNull())
+    expect(loads.value[1]!.graph!.answer.request.requestedAt).toBe(
+      loads.value[0]!.graph!.answer.request.requestedAt
+    )
+  })
 })
 
 test('a graph that fails leaves the data of the others in place', async () => {
@@ -541,6 +581,18 @@ describe('the page refresh', () => {
     useGlobalRefresh().resumeRefresh()
 
     await waitFor(() => expect(loadsSoFar()).toBe(loadsBefore + 1))
+  })
+
+  test('a refresh is answered as of the moment it fired', async () => {
+    vi.useFakeTimers({ now: A_MOMENT * 1000, toFake: ['Date'] })
+    const { loads } = renderWithFetcher(answeringAnyRange, A_RANGE)
+    await waitFor(() => expect(loads.value[0]!.graph).not.toBeNull())
+    const refreshedAt = A_MOMENT + 30
+    vi.setSystemTime(refreshedAt * 1000)
+
+    useGlobalRefresh().resumeRefresh()
+
+    await waitFor(() => expect(loads.value[0]!.graph!.answer.request.requestedAt).toBe(refreshedAt))
   })
 
   test('a refresh whose content swap will unmount this graph fetches nothing', async () => {

@@ -14,7 +14,12 @@ import GraphPanel from '@/graphing/components/GraphPanel.vue'
 import type { Metric, TimeRange } from '@/graphing/components/TimeSeriesGraph'
 import { MIN_ZOOM_TIME_RANGE_SECONDS } from '@/graphing/components/constants'
 import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
-import type { BurgerMenuCallable, GraphPanelProps, RequestedTimeRange } from '@/graphing/types'
+import type {
+  BurgerMenuCallable,
+  FetchAnswer,
+  GraphPanelProps,
+  RequestedTimeRange
+} from '@/graphing/types'
 import { binStart } from '@/graphing/utils/bins'
 import { continuousTimeAxis } from '@/graphing/utils/timeRange'
 
@@ -162,6 +167,15 @@ const UNIT: components['schemas']['ApiUnitFormat'] = {
 
 const TIME_RANGE: TimeRange = { start: 1_781_524_800, end: 1_781_528_400, step: 300 }
 const REQUESTED: RequestedTimeRange = { start: 1_781_524_800, end: 1_781_528_400 }
+const LONG_AFTER_EVERY_WINDOW = 2_000_000_000
+
+function answerLongAfter(requested: RequestedTimeRange, dataTimeRange: TimeRange): FetchAnswer {
+  return {
+    dataTimeRange,
+    request: { ...requested, requestedAt: LONG_AFTER_EVERY_WINDOW }
+  }
+}
+const ANSWER_TO_REQUESTED = answerLongAfter(REQUESTED, TIME_RANGE)
 const FIGURE_WIDTH = 800
 
 // All-disabled default keeps the "panel renders no button" assertions meaningful (zoom/pan
@@ -196,7 +210,7 @@ function renderPanelWithLegend(metrics: Metric[], hiddenMetricNames: string[] = 
   return render(GraphPanel, {
     props: {
       metrics,
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -236,7 +250,7 @@ function renderPanelForRequest(overrides: Partial<GraphPanelProps> = {}) {
   return render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: answerLongAfter(MID_INTERVAL_REQUEST, TIME_RANGE),
       requestedTimeRange: MID_INTERVAL_REQUEST,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -260,7 +274,7 @@ test('states the resolution the fetch resolved once one has landed', async () =>
 })
 
 test('states no resolution until a fetch has resolved one', () => {
-  renderPanelForRequest({ showTimestamp: true, dataTimeRange: undefined })
+  renderPanelForRequest({ showTimestamp: true, answer: null })
 
   expect(screen.queryByText(ANY_RESOLUTION)).not.toBeInTheDocument()
 })
@@ -269,7 +283,7 @@ test('does not render the legend when showLegend is not set', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -283,7 +297,7 @@ test('renders the legend when showLegend is true', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -298,7 +312,7 @@ test('hands the value resolution the renderer reports up to the host', async () 
   const { emitted } = render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -317,8 +331,7 @@ test('the brush bar shows the committed window, not the range the curves are dra
     props: {
       metrics: [CPU],
       // A range from some earlier fetch, which is what the panel draws while awaiting data.
-      dataTimeRange: { start: 1, end: 2, step: 300 },
-      answeredTimeRange: { start: 1, end: 2 },
+      answer: answerLongAfter({ start: 1, end: 2 }, { start: 1, end: 2, step: 300 }),
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -335,7 +348,7 @@ test('renders the context view when showBrush is set and a brush snapshot is sup
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -350,7 +363,7 @@ function renderPanelWithBrush() {
   return render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: answerLongAfter({ start: 200, end: 300 }, TIME_RANGE),
       // Same span as the brush move below, so the published range is the moved one.
       requestedTimeRange: { start: 200, end: 300 },
       panelKey: 0,
@@ -390,8 +403,7 @@ test('a brushed window offers the reset affordance once it lands', async () => {
 
   await rerender({
     requestedTimeRange: brushed,
-    answeredTimeRange: brushed,
-    dataTimeRange: { ...brushed, step: 10 }
+    answer: answerLongAfter(brushed, { ...brushed, step: 10 })
   })
 
   expect(screen.getByTestId('inspecting')).toHaveTextContent('true')
@@ -407,7 +419,7 @@ async function pannedPanel() {
   const rendered = render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: answerLongAfter({ start: 200, end: 300 }, TIME_RANGE),
       requestedTimeRange: { start: 200, end: 300 },
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -423,7 +435,7 @@ test("the panel's own pan echoing back keeps the reset affordance", async () => 
 
   await rerender({
     requestedTimeRange: PANNED,
-    dataTimeRange: PANNED_DATA,
+    answer: answerLongAfter(PANNED, PANNED_DATA),
     rangeChange: { version: 1, source: 0 }
   })
 
@@ -435,7 +447,7 @@ test("a sibling panel's commit ends the reset affordance", async () => {
 
   await rerender({
     requestedTimeRange: PANNED,
-    dataTimeRange: PANNED_DATA,
+    answer: answerLongAfter(PANNED, PANNED_DATA),
     rangeChange: { version: 1, source: 1 }
   })
 
@@ -446,7 +458,7 @@ test('does not render the context view when showBrush is not set', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -472,11 +484,10 @@ test('reports time zoom at its floor once the requested window is the narrowest 
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       // Served a step wider, as the backend does.
-      dataTimeRange: {
-        start: 1_781_524_800,
-        end: 1_781_524_800 + MIN_ZOOM_TIME_RANGE_SECONDS + 60,
-        step: 60
-      }
+      answer: answerLongAfter(
+        { start: 1_781_524_800, end: 1_781_524_800 + MIN_ZOOM_TIME_RANGE_SECONDS },
+        { start: 1_781_524_800, end: 1_781_524_800 + MIN_ZOOM_TIME_RANGE_SECONDS + 60, step: 60 }
+      )
     }
   })
 
@@ -488,7 +499,7 @@ test('does not report time zoom at its floor while the requested window is still
     props: {
       metrics: [CPU],
       interaction: INTERACTION_NONE,
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH
@@ -520,7 +531,7 @@ function renderPanelServedSixHourly(overrides: Partial<GraphPanelProps> = {}) {
   return render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: SERVED_SIX_HOURLY,
+      answer: answerLongAfter(REQUEST_NARROWER_THAN_A_STEP, SERVED_SIX_HOURLY),
       requestedTimeRange: REQUEST_NARROWER_THAN_A_STEP,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -534,16 +545,18 @@ function renderPanelServedSixHourly(overrides: Partial<GraphPanelProps> = {}) {
 // follows the data on screen: a coarse answer raises it above the configured minimum.
 test('reports time zoom at its floor once the requested window holds the fewest samples the served resolution fills', () => {
   const floor = continuousTimeAxis().zoomFloor(SERVED_SIX_HOURLY)
+  const atTheFloor = { start: SIX_HOURLY_GRID_BOUNDARY, end: SIX_HOURLY_GRID_BOUNDARY + floor }
 
   renderPanelServedSixHourly({
-    requestedTimeRange: { start: SIX_HOURLY_GRID_BOUNDARY, end: SIX_HOURLY_GRID_BOUNDARY + floor }
+    requestedTimeRange: atTheFloor,
+    answer: answerLongAfter(atTheFloor, SERVED_SIX_HOURLY)
   })
 
   expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent('true')
 })
 
 test('does not hold the requested window to the resolution of the data a fetch is replacing', () => {
-  renderPanelServedSixHourly({ answeredTimeRange: PREVIOUS_WINDOW })
+  renderPanelServedSixHourly({ answer: answerLongAfter(PREVIOUS_WINDOW, SERVED_SIX_HOURLY) })
 
   expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent('false')
 })
@@ -562,7 +575,7 @@ test('leaves a window the served resolution cannot fill where it was asked', () 
 // A fetch, not a gesture, can be what finds the floor. The renderer states it once, on entering:
 // an answer that keeps the window there has nothing new to say.
 test('does not have the renderer state the floor while a fetch is out', () => {
-  renderPanelServedSixHourly({ answeredTimeRange: PREVIOUS_WINDOW })
+  renderPanelServedSixHourly({ answer: answerLongAfter(PREVIOUS_WINDOW, SERVED_SIX_HOURLY) })
 
   expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('0')
 })
@@ -576,9 +589,11 @@ test('does not have the renderer state the floor of a graph that cannot be zoome
 })
 
 test('has the renderer state the floor once a fetch lands too coarse for the request', async () => {
-  const { rerender } = renderPanelServedSixHourly({ answeredTimeRange: PREVIOUS_WINDOW })
+  const { rerender } = renderPanelServedSixHourly({
+    answer: answerLongAfter(PREVIOUS_WINDOW, SERVED_SIX_HOURLY)
+  })
 
-  await rerender({ answeredTimeRange: REQUEST_NARROWER_THAN_A_STEP })
+  await rerender({ answer: answerLongAfter(REQUEST_NARROWER_THAN_A_STEP, SERVED_SIX_HOURLY) })
 
   expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('1')
 })
@@ -592,14 +607,16 @@ test('has the renderer state the floor for a window mounted at it', async () => 
 test('does not have the floor restated when a refresh answers at the same resolution', async () => {
   const { rerender } = renderPanelServedSixHourly()
 
-  await rerender({ dataTimeRange: { ...SERVED_SIX_HOURLY } })
+  await rerender({
+    answer: answerLongAfter(REQUEST_NARROWER_THAN_A_STEP, { ...SERVED_SIX_HOURLY })
+  })
 
   expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('1')
 })
 
 test('has the floor stated again once a later fetch lands the window back at it', async () => {
   const { rerender } = renderPanelServedSixHourly({
-    answeredTimeRange: REQUEST_NARROWER_THAN_A_STEP
+    answer: answerLongAfter(REQUEST_NARROWER_THAN_A_STEP, SERVED_SIX_HOURLY)
   })
   const wideEnough: RequestedTimeRange = {
     start: SIX_HOURLY_GRID_BOUNDARY,
@@ -607,11 +624,10 @@ test('has the floor stated again once a later fetch lands the window back at it'
   }
 
   await rerender({ requestedTimeRange: wideEnough })
-  await rerender({ answeredTimeRange: wideEnough, dataTimeRange: { ...SERVED_SIX_HOURLY } })
+  await rerender({ answer: answerLongAfter(wideEnough, { ...SERVED_SIX_HOURLY }) })
   await rerender({ requestedTimeRange: REQUEST_NARROWER_THAN_A_STEP })
   await rerender({
-    answeredTimeRange: REQUEST_NARROWER_THAN_A_STEP,
-    dataTimeRange: { ...SERVED_SIX_HOURLY }
+    answer: answerLongAfter(REQUEST_NARROWER_THAN_A_STEP, { ...SERVED_SIX_HOURLY })
   })
 
   expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('2')
@@ -623,7 +639,7 @@ test('holds the brush to the configured minimum span', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -641,7 +657,7 @@ test('does not render GraphBurgerMenu when showBurgerMenu is not set', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -655,7 +671,7 @@ test('does not render GraphBurgerMenu when the burger interaction is disabled', 
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -670,7 +686,7 @@ test('renders GraphBurgerMenu when the burger interaction is enabled, and is acc
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -695,7 +711,7 @@ test('a do-action from the header runs the callback with the graph the backends 
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -729,7 +745,7 @@ test('after a value-zoom, the burger menu action includes the shown Y-axis range
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -759,7 +775,7 @@ function renderPanelWithConsolidation() {
   return render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -791,7 +807,7 @@ test('the burger menu addresses the graph with the selected consolidation functi
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -812,7 +828,7 @@ test('renders title when showTitle is true', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -828,7 +844,7 @@ test('applies legend-right modifier class when legendPosition is "right"', () =>
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -845,7 +861,7 @@ test('does not apply legend-right modifier class when legendPosition is "bottom"
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -862,7 +878,7 @@ test('the renderer receives the baseline view without inspection', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -878,8 +894,11 @@ test('draws the window its data was fetched for while a newer one is fetched', (
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: { start: REQUESTED.start - 300, end: REQUESTED.end + 300, step: 300 },
-      answeredTimeRange: REQUESTED,
+      answer: answerLongAfter(REQUESTED, {
+        start: REQUESTED.start - 300,
+        end: REQUESTED.end + 300,
+        step: 300
+      }),
       requestedTimeRange: { start: 100, end: 200 },
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -894,7 +913,7 @@ test('a zoom intent from the renderer also publishes a requested time range upda
   const { emitted } = render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -913,7 +932,7 @@ test('a value-zoom intent from the renderer does not publish a requested time ra
   const { emitted } = render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -930,7 +949,7 @@ test('a pan intent from the renderer also publishes a requested time range updat
   const { emitted } = render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: answerLongAfter({ start: 200, end: 300 }, TIME_RANGE),
       // Same span as the pan below, so the published range is the panned one.
       requestedTimeRange: { start: 200, end: 300 },
       panelKey: 0,
@@ -951,7 +970,7 @@ test('a pan asks for the span that was requested, not the wider one that was ser
     props: {
       metrics: [CPU],
       // Served a step wider than requested, as the backend does.
-      dataTimeRange: { start: 1_781_524_800, end: 1_781_528_460, step: 60 },
+      answer: answerLongAfter(REQUESTED, { start: 1_781_524_800, end: 1_781_528_460, step: 60 }),
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -976,7 +995,7 @@ describe('reporting inspection to the host', () => {
     const { emitted } = render(GraphPanel, {
       props: {
         metrics: [CPU],
-        dataTimeRange: TIME_RANGE,
+        answer: ANSWER_TO_REQUESTED,
         requestedTimeRange: REQUESTED,
         panelKey: 0,
         figureWidth: FIGURE_WIDTH,
@@ -1004,7 +1023,7 @@ describe('reporting inspection to the host', () => {
     const { emitted } = render(GraphPanel, {
       props: {
         metrics: [CPU],
-        dataTimeRange: TIME_RANGE,
+        answer: ANSWER_TO_REQUESTED,
         requestedTimeRange: REQUESTED,
         panelKey: 0,
         figureWidth: FIGURE_WIDTH,
@@ -1022,7 +1041,7 @@ test('a reset intent from the renderer also publishes a requested time range upd
   const { emitted } = render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1043,7 +1062,7 @@ test('a reset intent from the renderer restores the baseline view', async () => 
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1062,7 +1081,7 @@ test('the renderer receives every metric when none are hidden', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU, MEM],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1077,7 +1096,7 @@ test('hiding a metric via the legend eye removes it from what TimeSeriesGraph re
   render(GraphPanel, {
     props: {
       metrics: [CPU, MEM],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1097,7 +1116,7 @@ test('a metric hidden via the hiddenMetricNames model is filtered from the rende
   render(GraphPanel, {
     props: {
       metrics: [CPU, MEM],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1114,7 +1133,7 @@ test('toggling a metric requests no new data', async () => {
   const { emitted } = render(GraphPanel, {
     props: {
       metrics: [CPU, MEM],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1131,7 +1150,7 @@ test('un-hiding a metric restores it to the renderer, and so to the tooltip', as
   render(GraphPanel, {
     props: {
       metrics: [CPU, MEM],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1156,7 +1175,7 @@ test('toggling two of five metrics hides exactly those two', async () => {
   render(GraphPanel, {
     props: {
       metrics,
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1194,7 +1213,7 @@ test('hiding every metric keeps the frame and states why', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU, MEM],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1213,7 +1232,7 @@ test('bringing one metric back clears the empty state', async () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU, MEM],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1235,7 +1254,7 @@ test('the renderer is told to offer the pin affordance', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1250,7 +1269,7 @@ test('a pin intent from the renderer stores the pinned time', async () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1267,7 +1286,7 @@ test('acting on an existing pin removes it', async () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1287,6 +1306,7 @@ test('draws its frame from the requested range before any data has arrived', () 
   render(GraphPanel, {
     props: {
       metrics: [],
+      answer: null,
       requestedTimeRange: { start: 1_700_000_000, end: 1_700_003_600 },
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1302,7 +1322,7 @@ test('keeps the all-hidden message when data arrived but nothing is shown', () =
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1320,7 +1340,7 @@ test('a window that returned no metrics does not blame hiding for the empty fram
   render(GraphPanel, {
     props: {
       metrics: [],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1339,7 +1359,7 @@ test('leaves an all-null panel to its host even when every metric is hidden', ()
         { ...CPU, data_points: [null, null, null] },
         { ...MEM, data_points: [null, null, null] }
       ],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1357,9 +1377,11 @@ test('keeps the all-hidden message up while a refetch is out', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU, MEM],
-      dataTimeRange: TIME_RANGE,
+      answer: answerLongAfter(
+        { start: REQUESTED.start - 3_600, end: REQUESTED.end - 3_600 },
+        TIME_RANGE
+      ),
       requestedTimeRange: REQUESTED,
-      answeredTimeRange: { start: REQUESTED.start - 3_600, end: REQUESTED.end - 3_600 },
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
@@ -1376,7 +1398,7 @@ test('forwards a provided y-axis, explicit range included, into the renderer opt
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1392,7 +1414,7 @@ test('derives the renderer y-axis from the metrics when none is provided', () =>
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
+      answer: ANSWER_TO_REQUESTED,
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -1445,7 +1467,7 @@ describe('a panel of bar metrics', () => {
     return renderPanelForRequest({
       binUnit: 'hour',
       requestedTimeRange: LAST_FOUR_HOURS,
-      dataTimeRange: SERVED
+      answer: answerLongAfter(LAST_FOUR_HOURS, SERVED)
     })
   }
 
@@ -1474,11 +1496,15 @@ describe('a panel of bar metrics', () => {
     { name: 'a 2 h view on a 90 min grid', step: 90 * 60, span: 2 * HOUR, awaitingData: false, atFloor: true, floor: 2 * HOUR },
     { name: 'a 2 h view while a fetch is out', step: 6 * HOUR, span: 2 * HOUR, awaitingData: true, atFloor: false, floor: HOUR }
   ])('refuses a time zoom where it clamps it, for $name', ({ step, span, awaitingData, atFloor, floor }) => {
+    const requestedTimeRange = { start: NOW - span, end: NOW }
     renderPanelForRequest({
       binUnit: 'hour',
-      requestedTimeRange: { start: NOW - span, end: NOW },
-      dataTimeRange: { start: NOW - span - step, end: NOW + step, step },
-      answeredTimeRange: awaitingData ? { start: NOW - step, end: NOW } : undefined
+      requestedTimeRange,
+      answer: answerLongAfter(awaitingData ? { start: NOW - step, end: NOW } : requestedTimeRange, {
+        start: NOW - span - step,
+        end: NOW + step,
+        step
+      })
     })
 
     expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent(String(atFloor))

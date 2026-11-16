@@ -124,7 +124,7 @@ test('fetches immediately on mount and exposes the mapped response', async () =>
   ])
 
   expect(data.metrics.value).toHaveLength(1)
-  expect(data.dataTimeRange.value).toEqual({ start: 0, end: 3600, step: 60 })
+  expect(data.answer.value?.dataTimeRange).toEqual({ start: 0, end: 3600, step: 60 })
   expect(data.metricsBySource.value.get('A')).toHaveLength(1)
   expect(data.overview.value).toBeUndefined()
 })
@@ -217,7 +217,7 @@ test('skips the request entirely once there is nothing left to draw', async () =
   await flush()
   expect(postSpy).toHaveBeenCalledTimes(1)
   expect(data.metrics.value).toEqual([])
-  expect(data.dataTimeRange.value).toBeUndefined()
+  expect(data.answer.value).toBeNull()
 })
 
 test('debounces edits into a single request', async () => {

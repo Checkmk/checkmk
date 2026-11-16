@@ -249,20 +249,17 @@ watch(overviewLoads, (overviews) => {
     .map(({ graph }) => graph)
     .find(
       (graph): graph is ResolvedGraph =>
-        graph !== null &&
-        sameRequestedTimeRange(graph.requestedTimeRange, brush.requestedDomain.value)
+        graph !== null && sameRequestedTimeRange(graph.answer.request, brush.requestedDomain.value)
     )
   if (answered === undefined) {
     return
   }
+  const { request, dataTimeRange } = answered.answer
   brush.onOverviewFetched({
-    requestedDomain: answered.requestedTimeRange,
-    drawnDomain: clippedToNavigableTime(
-      drawnTimeRange(answered.requestedTimeRange, answered.timeRange),
-      navigableBounds()
-    ),
+    requestedDomain: request,
+    drawnDomain: clippedToNavigableTime(drawnTimeRange(request, dataTimeRange), navigableBounds()),
     data: overviews.map(({ graph }) =>
-      graph === null ? null : { metrics: graph.metrics, dataTimeRange: graph.timeRange }
+      graph === null ? null : { metrics: graph.metrics, dataTimeRange: graph.answer.dataTimeRange }
     )
   })
 })
@@ -374,9 +371,8 @@ function onRetry(index: number): void {
         <GraphPanel
           :consolidation-fn="consolidationFnOfPanel(entry.index)"
           :metrics="graph.metrics"
-          :data-time-range="graph.timeRange"
+          :answer="graph.answer"
           :requested-time-range="requestedTimeRange"
-          :answered-time-range="graph.requestedTimeRange"
           :failed-time-range="entry.load.failedTimeRange"
           :panel-key="entry.index"
           :range-change="rangeChange"

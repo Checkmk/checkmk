@@ -203,7 +203,9 @@ const onCommittedTimeRange = (range: RequestedTimeRange, kind: TimeRangeCommitKi
 
 const baselineTimeRange = computed<TimeRange | undefined>(() => {
   const held = graph.value
-  return held ? timeAxis.value.drawnTimeRange(held.requestedTimeRange, held.timeRange) : undefined
+  return held
+    ? timeAxis.value.drawnTimeRange(held.answer.request, held.answer.dataTimeRange)
+    : undefined
 })
 
 const {
@@ -222,7 +224,7 @@ const {
   () => props.showPin,
   () => requestedTimeRange.value,
   onCommittedTimeRange,
-  () => graph.value?.requestedTimeRange,
+  () => graph.value?.answer.request,
   () => load.value?.failedTimeRange
 )
 
@@ -390,7 +392,7 @@ onBeforeUnmount(() => {
       <TimeSeriesGraph
         v-if="graph && baselineTimeRange"
         :view_time_range="baselineTimeRange"
-        :data_time_range="graph.timeRange"
+        :data_time_range="graph.answer.dataTimeRange"
         :metrics="visibleMetrics"
         :horizontal_lines="visibleHorizontalLines"
         :shaded_regions="graph?.shadedRegions ?? []"
@@ -398,7 +400,7 @@ onBeforeUnmount(() => {
         zoom-mode="time"
         :size="figureSize"
         :bin-unit="timeAxis.binUnit"
-        :min-time-range="timeAxis.minSpan(null, graph.timeRange)"
+        :min-time-range="timeAxis.minSpan(null, graph.answer.dataTimeRange)"
         :min-value-range="null"
         :inspecting="inspectionActive"
         :pan-enabled="true"

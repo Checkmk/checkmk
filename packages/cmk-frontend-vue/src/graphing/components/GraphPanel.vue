@@ -57,17 +57,15 @@ const timeAxis = computed(() =>
     : binnedTimeAxis(props.binUnit, getLocalTimeZone())
 )
 
-const answeredTimeRange = computed(() => props.answeredTimeRange ?? props.requestedTimeRange)
-
 const baselineTimeRange = computed<TimeRange>(() => {
-  if (!props.dataTimeRange) {
+  if (!props.answer) {
     return { ...props.requestedTimeRange, step: NOMINAL_STEP_SECONDS }
   }
-  return timeAxis.value.drawnTimeRange(answeredTimeRange.value, props.dataTimeRange)
+  return timeAxis.value.drawnTimeRange(props.answer.request, props.answer.dataTimeRange)
 })
 
 const headerTimeRange = computed<TimeRange | undefined>(() =>
-  props.dataTimeRange ? baselineTimeRange.value : undefined
+  props.answer ? baselineTimeRange.value : undefined
 )
 
 const {
@@ -88,7 +86,7 @@ const {
   () => props.interaction.pin === 'enabled', // getShowPin
   () => props.requestedTimeRange, // getRequestedTimeRange
   updateTimeRange, // onTimeRangeCommit
-  () => answeredTimeRange.value, // getAnsweredTimeRange
+  () => props.answer?.request, // getAnsweredTimeRange
   () => props.failedTimeRange // getFailedTimeRange
 )
 
@@ -151,8 +149,8 @@ const anyMetricShown = computed(() => visibleMetrics.value.some((metric) => !met
 const requestedSpan = computed(() => props.requestedTimeRange.end - props.requestedTimeRange.start)
 
 const servedForRequest = computed(() =>
-  sameRequestedTimeRange(answeredTimeRange.value, props.requestedTimeRange)
-    ? props.dataTimeRange
+  props.answer && sameRequestedTimeRange(props.answer.request, props.requestedTimeRange)
+    ? props.answer.dataTimeRange
     : undefined
 )
 
@@ -260,7 +258,7 @@ const legendAlignedWithPlot = computed(() =>
           <TimeSeriesGraph
             ref="graphRenderer"
             :view_time_range="baselineTimeRange"
-            :data_time_range="dataTimeRange"
+            :data_time_range="answer?.dataTimeRange"
             :metrics="visibleMetrics"
             :horizontal_lines="visibleHorizontalLines"
             :shaded_regions="shadedRegions ?? []"
@@ -299,7 +297,7 @@ const legendAlignedWithPlot = computed(() =>
             @update:value-resolution="valueResolution = $event"
           />
           <CmkAlert
-            v-if="dataTimeRange && hasPlottableData(metrics) && !anyMetricShown"
+            v-if="answer && hasPlottableData(metrics) && !anyMetricShown"
             class="graphing-graph-panel__empty-state"
             variant="info"
             :text="_t('All metrics are hidden')"
@@ -308,7 +306,7 @@ const legendAlignedWithPlot = computed(() =>
         </div>
 
         <GraphBrush
-          v-if="interaction.brush === 'enabled' && brushSnapshot && dataTimeRange"
+          v-if="interaction.brush === 'enabled' && brushSnapshot && answer"
           class="graphing-graph-panel__brush"
           :metrics="visibleBrushMetrics"
           :domain="brushSnapshot.drawnDomain"

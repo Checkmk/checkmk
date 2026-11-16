@@ -5,7 +5,7 @@
  */
 import type { TimeRange } from '../components/TimeSeriesGraph'
 import { MIN_ZOOM_SAMPLES, MIN_ZOOM_TIME_RANGE_SECONDS } from '../components/constants'
-import type { RequestedTimeRange, TimeRangeCommitKind } from '../types'
+import type { RequestedTimeRange, TimeRangeCommitKind, TimestampedRequest } from '../types'
 import { BIN_UNIT_SECONDS, type BinUnit, binEdges, binStart, gridStep } from './bins'
 
 export function sameRequestedTimeRange(a: RequestedTimeRange, b: RequestedTimeRange): boolean {
@@ -20,12 +20,12 @@ function hasUsableStep(range: TimeRange): boolean {
   return Number.isFinite(range.step) && range.step > 0
 }
 
-function nowInSeconds(): number {
+export function nowInSeconds(): number {
   return Math.floor(Date.now() / 1000)
 }
 
-function drawnEnd(requested: RequestedTimeRange, served: TimeRange, now: number): number {
-  const newestClosedSampleTime = snapDownToGrid(now, served.step)
+function drawnEnd(requested: TimestampedRequest, served: TimeRange): number {
+  const newestClosedSampleTime = snapDownToGrid(requested.requestedAt, served.step)
   const reachesIntoTheOpenInterval = requested.end > newestClosedSampleTime
   const end = reachesIntoTheOpenInterval
     ? snapDownToGrid(requested.end, served.step)
@@ -33,12 +33,8 @@ function drawnEnd(requested: RequestedTimeRange, served: TimeRange, now: number)
   return Math.min(end, served.end)
 }
 
-export function drawnTimeRange(
-  requested: RequestedTimeRange,
-  served: TimeRange,
-  now: number = nowInSeconds()
-): TimeRange {
-  const end = hasUsableStep(served) ? drawnEnd(requested, served, now) : requested.end
+export function drawnTimeRange(requested: TimestampedRequest, served: TimeRange): TimeRange {
+  const end = hasUsableStep(served) ? drawnEnd(requested, served) : requested.end
   const collapsesTheWindow = end <= requested.start
   return {
     start: requested.start,
@@ -94,7 +90,7 @@ export interface TimeAxis {
   /** The unit the renderer bins bar metrics by; null while the axis draws no bars. */
   binUnit: BinUnit | null
   planFetchWindow: FetchWindowPlanner
-  drawnTimeRange(requested: RequestedTimeRange, served: TimeRange): TimeRange
+  drawnTimeRange(requested: TimestampedRequest, served: TimeRange): TimeRange
   /** The shortest span a time zoom may reach, given the host's own minimum and the data on screen. */
   minSpan(hostMinimum: number | null, served: TimeRange | undefined): number | null
   /** The span at which a time zoom is refused, given the data on screen. */
@@ -106,7 +102,7 @@ export function continuousTimeAxis(): TimeAxis {
   return {
     binUnit: null,
     planFetchWindow: planFetchWindowByWidth,
-    drawnTimeRange: (requested, served) => drawnTimeRange(requested, served),
+    drawnTimeRange,
     minSpan: (hostMinimum) => hostMinimum,
     zoomFloor: (served) => minZoomSpan(served)
   }

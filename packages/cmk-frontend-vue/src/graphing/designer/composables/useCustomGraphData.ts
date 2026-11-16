@@ -14,8 +14,8 @@ import {
 } from '../../components/TimeSeriesGraph/interaction/timeBounds'
 import type { ConsolidationFn } from '../../components/consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from '../../components/constants'
-import type { RequestedTimeRange, TimeInterval } from '../../types'
-import { drawnTimeRange } from '../../utils/timeRange'
+import type { FetchAnswer, RequestedTimeRange, TimeInterval } from '../../types'
+import { drawnTimeRange, nowInSeconds } from '../../utils/timeRange'
 import {
   type CustomGraphMetric,
   type FetchCustomGraphDataRequest,
@@ -58,8 +58,7 @@ export interface CustomGraphData {
   metricsBySource: Readonly<Ref<Map<ItemId, Metric[]>>>
   /** The title each source resolved to in the last completed fetch; unresolved ones are absent. */
   resolvedTitles: Readonly<Ref<Map<ItemId, string>>>
-  dataTimeRange: Readonly<Ref<TimeRange | undefined>>
-  answeredTimeRange: Readonly<Ref<RequestedTimeRange | undefined>>
+  answer: Readonly<Ref<FetchAnswer | null>>
   failedTimeRange: Readonly<Ref<RequestedTimeRange | undefined>>
   horizontalLines: Readonly<Ref<HorizontalLine[]>>
   overview: Readonly<Ref<OverviewData | undefined>>
@@ -118,8 +117,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
   const metrics = ref<CustomGraphMetric[]>([])
   const metricsBySource = ref<Map<ItemId, Metric[]>>(new Map())
   const resolvedTitles = ref<Map<ItemId, string>>(new Map())
-  const dataTimeRange = ref<TimeRange | undefined>(undefined)
-  const answeredTimeRange = ref<RequestedTimeRange | undefined>(undefined)
+  const answer = ref<FetchAnswer | null>(null)
   const failedTimeRange = ref<RequestedTimeRange | undefined>(undefined)
   const horizontalLines = ref<HorizontalLine[]>([])
   const overview = ref<OverviewData | undefined>(undefined)
@@ -146,8 +144,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     metrics.value = []
     metricsBySource.value = new Map()
     resolvedTitles.value = new Map()
-    dataTimeRange.value = undefined
-    answeredTimeRange.value = undefined
+    answer.value = null
     failedTimeRange.value = undefined
     horizontalLines.value = []
     overview.value = undefined
@@ -195,6 +192,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
 
     failedTimeRange.value = undefined
     isLoading.value = true
+    const requestedAt = nowInSeconds()
     // Cleared on success below, not here, so a retry keeps the failure stated until a result lands.
     try {
       const [main, overviewResponse] = await Promise.all([
@@ -215,8 +213,10 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
       metrics.value = [...main.metrics]
       metricsBySource.value = bySource
       resolvedTitles.value = resolveTitles(items, bySource, groupTitles)
-      dataTimeRange.value = main.time_range
-      answeredTimeRange.value = { start: range.start, end: range.end }
+      answer.value = {
+        dataTimeRange: main.time_range,
+        request: { start: range.start, end: range.end, requestedAt }
+      }
       horizontalLines.value = main.horizontal_lines
       if (overviewBody === null) {
         overview.value = undefined
@@ -230,7 +230,10 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
           metrics: [...overviewResponse.metrics],
           dataTimeRange: overviewResponse.time_range,
           viewTimeRange: clippedToNavigableTime(
-            drawnTimeRange(overviewBody.requested_time_range, overviewResponse.time_range),
+            drawnTimeRange(
+              { ...overviewBody.requested_time_range, requestedAt },
+              overviewResponse.time_range
+            ),
             navigableBounds()
           )
         }
@@ -311,8 +314,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     metrics,
     metricsBySource,
     resolvedTitles,
-    dataTimeRange,
-    answeredTimeRange,
+    answer,
     failedTimeRange,
     horizontalLines,
     overview,

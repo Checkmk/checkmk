@@ -27,6 +27,17 @@ export interface TimeInterval {
 // Distinct from TimeRange, which is what the RRD actually returned.
 export type RequestedTimeRange = TimeInterval
 
+export interface TimestampedRequest extends RequestedTimeRange {
+  requestedAt: number // unix seconds
+}
+
+export interface FetchAnswer {
+  dataTimeRange: TimeRange
+  // Not recoverable from `dataTimeRange`: the fetch widens the window by its edge neighbours and
+  // the backend answers on its own storage grid.
+  request: TimestampedRequest
+}
+
 // Whether a committed range was translated (same span, shifted in time) or changed its
 // span. The brush snapshot keeps the overview strip fixed under translation and
 // re-derives it (multiplier × span) once the span changed.
@@ -103,13 +114,8 @@ export interface GraphPanelProps {
   metrics: Metric[]
   /** The unit the bar metrics are binned by; absent while the graph holds no bar metric. */
   binUnit?: BinUnit | undefined
-  // The range the fetched data actually covers (as opposed to requestedTimeRange).
-  // Absent until the first data fetch completes. Explicit undefined is accepted
-  // so that parent components can forward their own optional range prop directly.
-  dataTimeRange?: TimeRange | undefined
+  answer: FetchAnswer | null
   requestedTimeRange: RequestedTimeRange
-  // The requested range dataTimeRange was fetched for; absent means requestedTimeRange.
-  answeredTimeRange?: RequestedTimeRange | undefined
   // The requested range whose fetch failed, until the next fetch goes out.
   failedTimeRange?: RequestedTimeRange | undefined
   // Identifies this panel as the source of its own range commits.

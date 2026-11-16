@@ -12,20 +12,19 @@ import { ref } from 'vue'
 
 import { GlobalTimePicker } from '@/graphing/GlobalTimePicker'
 import GraphPanel from '@/graphing/components/GraphPanel.vue'
-import type { HorizontalLine, Metric, TimeRange } from '@/graphing/components/TimeSeriesGraph'
+import type { HorizontalLine, Metric } from '@/graphing/components/TimeSeriesGraph'
 import {
   clippedToNavigableTime,
   navigableBounds
 } from '@/graphing/components/TimeSeriesGraph/interaction/timeBounds'
 import type { GraphNoticeDescriptor } from '@/graphing/composables/useGraphNotice'
-import type { PanelKey, RangeChange, RequestedTimeRange } from '@/graphing/types'
+import type { FetchAnswer, PanelKey, RangeChange, RequestedTimeRange } from '@/graphing/types'
 
 defineProps<{
   timePicker: GlobalTimePickerProps
   title: string
   metrics: Metric[]
-  dataTimeRange: TimeRange | undefined
-  answeredTimeRange: RequestedTimeRange | undefined
+  answer: FetchAnswer | null
   failedTimeRange: RequestedTimeRange | undefined
   horizontalLines: HorizontalLine[]
   fitHorizontalLines?: boolean
@@ -69,8 +68,7 @@ function onPanelTimeRange(requested: RequestedTimeRange): void {
     <div ref="graphContainer" class="mode-custom-services-preview-graph-frame__box">
       <GraphPanel
         :metrics="metrics"
-        :data-time-range="dataTimeRange"
-        :answered-time-range="answeredTimeRange"
+        :answer="answer"
         :failed-time-range="failedTimeRange"
         :horizontal-lines="horizontalLines"
         :fit-horizontal-lines="fitHorizontalLines"

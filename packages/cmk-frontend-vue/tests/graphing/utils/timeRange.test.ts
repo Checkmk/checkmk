@@ -18,34 +18,40 @@ describe('drawnTimeRange', () => {
   const LONG_AFTER_EVERY_WINDOW = 2_000_000
 
   test('draws a window that closed before the newest sample as it was requested', () => {
-    const bothEndsMidInterval = { start: 1_000_037, end: 1_000_637 }
+    const bothEndsMidInterval = {
+      start: 1_000_037,
+      end: 1_000_637,
+      requestedAt: LONG_AFTER_EVERY_WINDOW
+    }
 
-    const drawn = drawnTimeRange(bothEndsMidInterval, SERVED, LONG_AFTER_EVERY_WINDOW)
+    const drawn = drawnTimeRange(bothEndsMidInterval, SERVED)
 
     expect(drawn.start).toBe(bothEndsMidInterval.start)
     expect(drawn.end).toBe(bothEndsMidInterval.end)
   })
 
   test('ends a window reaching into the still open interval on the newest closed sample', () => {
-    const endingNow = { start: 1_000_037, end: 1_000_637 }
-    const now = endingNow.end
+    const endingNow = { start: 1_000_037, end: 1_000_637, requestedAt: 1_000_637 }
 
-    const drawn = drawnTimeRange(endingNow, SERVED, now)
+    const drawn = drawnTimeRange(endingNow, SERVED)
 
     expect(drawn.end).toBe(NEWEST_GRID_BOUNDARY_COVERED)
   })
 
   test('keeps a window lying inside the still open interval drawable', () => {
-    const insideTheOpenInterval = { start: 1_000_637, end: 1_000_659 }
-    const now = insideTheOpenInterval.end
+    const insideTheOpenInterval = { start: 1_000_637, end: 1_000_659, requestedAt: 1_000_659 }
 
-    const drawn = drawnTimeRange(insideTheOpenInterval, SERVED, now)
+    const drawn = drawnTimeRange(insideTheOpenInterval, SERVED)
 
     expect(drawn.end).toBeGreaterThan(drawn.start)
   })
 
   test('holds the end inside the range the fetch answered with', () => {
-    const reachingBeyondTheServedRange = { start: 0, end: 1_000_000 }
+    const reachingBeyondTheServedRange = {
+      start: 0,
+      end: 1_000_000,
+      requestedAt: LONG_AFTER_EVERY_WINDOW
+    }
     const servedOneHourAtOneHourStep = { start: 0, end: 3_600, step: 3_600 }
 
     const drawn = drawnTimeRange(reachingBeyondTheServedRange, servedOneHourAtOneHourStep)
@@ -54,7 +60,7 @@ describe('drawnTimeRange', () => {
   })
 
   test('bounds the end by the answered range, not by where values stop', () => {
-    const window = { start: 1_000_020, end: 1_000_680 }
+    const window = { start: 1_000_020, end: 1_000_680, requestedAt: LONG_AFTER_EVERY_WINDOW }
     const servedPastTheNewestValue = { start: 1_000_020, end: 1_000_680, step: STEP }
 
     const drawn = drawnTimeRange(window, servedPastTheNewestValue)
@@ -63,7 +69,7 @@ describe('drawnTimeRange', () => {
   })
 
   test('passes the window through when the step is unusable', () => {
-    const window = { start: 500, end: 900 }
+    const window = { start: 500, end: 900, requestedAt: LONG_AFTER_EVERY_WINDOW }
     const servedWithoutStep = { start: 0, end: 1_000, step: 0 }
 
     const drawn = drawnTimeRange(window, servedWithoutStep)
@@ -117,6 +123,7 @@ describe('the zoom floor of the continuous time axis', () => {
 describe('binnedTimeAxis', () => {
   const TEN_THIRTY_SEVEN = Date.UTC(2026, 0, 1, 10, 37) / 1000
   const LAST_FOUR_HOURS = { start: TEN_THIRTY_SEVEN - 4 * HOUR, end: TEN_THIRTY_SEVEN }
+  const LAST_FOUR_HOURS_ANSWERED = { ...LAST_FOUR_HOURS, requestedAt: TEN_THIRTY_SEVEN }
   const SERVED = {
     start: Date.UTC(2026, 0, 1, 5) / 1000,
     end: Date.UTC(2026, 0, 1, 11) / 1000,
@@ -144,13 +151,13 @@ describe('binnedTimeAxis', () => {
   })
 
   test('draws up to the requested end, inside the last bin', () => {
-    const drawn = binnedTimeAxis('hour', 'UTC').drawnTimeRange(LAST_FOUR_HOURS, SERVED)
+    const drawn = binnedTimeAxis('hour', 'UTC').drawnTimeRange(LAST_FOUR_HOURS_ANSWERED, SERVED)
 
     expect(drawn.end).toBe(TEN_THIRTY_SEVEN)
   })
 
   test('draws on the served step', () => {
-    const drawn = binnedTimeAxis('hour', 'UTC').drawnTimeRange(LAST_FOUR_HOURS, SERVED)
+    const drawn = binnedTimeAxis('hour', 'UTC').drawnTimeRange(LAST_FOUR_HOURS_ANSWERED, SERVED)
 
     expect(drawn.step).toBe(HOUR)
   })
@@ -166,7 +173,10 @@ describe('binnedTimeAxis', () => {
       step: 6 * HOUR
     }
 
-    const drawn = binnedTimeAxis('hour', 'UTC').drawnTimeRange(requested, servedSixHourly)
+    const drawn = binnedTimeAxis('hour', 'UTC').drawnTimeRange(
+      { ...requested, requestedAt: requested.end },
+      servedSixHourly
+    )
 
     expect(drawn.start).toBe(Date.UTC(2026, 0, 1, 21) / 1000)
   })
@@ -206,7 +216,7 @@ function drawnBars(
   const axis = binnedTimeAxis(unit, timeZone)
   const planned = axis.planFetchWindow(requested, PLOT_WIDTH)
   const served = servedGrid(grid, planned, planned.step)
-  const view = axis.drawnTimeRange(requested, served)
+  const view = axis.drawnTimeRange({ ...requested, requestedAt: requested.end }, served)
   const edges = drawnBinEdges(unit, view, PLOT_WIDTH, timeZone)
   return { view, bins: foldIntoBins(ones(served), served, edges, 'sum') }
 }

@@ -16,8 +16,8 @@ import {
   clippedToNavigableTime
 } from '../components/TimeSeriesGraph/interaction/timeBounds'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../components/consolidation'
-import type { RequestedTimeRange } from '../types'
-import { type FetchWindowPlanner, planFetchWindowByWidth } from '../utils/timeRange'
+import type { FetchAnswer, RequestedTimeRange } from '../types'
+import { type FetchWindowPlanner, nowInSeconds, planFetchWindowByWidth } from '../utils/timeRange'
 
 // The fetch endpoint only needs the self-contained definition (the graph kind is embedded in
 // `internal`); a caller holding a full render shell additionally contributes its header title to
@@ -32,10 +32,7 @@ export type GraphCombinationMode = 'average' | 'lines' | 'max' | 'min' | 'stacke
 export interface ResolvedGraph {
   title: string
   metrics: Metric[]
-  timeRange: TimeRange
-  // Not recoverable from `timeRange`: the fetch widens the window by its edge neighbours and the
-  // backend answers on its own storage grid.
-  requestedTimeRange: RequestedTimeRange
+  answer: FetchAnswer
   horizontalLines: HorizontalLine[]
   shadedRegions: ShadedRegion[]
   // The add-to type the context menu is assembled for and the specification its actions replay;
@@ -56,6 +53,7 @@ export interface GraphFetchParams {
 interface CurrentRequest {
   fetchWindow: GraphFetchParams['fetchWindow']
   requestedTimeRange: RequestedTimeRange
+  requestedAt: number
 }
 
 export type GraphFetchResponse = components['schemas']['GraphFetchResponse']
@@ -186,6 +184,10 @@ export function useGraphData(
   )
   let controls: LoadControl[] = getGraphs().map(() => newLoadControl())
 
+  // Taken once per range or refresh, not per load: graphs that load later, as they scroll into
+  // view, have to end their windows where the first ones did.
+  let requestedAt = nowInSeconds()
+
   function updateLoad(index: number, update: Partial<GraphLoad>): void {
     published.value = loads.value.map((load, loadIndex) =>
       loadIndex === index ? { ...load, ...update } : load
@@ -242,7 +244,8 @@ export function useGraphData(
     const bounds = options.getFetchBounds?.()
     return {
       fetchWindow: bounds === undefined ? window : clippedToNavigableTime(window, bounds),
-      requestedTimeRange
+      requestedTimeRange,
+      requestedAt
     }
   }
 
@@ -262,8 +265,10 @@ export function useGraphData(
       graph: {
         title: fetched.title || (definition.options?.header.title ?? ''),
         metrics: fetched.metrics,
-        timeRange: fetched.timeRange,
-        requestedTimeRange: request.requestedTimeRange,
+        answer: {
+          dataTimeRange: fetched.timeRange,
+          request: { ...request.requestedTimeRange, requestedAt: request.requestedAt }
+        },
         horizontalLines: fetched.horizontalLines,
         shadedRegions: fetched.shadedRegions,
         addTo: definition.add_to,
@@ -354,6 +359,7 @@ export function useGraphData(
       if (contentReloadPending()) {
         return
       }
+      requestedAt = nowInSeconds()
       matchGraphCount()
       markStale(everyIndex())
     },

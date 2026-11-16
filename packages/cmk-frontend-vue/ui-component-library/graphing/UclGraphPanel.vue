@@ -83,7 +83,12 @@ import { computed, ref, watch } from 'vue'
 
 import GraphPanel from '@/graphing/components/GraphPanel.vue'
 import { useBrushSnapshot } from '@/graphing/composables/useBrushSnapshot'
-import type { BrushOverview, RequestedTimeRange, TimeRangeCommitKind } from '@/graphing/types'
+import type {
+  BrushOverview,
+  FetchAnswer,
+  RequestedTimeRange,
+  TimeRangeCommitKind
+} from '@/graphing/types'
 
 import { scenarioData } from './graphScenarios'
 
@@ -134,6 +139,10 @@ const requestedTimeRange = ref<RequestedTimeRange>({
 })
 
 const data = computed(() => scenarioData(propState.value.scenario, requestedTimeRange.value))
+const answer = computed<FetchAnswer>(() => ({
+  dataTimeRange: data.value.dataTimeRange,
+  request: { ...requestedTimeRange.value, requestedAt: nowSeconds() }
+}))
 
 const status = (on: boolean): 'enabled' | 'disabled' => (on ? 'enabled' : 'disabled')
 
@@ -180,7 +189,7 @@ function onRequestedTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKi
         :key="propState.scenario"
         :metrics="data.metrics"
         :bin-unit="data.binUnit"
-        :data-time-range="data.dataTimeRange"
+        :answer="answer"
         :requested-time-range="requestedTimeRange"
         :horizontal-lines="data.horizontalLines"
         :panel-key="0"

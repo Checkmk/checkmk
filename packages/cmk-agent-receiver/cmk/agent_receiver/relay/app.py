@@ -6,7 +6,8 @@ import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
@@ -14,6 +15,7 @@ from cmk.agent_receiver.lib.middleware import B3RequestIDMiddleware
 from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TasksRepository
 from cmk.agent_receiver.relay.lib.relay_config_repository import RelayConfigRepository
+from cmk.agent_receiver.relay.lib.site_client import CheckmkAPIError, RelayNotFoundError
 
 from .api.routers.relays import router as relay_router
 from .api.routers.tasks import router as task_router
@@ -83,11 +85,26 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     yield
 
 
+async def _relay_not_found(_request: Request, error: Exception) -> JSONResponse:
+    assert isinstance(error, RelayNotFoundError)
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={"detail": f"Relay {error.relay_id} not found"},
+    )
+
+
+async def _site_api_failed(_request: Request, error: Exception) -> JSONResponse:
+    assert isinstance(error, CheckmkAPIError)
+    return JSONResponse(status_code=status.HTTP_502_BAD_GATEWAY, content={"detail": error.msg})
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Checkmk Relay",
     )
     app.add_middleware(B3RequestIDMiddleware)
+    app.add_exception_handler(RelayNotFoundError, _relay_not_found)
+    app.add_exception_handler(CheckmkAPIError, _site_api_failed)
     app.include_router(relay_router)
     app.include_router(task_router)
     return app

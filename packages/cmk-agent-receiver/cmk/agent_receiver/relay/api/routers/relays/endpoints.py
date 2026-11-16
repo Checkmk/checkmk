@@ -20,10 +20,6 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.store_crash_report imp
 )
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.agent_receiver.relay.lib.site_auth import UnsupportedAuthFormatError
-from cmk.agent_receiver.relay.lib.site_client import (
-    CheckmkAPIError,
-    RelayNotFoundError,
-)
 from cmk.relay_protocols import relays as relay_protocols
 from cmk.relay_protocols.monitoring_data import MonitoringData
 
@@ -60,11 +56,6 @@ async def register_relay(
             status_code=fastapi.status.HTTP_401_UNAUTHORIZED,
             detail="Unsupported authorization format. Use 'Bearer <user> <password>' or 'CMK-TOKEN <token>'.",
         )
-    except CheckmkAPIError as e:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
-            detail=e.msg,
-        )
 
 
 @router.get(
@@ -92,18 +83,7 @@ async def get_relay_status(
         404 Not Found: If the relay does not exist in CMK configuration nor in local config
         502 Bad Gateway: If there is an error communicating with the CMK API
     """
-    try:
-        return await handler.process(relay_id=RelayID(relay_id))
-    except RelayNotFoundError:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_404_NOT_FOUND,
-            detail=f"Relay {relay_id} not found",
-        )
-    except CheckmkAPIError as e:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
-            detail=e.msg,
-        )
+    return await handler.process(relay_id=RelayID(relay_id))
 
 
 @router.post(
@@ -122,18 +102,7 @@ async def refresh_cert(
     relay_id: str,
     payload: relay_protocols.RelayRefreshCertRequest,
 ) -> relay_protocols.RelayRefreshCertResponse:
-    try:
-        return await handler.process(relay_id=RelayID(relay_id), request=payload)
-    except RelayNotFoundError:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_404_NOT_FOUND,
-            detail=f"Relay {relay_id} not found",
-        )
-    except CheckmkAPIError as e:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
-            detail=e.msg,
-        )
+    return await handler.process(relay_id=RelayID(relay_id), request=payload)
 
 
 @router.post(

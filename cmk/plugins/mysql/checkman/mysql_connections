@@ -1,4 +1,4 @@
-title: MySQL: Maximum Connection Usage since Startup
+title: MySQL: Maximum Connection Usage
 agents: linux
 catalog: app/mysql
 license: GPLv2

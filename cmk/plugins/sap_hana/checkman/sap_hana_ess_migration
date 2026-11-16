@@ -1,4 +1,4 @@
-title: SAP HANA: Migration of Statistics Server
+title: SAP HANA: Statistics Server Migration
 agents: linux
 catalog: app/sap_hana
 license: GPLv2

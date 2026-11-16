@@ -1,4 +1,4 @@
-title: MySQL: Replica/Slave Sync Status
+title: MySQL: Replica Sync Status
 agents: linux
 catalog: app/mysql
 license: GPLv2

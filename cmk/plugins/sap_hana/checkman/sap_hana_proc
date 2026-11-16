@@ -1,4 +1,4 @@
-title: SAP HANA: Process
+title: SAP HANA: Processes
 agents: linux
 catalog: app/sap_hana
 license: GPLv2

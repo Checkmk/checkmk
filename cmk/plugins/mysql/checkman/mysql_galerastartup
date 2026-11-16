@@ -1,4 +1,4 @@
-title: MySQL: Galera Cluster Addresses (Startup)
+title: MySQL: Galera Startup Addresses
 agents: linux
 catalog: app/mysql
 license: GPLv2

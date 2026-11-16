@@ -1,4 +1,4 @@
-title: MySQL: Status of Daemon
+title: MySQL: Daemon Status
 agents: linux
 catalog: app/mysql
 license: GPLv2

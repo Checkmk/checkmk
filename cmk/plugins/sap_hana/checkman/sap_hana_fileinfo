@@ -1,4 +1,4 @@
-title: SAP HANA: Age and Size of Files
+title: SAP HANA: File Age and Size
 agents: linux
 catalog: app/sap_hana
 license: GPLv2

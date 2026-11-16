@@ -1,4 +1,4 @@
-title: MySQL: Galera Size
+title: MySQL: Galera Cluster Size
 agents: linux
 catalog: app/mysql
 license: GPLv2

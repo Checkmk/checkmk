@@ -1,4 +1,4 @@
-title: SAP HANA: Age, Size and Count of a Group of Files
+title: SAP HANA: File Group Age, Size and Count
 agents: linux
 catalog: app/sap_hana
 license: GPLv2

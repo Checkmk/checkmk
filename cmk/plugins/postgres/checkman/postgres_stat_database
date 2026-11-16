@@ -1,4 +1,4 @@
-title: PostgreSQL: Statistics
+title: PostgreSQL: Database Statistics
 agents: linux
 catalog: app/postgresql
 license: GPLv2

@@ -64,6 +64,17 @@ describe('iframeUrl', () => {
     expect(Object.fromEntries(new URL(url).searchParams)).toEqual({ site: 'new', keep: '1' })
   })
 
+  it('encodes a filter value so that the page reads it unchanged', () => {
+    const value = 'web 01&role=db#ü'
+
+    const url = iframeUrl('https://example.com/page', {
+      context: { host: { host: value } },
+      timeRange: null
+    })
+
+    expect(new URL(url).searchParams.get('host')).toBe(value)
+  })
+
   it('keeps a relative URL and its fragment', () => {
     expect(
       iframeUrl('view.py?view_name=allhosts#rows', {

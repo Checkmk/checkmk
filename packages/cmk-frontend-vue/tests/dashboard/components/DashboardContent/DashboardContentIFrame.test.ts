@@ -27,6 +27,15 @@ const FILTER_CONTEXT = {
   filters: { site: { site: 'prod' } }
 }
 
+const NEXT_DAY = {
+  from: fromDate(new Date('2026-01-02T00:00:00Z'), 'UTC'),
+  to: fromDate(new Date('2026-01-02T01:00:00Z'), 'UTC')
+}
+
+function sourceOf(iframe: HTMLIFrameElement): URL {
+  return new URL(iframe.getAttribute('src')!)
+}
+
 function embeddedFrame(): HTMLIFrameElement {
   const frame = screen.getByTitle(TEST_WIDGET_TITLE)
   if (!(frame instanceof HTMLIFrameElement)) {
@@ -39,7 +48,7 @@ function iframeSource(content: IFrameContent): URL {
   render(DashboardContentIFrame, {
     props: makeContentProps(content, { effective_filter_context: FILTER_CONTEXT })
   })
-  return new URL(embeddedFrame().getAttribute('src')!)
+  return sourceOf(embeddedFrame())
 }
 
 describe('DashboardContentIFrame', () => {
@@ -58,6 +67,21 @@ describe('DashboardContentIFrame', () => {
     expect(source.searchParams.get('site')).toBe('prod')
   })
 
+  it('loads the page again with the changed filters', async () => {
+    const props = makeContentProps(
+      { ...URL_ONLY, include_context: true },
+      { effective_filter_context: FILTER_CONTEXT }
+    )
+    const { rerender } = render(DashboardContentIFrame, { props })
+
+    await rerender({
+      ...props,
+      effective_filter_context: { ...FILTER_CONTEXT, filters: { site: { site: 'test' } } }
+    })
+
+    expect(sourceOf(embeddedFrame()).searchParams.get('site')).toBe('test')
+  })
+
   it('embeds the configured URL when the widget includes nothing', () => {
     const source = iframeSource(URL_ONLY)
 
@@ -69,6 +93,29 @@ describe('DashboardContentIFrame', () => {
 
     expect(source.searchParams.get('from')).toBe('1767225600000')
     expect(source.searchParams.get('to')).toBe('1767229200000')
+  })
+
+  it('loads the page again with a changed time range when the widget asks for it', async () => {
+    const props = makeContentProps({ ...URL_ONLY, include_time_range: true })
+    const { rerender } = render(DashboardContentIFrame, { props })
+
+    await rerender({ ...props, range: NEXT_DAY })
+
+    expect(Object.fromEntries(sourceOf(embeddedFrame()).searchParams)).toEqual({
+      from: '1767312000000',
+      to: '1767315600000'
+    })
+  })
+
+  it('keeps the loaded page when the time range changes and the widget leaves it out', async () => {
+    const props = makeContentProps(URL_ONLY)
+    const { rerender } = render(DashboardContentIFrame, { props })
+    const iframe = embeddedFrame()
+
+    await rerender({ ...props, range: NEXT_DAY })
+
+    expect(embeddedFrame()).toBe(iframe)
+    expect(sourceOf(iframe).toString()).toBe(URL_ONLY.url)
   })
 
   it('tells the loaded page the time range, the tick and whether the dashboard is live', async () => {
@@ -95,14 +142,7 @@ describe('DashboardContentIFrame', () => {
     const postMessage = vi.spyOn(embeddedFrame().contentWindow!, 'postMessage')
 
     await rerender({ ...props, tick: 1 })
-    await rerender({
-      ...props,
-      tick: 1,
-      range: {
-        from: fromDate(new Date('2026-01-02T00:00:00Z'), 'UTC'),
-        to: fromDate(new Date('2026-01-02T01:00:00Z'), 'UTC')
-      }
-    })
+    await rerender({ ...props, tick: 1, range: NEXT_DAY })
 
     expect(postMessage.mock.calls.map(([message]) => message)).toEqual([
       expect.objectContaining({ tick: 1 }),

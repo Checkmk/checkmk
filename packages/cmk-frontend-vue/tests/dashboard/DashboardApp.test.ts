@@ -97,7 +97,8 @@ const constants: DashboardConstants = {
   widgets: {
     static_text: widgetConstants,
     monitoring_table: widgetConstants,
-    alert_overview: widgetConstants
+    alert_overview: widgetConstants,
+    url: widgetConstants
   }
 }
 
@@ -536,6 +537,56 @@ function showHostsTableFailingToReschedule(grid: Grid): DashboardPageProperties 
   }
 }
 
+const EMBEDDED_PAGE_TITLE = 'Custom page'
+
+/** Shows a dashboard with these filters and one widget that embeds a page with them. */
+function showEmbeddedPageWithDashboardFilters(filters: Record<string, Record<string, string>>) {
+  server.use(
+    restApiHttp.post(
+      '/domain-types/dashboard/actions/compute-widget-titles/invoke',
+      ({ response }) =>
+        response(200).json({
+          domainType: 'dashboard-widget-titles',
+          id: 'titles',
+          links: [],
+          extensions: { titles: { embedded_page: EMBEDDED_PAGE_TITLE } }
+        })
+    ),
+    restApiHttp.get('/objects/dashboard_relative_grid/{dashboard_id}', ({ response }) =>
+      response(200).json({
+        domainType: 'dashboard',
+        id: SOURCE_ID,
+        title: SOURCE_TITLE,
+        links: [],
+        extensions: {
+          ...sourceDashboard,
+          filter_context: { ...sourceDashboard.filter_context, filters },
+          widgets: {
+            embedded_page: {
+              general_settings: {
+                title: { text: EMBEDDED_PAGE_TITLE, render_mode: 'with_background' },
+                render_background: true
+              },
+              content: {
+                type: 'url',
+                url: 'custom_page.py',
+                include_context: true,
+                include_time_range: false
+              },
+              filter_context: { uses_infos: [], filters: {} },
+              layout: {
+                type: 'relative_grid',
+                position: { x: 1, y: 1 },
+                size: { width: 80, height: 40 }
+              }
+            }
+          }
+        }
+      })
+    )
+  )
+}
+
 /** jsdom does no layout: the table shows its rows only once it is told it has room for them. */
 async function renderHostsTable(props: DashboardPageProperties): Promise<void> {
   FakeResizeObserver.instances = []
@@ -593,6 +644,16 @@ describe('DashboardApp', () => {
       expect(failure).toHaveTextContent('Could not reschedule the checks for the selected hosts')
     }
   )
+
+  it('passes the dashboard filters to an embedded page that includes them', async () => {
+    showEmbeddedPageWithDashboardFilters({ host: { host: 'heute' } })
+
+    render(DashboardApp, { props: pageProperties })
+
+    const frame = await screen.findByTitle(EMBEDDED_PAGE_TITLE)
+    const source = new URL(frame.getAttribute('src')!, location.href)
+    expect(source.searchParams.get('host')).toBe('heute')
+  })
 
   it('names each widget by its title', async () => {
     render(DashboardApp, { props: pageProperties })

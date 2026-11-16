@@ -128,6 +128,12 @@ class AlertsVisualizationType(StrEnum):
     PERCENTAGE_OF_SERVICE_PROBLEMS = "Percentage of service problems"
 
 
+class OtherElementType(StrEnum):
+    """Enumeration of the elements the 'Other elements' widget offers."""
+
+    EMBED_URL = "Embed URL"
+
+
 class WizardDialogName(StrEnum):
     ADD_WIDGET = "Add widget to dashboard"
     EDIT_WIDGET = "Edit widget properties"
@@ -682,3 +688,26 @@ class CloneCustomGraphWidgetWizard(_EmbeddedCustomGraphWidgetWizard):
             message=f"The wizard does not name {graph_title!r} as the graph it cloned",
         ).to_be_visible()
         self.designer.expect_loaded()
+
+
+class OtherElementsWidgetWizard(BaseWidgetWizard):
+    """Represents the widget wizard sidebar to configure an 'Other elements' widget.
+
+    To navigate: '{within any customized dashboard} > Add widget > Other elements'.
+    """
+
+    widget_type_name = "Other elements"
+    sidebar_title = "Add other element"
+
+    @property
+    def url_input(self) -> Locator:
+        """Locator property of the field for the URL that the 'Embed URL' element shows."""
+        return self.locator().get_by_role("textbox", name="Enter URL to embed")
+
+    def select_element_type(self, element_type: OtherElementType) -> None:
+        """Select the type of element for the widget.
+
+        Args:
+            element_type: type of element to select.
+        """
+        self.locator().get_by_role("button", name=element_type, exact=True).click()

@@ -680,6 +680,31 @@ class TestURLContent:
         assert widget["content"]["include_context"] is True
         assert widget["content"]["include_time_range"] is True
 
+    @pytest.mark.parametrize("omitted", ["include_context", "include_time_range"])
+    def test_requires_each_query_parameter_option(
+        self, clients: ClientRegistry, omitted: str
+    ) -> None:
+        content: dict[str, object] = {
+            "type": "url",
+            "url": "https://example.com",
+            "include_context": False,
+            "include_time_range": False,
+        }
+        del content[omitted]
+
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload("test_dashboard", {"test_widget": create_widget(content)}),
+            expect_ok=False,
+        )
+
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
+        assert (
+            resp.json["fields"][f"body.widgets.test_widget.content.url.{omitted}"]["msg"]
+            == "Field required"
+        )
+
     @pytest.mark.parametrize(
         "url,should_fail",
         [

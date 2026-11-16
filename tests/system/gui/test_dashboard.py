@@ -33,6 +33,8 @@ from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar impor
     AlertsAndNotificationsWidgetWizard,
     AlertsVisualizationType,
     MetricsAndGraphsWidgetWizard,
+    OtherElementsWidgetWizard,
+    OtherElementType,
     ServiceMetricDropdownOptions,
     SiteFilterDropdownOptions,
     VisualizationType,
@@ -46,6 +48,9 @@ _GRAPH_WIDGET_SERVICE = "Check_MK"
 # The widget names itself after the dashlet, which says "total" where the wizard tile that
 # creates it does not.
 _PROBLEM_PERCENTAGE_WIDGET_TITLE = "Percentage of total service problems"
+
+_EMBED_URL_WIDGET_TITLE = "Custom URL"
+_EMBEDDED_PAGE_TEXT = "Page embedded by the dashboard"
 
 
 def _create_new_dashboard(
@@ -236,6 +241,53 @@ def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[s
                 f"{host_name.text_content()}. Only one of "
                 f"{', '.join(linux_hosts)} hosts is expected"
             )
+
+    finally:
+        if is_cleanup_enabled():
+            EditDashboards(dashboard_page.page).delete_dashboard(custom_dashboard.page_title)
+
+
+def test_embed_url_widget_shows_its_page(
+    dashboard_page: MainDashboard, test_site: Site, javascript_errors: list[str]
+) -> None:
+    """Test that an 'Embed URL' widget shows its page after the dashboard is saved.
+
+    Steps:
+        1. Create a new dashboard.
+        2. Add an 'Embed URL' widget for a page of the site.
+        3. Save the dashboard and open it again.
+        4. Check that the widget shows the page.
+        5. Delete the created dashboard.
+    """
+    # The Content-Security-Policy of Checkmk allows frames only from the site's own origin.
+    embedded_page_url = f"{test_site.internal_url}embedded_page.html"
+    dashboard_page.page.route(
+        embedded_page_url,
+        lambda route: route.fulfill(content_type="text/html", body=f"<p>{_EMBEDDED_PAGE_TEXT}</p>"),
+    )
+
+    custom_dashboard: CustomDashboard = _create_new_dashboard(
+        dashboard_page.page, NewDashboardCharacteristics(name="Embed URL Dashboard")
+    )
+
+    try:
+        widget_wizard = custom_dashboard.open_add_widget_sidebar(OtherElementsWidgetWizard)
+        widget_wizard.select_element_type(OtherElementType.EMBED_URL)
+        widget_wizard.url_input.fill(embedded_page_url)
+        widget_wizard.add_and_place_widget_button.click()
+        custom_dashboard.save_widgets()
+
+        custom_dashboard = CustomDashboard(custom_dashboard.page, custom_dashboard.page_title)
+        custom_dashboard.check_widget_is_present(_EMBED_URL_WIDGET_TITLE)
+        expect(
+            custom_dashboard.get_widget(_EMBED_URL_WIDGET_TITLE)
+            .frame_locator("iframe")
+            .get_by_text(_EMBEDDED_PAGE_TEXT),
+            "The widget does not show the embedded page",
+        ).to_be_visible()
+        assert not javascript_errors, (
+            f"The dashboard raised uncaught page errors: {javascript_errors}"
+        )
 
     finally:
         if is_cleanup_enabled():

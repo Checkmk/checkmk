@@ -18,7 +18,6 @@ from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.licensing.basics.paths import get_verification_response_file_path
 from cmk.licensing.basics.protocol_version import (
     AllowedVerificationResponseVersions,
-    CURRENT_VERIFICATION_RESPONSE_VERSION,
     parse_verification_response_version,
 )
 
@@ -85,7 +84,6 @@ class PlainVerificationResponse:
     We're creating this very early on during import.
     """
 
-    VERSION: str
     request_id: UUID
     response_id: UUID
     created_at: int
@@ -149,8 +147,6 @@ def parse_verification_response_v2_0(raw: object) -> PlainVerificationResponse:
     if not isinstance(payload := raw.get("payload"), dict):
         raise TypeError("wrong payload type: %r" % type(payload))
     return PlainVerificationResponse(
-        # After parsing we have the latest license protocol version
-        VERSION=CURRENT_VERIFICATION_RESPONSE_VERSION,
         request_id=UUID(raw["request_id"]),
         response_id=UUID(raw["response_id"]),
         created_at=int(raw["created_at"]),
@@ -195,8 +191,6 @@ def parse_verification_response_v3_0(raw: object) -> PlainVerificationResponse:
     if not isinstance(payload := raw.get("payload"), dict):
         raise TypeError("wrong payload type: %r" % type(payload))
     return PlainVerificationResponse(
-        # After parsing we have the latest license protocol version
-        VERSION=CURRENT_VERIFICATION_RESPONSE_VERSION,
         request_id=UUID(raw["request_id"]),
         response_id=UUID(raw["response_id"]),
         created_at=int(raw["created_at"]),
@@ -231,8 +225,6 @@ def parse_verification_response_v3_2(raw: object) -> PlainVerificationResponse:
         raise TypeError("wrong payload type: %r" % type(payload))
 
     return PlainVerificationResponse(
-        # After parsing we have the latest license protocol version
-        VERSION=CURRENT_VERIFICATION_RESPONSE_VERSION,
         request_id=UUID(raw["request_id"]),
         response_id=UUID(raw["response_id"]),
         created_at=int(raw["created_at"]),

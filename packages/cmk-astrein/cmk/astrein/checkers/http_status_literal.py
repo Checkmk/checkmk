@@ -14,16 +14,6 @@ from cmk.astrein.framework import ASTVisitorChecker
 #: Files that must run on Python 3.4, which lacks http.HTTPStatus.
 LEGACY_PYTHON_SOURCES = "tests/agent-plugin-unit/sources-list.txt"
 
-#: Repo-relative glob patterns (``PurePosixPath.full_match``) the checker skips.
-_EXCLUDED_GLOBS = (
-    "tests/system/redfish/mockup-server/**",  # vendored DMTF code
-    # Livestatus status codes merely resemble HTTP ones.
-    "non-free/packages/cmk-liveproxyd/**",
-    "packages/cmk-livestatus-client/**",
-    "tests/performance/monitoring_views/remotes.py",
-    "doc/**",  # standalone example scripts for customers, also excluded from ruff
-)
-
 #: Members as named in Python 3.7, the oldest checked interpreter (cmk-update-agent).
 _STATUS_NAMES = {
     100: "CONTINUE",
@@ -105,6 +95,16 @@ class HTTPStatusLiteralChecker(ASTVisitorChecker):
 
     checker_id = "http-status-literal"
     summary = "Requires HTTP status codes to be http.HTTPStatus members"
+    excluded_globs = frozenset(
+        {
+            "tests/system/redfish/mockup-server/**",  # vendored DMTF code
+            # Livestatus status codes merely resemble HTTP ones.
+            "non-free/packages/cmk-liveproxyd/**",
+            "packages/cmk-livestatus-client/**",
+            "tests/performance/monitoring_views/remotes.py",
+            "doc/**",  # standalone example scripts for customers, also excluded from ruff
+        }
+    )
 
     def __init__(
         self,
@@ -118,9 +118,8 @@ class HTTPStatusLiteralChecker(ASTVisitorChecker):
         self._imported_names = ImportedNames()
 
     @override
-    def visit_Module(self, node: ast.Module) -> None:
-        if self._is_included():
-            self.generic_visit(node)
+    def applies_to(self, relative_path: PurePosixPath) -> bool:
+        return relative_path not in self._legacy_python_files and super().applies_to(relative_path)
 
     @override
     def visit_Import(self, node: ast.Import) -> None:
@@ -220,15 +219,6 @@ class HTTPStatusLiteralChecker(ASTVisitorChecker):
                 f"is listed in {LEGACY_PYTHON_SOURCES}.",
                 node,
             )
-
-    def _is_included(self) -> bool:
-        try:
-            relative_path = PurePosixPath(self.file_path.relative_to(self.repo_root))
-        except ValueError:
-            return True
-        return relative_path not in self._legacy_python_files and not any(
-            relative_path.full_match(glob) for glob in _EXCLUDED_GLOBS
-        )
 
 
 def load_legacy_python_files(repo_root: Path) -> frozenset[PurePosixPath]:

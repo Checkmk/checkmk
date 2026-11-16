@@ -8,7 +8,7 @@
 import ast
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import ClassVar
 
 from cmk.astrein.suppressions import Suppression
@@ -30,6 +30,8 @@ class ASTVisitorChecker(ast.NodeVisitor):
     """Unique kebab-case id naming what is checked, for selection, suppressions and reports."""
     summary: ClassVar[str]
     """One-line description of what the checker enforces."""
+    excluded_globs: ClassVar[frozenset[str]] = frozenset()
+    """Repo-relative glob patterns (``PurePosixPath.full_match``) of files the checker skips."""
 
     def __init__(self, file_path: Path, repo_root: Path):
         self.file_path = file_path
@@ -60,11 +62,17 @@ class ASTVisitorChecker(ast.NodeVisitor):
         )
 
     def check(self, tree: ast.AST, suppressions: Sequence[Suppression]) -> list[CheckerError]:
+        if not self.applies_to(PurePosixPath(self.file_path.relative_to(self.repo_root))):
+            return []
         self.suppressions = [s for s in suppressions if s.checker_id == self.checker_id]
         self.used_suppressions = set()
         self.errors = []
         self.visit(tree)
         return self.errors
+
+    def applies_to(self, relative_path: PurePosixPath) -> bool:
+        """Override to skip files by more than ``excluded_globs``."""
+        return not any(relative_path.full_match(glob) for glob in self.excluded_globs)
 
 
 #: A callable that creates a checker for a given file.

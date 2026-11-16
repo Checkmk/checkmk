@@ -3,17 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-from functools import partial
 from pathlib import Path
 
 import pytest
 
-from cmk.astrein.checkers.logging_formatter import (
-    _EXCLUDED_GLOBS,
-    _INCLUDED_GLOBS,
-    LoggingFormatterChecker,
-)
+from cmk.astrein.checkers.logging_formatter import LoggingFormatterChecker
 from cmk.astrein.engine import run_checkers
 from cmk.astrein.framework import CheckerError
 
@@ -21,17 +15,9 @@ _CHECKED_FILE = Path("/repo/checked/module.py")
 
 
 def _check(
-    code: str,
-    file_path: Path = _CHECKED_FILE,
-    repo_root: Path = Path("/repo"),
-    *,
-    excluded_globs: Sequence[str] = _EXCLUDED_GLOBS,
-    included_globs: Sequence[str] = _INCLUDED_GLOBS,
+    code: str, file_path: Path = _CHECKED_FILE, repo_root: Path = Path("/repo")
 ) -> list[CheckerError]:
-    factory = partial(
-        LoggingFormatterChecker, excluded_globs=excluded_globs, included_globs=included_globs
-    )
-    return run_checkers(file_path, repo_root, [factory], source_code=code)
+    return run_checkers(file_path, repo_root, [LoggingFormatterChecker], source_code=code)
 
 
 @pytest.mark.parametrize(
@@ -232,30 +218,3 @@ def test_rejects_dict_config_formatter_not_built_by_cmk_formatter(
 )
 def test_allows_non_offending_dict(code: str) -> None:
     assert _check(code) == []
-
-
-_FORMATTER_CALL = "import logging\nlogging.Formatter()"
-_DUMMY_EXCLUDED_GLOBS = ("excluded_top/**", "packages/excluded_pkg/**")
-_DUMMY_INCLUDED_GLOBS = ("packages/excluded_pkg/migrated.py",)
-
-
-@pytest.mark.parametrize(
-    "file_path, expected_errors",
-    [
-        pytest.param(Path("/repo/excluded_top/mod.py"), 0, id="excluded_top_level"),
-        pytest.param(Path("/repo/packages/excluded_pkg/other.py"), 0, id="excluded_package"),
-        pytest.param(Path("/repo/packages/other_pkg/mod.py"), 1, id="outside_every_glob"),
-        pytest.param(Path("/repo/packages/excluded_pkg/migrated.py"), 1, id="force_included"),
-        pytest.param(
-            Path("/repo/packages/excluded_pkg/not_migrated.py"), 0, id="sibling_of_force_included"
-        ),
-    ],
-)
-def test_glob_scoping_with_included_override(file_path: Path, expected_errors: int) -> None:
-    errors = _check(
-        _FORMATTER_CALL,
-        file_path=file_path,
-        excluded_globs=_DUMMY_EXCLUDED_GLOBS,
-        included_globs=_DUMMY_INCLUDED_GLOBS,
-    )
-    assert len(errors) == expected_errors

@@ -748,7 +748,8 @@ class RegionRun(NamedTuple):
 
 
 class _AccountJobs(NamedTuple):
-    account: AwsAccount
+    # Not the AwsAccount: its session would stay alive until all accounts are written.
+    account_id: str
     notes: Sequence[AgentInfoRow]
     runs: Sequence[Future[RegionRun]]
 
@@ -825,7 +826,9 @@ def _run_region(
         sections.run(use_cache=use_cache)
     except AwsAccessError as ae:
         # Not raised: a raising job stops the whole run, and this only loses the account.
-        return RegionRun(output.getvalue(), False, (), ae)
+        # A new error: the traceback and the chained botocore error of the original one
+        # hold frames that hold the account's session.
+        return RegionRun(output.getvalue(), False, (), AwsAccessError(str(ae)))
     except AssertionError:
         if args.debug:
             raise
@@ -964,7 +967,7 @@ def _start_account(
         )
         for job in _region_jobs(settings, regions)
     ]
-    return account_id, _AccountJobs(account, notes, runs)
+    return account_id, _AccountJobs(account.id, notes, runs)
 
 
 def _region_jobs(settings: _RunSettings, regions: Sequence[str]) -> list[_RegionJob]:
@@ -1034,7 +1037,7 @@ def _write_account_output(
         notes += region_run.notes
     if error is not None:
         return [AgentInfoRow("error", account_id, str(error))], has_exceptions
-    return [AgentInfoRow("ok", jobs.account.id), *notes], has_exceptions
+    return [AgentInfoRow("ok", jobs.account_id), *notes], has_exceptions
 
 
 @report_agent_crashes(AGENT, __version__)

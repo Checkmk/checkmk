@@ -7,6 +7,7 @@ import importlib
 from collections.abc import Callable, Sequence
 from functools import partial
 
+from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import entry_point_prefixes as cli_entry_point_prefixes
@@ -16,14 +17,14 @@ from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
 
 from .commands import bind, DiscoveredCommand, Run
-from .readers import record
+from .readers import Positional, record
 
 
-def _selector[R](command: CLICommand[R]) -> CLIFlag | CLIValue[str]:
-    match command.arguments:
-        case None | CLIArguments(optional=True):
-            return CLIFlag(long=command.long, short=command.short, help=command.help)
-        case CLIArguments(placeholder=placeholder):
+def _selector[R](
+    command: CLICommand[R], positional: Sequence[Positional]
+) -> CLIFlag | CLIValue[str]:
+    match positional:
+        case [CLIArgument(optional=False, placeholder=placeholder)]:
             return CLIValue(
                 long=command.long,
                 short=command.short,
@@ -31,6 +32,8 @@ def _selector[R](command: CLICommand[R]) -> CLIFlag | CLIValue[str]:
                 placeholder=placeholder,
                 parse=str,
             )
+        case _:
+            return CLIFlag(long=command.long, short=command.short, help=command.help)
 
 
 def _split_reference(reference: str) -> tuple[str, str]:
@@ -59,12 +62,39 @@ def loaded_run[R](command: CLICommand[R]) -> Run[R]:
     return load_handler(command).run
 
 
+def _is_required(positional: Positional) -> bool:
+    match positional:
+        case CLIArgument(optional=False):
+            return True
+        case _:
+            return False
+
+
+def _requires_one_after_an_optional(positional: Sequence[Positional]) -> bool:
+    required = [_is_required(each) for each in positional]
+    return False in required and any(required[required.index(False) :])
+
+
+def _reads_one_after_the_remaining(positional: Sequence[Positional]) -> bool:
+    return any(isinstance(each, CLIArguments) for each in positional[:-1])
+
+
 def make_command[R](command: CLICommand[R], run: Callable[[], Run[R]]) -> DiscoveredCommand:
     recorded = record(command.request)
+    if len({each.placeholder for each in recorded.positional}) < len(recorded.positional):
+        raise ValueError(f"{command.name!r} reads a positional argument twice")
+    if _reads_one_after_the_remaining(recorded.positional):
+        raise ValueError(f"{command.name!r} reads an argument after its remaining arguments")
+    if _requires_one_after_an_optional(recorded.positional):
+        raise ValueError(f"{command.name!r} reads a required argument after an optional one")
+    if command.arguments is not None and recorded.positional:
+        raise ValueError(f"{command.name!r} both declares and reads its positional arguments")
     return DiscoveredCommand(
         name=command.name,
-        selector=_selector(command),
-        arguments=command.arguments,
+        selector=_selector(
+            command, recorded.positional if command.arguments is None else [command.arguments]
+        ),
+        positional=recorded.positional if command.arguments is None else [command.arguments],
         description=command.description,
         options=recorded.options,
         load_handler=lambda: partial(bind, command, run()),

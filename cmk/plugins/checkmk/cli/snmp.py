@@ -10,14 +10,14 @@ from pathlib import Path
 from typing import Final
 
 import cmk.utils.paths
-from cmk.ccc.hostaddress import HostAddress
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.snmplib import (
     OID,
     SNMPBackendEnum,
 )
+from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import no_options as cli_no_options
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Values as CLIValues
 
@@ -29,12 +29,15 @@ def make_local_mibs_dir(omd_root: Path) -> Path:
     return omd_root / "local/share/snmp/mibs"
 
 
+def _translate_request(options: CLIReader) -> str | None:
+    return options.argument(CLIArgument(placeholder="WALK", parse=str))
+
+
 cli_command_snmptranslate = CLICommand(
     name="snmptranslate",
     handler="cmk.plugins.checkmk.cli.handlers.snmp:cli_handler_snmptranslate",
     long="snmptranslate",
-    request=cli_no_options,
-    arguments=CLIArguments("HOST"),
+    request=_translate_request,
     help="Do snmptranslate on walk",
     description=[
         (
@@ -71,6 +74,7 @@ class WalkRequest:
     extra_oids: Sequence[OID]
     oids: Sequence[OID]
     fake_dns: HostAddress | None
+    hosts: Sequence[HostName]
 
 
 def _walk_request(options: CLIReader) -> WalkRequest:
@@ -79,6 +83,7 @@ def _walk_request(options: CLIReader) -> WalkRequest:
         extra_oids=options.values(_EXTRA_OIDS_VALUES),
         oids=options.values(_OIDS_VALUES),
         fake_dns=options.value(FAKE_DNS_VALUE),
+        hosts=options.arguments(CLIArguments(placeholder="HOST1 HOST2...", parse=HostName)),
     )
 
 
@@ -87,7 +92,6 @@ cli_command_snmpwalk = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.snmp:cli_handler_snmpwalk",
     long="snmpwalk",
     request=_walk_request,
-    arguments=CLIArguments("HOST1 HOST2...", optional=True),
     help="Do snmpwalk on one or more hosts",
     description=[
         "Does a complete snmpwalk for the specified hosts both "
@@ -105,11 +109,16 @@ cli_command_snmpwalk = CLICommand(
 class GetRequest:
     backend: SNMPBackendEnum | None
     fake_dns: HostAddress | None
+    oid: OID | None
+    hosts: Sequence[HostName]
 
 
 def _get_request(options: CLIReader) -> GetRequest:
     return GetRequest(
-        backend=options.value(SNMP_BACKEND_VALUE), fake_dns=options.value(FAKE_DNS_VALUE)
+        backend=options.value(SNMP_BACKEND_VALUE),
+        fake_dns=options.value(FAKE_DNS_VALUE),
+        oid=options.argument(CLIArgument(placeholder="OID", parse=OID)),
+        hosts=options.arguments(CLIArguments(placeholder="HOST1 HOST2...", parse=HostName)),
     )
 
 
@@ -118,7 +127,6 @@ cli_command_snmpget = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.snmp:cli_handler_snmpget",
     long="snmpget",
     request=_get_request,
-    arguments=CLIArguments("OID [HOST1 HOST2...]", optional=True),
     help="Fetch single OID from one or multiple hosts",
     description=[
         (

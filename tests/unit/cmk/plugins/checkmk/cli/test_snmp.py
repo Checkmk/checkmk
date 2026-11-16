@@ -3,107 +3,77 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
+
 from collections.abc import Mapping, Sequence
-from pathlib import Path
 
 import pytest
 
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.hostaddress import HostAddress
-from cmk.checkengine.snmplib import SNMPBackendEnum
-from cmk.cli.internal import Context as CLIContext
+from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.snmplib import OID, SNMPBackendEnum
+from cmk.cli.internal import Argument as CLIArgument
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Declaration as CLIDeclaration
-from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Reader as CLIReader
-from cmk.plugins.checkmk.cli.handlers.snmp import cli_handler_snmptranslate, cli_handler_snmpwalk
 from cmk.plugins.checkmk.cli.options import FAKE_DNS_VALUE, SNMP_BACKEND_VALUE
 from cmk.plugins.checkmk.cli.snmp import (
     _EXTRA_OIDS_VALUES,
     _get_request,
     _OIDS_VALUES,
+    _translate_request,
     _walk_request,
     GetRequest,
     WalkRequest,
 )
 
 
-def _context(*, debug_mode: bool = False) -> CLIContext:
-    return CLIContext(
-        omd_root=Path("/nonexistent"),
-        global_options=CLIGlobalOptions(debug=debug_mode),
-        logger=logging.getLogger(__name__),
-    )
-
-
-def test_a_missing_walk_name_exits_three() -> None:
-    assert cli_handler_snmptranslate.run(_context(), None, [""]) == CLIExitCode.UNKNOWN
-
-
-def test_a_missing_walk_name_is_logged(caplog: pytest.LogCaptureFixture) -> None:
-    with caplog.at_level(logging.ERROR):
-        cli_handler_snmptranslate.run(_context(), None, [""])
-
-    assert caplog.messages == ["Please provide the name of a SNMP walk file"]
-
-
-def test_a_missing_walk_name_is_raised_through_under_debug() -> None:
-    with pytest.raises(MKGeneralException, match="name of a SNMP walk file"):
-        cli_handler_snmptranslate.run(_context(debug_mode=True), None, [""])
-
-
-def test_oids_and_extra_oids_together_exit_three() -> None:
-    given: Mapping[CLIDeclaration, Sequence[str]] = {
-        _OIDS_VALUES: ["1.3"],
-        _EXTRA_OIDS_VALUES: ["1.4"],
-    }
-
-    assert (
-        cli_handler_snmpwalk.run(
-            _context(),
-            _walk_request(CLIReader(lambda declaration: given.get(declaration, ()))),
-            [],
-        )
-        == CLIExitCode.UNKNOWN
-    )
-
-
-def test_oids_and_extra_oids_together_are_raised_through_under_debug() -> None:
-    with pytest.raises(MKGeneralException, match="--oid and --extraoid"):
-        given: Mapping[CLIDeclaration, Sequence[str]] = {
-            _OIDS_VALUES: ["1.3"],
-            _EXTRA_OIDS_VALUES: ["1.4"],
-        }
-
-        cli_handler_snmpwalk.run(
-            _context(debug_mode=True),
-            _walk_request(CLIReader(lambda declaration: given.get(declaration, ()))),
-            [],
-        )
-
-
 def test_the_walk_request_is_read_from_the_command_line() -> None:
     given: Mapping[CLIDeclaration, Sequence[str]] = {
         SNMP_BACKEND_VALUE: ["classic"],
         FAKE_DNS_VALUE: ["1.2.3.4"],
+        _EXTRA_OIDS_VALUES: [".1.2"],
         _OIDS_VALUES: [".1.3", ".1.4"],
+        CLIArguments(placeholder="HOST1 HOST2...", parse=HostName): ["host1", "host2"],
     }
 
     assert _walk_request(CLIReader(lambda declaration: given.get(declaration, ()))) == WalkRequest(
         backend=SNMPBackendEnum.CLASSIC,
-        extra_oids=(),
+        extra_oids=(".1.2",),
         oids=(".1.3", ".1.4"),
         fake_dns=HostAddress("1.2.3.4"),
+        hosts=(HostName("host1"), HostName("host2")),
     )
 
 
 def test_the_get_request_is_read_from_the_command_line() -> None:
-    given: Mapping[CLIDeclaration, Sequence[str]] = {SNMP_BACKEND_VALUE: ["stored-walk"]}
+    given: Mapping[CLIDeclaration, Sequence[str]] = {
+        SNMP_BACKEND_VALUE: ["stored-walk"],
+        CLIArgument(placeholder="OID", parse=OID): [".1.3.6"],
+        CLIArguments(placeholder="HOST1 HOST2...", parse=HostName): ["host1"],
+    }
 
     assert _get_request(CLIReader(lambda declaration: given.get(declaration, ()))) == GetRequest(
-        backend=SNMPBackendEnum.STORED_WALK, fake_dns=None
+        backend=SNMPBackendEnum.STORED_WALK,
+        fake_dns=None,
+        oid=".1.3.6",
+        hosts=(HostName("host1"),),
     )
+
+
+def test_the_walk_to_translate_is_read_from_the_command_line() -> None:
+    given: Mapping[CLIDeclaration, Sequence[str]] = {
+        CLIArgument(placeholder="WALK", parse=str): ["myhost"]
+    }
+
+    assert _translate_request(CLIReader(lambda declaration: given.get(declaration, ()))) == "myhost"
+
+
+def test_an_invalid_host_name_is_rejected() -> None:
+    with pytest.raises(ValueError, match="not a host"):
+        given: Mapping[CLIDeclaration, Sequence[str]] = {
+            CLIArguments(placeholder="HOST1 HOST2...", parse=HostName): ["not a host"]
+        }
+
+        _walk_request(CLIReader(lambda declaration: given.get(declaration, ())))
 
 
 def test_an_unknown_backend_is_rejected() -> None:

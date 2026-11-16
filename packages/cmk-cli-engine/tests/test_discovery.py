@@ -9,10 +9,14 @@ from typing import Final
 
 import pytest
 
+from cmk.cli.engine.commands import Commands as CLICommands
+from cmk.cli.engine.commands import requires_argument as cli_requires_argument
 from cmk.cli.engine.discovery import _named_after_its_variable as _cli_named_after_its_variable
 from cmk.cli.engine.discovery import load_handler as cli_load_handler
 from cmk.cli.engine.readers import parsed as cli_parsed
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Argument as CLIArgument
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import Count as CLICount
@@ -24,7 +28,7 @@ from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import PluginLocation
 
-from ._commands import command_with, HANDED_IN
+from ._commands import command_reading, command_with, HANDED_IN
 from ._logger import null_logger
 
 # The engine only hands this through to the command's handler.
@@ -84,7 +88,7 @@ def test_a_commands_handler_receives_its_request_parsed() -> None:
         _record,
     )
     bound = command.load_handler()(
-        cli_parsed([("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], null_logger())
+        cli_parsed([("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], {}, null_logger())
     )
 
     bound(
@@ -145,3 +149,82 @@ def test_a_reference_to_something_else_is_reported() -> None:
 def test_the_handler_of_another_command_is_rejected() -> None:
     with pytest.raises(ValueError, match="handles 'greet', not 'farewell'"):
         cli_load_handler(_greeting("farewell", f"{__name__}:cli_handler_greet"))
+
+
+_HOST_ARGUMENT = CLIArgument(placeholder="HOST", parse=str)
+
+_ADDRESS_ARGUMENT = CLIArgument(placeholder="ADDRESS", parse=str, optional=True)
+
+_NUMBERS_ARGUMENTS = CLIArguments(placeholder="N...", parse=int)
+
+
+def test_a_single_required_argument_is_the_command_options_value() -> None:
+    command = command_reading(lambda options: options.argument(_HOST_ARGUMENT))
+
+    assert cli_requires_argument(command)
+
+
+def test_more_arguments_are_the_rest_of_the_command_line() -> None:
+    command = command_reading(lambda options: options.arguments(_NUMBERS_ARGUMENTS))
+
+    assert not cli_requires_argument(command)
+
+
+def test_the_help_brackets_the_arguments_a_command_line_may_leave_out() -> None:
+    def request(options: CLIReader) -> object:
+        return (
+            options.argument(_HOST_ARGUMENT),
+            options.argument(_ADDRESS_ARGUMENT),
+            options.arguments(_NUMBERS_ARGUMENTS),
+        )
+
+    assert (
+        "--thing HOST [ADDRESS] [N...] " in CLICommands(commands=[command_reading(request)]).help()
+    )
+
+
+def test_a_required_argument_after_an_optional_one_is_rejected() -> None:
+    with pytest.raises(ValueError, match="'thing' reads a required argument after an optional one"):
+        command_reading(
+            lambda options: (
+                options.argument(_ADDRESS_ARGUMENT),
+                options.argument(_HOST_ARGUMENT),
+            )
+        )
+
+
+def test_an_argument_after_the_remaining_ones_is_rejected() -> None:
+    with pytest.raises(ValueError, match="'thing' reads an argument after its remaining arguments"):
+        command_reading(
+            lambda options: (
+                options.arguments(_NUMBERS_ARGUMENTS),
+                options.argument(_ADDRESS_ARGUMENT),
+            )
+        )
+
+
+def test_a_command_reading_a_positional_argument_twice_is_rejected() -> None:
+    with pytest.raises(ValueError, match="'thing' reads a positional argument twice"):
+        command_reading(
+            lambda options: (
+                options.argument(_HOST_ARGUMENT),
+                options.arguments(CLIArguments(placeholder="HOST", parse=str)),
+            )
+        )
+
+
+def test_a_command_declaring_and_reading_its_positional_arguments_is_rejected() -> None:
+    with pytest.raises(
+        ValueError, match="'thing' both declares and reads its positional arguments"
+    ):
+        command_with(
+            CLICommand(
+                name="thing",
+                handler=HANDED_IN,
+                long="thing",
+                request=lambda options: options.argument(_HOST_ARGUMENT),
+                arguments=CLIArguments(placeholder="FILES...", parse=str),
+                help="Do the thing",
+            ),
+            lambda *_args: CLIExitCode.SUCCESS,
+        )

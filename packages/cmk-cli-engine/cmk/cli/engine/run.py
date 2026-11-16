@@ -21,7 +21,7 @@ from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from .arguments import InvalidArguments, parse, rejection, RunCommand, ShowHelp
 from .commands import Commands, DiscoveredCommand
 from .options import GlobalOptions
-from .readers import parsed
+from .readers import assign, parsed
 
 type CommandTracer = Callable[[CLIContext, RunCommand], AbstractContextManager[None]]
 
@@ -87,7 +87,13 @@ def _run_command(
 ) -> CLIExitCode:
     bind = run_command.command.load_handler()
     try:
-        bound = bind(parsed(run_command.options, context.logger))
+        bound = bind(
+            parsed(
+                run_command.options,
+                assign(run_command.command.positional, run_command.args),
+                context.logger,
+            )
+        )
     except ValueError as error:
         runtime.write_error(rejection(argv, error))
         return CLIExitCode.UNKNOWN

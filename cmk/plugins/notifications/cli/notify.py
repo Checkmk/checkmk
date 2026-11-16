@@ -41,6 +41,6 @@ cli_command_notify = CLICommand(
     handler="cmk.plugins.notifications.cli.handlers.notify:cli_handler_notify",
     long="notify",
     request=_notify_request,
-    arguments=CLIArguments("MODE", optional=True),
+    arguments=CLIArguments(placeholder="MODE", parse=str),
     help="Used to send notifications from core",
 )

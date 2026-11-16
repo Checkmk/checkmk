@@ -68,7 +68,7 @@ cli_command_check = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.check:cli_handler_check",
     long="check",
     request=_checking_request,
-    arguments=CLIArguments("HOST [IPADDRESS]", optional=True),
+    arguments=CLIArguments(placeholder="HOST [IPADDRESS]", parse=str),
     default=True,
     help="Check all services on the given HOST",
     description=[

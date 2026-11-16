@@ -10,6 +10,7 @@ from typing import Final
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.plugins import CheckPluginName
 from cmk.checkengine.snmplib import SNMPBackendEnum
+from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Count as CLICount
@@ -50,7 +51,7 @@ cli_command_check_discovery = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.discovery:cli_handler_check_discovery",
     long="check-discovery",
     request=_check_discovery_request,
-    arguments=CLIArguments("HOSTNAME"),
+    arguments=CLIArgument(placeholder="HOSTNAME", parse=str),
     help="Check for not yet monitored services",
     description=[
         (
@@ -106,7 +107,7 @@ cli_command_discover = CLICommand(
     long="discover",
     short="I",
     request=_discover_request,
-    arguments=CLIArguments("[-I] HOST1 HOST2...", optional=True),
+    arguments=CLIArguments(placeholder="[-I] HOST1 HOST2...", parse=str),
     help="Find new services",
     description=[
         (

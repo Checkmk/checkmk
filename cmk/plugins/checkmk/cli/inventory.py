@@ -60,7 +60,7 @@ cli_command_inventory = CLICommand(
     long="inventory",
     short="i",
     request=_inventory_request,
-    arguments=CLIArguments("HOST1 HOST2...", optional=True),
+    arguments=CLIArguments(placeholder="HOST1 HOST2...", parse=str),
     help="Do a HW/SW Inventory on some or all hosts",
     description=[
         (

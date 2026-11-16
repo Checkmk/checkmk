@@ -14,7 +14,7 @@ cli_command_nagios_config = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.core_config:cli_handler_nagios_config",
     long="nagios-config",
     short="N",
-    arguments=CLIArguments("HOST1 HOST2...", optional=True),
+    arguments=CLIArguments(placeholder="HOST1 HOST2...", parse=str),
     request=fake_dns_request,
     help="Output Nagios configuration",
     description=[
@@ -51,7 +51,7 @@ cli_command_restart = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.core_config:cli_handler_restart",
     long="restart",
     short="R",
-    arguments=CLIArguments("[HostA, HostB]", optional=True),
+    arguments=CLIArguments(placeholder="[HostA, HostB]", parse=str),
     request=fake_dns_request,
     help="Create core config + core restart",
     description=[
@@ -69,7 +69,7 @@ cli_command_reload = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.core_config:cli_handler_reload",
     long="reload",
     short="O",
-    arguments=CLIArguments("[HostA, HostB]", optional=True),
+    arguments=CLIArguments(placeholder="[HostA, HostB]", parse=str),
     request=fake_dns_request,
     help="Create core config + core reload",
     description=[

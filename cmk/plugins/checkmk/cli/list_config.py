@@ -46,7 +46,7 @@ cli_command_list_hosts = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.list_config:cli_handler_list_hosts",
     long="list-hosts",
     short="l",
-    arguments=CLIArguments("G1 G2...", optional=True),
+    arguments=CLIArguments(placeholder="G1 G2...", parse=str),
     request=_list_hosts_request,
     help="Print list of all hosts or members of host groups",
     description=[
@@ -64,7 +64,7 @@ cli_command_list_tag = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.list_config:cli_handler_list_tag",
     long="list-tag",
     request=cli_no_options,
-    arguments=CLIArguments("TAG1 TAG2...", optional=True),
+    arguments=CLIArguments(placeholder="TAG1 TAG2...", parse=str),
     help="List hosts having certain tags",
     description=["Prints all hosts that have all of the specified tags at once."],
 )

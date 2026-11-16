@@ -18,7 +18,7 @@ from ._logger import null_logger
 
 
 def _read(options: Sequence[tuple[str, str]]) -> CLIEngineGlobalOptions:
-    return cli_read_global_options(cli_parsed(options, null_logger()))
+    return cli_read_global_options(cli_parsed(options, {}, null_logger()))
 
 
 def test_a_general_flag_is_collected() -> None:

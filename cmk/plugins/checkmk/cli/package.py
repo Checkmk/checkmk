@@ -17,7 +17,7 @@ cli_command_package = CLICommand(
     long="package",
     short="P",
     request=cli_no_options,
-    arguments=CLIArguments("COMMAND", optional=True),
+    arguments=CLIArguments(placeholder="COMMAND", parse=str),
     help="DEPRECATED: Do package operations",
     description=[DEPRECATION_MSG % ""],
 )

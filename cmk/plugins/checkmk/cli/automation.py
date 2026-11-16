@@ -38,6 +38,6 @@ cli_command_automation = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.automation:cli_handler_automation",
     long="automation",
     request=_for_cmk_version_request,
-    arguments=CLIArguments("COMMAND...", optional=True),
+    arguments=CLIArguments(placeholder="COMMAND...", parse=str),
     help="Internal helper to invoke Check_MK actions",
 )

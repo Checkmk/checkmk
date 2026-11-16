@@ -43,7 +43,7 @@ cli_command_man = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.man_pages:cli_handler_man",
     long="man",
     short="M",
-    arguments=CLIArguments("CHECKTYPE", optional=True),
+    arguments=CLIArguments(placeholder="CHECKTYPE", parse=str),
     request=_renderer_request,
     help="Show manpage for check CHECKTYPE",
     description=[

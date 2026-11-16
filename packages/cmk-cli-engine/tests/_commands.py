@@ -3,15 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
 from typing import Final
 
 from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
 from cmk.cli.engine.commands import Run as CLIRun
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Reader as CLIReader
 
 HANDED_IN: Final = "handed.in.by:the_test"
 
 
 def command_with[R](command: CLICommand[R], run: CLIRun[R]) -> CLIDiscoveredCommand:
     return cli_make_command(command, lambda: run)
+
+
+def command_reading(request: Callable[[CLIReader], object]) -> CLIDiscoveredCommand:
+    return command_with(
+        CLICommand(
+            name="thing",
+            handler=HANDED_IN,
+            long="thing",
+            request=request,
+            help="Do the thing",
+        ),
+        lambda *_args: CLIExitCode.SUCCESS,
+    )

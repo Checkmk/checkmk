@@ -12,7 +12,7 @@ cli_command_localize = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.localize:cli_handler_localize",
     long="localize",
     request=cli_no_options,
-    arguments=CLIArguments("COMMAND", optional=True),
+    arguments=CLIArguments(placeholder="COMMAND", parse=str),
     help="Do localization operations",
     description=[
         (

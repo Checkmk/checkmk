@@ -10,7 +10,7 @@ import pytest
 
 from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
-from cmk.cli.internal import Arguments as CLIArguments
+from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import no_options as cli_no_options
@@ -29,7 +29,7 @@ def _command(
     short: str | None = None,
     *,
     request: Callable[[CLIReader], object] = cli_no_options,
-    arguments: CLIArguments | None = None,
+    arguments: CLIArgument[str] | None = None,
     default: bool = False,
 ) -> CLIDiscoveredCommand:
     return command_with(
@@ -96,4 +96,8 @@ def test_there_is_at_most_one_default_command() -> None:
 
 def test_the_default_command_cannot_require_an_argument() -> None:
     with pytest.raises(ValueError, match="'one'"):
-        CLICommands(commands=[_command("one", arguments=CLIArguments("HOST"), default=True)])
+        CLICommands(
+            commands=[
+                _command("one", arguments=CLIArgument(placeholder="HOST", parse=str), default=True)
+            ]
+        )

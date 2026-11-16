@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from cmk.cli.internal import Args as CLIArgs
-from cmk.cli.internal import Arguments as CLIArguments
+from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
@@ -29,6 +29,7 @@ from .options import (
     short_help_text,
     spellings,
 )
+from .readers import Positional
 
 type BoundCommand = Callable[[CLIContext, CLIArgs], CLIExitCode]
 
@@ -45,7 +46,7 @@ type Run[R] = Callable[[CLIContext, R, CLIArgs], CLIExitCode]
 class DiscoveredCommand:
     name: str
     selector: CLIFlag | CLIValue[str]
-    arguments: CLIArguments | None
+    positional: Sequence[Positional]
     description: Sequence[str]
     options: Sequence[Declaration]
     load_handler: Callable[[], Callable[[CLIReader], BoundCommand]]
@@ -57,22 +58,28 @@ def bind[R](command: CLICommand[R], run: Run[R], reader: CLIReader) -> BoundComm
     return lambda context, args: run(context, request, args)
 
 
+def requires_argument(command: DiscoveredCommand) -> bool:
+    return placeholder(command.selector) is not None
+
+
 def _spelled(command: DiscoveredCommand) -> str:
     return ", ".join(spellings(command.selector))
 
 
-def _spelled_argument(arguments: CLIArguments | None) -> str:
-    match arguments:
-        case None:
-            return ""
-        case CLIArguments(placeholder=placeholder, optional=True):
-            return f" [{placeholder}]"
-        case CLIArguments(placeholder=placeholder):
-            return f" {placeholder}"
+def _bracketed_unless_required(positional: Positional) -> str:
+    match positional:
+        case CLIArgument(optional=False):
+            return positional.placeholder
+        case _:
+            return f"[{positional.placeholder}]"
+
+
+def _spelled_argument(command: DiscoveredCommand) -> str:
+    return "".join(f" {_bracketed_unless_required(each)}" for each in command.positional)
 
 
 def _short_help_text(command: DiscoveredCommand) -> str:
-    spelled = f" {_spelled(command)}{_spelled_argument(command.arguments)}"
+    spelled = f" {_spelled(command)}{_spelled_argument(command)}"
     return _COMMAND_COLUMN.fill(spelled, command.selector.help)
 
 
@@ -119,9 +126,9 @@ def _map_commands(commands: Sequence[DiscoveredCommand]) -> Mapping[str, Discove
 def _check_arguments(declarations: Sequence[Declaration]) -> None:
     declared: dict[str, bool] = {}
     for declaration in declarations:
-        requires_argument = placeholder(declaration) is not None
+        with_argument = placeholder(declaration) is not None
         for spelling in spellings(declaration):
-            if declared.setdefault(spelling, requires_argument) != requires_argument:
+            if declared.setdefault(spelling, with_argument) != with_argument:
                 raise ValueError(f"{spelling!r} is declared both with and without an argument")
 
 
@@ -129,7 +136,7 @@ def _default_command(commands: Sequence[DiscoveredCommand]) -> DiscoveredCommand
     match [command for command in commands if command.default]:
         case []:
             return None
-        case [command] if placeholder(command.selector) is not None:
+        case [command] if requires_argument(command):
             raise ValueError(f"The default command {command.name!r} cannot require an argument")
         case [command]:
             return command

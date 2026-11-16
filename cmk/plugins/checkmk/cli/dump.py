@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.snmplib import SNMPBackendEnum
+from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Reader as CLIReader
@@ -42,7 +43,7 @@ cli_command_dump_agent = CLICommand(
     long="dump-agent",
     short="d",
     request=_dump_agent_request,
-    arguments=CLIArguments("HOSTNAME|ADDRESS"),
+    arguments=CLIArgument(placeholder="HOSTNAME|ADDRESS", parse=str),
     help="Show raw information from agent",
     description=[
         (
@@ -59,7 +60,7 @@ cli_command_dump = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.dump:cli_handler_dump",
     long="dump",
     short="D",
-    arguments=CLIArguments("H1 H2...", optional=True),
+    arguments=CLIArguments(placeholder="H1 H2...", parse=str),
     request=fake_dns_request,
     help="Dump info about all or some hosts",
     description=[

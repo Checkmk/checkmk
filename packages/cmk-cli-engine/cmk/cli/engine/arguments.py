@@ -11,9 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cmk.cli.internal import Args as CLIArgs
-from cmk.cli.internal import Arguments as CLIArguments
 
-from .commands import Commands, DiscoveredCommand
+from .commands import Commands, DiscoveredCommand, requires_argument
 from .options import GetoptOptions, GlobalOptions, HELP_OPTION, read_global_options, spellings
 from .readers import parsed
 
@@ -37,13 +36,9 @@ class InvalidArguments:
 
 
 def _args(command: DiscoveredCommand, argument: str, positional: Sequence[str]) -> CLIArgs:
-    match command.arguments:
-        case None:
-            return ()
-        case CLIArguments(optional=True):
-            return positional
-        case CLIArguments():
-            return [argument]
+    if requires_argument(command):
+        return [argument, *positional]
+    return positional
 
 
 def _selected(
@@ -63,7 +58,7 @@ def _parse(
     options, positional = getopt.getopt(
         list(argv[1:]), commands.short_getopt_specs(), commands.long_getopt_specs()
     )
-    global_options = read_global_options(parsed(options, logger))
+    global_options = read_global_options(parsed(options, {}, logger))
     if any(option in spellings(HELP_OPTION) for option, _argument in options):
         return ShowHelp(global_options)
 

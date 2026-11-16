@@ -33,7 +33,7 @@ cli_command_flush = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.maintenance:cli_handler_flush",
     long="flush",
     request=cli_no_options,
-    arguments=CLIArguments("HOST1 HOST2...", optional=True),
+    arguments=CLIArguments(placeholder="HOST1 HOST2...", parse=str),
     help="Flush all data of some or all hosts",
     description=[
         (

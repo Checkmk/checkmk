@@ -76,16 +76,6 @@ class Context:
     """Where the command reports what the engine would report, e.g. its errors"""
 
 
-@dataclass(frozen=True)
-class Arguments:
-    """The positional arguments of a :class:`Command`"""
-
-    placeholder: str
-    """What the help shows in their place, e.g. ``"HOST"`` or ``"HOST1 HOST2..."``"""
-    optional: bool = False
-    """Whether the command takes any number of arguments, none included, instead of exactly one"""
-
-
 @dataclass(frozen=True, kw_only=True)
 class _OptionDeclaration:
     long: str
@@ -124,7 +114,31 @@ class Values[T](_OptionDeclaration):
     """Parses each argument; a ``ValueError`` rejects the command line"""
 
 
-type Declaration = Flag | Count | Value[object] | Values[object]
+@dataclass(frozen=True, kw_only=True)
+class Argument[T]:
+    """A positional argument: reading it parses the next one on the command line"""
+
+    placeholder: str
+    """What the help shows in its place, e.g. ``"HOST"``"""
+    parse: Callable[[str], T]
+    """Parses the argument; a ``ValueError`` rejects the command line"""
+    optional: bool = False
+    """Whether the command line may end before it"""
+
+
+@dataclass(frozen=True, kw_only=True)
+class Arguments[T]:
+    """Any number of positional arguments, none included: reading them parses all that are left"""
+
+    placeholder: str
+    """What the help shows in their place, e.g. ``"HOST1 HOST2..."``"""
+    parse: Callable[[str], T]
+    """Parses each argument; a ``ValueError`` rejects the command line"""
+
+
+type Declaration = (
+    Flag | Count | Value[object] | Values[object] | Argument[object] | Arguments[object]
+)
 
 
 def _parse[T](parse: Callable[[str], T], name: str, argument: str) -> T:
@@ -136,11 +150,11 @@ def _parse[T](parse: Callable[[str], T], name: str, argument: str) -> T:
 
 @dataclass(frozen=True)
 class Reader:
-    """Reads a command's options by their declarations, each with its declared type"""
+    """Reads a command's options and positional arguments by their declarations, each with its declared type"""
 
     given: Callable[[Declaration], Sequence[str]]
-    """What the command line gives an option: its argument per occurrence, an empty one
-    for an option without argument"""
+    """What the command line gives a declaration: an option's argument per occurrence, an empty one
+    for an option without argument, and the positional arguments that fall to an argument declaration"""
 
     def flag(self, option: Flag) -> bool:
         return bool(self.given(option))
@@ -154,6 +168,15 @@ class Reader:
 
     def values[T](self, option: Values[T]) -> Sequence[T]:
         return tuple(_parse(option.parse, f"--{option.long}", each) for each in self.given(option))
+
+    def argument[T](self, argument: Argument[T]) -> T | None:
+        given = self.given(argument)
+        return _parse(argument.parse, argument.placeholder, given[-1]) if given else None
+
+    def arguments[T](self, arguments: Arguments[T]) -> Sequence[T]:
+        return tuple(
+            _parse(arguments.parse, arguments.placeholder, each) for each in self.given(arguments)
+        )
 
 
 def no_options(_options: Reader) -> None:
@@ -171,17 +194,15 @@ class Command[R]:
     >>> @dataclass(frozen=True, kw_only=True)
     ... class GreetRequest:
     ...     loud: bool
-    ...     times: int | None
+    ...     names: Sequence[str]
     >>> def greet_request(options: Reader) -> GreetRequest:
     ...     return GreetRequest(
     ...         loud=options.flag(Flag(long="loud", help="Shout")),
-    ...         times=options.value(
-    ...             Value(long="times", help="Repeat", placeholder="N", parse=int)
-    ...         ),
+    ...         names=options.arguments(Arguments(placeholder="NAME...", parse=str)),
     ...     )
-    >>> def greet(context: Context, request: GreetRequest, args: Args) -> ExitCode:
+    >>> def greet(context: Context, request: GreetRequest, _args: Args) -> ExitCode:
     ...     greeting = "HELLO" if request.loud else "Hello"
-    ...     print(greeting, ", ".join(args))
+    ...     print(greeting, ", ".join(request.names))
     ...     return ExitCode.SUCCESS
     >>> cli_command_greet = Command(
     ...     name="greet",
@@ -189,12 +210,12 @@ class Command[R]:
     ...     long="greet",
     ...     request=greet_request,
     ...     help="Greet the given names",
-    ...     arguments=Arguments("NAME...", optional=True),
     ... )
 
     A request function only reads and assembles: the engine runs it once with
-    a reader that records the declarations, so an option read conditionally
-    would be missing from the help. Checks across options belong in the handler.
+    a reader that records the declarations, so an option or argument read
+    conditionally would be missing from the help. Checks across options belong
+    in the handler.
     """
 
     name: str
@@ -212,7 +233,8 @@ class Command[R]:
     handler: str
     """Where the command's :class:`Handler` lives, as ``module:object``, imported when the command runs"""
     short: str | None = None
-    arguments: Arguments | None = None
+    arguments: Argument[str] | Arguments[str] | None = None
+    """The positional arguments the handler receives unread, for a command whose request reads none"""
     description: Sequence[str] = ()
     default: bool = False
     """Whether positional arguments without any command select this command"""
@@ -261,6 +283,7 @@ def entry_point_prefixes() -> Mapping[type[Command[object]], str]:
 
 __all__ = [
     "Args",
+    "Argument",
     "Arguments",
     "Command",
     "Context",

@@ -18,6 +18,7 @@ from cmk.cli.engine.options import Declaration as CLIDeclaration
 from cmk.cli.engine.options import GlobalOptions as CLIEngineGlobalOptions
 from cmk.cli.engine.options import placeholder as cli_placeholder
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
@@ -70,7 +71,7 @@ _WITH_ARGUMENT: Final = command_with(
         handler=HANDED_IN,
         long="with-argument",
         request=cli_no_options,
-        arguments=CLIArguments("HOST"),
+        arguments=CLIArgument(placeholder="HOST", parse=str),
         help="needs exactly one argument",
     ),
     _unreachable,
@@ -116,7 +117,7 @@ _DEFAULT: Final = command_with(
         long="default",
         short="c",
         request=_default_request,
-        arguments=CLIArguments("HOSTS", optional=True),
+        arguments=CLIArguments(placeholder="HOSTS", parse=str),
         default=True,
         help="the default command",
     ),
@@ -186,13 +187,6 @@ def test_a_required_command_argument_comes_off_the_option() -> None:
 
     assert isinstance(parsed, CLIRunCommand)
     assert parsed.args == [_COMMAND_ARGUMENT]
-
-
-def test_a_command_without_argument_receives_no_arguments() -> None:
-    parsed = _parse(["cmk", "--plain", "ignored", "too"])
-
-    assert isinstance(parsed, CLIRunCommand)
-    assert parsed.args == ()
 
 
 def test_an_optional_command_argument_takes_all_positional_arguments() -> None:

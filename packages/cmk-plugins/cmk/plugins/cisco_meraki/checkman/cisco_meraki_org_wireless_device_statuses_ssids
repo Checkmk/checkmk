@@ -1,4 +1,4 @@
-title: Cisco Meraki: Wireless device statuses SSIDs
+title: Cisco Meraki: Wireless Device SSID Status
 agents: cisco_meraki
 catalog: os/services
 license: GPLv2

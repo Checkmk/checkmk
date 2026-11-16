@@ -1,4 +1,4 @@
-title: Cisco Meraki: Switch ports statuses
+title: Cisco Meraki: Switch Port Status
 agents: cisco_meraki
 catalog: os/services
 license: GPLv2

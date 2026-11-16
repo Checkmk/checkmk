@@ -1,4 +1,4 @@
-title: Temperature of HDDs Using S.M.A.R.T via NVMe
+title: S.M.A.R.T.: NVMe Disk Temperature
 agents: linux
 catalog: os/hardware
 license: GPLv2

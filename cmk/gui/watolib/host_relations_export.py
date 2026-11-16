@@ -9,9 +9,10 @@ Host relations (see :mod:`cmk.gui.watolib.host_relations`) are configured in Set
 live in the ``relations`` host attribute.
 
 To make the relations available for monitoring (Livestatus, views) they are resolved *once*,
-centrally, at activation time and written as the ``_CMK_RELATIONS`` custom host variable via a
-generated ``explicit_host_conf`` file. This runs on the central site before the configuration
-snapshots are built, so the file reaches every site with the configuration sync (``ultimatemt``
+centrally, and written as the ``_CMK_RELATIONS`` custom host variable via a generated
+``explicit_host_conf`` file. This runs on the central site before the cores are given a changed
+host configuration - at activation time before the configuration snapshots are built, and when
+hosts are renamed - so the file reaches every site with the configuration sync (``ultimatemt``
 builds a filtered one per site, see ``relations_of_site``). The central config knows every host
 of every site, so cross-site links resolve correctly here; each site's core only emits the macro
 for the hosts it actually monitors.
@@ -21,8 +22,8 @@ in its own folder's ``hosts.mk`` when that folder is saved. Relations cannot use
 derived reverse links belong to hosts in *other* folders, and the counterpart's site can only be
 looked up against the whole tree - neither is known while saving a single folder.
 
-:func:`register` declares the generated file for config sync; the write itself is triggered from
-the activation (see :func:`export_host_relations`).
+:func:`register` declares the generated file for config sync; the write itself is triggered by
+the activation and by a host rename (see :func:`export_host_relations_of_central_site`).
 
 What the resolution dropped with a warning is written to a file of the central site, which the
 activation adds to the result of the sites concerned (see :func:`add_dropped_relations`).
@@ -38,7 +39,10 @@ from typing import cast
 import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
+from cmk.gui.customer import customer_api
 from cmk.gui.log import logger
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.utils.host_relations import (
     dump_resolved_relations,
     parse_resolved_relations,
@@ -58,6 +62,7 @@ from cmk.gui.watolib.host_relations import (
     ResolvedRelations,
 )
 from cmk.gui.watolib.paths import wato_var_dir
+from cmk.livestatus_client import SiteConfigurations
 
 LOGGER = logger.getChild("host_relations")
 
@@ -149,8 +154,7 @@ def export_host_relations(
 ) -> None:
     """Resolve the relations of ``all_hosts`` and persist them as the ``_CMK_RELATIONS`` variable.
 
-    Called once per activation on the central site, immediately before the sync snapshots are
-    built; the links come from the ``relations`` attribute of every host of the folder tree.
+    The links come from the ``relations`` attribute of every host of the folder tree.
     Counterparts that do not exist are dropped by :func:`resolve_all_relations`. What it dropped
     with a warning goes to ``dropped_file_path``, for the activation of the sites concerned -
     unless their hosts belong to different customers: the warning names both hosts, so that one
@@ -173,6 +177,38 @@ def export_host_relations(
             "path": export_file_path,
         },
     )
+
+
+def export_host_relations_of_central_site(
+    all_hosts: Callable[[], Mapping[HostName, RelatedHost]],
+    site_configs: SiteConfigurations,
+    *,
+    debug: bool,
+) -> None:
+    """Export the relations where this site's core and the config sync pick them up.
+
+    To be called before cores are given a changed host configuration: by the activation, and by
+    a host rename, which restarts the cores without one. A remote site exports nothing, it
+    receives the file through config sync.
+
+    A failure is logged instead of raised: the relations are metadata no core acts on, so the
+    sites keep the last exported ones.
+    """
+    if is_distributed_setup_remote_site(site_configs):
+        return
+    try:
+        export_host_relations(
+            all_hosts(),
+            relations_export_path(),
+            relations_dropped_path(),
+            customer_of_site=lambda site: customer_api().get_customer_id(
+                site_configs.get(SiteId(site)) or {}
+            ),
+        )
+    except Exception:
+        if debug:
+            raise
+        LOGGER.exception("error exporting the host relations, keeping the last ones")
 
 
 def dropped_relations_of_site(path: Path, site_id: str) -> list[str]:

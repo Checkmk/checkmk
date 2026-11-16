@@ -74,7 +74,6 @@ from cmk.gui.crash_handler import (
     create_gui_crash_report,
     handle_exception_as_gui_crash_report,
 )
-from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.http import Request
 from cmk.gui.http import request as _request
@@ -148,11 +147,9 @@ from cmk.gui.watolib.config_sync import (
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.host_relations_export import (
     add_dropped_relations,
-    export_host_relations,
+    export_host_relations_of_central_site,
     relations_dropped_path,
-    relations_export_path,
 )
-from cmk.gui.watolib.host_relations_export import LOGGER as relations_logger
 from cmk.gui.watolib.hosts_and_folders import (
     ACTIVATION_FOLDER_TREE,
     collect_all_hosts,
@@ -2249,8 +2246,7 @@ class ActivateChangesManager:
     ) -> None:
         """Write the artifacts the sites need in their snapshot, then let the hooks have their say.
 
-        Anything but the host relations export aborts the activation when it fails: the relations
-        are metadata no core acts on, so the sites keep the last exported ones instead.
+        Anything but the host relations export aborts the activation when it fails.
 
         Like :func:`_activate_central_steps`, the central artifacts are skipped on a remote site:
         cron-driven local activations (agent auto-registration, automatic host removal) reach this
@@ -2260,22 +2256,7 @@ class ActivateChangesManager:
         # walk is shared but still only paid for when something asks for it.
         all_hosts = functools.cache(tree.all_hosts)
         is_central_site = not is_distributed_setup_remote_site(all_site_configs)
-        if is_central_site:
-            try:
-                export_host_relations(
-                    all_hosts(),
-                    relations_export_path(),
-                    relations_dropped_path(),
-                    customer_of_site=lambda site: customer_api().get_customer_id(
-                        all_site_configs.get(SiteId(site)) or {}
-                    ),
-                )
-            except Exception:
-                if debug:
-                    raise
-                relations_logger.exception(
-                    "error exporting the host relations, keeping the last ones"
-                )
+        export_host_relations_of_central_site(all_hosts, all_site_configs, debug=debug)
         try:
             if is_central_site:
                 for artifact in snapshot_artifact_registry.values():

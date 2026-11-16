@@ -58,6 +58,7 @@ from .audit_log import log_audit
 from .automation_commands import AutomationCommand
 from .automations import AnnotatedHostName, do_remote_automation
 from .check_mk_automations import rename_hosts
+from .host_relations_export import export_host_relations_of_central_site
 from .hosts_and_folders import (
     call_hook_hosts_changed,
     Folder,
@@ -151,7 +152,8 @@ def perform_rename_hosts(
     # Precompute cluster host list for node renaming due to expensive
     # FolderTree.all_hosts() call. This currently also needs to be done after the
     # host renaming as the folder_tree cache_invalidation still misses some caches.
-    all_hosts = list(tree.all_hosts().values())
+    hosts_by_name = tree.all_hosts()
+    all_hosts = list(hosts_by_name.values())
     cluster_hosts = [host for host in all_hosts if host.is_cluster()]
     relation_hosts = [host for host in all_hosts if host.attributes.get("relations")]
 
@@ -209,6 +211,13 @@ def perform_rename_hosts(
             successful_renamings.append((folder, oldname, newname))
         except MKAuthException as e:
             auth_problems.append((oldname, e))
+
+    # The core of this site is restarted below without an activation, which is what exports the
+    # relations otherwise (a remote site gets them with the sync of its automation call). The
+    # hosts of the walk above are the ones the passes above rewrote.
+    export_host_relations_of_central_site(
+        lambda: hosts_by_name, SiteConfigurations(dict(site_configs)), debug=debug
+    )
 
     # 2. Checkmk stuff ------------------------------------------------
     update_interface(_("Renaming host(s) in base configuration, rrd, history files, etc."))

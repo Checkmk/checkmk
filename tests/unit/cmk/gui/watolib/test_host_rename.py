@@ -20,8 +20,11 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.background_job.job._interface import BackgroundProcessInterface
 from cmk.gui.logged_in import user
+from cmk.gui.utils.host_relations import ResolvedRelation
 from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.gui.watolib.host_relations import ResolvedRelations
+from cmk.gui.watolib.host_relations_export import read_host_relations, relations_export_path
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
@@ -214,6 +217,28 @@ def test_rename_host(
         assert set(nodes) == expected_nodes
 
 
+def _rename_os1_to_os2(tree: FolderTree) -> None:
+    perform_rename_hosts(
+        tree,
+        renamings=[(tree.root_folder(), HostName("os1"), HostName("os2"))],
+        job_interface=BackgroundProcessInterface(
+            "",
+            "",
+            logging.getLogger(),
+            threading.Event(),
+            lambda x: gui_context(),  # noqa: ARG005
+            io.StringIO(),
+        ),
+        custom_user_attributes=[],
+        user_connections=[],
+        site_configs=_SITE_CONFIGS,
+        pending_changes=_noop_pending_changes(),
+        pprint_value=False,
+        use_git=False,
+        debug=False,
+    )
+
+
 @pytest.mark.parametrize(
     "kind",
     [
@@ -247,25 +272,65 @@ def test_rename_host_rewrites_the_relations_pointing_at_it(kind: str, tree: Fold
         acting_user=user,
     )
 
-    perform_rename_hosts(
-        tree,
-        renamings=[(folder, HostName("os1"), HostName("os2"))],
-        job_interface=BackgroundProcessInterface(
-            "",
-            "",
-            logging.getLogger(),
-            threading.Event(),
-            lambda x: gui_context(),  # noqa: ARG005
-            io.StringIO(),
-        ),
-        custom_user_attributes=[],
-        user_connections=[],
-        site_configs=_SITE_CONFIGS,
-        pending_changes=_noop_pending_changes(),
-        pprint_value=False,
-        use_git=False,
-        debug=False,
-    )
+    _rename_os1_to_os2(tree)
 
     renamed = tree.root_folder().hosts()[HostName("board")]
     assert renamed.attributes["relations"] == [{"kind": kind, "direction": "parent", "host": "os2"}]
+
+
+@pytest.mark.usefixtures("test_env")
+def test_rename_host_exports_the_relations_before_the_core_restarts(
+    monkeypatch: MonkeyPatch, tree: FolderTree
+) -> None:
+    """The rename restarts the core by itself and leaves nothing to activate, so the core would
+    otherwise keep the relations under the old name."""
+    folder = tree.root_folder()
+    folder.create_hosts(
+        [(HostName("os1"), HostAttributes(), None)],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=user,
+    )
+    folder.create_hosts(
+        [
+            (
+                HostName("board"),
+                HostAttributes(
+                    {
+                        "relations": [
+                            {"kind": "management", "direction": "parent", "host": HostName("os1")}
+                        ]
+                    }
+                ),
+                None,
+            ),
+        ],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=user,
+    )
+    seen_by_the_core: list[ResolvedRelations] = []
+
+    # The rename calls the automation itself and offers no way to pass it in.
+    def restart_core(**_kwargs: object) -> tuple[str, str]:
+        seen_by_the_core.append(read_host_relations(relations_export_path()))
+        return "", "[{}]"
+
+    monkeypatch.setattr(check_mk_automations, "check_mk_local_automation_serialized", restart_core)
+
+    _rename_os1_to_os2(tree)
+
+    assert seen_by_the_core == [
+        {
+            HostName("board"): [
+                ResolvedRelation(
+                    kind="management", direction="parent", host=HostName("os2"), site="NO_SITE"
+                )
+            ],
+            HostName("os2"): [
+                ResolvedRelation(
+                    kind="management", direction="child", host=HostName("board"), site="NO_SITE"
+                )
+            ],
+        }
+    ]

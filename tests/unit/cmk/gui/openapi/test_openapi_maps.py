@@ -463,6 +463,15 @@ def test_a_save_past_the_size_a_stored_map_takes_is_refused(clients: ClientRegis
     ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
+def test_the_size_limit_counts_a_character_outside_ascii_as_escaped(
+    clients: ClientRegistry,
+) -> None:
+    # The signed config holds a character outside ASCII in six bytes.
+    clients.Maps.create(
+        config=_map("map1", alias="\u00fc" * (MAP_CONFIG_MAX_BYTES // 6 + 1)), expect_ok=False
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
 def test_object_rejects_null_for_non_nullable_line_fields(clients: ClientRegistry) -> None:
     # ``line_perfdata_label``/``line_weather_color`` are non-nullable in the daemon
     # map schema; the REST mirror must not advertise them as nullable (an explicit

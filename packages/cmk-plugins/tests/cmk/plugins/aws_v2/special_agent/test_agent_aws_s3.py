@@ -26,6 +26,7 @@ from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.s3 import (
     S3,
     S3Bucket,
+    S3BucketHelper,
     S3Limits,
     S3Requests,
     S3Summary,
@@ -441,3 +442,21 @@ def test_agent_aws_s3_creates_no_bucket_host_without_buckets(
     s3_bucket_results = s3_bucket.run().results
 
     assert not s3_bucket_results
+
+
+class PagedS3Client:
+    """Lists one bucket per page, as AWS does for a small MaxBuckets."""
+
+    def list_buckets(self, MaxBuckets: int, ContinuationToken: str = "0") -> Mapping[str, object]:  # noqa: ARG002
+        page = int(ContinuationToken)
+        buckets = {"Buckets": [{"Name": f"bucket-{page}"}]}
+        return buckets if page == 2 else {**buckets, "ContinuationToken": str(page + 1)}
+
+    def get_bucket_location(self, Bucket: str) -> Mapping[str, object]:  # noqa: ARG002
+        return {"LocationConstraint": "eu-central-1"}
+
+
+def test_list_buckets_reads_every_page() -> None:
+    buckets = S3BucketHelper.list_buckets(PagedS3Client())
+
+    assert [bucket["Name"] for bucket in buckets] == ["bucket-0", "bucket-1", "bucket-2"]

@@ -5,7 +5,7 @@
 
 
 from argparse import Namespace as Args
-from collections.abc import Callable
+from collections.abc import Callable, Iterator, Mapping, Sequence
 
 import pytest
 
@@ -17,7 +17,7 @@ from cmk.plugins.aws_v2.special_agent.sections.cloudwatch import (
 )
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 
-from .agent_aws_fake_clients import FakeCloudwatchClient
+from .agent_aws_fake_clients import CloudwatchDescribeAlarmsIB, FakeCloudwatchClient
 
 ACCOUNT_HOST = TargetHost("123456789012")
 
@@ -54,6 +54,43 @@ def get_cloudwatch_alarms_sections() -> CreateCloudwatchAlarmSections:
         return cloudwatch_alarms_limits, cloudwatch_alarms
 
     return _create_cloudwatch_alarms_sections
+
+
+class AlarmsPaginator:
+    def __init__(self, alarms: Sequence[Mapping[str, object]]) -> None:
+        self._alarms = alarms
+
+    def paginate(self, **kwargs: object) -> Iterator[Mapping[str, object]]:  # noqa: ARG002
+        yield {"MetricAlarms": self._alarms}
+
+
+class AlarmsClient:
+    def __init__(self, amount: int) -> None:
+        self._alarms = CloudwatchDescribeAlarmsIB.create_instances(amount=amount)
+        self.alarm_listings = 0
+
+    def get_paginator(self, api_call: str) -> AlarmsPaginator:
+        assert api_call == "describe_alarms"
+        self.alarm_listings += 1
+        return AlarmsPaginator(self._alarms)
+
+
+@pytest.mark.parametrize("amount", [pytest.param(0, id="no alarms"), pytest.param(2, id="alarms")])
+def test_cloudwatch_alarms_do_not_describe_alarms_again_after_limits(amount: int) -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("cloudwatch_alarms", None)
+    client = AlarmsClient(amount)
+    distributor = ResultDistributor()
+    alarms_limits = CloudwatchAlarmsLimits(client, "region", config, distributor)
+    alarms = CloudwatchAlarms(client, "region", config)
+    distributor.add(alarms_limits.name, alarms)
+
+    alarms_limits.run()
+    alarms.run()
+
+    assert client.alarm_listings == 1
 
 
 cloudwatch_params: list[tuple[list[str] | None, int]] = [

@@ -102,25 +102,19 @@ class CloudwatchAlarms(AWSSection):
 
     @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("cloudwatch_alarms_limits")
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents([], 0.0)
+        return self._received_inventory("cloudwatch_alarms_limits")
 
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
         (colleague_contents,) = args
-        if self._names:
-            if colleague_contents.content:
-                return [
-                    alarm
-                    for alarm in colleague_contents.content
-                    if alarm["AlarmName"] in self._names
-                ]
+        alarms: Sequence[Mapping[str, object]] | None = colleague_contents.content
+        if alarms is None:
             return list(
                 _describe_alarms(self._client, self._get_response_content, names=self._names)
             )
-        return list(_describe_alarms(self._client, self._get_response_content))
+        if self._names:
+            return [alarm for alarm in alarms if alarm["AlarmName"] in self._names]
+        return alarms
 
     @override
     def _compute_content(

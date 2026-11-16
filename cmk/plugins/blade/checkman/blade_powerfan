@@ -1,4 +1,4 @@
-title: IBM Blade Center: Power Module Cooling Devices
+title: IBM BladeCenter: Power Module Cooling
 agents: snmp
 catalog: hw/server/ibm
 license: GPLv2

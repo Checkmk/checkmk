@@ -1,4 +1,4 @@
-title: Primergy BX600 Blade Enclosure: CPU Load
+title: Fujitsu PRIMERGY BX600: CPU Load
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPLv2

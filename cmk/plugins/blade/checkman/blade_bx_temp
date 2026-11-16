@@ -1,4 +1,4 @@
-title: Primergy BX600 Blade Server: Temperature
+title: Fujitsu PRIMERGY BX600: Temperature
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPLv2

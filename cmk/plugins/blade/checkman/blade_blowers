@@ -1,4 +1,4 @@
-title: IBM Blade Center: Chassis Blowers
+title: IBM BladeCenter: Chassis Blowers
 agents: snmp
 catalog: hw/server/ibm
 license: GPLv2

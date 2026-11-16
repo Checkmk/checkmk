@@ -8,16 +8,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkAlert, { type CmkAlertProps } from 'cmk-ui-library/components/CmkAlert.vue'
 import { computed } from 'vue'
 
-import type { ActionOutcome } from './types'
+import type { ActionFeedbackEntry } from './types'
 
 const props = defineProps<{
-  feedback: ActionOutcome
+  feedback: ActionFeedbackEntry
 }>()
 
 const open = defineModel<boolean>('open', { default: false })
 
 const alertProps = computed<CmkAlertProps>(() => {
-  const { variant, heading, message } = props.feedback
+  const { feedback } = props
+  // An action still running can be neither closed nor done with.
+  if (feedback.variant === 'loading') {
+    return { variant: 'loading', text: feedback.message }
+  }
+  const { variant, heading, message } = feedback
   if (variant === 'success') {
     return { variant, dismissible: true, autoDismiss: true, heading, text: message }
   }

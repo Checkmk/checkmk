@@ -19,6 +19,7 @@ export function useRescheduleHostsAction(): MonitoringAction<RescheduleValues, H
   return createRescheduleAction<HostRef>({
     reschedule: (api, targets, spreadMinutes) => api.rescheduleHosts(targets, spreadMinutes),
     lastCheck: async (host) => (await hostApi.fetchHostOverview(host)).last_check ?? null,
+    awaitingCheck: (host) => _t('Waiting for the check of %{host} to finish', { host: host.name }),
     checkRan: (host) => _t('The check of %{host} has run', { host: host.name }),
     errorHeading: _t('Could not reschedule the checks for the selected hosts')
   })

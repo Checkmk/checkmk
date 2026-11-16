@@ -43,7 +43,7 @@ import {
 } from '@/monitoring/shared/displayOptionsState/urlState'
 import { hostPanelFragment } from '@/monitoring/shared/hostPanelFragment'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
-import { serviceCommand, serviceRefOf } from '@/monitoring/shared/objectRefs'
+import { refKey, serviceCommand, serviceRefOf } from '@/monitoring/shared/objectRefs'
 import { toCellAction } from '@/monitoring/shared/rowLinks'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { useHostActions } from '@/monitoring/shared/useHostActions'
@@ -448,6 +448,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :column-pinning="columnPinning"
         :get-row-key="rowKey"
         :get-action-target="serviceRef"
+        :get-target-key="refKey"
         :get-action-targets="serviceActionTargets"
         :immediate-action-ids="IMMEDIATE_SERVICE_COMMAND_IDS"
         :selection-label="serviceListing.selectionLabel"
@@ -455,10 +456,9 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :counts-label="serviceListing.countsLabel"
         @performed="onActionPerformed"
       >
-        <template #row="{ row, tableRow, busy, onCommand }">
+        <template #row="{ row, tableRow, onCommand }">
           <HostServicesRow
             :service-host="host"
-            :busy="busy"
             :row="row"
             :table-row="tableRow"
             :row-actions="rowActionButtons"

@@ -7,21 +7,22 @@ import type { RowSelectionState } from '@tanstack/vue-table'
 import { type ComputedRef, type Ref, computed, ref, watch } from 'vue'
 
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
+import {
+  type ActionFeedbackStack,
+  useActionFeedbackStack
+} from '@/monitoring/shared/services/useActionFeedbackStack'
 
 export interface MonitoringActions<Id extends string = string> {
   activeAction: Ref<Id | null>
   selectedCount: ComputedRef<number>
-  feedback: Ref<ActionOutcome | null>
-  feedbackOpen: Ref<boolean>
+  /** One alert per command still running, and how the last one went. */
+  feedback: ActionFeedbackStack
   openAction: (id: Id) => void
   closeAction: () => void
   /**
-   * Show how a command went. The selection stays: a row-level command acts on a single row and must
-   * not touch the (independent) bulk selection, and a bulk command keeps its rows selected, as in
-   * the legacy views.
+   * Show how the command of the open pane went, and close the pane. The selection stays: a bulk
+   * command keeps its rows selected, as in the legacy views.
    */
-  showFeedback: (result: ActionOutcome) => void
-  /** Show how the command of the open pane went, and close the pane. */
   applyFeedback: (result: ActionOutcome) => void
 }
 
@@ -30,8 +31,7 @@ export function useMonitoringActions<Id extends string = string>(
   selectableKeys: Ref<readonly string[]>
 ): MonitoringActions<Id> {
   const activeAction = ref<Id | null>(null) as Ref<Id | null>
-  const feedback = ref<ActionOutcome | null>(null)
-  const feedbackOpen = ref(false)
+  const feedback = useActionFeedbackStack()
 
   const selectedCount = computed(() => Object.values(rowSelection.value).filter(Boolean).length)
 
@@ -43,13 +43,8 @@ export function useMonitoringActions<Id extends string = string>(
     activeAction.value = null
   }
 
-  function showFeedback(result: ActionOutcome): void {
-    feedback.value = result
-    feedbackOpen.value = true
-  }
-
   function applyFeedback(result: ActionOutcome): void {
-    showFeedback(result)
+    feedback.show(result)
     closeAction()
   }
 
@@ -73,10 +68,8 @@ export function useMonitoringActions<Id extends string = string>(
     activeAction,
     selectedCount,
     feedback,
-    feedbackOpen,
     openAction,
     closeAction,
-    showFeedback,
     applyFeedback
   }
 }

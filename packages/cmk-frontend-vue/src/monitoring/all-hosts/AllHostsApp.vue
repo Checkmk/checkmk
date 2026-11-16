@@ -38,7 +38,7 @@ import {
   seedDisplayOptions
 } from '@/monitoring/shared/displayOptionsState/urlState'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
-import { hostRefOf } from '@/monitoring/shared/objectRefs'
+import { hostRefOf, refKey } from '@/monitoring/shared/objectRefs'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { IMMEDIATE_HOST_COMMAND_IDS, useHostActions } from '@/monitoring/shared/useHostActions'
 import { useHostSlideInTabs } from '@/monitoring/shared/useHostSlideInTabs'
@@ -362,6 +362,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :column-pinning="columnPinning"
         :get-row-key="rowKey"
         :get-action-target="hostRefOf"
+        :get-target-key="refKey"
         :get-action-targets="hostActionTargets"
         :immediate-action-ids="IMMEDIATE_HOST_COMMAND_IDS"
         :selection-label="hostSelectionLabel"
@@ -369,9 +370,8 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :counts-label="hostCountsLabel"
         @performed="onActionPerformed"
       >
-        <template #row="{ row, tableRow, busy, onCommand }">
+        <template #row="{ row, tableRow, onCommand }">
           <HostRow
-            :busy="busy"
             :row="row"
             :table-row="tableRow"
             :row-actions="rowActionButtons"

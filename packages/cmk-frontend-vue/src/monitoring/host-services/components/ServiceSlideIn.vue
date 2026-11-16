@@ -27,7 +27,7 @@ import type {
   ServiceRef
 } from '@/monitoring/shared/api/types'
 import { AFTER_NARROW } from '@/monitoring/shared/components/MonitoringTableContext'
-import ActionFeedback from '@/monitoring/shared/components/action/ActionFeedback.vue'
+import ActionFeedbackAlerts from '@/monitoring/shared/components/action/ActionFeedbackAlerts.vue'
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
@@ -216,20 +216,13 @@ function onActionPerformed(result: ActionOutcome): void {
   emit('performed', result)
 }
 
-const {
-  activeActionId,
-  runningActionId,
-  feedback,
-  feedbackOpen,
-  openAction,
-  closeAction,
-  applyFeedback
-} = useSlideInActions<ServiceRef>(
-  () => props.actions,
-  actionTargets,
-  () => props.service,
-  onActionPerformed
-)
+const { activeActionId, runningActionIds, alerts, openAction, closeAction, applyFeedback } =
+  useSlideInActions<ServiceRef>(
+    () => props.actions,
+    actionTargets,
+    () => props.service,
+    onActionPerformed
+  )
 
 watch(
   () => props.service,
@@ -367,7 +360,7 @@ const tabs = computed<SlideInTab[]>(() => {
         <SlideInActions
           v-if="slideInActions.length"
           :actions="slideInActions"
-          :running-action-id="runningActionId"
+          :running-action-ids="runningActionIds"
           @select="openAction"
         />
         <div v-if="showAiExplain && overview" class="monitoring-service-slide-in__ai-explain">
@@ -379,12 +372,7 @@ const tabs = computed<SlideInTab[]>(() => {
           <ServiceAiExplainButton :overview="overview" />
         </div>
       </div>
-      <ActionFeedback
-        v-if="feedback"
-        v-model:open="feedbackOpen"
-        class="monitoring-service-slide-in__feedback"
-        :feedback="feedback"
-      />
+      <ActionFeedbackAlerts class="monitoring-service-slide-in__feedback" :stack="alerts" />
     </template>
     <template #override>
       <CmkButton variant="optional" class="monitoring-service-slide-in__back" @click="closeAction">

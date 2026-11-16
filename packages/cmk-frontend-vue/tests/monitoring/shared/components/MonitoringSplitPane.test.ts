@@ -51,6 +51,7 @@ const RESCHEDULE_LABEL = 'Reschedule check'
 const ACK_LABEL = 'Acknowledge'
 const COMMENT_LABEL = 'Add comment'
 const ROW_RESCHEDULE_LABEL = 'Reschedule this row'
+const AWAITING_CHECK = untranslated('Waiting for the check of host-1 to finish')
 
 interface Row {
   site_id: string
@@ -112,7 +113,7 @@ async function mountPaneWithLoadedRows(
 ) {
   service = new RowService('row-service', makeKeyShortcutService(), { columns: COLUMNS })
   const actions: MonitoringActionRegistry = {
-    [RESCHEDULE_ID]: makeAction(RESCHEDULE_ID, perform),
+    [RESCHEDULE_ID]: { ...makeAction(RESCHEDULE_ID, perform), pending: () => AWAITING_CHECK },
     [ACK_ID]: { ...makeAction(ACK_ID, perform), ...(ackConfirm && { confirm: ackConfirm }) },
     [COMMENT_ID]: makeAction(COMMENT_ID, perform)
   }
@@ -135,6 +136,7 @@ async function mountPaneWithLoadedRows(
               columnPinning: {},
               getRowKey: (row: Row) => `${row.site_id}/${row.name}`,
               getActionTarget: (row: Row) => ({ site_id: row.site_id, name: row.name }),
+              getTargetKey: (target: HostRef) => `${target.site_id}/${target.name}`,
               getActionTargets,
               selectionLabel: (count: number) =>
                 `${count} hosts selected` as unknown as TranslatedString,
@@ -220,7 +222,11 @@ describe('MonitoringSplitPane', () => {
 
     await userEvent.click(screen.getByRole('button', { name: RESCHEDULE_LABEL }))
 
-    expect(perform).toHaveBeenCalledWith([{ site_id: 'local', name: 'host-1' }], {})
+    expect(perform).toHaveBeenCalledWith(
+      [{ site_id: 'local', name: 'host-1' }],
+      {},
+      expect.any(AbortSignal)
+    )
     expect(screen.queryByRole('button', { name: 'Submit' })).not.toBeInTheDocument()
   })
 
@@ -233,7 +239,11 @@ describe('MonitoringSplitPane', () => {
 
     await userEvent.click(screen.getByRole('button', { name: RESCHEDULE_LABEL }))
 
-    expect(perform).toHaveBeenCalledWith([{ site_id: 'local', name: 'other-host' }], {})
+    expect(perform).toHaveBeenCalledWith(
+      [{ site_id: 'local', name: 'other-host' }],
+      {},
+      expect.any(AbortSignal)
+    )
   })
 
   it('refuses an action the selection maps to nothing for', async () => {
@@ -335,6 +345,43 @@ describe('MonitoringSplitPane', () => {
 
     expect(await screen.findByText('Rescheduled')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument()
+  })
+
+  it('tells a row command runs until it settles, then how it went', async () => {
+    const { outcome, settle } = pendingOutcome('Rescheduled')
+    await mountPaneWithLoadedRows(vi.fn().mockReturnValue(outcome))
+    await userEvent.click(await screen.findByRole('button', { name: ROW_RESCHEDULE_LABEL }))
+
+    expect(await screen.findByText(AWAITING_CHECK)).toBeInTheDocument()
+
+    settle()
+
+    expect(await screen.findByText('Rescheduled')).toBeInTheDocument()
+    expect(screen.queryByText(AWAITING_CHECK)).not.toBeInTheDocument()
+  })
+
+  it('tells each command still running in an alert of its own', async () => {
+    const { outcome } = pendingOutcome('Rescheduled')
+    await mountPaneWithLoadedRows(vi.fn().mockReturnValue(outcome))
+    await userEvent.click(await screen.findByRole('button', { name: ROW_RESCHEDULE_LABEL }))
+    await selectTheOnlyRow()
+
+    await userEvent.click(screen.getByRole('button', { name: RESCHEDULE_LABEL }))
+
+    expect(await screen.findAllByText(AWAITING_CHECK)).toHaveLength(2)
+  })
+
+  it('runs a command picked again in the same row while it runs only once', async () => {
+    const { outcome } = pendingOutcome('Rescheduled')
+    const perform = vi.fn().mockReturnValue(outcome)
+    await mountPaneWithLoadedRows(perform)
+    const reschedule = await screen.findByRole('button', { name: ROW_RESCHEDULE_LABEL })
+    await userEvent.click(reschedule)
+
+    await userEvent.click(reschedule)
+
+    expect(perform).toHaveBeenCalledTimes(1)
+    expect(screen.getAllByText(AWAITING_CHECK)).toHaveLength(1)
   })
 
   it('stops waiting for a submitted action once another action is picked', async () => {

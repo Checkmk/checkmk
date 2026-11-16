@@ -12,8 +12,8 @@ import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell
 defineProps<{
   /** The actions the backend reports this user may run on the object on show. */
   actions: CellAction[]
-  /** The action performing right away, pulsing until it settles. */
-  runningActionId?: string | null
+  /** The actions performing right away, each pulsing until it settles. */
+  runningActionIds?: ReadonlySet<string>
 }>()
 
 const emit = defineEmits<{
@@ -31,7 +31,7 @@ const emit = defineEmits<{
       :href="action.url"
       :target="action.url ? (action.target ?? '_top') : undefined"
       :title="action.label"
-      :running="runningActionId === action.id"
+      :running="runningActionIds?.has(action.id) ?? false"
       class="monitoring-slide-in-actions__action"
       @click="action.url || emit('select', action.id)"
     >

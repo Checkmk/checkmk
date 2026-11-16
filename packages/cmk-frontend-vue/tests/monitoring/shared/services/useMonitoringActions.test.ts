@@ -30,19 +30,10 @@ test('feedback stores the message and closes the pane', () => {
 
   actions.applyFeedback({ variant: 'success', message: 'done' as TranslatedString })
 
-  expect(actions.feedback.value).toEqual({ variant: 'success', message: 'done' })
-  expect(actions.feedbackOpen.value).toBe(true)
+  expect(actions.feedback.items.value.map((item) => item.feedback)).toEqual([
+    { variant: 'success', message: 'done' }
+  ])
   expect(actions.activeAction.value).toBeNull()
-})
-
-test('feedback of a command run outside the pane leaves the pane open', () => {
-  const actions = useMonitoringActions<'acknowledge'>(ref<RowSelectionState>({}), onOffer())
-  actions.openAction('acknowledge')
-
-  actions.showFeedback({ variant: 'success', message: 'done' as TranslatedString })
-
-  expect(actions.feedbackOpen.value).toBe(true)
-  expect(actions.activeAction.value).toBe('acknowledge')
 })
 
 test('feedback keeps the selection, as the legacy views do', () => {

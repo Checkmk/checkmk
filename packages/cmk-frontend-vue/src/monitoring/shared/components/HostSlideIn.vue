@@ -34,7 +34,7 @@ import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostOverview } from '@/monitoring/shared/api/types'
 import HostHeader, { type HostHeaderSubject } from '@/monitoring/shared/components/HostHeader.vue'
 import { AFTER_NARROW, NARROW_TARGET } from '@/monitoring/shared/components/MonitoringTableContext'
-import ActionFeedback from '@/monitoring/shared/components/action/ActionFeedback.vue'
+import ActionFeedbackAlerts from '@/monitoring/shared/components/action/ActionFeedbackAlerts.vue'
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
@@ -192,9 +192,8 @@ function onActionPerformed(result: ActionOutcome): void {
 
 const {
   activeActionId,
-  runningActionId,
-  feedback,
-  feedbackOpen,
+  runningActionIds,
+  alerts,
   openAction,
   closeAction,
   applyFeedback,
@@ -300,15 +299,10 @@ async function onCommand(payload: { id: string; host: HostRef }): Promise<void> 
     <template v-if="slideInActions.length" #actions>
       <SlideInActions
         :actions="slideInActions"
-        :running-action-id="runningActionId"
+        :running-action-ids="runningActionIds"
         @select="openAction"
       />
-      <ActionFeedback
-        v-if="feedback"
-        v-model:open="feedbackOpen"
-        class="monitoring-host-slide-in__feedback"
-        :feedback="feedback"
-      />
+      <ActionFeedbackAlerts class="monitoring-host-slide-in__feedback" :stack="alerts" />
     </template>
     <template #override>
       <CmkButton variant="optional" class="monitoring-host-slide-in__back" @click="closeAction">

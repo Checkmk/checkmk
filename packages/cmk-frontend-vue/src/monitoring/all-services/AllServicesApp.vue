@@ -57,7 +57,12 @@ import { buildFilterUrlSchema } from '@/monitoring/shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '@/monitoring/shared/filterState/urlState'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { tableKeyboardHints } from '@/monitoring/shared/keyboardHints'
-import { hostRefOfService, serviceCommand, serviceRefOf } from '@/monitoring/shared/objectRefs'
+import {
+  hostRefOfService,
+  refKey,
+  serviceCommand,
+  serviceRefOf
+} from '@/monitoring/shared/objectRefs'
 import {
   buildColumnStorageKey,
   buildDisplayOptionsStorageKey,
@@ -423,6 +428,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :column-pinning="columnPinning"
         :get-row-key="rowKey"
         :get-action-target="serviceRef"
+        :get-target-key="refKey"
         :get-action-targets="serviceActionTargets"
         :immediate-action-ids="IMMEDIATE_SERVICE_COMMAND_IDS"
         :selection-label="serviceListing.selectionLabel"
@@ -430,9 +436,8 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :counts-label="serviceListing.countsLabel"
         @performed="onActionPerformed"
       >
-        <template #row="{ row, tableRow, busy, onCommand }">
+        <template #row="{ row, tableRow, onCommand }">
           <HostServicesRow
-            :busy="busy"
             :row="row"
             :table-row="tableRow"
             :may-reschedule="serviceListing.mayReschedule"

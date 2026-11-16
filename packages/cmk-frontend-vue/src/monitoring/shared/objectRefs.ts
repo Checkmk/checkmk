@@ -20,6 +20,13 @@ export function serviceRefOf(host: HostRef, description: string): ServiceRef {
   return { host, description }
 }
 
+/** The same key for every reference to the same host or service, e.g. from different rows. */
+export function refKey(ref: HostRef | ServiceRef): string {
+  return 'description' in ref
+    ? `${ref.host.site_id}/${ref.host.name}/${ref.description}`
+    : `${ref.site_id}/${ref.name}`
+}
+
 /**
  * A command picked in a row of services, aimed at the service the command names on the given
  * host. That need not be the row's own service: an agent-based service is rescheduled by

@@ -19,15 +19,15 @@ import MonitoringLimitSelector from '@/monitoring/shared/components/MonitoringLi
 import MonitoringResultsCount from '@/monitoring/shared/components/MonitoringResultsCount.vue'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import MonitoringTotalCount from '@/monitoring/shared/components/MonitoringTotalCount.vue'
-import ActionFeedback from '@/monitoring/shared/components/action/ActionFeedback.vue'
+import ActionFeedbackAlerts from '@/monitoring/shared/components/action/ActionFeedbackAlerts.vue'
 import MonitoringActionBar from '@/monitoring/shared/components/action/MonitoringActionBar.vue'
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import {
   type RowCommand,
-  performRowCommand,
-  useRowCommandRunner
+  resolveRowCommand
 } from '@/monitoring/shared/components/action/rowCommand'
+import { type ActionRun, prepareRun } from '@/monitoring/shared/components/action/run'
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { ACTION_PANE_MIN_WIDTH } from '@/monitoring/shared/constants'
@@ -54,6 +54,8 @@ const props = withDefaults(
     getRowKey: (row: T) => string
     /** Maps a row to the reference the actions act on. */
     getActionTarget: (row: T) => Target
+    /** The same key for every reference to the same object, e.g. from different rows. */
+    getTargetKey: (target: Target) => string
     /**
      * Maps the selected rows to what a given action acts on, for pages where that is not simply
      * one target per row. Defaults to `getActionTarget` on each row.
@@ -84,16 +86,8 @@ const selectableKeys = computed<string[]>(() =>
   props.service.items.value.map((row) => props.getRowKey(row))
 )
 
-const {
-  activeAction,
-  selectedCount,
-  feedback,
-  feedbackOpen,
-  openAction,
-  closeAction,
-  showFeedback,
-  applyFeedback
-} = useMonitoringActions(rowSelection, selectableKeys)
+const { activeAction, selectedCount, feedback, openAction, closeAction, applyFeedback } =
+  useMonitoringActions(rowSelection, selectableKeys)
 
 function targetsFor(actionId: string): Target[] {
   const rows = props.service.items.value.filter((row) => rowSelection.value[props.getRowKey(row)])
@@ -143,7 +137,7 @@ async function onConfirm(): Promise<void> {
   }
   runningActionId.value = id
   try {
-    onFeedbackOutsidePane(await action.perform(targets, action.defaultValues()))
+    await runOutsidePane(prepareRun(action, targets))
   } finally {
     runningActionId.value = null
   }
@@ -168,10 +162,13 @@ function onFeedback(result: ActionOutcome): void {
 }
 
 // A command run outside the pane - from a row, at once or once confirmed - may take a while, as a
-// reschedule waits for its check: its outcome leaves alone a pane the user has opened meanwhile.
-function onFeedbackOutsidePane(result: ActionOutcome): void {
-  showFeedback(result)
-  emit('performed', result)
+// reschedule waits for its check: an alert tells it runs, and its outcome leaves alone a pane the
+// user has opened meanwhile. It runs on for as long as its alert is on show.
+async function runOutsidePane(run: ActionRun): Promise<void> {
+  const outcome = await feedback.track(run)
+  if (outcome) {
+    emit('performed', outcome)
+  }
 }
 
 async function onBulkAction(action: CellAction): Promise<void> {
@@ -188,7 +185,7 @@ async function onBulkAction(action: CellAction): Promise<void> {
     closeAction()
     runningActionId.value = action.id
     try {
-      onFeedbackOutsidePane(await registered.perform(targets, registered.defaultValues()))
+      await runOutsidePane(prepareRun(registered, targets))
     } finally {
       runningActionId.value = null
     }
@@ -213,14 +210,12 @@ function toggleDisplayOptions(): void {
   displayOptionsOpen.value = true
 }
 
-const rowCommands = useRowCommandRunner()
-
-async function onRowCommand(row: T, command: RowCommand<Target>): Promise<void> {
-  const outcome = await rowCommands.run(props.getRowKey(row), (signal) =>
-    performRowCommand(props.actions, command, signal)
-  )
-  if (outcome) {
-    onFeedbackOutsidePane(outcome)
+// A command picked again on the object it runs on, from the same row or another, is not run again.
+// One picked in the action bar runs on the selection as asked, whatever runs in the rows meanwhile.
+async function onRowCommand(command: RowCommand<Target>): Promise<void> {
+  const run = resolveRowCommand(props.actions, command, props.getTargetKey)
+  if (run) {
+    await runOutsidePane(run)
   }
 }
 
@@ -249,12 +244,7 @@ function onRightPaneCollapse(collapsed: boolean): void {
           :matched="service.matched.value"
           :narrowed="isNarrowed"
         />
-        <ActionFeedback
-          v-if="feedback"
-          v-model:open="feedbackOpen"
-          class="monitoring-split-pane__feedback"
-          :feedback="feedback"
-        />
+        <ActionFeedbackAlerts class="monitoring-split-pane__feedback" :stack="feedback" />
         <CmkAlert
           v-if="hasUnreachableSites"
           class="monitoring-split-pane__unreachable-sites"
@@ -325,13 +315,7 @@ function onRightPaneCollapse(collapsed: boolean): void {
           @retry="service.retry()"
         >
           <template #row="{ row, tableRow }">
-            <slot
-              name="row"
-              :row="row"
-              :table-row="tableRow"
-              :busy="rowCommands.isBusy(getRowKey(row))"
-              :on-command="(command: RowCommand<Target>) => onRowCommand(row, command)"
-            />
+            <slot name="row" :row="row" :table-row="tableRow" :on-command="onRowCommand" />
           </template>
           <template #empty-state>
             <slot name="empty-state">

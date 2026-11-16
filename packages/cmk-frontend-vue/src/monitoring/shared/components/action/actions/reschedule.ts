@@ -30,6 +30,8 @@ export interface RescheduleKindConfig<Target> {
   ): Promise<RescheduleResult>
   /** When the check of the target last ran, null if it never has. */
   lastCheck(target: Target): Promise<number | null>
+  /** Tells that the check of the target is awaited, naming what is to finish. */
+  awaitingCheck(target: Target): TranslatedString
   /** Tells that the check of the target has run, naming what ran. */
   checkRan(target: Target): TranslatedString
   errorHeading: TranslatedString
@@ -51,6 +53,11 @@ function delay(ms: number, signal?: AbortSignal): Promise<void> {
       resolve()
     }
   })
+}
+
+/** The target whose check a reschedule waits for: the only one, if there is just one. */
+function awaitedTarget<Target>(targets: readonly Target[]): Target | undefined {
+  return targets.length === 1 ? targets[0] : undefined
 }
 
 /** Whether the check has run, has not run yet, or can no longer be looked at. */
@@ -122,8 +129,8 @@ export function createRescheduleAction<Target>(
     return {
       variant: 'warning',
       message: _tn(
-        'The check did not run within %{seconds} second. It will still run as scheduled, and its result will show once the page refreshes.',
-        'The check did not run within %{seconds} seconds. It will still run as scheduled, and its result will show once the page refreshes.',
+        'The check did not finish within %{seconds} second. It will still run as scheduled, and its result will show once the page refreshes.',
+        'The check did not finish within %{seconds} seconds. It will still run as scheduled, and its result will show once the page refreshes.',
         seconds,
         { seconds: String(seconds) }
       )
@@ -139,6 +146,11 @@ export function createRescheduleAction<Target>(
     ],
     form: RescheduleForm,
     defaultValues: () => ({ spreadMinutes: DEFAULT_SPREAD_MINUTES }),
+    // Only rescheduling one target waits for its check; several are done once sent.
+    pending: (targets) => {
+      const awaited = awaitedTarget(targets)
+      return awaited === undefined ? undefined : config.awaitingCheck(awaited)
+    },
     perform: async (targets: Target[], values: RescheduleValues, signal?: AbortSignal) => {
       let result: RescheduleResult
       try {
@@ -146,9 +158,9 @@ export function createRescheduleAction<Target>(
       } catch {
         return commandFailed(config.errorHeading)
       }
-      const [only] = targets
-      if (targets.length === 1 && only !== undefined) {
-        return waitForCheck(only, result, signal)
+      const awaited = awaitedTarget(targets)
+      if (awaited !== undefined) {
+        return waitForCheck(awaited, result, signal)
       }
       const count = result.rescheduled
       return {

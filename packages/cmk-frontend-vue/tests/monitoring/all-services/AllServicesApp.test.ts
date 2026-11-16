@@ -21,6 +21,7 @@ const SERVICES_PATH = '/monitor/services'
 const EXPORT_EVENT = 'cmk-monitoring-export'
 const ACTION_MENU_PATH = '/monitor/hosts/{hostname}/service/action_menu'
 const OVERVIEW_PATH = '/monitor/hosts/{hostname}/service'
+const RESCHEDULE_PATH = '/monitor/services/actions/reschedule'
 const DISCOVER_GRAPHS_PATH = '/domain-types/graph/actions/discover_template_graphs/invoke'
 
 const RESCHEDULE: MonitoringAction = {
@@ -286,6 +287,47 @@ describe('with the rows laid out', () => {
         })
       })
     )
+  })
+
+  test('reschedules the "Check_MK" service of a host once while it runs, whichever row picks it', async () => {
+    const byCheckMk = {
+      label: 'Reschedule "Check_MK" service',
+      tooltip: 'Reschedule "Check_MK" service',
+      icon_name: 'reload',
+      target: 'Check_MK'
+    }
+    mockServices([
+      makeApiEntry({
+        name: 'CPU load',
+        host_name: 'web-1',
+        site_id: 'local',
+        reschedule: byCheckMk
+      }),
+      makeApiEntry({ name: 'Memory', host_name: 'web-1', site_id: 'local', reschedule: byCheckMk })
+    ])
+    // The first reschedule is still sent off when the second row picks it.
+    const listServices = postSpy.getMockImplementation()
+    postSpy.mockImplementation((path: string, init: unknown) => {
+      if (path !== RESCHEDULE_PATH) {
+        return listServices(path, init)
+      }
+      servicesPost(path, init)
+      return new Promise(() => {})
+    })
+    renderApp({ actions: [RESCHEDULE] })
+    const menus = await screen.findAllByRole('button', { name: 'More actions' })
+
+    for (const menu of menus) {
+      await userEvent.click(menu)
+      await userEvent.click(await screen.findByRole('menuitem', { name: /Reschedule/ }))
+    }
+
+    expect(
+      await screen.findAllByText('Waiting for the "Check_MK" service of web-1 to finish')
+    ).toHaveLength(1)
+    expect(
+      servicesPost.mock.calls.filter(([path]: [string]) => path === RESCHEDULE_PATH)
+    ).toHaveLength(1)
   })
 
   test('loads the action menu of a row from its own host and site', async () => {

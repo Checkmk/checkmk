@@ -38,6 +38,7 @@ function action(
   return createRescheduleAction<string>({
     reschedule,
     lastCheck,
+    awaitingCheck: (host) => untranslated(`Waiting for the check of ${host} to finish`),
     checkRan: (host) => untranslated(`The check of ${host} has run`),
     errorHeading: ERROR_HEADING
   })
@@ -54,6 +55,18 @@ function lastChecks(...answers: (number | null | Error)[]): () => Promise<number
     return answer
   }
 }
+
+test('rescheduling one object tells that its check is awaited', () => {
+  const built = action(async () => RESCHEDULED)
+
+  expect(built.pending?.(['web-01'])).toBe('Waiting for the check of web-01 to finish')
+})
+
+test('rescheduling several objects tells nothing while it runs, as it does not wait', () => {
+  const built = action(async () => RESCHEDULED)
+
+  expect(built.pending?.(['web-01', 'web-02'])).toBeUndefined()
+})
 
 test('a refused reschedule comes back as an error, not as a confirmation', async () => {
   const built = action(async () => {
@@ -90,7 +103,7 @@ test('rescheduling one object warns when its check has not run within the timeou
   expect(await feedback).toEqual({
     variant: 'warning',
     message:
-      'The check did not run within 3 seconds. It will still run as scheduled, and its result will show once the page refreshes.'
+      'The check did not finish within 3 seconds. It will still run as scheduled, and its result will show once the page refreshes.'
   })
 })
 

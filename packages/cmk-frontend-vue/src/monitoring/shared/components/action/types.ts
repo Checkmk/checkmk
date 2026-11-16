@@ -15,6 +15,9 @@ export interface ActionOutcome {
   heading?: TranslatedString
 }
 
+/** What a feedback alert tells: an action still running, or how one went. */
+export type ActionFeedbackEntry = { variant: 'loading'; message: TranslatedString } | ActionOutcome
+
 /** Number of hosts the open action applies to, for forms that adapt their wording or hints. */
 export const ACTION_TARGET_COUNT: InjectionKey<ComputedRef<number>> = Symbol(
   'monitoringActionTargetCount'
@@ -41,6 +44,12 @@ export interface MonitoringAction<Values = unknown, Target = HostRef> {
     submitLabel(count: number): TranslatedString
   }
   defaultValues(): Values
+  /**
+   * What to tell while the action runs on the targets, for an action that may take a while, e.g.
+   * a reschedule waiting for its check. Without it, or without a text for the targets, nothing is
+   * told until the action has settled.
+   */
+  pending?(targets: readonly Target[]): TranslatedString | undefined
   /** The signal aborts once no one waits for the outcome any more, e.g. its pane has closed. */
   perform(targets: Target[], values: Values, signal?: AbortSignal): Promise<ActionOutcome>
 }

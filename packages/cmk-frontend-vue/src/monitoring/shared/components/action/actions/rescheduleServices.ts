@@ -23,6 +23,13 @@ export function useRescheduleServicesAction(): MonitoringAction<RescheduleValues
     reschedule: (api, targets, spreadMinutes) => api.rescheduleServices(targets, spreadMinutes),
     lastCheck: async (service) =>
       (await servicesApi.fetchServiceOverview(service)).last_check ?? null,
+    awaitingCheck: ({ host, description }) =>
+      description === AGENT_BASED_CHECK
+        ? _t('Waiting for the "Check_MK" service of %{host} to finish', { host: host.name })
+        : _t('Waiting for the check of "%{service}" on %{host} to finish', {
+            service: description,
+            host: host.name
+          }),
     checkRan: ({ host, description }) =>
       description === AGENT_BASED_CHECK
         ? _t('The "Check_MK" service of %{host} has run, and with it the services it updates', {

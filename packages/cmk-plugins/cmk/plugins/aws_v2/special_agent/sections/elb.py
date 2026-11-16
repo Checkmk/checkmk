@@ -25,6 +25,7 @@ from .core import (
     AWSSectionCloudwatch,
     AWSSectionLimits,
     AWSSectionResult,
+    chunks,
     Metrics,
     ResultDistributor,
 )
@@ -121,10 +122,16 @@ class ELBSummaryGeneric(AWSSection):
         if self._resource == "elb":
             self._describe_load_balancers_karg = "LoadBalancerNames"
             self._describe_load_balancers_key = "LoadBalancerDescriptions"
+            self._describe_tags_karg = "LoadBalancerNames"
+            self._load_balancer_id_key = "LoadBalancerName"
+            self._tag_description_id_key = "LoadBalancerName"
             self._load_balancer_type = hosts.ClassicLoadBalancer
         elif self._resource == "elbv2":
             self._describe_load_balancers_karg = "Names"
             self._describe_load_balancers_key = "LoadBalancers"
+            self._describe_tags_karg = "ResourceArns"
+            self._load_balancer_id_key = "LoadBalancerArn"
+            self._tag_description_id_key = "ResourceArn"
             self._load_balancer_type = hosts.LoadBalancerV2
         else:
             raise AssertionError(
@@ -159,23 +166,29 @@ class ELBSummaryGeneric(AWSSection):
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
         (colleague_contents,) = args
+        load_balancers = self._describe_load_balancers(colleague_contents)
+        tags = self._get_load_balancer_tags(load_balancers)
         found_load_balancers = []
-        for load_balancer in self._describe_load_balancers(colleague_contents):
-            response = self._get_load_balancer_tags(load_balancer)
-            tagging = [
-                tag
-                for tag_descr in self._get_response_content(response, "TagDescriptions")
-                for tag in tag_descr["Tags"]
-            ]
+        for load_balancer in load_balancers:
+            tagging = tags.get(str(load_balancer[self._load_balancer_id_key]), [])
             if self._matches_tag_conditions(tagging):
                 load_balancer["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(tagging)
                 found_load_balancers.append(load_balancer)
         return found_load_balancers
 
-    def _get_load_balancer_tags(self, load_balancer):
-        if self._resource == "elb":
-            return self._client.describe_tags(LoadBalancerNames=[load_balancer["LoadBalancerName"]])  # type: ignore[attr-defined]
-        return self._client.describe_tags(ResourceArns=[load_balancer["LoadBalancerArn"]])  # type: ignore[attr-defined]
+    def _get_load_balancer_tags(
+        self, load_balancers: Sequence[Mapping[str, object]]
+    ) -> dict[str, Tags]:
+        ids = [str(load_balancer[self._load_balancer_id_key]) for load_balancer in load_balancers]
+        tags: dict[str, Tags] = {}
+        # DescribeTags takes at most 20 load balancers per request.
+        for chunk in chunks(ids, length=20):
+            response = self._client.describe_tags(**{self._describe_tags_karg: chunk})  # type: ignore[attr-defined]
+            for description in self._get_response_content(response, "TagDescriptions"):
+                tags.setdefault(description[self._tag_description_id_key], []).extend(
+                    description["Tags"]
+                )
+        return tags
 
     def _describe_load_balancers(
         self, colleague_contents: AWSColleagueContents

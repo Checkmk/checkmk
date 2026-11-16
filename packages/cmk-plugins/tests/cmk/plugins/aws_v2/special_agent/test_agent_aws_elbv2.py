@@ -64,7 +64,13 @@ class FakeELBv2Client:
         tagged_lbs = set(ResourceArns or []).intersection(
             {"LoadBalancerArn-0", "LoadBalancerArn-1"}
         )
-        return {"TagDescriptions": [lb for lb in lbs if lb["LoadBalancerArn"] in tagged_lbs]}
+        return {
+            "TagDescriptions": [
+                {"ResourceArn": lb["LoadBalancerArn"], "Tags": lb["Tags"]}
+                for lb in lbs
+                if lb["LoadBalancerArn"] in tagged_lbs
+            ]
+        }
 
     def describe_target_groups(self, LoadBalancerArn: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
         return {

@@ -18,7 +18,10 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsOption,
 )
 from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
-from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
+from cmk.plugins.aws_v2.special_agent.sections.core import (
+    AWSColleagueContents,
+    ResultDistributor,
+)
 from cmk.plugins.aws_v2.special_agent.sections.elb import (
     ELB,
     ELBHealth,
@@ -110,6 +113,49 @@ def test_elb_summary_does_not_describe_load_balancers_again_when_limits_found_no
     elb_summary.run()
 
     assert client.paginated_operations.count("describe_load_balancers") == 1
+
+
+class LoadBalancersPaginator:
+    def __init__(self, load_balancers: Sequence[Mapping[str, object]]) -> None:
+        self._load_balancers = load_balancers
+
+    def paginate(self, **kwargs: object) -> Iterator[Mapping[str, object]]:  # noqa: ARG002
+        yield {"LoadBalancerDescriptions": self._load_balancers}
+
+
+class FakeManyELBClient:
+    def __init__(self, amount: int) -> None:
+        self._load_balancers = ELBDescribeLoadBalancersIB.create_instances(amount=amount)
+        self.tag_request_sizes: list[int] = []
+
+    def get_paginator(self, operation_name: str) -> LoadBalancersPaginator:
+        assert operation_name == "describe_load_balancers"
+        return LoadBalancersPaginator(self._load_balancers)
+
+    def describe_tags(self, LoadBalancerNames: Sequence[str]) -> Mapping[str, object]:
+        self.tag_request_sizes.append(len(LoadBalancerNames))
+        return {
+            "TagDescriptions": [
+                {"LoadBalancerName": name, "Tags": [{"Key": "name", "Value": name}]}
+                for name in LoadBalancerNames
+            ]
+        }
+
+
+def test_elb_summary_fetches_the_tags_of_20_load_balancers_per_request() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("elb_names", None)
+    config.add_service_tags("elb_tags", (None, None))
+    client = FakeManyELBClient(amount=45)
+    elb_summary = ELBSummaryGeneric(client, "region", config, resource="elb")
+
+    load_balancers = elb_summary.get_live_data(AWSColleagueContents(None, 0.0))
+
+    assert client.tag_request_sizes == [20, 20, 5]
+    assert all(lb["TagsForCmkLabels"] == {"name": lb["LoadBalancerName"]} for lb in load_balancers)
+    assert len(load_balancers) == 45
 
 
 ELBSectionsOut = tuple[ELBLimits, ELBSummaryGeneric, ELBHealth, ELB]

@@ -79,3 +79,11 @@ def test_cloud_trial_payload_carries_audit_log_entries_per_actor_class() -> None
     json_payload = CloudTrialPayload.model_validate(payload).model_dump_with_metadata_json()
 
     assert json.loads(json_payload)["data"]["audit_log"] == audit_log
+
+
+def test_cloud_trial_payload_carries_the_count_of_hosts_with_default_services_only() -> None:
+    payload = {**_product_usage_data(), "count_hosts_default_services_only": 2}
+
+    json_payload = CloudTrialPayload.model_validate(payload).model_dump_with_metadata_json()
+
+    assert json.loads(json_payload)["data"]["count_hosts_default_services_only"] == 2

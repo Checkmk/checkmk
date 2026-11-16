@@ -1,4 +1,4 @@
-title: Podman Containers
+title: Podman: Containers
 agents: linux
 catalog: app/podman
 license: GPLv2

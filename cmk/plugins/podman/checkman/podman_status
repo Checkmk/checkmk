@@ -1,4 +1,4 @@
-title: Podman Status
+title: Podman: Status
 agents: linux
 catalog: app/podman
 license: GPLv2

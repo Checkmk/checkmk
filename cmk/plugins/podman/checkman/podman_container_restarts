@@ -1,4 +1,4 @@
-title: Podman Container Restarts
+title: Podman: Container Restarts
 agents: linux
 catalog: app/podman
 license: GPLv2

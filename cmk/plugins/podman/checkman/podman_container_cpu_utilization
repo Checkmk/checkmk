@@ -1,4 +1,4 @@
-title: Podman Container CPU utilization
+title: Podman: Container CPU Utilization
 agents: linux
 catalog: app/podman
 license: GPLv2

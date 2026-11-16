@@ -6,7 +6,7 @@
 
 from argparse import Namespace as Args
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Protocol
+from typing import override, Protocol
 
 import pytest
 
@@ -88,6 +88,53 @@ class FakeRDSClient:
         if operation_name == "describe_db_instances":
             return Paginator()
         raise NotImplementedError
+
+
+class TaggedInstancesPaginator(Paginator):
+    @override
+    def paginate(self, DBInstanceIdentifier: str | None = None) -> Iterator[Mapping[str, object]]:
+        assert DBInstanceIdentifier is None
+        instances = RDSDescribeDBInstancesIB.create_instances(amount=2)
+        for instance in instances:
+            instance["TagList"] = [{"Key": "name", "Value": instance["DBInstanceIdentifier"]}]
+        yield {"DBInstances": instances}
+
+
+class FakeTaggedRDSClient(FakeRDSClient):
+    def __init__(self) -> None:
+        super().__init__()
+        self.tag_requests = 0
+
+    @override
+    def list_tags_for_resource(self, ResourceName: str | None = None) -> Mapping[str, object]:
+        self.tag_requests += 1
+        return super().list_tags_for_resource(ResourceName)
+
+    @override
+    def get_paginator(self, operation_name: str) -> Paginator:
+        assert operation_name == "describe_db_instances"
+        return TaggedInstancesPaginator()
+
+
+def test_rds_summary_uses_the_tags_of_the_instance_description() -> None:
+    config = AWSConfig(
+        "hostname",
+        Args(),
+        ([], []),
+        NamingConvention.ip_region_instance,
+        NonEC2PiggybackTemplate.LONG,
+    ).for_account("123456789012")
+    config.add_single_service_config("rds_names", None)
+    config.add_service_tags("rds_tags", (None, None))
+    client = FakeTaggedRDSClient()
+    rds_summary = RDSSummary(client, "region", config)
+
+    instances = rds_summary.run().results[0].content
+
+    assert client.tag_requests == 0
+    assert [instance["TagsForCmkLabels"] for instance in instances] == [
+        {"name": instance["DBInstanceIdentifier"]} for instance in instances
+    ]
 
 
 RDSSectionsOut = tuple[RDSLimits, RDSSummary, RDS]

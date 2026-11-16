@@ -164,7 +164,11 @@ class RDSSummary(AWSSection):
         db_instances = []
 
         for instance in self._describe_db_instances():
-            tags = self._get_instance_tags(instance["DBInstanceArn"])
+            tags = (
+                instance["TagList"]
+                if "TagList" in instance
+                else self._get_instance_tags(instance["DBInstanceArn"])
+            )
             if self._matches_tag_conditions(tags):
                 instance["Region"] = self._region
                 instance["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(tags)

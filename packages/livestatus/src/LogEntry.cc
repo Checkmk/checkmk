@@ -20,6 +20,13 @@
 using namespace std::string_view_literals;
 
 namespace {
+// Same as text.starts_with(prefix), but without a memcmp() call when the first
+// characters differ, which is the common case when classifying a log line.
+bool has_prefix(std::string_view text, std::string_view prefix) {
+    return prefix.empty() || (!text.empty() && text.front() == prefix.front() &&
+                              text.starts_with(prefix));
+}
+
 struct LogDef {
     std::string prefix;
     LogEntry::Class log_class;
@@ -363,13 +370,18 @@ void LogEntry::classifyLogMessage() {
         kind_ = LogEntryKind::logging_initial_states;
         return;
     }
-    if (textContains("starting...") || textContains("active mode...")) {
+    // All markers except "Bailing out" end in "...", so most lines need only
+    // two scans instead of five.
+    const bool has_ellipsis = textContains("...");
+    if (has_ellipsis &&
+        (textContains("starting...") || textContains("active mode..."))) {
         class_ = LogEntry::Class::program;
         kind_ = LogEntryKind::core_starting;
         return;
     }
-    if (textContains("shutting down...") || textContains("Bailing out") ||
-        textContains("standby mode...")) {
+    if (textContains("Bailing out") ||
+        (has_ellipsis && (textContains("shutting down...") ||
+                          textContains("standby mode...")))) {
         class_ = LogEntry::Class::program;
         kind_ = LogEntryKind::core_stopping;
         return;
@@ -379,7 +391,8 @@ void LogEntry::classifyLogMessage() {
 }
 
 bool LogEntry::textStartsWith(std::string_view what) const {
-    return message_.compare(timestamp_prefix_length, what.size(), what) == 0;
+    return has_prefix(
+        std::string_view{message_}.substr(timestamp_prefix_length), what);
 }
 
 bool LogEntry::textContains(std::string_view what) const {

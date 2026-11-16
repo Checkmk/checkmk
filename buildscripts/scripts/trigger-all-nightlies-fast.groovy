@@ -49,7 +49,7 @@ def main() {
     def editions_to_test = all_editions;
 
     // building enterprise only on days other than Sunday. Using JJB would build the job twice at night
-    if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 12..15 || Calendar.getInstance().get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) { /
+    if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 12..15 || Calendar.getInstance().get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
         // build only enterprise on high noon or a little bit later
         editions_to_test = ["enterprise"];
     }

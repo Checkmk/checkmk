@@ -76,10 +76,10 @@ def placeholder(option: Declaration) -> str | None:
             return None
 
 
-def short_getopt_specs(option: Declaration) -> Sequence[str]:
+def short_getopt_spec(option: Declaration) -> str:
     if option.short is None:
-        return []
-    return [option.short if placeholder(option) is None else f"{option.short}:"]
+        return ""
+    return option.short if placeholder(option) is None else f"{option.short}:"
 
 
 def long_getopt_specs(option: Declaration) -> Sequence[str]:

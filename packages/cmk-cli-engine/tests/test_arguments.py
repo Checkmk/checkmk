@@ -93,6 +93,14 @@ _COLLECTED_VALUES: Final = CLIValues(
     parse=str,
 )
 
+_NUMBERED_VALUE: Final = CLIValue(
+    long="numbered",
+    short="n",
+    placeholder="N",
+    help="takes an argument by its short spelling",
+    parse=str,
+)
+
 _RENAMED_VALUE: Final = CLIValue(
     long="renamed",
     placeholder="VALUE",
@@ -104,11 +112,12 @@ _RENAMED_VALUE: Final = CLIValue(
 
 def _default_request(
     options: CLIReader,
-) -> tuple[bool, int, Sequence[str], str | None, Sequence[str]]:
+) -> tuple[bool, int, Sequence[str], str | None, str | None, Sequence[str]]:
     return (
         options.flag(_FLAG),
         options.count(_COUNTED_COUNT),
         options.values(_COLLECTED_VALUES),
+        options.value(_NUMBERED_VALUE),
         options.value(_RENAMED_VALUE),
         options.arguments(CLIArguments(placeholder="HOSTS", parse=str)),
     )
@@ -218,6 +227,13 @@ def test_a_deprecated_sub_option_is_kept_under_its_own_spelling() -> None:
 
     assert isinstance(parsed, CLIRunCommand)
     assert parsed.options == [("--default", ""), ("--legacy-name", "value")]
+
+
+def test_a_short_option_takes_the_next_argument_as_its_value() -> None:
+    parsed = _parse(["cmk", "--default", "-n", "5", "myhost"])
+
+    assert isinstance(parsed, CLIRunCommand)
+    assert parsed.args == ["myhost"]
 
 
 def test_positional_arguments_alone_run_the_default_command() -> None:

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import getopt
 import textwrap
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -20,11 +21,12 @@ from cmk.cli.internal import Value as CLIValue
 from .options import (
     Declaration,
     ENGINE_OPTIONS,
+    GetoptOptions,
     HELP_WIDTH,
     HelpColumn,
     long_getopt_specs,
     placeholder,
-    short_getopt_specs,
+    short_getopt_spec,
     short_help_text,
     spellings,
 )
@@ -164,15 +166,12 @@ class Commands:
     def find(self, spelling: str) -> DiscoveredCommand | None:
         return self._command_map.get(spelling)
 
-    def short_getopt_specs(self) -> str:
-        return "".join(
-            spec for declaration in self._declarations for spec in short_getopt_specs(declaration)
+    def getopt(self, args: Sequence[str]) -> tuple[GetoptOptions, Sequence[str]]:
+        return getopt.getopt(
+            list(args),
+            "".join(short_getopt_spec(declaration) for declaration in self._declarations),
+            [spec for declaration in self._declarations for spec in long_getopt_specs(declaration)],
         )
-
-    def long_getopt_specs(self) -> list[str]:
-        return [
-            spec for declaration in self._declarations for spec in long_getopt_specs(declaration)
-        ]
 
     def help(self) -> str:
         return f"""WAYS TO CALL:

@@ -53,9 +53,7 @@ def _selected(
 def _parse(
     commands: Commands, argv: Sequence[str], logger: logging.Logger
 ) -> RunCommand | ShowHelp:
-    options, positional = getopt.getopt(
-        list(argv[1:]), commands.short_getopt_specs(), commands.long_getopt_specs()
-    )
+    options, positional = commands.getopt(argv[1:])
     global_options = read_global_options(parsed(options, {}, logger))
     if any(option in spellings(HELP_OPTION) for option, _argument in options):
         return ShowHelp(global_options)

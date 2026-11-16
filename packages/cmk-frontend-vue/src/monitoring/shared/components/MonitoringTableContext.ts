@@ -7,7 +7,10 @@ import type { RowData, SortingState, Updater, VisibilityState } from '@tanstack/
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import type { ComputedRef, InjectionKey, Ref } from 'vue'
 
-import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
+import type {
+  ColumnCondition,
+  MonitoringService
+} from '@/monitoring/shared/services/MonitoringService'
 
 import type { ColumnFilterDefinition } from './filter/types'
 
@@ -80,6 +83,15 @@ export const MONITORING_SERVICE: InjectionKey<MonitoringService<unknown>> =
 
 /** What a panel does once a value in it narrowed the listing: make way for the result. */
 export const AFTER_NARROW: InjectionKey<() => void> = Symbol('AfterNarrow')
+
+/**
+ * Where a click on a value in a panel leads instead of narrowing the listing behind it:
+ * the address of a page that lists the hosts matching the condition. Provided, it takes
+ * precedence over MONITORING_SERVICE, the value becomes a link to that page and
+ * AFTER_NARROW is not called, as nothing behind the panel changes.
+ */
+export const NARROW_TARGET: InjectionKey<(condition: ColumnCondition) => string> =
+  Symbol('NarrowTarget')
 
 export interface MonitoringTableState {
   readonly sortState: Ref<SortingState>

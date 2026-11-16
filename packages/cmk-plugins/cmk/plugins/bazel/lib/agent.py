@@ -70,9 +70,10 @@ TAGS = TypeAdapter(list[Tag])
 class VersionCache:
     VERSION_CACHE_KEY = "bazel_version_cache"
 
-    def __init__(self, storage: Storage, ttl: float) -> None:
+    def __init__(self, storage: Storage, ttl: float, *, debug: bool) -> None:
         self.storage = storage
         self.ttl = ttl
+        self.debug = debug
 
     def get_or_update(self, url: str, commit: str) -> BazelVersionInfo | None:
         if info := self._get_cached_version_info():
@@ -80,6 +81,8 @@ class VersionCache:
         try:
             return self._renew_cached_version_info(url, commit)
         except (requests.exceptions.RequestException, ValidationError) as e:
+            if self.debug:
+                raise
             LOGGER.warning("Skipping version information: %(error)s", {"error": e})
             return None
 
@@ -266,7 +269,7 @@ def _process_data(res: requests.Response, endpoint: Endpoint, args: argparse.Nam
     if endpoint.name != "status" or "git_commit" not in data:
         return
 
-    version_cache = VersionCache(Storage(AGENT, args.host), args.version_cache)
+    version_cache = VersionCache(Storage(AGENT, args.host), args.version_cache, debug=args.debug)
     if not (
         version_info := version_cache.get_or_update(args.bazel_cache_tags_url, data["git_commit"])
     ):

@@ -543,7 +543,7 @@ def test_corrupted_version_cache_handling(
 ) -> None:
     tags_url = "https://bazel-remote.tld/tags"
     commit = "c5bf6e13938aa89923c637b5a4f01c2203a3c9f8"
-    version_cache = VersionCache(Storage("test_agent", "test_host"), ttl=60)
+    version_cache = VersionCache(Storage("test_agent", "test_host"), ttl=60, debug=False)
     first_call = version_cache.get_or_update(tags_url, commit)
     for entry in tmp_path.rglob("*"):
         if entry.is_file():
@@ -913,3 +913,24 @@ def test_bazel_cache_agent_skips_tags_that_are_not_versions(
     data = json.loads(output[_version_section_index(output) + 1])
     assert data["current"] == "2.5.0"
     assert data["latest"]["patch"] == "2.5.1"
+
+
+@pytest.mark.parametrize(
+    "tags_get, error",
+    [
+        pytest.param(rate_limited_tags_get, requests.HTTPError, id="http-error"),
+        pytest.param(non_json_tags_get, requests.JSONDecodeError, id="non-json"),
+    ],
+)
+def test_bazel_cache_agent_debug_mode_raises_version_lookup_errors(
+    tags_get: _RequestsGet,
+    error: type[Exception],
+    patched_environment: None,  # noqa: ARG001
+) -> None:
+    args = parse_arguments(["--host", "bazel-cache.tld", "--debug"])
+
+    with (
+        mock.patch("cmk.plugins.bazel.lib.agent.requests.get", tags_get),
+        pytest.raises(error),
+    ):
+        agent_bazel_cache_main(args=args)

@@ -1,4 +1,4 @@
-title: F5OS Platform Memory Utilization
+title: F5OS: Memory
 agents: snmp
 catalog: hw/network/f5
 license: GPLv2

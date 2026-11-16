@@ -1,4 +1,4 @@
-title: F5OS Platform CPU Utilization
+title: F5OS: CPU Utilization
 agents: snmp
 catalog: hw/network/f5
 license: GPLv2

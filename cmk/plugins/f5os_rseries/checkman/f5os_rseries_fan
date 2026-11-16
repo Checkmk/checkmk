@@ -1,4 +1,4 @@
-title: F5OS Fan Speed
+title: F5OS: Fans
 agents: snmp
 catalog: hw/network/f5
 license: GPLv2

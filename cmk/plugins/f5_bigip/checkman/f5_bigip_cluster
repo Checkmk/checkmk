@@ -1,4 +1,4 @@
-title: F5 Big-IP: Cluster State, Up to Firmware Version 10
+title: F5 BIG-IP: Config Sync for Firmware 10 and Earlier
 agents: snmp
 catalog: hw/network/f5
 license: GPLv2

@@ -1,4 +1,4 @@
-title: F5OS PSU
+title: F5OS: Power Supplies
 agents: snmp
 catalog: hw/network/f5
 license: GPLv2

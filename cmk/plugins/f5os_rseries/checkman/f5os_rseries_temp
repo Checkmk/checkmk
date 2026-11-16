@@ -1,4 +1,4 @@
-title: F5OS Platform Temperature
+title: F5OS: Temperature
 agents: snmp
 catalog: hw/network/f5
 license: GPLv2

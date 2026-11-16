@@ -1,4 +1,4 @@
-title: F5 Big-IP: Active/Active or Passive/Active vCMP Guest Failover Status
+title: F5 BIG-IP: vCMP Guest Failover
 agents: snmp
 catalog: hw/network/f5
 license: GPLv2

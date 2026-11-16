@@ -1,4 +1,4 @@
-title: F5OS Tenant
+title: F5OS: Tenants
 agents: snmp
 catalog: hw/network/f5
 license: GPLv2

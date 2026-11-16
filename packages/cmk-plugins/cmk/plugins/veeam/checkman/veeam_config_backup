@@ -1,4 +1,4 @@
-title: Veeam: Configuration backup
+title: Veeam: Configuration Backup
 agents: special
 catalog: os/storage
 license: GPLv2

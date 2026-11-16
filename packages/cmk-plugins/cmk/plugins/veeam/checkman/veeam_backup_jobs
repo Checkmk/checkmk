@@ -1,4 +1,4 @@
-title: Veeam: Backup Job (special agent)
+title: Veeam: Backup Jobs via REST API
 agents: special
 catalog: os/storage
 license: GPLv2

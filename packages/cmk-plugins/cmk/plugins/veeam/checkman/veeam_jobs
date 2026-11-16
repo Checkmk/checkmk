@@ -1,4 +1,4 @@
-title: Veeam: Jobs Backup
+title: Veeam: Backup Jobs via Agent Plug-in
 agents: windows
 catalog: os/storage
 license: GPLv2

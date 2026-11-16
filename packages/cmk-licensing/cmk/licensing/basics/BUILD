@@ -7,6 +7,7 @@ py_library(
     visibility = [
         "//cmk/gui_plugins/internal:__pkg__",
         "//cmk/plugins/checkmk/cli:__subpackages__",
+        "//non-free/packages/cmk-ai-control-plane:__pkg__",
         "//non-free/packages/cmk-data-backend:__pkg__",
         "//non-free/tests/testlib/common/licensing:__pkg__",
         "//non-free/tests/testlib/system:__pkg__",

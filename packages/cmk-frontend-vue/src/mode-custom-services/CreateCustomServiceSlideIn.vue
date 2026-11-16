@@ -19,6 +19,7 @@ import {
   createCustomService,
   hostCreationAfter
 } from './save'
+import { servicesPreviewBlocksSave, useServicesPreview } from './servicesPreview'
 import AssignHostStep from './steps/AssignHostStep.vue'
 import ConfigureNameStep from './steps/ConfigureNameStep.vue'
 import {
@@ -51,9 +52,13 @@ const templateErrors = ref<string[]>([])
 const nameStepRef = useTemplateRef<InstanceType<typeof ConfigureNameStep>>('nameStep')
 
 const templatePreview = useHostNameTemplatePreview(() => model.value)
+const servicesPreview = useServicesPreview(() => model.value)
 
 const canSave = computed(
-  () => isReadyToCreate(model.value) && !templatePreviewBlocksSave(templatePreview.preview.value)
+  () =>
+    isReadyToCreate(model.value) &&
+    !templatePreviewBlocksSave(templatePreview.preview.value) &&
+    !servicesPreviewBlocksSave(servicesPreview.preview.value)
 )
 
 watch(
@@ -115,6 +120,7 @@ async function save(): Promise<void> {
         :append-series-attributes="model.appendSeriesAttributes"
         :template-errors="templateErrors"
         :template-preview="templatePreview.preview.value"
+        :services-preview="servicesPreview.preview.value"
       />
       <NewHostCreationStatus v-if="hostCreation !== null" :status="hostCreation" />
       <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />

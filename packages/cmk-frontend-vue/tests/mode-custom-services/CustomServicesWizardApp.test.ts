@@ -25,6 +25,7 @@ const GRAPH_DATA_URL = `${API_BASE}/domain-types/custom_graph/actions/fetch_data
 const TEMPLATE_ATTRIBUTES_URL = `${API_BASE}/domain-types/custom_service/actions/template_attributes/invoke`
 const RESOLVE_URL = `${API_BASE}/domain-types/custom_service/actions/resolve_host_name_template/invoke`
 const OPENTELEMETRY_DATA_URL = `${API_BASE}/domain-types/custom_service/actions/opentelemetry_data/invoke`
+const RESOLVE_SERVICES_URL = `${API_BASE}/domain-types/custom_service/actions/resolve_services/invoke`
 
 const STORED_EXTENSIONS = {
   host_assignment: { mode: 'explicit_host', host_name: 'web01' },
@@ -117,6 +118,9 @@ const server = useMswServer(
       errors: [],
       internal: '{"graphs":[]}'
     })
+  ),
+  http.post(RESOLVE_SERVICES_URL, () =>
+    HttpResponse.json({ services: [], total: 0, clashes: [], complete: true })
   ),
   http.post(OPENTELEMETRY_DATA_URL, () => HttpResponse.json({ hosts: [] }))
 )
@@ -509,4 +513,36 @@ test('a service that cannot be created stays in the wizard instead of adding an 
 
   expect(await screen.findByText(/The service name is in use/)).toBeTruthy()
   expect(window.location.hash).toBe('')
+})
+
+function serveClash(): void {
+  server.use(
+    http.post(RESOLVE_SERVICES_URL, () =>
+      HttpResponse.json({
+        services: [
+          { host_name: 'pod-cart', service_name: 'Latency', new_host: false, clash: 'monitored' }
+        ],
+        total: 1,
+        clashes: [
+          {
+            host_name: 'pod-cart',
+            service_name: 'Latency',
+            message: 'A service named "Latency" already exists on host "pod-cart".'
+          }
+        ],
+        complete: true
+      })
+    )
+  )
+}
+
+test('a service name that clashes cannot be saved', async () => {
+  serveStoredTemplateService()
+  serveResolution(['pod-cart'])
+  serveClash()
+  renderWizard()
+  await goToHostStep()
+
+  expect(await screen.findByText(/already exists on host "pod-cart"/)).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Save & activate changes' })).toBeDisabled()
 })

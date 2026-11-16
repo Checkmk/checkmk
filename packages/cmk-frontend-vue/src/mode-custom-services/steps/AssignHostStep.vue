@@ -23,8 +23,10 @@ import { computed, ref, watch } from 'vue'
 import { fetchTemplateAttributes } from '../api'
 import { type TemplateAttributes, appendedAttributeNames, templateMacro } from '../definition'
 import { useOpenTelemetryData } from '../openTelemetryData'
+import type { ServicesPreview } from '../servicesPreview'
 import type { TemplatePreview } from '../templatePreview'
 import OpenTelemetryDataNotice from './OpenTelemetryDataNotice.vue'
+import ServicesToBeCreated from './ServicesToBeCreated.vue'
 import TemplateHostMatches from './TemplateHostMatches.vue'
 
 const { _t } = usei18n()
@@ -36,6 +38,7 @@ const {
   aggregator,
   appendSeriesAttributes,
   templatePreview,
+  servicesPreview,
   templateErrors = []
 } = defineProps<{
   metricName: string | null
@@ -44,6 +47,7 @@ const {
   aggregator: Aggregator | undefined
   appendSeriesAttributes: boolean
   templatePreview: TemplatePreview
+  servicesPreview: ServicesPreview
   templateErrors?: string[]
 }>()
 
@@ -281,28 +285,15 @@ const templateFieldId = useId()
       </CmkTabs>
     </div>
 
-    <div v-if="assignmentMode === 'manual'" class="mode-custom-services-assign-host-step__preview">
-      <span class="mode-custom-services-assign-host-step__label">
-        {{ _t('Services to be created') }} ({{ hostName ? 1 : 0 }})
-      </span>
-      <div v-if="hostName" class="mode-custom-services-assign-host-step__summary">
-        <span
-          >{{ _t('Service:') }} <strong>{{ serviceName }}</strong> {{ appendedAttributes }}</span
-        >
-        <span
-          >{{ _t('Target host:') }} <strong>{{ hostName }}</strong></span
-        >
-        <OpenTelemetryDataNotice :data="openTelemetryData" />
-      </div>
-    </div>
-    <div v-else class="mode-custom-services-assign-host-step__preview">
-      <span class="mode-custom-services-assign-host-step__label">
-        {{ _t('Services to be created') }}
-      </span>
+    <div class="mode-custom-services-assign-host-step__preview">
+      <ServicesToBeCreated :preview="servicesPreview" />
+      <OpenTelemetryDataNotice
+        v-if="assignmentMode === 'manual' && hostName"
+        :data="openTelemetryData"
+      />
       <TemplateHostMatches
+        v-else-if="assignmentMode === 'automatic'"
         :preview="templatePreview"
-        :service-name="serviceName"
-        :appended-attributes="appendedAttributes"
         :opentelemetry-data="openTelemetryData"
       />
     </div>
@@ -356,11 +347,5 @@ const templateFieldId = useId()
   gap: var(--dimension-3);
   padding-top: var(--dimension-3);
   border-top: 1px solid var(--ux-theme-6, rgb(255 255 255 / 10%));
-}
-
-.mode-custom-services-assign-host-step__summary {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-2);
 }
 </style>

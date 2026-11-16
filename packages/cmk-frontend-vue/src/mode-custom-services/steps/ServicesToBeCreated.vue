@@ -99,6 +99,11 @@ const services = computed(() => (preview.status === 'resolved' ? preview.service
           total: services.total
         })
       }}</span>
+      <span v-if="!services.complete">{{
+        _t(
+          'The metric has more series than are looked up here, so it creates more services than counted, and their names are checked only when saving.'
+        )
+      }}</span>
       <CmkAlert
         v-for="clash in services.clashes.slice(0, CLASHES_EXPLAINED)"
         :key="`${clash.host_name}/${clash.service_name}`"

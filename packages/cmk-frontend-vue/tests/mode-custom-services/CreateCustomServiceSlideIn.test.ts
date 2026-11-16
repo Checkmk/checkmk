@@ -18,6 +18,7 @@ const AUTOCOMPLETE_URL = `${location.protocol}//${location.host}/api/internal/ob
 const TEMPLATE_ATTRIBUTES_URL = `${location.protocol}//${location.host}/api/internal/domain-types/custom_service/actions/template_attributes/invoke`
 const RESOLVE_URL = `${location.protocol}//${location.host}/api/internal/domain-types/custom_service/actions/resolve_host_name_template/invoke`
 const OPENTELEMETRY_DATA_URL = `${location.protocol}//${location.host}/api/internal/domain-types/custom_service/actions/opentelemetry_data/invoke`
+const RESOLVE_SERVICES_URL = `${location.protocol}//${location.host}/api/internal/domain-types/custom_service/actions/resolve_services/invoke`
 
 let createRequests = 0
 let lastBody: unknown = null
@@ -51,6 +52,9 @@ const server = useMswServer(
       hidden_match_count: 0,
       truncated: false
     })
+  ),
+  http.post(RESOLVE_SERVICES_URL, () =>
+    HttpResponse.json({ services: [], total: 0, clashes: [], complete: true })
   ),
   http.post(OPENTELEMETRY_DATA_URL, () => HttpResponse.json({ hosts: [] }))
 )
@@ -274,4 +278,43 @@ test('a refused new host keeps the dialog open and says why', async () => {
 
   expect(await screen.findByText('Sorry, the hosts in the folder Main are locked.')).toBeTruthy()
   expect(emitted('close')).toBeUndefined()
+})
+
+function serveClash(): void {
+  server.use(
+    http.post(RESOLVE_SERVICES_URL, () =>
+      HttpResponse.json({
+        services: [
+          { host_name: 'pod-cart', service_name: 'Latency', new_host: false, clash: 'monitored' }
+        ],
+        total: 1,
+        clashes: [
+          {
+            host_name: 'pod-cart',
+            service_name: 'Latency',
+            message: 'A service named "Latency" already exists on host "pod-cart".'
+          }
+        ],
+        complete: true
+      })
+    )
+  )
+}
+
+test('a service name that clashes cannot be saved', async () => {
+  server.use(
+    http.post(RESOLVE_URL, () =>
+      HttpResponse.json({
+        matching_hosts: [],
+        unmatched_host_names: ['pod-cart'],
+        hidden_match_count: 0,
+        truncated: false
+      })
+    )
+  )
+  serveClash()
+  renderSlideIn(initialModel({ hostNameTemplate: '$RESOURCE_ATTR.service.name$' }))
+
+  expect(await screen.findByText(/already exists on host "pod-cart"/)).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
 })

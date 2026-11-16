@@ -18,7 +18,7 @@ const RESOLUTION = {
 
 function renderMatches(preview: TemplatePreview) {
   return render(TemplateHostMatches, {
-    props: { preview, serviceName: 'HTTP duration', appendedAttributes: '+ http.route' }
+    props: { preview }
   })
 }
 
@@ -26,10 +26,9 @@ function isAlert(text: RegExp): boolean {
   return screen.getByText(text).closest('[role="alert"]') !== null
 }
 
-test('names the service and the hosts the template matches', () => {
+test('names the hosts the template matches', () => {
   renderMatches({ status: 'resolved', resolution: RESOLUTION })
 
-  expect(screen.getByText(/Service:/)).toHaveTextContent('Service: HTTP duration + http.route')
   expect(screen.getByText(/Target hosts:/)).toHaveTextContent(
     'Target hosts: pod-cart, pod-checkout'
   )
@@ -47,13 +46,12 @@ test('names the hosts saving creates apart', () => {
   expect(screen.getByText(/Target hosts:/)).not.toHaveTextContent('pod-search')
 })
 
-test('names the service when the template resolves only to new hosts', () => {
+test('a template resolving only to new hosts names no target host and allows saving', () => {
   renderMatches({
     status: 'resolved',
     resolution: { ...RESOLUTION, matching_hosts: [], unmatched_host_names: ['pod-search'] }
   })
 
-  expect(screen.getByText(/Service:/)).toHaveTextContent('Service: HTTP duration + http.route')
   expect(screen.queryByText(/Target hosts:/)).toBeNull()
   expect(screen.queryByText(/resolves to no host name/)).toBeNull()
 })
@@ -62,7 +60,6 @@ test('warns that the service cannot be saved when the template resolves to no ho
   renderMatches({ status: 'resolved', resolution: { ...RESOLUTION, matching_hosts: [] } })
 
   expect(isAlert(/resolves to no host name/)).toBe(true)
-  expect(screen.queryByText(/Service:/)).toBeNull()
   expect(screen.queryByText(/Target hosts:/)).toBeNull()
 })
 

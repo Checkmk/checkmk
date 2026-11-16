@@ -13,15 +13,8 @@ import OpenTelemetryDataNotice from './OpenTelemetryDataNotice.vue'
 
 const { _t, _tn } = usei18n()
 
-const {
-  preview,
-  serviceName,
-  appendedAttributes,
-  opentelemetryData = { status: 'idle' }
-} = defineProps<{
+const { preview, opentelemetryData = { status: 'idle' } } = defineProps<{
   preview: TemplatePreview
-  serviceName: string
-  appendedAttributes: string
   opentelemetryData?: OpenTelemetryData
 }>()
 </script>
@@ -57,13 +50,6 @@ const {
           _t('This template currently resolves to no host name, so the service cannot be saved.')
         "
       />
-      <span
-        v-if="
-          preview.resolution.matching_hosts.length > 0 ||
-          preview.resolution.unmatched_host_names.length > 0
-        "
-        >{{ _t('Service:') }} <strong>{{ serviceName }}</strong> {{ appendedAttributes }}</span
-      >
       <template v-if="preview.resolution.matching_hosts.length > 0">
         <span
           >{{ _t('Target hosts:') }}

@@ -13,6 +13,7 @@ import { HttpResponse, http } from 'msw'
 import { afterEach, expect, test } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
+import type { ServicesPreview } from '@/mode-custom-services/servicesPreview'
 import AssignHostStep from '@/mode-custom-services/steps/AssignHostStep.vue'
 import type { TemplatePreview } from '@/mode-custom-services/templatePreview'
 
@@ -82,13 +83,15 @@ function renderStep(
     appendSeriesAttributes = true,
     hostNameTemplate = null,
     templateErrors = [],
-    templatePreview = { status: 'idle' }
+    templatePreview = { status: 'idle' },
+    servicesPreview = { status: 'idle' }
   }: {
     aggregator?: Aggregator | undefined
     appendSeriesAttributes?: boolean
     hostNameTemplate?: string | null
     templateErrors?: string[]
     templatePreview?: TemplatePreview
+    servicesPreview?: ServicesPreview
   } = {}
 ) {
   const service = ref(serviceName)
@@ -106,7 +109,8 @@ function renderStep(
         aggregator,
         appendSeriesAttributes,
         templateErrors,
-        templatePreview
+        templatePreview,
+        servicesPreview
       }
     },
     template: `<AssignHostStep
@@ -120,6 +124,7 @@ function renderStep(
       :append-series-attributes="appendSeriesAttributes"
       :template-errors="templateErrors"
       :template-preview="templatePreview"
+      :services-preview="servicesPreview"
     />`
   })
   render(wrapper)
@@ -145,11 +150,24 @@ test('selects a host from the injected autocompleter suggestions', async () => {
   expect(host.value).toBe('web01')
 })
 
-test('summarizes the service to be created once a host is chosen', () => {
-  renderStep('HTTP duration', 'web01')
+const WEB01_SERVICE: ServicesPreview = {
+  status: 'resolved',
+  services: {
+    services: [
+      { host_name: 'web01', service_name: 'HTTP duration GET', new_host: false, clash: null }
+    ],
+    total: 1,
+    clashes: [],
+    complete: true
+  }
+}
+
+test('lists the services to be created below the tabs', () => {
+  renderStep('HTTP duration', 'web01', { servicesPreview: WEB01_SERVICE })
+
+  const service = screen.getByText('HTTP duration GET')
   expect(screen.getByText(/Services to be created/)).toHaveTextContent('(1)')
-  expect(screen.getByText(/Service:/)).toHaveTextContent('Service: HTTP duration + all attributes')
-  expect(screen.getByText('web01')).toBeTruthy()
+  expect(screen.getByRole('tabpanel').contains(service)).toBe(false)
 })
 
 test('tells that all attribute values are appended to the service name', () => {
@@ -269,13 +287,13 @@ test('explains that merged series offer no attribute', async () => {
 })
 
 test('asks for no attributes while the host is assigned by hand', async () => {
-  renderStep('HTTP duration', 'web01')
+  renderStep('HTTP duration', 'web01', { servicesPreview: WEB01_SERVICE })
 
-  await screen.findByText('web01')
+  await screen.findByText('HTTP duration GET')
   expect(templateAttributesRequest).toBeNull()
 })
 
-test('summarizes the services on the hosts the template matches below the tabs', () => {
+test('names the hosts the template matches below the tabs', () => {
   renderStep('HTTP duration', null, {
     hostNameTemplate: 'pod-$RESOURCE_ATTR.k8s.pod.name$',
     templatePreview: {
@@ -291,7 +309,6 @@ test('summarizes the services on the hosts the template matches below the tabs',
 
   const targetHosts = screen.getByText(/Target hosts:/)
   expect(targetHosts).toHaveTextContent('Target hosts: pod-cart, pod-search')
-  expect(screen.getByText(/Service:/)).toHaveTextContent('Service: HTTP duration + all attributes')
   expect(screen.getByRole('tabpanel').contains(targetHosts)).toBe(false)
 })
 

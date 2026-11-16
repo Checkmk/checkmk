@@ -107,3 +107,9 @@ test('asks for every input the services are named from', () => {
     )
   ).toBeTruthy()
 })
+
+test('tells that a metric with more series than looked up creates more services', () => {
+  renderList(resolved([service('Latency GET')], { complete: false }))
+
+  expect(screen.getByText(/more series than are looked up here/)).toBeTruthy()
+})

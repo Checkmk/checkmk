@@ -23,6 +23,7 @@ import {
   hostCreationAfter,
   updateCustomService
 } from './save'
+import { servicesPreviewBlocksSave, useServicesPreview } from './servicesPreview'
 import AssignHostStep from './steps/AssignHostStep.vue'
 import ConfigureNameStep from './steps/ConfigureNameStep.vue'
 import DefineMetricStep from './steps/DefineMetricStep.vue'
@@ -56,9 +57,17 @@ const metricStepValid = computed(() => isMetricSelected(model.value))
 const templatePreview = useHostNameTemplatePreview(() =>
   currentStep.value === 3 ? model.value : null
 )
-// A service name and a host, or a host name template whose matches allow saving, are required.
+const servicesPreview = useServicesPreview(
+  () => (currentStep.value === 3 ? model.value : null),
+  props.configuration_name
+)
+// A service name and a host, or a host name template whose matches allow saving, are required,
+// and the names of the services must not clash.
 const hostStepValid = computed(
-  () => isReadyToCreate(model.value) && !templatePreviewBlocksSave(templatePreview.preview.value)
+  () =>
+    isReadyToCreate(model.value) &&
+    !templatePreviewBlocksSave(templatePreview.preview.value) &&
+    !servicesPreviewBlocksSave(servicesPreview.preview.value)
 )
 
 watch(
@@ -226,6 +235,7 @@ async function saveService(target: string): Promise<void> {
             v-model:host-name-template="model.hostNameTemplate"
             :template-errors="templateErrors"
             :template-preview="templatePreview.preview.value"
+            :services-preview="servicesPreview.preview.value"
             :metric-name="model.metricName"
             :attribute-filter="model.attributeFilter"
             :consolidation="model.consolidation"

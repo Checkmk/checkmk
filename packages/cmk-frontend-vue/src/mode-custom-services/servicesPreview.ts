@@ -38,6 +38,14 @@ export interface ServicesPreviewLookup {
   preview: Readonly<Ref<ServicesPreview>>
 }
 
+/**
+ * Blocks what saving is known to refuse: names that clash. A pending or failed lookup does not
+ * block: saving resolves the names again and states its own refusal.
+ */
+export function servicesPreviewBlocksSave(preview: ServicesPreview): boolean {
+  return preview.status === 'resolved' && preview.services.clashes.length > 0
+}
+
 function completeModel(model: ServiceModel): CompleteModel | null {
   const { metricName, hostName, hostNameTemplate, serviceName, consolidation } = model
   if (

@@ -10,7 +10,11 @@ import { HttpResponse, http } from 'msw'
 import { afterEach, expect, test, vi } from 'vitest'
 import { type EffectScope, effectScope, ref } from 'vue'
 
-import { type ServicesPreview, useServicesPreview } from '@/mode-custom-services/servicesPreview'
+import {
+  type ServicesPreview,
+  servicesPreviewBlocksSave,
+  useServicesPreview
+} from '@/mode-custom-services/servicesPreview'
 import { type ServiceModel, emptyService } from '@/mode-custom-services/types'
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
@@ -140,4 +144,21 @@ test.each<[string, number, Partial<ServiceModel>, ServicesPreview['status']]>([
   const { preview } = mount(hostService(overrides))
 
   await vi.waitFor(() => expect(preview.value.status).toBe(expected))
+})
+
+const CLASH = { host_name: 'web01', service_name: 'Latency', message: 'clash' }
+
+test.each<[string, ServicesPreview, boolean]>([
+  ['idle', { status: 'idle' }, false],
+  ['loading', { status: 'loading' }, false],
+  ['resolved without clashes', { status: 'resolved', services: SERVICES }, false],
+  [
+    'resolved with a clash',
+    { status: 'resolved', services: { ...SERVICES, clashes: [CLASH] } },
+    true
+  ],
+  ['refused', { status: 'refused' }, false],
+  ['failed', { status: 'failed', error: 'down' }, false]
+])('a %s preview blocks saving: %s', (_, preview, blocks) => {
+  expect(servicesPreviewBlocksSave(preview)).toBe(blocks)
 })

@@ -205,11 +205,16 @@ class S3Summary(AWSSection):
             try:
                 response = self._client.get_bucket_tagging(Bucket=bucket_name)  # type: ignore[attr-defined]
             except self._client.exceptions.ClientError as e:
-                # If there are no tags attached to a bucket we receive a 'ClientError'
-                LOGGER.info(
-                    "%(name)s/%(bucket_name)s: No tags set, %(error)s",
-                    {"name": self.name, "bucket_name": bucket_name, "error": e},
-                )
+                if e.response.get("Error", {}).get("Code") == "NoSuchTagSet":
+                    LOGGER.debug(
+                        "%(name)s/%(bucket_name)s: No tags set",
+                        {"name": self.name, "bucket_name": bucket_name},
+                    )
+                else:
+                    LOGGER.warning(
+                        "%(name)s/%(bucket_name)s: Cannot read the tags: %(error)s",
+                        {"name": self.name, "bucket_name": bucket_name, "error": e},
+                    )
                 response = {}
 
             tagging = self._get_response_content(response, "TagSet")

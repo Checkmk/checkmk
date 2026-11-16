@@ -614,11 +614,11 @@ class AWSSectionCloudwatch(AWSSection):
         if not metric_specs:
             return []
 
-        # A single GetMetricData call can include up to 100 MetricDataQuery structures
+        # A single GetMetricData call can include up to 500 MetricDataQuery structures
         # There's no pagination for this operation:
         # self._client.can_paginate('get_metric_data') = False
         raw_content = []
-        for chunk in chunks(metric_specs):
+        for chunk in chunks(metric_specs, length=500):
             if not chunk:
                 continue
             response = self._client.get_metric_data(  # type: ignore[attr-defined]

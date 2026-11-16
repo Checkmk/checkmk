@@ -1,4 +1,4 @@
-title: FortiGate Firewall Cluster Monitoring: Memory
+title: Fortinet FortiGate: Cluster Node Memory
 agents: snmp
 catalog: hw/network/fortinet
 license: GPLv2

@@ -1,4 +1,4 @@
-title: FortiGate WiFi Access Points: Connection
+title: Fortinet FortiGate: Access Point Connections
 agents: snmp
 catalog: hw/network/fortinet
 license: GPLv2

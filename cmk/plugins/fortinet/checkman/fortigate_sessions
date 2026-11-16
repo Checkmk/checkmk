@@ -1,4 +1,4 @@
-title: FortiGate Firewalls: Current Number of Sessions
+title: Fortinet FortiGate: Sessions via FORTINET-MIB-280
 agents: snmp
 catalog: hw/network/fortinet
 license: GPLv2

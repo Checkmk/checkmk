@@ -1,4 +1,4 @@
-title: FortiGate Firewalls: Status of SSL VPN Tunnels
+title: Fortinet FortiGate: SSL VPN Tunnels
 agents: snmp
 catalog: hw/network/fortinet
 license: GPLv2

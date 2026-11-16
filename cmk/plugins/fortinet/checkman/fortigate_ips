@@ -1,4 +1,4 @@
-title: Fortinet FortiGate IPS: Detection and Blocking rate
+title: Fortinet FortiGate: IPS Detection and Blocking Rate
 agents: snmp
 catalog: hw/network/fortinet
 license: GPLv2

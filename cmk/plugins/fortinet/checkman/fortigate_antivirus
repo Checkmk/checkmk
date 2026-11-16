@@ -1,4 +1,4 @@
-title: Fortinet FortiGate AntiVirus: Detection and Blocking rate
+title: Fortinet FortiGate: Antivirus Detection and Blocking Rate
 agents: snmp
 catalog: hw/network/fortinet
 license: GPLv2

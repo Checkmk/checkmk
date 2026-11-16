@@ -1,4 +1,4 @@
-title: Fortinet WLAN Controller APs: Number of Wifi Access Points
+title: Fortinet Wireless Controller: Access Points
 agents: snmp
 catalog: hw/network/fortinet
 license: GPLv2

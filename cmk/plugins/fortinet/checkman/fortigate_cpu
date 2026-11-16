@@ -1,4 +1,4 @@
-title: FortiGate Firewalls: CPU Utilization
+title: Fortinet FortiGate: CPU Utilization via FORTINET-MIB-280
 agents: snmp
 catalog: hw/network/fortinet
 license: GPLv2

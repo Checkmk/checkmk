@@ -1,4 +1,4 @@
-title: Fortinet FortiMail: CPU load
+title: Fortinet FortiMail: CPU Load
 agents: snmp
 catalog: hw/network/fortinet
 license: GPLv2

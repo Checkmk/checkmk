@@ -1,4 +1,4 @@
-title: FortiGate Firewalls: RAM Usage
+title: Fortinet FortiGate: Memory via FORTINET-MIB-280
 agents: snmp
 catalog: hw/network/fortinet
 license: GPLv2

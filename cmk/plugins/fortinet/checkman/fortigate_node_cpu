@@ -1,4 +1,4 @@
-title: FortiGate Firewall Cluster Monitoring: CPU
+title: Fortinet FortiGate: Cluster Node CPU
 agents: snmp
 catalog: hw/network/fortinet
 license: GPLv2

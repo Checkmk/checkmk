@@ -1,4 +1,4 @@
-title: FortiGate Firewall Cluster Monitoring: Sessions
+title: Fortinet FortiGate: Cluster Node Sessions
 agents: snmp
 catalog: hw/network/fortinet
 license: GPLv2

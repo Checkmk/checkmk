@@ -1,4 +1,4 @@
-title: Sophos Device: CPU Usage
+title: Sophos: CPU Utilization
 agents: snmp
 catalog: hw/network/sophos
 license: GPLv2

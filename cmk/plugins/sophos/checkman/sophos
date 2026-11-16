@@ -1,4 +1,4 @@
-title: Sophos Email Appliance: Module States
+title: Sophos: Email Appliance Module States
 agents: snmp
 catalog: hw/mail/sophos
 license: GPLv2

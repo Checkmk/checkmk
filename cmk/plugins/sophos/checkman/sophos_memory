@@ -1,4 +1,4 @@
-title: Sophos Device: Memory Usage
+title: Sophos: Memory Usage
 agents: snmp
 catalog: hw/network/sophos
 license: GPLv2

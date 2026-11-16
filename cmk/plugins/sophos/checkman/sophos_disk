@@ -1,4 +1,4 @@
-title: Sophos Device: Disk Usage
+title: Sophos: Disk Usage
 agents: snmp
 catalog: hw/network/sophos
 license: GPLv2

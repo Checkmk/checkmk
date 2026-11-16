@@ -150,7 +150,6 @@ def test_logging_defaults_to_production_exclusion_config() -> None:
     checker = LoggingNamedPlaceholderChecker(
         file_path=Path("/repo/foo.py"),
         repo_root=Path("/repo"),
-        source_code=_POSITIONAL_LOG_CALL,
     )
     assert checker._excluded_prefixes is _EXCLUDED_PREFIXES  # noqa: SLF001
     assert checker._included_paths is _INCLUDED_PATHS  # noqa: SLF001

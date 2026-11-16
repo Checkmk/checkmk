@@ -28,7 +28,7 @@ def run_checkers(
 ) -> list[CheckerError]:
     """Run multiple checkers on a Python file.
 
-    Each factory is called with ``(file_path, repo_root, source_code)``
+    Each factory is called with ``(file_path, repo_root)``
     to produce a checker instance.  Plain checker classes work as factories;
     use ``functools.partial`` to pre-bind extra parameters.
 
@@ -71,7 +71,7 @@ def run_checkers(
     ran_checker_ids: set[str] = set()
     used_suppressions: set[Suppression] = set()
     for factory in checker_factories:
-        checker = factory(file_path, repo_root, source_code)
+        checker = factory(file_path, repo_root)
         all_errors.extend(checker.check(tree, suppressions))
         ran_checker_ids.add(checker.checker_id)
         used_suppressions |= checker.used_suppressions

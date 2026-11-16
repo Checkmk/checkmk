@@ -59,12 +59,11 @@ class LoggingFormatterChecker(ASTVisitorChecker):
         self,
         file_path: Path,
         repo_root: Path,
-        source_code: str,
         *,
         excluded_globs: Sequence[str] = _EXCLUDED_GLOBS,
         included_globs: Sequence[str] = _INCLUDED_GLOBS,
     ) -> None:
-        super().__init__(file_path, repo_root, source_code)
+        super().__init__(file_path, repo_root)
         self._excluded_globs = excluded_globs
         self._included_globs = included_globs
         self._module_name = str(compute_module_name(file_path, repo_root))

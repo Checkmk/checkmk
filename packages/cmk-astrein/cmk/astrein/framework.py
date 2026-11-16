@@ -31,11 +31,9 @@ class ASTVisitorChecker(ast.NodeVisitor):
     summary: ClassVar[str]
     """One-line description of what the checker enforces."""
 
-    def __init__(self, file_path: Path, repo_root: Path, source_code: str):
+    def __init__(self, file_path: Path, repo_root: Path):
         self.file_path = file_path
         self.repo_root = repo_root
-        self.source_code = source_code
-        self.source_lines = source_code.splitlines()
         self.errors: list[CheckerError] = []
         self.suppressions: Sequence[Suppression] = []
         self.used_suppressions: set[Suppression] = set()
@@ -72,4 +70,4 @@ class ASTVisitorChecker(ast.NodeVisitor):
 #: A callable that creates a checker for a given file.
 #: Checker classes satisfy this directly; use ``functools.partial`` to bind
 #: extra arguments (e.g. a pre-loaded config) before passing to ``run_checkers``.
-CheckerFactory = Callable[[Path, Path, str], ASTVisitorChecker]
+CheckerFactory = Callable[[Path, Path], ASTVisitorChecker]

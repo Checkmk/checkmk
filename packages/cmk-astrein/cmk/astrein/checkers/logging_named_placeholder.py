@@ -58,12 +58,11 @@ class LoggingNamedPlaceholderChecker(ASTVisitorChecker):
         self,
         file_path: Path,
         repo_root: Path,
-        source_code: str,
         *,
         excluded_prefixes: Sequence[str] = _EXCLUDED_PREFIXES,
         included_paths: Sequence[str] = _INCLUDED_PATHS,
     ) -> None:
-        super().__init__(file_path, repo_root, source_code)
+        super().__init__(file_path, repo_root)
         self._excluded_prefixes = excluded_prefixes
         self._included_paths = included_paths
 

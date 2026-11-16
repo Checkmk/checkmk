@@ -52,7 +52,7 @@ def module_config(repo_root: Path) -> ModuleLayersConfig:
 def make_checker(repo_root: Path, module_config: ModuleLayersConfig) -> _MakeChecker:
     def _make(file_path: str) -> ModuleLayersChecker:
         full_path = repo_root / file_path
-        return ModuleLayersChecker(full_path, repo_root, "", config=module_config)
+        return ModuleLayersChecker(full_path, repo_root, config=module_config)
 
     return _make
 

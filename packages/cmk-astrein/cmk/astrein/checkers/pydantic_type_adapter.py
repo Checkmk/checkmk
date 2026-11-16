@@ -16,8 +16,8 @@ class PydanticTypeAdapterChecker(ASTVisitorChecker):
     checker_id = "pydantic-type-adapter"
     summary = "Flags TypeAdapter() construction inside functions"
 
-    def __init__(self, file_path: Path, repo_root: Path, source_code: str) -> None:
-        super().__init__(file_path, repo_root, source_code)
+    def __init__(self, file_path: Path, repo_root: Path) -> None:
+        super().__init__(file_path, repo_root)
         self._function_depth = 0
 
     @override

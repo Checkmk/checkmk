@@ -33,10 +33,9 @@ class ModuleLayersChecker(ASTVisitorChecker):
         self,
         file_path: Path,
         repo_root: Path,
-        source_code: str,
         config: ModuleLayersConfig,
     ):
-        super().__init__(file_path, repo_root, source_code)
+        super().__init__(file_path, repo_root)
 
         self._config = config
 

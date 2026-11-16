@@ -110,11 +110,10 @@ class HTTPStatusLiteralChecker(ASTVisitorChecker):
         self,
         file_path: Path,
         repo_root: Path,
-        source_code: str,
         *,
         legacy_python_files: frozenset[PurePosixPath],
     ) -> None:
-        super().__init__(file_path, repo_root, source_code)
+        super().__init__(file_path, repo_root)
         self._legacy_python_files = legacy_python_files
         self._imported_names = ImportedNames()
 

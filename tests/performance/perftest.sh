@@ -23,20 +23,16 @@ if [ -n "${CI}" ]; then
     "${SCRIPT_DIR}/perftest_plot.py" --update --branch-version="${BRANCH}" \
         --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net --require-database \
         --validate-baselines --warn-only || exit 200
-    if [[ "$(date '+%Y-%m-%d')" > "2025-12-01" ]]; then
-        # check monthly baseline
-        "${SCRIPT_DIR}/perftest_plot.py" --branch-version="${BRANCH}" \
-            --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net --require-database \
-            --validate-baselines --warn-only \
-            --skip-filesystem-writes --skip-database-writes --baseline-offset=30 || exit 200
-    fi
-    if [[ "$(date '+%Y-%m-%d')" > "2026-11-01" ]]; then
-        # check yearly baseline
-        "${SCRIPT_DIR}/perftest_plot.py" --branch-version="${BRANCH}" \
-            --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net --require-database \
-            --validate-baselines --warn-only \
-            --skip-filesystem-writes --skip-database-writes --baseline-offset=365 || exit 200
-    fi
+    # check monthly baseline
+    "${SCRIPT_DIR}/perftest_plot.py" --branch-version="${BRANCH}" \
+        --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net --require-database \
+        --validate-baselines --warn-only \
+        --skip-filesystem-writes --skip-database-writes --baseline-offset=30 || exit 200
+    # check yearly baseline
+    "${SCRIPT_DIR}/perftest_plot.py" --branch-version="${BRANCH}" \
+        --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net --require-database \
+        --validate-baselines --warn-only \
+        --skip-filesystem-writes --skip-database-writes --baseline-offset=365 || exit 200
 fi
 echo "ROOT_DIR=${ROOT_DIR}"
 exit "$RC"

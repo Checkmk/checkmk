@@ -1,4 +1,4 @@
-title: Aruba Switch: 2930M Power Supply Status
+title: Aruba: 2930M Power Supplies
 agents: snmp
 catalog: hw/network/aruba
 license: GPLv2

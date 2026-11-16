@@ -361,9 +361,19 @@ def test_monitoring_page_load(
     fake_remote_shape: EstateShape,
     track_system_resources: None,
     page: Page,
+    pytestconfig: pytest.Config,
 ) -> None:
     """Time a first page load of each page against a real site."""
-    _measure(benchmark, site_probe, page, "load", monitoring_fleet, fake_remote_shape, central_site)
+    _measure(
+        benchmark,
+        site_probe,
+        page,
+        "load",
+        monitoring_fleet,
+        fake_remote_shape,
+        central_site,
+        pytestconfig,
+    )
 
 
 @pytest.mark.parametrize("page", PAGES, ids=lambda page: page.id)
@@ -375,10 +385,18 @@ def test_monitoring_page_refresh(
     fake_remote_shape: EstateShape,
     track_system_resources: None,
     page: Page,
+    pytestconfig: pytest.Config,
 ) -> None:
     """Time what the page repeats on its refresh timer, which is what an open tab costs."""
     _measure(
-        benchmark, site_probe, page, "refresh", monitoring_fleet, fake_remote_shape, central_site
+        benchmark,
+        site_probe,
+        page,
+        "refresh",
+        monitoring_fleet,
+        fake_remote_shape,
+        central_site,
+        pytestconfig,
     )
 
 
@@ -390,6 +408,7 @@ def _measure(
     fleet: Sequence[str],
     shape: EstateShape,
     site: Site,
+    pytestconfig: pytest.Config,
 ) -> None:
     requests_ = page.load if phase == "load" else page.poll
     started = time()
@@ -399,7 +418,9 @@ def _measure(
     benchmark.pedantic(  # type: ignore[no-untyped-call]
         probe.run,
         args=[requests_],
-        rounds=5,
+        # Most of these pages answer in well under a second, where a single slow round moves
+        # a 5-round mean by tens of percent. 20 rounds still take only seconds per page.
+        rounds=val if isinstance(val := pytestconfig.getoption("rounds"), int) else 20,
         iterations=1,
         warmup_rounds=1,
     )

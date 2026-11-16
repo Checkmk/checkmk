@@ -6,7 +6,7 @@
 
 from argparse import Namespace as Args
 from collections.abc import Collection, Mapping, Sequence
-from typing import Protocol
+from typing import override, Protocol
 
 import pytest
 
@@ -123,6 +123,51 @@ class FakeEC2Client:
             "SpotFleetRequestConfigs": EC2DescribeSpotFleetRequestsIB.create_instances(amount=3),
             "NextToken": "string",
         }
+
+
+class CountingEC2Client(FakeEC2Client):
+    def __init__(self, has_instances: bool) -> None:
+        super().__init__()
+        self._has_instances = has_instances
+        self.instance_descriptions = 0
+
+    @override
+    def describe_instances(
+        self,
+        InstanceIds: object = None,
+        Filters: object = None,
+    ) -> Mapping[str, object]:
+        self.instance_descriptions += 1
+        if not self._has_instances:
+            return {"Reservations": []}
+        return super().describe_instances(InstanceIds, Filters)
+
+
+@pytest.mark.parametrize(
+    "names, has_instances",
+    [
+        pytest.param(None, True, id="no filter"),
+        pytest.param(["InstanceId-0"], False, id="name filter, no instances"),
+    ],
+)
+def test_ec2_summary_does_not_describe_instances_again_after_limits(
+    names: list[str] | None, has_instances: bool
+) -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("ec2_names", names)
+    config.add_service_tags("ec2_tags", (None, None))
+    client = CountingEC2Client(has_instances)
+    distributor = ResultDistributor()
+    ec2_limits = EC2Limits(client, "region", config, distributor, FakeServiceQuotasClient())
+    ec2_summary = EC2Summary(client, "region", config, distributor)
+    distributor.add(ec2_limits.name, ec2_summary)
+
+    ec2_limits.run()
+    ec2_summary.run()
+
+    assert client.instance_descriptions == 1
 
 
 EC2SectionsOut = tuple[EC2Limits, EC2Summary, EC2SecurityGroups, EC2]

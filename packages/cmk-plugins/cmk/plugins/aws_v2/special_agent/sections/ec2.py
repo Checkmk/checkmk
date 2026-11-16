@@ -400,10 +400,7 @@ class EC2Summary(AWSSection):
 
     @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("ec2_limits")
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents([], 0.0)
+        return self._received_inventory("ec2_limits")
 
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]] | None:
@@ -413,12 +410,12 @@ class EC2Summary(AWSSection):
         if self._tags is not None:
             return self._fetch_instances_filtered_by_tags(colleague_contents.content)
 
-        return self._fetch_instances_without_filter()
+        return self._fetch_instances_without_filter(colleague_contents.content)
 
     def _fetch_instances_filtered_by_names(
-        self, col_reservations: Sequence[dict]
+        self, col_reservations: Sequence[dict] | None
     ) -> Sequence[Mapping[str, object]]:
-        if col_reservations:
+        if col_reservations is not None:
             instances = [
                 inst
                 for res in col_reservations
@@ -435,9 +432,9 @@ class EC2Summary(AWSSection):
         return instances
 
     def _fetch_instances_filtered_by_tags(
-        self, col_reservations: list
+        self, col_reservations: list | None
     ) -> list[Mapping[str, object]] | None:
-        if col_reservations:
+        if col_reservations is not None:
             tags = self.prepare_tags_for_api_response(self._tags)
             return (
                 [
@@ -465,13 +462,13 @@ class EC2Summary(AWSSection):
             )
         return instances
 
-    def _fetch_instances_without_filter(self) -> Sequence[Mapping[str, object]]:
-        response = self._client.describe_instances()  # type: ignore[attr-defined]
-        return [
-            inst
-            for res in self._get_response_content(response, "Reservations")
-            for inst in res["Instances"]
-        ]
+    def _fetch_instances_without_filter(
+        self, col_reservations: Sequence[dict] | None
+    ) -> Sequence[Mapping[str, object]]:
+        if col_reservations is None:
+            response = self._client.describe_instances()  # type: ignore[attr-defined]
+            col_reservations = self._get_response_content(response, "Reservations")
+        return [inst for res in col_reservations for inst in res["Instances"]]
 
     @override
     def _compute_content(

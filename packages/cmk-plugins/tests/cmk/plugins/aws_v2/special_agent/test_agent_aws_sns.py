@@ -180,6 +180,32 @@ def test_sns_summary_does_not_list_topics_again_when_limits_found_none() -> None
     assert client.paginated_operations.count("list_topics") == 1
 
 
+class CountingTaggingClient:
+    def __init__(self) -> None:
+        self.tag_listings = 0
+
+    def get_paginator(self, operation_name: str) -> TaggingPaginator:
+        assert operation_name == "get_resources"
+        self.tag_listings += 1
+        return TaggingPaginator()
+
+
+def test_sns_summary_does_not_fetch_tags_without_topics() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("sns_names", None)
+    config.add_service_tags("sns_tags", (None, None))
+    client = FakeSNSClient(n_std_topics=0, n_fifo_topics=0, n_subs=0)
+    tagging_client = CountingTaggingClient()
+    fetcher = SNSTopicsFetcher(client, tagging_client, "region", config)
+    sns_summary = SNSSummary(client, "region", config, fetcher)
+
+    sns_summary.run()
+
+    assert tagging_client.tag_listings == 0
+
+
 SNSSectionsOut = tuple[SNSSummary, SNSSMS, SNS, SNSTopicCloudwatch]
 
 

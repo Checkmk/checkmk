@@ -223,6 +223,41 @@ class FakeTaggingClient:
         raise NotImplementedError
 
 
+class EmptyPaginator:
+    def paginate(self, *args: object, **kwargs: object) -> Iterator[Mapping[str, object]]:  # noqa: ARG002
+        yield {"DistributionList": {}}
+
+
+class FakeEmptyCloudFrontClient:
+    def get_paginator(self, operation_name: str) -> EmptyPaginator:
+        assert operation_name == "list_distributions"
+        return EmptyPaginator()
+
+
+class CountingTaggingClient:
+    def __init__(self) -> None:
+        self.tag_listings = 0
+
+    def get_paginator(self, operation_name: str) -> TaggingPaginator:
+        assert operation_name == "get_resources"
+        self.tag_listings += 1
+        return TaggingPaginator()
+
+
+def test_cloudfront_summary_does_not_fetch_tags_without_distributions() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("cloudfront_names", None)
+    config.add_service_tags("cloudfront_tags", (None, None))
+    tagging_client = CountingTaggingClient()
+    summary = CloudFrontSummary(FakeEmptyCloudFrontClient(), tagging_client, "us-east-1", config)
+
+    summary.run()
+
+    assert tagging_client.tag_listings == 0
+
+
 CloudFrontSectionsOut = tuple[CloudFrontSummary, CloudFront]
 
 

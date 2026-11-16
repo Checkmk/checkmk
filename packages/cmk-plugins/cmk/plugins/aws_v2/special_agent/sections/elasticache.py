@@ -305,6 +305,8 @@ class ElastiCacheSummary(AWSSection):
     ) -> tuple[Sequence[Mapping[str, object]], Sequence[Mapping[str, object]]]:
         (colleague_contents,) = args
         clusters, nodes = self._fetch_data(colleague_contents.content)
+        if not clusters:
+            return [], []
 
         resource_tags = fetch_resource_tags_from_types(
             self._tagging_client, ["elasticache:replicationgroup"]

@@ -69,16 +69,18 @@ class CloudFrontSummary(AWSSection):
     @override
     def get_live_data(self, *args):
         distributions = []
-
-        resource_tags = fetch_resource_tags_from_types(
-            self._tagging_client, ["cloudfront:distribution"]
-        )
-
         for page in self._client.get_paginator("list_distributions").paginate():
             fetched_distributions = self._get_response_content(
                 page, "DistributionList", dflt={}
             ).get("Items", [])
             distributions.extend(fetched_distributions)
+
+        if not distributions:
+            return []
+
+        resource_tags = fetch_resource_tags_from_types(
+            self._tagging_client, ["cloudfront:distribution"]
+        )
 
         for distribution in distributions:
             distribution["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(

@@ -235,6 +235,9 @@ class SNSSummary(AWSSection):
         else:
             topics_arn = [topic.to_arn() for topic in self._sns_topics_fetcher.fetch_all_topics()]
 
+        if not topics_arn:
+            return []
+
         tags = self._sns_topics_fetcher.fetch_all_topic_tags()
         filtered_topics = self._sns_topics_fetcher.filter_topics(topics_arn, tags)
 

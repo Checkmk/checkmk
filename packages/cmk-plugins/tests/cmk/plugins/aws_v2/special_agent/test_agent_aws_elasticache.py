@@ -343,6 +343,30 @@ class FakeTaggingClient:
         raise NotImplementedError
 
 
+class CountingTaggingClient:
+    def __init__(self) -> None:
+        self.tag_listings = 0
+
+    def get_paginator(self, operation_name: str) -> TaggingPaginator:
+        assert operation_name == "get_resources"
+        self.tag_listings += 1
+        return TaggingPaginator()
+
+
+def test_elasticache_summary_does_not_fetch_tags_without_clusters() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
+    config.add_single_service_config("elasticache_names", None)
+    config.add_service_tags("elasticache_tags", (None, None))
+    tagging_client = CountingTaggingClient()
+    summary = ElastiCacheSummary(FakeElastiCacheClient([]), tagging_client, "region", config)
+
+    summary.run()
+
+    assert tagging_client.tag_listings == 0
+
+
 ElasticacheSectionsOut = tuple[ElastiCacheLimits, ElastiCacheSummary, ElastiCache]
 
 

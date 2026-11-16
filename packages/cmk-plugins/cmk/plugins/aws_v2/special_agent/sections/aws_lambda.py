@@ -153,11 +153,10 @@ class LambdaSummary(AWSSection):
         functions = []
         for page in self._client.get_paginator("list_functions").paginate():
             for function in self._get_response_content(page, "Functions"):
+                if self._names is not None and function.get("FunctionName") not in self._names:
+                    continue
                 tags = self._get_tagging_for(function.get("FunctionArn"))
-                if (
-                    self._names is None
-                    or (self._names and function.get("FunctionName") in self._names)
-                ) and (self._tags is None or self._tags and self._matches_tag_conditions(tags)):
+                if self._tags is None or self._tags and self._matches_tag_conditions(tags):
                     function["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(tags)
                     functions.append(function)
         return functions

@@ -91,6 +91,16 @@ class FakeLambdaClient:
         }
 
 
+class TagRecordingLambdaClient(FakeLambdaClient):
+    def __init__(self) -> None:
+        self.tagged_resources: list[str] = []
+
+    @override
+    def list_tags(self, Resource: str) -> Mapping[str, Mapping[Entity, Entity]]:
+        self.tagged_resources.append(Resource)
+        return super().list_tags(Resource)
+
+
 def create_config(
     names: Sequence[str] | None, tags: OverallTags, tag_import: TagsOption
 ) -> AWSConfig:
@@ -129,6 +139,18 @@ def get_lambda_sections(
         create_config(names, tags, tag_import),
         distributor,
     )
+
+
+def test_lambda_summary_fetches_tags_only_of_the_named_functions() -> None:
+    client = TagRecordingLambdaClient()
+    config = create_config(["FunctionName-0"], (None, None), TagsImportPatternOption.import_all)
+    lambda_summary = LambdaSummary(client, "region", config)
+
+    lambda_summary.run()
+
+    assert client.tagged_resources == [
+        "arn:aws:lambda:eu-central-1:123456789:function:FunctionName-0"
+    ]
 
 
 no_tags_or_names_params = [

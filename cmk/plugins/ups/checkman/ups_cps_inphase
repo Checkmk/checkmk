@@ -1,4 +1,4 @@
-title: CPS UPS Device: Input Phase
+title: CyberPower UPS: Input Phases
 agents: snmp
 catalog: hw/power/cps
 license: GPLv2

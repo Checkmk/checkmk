@@ -1,4 +1,4 @@
-title: Generic UPS Device: Input Voltage
+title: UPS: Input Voltage via SNMP
 agents: snmp
 catalog: hw/power/generic
 license: GPLv2

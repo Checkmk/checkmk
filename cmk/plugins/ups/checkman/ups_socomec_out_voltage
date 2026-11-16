@@ -1,4 +1,4 @@
-title: Socomec UPS Device: Output Voltage
+title: Socomec: Output Voltage
 agents: snmp
 catalog: hw/power/socomec
 license: GPLv2

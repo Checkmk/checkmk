@@ -1,4 +1,4 @@
-title: Eaton UPS Devices: Temperature and Humidity Sensors
+title: Eaton UPS: Temperature and Humidity
 agents: snmp
 catalog: hw/environment/eaton
 license: GPLv2

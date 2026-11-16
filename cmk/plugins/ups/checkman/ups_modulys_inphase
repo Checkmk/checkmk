@@ -1,4 +1,4 @@
-title: Socomec Modulys UPS Device: Input Phases
+title: Socomec Modulys: Input Phases
 agents: snmp
 catalog: hw/power/socomec
 license: GPLv2

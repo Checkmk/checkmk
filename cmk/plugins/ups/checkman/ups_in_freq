@@ -1,4 +1,4 @@
-title: Generic UPS Device: In Frequency
+title: UPS: Input Frequency via SNMP
 agents: snmp
 catalog: hw/power/generic
 license: GPLv2

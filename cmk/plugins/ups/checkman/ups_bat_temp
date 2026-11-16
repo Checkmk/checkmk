@@ -1,4 +1,4 @@
-title: Generic UPS Device: Temperature Sensor
+title: UPS: Battery Temperature via SNMP
 agents: snmp
 catalog: hw/power/generic
 license: GPLv2

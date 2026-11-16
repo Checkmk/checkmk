@@ -1,4 +1,4 @@
-title: CPS UPS Device: Remaining Battery Capacity
+title: CyberPower UPS: Battery Temperature
 agents: snmp
 catalog: hw/power/cps
 license: GPLv2

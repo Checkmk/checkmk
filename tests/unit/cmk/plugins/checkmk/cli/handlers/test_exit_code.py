@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.plugins.checkmk.cli.exit_code import state_exit_code
+from cmk.plugins.checkmk.cli.handlers._exit_code import state_exit_code
 
 
 @pytest.mark.parametrize(

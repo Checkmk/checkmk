@@ -19,7 +19,6 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:snmplib",
-        "//packages/cmk-check-engine:specs",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",

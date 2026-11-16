@@ -67,12 +67,13 @@ from cmk.plugins.checkmk.cli.discovery import (
     cli_command_discover,
     DiscoverRequest,
 )
-from cmk.plugins.checkmk.cli.exit_code import state_exit_code
 from cmk.plugins.checkmk.cli.options import host_address, make_file_cache_options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
 from cmk.utils.log import console
+
+from ._exit_code import state_exit_code
 
 
 def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:

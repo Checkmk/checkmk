@@ -35,6 +35,7 @@ Options:
     --dbhost                 Database host (default: None).
     --dbport                 Database port (default: 5432).
     --require-database       Fail if the database can not be reached.
+    --product-release        The product release of the stored jobs.
     --validate-baselines     Whether to perform baseline validation.
     --alert-on-failure       Whether to alert on failed baseline validation.
     --warn-only              Report failed baseline validation without a non-zero exit code.
@@ -653,6 +654,7 @@ class PerformanceDb:
         job_name: str,
         job_starttime: Datetime,
         job_endtime: Datetime,
+        product_release: str,
         scenario_name: str,
         test_starttime: Datetime,
         test_endtime: Datetime,
@@ -669,6 +671,7 @@ class PerformanceDb:
             job_name (str): Name of the job.
             job_starttime (Datetime): Timestamp when the job started.
             job_endtime (Datetime): Timestamp when the job ended.
+            product_release (str): Product release the job measured.
             scenario_name (str): Name of the test scenario.
             test_starttime (Datetime): Timestamp when the test started.
             test_endtime (Datetime): Timestamp when the test ended.
@@ -687,7 +690,7 @@ class PerformanceDb:
             job_name=job_name,
             start_timestamp=job_starttime,
             end_timestamp=job_endtime,
-            product_release="",
+            product_release=product_release,
             system_name=str(machine_info.get("system", "")),
             system_release=str(machine_info.get("release", "")),
             system_machine=str(machine_info.get("machine", "")),
@@ -766,6 +769,7 @@ class PerftestPlotArgs(argparse.Namespace):
         edition (str): The default edition.
         update_db (bool): If True, update existing job data in the database.
         purge_db (bool): If True, delete existing job data from the database.
+        product_release (str): The product release of the stored jobs.
         baseline_offset (int): The offset for the baseline validation.
         cpu_tolerance (float): The tolerance level for the CPU baseline validation.
         mem_tolerance (float): The tolerance level for the memory baseline validation.
@@ -802,6 +806,7 @@ class PerftestPlotArgs(argparse.Namespace):
     edition: str
     update_db: bool
     purge_db: bool
+    product_release: str
     baseline_offset: int
     cpu_tolerance: float
     mem_tolerance: float
@@ -1517,23 +1522,32 @@ class PerftestPlot:
                     self.database.delete_job(job_name=job_name)
                 if self.purge_db:
                     continue
-                for scenario_name, performance_data in scenario_data.items():
-                    job_endtime = (
-                        Datetime.fromisoformat(str(_ts))
-                        if (_ts := benchmark_data.get("end_time", benchmark_data.get("datetime")))
-                        else Datetime.now()
+                new_scenario_data = {
+                    scenario_name: performance_data
+                    for scenario_name, performance_data in scenario_data.items()
+                    if performance_data
+                }
+                if not new_scenario_data:
+                    continue
+                job_endtime = (
+                    Datetime.fromisoformat(str(_ts))
+                    if (_ts := benchmark_data.get("end_time", benchmark_data.get("datetime")))
+                    else Datetime.now()
+                )
+                job_starttime = (
+                    Datetime.fromisoformat(str(_ts))
+                    if (_ts := benchmark_data.get("start_time"))
+                    else min(
+                        Datetime.fromisoformat(str(performance_data[0].get("time", "")))
+                        for performance_data in new_scenario_data.values()
                     )
-                    job_starttime = (
-                        Datetime.fromisoformat(str(_ts))
-                        if (_ts := benchmark_data.get("start_time"))
-                        else job_endtime
-                    )
-                    if not performance_data:
-                        continue
+                )
+                for scenario_name, performance_data in new_scenario_data.items():
                     self.database.write_scenario_data(
                         job_name=job_name,
                         job_starttime=job_starttime,
                         job_endtime=job_endtime,
+                        product_release=self.args.product_release,
                         scenario_name=scenario_name,
                         test_starttime=Datetime.fromisoformat(
                             str(performance_data[0].get("time", ""))
@@ -2048,6 +2062,13 @@ def parse_args() -> PerftestPlotArgs:
         type=bool,
         default=False,
         help="Specifies if the DB will be purged, if job data for a selected job exists already.",
+    )
+    parser.add_argument(
+        "--product-release",
+        dest="product_release",
+        type=str,
+        default="",
+        help="The product release of the stored jobs, e.g. 2.5.0-2026.11.16 (default: none).",
     )
     parser.add_argument(
         "--baseline-offset",

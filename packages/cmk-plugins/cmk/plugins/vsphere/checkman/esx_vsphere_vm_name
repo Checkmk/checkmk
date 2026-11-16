@@ -1,4 +1,4 @@
-title: Virtual Machine under ESX: Name of the VM
+title: VMware ESXi: VM Name
 agents: vsphere
 catalog: os/misc
 license: GPLv2

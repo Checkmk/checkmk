@@ -1,4 +1,4 @@
-title: Virtual Machine under ESX: Snapshot Settings
+title: VMware ESXi: VM Snapshots Summary
 agents: vsphere
 catalog: os/kernel
 license: GPLv2

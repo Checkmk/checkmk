@@ -1,4 +1,4 @@
-title: VMware ESX: Number of Virtualmachnies and Hostssystems
+title: VMware ESXi: Number of VMs and Hosts
 agents: vsphere
 catalog: os/misc
 license: GPLv2

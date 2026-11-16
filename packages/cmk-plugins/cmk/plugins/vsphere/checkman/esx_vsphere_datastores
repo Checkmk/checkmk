@@ -1,4 +1,4 @@
-title: VMware ESX Host Systems: Used Space
+title: VMware ESXi: Datastore Used Space
 agents: vsphere
 catalog: os/storage
 license: GPLv2

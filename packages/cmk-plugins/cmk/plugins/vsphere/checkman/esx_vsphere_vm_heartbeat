@@ -1,4 +1,4 @@
-title: Virtual Machine under ESX: Heartbeat
+title: VMware ESXi: VM Heartbeat
 agents: vsphere
 catalog: os/ps
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Virtual Machine under ESX: Guest Tools Version Status
+title: VMware ESXi: VM Guest Tools
 agents: vsphere
 catalog: os/ps
 license: GPLv2

@@ -13,8 +13,9 @@ from cmk.cli.engine.arguments import parse as cli_parse
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.arguments import ShowHelp as CLIShowHelp
 from cmk.cli.engine.commands import Commands as CLICommands
-from cmk.cli.engine.options import _GENERAL_OPTIONS as CLI_GENERAL_OPTIONS
+from cmk.cli.engine.options import ENGINE_OPTIONS as CLI_ENGINE_OPTIONS
 from cmk.cli.engine.options import GlobalOptions as CLIEngineGlobalOptions
+from cmk.cli.engine.options import HELP_OPTION as CLI_HELP_OPTION
 from cmk.cli.engine.options import Option as CLIOption
 from cmk.cli.engine.options import placeholder as cli_placeholder
 from cmk.cli.internal import Argument as CLIArgument
@@ -137,6 +138,9 @@ _DEFAULT: Final = command_with(
 )
 
 _COMMANDS: Final = CLICommands(commands=[_PLAIN, _OTHER_PLAIN, _WITH_ARGUMENT, _DEFAULT])
+
+
+_GENERAL_OPTIONS: Final = [option for option in CLI_ENGINE_OPTIONS if option is not CLI_HELP_OPTION]
 
 
 def _parse(argv: Sequence[str]) -> CLIRunCommand | CLIShowHelp | CLIInvalidArguments:
@@ -272,7 +276,7 @@ def test_the_rejection_names_the_program_as_it_was_called() -> None:
     assert "see `check_mk --help`" in parsed.message
 
 
-@pytest.mark.parametrize("option", CLI_GENERAL_OPTIONS, ids=lambda option: option.long)
+@pytest.mark.parametrize("option", _GENERAL_OPTIONS, ids=lambda option: option.long)
 def test_a_general_option_does_not_select_a_command(option: CLIOption) -> None:
     parsed = _parse(["cmk", *_general_option_argv(option), "myhost"])
 
@@ -280,7 +284,7 @@ def test_a_general_option_does_not_select_a_command(option: CLIOption) -> None:
     assert parsed.command is _DEFAULT
 
 
-@pytest.mark.parametrize("option", CLI_GENERAL_OPTIONS, ids=lambda option: option.long)
+@pytest.mark.parametrize("option", _GENERAL_OPTIONS, ids=lambda option: option.long)
 def test_a_general_option_is_handed_back_for_processing(option: CLIOption) -> None:
     parsed = _parse(["cmk", *_general_option_argv(option), "myhost"])
 

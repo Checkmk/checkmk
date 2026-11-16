@@ -1,4 +1,4 @@
-title: Intel True Fabric Scale Switches: Slot Temperature Sensors
+title: Intel True Scale Fabric Switches: Slot Temperature Sensors
 agents: snmp
 catalog: hw/network/intel
 license: GPLv2

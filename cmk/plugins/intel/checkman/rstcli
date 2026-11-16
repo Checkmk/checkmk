@@ -1,11 +1,11 @@
-title: Intel Rapid Storage Technologie: State of Raid Volumes
+title: Intel Rapid Storage Technology: RAID Volumes
 agents: windows
 catalog: os/storage
 license: GPLv2
 distribution: check_mk
 description:
  This check monitors the overall state of raid volumes set up
- through Intel Rapid Storage Technologie.
+ through Intel Rapid Storage Technology.
 
  Due to lack of documentation, this tool will only accept "Normal" as a healthy
  state, all others are treated as critical. Please let us know about other states

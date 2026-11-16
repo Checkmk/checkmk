@@ -1,4 +1,4 @@
-title: Intel True Fabric Scale Switches: Fans Status and Speed
+title: Intel True Scale Fabric Switches: Fan Status and Speed
 agents: snmp
 catalog: hw/network/intel
 license: GPLv2

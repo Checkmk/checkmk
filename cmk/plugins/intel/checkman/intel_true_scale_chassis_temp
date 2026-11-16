@@ -1,4 +1,4 @@
-title: Intel True Fabric Scale Switches: Chassis Temperature Status
+title: Intel True Scale Fabric Switches: Chassis Temperature Status
 agents: snmp
 catalog: hw/network/intel
 license: GPLv2

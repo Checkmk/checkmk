@@ -25,6 +25,7 @@ from cmk.livestatus_client.tables import (
 )
 from cmk.piggyback.backend import (
     get_piggybacked_host_with_sources,
+    PiggybackDataRemovedMessage,
     watch_new_messages,
 )
 from cmk.utils.paths import omd_root
@@ -120,16 +121,19 @@ def _command_track(
     """Track incoming piggyback messages.
 
     This command will print information about incoming piggyback messages to the console.
-    The format is `source -> piggybacked: size`.
+    The format is `source -> piggybacked: size`, or `removed` if the data was removed.
     One message is printed for each incoming message (these are the same events that trigger
     the piggyback-hub).
     """
     _write("Tracking incoming messages\n")
     try:
         for message in watch_new_messages(omd_root):
-            _write(
-                f"{message.meta.source} -> {message.meta.piggybacked}: {len(message.raw_data)} bytes\n"
-            )
+            if isinstance(message, PiggybackDataRemovedMessage):
+                _write(f"{message.source} -> {message.piggybacked}: removed\n")
+            else:
+                _write(
+                    f"{message.meta.source} -> {message.meta.piggybacked}: {len(message.raw_data)} bytes\n"
+                )
     except KeyboardInterrupt:
         _write("\nStopped tracking\n")
     return 0

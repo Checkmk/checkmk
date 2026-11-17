@@ -14,6 +14,7 @@ from ._storage import get_current_piggyback_sources_of_host as get_current_piggy
 from ._storage import get_messages_for as get_messages_for
 from ._storage import get_piggybacked_host_with_sources as get_piggybacked_host_with_sources
 from ._storage import move_for_host_rename as move_for_host_rename
+from ._storage import PiggybackDataRemovedMessage as PiggybackDataRemovedMessage
 from ._storage import PiggybackMessage as PiggybackMessage
 from ._storage import PiggybackMetaData as PiggybackMetaData
 from ._storage import remove_piggyback_raw_data as remove_piggyback_raw_data

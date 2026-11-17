@@ -18,6 +18,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.messaging import BindingKey, Channel, CMKConnectionError, DeliveryTag, RoutingKey
 from cmk.piggyback.backend import (
     get_messages_for,
+    PiggybackDataRemovedMessage,
     PiggybackMessage,
     remove_piggyback_raw_data,
     store_piggyback_raw_data,
@@ -130,7 +131,8 @@ class SendingPayloadProcess(multiprocessing.Process):
             while True:
                 with make_connection(self.omd_root, self.site, self.logger, self.task_name) as conn:
                     try:
-                        channel = conn.channel(PiggybackPayload)
+                        # one channel for both routes keeps removals in order with the payloads
+                        channel = conn.channel(PiggybackHubMessage)
                         if failed_message is not None:
                             # Retry in case the first time the channel was not available after make_connection
                             self._handle_message(channel, config, failed_message)
@@ -157,25 +159,36 @@ class SendingPayloadProcess(multiprocessing.Process):
 
     def _handle_message(
         self,
-        channel: Channel[PiggybackPayload],
+        channel: Channel[PiggybackHubMessage],
         config: PiggybackHubConfig,
-        message: PiggybackMessage,
+        message: PiggybackMessage | PiggybackDataRemovedMessage,
     ) -> None:
-        if (site_id := config.locations.get(message.meta.piggybacked, self.site)) == self.site:
+        if isinstance(message, PiggybackDataRemovedMessage):
+            source, piggybacked = message.source, message.piggybacked
+            hub_message = PiggybackHubMessage(
+                PiggybackPayloadRemoval(source_host=source, piggybacked_host=piggybacked)
+            )
+            routing = PAYLOAD_REMOVAL_ROUTE
+        else:
+            source, piggybacked = message.meta.source, message.meta.piggybacked
+            hub_message = PiggybackHubMessage(PiggybackPayload.from_message(message))
+            routing = PAYLOAD_ROUTE
+
+        if (site_id := config.locations.get(piggybacked, self.site)) == self.site:
             return
 
         self.logger.debug(
-            "%(task_name)s: from host '%(source)s' to host '%(piggybacked)s' on site '%(site)s'",
+            "%(task_name)s: %(routing)s from host '%(source)s' to host '%(piggybacked)s' "
+            "on site '%(site)s'",
             {
                 "task_name": self.task_name.title(),
-                "source": message.meta.source,
-                "piggybacked": message.meta.piggybacked,
+                "routing": routing.value,
+                "source": source,
+                "piggybacked": piggybacked,
                 "site": site_id,
             },
         )
-        channel.publish_for_site(
-            site_id, PiggybackPayload.from_message(message), routing=RoutingKey("payload")
-        )
+        channel.publish_for_site(site_id, hub_message, routing=routing)
 
     def _check_for_config_reload(self, current_config: PiggybackHubConfig) -> PiggybackHubConfig:
         if not self.reload_config.is_set():
@@ -213,7 +226,7 @@ def send_messages_oneshot(
                         "host": ",".join(payload.raw_data),  # it's only one.
                     },
                 )
-                channel.publish_for_site(site, payload, routing=RoutingKey("payload"))
+                channel.publish_for_site(site, payload, routing=PAYLOAD_ROUTE)
 
     except CMKConnectionError:
         logger.exception("Connection error: %(task_name)s", {"task_name": task_name})

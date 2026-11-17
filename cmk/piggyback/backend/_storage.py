@@ -57,6 +57,14 @@ class PiggybackMessage:
     raw_data: bytes
 
 
+@dataclass(frozen=True, kw_only=True)
+class PiggybackDataRemovedMessage:
+    """The source has no data for the piggybacked host anymore"""
+
+    source: HostName
+    piggybacked: HostName
+
+
 # ***** Terminology *****
 # "piggybacked_host_folder":
 # - tmp/check_mk/piggyback/HOST
@@ -75,10 +83,10 @@ class PiggybackMessage:
 # - Path(tmp/check_mk/piggyback_sources/SOURCE).name
 
 
-def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
-    """Yields piggyback messages as they come in."""
+def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage | PiggybackDataRemovedMessage]:
+    """Yields piggyback messages as they come in, and removals of piggyback data."""
 
-    host_folder_mask = Masks.MOVED_TO | Masks.DELETE_SELF
+    host_folder_mask = Masks.MOVED_TO | Masks.MOVED_FROM | Masks.DELETE_SELF
 
     with INotify() as inotify:
         watch_for_new_piggybacked_hosts = inotify.add_watch(
@@ -131,6 +139,17 @@ def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
 
             if event.type & Masks.DELETE_SELF:
                 inotify.rm_watch(event.watchee)
+                continue
+
+            # Only a source rename moves payload files away. Deletions (cleanup, manual) are not
+            # forwarded: each site expires its copies by its own maximum age.
+            if event.type & Masks.MOVED_FROM:
+                # payload files are written via hidden temporary files, which are no sources
+                if not event.name.startswith("."):
+                    yield PiggybackDataRemovedMessage(
+                        source=HostAddress(event.name),
+                        piggybacked=HostName(event.watchee.path.name),
+                    )
                 continue
 
             if message := _make_message_from_event(event, omd_root):

@@ -583,7 +583,10 @@ def test_watching_ignores_a_removed_file_without_a_host_name() -> None:
         stopped.set()
         remover.join()
 
-    assert [(m.meta.source, m.meta.piggybacked) for m in received] == [
+    assert [
+        (m.meta.source, m.meta.piggybacked) if isinstance(m, backend.PiggybackMessage) else m
+        for m in received
+    ] == [
         (source, _TEST_HOST_NAME),
         (source, _TEST_HOST_NAME),
     ]

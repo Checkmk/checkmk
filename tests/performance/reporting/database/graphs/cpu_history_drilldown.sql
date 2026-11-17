@@ -1,124 +1,60 @@
 -- CPU drilldown graph: for the selected {{product_release}} and single
--- {{scenario_name}}, plots average CPU usage per job and overlays fixed reference
--- baselines for releases 3.0.0/2.5.0/2.4.0/2.3.0 as extra columns. Each baseline
--- is the average of that release's 100 most recent measurements, skipping the
--- single most recent measurement (OFFSET 1) to avoid an in-progress or outlier build. The
--- per-job value and all baselines are divided by 100 for Metabase's percent
--- formatting, consistent with cpu_history.sql.
+-- {{scenario_name}}, plots average CPU usage per job and overlays fixed
+-- reference baselines for releases 3.0.0/2.5.0/2.4.0 as extra columns. Each
+-- baseline averages that release's 100 most recent jobs, skipping the most
+-- recent one (recency 1) to avoid an in-progress or outlier build. Each job's
+-- values are averaged first, so every build counts the same, however long it
+-- ran. The per-job value and all baselines are divided by 100 for Metabase's
+-- percent formatting, consistent with cpu_history.sql. Only the first run of a
+-- day counts for the baselines, not its reruns (_2, _3, ...).
 WITH
-  baseline300 AS (
+  job_values AS (
     SELECT
-      AVG(measured_value) AS baseline_cpu_usage
-    FROM
-      (
-        SELECT
-          m.measured_value
-        FROM
-          jobs j
-          JOIN tests t ON j.job_id = t.job_id
-          JOIN metrics m ON t.test_id = m.test_id
-          JOIN scenarios s ON t.scenario_id = s.scenario_id
-        WHERE
-          j.job_name LIKE '3.0.0-%'
-          AND m.metric_name = 'cpu_info.cpu_percent'
-          AND {{scenario_name}}
+      SPLIT_PART(j.job_name, '-', 1) AS release,
+      AVG(m.measured_value) AS job_cpu_usage,
+      ROW_NUMBER() OVER (
+        PARTITION BY
+          SPLIT_PART(j.job_name, '-', 1)
         ORDER BY
-          j.start_timestamp DESC
-        OFFSET
-          1
-        LIMIT
-          100
-      )
+          j.start_timestamp DESC,
+          j.job_id DESC
+      ) AS recency
+    FROM
+      jobs j
+      JOIN tests t ON j.job_id = t.job_id
+      JOIN metrics m ON t.test_id = m.test_id
+      JOIN scenarios s ON t.scenario_id = s.scenario_id
+    WHERE
+      m.metric_name = 'cpu_info.cpu_percent'
+      AND {{scenario_name}}
+      AND SPLIT_PART(j.job_name, '-', 1) IN ('3.0.0', '2.5.0', '2.4.0')
+      AND j.job_name !~ '_[0-9]+$'
+    GROUP BY
+      j.job_id
   ),
-  baseline250 AS (
+  baselines AS (
     SELECT
-      AVG(measured_value) AS baseline_cpu_usage
+      AVG(job_cpu_usage) FILTER (WHERE release = '3.0.0') AS baseline300,
+      AVG(job_cpu_usage) FILTER (WHERE release = '2.5.0') AS baseline250,
+      AVG(job_cpu_usage) FILTER (WHERE release = '2.4.0') AS baseline240
     FROM
-      (
-        SELECT
-          m.measured_value
-        FROM
-          jobs j
-          JOIN tests t ON j.job_id = t.job_id
-          JOIN metrics m ON t.test_id = m.test_id
-          JOIN scenarios s ON t.scenario_id = s.scenario_id
-        WHERE
-          j.job_name LIKE '2.5.0-%'
-          AND m.metric_name = 'cpu_info.cpu_percent'
-          AND {{scenario_name}}
-        ORDER BY
-          j.start_timestamp DESC
-        OFFSET
-          1
-        LIMIT
-          100
-      )
-  ),
-  baseline240 AS (
-    SELECT
-      AVG(measured_value) AS baseline_cpu_usage
-    FROM
-      (
-        SELECT
-          m.measured_value
-        FROM
-          jobs j
-          JOIN tests t ON j.job_id = t.job_id
-          JOIN metrics m ON t.test_id = m.test_id
-          JOIN scenarios s ON t.scenario_id = s.scenario_id
-        WHERE
-          j.job_name LIKE '2.4.0-%'
-          AND m.metric_name = 'cpu_info.cpu_percent'
-          AND {{scenario_name}}
-        ORDER BY
-          j.start_timestamp DESC
-        OFFSET
-          1
-        LIMIT
-          100
-      )
-  ),
-  baseline230 AS (
-    SELECT
-      AVG(measured_value) AS baseline_cpu_usage
-    FROM
-      (
-        SELECT
-          m.measured_value
-        FROM
-          jobs j
-          JOIN tests t ON j.job_id = t.job_id
-          JOIN metrics m ON t.test_id = m.test_id
-          JOIN scenarios s ON t.scenario_id = s.scenario_id
-        WHERE
-          j.job_name LIKE '2.3.0-%'
-          AND m.metric_name = 'cpu_info.cpu_percent'
-          AND {{scenario_name}}
-        ORDER BY
-          j.start_timestamp DESC
-        OFFSET
-          1
-        LIMIT
-          100
-      )
+      job_values
+    WHERE
+      recency BETWEEN 2 AND 101
   )
 SELECT
   j.job_name AS "Job Name",
   s.scenario_name AS "Scenario Name",
   AVG(m.measured_value) / 100 AS "average CPU usage (%)",
-  b300.baseline_cpu_usage / 100 AS "3.0.0 baseline CPU usage (%)",
-  b250.baseline_cpu_usage / 100 AS "2.5.0 baseline CPU usage (%)",
-  b240.baseline_cpu_usage / 100 AS "2.4.0 baseline CPU usage (%)",
-  b230.baseline_cpu_usage / 100 AS "2.3.0 baseline CPU usage (%)"
+  b.baseline300 / 100 AS "3.0.0 baseline CPU usage (%)",
+  b.baseline250 / 100 AS "2.5.0 baseline CPU usage (%)",
+  b.baseline240 / 100 AS "2.4.0 baseline CPU usage (%)"
 FROM
   jobs j
   JOIN tests t ON j.job_id = t.job_id
   JOIN metrics m ON t.test_id = m.test_id
   JOIN scenarios s ON t.scenario_id = s.scenario_id
-  CROSS JOIN baseline300 b300
-  CROSS JOIN baseline250 b250
-  CROSS JOIN baseline240 b240
-  CROSS JOIN baseline230 b230
+  CROSS JOIN baselines b
 WHERE
   j.job_name LIKE CONCAT({{product_release}}, '-%')
   AND j.start_timestamp >= now() - INTERVAL '6 months'
@@ -127,9 +63,8 @@ WHERE
 GROUP BY
   j.job_name,
   s.scenario_name,
-  b300.baseline_cpu_usage,
-  b250.baseline_cpu_usage,
-  b240.baseline_cpu_usage,
-  b230.baseline_cpu_usage
+  b.baseline300,
+  b.baseline250,
+  b.baseline240
 ORDER BY
   j.job_name ASC;

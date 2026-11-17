@@ -54,6 +54,7 @@ py_library(
         "//packages/cmk-plugin-apis:bakery",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-plugin-apis:inventory_ui",
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-wsgi",
     ],

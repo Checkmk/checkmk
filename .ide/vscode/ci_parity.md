@@ -14,6 +14,7 @@ Achieve the same outcome locally in the IDE as with Bazel in CI.
 | Broken         | Configured but not working correctly                                                               |
 | Not configured | No local IDE integration; only caught in CI                                                        |
 | Not evaluated  | No experience yet; needs investigation                                                             |
+| N/A            | Neither CI nor VSCode runs the tool                                                                |
 
 ## Python (.py)
 
@@ -76,13 +77,13 @@ Achieve the same outcome locally in the IDE as with Bazel in CI.
 
 ## C / C++ (.cc, .h, .cpp)
 
-| Task         | CI (Bazel)                     | Local (VSCode)                             | Parity         | Notes                                                                                                                                                                                                           |
-| ------------ | ------------------------------ | ------------------------------------------ | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Formatting   | clang-format                   | clangd extension (`vscode-clangd`) on save | Version risk   | clangd is pinned to the workspace `bazel_env` binary (`clangd.path = bazel-bin/bazel/tools/bazel_env/bin/clangd`). Build `bazel_env` once via the C++ profile so the path resolves.                             |
-| Linting      | clang-tidy (bazel lint aspect) | clangd in-editor diagnostics               | Match          | clangd is launched with `--clang-tidy` and reads `compile_commands.json` from the workspace root.                                                                                                               |
-| IWYU         | `--config=iwyu` (bazel)        | Not configured                             | Not configured |                                                                                                                                                                                                                 |
-| Intellisense | N/A                            | clangd                                     | Match          | clangd uses `compile_commands.json` regenerated via `CMK ▸ Cmd: Refresh C++ compile_commands.json` (`bazel build //bazel/tools:bazel_env && bazel run //:refresh_compile_commands`). No automatic regeneration. |
-| Testing      | `cc_test` via bazel            | CMK Tests Test Explorer (Bazel-driven)     | Match          | Discovers `cc_test` rules and shells out to `bazel test`, hermetic toolchain.                                                                                                                                   |
+| Task         | CI (Bazel)                     | Local (VSCode)                             | Parity       | Notes                                                                                                                                                                                                           |
+| ------------ | ------------------------------ | ------------------------------------------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Formatting   | clang-format                   | clangd extension (`vscode-clangd`) on save | Version risk | clangd is pinned to the workspace `bazel_env` binary (`clangd.path = bazel-bin/bazel/tools/bazel_env/bin/clangd`). Build `bazel_env` once via the C++ profile so the path resolves.                             |
+| Linting      | clang-tidy (bazel lint aspect) | clangd in-editor diagnostics               | Match        | clangd is launched with `--clang-tidy` and reads `compile_commands.json` from the workspace root.                                                                                                               |
+| IWYU         | Not run                        | Not configured                             | N/A          | Run `scripts/run-iwyu` locally, `scripts/install-iwyu.sh` installs IWYU.                                                                                                                                        |
+| Intellisense | N/A                            | clangd                                     | Match        | clangd uses `compile_commands.json` regenerated via `CMK ▸ Cmd: Refresh C++ compile_commands.json` (`bazel build //bazel/tools:bazel_env && bazel run //:refresh_compile_commands`). No automatic regeneration. |
+| Testing      | `cc_test` via bazel            | CMK Tests Test Explorer (Bazel-driven)     | Match        | Discovers `cc_test` rules and shells out to `bazel test`, hermetic toolchain.                                                                                                                                   |
 
 ## Shell (.sh)
 

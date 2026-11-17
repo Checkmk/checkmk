@@ -26,16 +26,11 @@ from cmk.plugins.checkmk.cli.handlers.maintenance import (
 )
 from cmk.ruleset_matcher.matcher import RuleSpec
 
+from ._context import context, OMD_ROOT
+
 _SHORT_MAX_AGE = 60
 _LONG_MAX_AGE = 7200
 
-_OMD_ROOT = Path("/omd/sites/mysite")
-
-_CONTEXT = CLIContext(
-    omd_root=_OMD_ROOT,
-    global_options=CLIGlobalOptions(),
-    logger=logging.getLogger(__name__),
-)
 
 _FAILURE = MKGeneralException("Cannot load the configuration")
 
@@ -54,7 +49,7 @@ class _FakeUpdateDNSCache:
 def test_the_dns_cache_is_updated_with_the_fake_address() -> None:
     update = _FakeUpdateDNSCache()
 
-    _UpdateDNSCacheCommand(update_dns_cache=update).run(_CONTEXT, HostAddress("127.0.0.1"))
+    _UpdateDNSCacheCommand(update_dns_cache=update).run(context(), HostAddress("127.0.0.1"))
 
     assert update.asked == [(HostAddress("127.0.0.1"), False)]
 
@@ -62,7 +57,7 @@ def test_the_dns_cache_is_updated_with_the_fake_address() -> None:
 def test_a_failed_dns_cache_update_exits_three() -> None:
     assert (
         _UpdateDNSCacheCommand(update_dns_cache=_FakeUpdateDNSCache(error=_FAILURE)).run(
-            _CONTEXT, None
+            context(), None
         )
         == CLIExitCode.UNKNOWN
     )
@@ -79,9 +74,9 @@ class _FakeCleanupPiggyback:
 def test_the_sites_piggyback_files_are_cleaned_up() -> None:
     cleanup = _FakeCleanupPiggyback()
 
-    _CleanupPiggybackCommand(cleanup_piggyback=cleanup).run(_CONTEXT, None)
+    _CleanupPiggybackCommand(cleanup_piggyback=cleanup).run(context(), None)
 
-    assert cleanup.asked == [(_OMD_ROOT, False)]
+    assert cleanup.asked == [(OMD_ROOT, False)]
 
 
 def _write_main_mk(
@@ -153,10 +148,10 @@ class _FakeFlush:
 def test_the_requested_hosts_are_flushed() -> None:
     flush = _FakeFlush()
 
-    _FlushCommand(flush=flush).run(_CONTEXT, (HostAddress("host1"),))
+    _FlushCommand(flush=flush).run(context(), (HostAddress("host1"),))
 
     assert flush.asked == [((HostAddress("host1"),), False)]
 
 
 def test_a_failed_flush_exits_three() -> None:
-    assert _FlushCommand(flush=_FakeFlush(error=_FAILURE)).run(_CONTEXT, ()) == CLIExitCode.UNKNOWN
+    assert _FlushCommand(flush=_FakeFlush(error=_FAILURE)).run(context(), ()) == CLIExitCode.UNKNOWN

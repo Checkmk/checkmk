@@ -3,20 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 from pathlib import Path
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.specs.checkresults import ServiceState
-from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.checkmk.cli.check import CheckingRequest
 from cmk.plugins.checkmk.cli.handlers.check import _CheckCommand
 from cmk.plugins.checkmk.cli.options import FileCacheRequest, PluginSelectionRequest
 
-_OMD_ROOT = Path("/omd/sites/mysite")
+from ._context import context, OMD_ROOT
 
 
 class _FakeCheckHost:
@@ -32,14 +29,6 @@ class _FakeCheckHost:
         if self._error is not None:
             raise self._error
         return self._state
-
-
-def _context() -> CLIContext:
-    return CLIContext(
-        omd_root=_OMD_ROOT,
-        global_options=CLIGlobalOptions(),
-        logger=logging.getLogger(__name__),
-    )
 
 
 def _request() -> CheckingRequest:
@@ -61,14 +50,14 @@ def _request() -> CheckingRequest:
 def test_the_requested_host_is_checked() -> None:
     check_host = _FakeCheckHost()
 
-    _CheckCommand(check_host=check_host).run(_context(), _request())
+    _CheckCommand(check_host=check_host).run(context(), _request())
 
-    assert check_host.checked == [(HostName("myhost"), _request(), _OMD_ROOT, False)]
+    assert check_host.checked == [(HostName("myhost"), _request(), OMD_ROOT, False)]
 
 
 def test_the_check_exits_with_the_hosts_state() -> None:
     assert (
-        _CheckCommand(check_host=_FakeCheckHost(state=2)).run(_context(), _request())
+        _CheckCommand(check_host=_FakeCheckHost(state=2)).run(context(), _request())
         == CLIExitCode.ERROR
     )
 
@@ -76,4 +65,4 @@ def test_the_check_exits_with_the_hosts_state() -> None:
 def test_a_failed_check_exits_three() -> None:
     check_host = _FakeCheckHost(error=MKGeneralException("Unknown host"))
 
-    assert _CheckCommand(check_host=check_host).run(_context(), _request()) == CLIExitCode.UNKNOWN
+    assert _CheckCommand(check_host=check_host).run(context(), _request()) == CLIExitCode.UNKNOWN

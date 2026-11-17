@@ -3,17 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 from pathlib import Path
-from typing import Final
 
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.checkmk.cli.dump import (
     DumpAgentRequest,
     DumpHostsRequest,
@@ -26,7 +22,7 @@ from cmk.plugins.checkmk.cli.handlers.dump import (
 )
 from cmk.plugins.checkmk.cli.options import FileCacheRequest
 
-_OMD_ROOT: Final = Path("/omd/sites/mysite")
+from ._context import context, OMD_ROOT
 
 
 class _FakeDumpAgent:
@@ -50,32 +46,20 @@ def _agent_request(host: HostAddress) -> DumpAgentRequest:
     )
 
 
-_CONTEXT: Final = CLIContext(
-    omd_root=_OMD_ROOT,
-    global_options=CLIGlobalOptions(),
-    logger=logging.getLogger(__name__),
-)
-
-
 def test_the_agent_output_of_the_requested_host_is_dumped() -> None:
     dump_agent = _FakeDumpAgent(_AgentDump(b"", (), ()))
 
-    _DumpAgentCommand(dump_agent=dump_agent).run(_CONTEXT, _agent_request(HostAddress("myhost")))
+    _DumpAgentCommand(dump_agent=dump_agent).run(context(), _agent_request(HostAddress("myhost")))
 
     assert dump_agent.asked == [
-        (HostAddress("myhost"), _agent_request(HostAddress("myhost")), _OMD_ROOT, False)
+        (HostAddress("myhost"), _agent_request(HostAddress("myhost")), OMD_ROOT, False)
     ]
 
 
 def test_the_agent_output_is_written(capsys: pytest.CaptureFixture[str]) -> None:
-    context = CLIContext(
-        omd_root=_OMD_ROOT,
-        global_options=CLIGlobalOptions(),
-        logger=logging.getLogger(__name__),
-    )
     dump_agent = _FakeDumpAgent(_AgentDump(b"<<<check_mk>>>\n", (), ()))
 
-    _DumpAgentCommand(dump_agent=dump_agent).run(context, _agent_request(HostAddress("myhost")))
+    _DumpAgentCommand(dump_agent=dump_agent).run(context(), _agent_request(HostAddress("myhost")))
 
     assert capsys.readouterr().out == "<<<check_mk>>>\n"
 
@@ -85,7 +69,7 @@ def test_an_agent_dump_with_errors_exits_one() -> None:
 
     assert (
         _DumpAgentCommand(dump_agent=dump_agent).run(
-            _CONTEXT, _agent_request(HostAddress("myhost"))
+            context(), _agent_request(HostAddress("myhost"))
         )
         == CLIExitCode.FAILURE
     )
@@ -96,7 +80,7 @@ def test_the_warnings_and_errors_are_reported(capsys: pytest.CaptureFixture[str]
         _AgentDump(b"", ("WARNING [agent]: denied",), ("ERROR [agent]: refused",))
     )
 
-    _DumpAgentCommand(dump_agent=dump_agent).run(_CONTEXT, _agent_request(HostAddress("myhost")))
+    _DumpAgentCommand(dump_agent=dump_agent).run(context(), _agent_request(HostAddress("myhost")))
 
     assert capsys.readouterr().err == "WARNING [agent]: denied\nERROR [agent]: refused\n"
 
@@ -113,7 +97,7 @@ def test_the_requested_hosts_are_dumped() -> None:
     dump_hosts = _FakeDumpHosts()
     request = DumpHostsRequest(fake_dns=None, hosts=(HostAddress("myhost"),))
 
-    _DumpHostsCommand(dump_hosts=dump_hosts).run(_CONTEXT, request)
+    _DumpHostsCommand(dump_hosts=dump_hosts).run(context(), request)
 
     assert dump_hosts.asked == [(request, False)]
 

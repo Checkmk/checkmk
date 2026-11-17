@@ -3,24 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 from pathlib import Path
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
-from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.checkmk.cli.core_config import CoreConfigRequest
 from cmk.plugins.checkmk.cli.handlers.core_config import _ConfigureCoreCommand, _UpdateCommand
 
-_OMD_ROOT = Path("/omd/sites/mysite")
-
-_CONTEXT = CLIContext(
-    omd_root=_OMD_ROOT,
-    global_options=CLIGlobalOptions(),
-    logger=logging.getLogger(__name__),
-)
+from ._context import context, OMD_ROOT
 
 _REQUEST = CoreConfigRequest(fake_dns=None, hosts=(HostAddress("host1"),))
 
@@ -41,15 +32,15 @@ class _FakeConfigureCore:
 def test_the_core_is_configured_for_the_requested_hosts() -> None:
     configure_core = _FakeConfigureCore()
 
-    _ConfigureCoreCommand(configure_core=configure_core).run(_CONTEXT, _REQUEST)
+    _ConfigureCoreCommand(configure_core=configure_core).run(context(), _REQUEST)
 
-    assert configure_core.asked == [(_REQUEST, _OMD_ROOT, False)]
+    assert configure_core.asked == [(_REQUEST, OMD_ROOT, False)]
 
 
 def test_a_failed_core_configuration_exits_three() -> None:
     assert (
         _ConfigureCoreCommand(configure_core=_FakeConfigureCore(error=_FAILURE)).run(
-            _CONTEXT, _REQUEST
+            context(), _REQUEST
         )
         == CLIExitCode.UNKNOWN
     )
@@ -68,12 +59,13 @@ class _FakeUpdate:
 def test_the_core_config_is_updated_with_the_fake_address() -> None:
     update = _FakeUpdate(updated=True)
 
-    _UpdateCommand(update=update).run(_CONTEXT, HostAddress("127.0.0.1"))
+    _UpdateCommand(update=update).run(context(), HostAddress("127.0.0.1"))
 
-    assert update.asked == [(HostAddress("127.0.0.1"), _OMD_ROOT, False)]
+    assert update.asked == [(HostAddress("127.0.0.1"), OMD_ROOT, False)]
 
 
 def test_a_configuration_error_exits_one() -> None:
     assert (
-        _UpdateCommand(update=_FakeUpdate(updated=False)).run(_CONTEXT, None) == CLIExitCode.FAILURE
+        _UpdateCommand(update=_FakeUpdate(updated=False)).run(context(), None)
+        == CLIExitCode.FAILURE
     )

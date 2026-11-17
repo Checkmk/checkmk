@@ -3,17 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 from collections.abc import Sequence
-from pathlib import Path
 
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.checkmk.cli.handlers.list_config import (
     _DSType,
     _ListChecksCommand,
@@ -24,16 +20,7 @@ from cmk.plugins.checkmk.cli.handlers.list_config import (
 from cmk.plugins.checkmk.cli.list_config import ListHostsRequest
 from cmk.ruleset_matcher.tags import TagID
 
-
-def _context() -> CLIContext:
-    return CLIContext(
-        omd_root=Path("/omd/sites/mysite"),
-        global_options=CLIGlobalOptions(),
-        logger=logging.getLogger(__name__),
-    )
-
-
-_CONTEXT = _context()
+from ._context import context
 
 _REQUEST = ListHostsRequest(all_sites=False, include_offline=False, host_groups=("linux",))
 
@@ -53,13 +40,13 @@ class _FakeListHosts:
 def test_the_requested_hosts_are_listed() -> None:
     list_hosts = _FakeListHosts()
 
-    _ListHostsCommand(list_hosts=list_hosts).run(_CONTEXT, _REQUEST)
+    _ListHostsCommand(list_hosts=list_hosts).run(context(), _REQUEST)
 
     assert list_hosts.asked == [(_REQUEST, False)]
 
 
 def test_the_hosts_are_written_one_per_line(capsys: pytest.CaptureFixture[str]) -> None:
-    _ListHostsCommand(list_hosts=_FakeListHosts()).run(_context(), _REQUEST)
+    _ListHostsCommand(list_hosts=_FakeListHosts()).run(context(), _REQUEST)
 
     assert capsys.readouterr().out == "host1\nhost2\n"
 
@@ -67,7 +54,7 @@ def test_the_hosts_are_written_one_per_line(capsys: pytest.CaptureFixture[str]) 
 def test_a_failed_host_listing_exits_three() -> None:
     list_hosts = _FakeListHosts(error=MKGeneralException("Cannot load the configuration"))
 
-    assert _ListHostsCommand(list_hosts=list_hosts).run(_CONTEXT, _REQUEST) == CLIExitCode.UNKNOWN
+    assert _ListHostsCommand(list_hosts=list_hosts).run(context(), _REQUEST) == CLIExitCode.UNKNOWN
 
 
 class _FakeListHostsWithTags:
@@ -83,15 +70,13 @@ class _FakeListHostsWithTags:
 def test_the_hosts_with_the_tags_are_written_sorted(capsys: pytest.CaptureFixture[str]) -> None:
     list_hosts = _FakeListHostsWithTags([HostName("zeta"), HostName("alpha")])
 
-    _ListTagCommand(list_hosts_with_tags=list_hosts).run(_context(), (TagID("lan"),))
+    _ListTagCommand(list_hosts_with_tags=list_hosts).run(context(), (TagID("lan"),))
 
     assert capsys.readouterr().out == "alpha\nzeta\n"
 
 
 def test_no_host_with_the_tags_writes_nothing(capsys: pytest.CaptureFixture[str]) -> None:
-    _ListTagCommand(list_hosts_with_tags=_FakeListHostsWithTags([])).run(
-        _context(), (TagID("lan"),)
-    )
+    _ListTagCommand(list_hosts_with_tags=_FakeListHostsWithTags([])).run(context(), (TagID("lan"),))
 
     assert capsys.readouterr().out == ""
 
@@ -111,6 +96,6 @@ class _FakeCheckTable:
 
 
 def test_the_checks_are_listed_by_name(capsys: pytest.CaptureFixture[str]) -> None:
-    _ListChecksCommand(check_table=_FakeCheckTable()).run(_context(), None)
+    _ListChecksCommand(check_table=_FakeCheckTable()).run(context(), None)
 
     assert capsys.readouterr().out == f"{_DF.render_tty()}\n{_MEM.render_tty()}\n"

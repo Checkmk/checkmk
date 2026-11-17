@@ -3,13 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 from pathlib import Path
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.checkmk.cli.handlers.inventory import (
     _InventorizeMarkedHostsCommand,
     _InventoryCommand,
@@ -17,13 +14,7 @@ from cmk.plugins.checkmk.cli.handlers.inventory import (
 from cmk.plugins.checkmk.cli.inventory import InventorizeMarkedHostsRequest, InventoryRequest
 from cmk.plugins.checkmk.cli.options import FileCacheRequest, PluginSelectionRequest
 
-_OMD_ROOT = Path("/omd/sites/mysite")
-
-_CONTEXT = CLIContext(
-    omd_root=_OMD_ROOT,
-    global_options=CLIGlobalOptions(),
-    logger=logging.getLogger(__name__),
-)
+from ._context import context, OMD_ROOT
 
 _FILE_CACHE = FileCacheRequest(cache=False, no_cache=False, no_tcp=False)
 
@@ -54,15 +45,17 @@ class _FakeInventorize:
 def test_the_requested_hosts_are_inventorized() -> None:
     inventorize = _FakeInventorize()
 
-    _InventoryCommand(inventorize=inventorize).run(_CONTEXT, _REQUEST)
+    _InventoryCommand(inventorize=inventorize).run(context(), _REQUEST)
 
-    assert inventorize.asked == [(_REQUEST, _OMD_ROOT, False)]
+    assert inventorize.asked == [(_REQUEST, OMD_ROOT, False)]
 
 
 def test_a_failed_inventory_exits_three() -> None:
     inventorize = _FakeInventorize(error=MKGeneralException("Cannot load the configuration"))
 
-    assert _InventoryCommand(inventorize=inventorize).run(_CONTEXT, _REQUEST) == CLIExitCode.UNKNOWN
+    assert (
+        _InventoryCommand(inventorize=inventorize).run(context(), _REQUEST) == CLIExitCode.UNKNOWN
+    )
 
 
 class _FakeInventorizeMarkedHosts:
@@ -81,6 +74,6 @@ def test_the_marked_hosts_are_inventorized() -> None:
         file_cache=_FILE_CACHE, usewalk=False, snmp_backend=None, fake_dns=None
     )
 
-    _InventorizeMarkedHostsCommand(inventorize_marked_hosts=inventorize).run(_CONTEXT, request)
+    _InventorizeMarkedHostsCommand(inventorize_marked_hosts=inventorize).run(context(), request)
 
-    assert inventorize.asked == [(request, _OMD_ROOT, False)]
+    assert inventorize.asked == [(request, OMD_ROOT, False)]

@@ -3,27 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 from pathlib import Path
 
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.checkmk.cli.discovery import CheckDiscoveryRequest, DiscoverRequest
 from cmk.plugins.checkmk.cli.handlers.discovery import _CheckDiscoveryCommand, _DiscoverCommand
 from cmk.plugins.checkmk.cli.options import FileCacheRequest, PluginSelectionRequest
 
-_OMD_ROOT = Path("/omd/sites/mysite")
-
-_CONTEXT = CLIContext(
-    omd_root=_OMD_ROOT,
-    global_options=CLIGlobalOptions(),
-    logger=logging.getLogger(__name__),
-)
+from ._context import context, OMD_ROOT
 
 _FILE_CACHE = FileCacheRequest(cache=False, no_cache=False, no_tcp=False)
 
@@ -50,14 +41,14 @@ def test_the_discovery_of_the_requested_host_is_checked() -> None:
     check = _FakeCheckDiscovery(ActiveCheckResult(state=0, summary="All services monitored"))
 
     _CheckDiscoveryCommand(check_discovery=check).run(
-        _CONTEXT, _check_discovery_request(HostAddress("myhost"))
+        context(), _check_discovery_request(HostAddress("myhost"))
     )
 
     assert check.asked == [
         (
             HostAddress("myhost"),
             _check_discovery_request(HostAddress("myhost")),
-            _OMD_ROOT,
+            OMD_ROOT,
             False,
         )
     ]
@@ -65,14 +56,9 @@ def test_the_discovery_of_the_requested_host_is_checked() -> None:
 
 def test_the_discovery_check_writes_its_result(capsys: pytest.CaptureFixture[str]) -> None:
     check = _FakeCheckDiscovery(ActiveCheckResult(state=0, summary="All services monitored"))
-    context = CLIContext(
-        omd_root=_OMD_ROOT,
-        global_options=CLIGlobalOptions(),
-        logger=logging.getLogger(__name__),
-    )
 
     _CheckDiscoveryCommand(check_discovery=check).run(
-        context, _check_discovery_request(HostAddress("myhost"))
+        context(), _check_discovery_request(HostAddress("myhost"))
     )
 
     assert capsys.readouterr().out == "All services monitored\n"
@@ -83,7 +69,7 @@ def test_the_discovery_check_exits_with_its_state() -> None:
 
     assert (
         _CheckDiscoveryCommand(check_discovery=check).run(
-            _CONTEXT, _check_discovery_request(HostAddress("myhost"))
+            context(), _check_discovery_request(HostAddress("myhost"))
         )
         == CLIExitCode.FAILURE
     )
@@ -116,13 +102,13 @@ class _FakeDiscover:
 def test_the_requested_hosts_are_discovered() -> None:
     discover = _FakeDiscover(succeeded=True)
 
-    _DiscoverCommand(discover=discover).run(_CONTEXT, _DISCOVER_REQUEST)
+    _DiscoverCommand(discover=discover).run(context(), _DISCOVER_REQUEST)
 
-    assert discover.asked == [(_DISCOVER_REQUEST, _OMD_ROOT, False)]
+    assert discover.asked == [(_DISCOVER_REQUEST, OMD_ROOT, False)]
 
 
 def test_a_failed_discovery_exits_one() -> None:
     assert (
-        _DiscoverCommand(discover=_FakeDiscover(succeeded=False)).run(_CONTEXT, _DISCOVER_REQUEST)
+        _DiscoverCommand(discover=_FakeDiscover(succeeded=False)).run(context(), _DISCOVER_REQUEST)
         == CLIExitCode.FAILURE
     )

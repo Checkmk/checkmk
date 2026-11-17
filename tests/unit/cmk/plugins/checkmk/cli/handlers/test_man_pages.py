@@ -3,19 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
 from cmk.ccc.exceptions import MKBailOut
-from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.checkmk.cli.handlers.man_pages import _BrowseManCommand, _ManCommand
 from cmk.plugins.checkmk.cli.man_pages import ManRequest
 from cmk.utils.man_pages import ManPage
+
+from ._context import context
 
 _DF_PATH = Path("/omd/sites/mysite/share/check_mk/checkman/df")
 
@@ -32,14 +31,6 @@ _DF = ManPage(
     discovery=None,
     cluster=None,
 )
-
-
-def _context(*, debug: bool = False) -> CLIContext:
-    return CLIContext(
-        omd_root=Path("/omd/sites/mysite"),
-        global_options=CLIGlobalOptions(debug=debug),
-        logger=logging.getLogger(__name__),
-    )
 
 
 class _FakeManPagePaths:
@@ -87,7 +78,7 @@ def _request(check_type: str | None) -> ManRequest:
 def test_without_a_check_type_the_table_of_all_man_pages_is_printed() -> None:
     print_table = _FakePrintManPageTable()
 
-    _man_command(print_table=print_table).run(_context(), _request(None))
+    _man_command(print_table=print_table).run(context(), _request(None))
 
     assert print_table.printed == [{"df": _DF_PATH}]
 
@@ -95,24 +86,24 @@ def test_without_a_check_type_the_table_of_all_man_pages_is_printed() -> None:
 def test_the_man_page_of_the_check_type_is_parsed() -> None:
     parse = _FakeParseManPage()
 
-    _man_command(parse=parse).run(_context(), _request("df"))
+    _man_command(parse=parse).run(context(), _request("df"))
 
     assert parse.parsed == [("df", _DF_PATH, False)]
 
 
 def test_the_rendered_man_page_is_written(capsys: pytest.CaptureFixture[str]) -> None:
-    _man_command().run(_context(), _request("df"))
+    _man_command().run(context(), _request("df"))
 
     assert "Filesystems" in capsys.readouterr().out
 
 
 def test_an_unknown_check_type_exits_three() -> None:
-    assert _man_command().run(_context(), _request("nope")) == CLIExitCode.UNKNOWN
+    assert _man_command().run(context(), _request("nope")) == CLIExitCode.UNKNOWN
 
 
 def test_an_unknown_check_type_is_raised_through_under_debug() -> None:
     with pytest.raises(MKBailOut, match="No manpage for nope"):
-        _man_command().run(_context(debug=True), _request("nope"))
+        _man_command().run(context(debug=True), _request("nope"))
 
 
 class _FakeBrowseManPages:
@@ -126,6 +117,6 @@ class _FakeBrowseManPages:
 def test_the_man_pages_are_browsed() -> None:
     browse = _FakeBrowseManPages()
 
-    _BrowseManCommand(browse=browse).run(_context(), None)
+    _BrowseManCommand(browse=browse).run(context(), None)
 
     assert browse.browsed == [False]

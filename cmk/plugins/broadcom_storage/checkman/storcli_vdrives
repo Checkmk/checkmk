@@ -1,4 +1,4 @@
-title: LSI MegaRAID: State of Virtual Drives (via StorCLI)
+title: LSI MegaRAID: Virtual Drives via StorCLI
 agents: windows
 catalog: os/storage
 license: GPLv2

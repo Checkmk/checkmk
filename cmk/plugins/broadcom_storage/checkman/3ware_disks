@@ -1,4 +1,4 @@
-title: 3ware ATA RAID Controller: State of Disks
+title: 3ware: Disk State
 agents: linux
 catalog: os/storage
 license: GPLv2

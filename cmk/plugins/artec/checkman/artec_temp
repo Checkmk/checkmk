@@ -1,4 +1,4 @@
-title: ARTEC Mail Archive Appliance: Temperature
+title: ARTEC Mail Archive: Temperature
 agents: snmp
 catalog: hw/mail/artec
 license: GPLv2

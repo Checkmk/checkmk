@@ -152,6 +152,7 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
     "Veeam Scale-out repository Scale-out Backup Repository": ExpectedServiceResult(
         0,
         [
+            r"Extent status: 1 of 1 OK\b",
             r"Extent Backup Repository on Linux: Normal\b",
             r"Capacity tier: disabled\b",
             r"Archive tier: disabled\b",

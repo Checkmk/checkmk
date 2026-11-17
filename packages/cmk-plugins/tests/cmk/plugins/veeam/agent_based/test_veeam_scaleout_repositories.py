@@ -83,7 +83,7 @@ def test_parse_veeam_scaleout_repositories_with_capacity_and_archive_tier() -> N
 def test_check_veeam_scaleout_repositories_normal_is_ok() -> None:
     section = parse_veeam_scaleout_repositories([[_scaleout_repo()]])
     results = list(check_veeam_scaleout_repositories("sobr-1", PARAMS, section))
-    assert results[0] == Result(state=State.OK, summary="1 extent")
+    assert results[0] == Result(state=State.OK, summary="Extent status: 1 of 1 OK")
 
 
 def test_check_veeam_scaleout_repositories_maintenance_is_warn() -> None:
@@ -97,7 +97,9 @@ def test_check_veeam_scaleout_repositories_maintenance_is_warn() -> None:
         ]
     )
     results = list(check_veeam_scaleout_repositories("sobr-1", PARAMS, section))
-    assert results[0] == Result(state=State.WARN, summary="1 extent, extent-1 (Maintenance)")
+    assert results[0] == Result(
+        state=State.WARN, summary="Extent status: 0 of 1 OK, extent-1: Maintenance"
+    )
 
 
 def test_check_veeam_scaleout_repositories_unknown_status_is_unknown() -> None:
@@ -105,7 +107,9 @@ def test_check_veeam_scaleout_repositories_unknown_status_is_unknown() -> None:
         [[_scaleout_repo(performanceTier={"performanceExtents": [_extent(status=["Kaputt"])]})]]
     )
     results = list(check_veeam_scaleout_repositories("sobr-1", PARAMS, section))
-    assert results[0] == Result(state=State.UNKNOWN, summary="1 extent, extent-1 (Kaputt)")
+    assert results[0] == Result(
+        state=State.UNKNOWN, summary="Extent status: 0 of 1 OK, extent-1: Kaputt"
+    )
 
 
 def test_check_veeam_scaleout_repositories_empty_status_is_ok() -> None:
@@ -113,7 +117,7 @@ def test_check_veeam_scaleout_repositories_empty_status_is_ok() -> None:
         [[_scaleout_repo(performanceTier={"performanceExtents": [_extent(status=[])]})]]
     )
     results = list(check_veeam_scaleout_repositories("sobr-1", PARAMS, section))
-    assert results[0] == Result(state=State.OK, summary="1 extent")
+    assert results[0] == Result(state=State.OK, summary="Extent status: 1 of 1 OK")
     assert Result(state=State.OK, notice="Extent extent-1: no status reported") in results
 
 
@@ -141,7 +145,9 @@ def test_check_veeam_scaleout_repositories_worst_of_multiple_extents() -> None:
         ]
     )
     results = list(check_veeam_scaleout_repositories("sobr-1", PARAMS, section))
-    assert results[0] == Result(state=State.WARN, summary="2 extents, extent-2 (Evacuate)")
+    assert results[0] == Result(
+        state=State.WARN, summary="Extent status: 1 of 2 OK, extent-2: Evacuate"
+    )
 
 
 def test_check_veeam_scaleout_repositories_details() -> None:
@@ -186,7 +192,9 @@ def test_changed_extent_status_state_is_applied() -> None:
         ]
     )
     results = list(check_veeam_scaleout_repositories("sobr-1", params, section))
-    assert results[0] == Result(state=State.CRIT, summary="1 extent, extent-1 (Maintenance)")
+    assert results[0] == Result(
+        state=State.CRIT, summary="Extent status: 0 of 1 OK, extent-1: Maintenance"
+    )
 
 
 def test_changed_no_performance_extents_state_is_applied() -> None:
@@ -196,3 +204,36 @@ def test_changed_no_performance_extents_state_is_applied() -> None:
     )
     results = list(check_veeam_scaleout_repositories("sobr-1", params, section))
     assert results[0] == Result(state=State.OK, summary="No performance extents configured")
+
+
+def test_extent_status_mapped_to_ok_counts_as_ok() -> None:
+    params: CheckParameters = {**PARAMS, "status_maintenance": 0}
+    section = parse_veeam_scaleout_repositories(
+        [
+            [
+                _scaleout_repo(
+                    performanceTier={"performanceExtents": [_extent(status=["Maintenance"])]}
+                )
+            ]
+        ]
+    )
+    results = list(check_veeam_scaleout_repositories("sobr-1", params, section))
+    assert results[0] == Result(state=State.OK, summary="Extent status: 1 of 1 OK")
+
+
+def test_extent_with_several_statuses_names_all_of_them() -> None:
+    section = parse_veeam_scaleout_repositories(
+        [
+            [
+                _scaleout_repo(
+                    performanceTier={
+                        "performanceExtents": [_extent(status=["Maintenance", "Evacuate"])]
+                    }
+                )
+            ]
+        ]
+    )
+    results = list(check_veeam_scaleout_repositories("sobr-1", PARAMS, section))
+    assert results[0] == Result(
+        state=State.WARN, summary="Extent status: 0 of 1 OK, extent-1: Maintenance and Evacuate"
+    )

@@ -5,9 +5,10 @@ license: GPLv2
 distribution: check_mk
 description:
  This check monitors a scale-out backup repository of a Veeam Backup &
- Replication server, collected via the Veeam special agent. It reports the
- number of configured performance extents and their statuses, the
- description, whether the capacity tier and archive tier are configured
+ Replication server, collected via the Veeam special agent. Its summary
+ starts with how many performance extents are {OK}, and names each extent
+ that is not, with its statuses. The details show each extent's statuses,
+ the description, whether the capacity tier and archive tier are configured
  and enabled, and the placement policy.
 
  This check does not report capacity. A scale-out repository has no

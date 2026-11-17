@@ -134,10 +134,10 @@ def check_veeam_scaleout_repositories(
             state = _extent_state(extent.statuses, params)
             extent_states.append(state)
             if state != State.OK:
-                problem_extents.append(f"{extent.name} ({', '.join(extent.statuses)})")
+                problem_extents.append(f"{extent.name}: {' and '.join(extent.statuses)}")
 
         count = len(repo.performance_extents)
-        summary = f"{count} extent{'' if count == 1 else 's'}"
+        summary = f"Extent status: {count - len(problem_extents)} of {count} OK"
         if problem_extents:
             summary += f", {', '.join(problem_extents)}"
         yield Result(

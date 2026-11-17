@@ -168,6 +168,12 @@ def _make_message_from_event(event: Event, omd_root: Path) -> PiggybackMessage |
     if (mtime := _get_mtime(payload_file_path)) is None:
         return None
 
+    try:
+        raw_data = payload_file_path.read_bytes()
+    except FileNotFoundError:
+        # moved or removed since the stat, e.g. by a host rename; that has its own events
+        return None
+
     return PiggybackMessage(
         PiggybackMetaData(
             source=source,
@@ -175,7 +181,7 @@ def _make_message_from_event(event: Event, omd_root: Path) -> PiggybackMessage |
             last_update=mtime,
             last_contact=_get_mtime(status_file_path),
         ),
-        payload_file_path.read_bytes(),
+        raw_data,
     )
 
 

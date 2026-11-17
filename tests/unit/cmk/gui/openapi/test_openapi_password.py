@@ -113,6 +113,22 @@ def test_openapi_password_editable_by(clients: ClientRegistry) -> None:
 
 
 @managedtest
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="crash group 4868")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")
+def test_openapi_password_rejects_unknown_editor_group(clients: ClientRegistry) -> None:
+    resp = clients.Password.create(
+        ident="test_unknown_editor",
+        title="Checkmk",
+        password="tt",
+        shared=[],
+        editable_by="no_such_group",
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+
+
+@managedtest
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")
 def test_openapi_password_customer(clients: ClientRegistry) -> None:
     resp = clients.Password.create(

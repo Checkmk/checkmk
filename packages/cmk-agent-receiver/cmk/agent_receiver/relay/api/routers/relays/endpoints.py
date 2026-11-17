@@ -12,7 +12,7 @@ from pydantic import SecretStr
 from cmk.agent_receiver.lib.mtls_auth_validator import ExpectedCA, mtls_authorization_dependency
 from cmk.agent_receiver.relay.api.routers.relays import dependencies, handlers
 from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_data import (
-    FailedToSendMonitoringDataError,
+    ForwardRefusedError,
 )
 from cmk.agent_receiver.relay.api.routers.relays.handlers.store_crash_report import (
     CrashExtractionTimeoutError,
@@ -122,8 +122,10 @@ async def forward_monitoring_data(
         fastapi.Depends(dependencies.get_forward_monitoring_data_handler),
     ],
 ) -> fastapi.Response:
-    """
-    Forward monitoring data to CMC for a specific relay and host.
+    """Queue monitoring data for the core.
+
+    204 means queued, not delivered: a failed hand-over is only logged. 503 means the
+    queue stayed full for too long.
     """
     try:
         await handler.process(
@@ -135,10 +137,9 @@ async def forward_monitoring_data(
             service=monitoring_data.service,
             payload_type=monitoring_data.payload_type,
         )
-    except FailedToSendMonitoringDataError as e:
+    except ForwardRefusedError as e:
         return fastapi.Response(
-            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
-            content=f"Failed to forward monitoring data: {e}",
+            status_code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE, content=str(e)
         )
     return fastapi.Response(status_code=fastapi.status.HTTP_204_NO_CONTENT)
 

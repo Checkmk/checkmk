@@ -6,10 +6,7 @@ import base64
 import secrets
 import time
 import uuid
-from collections.abc import Iterator
 from http import HTTPStatus
-from pathlib import Path
-from unittest.mock import patch
 
 import httpx2
 import pytest
@@ -30,10 +27,7 @@ from cmk.testlib.agent_receiver.clients import (
 )
 from cmk.testlib.agent_receiver.mock_socket import (
     create_busy_socket,
-    create_crashy_socket,
-    create_non_listening_socket,
     create_socket,
-    create_unresponsive_socket,
 )
 from cmk.testlib.agent_receiver.relay_config_generator import RelayConfig
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock, User
@@ -164,25 +158,27 @@ def test_forward_monitoring_data_with_delay(
         assert_monitoring_data_payload(connection_data.data, payload)
 
 
-def test_forward_monitoring_data_waits_for_a_free_slot_in_the_backlog(
+def test_forward_is_answered_before_the_core_accepts_it(
     socket_path: str,
     relay_id: str,
     relay_config: RelayConfig,
     test_client: TestClient,
     site: SiteMock,
 ) -> None:
-    """The core accepts one waiting connection at a time; a full backlog must not lose the result."""
+    """A stalled core must not hold up the relay: it gets its answer once the data is queued."""
     payload = b"monitoring payload"
     monitoring_data = create_monitoring_data(relay_config.serial, payload)
     relay = RelayClient(test_client, site.site_name, relay_id)
     relay.apply_config(relay_config)
 
-    # Without waiting, the hand-over fails on its first connect, well within this time.
-    with create_busy_socket(socket_path=socket_path, busy_for=0.2) as ms:
+    with create_busy_socket(socket_path=socket_path, busy_for=1.0) as ms:
         response = relay.forward_monitoring_data(monitoring_data)
-        assert response.status_code == HTTPStatus.NO_CONTENT, response.text
+        nothing_arrived_yet = ms.data_queue.empty()
         connection_data = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT)
-        assert_monitoring_data_payload(connection_data.data, payload)
+
+    assert response.status_code == HTTPStatus.NO_CONTENT, response.text
+    assert nothing_arrived_yet
+    assert_monitoring_data_payload(connection_data.data, payload)
 
 
 def test_forward_active_check_data_announces_it_as_an_active_check(
@@ -237,112 +233,6 @@ def assert_monitoring_data_payload(received_data: bytes, expected_payload: bytes
     assert len(parts) == 2, f"Expected 2 parts (header + payload), got {len(parts)}"
     received_payload = parts[1]
     assert received_payload == expected_payload
-
-
-def test_connection_refused(
-    socket_path: str,
-    relay_id: str,
-    relay_config: RelayConfig,
-    test_client: TestClient,
-    site: SiteMock,
-) -> None:
-    """Verify that connection refused errors (ECONNREFUSED) are handled correctly and return a 502 BAD_GATEWAY response.
-
-    Test steps:
-    1. Create socket without accepting connections
-    2. Attempt to forward monitoring data
-    3. Verify 502 BAD_GATEWAY response is returned
-    """
-    payload = b"monitoring payload"
-    monitoring_data = create_monitoring_data(relay_config.serial, payload)
-
-    with create_non_listening_socket(socket_path=socket_path):
-        relay = RelayClient(test_client, site.site_name, relay_id)
-        relay.apply_config(relay_config)
-        response = relay.forward_monitoring_data(monitoring_data)
-        assert response.status_code == HTTPStatus.BAD_GATEWAY, response.text
-
-
-def test_socket_path_not_exists(
-    relay_id: str,
-    relay_config: RelayConfig,
-    test_client: TestClient,
-    site: SiteMock,
-    tmp_path: Path,
-) -> None:
-    """Verify that missing socket path errors (ENOENT) are handled correctly and return a 502 BAD_GATEWAY response.
-
-    Test steps:
-    1. Configure nonexistent socket path
-    2. Attempt to forward monitoring data
-    3. Verify 502 BAD_GATEWAY response is returned
-    """
-    payload = b"monitoring payload"
-    monitoring_data = create_monitoring_data(relay_config.serial, payload)
-
-    # Use a socket path that doesn't exist
-    nonexistent_socket = f"{tmp_path}/nonexistent-{secrets.token_urlsafe(8)}.sock"
-
-    with patch.object(Config, "raw_data_socket", nonexistent_socket):
-        relay = RelayClient(test_client, site.site_name, relay_id)
-        relay.apply_config(relay_config)
-        response = relay.forward_monitoring_data(monitoring_data)
-        assert response.status_code == HTTPStatus.BAD_GATEWAY, response.text
-
-
-def test_sendall_timeout_unresponsive_server(
-    socket_path: str,
-    relay_id: str,
-    relay_config: RelayConfig,
-    test_client: TestClient,
-    site: SiteMock,
-) -> None:
-    """Verify that sendall() timeout with an unresponsive server is handled correctly and returns a 502 BAD_GATEWAY response.
-
-    Test steps:
-    1. Create unresponsive socket that accepts but never receives
-    2. Forward large payload that exceeds socket buffer
-    3. Verify 502 BAD_GATEWAY response after timeout
-    """
-    # Large payload that will exceed socket send buffer (typically 64KB-128KB)
-    # Using 256kb to ensure it blocks waiting for the server to recv()
-    payload = secrets.token_bytes(256 * 1024)
-    monitoring_data = create_monitoring_data(relay_config.serial, payload)
-
-    with create_unresponsive_socket(socket_path=socket_path):
-        relay = RelayClient(test_client, site.site_name, relay_id)
-        relay.apply_config(relay_config)
-        response = relay.forward_monitoring_data(monitoring_data)
-        assert response.status_code == HTTPStatus.BAD_GATEWAY, response.text
-        assert "Failed to forward monitoring data" in response.text
-
-
-def test_broken_pipe_during_send(
-    socket_path: str,
-    relay_id: str,
-    relay_config: RelayConfig,
-    test_client: TestClient,
-    site: SiteMock,
-) -> None:
-    """Verify that broken pipe errors (EPIPE) during send are handled correctly and return a 502 BAD_GATEWAY response.
-
-    Test steps:
-    1. Create socket that accepts then immediately closes connection
-    2. Forward large payload to trigger broken pipe
-    3. Verify 502 BAD_GATEWAY response is returned
-    """
-    # Use a large payload (256KB) to ensure sendall() doesn't complete instantly.
-    # Small payloads fit entirely in the socket send buffer, making it impossible
-    # to reliably trigger EPIPE during transmission.
-    payload = secrets.token_bytes(256 * 1024)
-    monitoring_data = create_monitoring_data(relay_config.serial, payload)
-
-    with create_crashy_socket(socket_path=socket_path):
-        relay = RelayClient(test_client, site.site_name, relay_id)
-        relay.apply_config(relay_config)
-        response = relay.forward_monitoring_data(monitoring_data)
-        assert response.status_code == HTTPStatus.BAD_GATEWAY, response.text
-        assert "Failed to forward monitoring data" in response.text
 
 
 @pytest.mark.parametrize(
@@ -423,16 +313,13 @@ def relay_id(test_client: TestClient, user: User, site: SiteMock) -> str:
 
 
 @pytest.fixture
-def socket_path(tmp_path: Path) -> Iterator[str]:
-    socket_path = f"{tmp_path}/{secrets.token_urlsafe(8)}-test.sock"
-    with patch.object(Config, "raw_data_socket", socket_path):
-        yield socket_path
+def socket_path(site_context: Config) -> str:
+    site_context.raw_data_socket.parent.mkdir(parents=True, exist_ok=True)
+    return str(site_context.raw_data_socket)
 
 
 @pytest.fixture
-def relay_config(site: SiteMock, relay_id: str, socket_path: str) -> RelayConfig:
-    # We use socket_path indirectly; we want to make sure we use the patched the Config class.
-    _ = socket_path
+def relay_config(site: SiteMock, relay_id: str) -> RelayConfig:
     return site.push_config([relay_id])
 
 

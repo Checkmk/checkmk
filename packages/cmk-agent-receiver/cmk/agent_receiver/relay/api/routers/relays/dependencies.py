@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Annotated
+from typing import Annotated, TypedDict
 
 import fastapi
 
@@ -53,12 +53,15 @@ async def get_relay_status_handler(
     )
 
 
+class LifespanState(TypedDict):
+    forward_monitoring_data_handler: ForwardMonitoringDataHandler
+
+
 async def get_forward_monitoring_data_handler(
-    config: Annotated[Config, fastapi.Depends(config_dependency)],
+    request: fastapi.Request,
 ) -> ForwardMonitoringDataHandler:
-    return ForwardMonitoringDataHandler(
-        data_socket=config.raw_data_socket, socket_timeout=config.socket_timeout
-    )
+    state: LifespanState = request.scope["state"]
+    return state["forward_monitoring_data_handler"]
 
 
 async def get_store_crash_report_handler(

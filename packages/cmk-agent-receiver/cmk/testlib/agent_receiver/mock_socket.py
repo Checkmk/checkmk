@@ -167,6 +167,8 @@ def create_busy_socket(*, socket_path: str, busy_for: float) -> Iterator[MockSoc
         finally:
             timer.cancel()
             timer.join()
+            for filler in backlog_filler:  # left open if the context ends while busy
+                filler.close()
             ms.stop()
             with contextlib.suppress(FileNotFoundError):
                 os.unlink(socket_path)

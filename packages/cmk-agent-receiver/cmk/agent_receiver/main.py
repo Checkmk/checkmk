@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import AsyncIterator, Callable
-from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from contextlib import AbstractAsyncContextManager, asynccontextmanager, AsyncExitStack
 
 from fastapi import FastAPI
 
@@ -16,24 +16,31 @@ from cmk.ccc.version import edition
 from cmk.licensing.basics.options import get_license_options
 
 from .agent_receiver.app import create_app as create_ar_app
+from .relay.api.routers.relays.dependencies import LifespanState
+from .relay.api.routers.relays.handlers import ForwardMonitoringDataHandler
 from .relay.app import create_app as create_relay_app
 from .relay.app import lifespan as relay_lifespan
 
 
 def _lifespan(
     relay_enabled: bool,
-) -> Callable[[FastAPI], AbstractAsyncContextManager[None]]:
+) -> Callable[[FastAPI], AbstractAsyncContextManager[LifespanState]]:
     @asynccontextmanager
-    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    async def lifespan(app: FastAPI) -> AsyncIterator[LifespanState]:
         # Loading a CA parses its private key, a few 100 ms of CPU for 4096 bits. Here it
         # delays the start of the worker instead of stalling its first requests.
         agent_root_ca()
         relay_root_ca()
-        if not relay_enabled:
-            yield
-            return
-        async with relay_lifespan(app):
-            yield
+        config = get_config()
+        async with AsyncExitStack() as stack:
+            forwarder = await stack.enter_async_context(
+                ForwardMonitoringDataHandler(
+                    data_socket=config.raw_data_socket, socket_timeout=config.socket_timeout
+                ).running()
+            )
+            if relay_enabled:
+                await stack.enter_async_context(relay_lifespan(app))
+            yield LifespanState(forward_monitoring_data_handler=forwarder)
 
     return lifespan
 

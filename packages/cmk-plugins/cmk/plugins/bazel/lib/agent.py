@@ -89,7 +89,9 @@ class VersionCache:
         timestamp = time.time()
         items = resp.json()
         versions = {
-            item["commit"]["sha"]: SemanticVersion.from_string(item["name"]) for item in items
+            item["commit"]["sha"]: version
+            for item in items
+            if (version := _parse_version_tag(item["name"])) is not None
         }
         current_version = versions.get(commit_hash)
 
@@ -112,6 +114,13 @@ class VersionCache:
         # should the combination of url and commit actually be the key?
         self.storage.write(self.VERSION_CACHE_KEY, info.model_dump_json())
         return info
+
+
+def _parse_version_tag(name: str) -> SemanticVersion | None:
+    try:
+        return SemanticVersion.from_string(name)
+    except ValueError:
+        return None
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:

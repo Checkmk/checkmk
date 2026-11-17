@@ -850,14 +850,6 @@ def non_json_tags_get(url: str, **kwargs: object) -> MockResponse:
     return default_requests_mock_get(url, **kwargs)
 
 
-def non_semver_tag_get(url: str, **kwargs: object) -> MockResponse:
-    if "tags" in url:
-        return MockResponse(
-            [{"name": "latest", "commit": {"sha": "c5bf6e13938aa89923c637b5a4f01c2203a3c9f8"}}]
-        )
-    return default_requests_mock_get(url, **kwargs)
-
-
 class _RequestsGet(Protocol):
     def __call__(self, url: str, **kwargs: object) -> MockResponse: ...
 
@@ -866,7 +858,6 @@ class _RequestsGet(Protocol):
     "tags_get",
     [
         pytest.param(non_json_tags_get, id="non-json"),
-        pytest.param(non_semver_tag_get, id="non-semver-tag"),
     ],
 )
 def test_bazel_cache_agent_output_without_version_on_unexpected_tags_response(
@@ -883,3 +874,28 @@ def test_bazel_cache_agent_output_without_version_on_unexpected_tags_response(
     assert not any(line.startswith(VERSION_SECTION_PREFIX) for line in output)
     [warning] = [r.getMessage() for r in caplog.records if r.levelname == "WARNING"]
     assert warning.startswith("Skipping version information: ")
+
+
+def tags_with_latest_get(url: str, **kwargs: object) -> MockResponse:
+    if "tags" in url:
+        return MockResponse(
+            [
+                {"name": "latest", "commit": {"sha": "d0f166cdd973342ec4aa8a51228cfd3a7a205414"}},
+                {"name": "v2.5.1", "commit": {"sha": "d0f166cdd973342ec4aa8a51228cfd3a7a205414"}},
+                {"name": "v2.5.0", "commit": {"sha": "c5bf6e13938aa89923c637b5a4f01c2203a3c9f8"}},
+            ]
+        )
+    return default_requests_mock_get(url, **kwargs)
+
+
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", tags_with_latest_get)
+def test_bazel_cache_agent_skips_tags_that_are_not_versions(
+    capsys: pytest.CaptureFixture[str],
+    patched_environment: None,  # noqa: ARG001
+) -> None:
+    agent_bazel_cache_main(args=parse_arguments(["--host", "bazel-cache.tld"]))
+
+    output = capsys.readouterr().out.rstrip().split("\n")
+    data = json.loads(output[_version_section_index(output) + 1])
+    assert data["current"] == "2.5.0"
+    assert data["latest"]["patch"] == "2.5.1"

@@ -4,7 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import client from 'cmk-ui-library/lib/rest-api-client/client'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
@@ -21,7 +23,9 @@ import type {
   SingleTimeseriesContent
 } from '@/dashboard/types/widget.ts'
 
+import { discoveredGraph, useRequestRecords } from '@tests/dashboard/apiHandlers'
 import { makeContentProps } from '@tests/dashboard/contentProps'
+import { flushPromises } from '@tests/dashboard/utils'
 
 // The figure owns its own data fetch; stubbing it keeps these tests on the discovery step and on
 // which fetch function the widget hands it.
@@ -95,17 +99,33 @@ const baseProps = makeContentProps(CUSTOM_GRAPH_CONTENT, {
   effectiveTitle: 'My graph'
 })
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let postSpy: any
+const MY_GRAPH = discoveredGraph('my_graph', 'My graph', '{"graphs": []}')
 
-beforeEach(() => {
-  postSpy = vi.spyOn(client, 'POST')
-  postSpy.mockResolvedValue({
-    data: { graphs: [{ internal: '{"graphs": []}', title: 'My graph' }], no_data_message: null },
-    error: undefined,
-    response: new Response('{}', { status: 200 })
-  } as never)
-})
+const DISCOVERY = { graphs: [MY_GRAPH], no_data_message: null }
+
+const customGraphDiscoveries =
+  useRequestRecords<components['schemas']['CustomGraphsDiscoverRequest']>()
+
+const server = useMswServer(
+  restApiHttp.post(
+    '/domain-types/graph/actions/discover_custom_graphs/invoke',
+    async ({ request, response }) => {
+      customGraphDiscoveries.push(await request.json())
+      return response(200).json(DISCOVERY)
+    }
+  ),
+  restApiHttp.post(
+    '/domain-types/graph/actions/discover_single_timeseries_graphs/invoke',
+    ({ response }) => response(200).json(DISCOVERY)
+  ),
+  restApiHttp.post('/domain-types/graph/actions/discover_combined_graphs/invoke', ({ response }) =>
+    response(200).json(DISCOVERY)
+  ),
+  restApiHttp.post(
+    '/domain-types/graph/actions/discover_average_scatterplot_graphs/invoke',
+    ({ response }) => response(200).json(DISCOVERY)
+  )
+)
 
 function renderWidget(props: Record<string, unknown> = {}) {
   return render(DashboardContentTimeSeriesGraph, {
@@ -117,11 +137,9 @@ describe('custom graph widget', () => {
   test('discovers the custom graph by its name', async () => {
     renderWidget()
 
-    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
-    expect(postSpy.mock.calls[0][0]).toBe(
-      '/domain-types/graph/actions/discover_custom_graphs/invoke'
+    await waitFor(() =>
+      expect(customGraphDiscoveries).toEqual([{ type: 'saved', name: 'my_graph' }])
     )
-    expect(postSpy.mock.calls[0][1].body).toEqual({ type: 'saved', name: 'my_graph' })
   })
 
   test('renders the figure with the discovered definition', async () => {
@@ -132,7 +150,7 @@ describe('custom graph widget', () => {
 
   test('does not rediscover when only the dashboard filter context changes', async () => {
     const { rerender } = renderWidget()
-    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(customGraphDiscoveries).toHaveLength(1))
 
     await rerender({
       effective_filter_context: {
@@ -141,28 +159,40 @@ describe('custom graph widget', () => {
         context: {}
       }
     } as never)
+    await flushPromises()
 
-    expect(postSpy).toHaveBeenCalledTimes(1)
+    expect(customGraphDiscoveries).toHaveLength(1)
   })
 
   test('rediscovers when the configured custom graph changes', async () => {
     const { rerender } = renderWidget()
-    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(customGraphDiscoveries).toHaveLength(1))
 
     await rerender({
       content: { ...CUSTOM_GRAPH_CONTENT, custom_graph: 'other_graph' }
     } as never)
 
-    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
-    expect(postSpy.mock.calls[1][1].body).toEqual({ type: 'saved', name: 'other_graph' })
+    await waitFor(() => expect(customGraphDiscoveries).toHaveLength(2))
+    expect(customGraphDiscoveries[1]).toEqual({ type: 'saved', name: 'other_graph' })
   })
 
   test('shows the error message when the graph cannot be discovered', async () => {
-    postSpy.mockResolvedValue({
-      data: undefined,
-      error: { title: 'Custom graph not found', detail: 'No custom graph was found.' },
-      response: new Response('{}', { status: 404 })
-    } as never)
+    server.use(
+      restApiHttp.post(
+        '/domain-types/graph/actions/discover_custom_graphs/invoke',
+        ({ response }) =>
+          response.untyped(
+            HttpResponse.json(
+              {
+                title: 'Custom graph not found',
+                status: 404,
+                detail: 'No custom graph was found.'
+              },
+              { status: 404 }
+            )
+          )
+      )
+    )
 
     renderWidget()
 
@@ -192,11 +222,9 @@ describe('custom graph widget with an embedded definition', () => {
   test('discovers the graph from its embedded definition', async () => {
     renderWidget({ content: EMBEDDED_CUSTOM_GRAPH_CONTENT })
 
-    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
-    expect(postSpy.mock.calls[0][0]).toBe(
-      '/domain-types/graph/actions/discover_custom_graphs/invoke'
+    await waitFor(() =>
+      expect(customGraphDiscoveries).toEqual([{ type: 'inline', definition: DEFINITION }])
     )
-    expect(postSpy.mock.calls[0][1].body).toEqual({ type: 'inline', definition: DEFINITION })
   })
 
   test('renders the figure with the discovered definition', async () => {
@@ -207,13 +235,13 @@ describe('custom graph widget with an embedded definition', () => {
 
   test('rediscovers when the embedded definition changes', async () => {
     const { rerender } = renderWidget({ content: EMBEDDED_CUSTOM_GRAPH_CONTENT })
-    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(customGraphDiscoveries).toHaveLength(1))
 
     const changed = { ...DEFINITION, data_sources: [{ type: 'constant', id: 'C', value: 200 }] }
     await rerender({ content: { ...EMBEDDED_CUSTOM_GRAPH_CONTENT, definition: changed } } as never)
 
-    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
-    expect(postSpy.mock.calls[1][1].body).toEqual({ type: 'inline', definition: changed })
+    await waitFor(() => expect(customGraphDiscoveries).toHaveLength(2))
+    expect(customGraphDiscoveries[1]).toEqual({ type: 'inline', definition: changed })
   })
 })
 
@@ -359,12 +387,9 @@ function renderInSharedDashboard(
 
 // A shell an interactive dashboard would offer the burger menu for.
 const ADDABLE_SHELL = {
-  internal: '{"graphs": []}',
-  title: 'My graph',
-  name: 'my_graph',
+  ...MY_GRAPH,
   add_to_specification: { graph_type: 'custom', id: 'my_graph' },
-  add_type: 'custom_graph',
-  y_axis: null
+  add_type: 'custom_graph'
 }
 
 const BURGER_ENABLED = {
@@ -376,22 +401,14 @@ describe('graph widget on a shared dashboard', () => {
   test('renders the pre-discovered shell without discovering itself', async () => {
     renderInSharedDashboard({
       w1: {
-        graphs: [
-          {
-            internal: '{"graphs": []}',
-            title: 'My graph',
-            name: 'my_graph',
-            add_to_specification: null,
-            add_type: null,
-            y_axis: null
-          }
-        ],
+        graphs: [MY_GRAPH],
         no_data_message: null
       }
     })
 
     expect(await screen.findByTestId('graph-figure')).toHaveTextContent('{"graphs": []}')
-    expect(postSpy).not.toHaveBeenCalled()
+    await flushPromises()
+    expect(customGraphDiscoveries).toEqual([])
   })
 
   test('shows the backend explanation when nothing was discovered', async () => {
@@ -418,16 +435,7 @@ describe('graph widget on a shared dashboard', () => {
   test('hands the figure a fetch function instead of letting it fetch by definition', async () => {
     renderInSharedDashboard({
       w1: {
-        graphs: [
-          {
-            internal: '{"graphs": []}',
-            title: 'My graph',
-            name: 'my_graph',
-            add_to_specification: null,
-            add_type: null,
-            y_axis: null
-          }
-        ],
+        graphs: [MY_GRAPH],
         no_data_message: null
       }
     })
@@ -439,18 +447,30 @@ describe('graph widget on a shared dashboard', () => {
 
 describe('createSharedGraphFetcher', () => {
   test('fetches by widget ID with the dashboard token, never by graph definition', async () => {
-    postSpy.mockResolvedValue({
-      data: {
-        title: 'CPU utilization',
-        metrics: [],
-        time_range: { start: 1_000, end: 2_000, step: 60 },
-        horizontal_lines: [],
-        warnings: [],
-        errors: []
-      },
-      error: undefined,
-      response: new Response('{}', { status: 200 })
-    } as never)
+    const fetches: {
+      authorization: string | null
+      body: components['schemas']['WidgetGraphFetchRequest']
+    }[] = []
+    server.use(
+      restApiHttp.post(
+        '/domain-types/dashboard/actions/fetch-widget-graph-data/invoke',
+        async ({ request, response }) => {
+          fetches.push({
+            authorization: request.headers.get('Authorization'),
+            body: await request.json()
+          })
+          return response(200).json({
+            title: 'CPU utilization',
+            metrics: [],
+            time_range: { start: 1_000, end: 2_000, step: 60 },
+            horizontal_lines: [],
+            shaded_regions: [],
+            warnings: [],
+            errors: []
+          })
+        }
+      )
+    )
 
     const fetched = await createSharedGraphFetcher(
       'w1',
@@ -463,25 +483,33 @@ describe('createSharedGraphFetcher', () => {
     })
 
     // The body is matched exactly: the graph definition must not be part of it.
-    expect(postSpy).toHaveBeenCalledWith(
-      '/domain-types/dashboard/actions/fetch-widget-graph-data/invoke',
-      expect.objectContaining({
-        headers: { Authorization: `CMK-TOKEN ${CMK_TOKEN}` },
+    expect(fetches).toEqual([
+      {
+        authorization: `CMK-TOKEN ${CMK_TOKEN}`,
         body: {
           source: { type: 'saved', widget_id: 'w1' },
           requested_time_range: { start: 1_000, end: 2_000, step: 60 },
           consolidation_function: 'max'
         }
-      })
-    )
+      }
+    ])
     expect(fetched.timeRange).toEqual({ start: 1_000, end: 2_000, step: 60 })
   })
 
-  test('forwards the abort signal so a superseded load can be cancelled', () => {
-    postSpy.mockReturnValue(new Promise(() => {}))
+  test('cancels the request of a superseded load', async () => {
+    const signals: AbortSignal[] = []
+    server.use(
+      restApiHttp.post(
+        '/domain-types/dashboard/actions/fetch-widget-graph-data/invoke',
+        ({ request }) => {
+          signals.push(request.signal)
+          return new Promise<never>(() => {})
+        }
+      )
+    )
     const load = new AbortController()
 
-    void createSharedGraphFetcher(
+    const fetched = createSharedGraphFetcher(
       'w1',
       CMK_TOKEN
     )({
@@ -490,8 +518,11 @@ describe('createSharedGraphFetcher', () => {
       combinationMode: null,
       signal: load.signal
     })
+    await waitFor(() => expect(signals).toHaveLength(1))
+    load.abort()
 
-    expect(postSpy.mock.calls[0][1].signal).toBe(load.signal)
+    expect(signals[0]!.aborted).toBe(true)
+    await expect(fetched).rejects.toHaveProperty('name', 'AbortError')
   })
 })
 
@@ -575,11 +606,12 @@ describe('the widget pin', () => {
 
 describe('the burger menu of a graph widget', () => {
   test('is offered on an interactive dashboard when the widget asks for it', async () => {
-    postSpy.mockResolvedValue({
-      data: { graphs: [ADDABLE_SHELL], no_data_message: null },
-      error: undefined,
-      response: new Response('{}', { status: 200 })
-    } as never)
+    server.use(
+      restApiHttp.post(
+        '/domain-types/graph/actions/discover_custom_graphs/invoke',
+        ({ response }) => response(200).json({ graphs: [ADDABLE_SHELL], no_data_message: null })
+      )
+    )
 
     renderWidget({ content: BURGER_ENABLED })
 
@@ -621,7 +653,9 @@ const ONE_SERVICE = {
   restricted_to_single: []
 }
 
-const GRAPH_LINKS = {
+type GraphLinks = components['schemas']['ComputedWidgetResponse_GraphLinks_']['value']
+
+const GRAPH_LINKS: GraphLinks = {
   links: [
     {
       title: 'Service',
@@ -648,24 +682,26 @@ const GRAPH_LINKS = {
   ]
 }
 
-const GRAPH_LINKS_URL = '/domain-types/dashboard/actions/compute-graph-links/invoke'
+function serveGraphLinks(
+  linksFor: (services: components['schemas']['GraphLinksRequest']['services']) => GraphLinks
+): void {
+  server.use(
+    restApiHttp.post(
+      '/domain-types/dashboard/actions/compute-graph-links/invoke',
+      async ({ request, response }) => {
+        const { services } = await request.json()
+        return response(200).json({ domainType: 'widget-compute', value: linksFor(services) })
+      }
+    )
+  )
+}
 
 const sameJson = (actual: unknown, expected: unknown): boolean =>
   JSON.stringify(actual) === JSON.stringify(expected)
 
-// The answers of the mocked API arrive within a macrotask.
-const settled = () => new Promise((resolve) => setTimeout(resolve, 0))
-
 describe('the contextual link of a graph widget', () => {
   beforeEach(() => {
-    postSpy.mockImplementation(async (url: string) => ({
-      data:
-        url === GRAPH_LINKS_URL
-          ? { domainType: 'widget-compute', value: GRAPH_LINKS }
-          : { graphs: [{ internal: '{"graphs": []}', title: 'My graph' }], no_data_message: null },
-      error: undefined,
-      response: new Response('{}', { status: 200 })
-    }))
+    serveGraphLinks(() => GRAPH_LINKS)
   })
 
   test('leads a graph of one service straight to the target for its host', async () => {
@@ -698,26 +734,16 @@ describe('the contextual link of a graph widget', () => {
     })
 
     const figure = await screen.findByTestId('graph-figure')
-    await settled()
+    await flushPromises()
     expect(figure.getAttribute('data-header-actions-shown')).toBe('false')
   })
 
   test('asks for the links of a service under an empty site filter on all sites', async () => {
-    postSpy.mockImplementation(async (url: string, init: { body: { services?: unknown } }) => ({
-      data:
-        url !== GRAPH_LINKS_URL
-          ? { graphs: [{ internal: '{"graphs": []}', title: 'My graph' }], no_data_message: null }
-          : {
-              domainType: 'widget-compute',
-              value: sameJson(init.body.services, [
-                { site_id: null, host_name: 'heute', service_description: 'CPU load' }
-              ])
-                ? GRAPH_LINKS
-                : { links: [], services: [] }
-            },
-      error: undefined,
-      response: new Response('{}', { status: 200 })
-    }))
+    serveGraphLinks((services) =>
+      sameJson(services, [{ site_id: null, host_name: 'heute', service_description: 'CPU load' }])
+        ? GRAPH_LINKS
+        : { links: [], services: [] }
+    )
     renderWidget({
       content: LINKED_TIMESERIES,
       effective_filter_context: {
@@ -736,7 +762,7 @@ describe('the contextual link of a graph widget', () => {
     })
 
     await screen.findByTestId('graph-figure')
-    await settled()
+    await flushPromises()
     expect(screen.queryByRole('link', { name: 'Service' })).not.toBeInTheDocument()
   })
 
@@ -747,7 +773,7 @@ describe('the contextual link of a graph widget', () => {
     )
 
     await screen.findByTestId('graph-figure')
-    await settled()
+    await flushPromises()
     expect(screen.queryByRole('link', { name: 'Service' })).not.toBeInTheDocument()
   })
 
@@ -759,7 +785,7 @@ describe('the contextual link of a graph widget', () => {
     })
 
     await screen.findByTestId('graph-figure')
-    await settled()
+    await flushPromises()
     expect(screen.queryByRole('link', { name: 'Service' })).not.toBeInTheDocument()
   })
 

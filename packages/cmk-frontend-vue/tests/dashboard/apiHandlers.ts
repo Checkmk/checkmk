@@ -137,6 +137,15 @@ export function mainMenuTopicsHandler(topics: DashboardMainMenuTopic[]) {
   )
 }
 
+/** A graph that a graph discovery finds, without a y-axis of its own. */
+export function discoveredGraph(
+  name: string,
+  title: string,
+  internal: string
+): components['schemas']['ApiDiscoveredGraph'] {
+  return { name, title, internal, add_to_specification: null, add_type: null, y_axis: null }
+}
+
 /** Waits after each test until every request that the test started has an answer. */
 export function useAnsweredRequestsAfterEach(server: ReturnType<typeof useMswServer>): void {
   const unanswered = new Map<string, string>()

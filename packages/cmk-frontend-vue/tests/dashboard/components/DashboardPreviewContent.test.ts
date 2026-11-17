@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
-import client from 'cmk-ui-library/lib/rest-api-client/client'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
@@ -12,12 +12,24 @@ import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewCont
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction'
 import type { AverageScatterplotContent, StaticTextContent } from '@/dashboard/types/widget'
 
+import { discoveredGraph } from '@tests/dashboard/apiHandlers'
 import { makeContentProps } from '@tests/dashboard/contentProps'
 
 // The figure owns its own data fetch; the preview only decides how the widget around it scrolls.
 vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
   default: { template: '<div data-testid="graph-figure" />' }
 }))
+
+useMswServer(
+  restApiHttp.post(
+    '/domain-types/graph/actions/discover_average_scatterplot_graphs/invoke',
+    ({ response }) =>
+      response(200).json({
+        graphs: [discoveredGraph('scatterplot', 'Scatterplot', '{"graphs": []}')],
+        no_data_message: null
+      })
+  )
+)
 
 function renderPreview(props: object) {
   const wrapper = defineComponent({
@@ -57,14 +69,6 @@ describe('DashboardPreviewContent', () => {
   ] as const)(
     'scrolls a scatterplot preview with a $legend legend: $scrolls',
     async ({ legend, scrolls }) => {
-      vi.spyOn(client, 'POST').mockResolvedValue({
-        data: {
-          graphs: [{ internal: '{"graphs": []}', title: 'Scatterplot' }],
-          no_data_message: null
-        },
-        error: undefined,
-        response: new Response('{}', { status: 200 })
-      } as never)
       const props = makeContentProps<AverageScatterplotContent>({
         type: 'average_scatterplot',
         metric: 'util',

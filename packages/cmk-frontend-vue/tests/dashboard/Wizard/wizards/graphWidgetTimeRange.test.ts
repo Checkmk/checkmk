@@ -5,8 +5,6 @@
  */
 import { render } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
-// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { type Ref, defineComponent, h } from 'vue'
 
@@ -20,7 +18,7 @@ import { useProvideDashboardConstants } from '@/dashboard/composables/useProvide
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 
-const API = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions`
+import { widgetAttributesHandler, widgetTitlesHandler } from '@tests/dashboard/apiHandlers'
 
 const WIDGET_CONSTANTS: DashboardConstants['widgets'][string] = {
   filter_context: { restricted_to_single: [] },
@@ -88,14 +86,7 @@ const WIZARDS: {
   }
 ]
 
-useMswServer(
-  http.post(`${API}/compute-widget-titles/invoke`, () =>
-    HttpResponse.json({ extensions: { titles: { preview_widget: 'Graph' } } })
-  ),
-  http.post(`${API}/compute-widget-attributes/invoke`, () =>
-    HttpResponse.json({ value: { filter_context: { uses_infos: [] } } })
-  )
-)
+useMswServer(widgetTitlesHandler('Graph'), widgetAttributesHandler())
 
 async function openWizard(
   open: (spec: WidgetSpec | null) => Promise<GraphHandler>,

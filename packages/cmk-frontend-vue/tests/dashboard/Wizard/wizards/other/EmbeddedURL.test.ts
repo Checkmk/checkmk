@@ -6,8 +6,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
-// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
@@ -18,9 +16,8 @@ import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/u
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 
+import { widgetTitlesHandler } from '@tests/dashboard/apiHandlers'
 import { makeContentProps } from '@tests/dashboard/contentProps'
-
-const API = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions`
 
 const CONSTANTS: DashboardConstants = {
   responsive_grid_breakpoints: {},
@@ -41,11 +38,7 @@ const CONSTANTS: DashboardConstants = {
   }
 }
 
-useMswServer(
-  http.post(`${API}/compute-widget-titles/invoke`, () =>
-    HttpResponse.json({ extensions: { titles: { preview_widget: 'Custom URL' } } })
-  )
-)
+useMswServer(widgetTitlesHandler('Custom URL'))
 
 function openEmbeddedURL(
   editWidgetSpec: WidgetSpec | null,

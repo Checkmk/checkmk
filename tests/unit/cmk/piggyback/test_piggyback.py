@@ -14,7 +14,9 @@ import pytest
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostAddress
+from cmk.ccc.inotify import INotify, Masks
 from cmk.piggyback import backend
+from cmk.piggyback.backend._paths import payload_dir, source_status_dir
 from cmk.piggyback.backend._storage import _remove_files_older_than, _remove_folder_if_empty
 
 _TEST_HOST_NAME = HostAddress("test-host")
@@ -394,15 +396,37 @@ def test_renaming_a_source_host_keeps_it_the_source_of_its_piggybacked_hosts() -
 
     actions = backend.move_for_host_rename(cmk.utils.paths.omd_root, "old-source", "new-source")
 
+    # piggyback_sources/old-source    -> piggyback_sources/new-source:      piggyback-pig
     # piggyback/test-host/old-source  -> piggyback/test-host/new-source:    piggyback-pig
     # piggyback/test-host2/old-source -> piggyback/test-host2/new-source:   piggyback-pig
-    # piggyback_sources/old-source    -> piggyback_sources/new-source:      piggyback-pig
     assert actions == ("piggyback-pig", "piggyback-pig", "piggyback-pig")
     assert backend.get_all_current_piggyback_sources(cmk.utils.paths.omd_root) == {
         HostAddress("new-source")
     }
     # the status file is only observable through last_contact, which is None without it
     assert _get_only_raw_data_element(HostAddress("test-host")).meta.last_contact is not None
+
+
+def test_renaming_a_source_host_moves_its_status_file_first() -> None:
+    omd_root = cmk.utils.paths.omd_root
+    backend.store_piggyback_raw_data(
+        HostAddress("old-source"),
+        {_TEST_HOST_NAME: _PAYLOAD},
+        message_timestamp=_REF_TIME,
+        contact_timestamp=_REF_TIME,
+        omd_root=omd_root,
+    )
+
+    with INotify() as inotify:
+        status_watch = inotify.add_watch(source_status_dir(omd_root), Masks.MOVED_TO)
+        payload_watch = inotify.add_watch(payload_dir(omd_root) / _TEST_HOST_NAME, Masks.MOVED_TO)
+
+        backend.move_for_host_rename(omd_root, "old-source", "new-source")
+
+        moves = [(event.watchee, event.name) for event in inotify.read(timeout=1)]
+
+    # the hub forwards each moved payload file with the last contact it finds in the status file
+    assert moves == [(status_watch, "new-source"), (payload_watch, "new-source")]
 
 
 def test_renaming_a_host_that_is_source_and_piggybacked_moves_both_sides() -> None:
@@ -423,9 +447,9 @@ def test_renaming_a_host_that_is_source_and_piggybacked_moves_both_sides() -> No
 
     actions = backend.move_for_host_rename(cmk.utils.paths.omd_root, "old-host", "new-host")
 
-    # piggyback/old-host/        -> piggyback/new-host/:          piggyback-load
-    # piggyback/peer/old-host    -> piggyback/peer/new-host:      piggyback-pig
     # piggyback_sources/old-host -> piggyback_sources/new-host:   piggyback-pig
+    # piggyback/peer/old-host    -> piggyback/peer/new-host:      piggyback-pig
+    # piggyback/old-host/        -> piggyback/new-host/:          piggyback-load
     assert sorted(actions) == ["piggyback-load", "piggyback-pig", "piggyback-pig"]
     assert _get_only_raw_data_element(HostAddress("new-host")).meta.source == HostAddress("peer")
     assert _get_only_raw_data_element(HostAddress("peer")).meta.source == HostAddress("new-host")

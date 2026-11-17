@@ -543,12 +543,14 @@ def move_for_host_rename(omd_root: Path, old_host: str, new_host: str) -> tuple[
             return
         yield "piggyback-pig"
 
-    # the payload files of the renamed host sit in the folder of every host it is a source of,
-    # so they have to be moved before its own folder is renamed away
+    # The status file goes first: the piggyback hub forwards each moved payload file together
+    # with the last contact it finds, and without one the receiving site drops the data.
+    # The payload files of the renamed host sit in the folder of every host it is a source of,
+    # so they have to be moved before its own folder is renamed away.
     return tuple(
         itertools.chain(
-            *(_rename_file(folder) for folder in _get_piggybacked_host_folders(omd_root)),
             _rename_file(source_status_dir(omd_root)),
+            *(_rename_file(folder) for folder in _get_piggybacked_host_folders(omd_root)),
             _rename_piggybacked_dir(payload_dir(omd_root)),
         )
     )

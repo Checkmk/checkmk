@@ -26,16 +26,17 @@ py_library(
 py_library(
     name = "performance",
     testonly = True,
-    # The site suite (`system/`) and the reporting carry no Bazel target of their own -
-    # `perftest.sh` runs the site suite with pytest - so they are globbed in here to be linted
-    # and type-checked with everything else. `testlib/` and the component suites are Bazel
-    # packages of their own, which the glob does not reach into.
+    # The site suite (`system/`) carries no Bazel target of its own - `perftest.sh` runs it with
+    # pytest - so it is globbed in here to be linted and type-checked with everything else.
+    # `testlib/` and the component suites are Bazel packages of their own, which the glob does not
+    # reach into, and `reporting/` has its own target below.
     srcs = glob(
         ["**/*.py"],
         exclude = [
             "__init__.py",
             "benchmark_json.py",
             "component/__init__.py",
+            "reporting/**",
             "sysmon.py",
         ],
     ),
@@ -45,9 +46,6 @@ py_library(
         ":sysmon",
         "//tests/performance/testlib:livestatus_fake",
         requirement("pytest"),
-        requirement("psycopg"),
-        requirement("jira"),
-        requirement("matplotlib"),
         requirement("requests"),
         requirement("playwright"),
         requirement("pytest_benchmark"),
@@ -89,6 +87,21 @@ py_library(
     deps = [
         ":pkg",
         requirement("pytest"),
+    ],
+)
+
+# The upload, baseline checks and graphs, on their own so their unit tests need neither a site
+# nor a browser.
+py_library(
+    name = "reporting",
+    testonly = True,
+    srcs = glob(["reporting/*.py"]),
+    imports = ["../.."],
+    deps = [
+        ":pkg",
+        requirement("jira"),
+        requirement("matplotlib"),
+        requirement("psycopg"),
     ],
 )
 

@@ -56,10 +56,6 @@ from cmk.utils.servicename import ServiceName
 __all__ = ["execute_check_discovery"]
 
 
-# TODO: remove this feature flag, once successfully tested
-_CHANGED_PARAMS_FEATURE_FLAG = True
-
-
 class _Transition(enum.Enum):
     NEW = enum.auto()
     VANISHED = enum.auto()
@@ -286,10 +282,7 @@ def _check_service_lists(
             modified_labels = True
             filtered &= not service_filters.changed_labels(service_description)
 
-        # TODO (params-discovery): we removed the params check for now as the front-end
-        # implementation is yet to be done. See previous git history to see how the check was
-        # implemented.
-        if _CHANGED_PARAMS_FEATURE_FLAG and service.new.parameters != service.previous.parameters:
+        if service.new.parameters != service.previous.parameters:
             modified = True
             modified_params = True
             filtered &= not service_filters.changed_params(service_description)
@@ -300,11 +293,7 @@ def _check_service_lists(
     if change_affected_check_plugins:
         severity = max(
             params.severity_changed_service_labels if modified_labels else 0,
-            (
-                params.severity_changed_service_params
-                if _CHANGED_PARAMS_FEATURE_FLAG and modified_params
-                else 0
-            ),
+            params.severity_changed_service_params if modified_params else 0,
         )
         subresults.append(
             _transition_result(_Transition.CHANGED, change_affected_check_plugins, severity)
@@ -329,13 +318,9 @@ def _transition_result(
 ) -> ActiveCheckResult:
     info = ", ".join([f"{k}: {v}" for k, v in affected_check_plugins.items()])
     count = sum(affected_check_plugins.values())
-    if transition is _Transition.CHANGED and not _CHANGED_PARAMS_FEATURE_FLAG:
-        # TODO: see above TODO (params-discovery)
-        summary = f"Services with changed discovery labels: {count} ({info})"
-    else:
-        summary = f"Services {transition.title}: {count} ({info})"
-
-    return ActiveCheckResult(state=severity, summary=summary)
+    return ActiveCheckResult(
+        state=severity, summary=f"Services {transition.title}: {count} ({info})"
+    )
 
 
 def _make_service_result(

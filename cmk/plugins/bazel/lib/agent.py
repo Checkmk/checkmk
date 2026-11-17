@@ -21,7 +21,7 @@ from typing import NamedTuple
 
 import requests
 import urllib3
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, vcrtrace
@@ -35,6 +35,8 @@ LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 CAMEL_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 DEFAULT_VERSION_CACHE_INTERVAL = 8 * 3600
+FAILED_LOOKUP_RETRY_INTERVAL = 3600
+TAGS_PER_PAGE = 100  # GitHub maximum
 PASSWORD_OPTION = "password"
 
 
@@ -56,15 +58,42 @@ class BazelVersionInfo(BaseModel):
     latest: BazelVersion
 
 
+class TagCommit(BaseModel):
+    sha: str
+
+
+class Tag(BaseModel):
+    name: str
+    commit: TagCommit
+
+
+TAGS = TypeAdapter(list[Tag])
+
+
 class VersionCache:
     VERSION_CACHE_KEY = "bazel_version_cache"
+    LOOKUP_FAILED_KEY = "bazel_version_lookup_failed"
 
-    def __init__(self, storage: Storage, ttl: float) -> None:
+    def __init__(self, storage: Storage, ttl: float, *, debug: bool) -> None:
         self.storage = storage
         self.ttl = ttl
+        self.debug = debug
 
     def get_or_update(self, url: str, commit: str) -> BazelVersionInfo | None:
-        return self._get_cached_version_info() or self._renew_cached_version_info(url, commit)
+        if info := self._get_cached_version_info():
+            return info
+        if not self.debug and self._lookup_failed_recently():
+            return None
+        try:
+            info = self._renew_cached_version_info(url, commit)
+        except (requests.exceptions.RequestException, ValidationError) as e:
+            if self.debug:
+                raise
+            LOGGER.warning("Skipping version information: %(error)s", {"error": e})
+            info = None
+        if info is None:
+            self.storage.write(self.LOOKUP_FAILED_KEY, str(time.time()))
+        return info
 
     def _get_cached_version_info(self) -> BazelVersionInfo | None:
         if not (raw := self.storage.read(self.VERSION_CACHE_KEY, None)):
@@ -76,23 +105,33 @@ class VersionCache:
             return None
         return info if 0 < (time.time() - info.timestamp) < self.ttl else None
 
+    def _lookup_failed_recently(self) -> bool:
+        try:
+            failed_at = float(self.storage.read(self.LOOKUP_FAILED_KEY, ""))
+        except ValueError:
+            return False
+        retry_interval = min(self.ttl, FAILED_LOOKUP_RETRY_INTERVAL)
+        return 0 < (time.time() - failed_at) < retry_interval
+
     def _renew_cached_version_info(
         self, tags_url: str, commit_hash: str
     ) -> BazelVersionInfo | None:
-        try:
-            resp = requests.get(tags_url, timeout=30)
-            resp.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            LOGGER.warning("Skipping version information: %(error)s", {"error": e})
-            return None
+        resp = requests.get(tags_url, params={"per_page": TAGS_PER_PAGE}, timeout=30)
+        resp.raise_for_status()
         timestamp = time.time()
-        items = resp.json()
+        tags = TAGS.validate_python(resp.json())
         versions = {
-            item["commit"]["sha"]: SemanticVersion.from_string(item["name"]) for item in items
+            tag.commit.sha: version
+            for tag in tags
+            if (version := _parse_version_tag(tag.name)) is not None
         }
         current_version = versions.get(commit_hash)
 
         if current_version is None:
+            LOGGER.warning(
+                "Skipping version information: commit %(commit)s not found among tags",
+                {"commit": commit_hash},
+            )
             return None
 
         newer_versions = {v for v in versions.values() if v > current_version}
@@ -111,6 +150,13 @@ class VersionCache:
         # should the combination of url and commit actually be the key?
         self.storage.write(self.VERSION_CACHE_KEY, info.model_dump_json())
         return info
+
+
+def _parse_version_tag(name: str) -> SemanticVersion | None:
+    try:
+        return SemanticVersion.from_string(name)
+    except ValueError:
+        return None
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -244,7 +290,7 @@ def _process_data(res: requests.Response, endpoint: Endpoint, args: argparse.Nam
     if endpoint.name != "status" or "git_commit" not in data:
         return
 
-    version_cache = VersionCache(Storage(AGENT, args.host), args.version_cache)
+    version_cache = VersionCache(Storage(AGENT, args.host), args.version_cache, debug=args.debug)
     if not (
         version_info := version_cache.get_or_update(args.bazel_cache_tags_url, data["git_commit"])
     ):

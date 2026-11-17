@@ -116,8 +116,9 @@ class MonitoringTable:
     )
     links: list[MonitoringTableLink] = api_field(
         description=(
-            "The links into Setup the user may follow from a row of the table. Empty for a "
-            "services table."
+            "The links into Setup the user may follow from a row of the table. A row of a "
+            "services table offers them in its action menu, which asks per row whether the user "
+            "may open the host of its service in Setup."
         )
     )
     host_actions: list[MonitoringTableAction] = api_field(

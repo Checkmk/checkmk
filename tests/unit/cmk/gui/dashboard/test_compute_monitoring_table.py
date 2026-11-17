@@ -638,9 +638,20 @@ def test_a_services_table_offers_the_service_commands_of_the_reader(
     assert "reschedule" in [action["ident"] for action in response.json["value"]["actions"]]
 
 
-def test_a_services_table_offers_no_setup_links_for_a_service(
+def test_a_services_table_offers_the_setup_links_of_the_reader_for_a_service(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
+    response = _compute_service_with_graphs(clients, mock_livestatus, _services_body())
+
+    assert [link["ident"] for link in response.json["value"]["links"]] == ["parameters"]
+
+
+def test_a_reader_who_may_not_edit_rules_is_offered_no_link_to_the_parameters_of_a_service(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # Setup waives the rules permission for those who may see all of it.
+    _log_in_with_admin_permissions_but(clients, {"wato.rulesets": "no", "wato.seeall": "no"})
+
     response = _compute_service_with_graphs(clients, mock_livestatus, _services_body())
 
     assert response.json["value"]["links"] == []

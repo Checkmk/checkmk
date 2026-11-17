@@ -14,6 +14,7 @@ from cmk.gui.monitor.command import (
     MonitorCommands,
     MonitorObjectType,
     OfferedCommand,
+    service_setup_links,
     SetupLink,
 )
 from cmk.gui.monitor.hosts.table import (
@@ -61,6 +62,12 @@ def _host_setup_links(api_context: ApiContext) -> Sequence[SetupLink]:
     return host_setup_links(api_context.config, api_context.user)
 
 
+def _service_setup_links(api_context: ApiContext) -> Sequence[SetupLink]:
+    if _reads_shared_dashboard(api_context):
+        return []
+    return service_setup_links(api_context.config, api_context.user)
+
+
 @dataclass(frozen=True)
 class RowOffer:
     """What the page of an object type offers to do with one of its objects."""
@@ -81,7 +88,7 @@ class RowOffer:
 
 
 _HOST_OFFER: Final = RowOffer("host", HOST_SUPPORTED_ACTIONS, links=_host_setup_links)
-_SERVICE_OFFER: Final = RowOffer("service", SERVICE_SUPPORTED_ACTIONS)
+_SERVICE_OFFER: Final = RowOffer("service", SERVICE_SUPPORTED_ACTIONS, links=_service_setup_links)
 
 
 @dataclass(frozen=True)

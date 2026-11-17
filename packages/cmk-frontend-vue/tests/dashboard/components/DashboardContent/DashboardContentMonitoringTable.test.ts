@@ -126,6 +126,8 @@ let failWith: number | null = null
 let requests: unknown[] = []
 let authorizations: (string | null)[] = []
 let reschedules: unknown[] = []
+// Whether each service menu opened asked for the links into Setup.
+let askedForSetupLinks: (string | null)[] = []
 // When the host's check last ran: by default, since it was rescheduled.
 let hostLastCheck = SCHEDULED_AT
 
@@ -141,9 +143,10 @@ const server = useMswServer(
   restApiHttp.get('/monitor/hosts/{hostname}/action_menu', ({ response }) =>
     response(200).json({ items: [] })
   ),
-  restApiHttp.get('/monitor/hosts/{hostname}/service/action_menu', ({ response }) =>
-    response(200).json({ items: [] })
-  ),
+  restApiHttp.get('/monitor/hosts/{hostname}/service/action_menu', ({ request, response }) => {
+    askedForSetupLinks.push(new URL(request.url).searchParams.get('include_setup_links'))
+    return response(200).json({ items: [] })
+  }),
   restApiHttp.post('/monitor/hosts/actions/reschedule', async ({ request, response }) => {
     reschedules.push(await request.json())
     return response(200).json({ rescheduled: 1, scheduled_at: SCHEDULED_AT, wait_timeout: 10 })
@@ -180,6 +183,7 @@ afterEach(() => {
   requests = []
   authorizations = []
   reschedules = []
+  askedForSetupLinks = []
   hostLastCheck = SCHEDULED_AT
   vi.useRealTimers()
   FakeResizeObserver.instances = []
@@ -553,6 +557,36 @@ describe('DashboardContentMonitoringTable', () => {
         }
       ])
     )
+  })
+
+  it('asks the menu of a service row for the links into Setup the table offers', async () => {
+    value = {
+      ...SERVICES_VALUE,
+      links: [
+        {
+          ident: 'parameters',
+          title: 'Parameters',
+          icon: 'rulesets',
+          url: 'wato.py?mode=object_parameters&host={host}&service={service}'
+        }
+      ]
+    }
+    await renderWidget(SERVICES_CONTENT)
+    await screen.findByText('Check_MK')
+
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+    await waitFor(() => expect(askedForSetupLinks).toEqual(['true']))
+  })
+
+  it('asks the menu of a service row for no links into Setup the table does not offer', async () => {
+    value = SERVICES_VALUE
+    await renderWidget(SERVICES_CONTENT)
+    await screen.findByText('Check_MK')
+
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+    await waitFor(() => expect(askedForSetupLinks).toEqual([null]))
   })
 
   it('offers no row actions in the wizard preview', async () => {

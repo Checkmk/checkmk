@@ -260,11 +260,15 @@ export class ServicesTableDescriptor extends MonitoringTableDescriptor<
     const { mayReschedule, loadActionMenu, registry } = useServiceActions({
       actions: offer.actions
     })
+    // A row offers the links into Setup in its menu, as All services does: whether the reader may
+    // open the host of its service there is asked when the menu opens, not for every row.
+    const menuOptions = { includeSetupLinks: offer.links.length > 0 }
     return {
       rowProps: (row) =>
         ({
           mayReschedule,
-          loadActionMenu: (service: string) => loadActionMenu(hostRefOfService(row), service)
+          loadActionMenu: (service: string) =>
+            loadActionMenu(hostRefOfService(row), service, menuOptions)
         }) satisfies Partial<ComponentProps<typeof HostServicesRow>>,
       run: (row, command, signal) =>
         performRowCommand(registry, serviceCommand(hostRefOfService(row), command), signal)

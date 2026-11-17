@@ -8,7 +8,9 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <ctime>
 #include <iomanip>
+#include <optional>
 #include <ratio>
 #include <string>
 #include <utility>
@@ -41,6 +43,21 @@ inline uint64_t mangleTimePoint(std::chrono::system_clock::time_point x) {
 inline std::chrono::system_clock::time_point demangleTimePoint(uint64_t x) {
     return std::chrono::system_clock::time_point{
         std::chrono::microseconds{x ^ mangleTimePoint({})}};
+}
+
+// system_clock counts nanoseconds in 64 bits, so from_time_t() overflows for
+// timestamps beyond the year 2262. Timestamps long before the epoch overflow,
+// too, when we subtract them from now, and none of ours are negative anyway.
+inline std::optional<std::chrono::system_clock::time_point> checked_from_time_t(
+    std::time_t t) {
+    constexpr auto max_seconds =
+        std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::duration::max())
+            .count();
+    if (t < 0 || t > max_seconds) {
+        return std::nullopt;
+    }
+    return std::chrono::system_clock::from_time_t(t);
 }
 }  // namespace mk
 

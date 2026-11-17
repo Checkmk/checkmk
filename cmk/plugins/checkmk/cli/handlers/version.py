@@ -9,7 +9,6 @@ from pathlib import Path
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.version import Edition, edition
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -25,7 +24,7 @@ type _EditionOf = Callable[[Path], Edition]
 class _VersionCommand:
     edition_of: _EditionOf
 
-    def run(self, context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, _request: None) -> CLIExitCode:
         write_stdout(
             """This is %s version %s
 Copyright (C) 2009 Checkmk GmbH

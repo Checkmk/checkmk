@@ -87,7 +87,7 @@ def _request(check_type: str | None) -> ManRequest:
 def test_without_a_check_type_the_table_of_all_man_pages_is_printed() -> None:
     print_table = _FakePrintManPageTable()
 
-    _man_command(print_table=print_table).run(_context(), _request(None), ())
+    _man_command(print_table=print_table).run(_context(), _request(None))
 
     assert print_table.printed == [{"df": _DF_PATH}]
 
@@ -95,24 +95,24 @@ def test_without_a_check_type_the_table_of_all_man_pages_is_printed() -> None:
 def test_the_man_page_of_the_check_type_is_parsed() -> None:
     parse = _FakeParseManPage()
 
-    _man_command(parse=parse).run(_context(), _request("df"), ())
+    _man_command(parse=parse).run(_context(), _request("df"))
 
     assert parse.parsed == [("df", _DF_PATH, False)]
 
 
 def test_the_rendered_man_page_is_written(capsys: pytest.CaptureFixture[str]) -> None:
-    _man_command().run(_context(), _request("df"), ())
+    _man_command().run(_context(), _request("df"))
 
     assert "Filesystems" in capsys.readouterr().out
 
 
 def test_an_unknown_check_type_exits_three() -> None:
-    assert _man_command().run(_context(), _request("nope"), ()) == CLIExitCode.UNKNOWN
+    assert _man_command().run(_context(), _request("nope")) == CLIExitCode.UNKNOWN
 
 
 def test_an_unknown_check_type_is_raised_through_under_debug() -> None:
     with pytest.raises(MKBailOut, match="No manpage for nope"):
-        _man_command().run(_context(debug=True), _request("nope"), ())
+        _man_command().run(_context(debug=True), _request("nope"))
 
 
 class _FakeBrowseManPages:
@@ -126,6 +126,6 @@ class _FakeBrowseManPages:
 def test_the_man_pages_are_browsed() -> None:
     browse = _FakeBrowseManPages()
 
-    _BrowseManCommand(browse=browse).run(_context(), None, ())
+    _BrowseManCommand(browse=browse).run(_context(), None)
 
     assert browse.browsed == [False]

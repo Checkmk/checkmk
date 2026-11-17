@@ -57,7 +57,6 @@ from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -301,9 +300,7 @@ def _check_discovery(
 class _CheckDiscoveryCommand:
     check_discovery: _CheckDiscovery
 
-    def run(
-        self, context: CLIContext, request: CheckDiscoveryRequest, _args: CLIArgs
-    ) -> CLIExitCode:
+    def run(self, context: CLIContext, request: CheckDiscoveryRequest) -> CLIExitCode:
         assert request.host is not None
         try:
             check_result = self.check_discovery(
@@ -568,7 +565,7 @@ def _discover(request: DiscoverRequest, *, omd_root: Path, debug: bool) -> bool:
 class _DiscoverCommand:
     discover: _Discover
 
-    def run(self, context: CLIContext, request: DiscoverRequest, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, request: DiscoverRequest) -> CLIExitCode:
         try:
             succeeded = self.discover(
                 request, omd_root=context.omd_root, debug=context.global_options.debug

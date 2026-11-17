@@ -25,6 +25,6 @@ def test_the_version_names_the_sites_edition(capsys: pytest.CaptureFixture[str])
         logger=logging.getLogger(__name__),
     )
 
-    _VersionCommand(edition_of=_ultimate).run(context, None, ())
+    _VersionCommand(edition_of=_ultimate).run(context, None)
 
     assert capsys.readouterr().out.startswith("This is Checkmk Ultimate version ")

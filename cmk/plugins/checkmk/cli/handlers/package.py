@@ -6,7 +6,6 @@
 import sys
 from collections.abc import Sequence
 
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -16,7 +15,7 @@ from cmk.plugins.checkmk.cli.package import (
 )
 
 
-def _run_package(_context: CLIContext, arguments: Sequence[str], _args: CLIArgs) -> CLIExitCode:
+def _run_package(_context: CLIContext, arguments: Sequence[str]) -> CLIExitCode:
     sys.stderr.write(DEPRECATION_MSG % " ".join(("", *arguments)) + "\n")
     return CLIExitCode.FAILURE
 

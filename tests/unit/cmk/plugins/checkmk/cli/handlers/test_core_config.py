@@ -41,7 +41,7 @@ class _FakeConfigureCore:
 def test_the_core_is_configured_for_the_requested_hosts() -> None:
     configure_core = _FakeConfigureCore()
 
-    _ConfigureCoreCommand(configure_core=configure_core).run(_CONTEXT, _REQUEST, ())
+    _ConfigureCoreCommand(configure_core=configure_core).run(_CONTEXT, _REQUEST)
 
     assert configure_core.asked == [(_REQUEST, _OMD_ROOT, False)]
 
@@ -49,7 +49,7 @@ def test_the_core_is_configured_for_the_requested_hosts() -> None:
 def test_a_failed_core_configuration_exits_three() -> None:
     assert (
         _ConfigureCoreCommand(configure_core=_FakeConfigureCore(error=_FAILURE)).run(
-            _CONTEXT, _REQUEST, ()
+            _CONTEXT, _REQUEST
         )
         == CLIExitCode.UNKNOWN
     )
@@ -68,13 +68,12 @@ class _FakeUpdate:
 def test_the_core_config_is_updated_with_the_fake_address() -> None:
     update = _FakeUpdate(updated=True)
 
-    _UpdateCommand(update=update).run(_CONTEXT, HostAddress("127.0.0.1"), ())
+    _UpdateCommand(update=update).run(_CONTEXT, HostAddress("127.0.0.1"))
 
     assert update.asked == [(HostAddress("127.0.0.1"), _OMD_ROOT, False)]
 
 
 def test_a_configuration_error_exits_one() -> None:
     assert (
-        _UpdateCommand(update=_FakeUpdate(updated=False)).run(_CONTEXT, None, ())
-        == CLIExitCode.FAILURE
+        _UpdateCommand(update=_FakeUpdate(updated=False)).run(_CONTEXT, None) == CLIExitCode.FAILURE
     )

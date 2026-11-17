@@ -43,7 +43,6 @@ from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import InventoryPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -291,7 +290,7 @@ def _inventorize(request: InventoryRequest, *, omd_root: Path, debug: bool) -> N
 class _InventoryCommand:
     inventorize: _Inventorize
 
-    def run(self, context: CLIContext, request: InventoryRequest, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, request: InventoryRequest) -> CLIExitCode:
         try:
             self.inventorize(request, omd_root=context.omd_root, debug=context.global_options.debug)
         except (MKBailOut, MKGeneralException) as e:
@@ -494,9 +493,7 @@ def _inventorize_marked_hosts(
 class _InventorizeMarkedHostsCommand:
     inventorize_marked_hosts: _InventorizeMarkedHosts
 
-    def run(
-        self, context: CLIContext, request: InventorizeMarkedHostsRequest, _args: CLIArgs
-    ) -> CLIExitCode:
+    def run(self, context: CLIContext, request: InventorizeMarkedHostsRequest) -> CLIExitCode:
         try:
             self.inventorize_marked_hosts(
                 request, omd_root=context.omd_root, debug=context.global_options.debug

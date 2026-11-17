@@ -40,15 +40,6 @@ class ExitCode(Enum):
     """128 + SIGPIPE, as a shell reports a command whose reader went away"""
 
 
-type Args = Sequence[str]
-"""The positional arguments of a command.
-
-Empty for commands without an argument, exactly one element for commands with a
-required argument, and all remaining command line arguments for commands with an
-optional argument.
-"""
-
-
 @dataclass(frozen=True, kw_only=True)
 class GlobalOptions:
     """The options every command accepts and acts on itself.
@@ -200,7 +191,7 @@ class Command[R]:
     ...         loud=options.flag(Flag(long="loud", help="Shout")),
     ...         names=options.arguments(Arguments(placeholder="NAME...", parse=str)),
     ...     )
-    >>> def greet(context: Context, request: GreetRequest, _args: Args) -> ExitCode:
+    >>> def greet(context: Context, request: GreetRequest) -> ExitCode:
     ...     greeting = "HELLO" if request.loud else "Hello"
     ...     print(greeting, ", ".join(request.names))
     ...     return ExitCode.SUCCESS
@@ -233,8 +224,6 @@ class Command[R]:
     handler: str
     """Where the command's :class:`Handler` lives, as ``module:object``, imported when the command runs"""
     short: str | None = None
-    arguments: Argument[str] | Arguments[str] | None = None
-    """The positional arguments the handler receives unread, for a command whose request reads none"""
     description: Sequence[str] = ()
     default: bool = False
     """Whether positional arguments without any command select this command"""
@@ -250,21 +239,21 @@ class Handler[R]:
 
     Its command refers to it as ``module:object``:
 
-    >>> def greet(context: Context, request: None, args: Args) -> ExitCode:
-    ...     print("Hello", ", ".join(args))
+    >>> def greet(context: Context, request: None) -> ExitCode:
+    ...     print("Hello")
     ...     return ExitCode.SUCCESS
     >>> cli_command_greet = Command(
     ...     name="greet",
     ...     handler="cmk.plugins.greetings.cli.handlers.greet:cli_handler_greet",
     ...     long="greet",
     ...     request=no_options,
-    ...     help="Greet the given names",
+    ...     help="Greet",
     ... )
     >>> cli_handler_greet = Handler(command=cli_command_greet, run=greet)
     """
 
     command: Command[R]
-    run: Callable[[Context, R, Args], ExitCode]
+    run: Callable[[Context, R], ExitCode]
     """Runs the command with its request and returns the exit status"""
 
 
@@ -282,7 +271,6 @@ def entry_point_prefixes() -> Mapping[type[Command[object]], str]:
 
 
 __all__ = [
-    "Args",
     "Argument",
     "Arguments",
     "Command",

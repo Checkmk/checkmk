@@ -14,7 +14,6 @@ from cmk.cli.engine.commands import requires_argument as cli_requires_argument
 from cmk.cli.engine.discovery import _named_after_its_variable as _cli_named_after_its_variable
 from cmk.cli.engine.discovery import load_handler as cli_load_handler
 from cmk.cli.engine.readers import parsed as cli_parsed
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
@@ -50,7 +49,7 @@ def _walk_request(options: CLIReader) -> tuple[str | None, int]:
     return options.value(_OID_VALUE), options.count(_VERBOSE_COUNT)
 
 
-def _handler(_context: CLIContext, _request: tuple[str | None, int], _args: CLIArgs) -> CLIExitCode:
+def _handler(_context: CLIContext, _request: tuple[str | None, int]) -> CLIExitCode:
     return CLIExitCode.SUCCESS
 
 
@@ -71,9 +70,7 @@ def test_make_command_records_the_options_a_command_declares() -> None:
 def test_a_commands_handler_receives_its_request_parsed() -> None:
     seen: list[tuple[str | None, int]] = []
 
-    def _record(
-        _context: CLIContext, request: tuple[str | None, int], _args: CLIArgs
-    ) -> CLIExitCode:
+    def _record(_context: CLIContext, request: tuple[str | None, int]) -> CLIExitCode:
         seen.append(request)
         return CLIExitCode.SUCCESS
 
@@ -92,8 +89,11 @@ def test_a_commands_handler_receives_its_request_parsed() -> None:
     )
 
     bound(
-        CLIContext(omd_root=_OMD_ROOT, global_options=CLIGlobalOptions(), logger=null_logger()),
-        [],
+        CLIContext(
+            omd_root=_OMD_ROOT,
+            global_options=CLIGlobalOptions(),
+            logger=null_logger(),
+        )
     )
 
     assert seen == [("ISO", 2)]
@@ -118,7 +118,7 @@ def _greeting(name: str, handler: str) -> CLICommand[None]:
     return CLICommand(name=name, handler=handler, long=name, request=cli_no_options, help="Greet")
 
 
-def _greet(_context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+def _greet(_context: CLIContext, _request: None) -> CLIExitCode:
     return CLIExitCode.SUCCESS
 
 
@@ -210,21 +210,4 @@ def test_a_command_reading_a_positional_argument_twice_is_rejected() -> None:
                 options.argument(_HOST_ARGUMENT),
                 options.arguments(CLIArguments(placeholder="HOST", parse=str)),
             )
-        )
-
-
-def test_a_command_declaring_and_reading_its_positional_arguments_is_rejected() -> None:
-    with pytest.raises(
-        ValueError, match="'thing' both declares and reads its positional arguments"
-    ):
-        command_with(
-            CLICommand(
-                name="thing",
-                handler=HANDED_IN,
-                long="thing",
-                request=lambda options: options.argument(_HOST_ARGUMENT),
-                arguments=CLIArguments(placeholder="FILES...", parse=str),
-                help="Do the thing",
-            ),
-            lambda *_args: CLIExitCode.SUCCESS,
         )

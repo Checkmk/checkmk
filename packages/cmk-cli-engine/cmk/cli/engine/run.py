@@ -98,7 +98,7 @@ def _run_command(
         runtime.write_error(rejection(argv, error))
         return CLIExitCode.UNKNOWN
     with runtime.trace_command(context, run_command):
-        return bound(context, run_command.args)
+        return bound(context)
 
 
 def run(

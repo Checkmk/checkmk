@@ -129,7 +129,7 @@ def _selection(*plugins: str, list_plugins: bool = False) -> CliSelection:
 def test_the_dump_is_created_with_the_selected_plugins() -> None:
     create_dump = _FakeCreateDump()
 
-    _dump_command(create_dump).run(_context(), _selection("b_high"), ())
+    _dump_command(create_dump).run(_context(), _selection("b_high"))
 
     assert create_dump.asked == [
         (_OMD_ROOT, DumpSelection(plugins=["b_high"], checkmk_server_host=""), False)
@@ -139,7 +139,7 @@ def test_the_dump_is_created_with_the_selected_plugins() -> None:
 def test_listing_the_plugins_creates_no_dump() -> None:
     create_dump = _FakeCreateDump()
 
-    _dump_command(create_dump).run(_context(), _selection(list_plugins=True), ())
+    _dump_command(create_dump).run(_context(), _selection(list_plugins=True))
 
     assert create_dump.asked == []
 
@@ -147,18 +147,17 @@ def test_listing_the_plugins_creates_no_dump() -> None:
 def test_the_plugins_are_listed_by_topic(capsys: pytest.CaptureFixture[str]) -> None:
     catalogue = {"a_low": _make_cli_plugin("a_low", _CLI_TOPIC_A, Sensitivity.LOW)}
 
-    _dump_command(_FakeCreateDump(), catalogue).run(_context(), _selection(list_plugins=True), ())
+    _dump_command(_FakeCreateDump(), catalogue).run(_context(), _selection(list_plugins=True))
 
     assert capsys.readouterr().out == "Topic A\n  a_low (low): A test plugin\n"
 
 
 def test_an_unknown_plugin_exits_three() -> None:
     assert (
-        _dump_command(_FakeCreateDump()).run(_context(), _selection("nope"), ())
-        == CLIExitCode.UNKNOWN
+        _dump_command(_FakeCreateDump()).run(_context(), _selection("nope")) == CLIExitCode.UNKNOWN
     )
 
 
 def test_an_unknown_plugin_is_raised_through_under_debug() -> None:
     with pytest.raises(MKGeneralException, match="Unknown plugin 'nope'"):
-        _dump_command(_FakeCreateDump()).run(_context(debug=True), _selection("nope"), ())
+        _dump_command(_FakeCreateDump()).run(_context(debug=True), _selection("nope"))

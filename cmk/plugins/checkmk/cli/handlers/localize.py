@@ -13,7 +13,6 @@ from pathlib import Path
 import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKException
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -310,7 +309,7 @@ def _initialize_local_po_file(lang: LanguageName) -> None:
         )
 
 
-def _run_localize(_context: CLIContext, arguments: Sequence[str], _args: CLIArgs) -> CLIExitCode:
+def _run_localize(_context: CLIContext, arguments: Sequence[str]) -> CLIExitCode:
     return do_localize(arguments)
 
 

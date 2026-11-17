@@ -17,7 +17,6 @@ from cmk.cli.engine.options import _GENERAL_OPTIONS as CLI_GENERAL_OPTIONS
 from cmk.cli.engine.options import Declaration as CLIDeclaration
 from cmk.cli.engine.options import GlobalOptions as CLIEngineGlobalOptions
 from cmk.cli.engine.options import placeholder as cli_placeholder
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
@@ -34,7 +33,7 @@ from ._commands import command_with, HANDED_IN
 from ._logger import null_logger
 
 
-def _unreachable(_context: CLIContext, _request: None, _args: CLIArgs) -> NoReturn:
+def _unreachable(_context: CLIContext, _request: object) -> NoReturn:
     raise AssertionError("parsing must not run the command")
 
 
@@ -65,13 +64,17 @@ _OTHER_PLAIN: Final = command_with(
     _unreachable,
 )
 
+
+def _host_request(options: CLIReader) -> str | None:
+    return options.argument(CLIArgument(placeholder="HOST", parse=str))
+
+
 _WITH_ARGUMENT: Final = command_with(
     CLICommand(
         name="with_argument",
         handler=HANDED_IN,
         long="with-argument",
-        request=cli_no_options,
-        arguments=CLIArgument(placeholder="HOST", parse=str),
+        request=_host_request,
         help="needs exactly one argument",
     ),
     _unreachable,
@@ -101,12 +104,13 @@ _RENAMED_VALUE: Final = CLIValue(
 
 def _default_request(
     options: CLIReader,
-) -> tuple[bool, int, Sequence[str], str | None]:
+) -> tuple[bool, int, Sequence[str], str | None, Sequence[str]]:
     return (
         options.flag(_FLAG),
         options.count(_COUNTED_COUNT),
         options.values(_COLLECTED_VALUES),
         options.value(_RENAMED_VALUE),
+        options.arguments(CLIArguments(placeholder="HOSTS", parse=str)),
     )
 
 
@@ -117,7 +121,6 @@ _DEFAULT: Final = command_with(
         long="default",
         short="c",
         request=_default_request,
-        arguments=CLIArguments(placeholder="HOSTS", parse=str),
         default=True,
         help="the default command",
     ),

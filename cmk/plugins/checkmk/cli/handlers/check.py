@@ -18,7 +18,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.plugins import CheckPluginName
 from cmk.checkengine.specs.checkresults import ServiceState
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -102,7 +101,7 @@ def _check_host(
 class _CheckCommand:
     check_host: _CheckHost
 
-    def run(self, context: CLIContext, request: CheckingRequest, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, request: CheckingRequest) -> CLIExitCode:
         assert request.host is not None
         try:
             return state_exit_code(

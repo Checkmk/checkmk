@@ -27,12 +27,12 @@ def _context() -> CLIContext:
     "args", [[], ["frobnicate", "de"]], ids=["without a command", "with an unknown command"]
 )
 def test_a_wrong_invocation_fails(args: list[str]) -> None:
-    assert cli_handler_localize.run(_context(), args, ()) == CLIExitCode.FAILURE
+    assert cli_handler_localize.run(_context(), args) == CLIExitCode.FAILURE
 
 
 def test_a_call_without_a_command_shows_the_usage_on_stderr(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    cli_handler_localize.run(_context(), [], ())
+    cli_handler_localize.run(_context(), [])
 
     assert "Usage:" in capsys.readouterr().err

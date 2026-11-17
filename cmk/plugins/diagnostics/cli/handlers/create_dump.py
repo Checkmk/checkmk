@@ -18,7 +18,6 @@ from cmk.base.diagnostics import (
 )
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -94,7 +93,7 @@ class _CreateDiagnosticsDumpCommand:
     load_catalogue: _LoadCatalogue
     create_dump: _CreateDump
 
-    def run(self, context: CLIContext, options: CliSelection, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, options: CliSelection) -> CLIExitCode:
         try:
             catalogue = self.load_catalogue()
 

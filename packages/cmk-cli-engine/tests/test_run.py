@@ -21,7 +21,6 @@ from cmk.cli.engine.run import CommandTracer as CLICommandTracer
 from cmk.cli.engine.run import dispatch as cli_dispatch
 from cmk.cli.engine.run import run as cli_run
 from cmk.cli.engine.run import Runtime as CLIRuntime
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
@@ -147,7 +146,7 @@ def test_an_interruption_says_so_in_the_log(caplog: pytest.LogCaptureFixture) ->
     assert "<Interrupted>" in caplog.text
 
 
-def _command(handler: Callable[[CLIContext, None, CLIArgs], CLIExitCode]) -> CLIDiscoveredCommand:
+def _command(handler: Callable[[CLIContext, None], CLIExitCode]) -> CLIDiscoveredCommand:
     return command_with(
         CLICommand(
             name="demo",
@@ -230,9 +229,7 @@ def _number_request(options: CLIReader) -> int | None:
     return options.value(_NUMBER_VALUE)
 
 
-def _numbered(
-    handler: Callable[[CLIContext, int | None, CLIArgs], CLIExitCode],
-) -> CLIDiscoveredCommand:
+def _numbered(handler: Callable[[CLIContext, int | None], CLIExitCode]) -> CLIDiscoveredCommand:
     return command_with(
         CLICommand(
             name="demo",
@@ -248,7 +245,7 @@ def _numbered(
 def test_a_sub_option_reaches_the_command_parsed() -> None:
     seen: list[int | None] = []
 
-    def remember(_context: CLIContext, number: int | None, _args: CLIArgs) -> CLIExitCode:
+    def remember(_context: CLIContext, number: int | None) -> CLIExitCode:
         seen.append(number)
         return CLIExitCode.SUCCESS
 
@@ -264,9 +261,7 @@ def _host_request(options: CLIReader) -> str | None:
     return options.argument(_HOST_ARGUMENT)
 
 
-def _hosted(
-    handler: Callable[[CLIContext, str | None, CLIArgs], CLIExitCode],
-) -> CLIDiscoveredCommand:
+def _hosted(handler: Callable[[CLIContext, str | None], CLIExitCode]) -> CLIDiscoveredCommand:
     return command_with(
         CLICommand(
             name="demo",
@@ -282,7 +277,7 @@ def _hosted(
 def test_a_positional_argument_reaches_the_command_parsed() -> None:
     seen: list[str | None] = []
 
-    def remember(_context: CLIContext, host: str | None, _args: CLIArgs) -> CLIExitCode:
+    def remember(_context: CLIContext, host: str | None) -> CLIExitCode:
         seen.append(host)
         return CLIExitCode.SUCCESS
 
@@ -370,7 +365,7 @@ def test_the_log_file_is_the_one_asked_for() -> None:
 def test_a_command_is_handed_the_site_root() -> None:
     seen: list[Path] = []
 
-    def remember(context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+    def remember(context: CLIContext, _request: None) -> CLIExitCode:
         seen.append(context.omd_root)
         return CLIExitCode.SUCCESS
 
@@ -382,7 +377,7 @@ def test_a_command_is_handed_the_site_root() -> None:
 def test_a_command_is_handed_only_the_options_it_acts_on() -> None:
     seen: list[CLIGlobalOptions] = []
 
-    def remember(context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+    def remember(context: CLIContext, _request: None) -> CLIExitCode:
         seen.append(context.global_options)
         return CLIExitCode.SUCCESS
 
@@ -394,7 +389,7 @@ def test_a_command_is_handed_only_the_options_it_acts_on() -> None:
 def test_a_command_reports_through_the_engines_logger() -> None:
     seen: list[logging.Logger] = []
 
-    def remember(context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+    def remember(context: CLIContext, _request: None) -> CLIExitCode:
         seen.append(context.logger)
         return CLIExitCode.SUCCESS
 
@@ -464,7 +459,7 @@ def _ignored_sigint() -> Iterator[None]:
         signal.signal(signal.SIGINT, previous)
 
 
-def _interrupting(_context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+def _interrupting(_context: CLIContext, _request: None) -> CLIExitCode:
     signal.raise_signal(signal.SIGINT)
     return CLIExitCode.SUCCESS
 
@@ -513,7 +508,7 @@ def test_the_command_runs_inside_its_trace() -> None:
         yield
         events.append("trace ends")
 
-    def handler(_context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+    def handler(_context: CLIContext, _request: None) -> CLIExitCode:
         events.append("handler")
         return CLIExitCode.SUCCESS
 
@@ -592,5 +587,5 @@ def test_the_profile_is_written_even_when_the_command_raises() -> None:
     assert len(written.calls) == 1
 
 
-def _failing(_context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+def _failing(_context: CLIContext, _request: None) -> CLIExitCode:
     raise ValueError("no such host")

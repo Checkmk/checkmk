@@ -32,7 +32,6 @@ from cmk.checkengine.parser import make_parser, NO_SELECTION, parse_raw_data, Se
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.checkengine.summarize import summarize
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -279,7 +278,7 @@ def _dump_agent(
 class _DumpAgentCommand:
     dump_agent: _DumpAgent
 
-    def run(self, context: CLIContext, request: DumpAgentRequest, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, request: DumpAgentRequest) -> CLIExitCode:
         assert request.host is not None
         try:
             dump = self.dump_agent(
@@ -372,7 +371,7 @@ def _dump_hosts(request: DumpHostsRequest, *, debug: bool) -> None:
 class _DumpHostsCommand:
     dump_hosts: _DumpHosts
 
-    def run(self, context: CLIContext, request: DumpHostsRequest, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, request: DumpHostsRequest) -> CLIExitCode:
         try:
             self.dump_hosts(request, debug=context.global_options.debug)
         except (MKBailOut, MKGeneralException) as e:

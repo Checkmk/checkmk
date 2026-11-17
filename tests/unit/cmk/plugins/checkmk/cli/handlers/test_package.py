@@ -20,7 +20,7 @@ def test_the_retired_command_refers_to_mkp_on_stderr(capsys: pytest.CaptureFixtu
         logger=logging.getLogger(__name__),
     )
 
-    cli_handler_package.run(context, ("list",), ())
+    cli_handler_package.run(context, ("list",))
 
     assert capsys.readouterr().err == (
         "This command is no longer supported. Please use `mkp list` instead.\n"

@@ -75,7 +75,7 @@ def test_the_named_automation_runs_with_its_arguments() -> None:
     execute = _FakeExecuteAutomation()
 
     _AutomationCommand(execute=execute).run(
-        _context(), _request("service-discovery-preview", "myhost"), ()
+        _context(), _request("service-discovery-preview", "myhost")
     )
 
     assert execute.executed == [
@@ -84,14 +84,14 @@ def test_the_named_automation_runs_with_its_arguments() -> None:
 
 
 def test_an_automation_without_name_exits_three() -> None:
-    assert _AutomationCommand(execute=_FakeExecuteAutomation()).run(_context(), _request(), ()) == (
+    assert _AutomationCommand(execute=_FakeExecuteAutomation()).run(_context(), _request()) == (
         CLIExitCode.UNKNOWN
     )
 
 
 def test_the_result_is_written_serialized(capsys: pytest.CaptureFixture[str]) -> None:
 
-    _AutomationCommand(execute=_FakeExecuteAutomation()).run(_context(), _request("test"), ())
+    _AutomationCommand(execute=_FakeExecuteAutomation()).run(_context(), _request("test"))
 
     assert capsys.readouterr().out == "('done',)\n"
 
@@ -100,6 +100,5 @@ def test_a_failed_automation_exits_with_its_error() -> None:
     execute = _FakeExecuteAutomation(AutomationError.UNKNOWN_ERROR)
 
     assert (
-        _AutomationCommand(execute=execute).run(_context(), _request("test"), ())
-        == CLIExitCode.ERROR
+        _AutomationCommand(execute=execute).run(_context(), _request("test")) == CLIExitCode.ERROR
     )

@@ -22,7 +22,6 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.store import activation_lock
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -241,7 +240,7 @@ def _update(fake_dns: HostAddress | None, *, omd_root: Path, debug: bool) -> boo
 class _UpdateCommand:
     update: _Update
 
-    def run(self, context: CLIContext, fake_dns: HostAddress | None, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, fake_dns: HostAddress | None) -> CLIExitCode:
         try:
             updated = self.update(
                 fake_dns, omd_root=context.omd_root, debug=context.global_options.debug
@@ -340,7 +339,7 @@ class _Activation:
 class _ConfigureCoreCommand:
     configure_core: _ConfigureCore
 
-    def run(self, context: CLIContext, request: CoreConfigRequest, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, request: CoreConfigRequest) -> CLIExitCode:
         try:
             self.configure_core(
                 request, omd_root=context.omd_root, debug=context.global_options.debug

@@ -26,7 +26,6 @@ from cmk.ccc import version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, raise_mkterminate_on_sigint
 from cmk.ccc.version import Edition
 from cmk.ccc.version import edition as edition_of_site
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -151,7 +150,7 @@ class _NotifyCommand:
     execute_automation: _ExecuteNotifyAutomation
     notify: _Notify
 
-    def run(self, context: CLIContext, request: NotifyRequest, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, request: NotifyRequest) -> CLIExitCode:
         try:
             edition = self.edition_of(context.omd_root)
             community_edition = edition is Edition.COMMUNITY

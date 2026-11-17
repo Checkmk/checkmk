@@ -116,7 +116,7 @@ _SPOOLFILE = ("spoolfile", "/spool/1")
 def test_a_notification_is_sent_with_the_command_line_arguments() -> None:
     notify = _FakeNotify()
 
-    _notify_command(notify=notify).run(_context(), _request("fake-service"), ())
+    _notify_command(notify=notify).run(_context(), _request("fake-service"))
 
     assert notify.asked == [(("fake-service",), Edition.PRO, False, False, False)]
 
@@ -124,7 +124,7 @@ def test_a_notification_is_sent_with_the_command_line_arguments() -> None:
 def test_a_spool_file_of_a_commercial_site_goes_to_the_automation_helper() -> None:
     execute = _FakeExecuteNotifyAutomation()
 
-    _notify_command(execute_automation=execute).run(_context(), _request(*_SPOOLFILE), ())
+    _notify_command(execute_automation=execute).run(_context(), _request(*_SPOOLFILE))
 
     assert execute.asked == [_SPOOLFILE]
 
@@ -133,7 +133,7 @@ def test_the_automation_helper_is_asked_to_log_to_stdout_as_well() -> None:
     execute = _FakeExecuteNotifyAutomation()
     request = _request(*_SPOOLFILE, log_to_stdout=True)
 
-    _notify_command(execute_automation=execute).run(_context(), request, ())
+    _notify_command(execute_automation=execute).run(_context(), request)
 
     assert execute.asked == [["--log-to-stdout", *_SPOOLFILE]]
 
@@ -142,7 +142,7 @@ def test_a_spool_file_of_a_community_site_is_notified_locally() -> None:
     notify = _FakeNotify()
     notification = _notify_command(edition=Edition.COMMUNITY, notify=notify)
 
-    notification.run(_context(), _request(*_SPOOLFILE), ())
+    notification.run(_context(), _request(*_SPOOLFILE))
 
     assert notify.asked == [(_SPOOLFILE, Edition.COMMUNITY, False, False, False)]
 
@@ -150,14 +150,14 @@ def test_a_spool_file_of_a_community_site_is_notified_locally() -> None:
 def test_a_spool_file_fails_without_the_automation_helper() -> None:
     notification = _notify_command(execute_automation=_UnavailableNotifyAutomation())
 
-    assert notification.run(_context(), _request(*_SPOOLFILE), ()) == CLIExitCode.FAILURE
+    assert notification.run(_context(), _request(*_SPOOLFILE)) == CLIExitCode.FAILURE
 
 
 def test_the_automation_helpers_exit_code_keeps_its_retry_meaning() -> None:
     execute = _FakeExecuteNotifyAutomation("{'exit_code': 1, 'output': ''}")
 
     assert (
-        _notify_command(execute_automation=execute).run(_context(), _request(*_SPOOLFILE), ())
+        _notify_command(execute_automation=execute).run(_context(), _request(*_SPOOLFILE))
         == CLIExitCode.FAILURE
     )
 
@@ -168,7 +168,7 @@ def test_the_automation_helpers_output_is_written_when_logging_to_stdout(
     execute = _FakeExecuteNotifyAutomation("{'exit_code': 0, 'output': 'sent\\n'}")
     request = _request(*_SPOOLFILE, log_to_stdout=True)
 
-    _notify_command(execute_automation=execute).run(_context(), request, ())
+    _notify_command(execute_automation=execute).run(_context(), request)
 
     assert capsys.readouterr().out == "sent\n"
 
@@ -177,7 +177,7 @@ def test_an_unparsable_automation_result_exits_two() -> None:
     execute = _FakeExecuteNotifyAutomation("not python")
 
     assert (
-        _notify_command(execute_automation=execute).run(_context(), _request(*_SPOOLFILE), ())
+        _notify_command(execute_automation=execute).run(_context(), _request(*_SPOOLFILE))
         == CLIExitCode.ERROR
     )
 
@@ -185,17 +185,17 @@ def test_an_unparsable_automation_result_exits_two() -> None:
 def test_a_failing_notification_exits_three() -> None:
     notify = _FakeNotify(error=MKGeneralException("Cannot load the configuration"))
 
-    assert _notify_command(notify=notify).run(_context(), _request(), ()) == CLIExitCode.UNKNOWN
+    assert _notify_command(notify=notify).run(_context(), _request()) == CLIExitCode.UNKNOWN
 
 
 def test_a_failing_notification_is_raised_through_under_debug() -> None:
     notify = _FakeNotify(error=MKGeneralException("Cannot load the configuration"))
 
     with pytest.raises(MKGeneralException, match="Cannot load the configuration"):
-        _notify_command(notify=notify).run(_context(debug=True), _request(), ())
+        _notify_command(notify=notify).run(_context(debug=True), _request())
 
 
 def test_an_interrupted_notification_exits_as_interrupted() -> None:
     notify = _FakeNotify(error=MKTerminate())
 
-    assert _notify_command(notify=notify).run(_context(), _request(), ()) == CLIExitCode.INTERRUPTED
+    assert _notify_command(notify=notify).run(_context(), _request()) == CLIExitCode.INTERRUPTED

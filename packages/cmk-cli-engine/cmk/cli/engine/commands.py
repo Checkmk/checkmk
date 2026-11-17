@@ -9,7 +9,6 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
@@ -31,7 +30,7 @@ from .options import (
 )
 from .readers import Positional
 
-type BoundCommand = Callable[[CLIContext, CLIArgs], CLIExitCode]
+type BoundCommand = Callable[[CLIContext], CLIExitCode]
 
 _COMMAND_COLUMN: Final = HelpColumn(indent=" cmk ", width=36)
 
@@ -39,7 +38,7 @@ _SUB_OPTION_COLUMN: Final = HelpColumn(indent="    ", width=24)
 
 _ENGINE_OPTION_COLUMN: Final = HelpColumn(indent="  ", width=21)
 
-type Run[R] = Callable[[CLIContext, R, CLIArgs], CLIExitCode]
+type Run[R] = Callable[[CLIContext, R], CLIExitCode]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -55,7 +54,7 @@ class DiscoveredCommand:
 
 def bind[R](command: CLICommand[R], run: Run[R], reader: CLIReader) -> BoundCommand:
     request = command.request(reader)
-    return lambda context, args: run(context, request, args)
+    return lambda context: run(context, request)
 
 
 def requires_argument(command: DiscoveredCommand) -> bool:

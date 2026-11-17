@@ -18,7 +18,6 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.discovery import remove_autochecks_of_host
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -60,7 +59,7 @@ def _update_dns_cache(fake_dns: HostAddress | None, *, debug: bool) -> None:
 class _UpdateDNSCacheCommand:
     update_dns_cache: _UpdateDNSCache
 
-    def run(self, context: CLIContext, fake_dns: HostAddress | None, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, fake_dns: HostAddress | None) -> CLIExitCode:
         try:
             self.update_dns_cache(fake_dns, debug=context.global_options.debug)
         except (MKBailOut, MKGeneralException) as e:
@@ -89,7 +88,7 @@ def _cleanup_piggyback(omd_root: Path, *, debug: bool) -> None:
 class _CleanupPiggybackCommand:
     cleanup_piggyback: _CleanupPiggyback
 
-    def run(self, context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, _request: None) -> CLIExitCode:
         try:
             self.cleanup_piggyback(context.omd_root, debug=context.global_options.debug)
         except MKGeneralException as e:
@@ -210,7 +209,7 @@ def _flush(hosts: Sequence[HostAddress], *, debug: bool) -> None:
 class _FlushCommand:
     flush: _Flush
 
-    def run(self, context: CLIContext, hosts: Sequence[HostAddress], _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, hosts: Sequence[HostAddress]) -> CLIExitCode:
         try:
             self.flush(hosts, debug=context.global_options.debug)
         except (MKBailOut, MKGeneralException) as e:

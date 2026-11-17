@@ -10,8 +10,6 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from cmk.cli.internal import Args as CLIArgs
-
 from .commands import Commands, DiscoveredCommand, requires_argument
 from .options import GetoptOptions, GlobalOptions, HELP_OPTION, read_global_options, spellings
 from .readers import parsed
@@ -22,7 +20,7 @@ class RunCommand:
     command: DiscoveredCommand
     global_options: GlobalOptions
     options: GetoptOptions
-    args: CLIArgs
+    args: Sequence[str]
 
 
 @dataclass(frozen=True)
@@ -35,7 +33,7 @@ class InvalidArguments:
     message: str
 
 
-def _args(command: DiscoveredCommand, argument: str, positional: Sequence[str]) -> CLIArgs:
+def _args(command: DiscoveredCommand, argument: str, positional: Sequence[str]) -> Sequence[str]:
     if requires_argument(command):
         return [argument, *positional]
     return positional

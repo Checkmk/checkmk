@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Protocol
 
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -50,7 +49,7 @@ class _ManCommand:
     print_table: _PrintManPageTable
     parse: _ParseManPage
 
-    def run(self, context: CLIContext, request: ManRequest, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, request: ManRequest) -> CLIExitCode:
         try:
             man_page_path_map = self.paths(debug=context.global_options.debug)
             if request.check_type is None:
@@ -104,7 +103,7 @@ def _browse_man_pages(*, debug: bool) -> None:
 class _BrowseManCommand:
     browse: _BrowseManPages
 
-    def run(self, context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, _request: None) -> CLIExitCode:
         try:
             self.browse(debug=context.global_options.debug)
         except MKGeneralException as e:

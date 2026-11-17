@@ -87,14 +87,10 @@ def make_command[R](command: CLICommand[R], run: Callable[[], Run[R]]) -> Discov
         raise ValueError(f"{command.name!r} reads an argument after its remaining arguments")
     if _requires_one_after_an_optional(recorded.positional):
         raise ValueError(f"{command.name!r} reads a required argument after an optional one")
-    if command.arguments is not None and recorded.positional:
-        raise ValueError(f"{command.name!r} both declares and reads its positional arguments")
     return DiscoveredCommand(
         name=command.name,
-        selector=_selector(
-            command, recorded.positional if command.arguments is None else [command.arguments]
-        ),
-        positional=recorded.positional if command.arguments is None else [command.arguments],
+        selector=_selector(command, recorded.positional),
+        positional=recorded.positional,
         description=command.description,
         options=recorded.options,
         load_handler=lambda: partial(bind, command, run()),

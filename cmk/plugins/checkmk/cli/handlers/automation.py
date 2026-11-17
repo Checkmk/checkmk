@@ -17,7 +17,6 @@ from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.base import config
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout
 from cmk.ccc.store import lock_checkmk_configuration
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -85,7 +84,7 @@ def _execute_automation(
 class _AutomationCommand:
     execute: _ExecuteAutomation
 
-    def run(self, context: CLIContext, request: AutomationRequest, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, request: AutomationRequest) -> CLIExitCode:
         try:
             if not request.arguments:
                 raise MKBailOut("You need to provide arguments")

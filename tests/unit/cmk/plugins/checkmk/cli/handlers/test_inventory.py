@@ -54,7 +54,7 @@ class _FakeInventorize:
 def test_the_requested_hosts_are_inventorized() -> None:
     inventorize = _FakeInventorize()
 
-    _InventoryCommand(inventorize=inventorize).run(_CONTEXT, _REQUEST, ())
+    _InventoryCommand(inventorize=inventorize).run(_CONTEXT, _REQUEST)
 
     assert inventorize.asked == [(_REQUEST, _OMD_ROOT, False)]
 
@@ -62,10 +62,7 @@ def test_the_requested_hosts_are_inventorized() -> None:
 def test_a_failed_inventory_exits_three() -> None:
     inventorize = _FakeInventorize(error=MKGeneralException("Cannot load the configuration"))
 
-    assert (
-        _InventoryCommand(inventorize=inventorize).run(_CONTEXT, _REQUEST, ())
-        == CLIExitCode.UNKNOWN
-    )
+    assert _InventoryCommand(inventorize=inventorize).run(_CONTEXT, _REQUEST) == CLIExitCode.UNKNOWN
 
 
 class _FakeInventorizeMarkedHosts:
@@ -84,6 +81,6 @@ def test_the_marked_hosts_are_inventorized() -> None:
         file_cache=_FILE_CACHE, usewalk=False, snmp_backend=None, fake_dns=None
     )
 
-    _InventorizeMarkedHostsCommand(inventorize_marked_hosts=inventorize).run(_CONTEXT, request, ())
+    _InventorizeMarkedHostsCommand(inventorize_marked_hosts=inventorize).run(_CONTEXT, request)
 
     assert inventorize.asked == [(request, _OMD_ROOT, False)]

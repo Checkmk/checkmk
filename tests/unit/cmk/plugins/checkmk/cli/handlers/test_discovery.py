@@ -50,7 +50,7 @@ def test_the_discovery_of_the_requested_host_is_checked() -> None:
     check = _FakeCheckDiscovery(ActiveCheckResult(state=0, summary="All services monitored"))
 
     _CheckDiscoveryCommand(check_discovery=check).run(
-        _CONTEXT, _check_discovery_request(HostAddress("myhost")), ()
+        _CONTEXT, _check_discovery_request(HostAddress("myhost"))
     )
 
     assert check.asked == [
@@ -72,7 +72,7 @@ def test_the_discovery_check_writes_its_result(capsys: pytest.CaptureFixture[str
     )
 
     _CheckDiscoveryCommand(check_discovery=check).run(
-        context, _check_discovery_request(HostAddress("myhost")), ()
+        context, _check_discovery_request(HostAddress("myhost"))
     )
 
     assert capsys.readouterr().out == "All services monitored\n"
@@ -83,7 +83,7 @@ def test_the_discovery_check_exits_with_its_state() -> None:
 
     assert (
         _CheckDiscoveryCommand(check_discovery=check).run(
-            _CONTEXT, _check_discovery_request(HostAddress("myhost")), ()
+            _CONTEXT, _check_discovery_request(HostAddress("myhost"))
         )
         == CLIExitCode.FAILURE
     )
@@ -116,15 +116,13 @@ class _FakeDiscover:
 def test_the_requested_hosts_are_discovered() -> None:
     discover = _FakeDiscover(succeeded=True)
 
-    _DiscoverCommand(discover=discover).run(_CONTEXT, _DISCOVER_REQUEST, ())
+    _DiscoverCommand(discover=discover).run(_CONTEXT, _DISCOVER_REQUEST)
 
     assert discover.asked == [(_DISCOVER_REQUEST, _OMD_ROOT, False)]
 
 
 def test_a_failed_discovery_exits_one() -> None:
     assert (
-        _DiscoverCommand(discover=_FakeDiscover(succeeded=False)).run(
-            _CONTEXT, _DISCOVER_REQUEST, ()
-        )
+        _DiscoverCommand(discover=_FakeDiscover(succeeded=False)).run(_CONTEXT, _DISCOVER_REQUEST)
         == CLIExitCode.FAILURE
     )

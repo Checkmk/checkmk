@@ -23,7 +23,6 @@ from cmk.checkengine.plugins import (
     CheckPlugin,
     SNMPSectionPlugin,
 )
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -105,7 +104,7 @@ def _list_hosts(request: ListHostsRequest, *, debug: bool) -> Sequence[HostName]
 class _ListHostsCommand:
     list_hosts: _ListHosts
 
-    def run(self, context: CLIContext, request: ListHostsRequest, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, request: ListHostsRequest) -> CLIExitCode:
         try:
             hosts = self.list_hosts(request, debug=context.global_options.debug)
         except MKGeneralException as e:
@@ -161,7 +160,7 @@ def _list_hosts_with_tags(tags: Sequence[TagID], *, debug: bool) -> Sequence[Hos
 class _ListTagCommand:
     list_hosts_with_tags: _ListHostsWithTags
 
-    def run(self, context: CLIContext, tags: Sequence[TagID], _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, tags: Sequence[TagID]) -> CLIExitCode:
         try:
             hosts = self.list_hosts_with_tags(tags, debug=context.global_options.debug)
         except MKGeneralException as e:
@@ -276,7 +275,7 @@ def _check_table(*, debug: bool) -> Sequence[_TableRow]:
 class _ListChecksCommand:
     check_table: _CheckTable
 
-    def run(self, context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, _request: None) -> CLIExitCode:
         try:
             table = self.check_table(debug=context.global_options.debug)
         except MKGeneralException as e:

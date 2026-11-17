@@ -29,7 +29,6 @@ from cmk.checkengine.snmplib import (
     SNMPHostConfig,
     walk_all_contexts_for_export,
 )
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -94,7 +93,7 @@ def _translate_walk(walk_name: str) -> Sequence[tuple[bytes, bytes]]:
 class _SNMPTranslateCommand:
     translate_walk: _TranslateWalk
 
-    def run(self, context: CLIContext, walk_name: str | None, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, walk_name: str | None) -> CLIExitCode:
         try:
             if not walk_name:
                 raise MKGeneralException("Please provide the name of a SNMP walk file")
@@ -209,7 +208,7 @@ def _walk_hosts(request: WalkRequest, *, debug: bool) -> None:
 class _SNMPWalkCommand:
     walk_hosts: _WalkHosts
 
-    def run(self, context: CLIContext, request: WalkRequest, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, request: WalkRequest) -> CLIExitCode:
         try:
             if request.oids and request.extra_oids:
                 raise MKGeneralException(
@@ -281,7 +280,7 @@ def _get_oid_values(oid: OID, request: GetRequest, *, debug: bool) -> Iterator[_
 class _SNMPGetCommand:
     get_oid_values: _GetOIDValues
 
-    def run(self, context: CLIContext, request: GetRequest, _args: CLIArgs) -> CLIExitCode:
+    def run(self, context: CLIContext, request: GetRequest) -> CLIExitCode:
         assert request.oid is not None
         try:
             for got in self.get_oid_values(

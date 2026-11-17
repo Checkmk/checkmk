@@ -29,7 +29,6 @@ def _command(
     short: str | None = None,
     *,
     request: Callable[[CLIReader], object] = cli_no_options,
-    arguments: CLIArgument[str] | None = None,
     default: bool = False,
 ) -> CLIDiscoveredCommand:
     return command_with(
@@ -40,7 +39,6 @@ def _command(
             short=short,
             request=request,
             help="a command under test",
-            arguments=arguments,
             default=default,
         ),
         _never,
@@ -94,10 +92,10 @@ def test_there_is_at_most_one_default_command() -> None:
         CLICommands(commands=[_command("one", default=True), _command("other", default=True)])
 
 
+def _read_host(options: CLIReader) -> str | None:
+    return options.argument(CLIArgument(placeholder="HOST", parse=str))
+
+
 def test_the_default_command_cannot_require_an_argument() -> None:
     with pytest.raises(ValueError, match="'one'"):
-        CLICommands(
-            commands=[
-                _command("one", arguments=CLIArgument(placeholder="HOST", parse=str), default=True)
-            ]
-        )
+        CLICommands(commands=[_command("one", request=_read_host, default=True)])

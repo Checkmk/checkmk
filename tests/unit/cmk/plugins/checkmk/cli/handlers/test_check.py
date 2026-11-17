@@ -61,14 +61,14 @@ def _request() -> CheckingRequest:
 def test_the_requested_host_is_checked() -> None:
     check_host = _FakeCheckHost()
 
-    _CheckCommand(check_host=check_host).run(_context(), _request(), ())
+    _CheckCommand(check_host=check_host).run(_context(), _request())
 
     assert check_host.checked == [(HostName("myhost"), _request(), _OMD_ROOT, False)]
 
 
 def test_the_check_exits_with_the_hosts_state() -> None:
     assert (
-        _CheckCommand(check_host=_FakeCheckHost(state=2)).run(_context(), _request(), ())
+        _CheckCommand(check_host=_FakeCheckHost(state=2)).run(_context(), _request())
         == CLIExitCode.ERROR
     )
 
@@ -76,6 +76,4 @@ def test_the_check_exits_with_the_hosts_state() -> None:
 def test_a_failed_check_exits_three() -> None:
     check_host = _FakeCheckHost(error=MKGeneralException("Unknown host"))
 
-    assert (
-        _CheckCommand(check_host=check_host).run(_context(), _request(), ()) == CLIExitCode.UNKNOWN
-    )
+    assert _CheckCommand(check_host=check_host).run(_context(), _request()) == CLIExitCode.UNKNOWN

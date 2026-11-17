@@ -672,11 +672,11 @@ def discover_host_labels(
 
     """
     for unit, settings in _match_systemd_units(params, list(section.services.values())):
-        if settings.get("host_labels_auto"):
+        if "host_labels_auto" in settings:
             yield HostLabel(f"cmk/systemd/unit/{unit.name}", "yes")
 
-        for name, value in settings.get("host_labels_explicit", {}).items():
-            yield HostLabel(name, value)
+        for label in settings.get("host_labels_explicit", ()):
+            yield HostLabel(label["key"], label["value"])
 
 
 agent_section_systemd_units = AgentSection(
@@ -715,36 +715,23 @@ def discovery_systemd_units_sockets(
     yield from discovery_systemd_units(params, list(section.sockets.values()))
 
 
+def _matches_any(conditions: Sequence[Mapping[str, str]] | None, text: str) -> bool:
+    return conditions is None or any(
+        re.match(c["pattern"], text) if c["match"] == "regex" else c["pattern"] == text
+        for c in conditions
+    )
+
+
 def _match_systemd_units(
     params: Sequence[Mapping[str, Any]], units: Sequence[UnitEntry]
 ) -> Iterator[tuple[UnitEntry, Mapping[str, Any]]]:
-    def regex_match(what: Sequence[str], name: str) -> bool:
-        if not what:
-            return True
-        for entry in what:
-            if entry.startswith("~"):
-                if re.compile(entry[1:]).match(name):
-                    return True
-                continue
-            if entry == name:
-                return True
-        return False
-
-    def state_match(rule_states: Sequence[str], state: str) -> bool:
-        if not rule_states:
-            return True
-        return any(s in (None, state) for s in rule_states)
-
-    # defaults are always last and empty to apeace the new api
     for unit in units:
         for settings in params:
-            descriptions = settings.get("descriptions", [])
-            names = settings.get("names", [])
-            states = settings.get("states", [])
+            states = settings.get("states")
             if (
-                regex_match(descriptions, unit.description)
-                and regex_match(names, unit.name)
-                and state_match(states, unit.active_status)
+                _matches_any(settings.get("descriptions"), unit.description)
+                and _matches_any(settings.get("names"), unit.name)
+                and (states is None or unit.active_status in states)
             ):
                 yield unit, settings
 
@@ -826,7 +813,7 @@ CHECK_DEFAULT_PARAMETERS = {
     "active_since_upper": ("no_levels", None),
 }
 
-DISCOVERY_DEFAULT_PARAMETERS = {"names": ["(never discover)^"]}
+DISCOVERY_DEFAULT_PARAMETERS = {"names": [{"match": "exact", "pattern": "(never discover)"}]}
 
 check_plugin_systemd_units_services = CheckPlugin(
     name="systemd_units_services",

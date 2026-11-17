@@ -18,6 +18,7 @@ from cmk.plugins.systemd.agent_based.systemd_units import (
     check_systemd_units_services_summary,
     CpuTimeSeconds,
     discover_host_labels,
+    DISCOVERY_DEFAULT_PARAMETERS,
     discovery_systemd_units_services,
     discovery_systemd_units_sockets,
     Memory,
@@ -647,17 +648,22 @@ def test_parse_systemd_units(pre_string_table: Sequence[str], section: Section) 
     "params, expected",
     [
         pytest.param(
-            [{"names": ["~apache"]}],
+            [{"names": [{"match": "regex", "pattern": "apache"}]}],
             [],
             id="no-host-labels",
         ),
         pytest.param(
-            [{"names": ["~apache"], "host_labels_auto": True}],
+            [{"names": [{"match": "regex", "pattern": "apache"}], "host_labels_auto": None}],
             [HostLabel("cmk/systemd/unit/apache", "yes")],
             id="host-labels-auto",
         ),
         pytest.param(
-            [{"names": ["~apache"], "host_labels_explicit": {"webserver": "value"}}],
+            [
+                {
+                    "names": [{"match": "regex", "pattern": "apache"}],
+                    "host_labels_explicit": [{"key": "webserver", "value": "value"}],
+                }
+            ],
             [HostLabel("webserver", "value")],
             id="host-labels-explicit",
         ),
@@ -712,7 +718,7 @@ def test_discover_host_labels_only_for_matching_units() -> None:
     # RuleSetType.ALL API. It matches every unit but must not contribute labels.
     assert list(
         discover_host_labels(
-            [{"names": ["~apache"], "host_labels_auto": True}, {}],
+            [{"names": [{"match": "regex", "pattern": "apache"}], "host_labels_auto": None}, {}],
             Section(
                 services={
                     "apache": _unit("apache"),
@@ -728,13 +734,23 @@ def test_discover_host_labels_only_for_matching_units() -> None:
 @pytest.mark.parametrize(
     "params",
     [
-        pytest.param([{"names": ["~nginx"], "host_labels_auto": True}], id="name-mismatch"),
         pytest.param(
-            [{"descriptions": ["~nginx"], "host_labels_auto": True}], id="description-mismatch"
+            [{"names": [{"match": "regex", "pattern": "nginx"}], "host_labels_auto": None}],
+            id="name-mismatch",
         ),
-        pytest.param([{"states": ["failed"], "host_labels_auto": True}], id="state-mismatch"),
         pytest.param(
-            [{"names": ["~apache"], "states": ["failed"], "host_labels_auto": True}],
+            [{"descriptions": [{"match": "regex", "pattern": "nginx"}], "host_labels_auto": None}],
+            id="description-mismatch",
+        ),
+        pytest.param([{"states": ["failed"], "host_labels_auto": None}], id="state-mismatch"),
+        pytest.param(
+            [
+                {
+                    "names": [{"match": "regex", "pattern": "apache"}],
+                    "states": ["failed"],
+                    "host_labels_auto": None,
+                }
+            ],
             id="partial-mismatch",
         ),
     ],
@@ -786,7 +802,7 @@ def test_discover_host_labels_one_label_per_unit() -> None:
 
     assert list(
         discover_host_labels(
-            [{"names": ["~.*"], "host_labels_auto": True}],
+            [{"names": [{"match": "regex", "pattern": ".*"}], "host_labels_auto": None}],
             Section(
                 services={
                     "apache": _unit("apache"),
@@ -1050,7 +1066,7 @@ SECTION = Section(
         (
             SECTION,
             [
-                {"names": ["~virtualbox.*"]},
+                {"names": [{"match": "regex", "pattern": "virtualbox.*"}]},
             ],
             [Service(item="virtualbox")],
         ),
@@ -1059,24 +1075,55 @@ SECTION = Section(
             [],
             [],
         ),
+        pytest.param(
+            SECTION,
+            [DISCOVERY_DEFAULT_PARAMETERS],
+            [],
+            id="defaults-discover-nothing",
+        ),
+        pytest.param(
+            SECTION,
+            [
+                {"names": [{"match": "exact", "pattern": "virtualbox"}]},
+                DISCOVERY_DEFAULT_PARAMETERS,
+            ],
+            [Service(item="virtualbox")],
+            id="rule-before-defaults",
+        ),
+        pytest.param(
+            SECTION,
+            [
+                {"names": [{"match": "exact", "pattern": "virtualbo"}]},
+            ],
+            [],
+            id="exact-is-not-prefix",
+        ),
+        pytest.param(
+            SECTION,
+            [
+                {"descriptions": [{"match": "regex", "pattern": "LSB"}], "states": ["active"]},
+            ],
+            [Service(item="virtualbox"), Service(item="check-mk-enterprise-2021.09.07")],
+            id="description-and-state",
+        ),
         (
             Section(services={}, sockets={}),
             [
-                {"names": ["~virtualbox.*"]},
+                {"names": [{"match": "regex", "pattern": "virtualbox.*"}]},
             ],
             [],
         ),
         (
             SECTION,
             [
-                {"names": ["~aardvark.*"]},
+                {"names": [{"match": "regex", "pattern": "aardvark.*"}]},
             ],
             [],
         ),
         (
             SECTION,
             [
-                {"names": ["~.*"]},
+                {"names": [{"match": "regex", "pattern": ".*"}]},
             ],
             [
                 Service(item="virtualbox"),
@@ -1090,7 +1137,7 @@ SECTION = Section(
 )
 def test_discover_systemd_units_services(
     section: Section,
-    discovery_params: Sequence[Mapping[str, Sequence[str]]],
+    discovery_params: Sequence[Mapping[str, object]],
     discovered_services: Sequence[Service],
 ) -> None:
     assert (
@@ -1123,7 +1170,7 @@ def test_discover_systemd_units_services(
                 services={},
             ),
             [
-                {"names": ["~cockpit"]},
+                {"names": [{"match": "regex", "pattern": "cockpit"}]},
             ],
             [
                 Service(item="cockpit"),
@@ -1133,7 +1180,7 @@ def test_discover_systemd_units_services(
 )
 def test_discover_systemd_units_sockets(
     section: Section,
-    discovery_params: Sequence[Mapping[str, Sequence[str]]],
+    discovery_params: Sequence[Mapping[str, object]],
     discovered_services: Sequence[Service],
 ) -> None:
     assert (

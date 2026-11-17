@@ -5,112 +5,201 @@
 
 # mypy: disable-error-code="type-arg"
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    rulespec_registry,
-    RulespecGroupCheckParametersDiscovery,
-)
-from cmk.gui.valuespec import Dictionary as LegacyDictionary
-from cmk.gui.valuespec import (
-    FixedValue,
-    Labels,
-    ListChoice,
-    ListOf,
-    TextOrRegExp,
-    ValueSpec,
-)
-from cmk.ruleset_matcher.definition import RuleGroup
-from cmk.rulesets.v1 import Help, Title
+import re
+from collections.abc import Mapping, Sequence
+
+from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DataSize,
     DefaultValue,
     DictElement,
+    DictGroup,
     Dictionary,
+    FieldSize,
+    FixedValue,
     IECMagnitude,
     InputHint,
     LevelDirection,
+    List,
     migrate_to_float_simple_levels,
     migrate_to_integer_simple_levels,
+    MultipleChoice,
+    MultipleChoiceElement,
     ServiceState,
     SimpleLevels,
+    SingleChoice,
+    SingleChoiceElement,
+    String,
     TimeMagnitude,
     TimeSpan,
+    validators,
 )
-from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
+from cmk.rulesets.v1.rule_specs import (
+    CheckParameters,
+    DiscoveryParameters,
+    HostAndItemCondition,
+    Topic,
+)
 
 
-def _valuespec_discovery_systemd_units_host_labels() -> list[tuple[str, ValueSpec]]:
-    return [
-        (
-            "host_labels_auto",
-            FixedValue(
-                True,
-                title=_("Automatic generation of host labels"),
-                totext=_("active"),
-                help=_(
+def _migrate_to_match(value: object) -> Mapping[str, object]:
+    match value:
+        case str() if value.startswith("~"):
+            return {"match": "regex", "pattern": value[1:]}
+        case str():
+            return {"match": "exact", "pattern": value}
+        case dict():
+            return value
+        case _:
+            raise TypeError(value)
+
+
+def _migrate_to_label_list(value: object) -> Sequence[Mapping[str, object]]:
+    match value:
+        case dict():
+            return [{"key": key, "value": label_value} for key, label_value in value.items()]
+        case list():
+            return value
+        case _:
+            raise TypeError(value)
+
+
+def _validate_regex_pattern(value: Mapping[str, object]) -> None:
+    if value["match"] != "regex":
+        return
+    try:
+        re.compile(str(value["pattern"]))
+    except re.error:
+        raise validators.ValidationError(
+            Message("Invalid regular expression: %(pattern)s") % {"pattern": str(value["pattern"])}
+        )
+
+
+def _unit_match(title: Title, help_text: Help) -> List[Mapping[str, object]]:
+    return List(
+        title=title,
+        help_text=help_text,
+        element_template=Dictionary(
+            elements={
+                "pattern": DictElement(
+                    group=DictGroup(),
+                    parameter_form=String(
+                        title=Title("Pattern"),
+                        field_size=FieldSize.LARGE,
+                        custom_validate=(validators.LengthInRange(min_value=1),),
+                    ),
+                    required=True,
+                ),
+                "match": DictElement(
+                    group=DictGroup(),
+                    parameter_form=SingleChoice(
+                        title=Title("Match type"),
+                        help_text=Help(
+                            "With an explicit match, the pattern must equal the whole text."
+                            " With a regular expression match, the pattern is a regular"
+                            " expression that is matched from the beginning. Add a trailing"
+                            " <tt>$</tt> to match the whole text. Read more about"
+                            " [regexes|regular expression matching in Checkmk] in our User Guide."
+                        ),
+                        elements=[
+                            SingleChoiceElement(name="exact", title=Title("Explicit match")),
+                            SingleChoiceElement(
+                                name="regex", title=Title("Regular expression match")
+                            ),
+                        ],
+                        prefill=DefaultValue("exact"),
+                    ),
+                    required=True,
+                ),
+            },
+            custom_validate=(_validate_regex_pattern,),
+            migrate=_migrate_to_match,
+        ),
+        custom_validate=(validators.LengthInRange(min_value=1),),
+    )
+
+
+def _unit_restriction_elements() -> Mapping[str, DictElement]:
+    return {
+        "descriptions": DictElement(
+            parameter_form=_unit_match(
+                Title("Restrict by description"),
+                Help("Restrict the systemd units by description."),
+            ),
+        ),
+        "names": DictElement(
+            parameter_form=_unit_match(
+                Title("Restrict by name"),
+                Help("Restrict the systemd units by their name."),
+            ),
+        ),
+        "states": DictElement(
+            parameter_form=MultipleChoice(
+                title=Title("Restrict by state"),
+                elements=[
+                    MultipleChoiceElement(name="active", title=Title("active")),
+                    MultipleChoiceElement(name="inactive", title=Title("inactive")),
+                    MultipleChoiceElement(name="failed", title=Title("failed")),
+                ],
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            ),
+        ),
+    }
+
+
+def _host_label_elements() -> Mapping[str, DictElement]:
+    return {
+        "host_labels_auto": DictElement(
+            parameter_form=FixedValue(
+                value=None,
+                title=Title("Automatic generation of host labels"),
+                help_text=Help(
                     "Create host labels for each discovered systemd service in the following"
                     " format %(label_format)r"
                 )
                 % {"label_format": "cmk/systemd/unit/<name>:yes"},
             ),
         ),
-        (
-            "host_labels_explicit",
-            Labels(
-                Labels.World.CONFIG,
-                title=_("Explicit host labels"),
-                help=_(
+        "host_labels_explicit": DictElement(
+            parameter_form=List(
+                title=Title("Explicit host labels"),
+                help_text=Help(
                     "Here, you can specify host labels that are automatically created, when one of"
                     " the systemd services is discovered."
                 ),
+                element_template=Dictionary(
+                    elements={
+                        "key": DictElement(
+                            parameter_form=String(
+                                title=Title("Key"),
+                                custom_validate=(
+                                    validators.MatchRegex(
+                                        "^[^:]+$",
+                                        Message("The key must not be empty or contain a colon."),
+                                    ),
+                                ),
+                            ),
+                            required=True,
+                        ),
+                        "value": DictElement(
+                            parameter_form=String(
+                                title=Title("Value"),
+                                custom_validate=(validators.LengthInRange(min_value=1),),
+                            ),
+                            required=True,
+                        ),
+                    },
+                ),
+                migrate=_migrate_to_label_list,
             ),
         ),
-    ]
+    }
 
 
-def _valuespec_discovery_systemd_units_elements() -> list:
-    return [
-        (
-            "descriptions",
-            ListOf(
-                valuespec=TextOrRegExp(),
-                title=_("Restrict by description"),
-                help=_("Restrict the systemd units by description."),
-                allow_empty=False,
-            ),
-        ),
-        (
-            "names",
-            ListOf(
-                valuespec=TextOrRegExp(),
-                title=_("Restrict by name"),
-                help=_("Restrict the systemd units by their name."),
-                allow_empty=False,
-            ),
-        ),
-        (
-            "states",
-            ListChoice(
-                choices=[
-                    ("active", "active"),
-                    ("inactive", "inactive"),
-                    ("failed", "failed"),
-                ],
-                title=_("Restrict by state"),
-                allow_empty=False,
-            ),
-        ),
-    ]
-
-
-def _valuespec_discovery_systemd_units_base(
-    elements: list[tuple[str, ValueSpec]],
-) -> LegacyDictionary:
-    return LegacyDictionary(
-        title=_("Systemd single unit discovery"),
-        elements=elements,
-        help=_(
+def _discovery_form(elements: Mapping[str, DictElement]) -> Dictionary:
+    return Dictionary(
+        title=Title("Systemd single unit discovery"),
+        help_text=Help(
             "Configure the discovery of single systemd units (sockets or services)."
             " To be discovered, a unit must match at least one condition each: "
             "one description condition, one name condition and one state condition, if configured."
@@ -119,39 +208,31 @@ def _valuespec_discovery_systemd_units_base(
             " ('check-mk-agent@...') will never be discovered."
             " They appear and disappear frequently."
         ),
-        empty_text=_("No restrictions (discover all units)"),
+        no_elements_text=Message("No restrictions (discover all units)"),
+        elements=elements,
     )
 
 
-def _valuespec_discovery_systemd_units_addon() -> LegacyDictionary:
-    return _valuespec_discovery_systemd_units_base(
-        _valuespec_discovery_systemd_units_elements()
-        + _valuespec_discovery_systemd_units_host_labels()
-    )
+def _parameter_form_discovery_systemd_units_services() -> Dictionary:
+    return _discovery_form({**_unit_restriction_elements(), **_host_label_elements()})
 
 
-def _valuespec_discovery_systemd_units() -> LegacyDictionary:
-    return _valuespec_discovery_systemd_units_base(_valuespec_discovery_systemd_units_elements())
+def _parameter_form_discovery_systemd_units_sockets() -> Dictionary:
+    return _discovery_form(_unit_restriction_elements())
 
 
-rulespec_registry.register(
-    HostRulespec(
-        title=lambda: _("Systemd single service discovery"),
-        group=RulespecGroupCheckParametersDiscovery,
-        match_type="all",
-        name=RuleGroup.DiscoveryParameters("discovery_systemd_units_services"),
-        valuespec=_valuespec_discovery_systemd_units_addon,
-    )
+rule_spec_discovery_systemd_units_services = DiscoveryParameters(
+    name="discovery_systemd_units_services",
+    title=Title("Systemd single service discovery"),
+    topic=Topic.GENERAL,
+    parameter_form=_parameter_form_discovery_systemd_units_services,
 )
 
-rulespec_registry.register(
-    HostRulespec(
-        title=lambda: _("Systemd single socket discovery"),
-        group=RulespecGroupCheckParametersDiscovery,
-        match_type="all",
-        name=RuleGroup.DiscoveryParameters("discovery_systemd_units_sockets"),
-        valuespec=_valuespec_discovery_systemd_units,
-    )
+rule_spec_discovery_systemd_units_sockets = DiscoveryParameters(
+    name="discovery_systemd_units_sockets",
+    title=Title("Systemd single socket discovery"),
+    topic=Topic.GENERAL,
+    parameter_form=_parameter_form_discovery_systemd_units_sockets,
 )
 
 

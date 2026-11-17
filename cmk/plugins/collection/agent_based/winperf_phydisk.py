@@ -287,8 +287,8 @@ _LINE_TO_METRIC: Final = {
     "-18": "write_ios",  # 216 Disk Writes/sec
     "1168": "read_ql",  # 1402 Avg. Disc Read Queue length
     "1170": "write_ql",  # 1402 Avg. Disc Write Queue length
-    "-24": "average_read_wait",  # 210 Avg. Disc sec/Write
-    "-26": "average_write_wait",  # 208 Avg. Disc sec/Read
+    "-26": "average_read_wait",  # 208 Avg. Disc sec/Read
+    "-24": "average_write_wait",  # 210 Avg. Disc sec/Write
 }
 
 DiskType = dict[str, int | float]

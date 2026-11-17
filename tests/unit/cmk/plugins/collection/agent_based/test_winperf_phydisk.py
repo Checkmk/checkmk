@@ -136,10 +136,12 @@ DISK_WO_FREQUENCY = {
     "timestamp": 1435670669.29,
     "read_ql": 1552698000,
     "write_ql": 894217000,
-    "average_write_wait": 465017058,
-    "average_write_wait_base": 40852,
-    "average_read_wait": 267808781,
-    "average_read_wait_base": 24006,
+    # The base of a wait counter is the IO count of the same direction: row "-26" pairs with
+    # "-20" (reads), row "-24" pairs with "-18" (writes).
+    "average_read_wait": 465017058,
+    "average_read_wait_base": 40852,
+    "average_write_wait": 267808781,
+    "average_write_wait_base": 24006,
     "read_ios": 40852,
     "write_ios": 24006,
     "read_throughput": 1725201408,
@@ -371,3 +373,13 @@ def test_denom_bad() -> None:
     exc = winperf_phydisk._Denom(1, True)
     with pytest.raises(IgnoreResultsError):
         exc.calc_smart(0.0)
+
+
+def test_parse_winperf_phydisk_pairs_wait_with_own_direction() -> None:
+    """Windows counter 208 counts reads, 210 counts writes. Each wait counter must carry the
+    IO count of its own direction as base, otherwise read and write latency are swapped."""
+    section = winperf_phydisk.parse_winperf_phydisk(STRING_TABLE_REAL_LIFE)
+    assert section is not None
+    disk = section["C:"]
+    assert disk["average_read_wait_base"] == disk["read_ios"]
+    assert disk["average_write_wait_base"] == disk["write_ios"]

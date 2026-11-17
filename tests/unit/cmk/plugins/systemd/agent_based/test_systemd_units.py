@@ -11,6 +11,7 @@ import pytest
 from cmk.agent_based.v2 import HostLabel, Metric, Result, Service, State
 from cmk.plugins.systemd.agent_based.systemd_units import (
     _services_split,
+    CHECK_DEFAULT_PARAMETERS,
     CHECK_DEFAULT_PARAMETERS_SUMMARY,
     check_systemd_services,
     check_systemd_sockets,
@@ -1146,12 +1147,7 @@ def test_discover_systemd_units_sockets(
     [
         (
             "cmktest",
-            {
-                "else": 2,
-                "states": {"active": 0, "failed": 2, "inactive": 0},
-                "states_default": 2,
-                "disabled_critical": False,
-            },
+            CHECK_DEFAULT_PARAMETERS,
             SECTION,
             [
                 Result(state=State.OK, summary="Status: active"),
@@ -1167,13 +1163,37 @@ def test_discover_systemd_units_sockets(
             ],
         ),
         (
-            "virtualbox",
+            "cmktest",
             {
-                "else": 2,
-                "states": {"active": 0, "failed": 2, "inactive": 0},
-                "states_default": 2,
-                "disabled_critical": False,
+                **CHECK_DEFAULT_PARAMETERS,
+                "cpu_time": ("fixed", (0.0005, 0.001)),
+                "active_since_lower": ("fixed", (3600.0, 60.0)),
+                "active_since_upper": ("fixed", (7200.0, 86400.0)),
+                "memory": ("fixed", (102400, 204800)),
             },
+            SECTION,
+            [
+                Result(state=State.OK, summary="Status: active"),
+                Result(state=State.OK, summary="NOT FROM SYSTEMD"),
+                Result(
+                    state=State.WARN,
+                    summary="CPU Time: 815 microseconds (warn/crit at 500 microseconds/1 millisecond)",
+                ),
+                Metric("cpu_time", 0.000815, levels=(0.0005, 0.001)),
+                Result(
+                    state=State.WARN,
+                    summary="Active since: 33 minutes 0 seconds (warn/crit below 1 hour 0 minutes/1 minute 0 seconds)",
+                ),
+                Metric("active_since", 1980.0, levels=(7200.0, 86400.0)),
+                Result(state=State.WARN, summary="Memory: 176 KiB (warn/crit at 100 KiB/200 KiB)"),
+                Metric("mem_used", 180224.0, levels=(102400.0, 204800.0)),
+                Result(state=State.OK, summary="Number of tasks: 1"),
+                Metric("number_of_tasks", 1.0),
+            ],
+        ),
+        (
+            "virtualbox",
+            CHECK_DEFAULT_PARAMETERS,
             SECTION,
             [
                 Result(state=State.OK, summary="Status: active"),
@@ -1184,12 +1204,7 @@ def test_discover_systemd_units_sockets(
         ),
         (
             "foo",
-            {
-                "else": 2,
-                "states": {"active": 0, "failed": 2, "inactive": 0},
-                "states_default": 2,
-                "disabled_critical": False,
-            },
+            CHECK_DEFAULT_PARAMETERS,
             SECTION,
             [
                 Result(state=State.CRIT, summary="Status: failed"),
@@ -1201,12 +1216,7 @@ def test_discover_systemd_units_sockets(
         ),
         (
             "something",
-            {
-                "else": 2,
-                "states": {"active": 0, "failed": 2, "inactive": 0},
-                "states_default": 2,
-                "disabled_critical": False,
-            },
+            CHECK_DEFAULT_PARAMETERS,
             SECTION,
             [
                 Result(
@@ -1218,12 +1228,7 @@ def test_discover_systemd_units_sockets(
         ),
         (
             "something",
-            {
-                "else": 2,
-                "states": {"active": 0, "failed": 2, "inactive": 0},
-                "states_default": 2,
-                "disabled_critical": False,
-            },
+            CHECK_DEFAULT_PARAMETERS,
             Section(services={}, sockets={}),
             [
                 Result(
@@ -1247,10 +1252,8 @@ def test_check_systemd_units_services(
         (
             "cockpit",
             {
-                "else": 2,
+                **CHECK_DEFAULT_PARAMETERS,
                 "states": {"active": 2, "failed": 1, "inactive": 0},
-                "states_default": 2,
-                "disabled_critical": False,
             },
             Section(
                 sockets={

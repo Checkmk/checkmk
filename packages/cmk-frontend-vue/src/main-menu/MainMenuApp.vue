@@ -111,7 +111,7 @@ onMounted(() => {
         "
       />
     </a>
-    <ul v-if="registeredToggles.length" id="toggle-menu">
+    <ul id="main-menu">
       <NavToggleItem
         v-for="{ item, navToggle } in registeredToggles"
         :key="`nav-toggle-${item.id}`"
@@ -119,8 +119,6 @@ onMounted(() => {
         :nav-toggle="navToggle"
         :hide-item-title="props.hide_item_title"
       />
-    </ul>
-    <ul id="main-menu">
       <NavItem
         v-for="item in props.main"
         :key="`nav-item-${item.id}`"

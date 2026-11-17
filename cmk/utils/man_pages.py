@@ -240,7 +240,7 @@ CATALOG_TITLES: Final = {
     "postfix": "Postfix",
     "postgresql": "PostgreSQL",
     "power": "Power supplies and PDUs",
-    "primekey": "Primekey",
+    "primekey": "PrimeKey",
     "printer": "Printers",
     "prometheus": "Prometheus",
     "proxmox": "Proxmox",

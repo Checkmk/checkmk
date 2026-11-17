@@ -1,4 +1,4 @@
-title: Prometheus: Build Check
+title: Prometheus: Build Info
 agents: prometheus
 catalog: app/prometheus
 license: GPLv2

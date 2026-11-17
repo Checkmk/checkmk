@@ -1,4 +1,4 @@
-title: Prometheus: Custom Check
+title: Prometheus: Custom Service
 agents: linux
 catalog: app/prometheus
 license: GPLv2

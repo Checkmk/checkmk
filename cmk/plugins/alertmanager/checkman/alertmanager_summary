@@ -1,4 +1,4 @@
-title: Prometheus: Alerting rule summary
+title: Prometheus: Alertmanager Rule Summary
 agents: alertmanager
 catalog: app/alertmanager
 license: GPLv2

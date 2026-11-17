@@ -61,12 +61,6 @@ package_msi_init() {
     PACKAGE_MSI_ARGS=("$@")
 }
 
-# Call after the last change to the stage, before linking.
-normalize_stage_mtimes() {
-    # Keeps the artifact deterministic.
-    find "$STAGE" -exec touch -t 202601010000.00 {} +
-}
-
 setup_wine_prefix() {
     export WINEPREFIX="$TMP/wineprefix" WINEDEBUG=-all HOME="$TMP"
     export XDG_RUNTIME_DIR="$TMP/xdg"

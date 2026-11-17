@@ -28,7 +28,7 @@ link_msi() {
 
     cd "$STAGE/agents/wnx/install"
     mkdir -p obj bin plugins
-    tar xf plugins.tar -C plugins
+    tar xmf plugins.tar -C plugins
     wix "$CANDLE" -ext WixUtilExtension -out 'obj\InstallMainDialog.wixobj' InstallMainDialog.wxs
     wix "$CANDLE" -ext WixUtilExtension -out 'obj\InstallFolderDialog.wixobj' InstallFolderDialog.wxs
     # -sw1091: Package/@Id is pinned on purpose, patch_msi() replaces the package code after linking.
@@ -53,7 +53,6 @@ patch_agent_msi() {
 
 main() {
     stamp_plugins "$1"
-    normalize_stage_mtimes
     setup_wine_prefix
     link_msi
     patch_agent_msi

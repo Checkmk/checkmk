@@ -395,25 +395,26 @@ def _check_heartbeat_crm(
         yield Result(state=State.CRIT, summary=f"DC: {section.cluster.dc} (Expected {p_dc})")
 
     # Check for number of nodes when enabled
-    if params["num_nodes"] is not None and section.cluster.num_nodes is not None:
-        if section.cluster.num_nodes == params["num_nodes"]:
+    if (p_nodes := params.get("num_nodes")) is not None and section.cluster.num_nodes is not None:
+        if section.cluster.num_nodes == p_nodes:
             yield Result(state=State.OK, summary="Nodes: %d" % (section.cluster.num_nodes,))
         else:
             yield Result(
                 state=State.CRIT,
-                summary="Nodes: %d (Expected %d)"
-                % (section.cluster.num_nodes, params["num_nodes"]),
+                summary="Nodes: %d (Expected %d)" % (section.cluster.num_nodes, p_nodes),
             )
 
     # Check for number of resources when enabled
-    if params["num_resources"] is not None and section.cluster.num_resources is not None:
-        if section.cluster.num_resources == params["num_resources"]:
+    if (
+        p_resources := params.get("num_resources")
+    ) is not None and section.cluster.num_resources is not None:
+        if section.cluster.num_resources == p_resources:
             yield Result(state=State.OK, summary="Resources: %d" % (section.cluster.num_resources,))
         else:
             yield Result(
                 state=State.CRIT,
                 summary="Resources: %d (Expected %d)"
-                % (section.cluster.num_resources, params["num_resources"]),
+                % (section.cluster.num_resources, p_resources),
             )
 
     if not params.get("show_failed_actions"):

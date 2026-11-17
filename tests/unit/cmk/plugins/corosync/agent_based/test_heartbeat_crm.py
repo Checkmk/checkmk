@@ -262,7 +262,6 @@ def test_check_heartbeat_crm_ok(section_1: Section) -> None:
         ]
 
 
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="CMK-42471: KeyError 'num_nodes'")
 def test_check_heartbeat_crm_enforced_service_without_expected_counts(
     section_1: Section,
 ) -> None:

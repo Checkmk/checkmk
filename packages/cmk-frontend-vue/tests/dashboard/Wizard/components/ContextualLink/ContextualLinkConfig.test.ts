@@ -14,8 +14,6 @@ import {
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
-// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'
 
@@ -24,7 +22,12 @@ import type { ContextualLinkOptions } from '@/dashboard/components/Wizard/compon
 import { useContextualLink } from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
 import type { HostStateContent, HostStatisticsContent } from '@/dashboard/components/Wizard/types'
 
-const API = `${location.protocol}//${location.host}/api/internal`
+import {
+  dashboardMetadata,
+  dashboardMetadataListHandler,
+  viewsHandler
+} from '@tests/dashboard/apiHandlers'
+
 const HOST_STATISTICS_OPTIONS: ContextualLinkOptions = {
   modes: ['default', 'inherited', 'custom'],
   filters: ['sites', 'wato_folders', 'hostgroups', 'hoststate', 'host_labels'],
@@ -33,31 +36,8 @@ const HOST_STATISTICS_OPTIONS: ContextualLinkOptions = {
 
 useMswServer(
   // The target picker of the inherited and the custom mode lists the dashboards and the views.
-  http.get(`${API}/domain-types/dashboard_metadata/collections/all`, () =>
-    HttpResponse.json({
-      domainType: 'dashboard_metadata',
-      id: 'all',
-      links: [],
-      value: [
-        {
-          domainType: 'dashboard_metadata',
-          id: 'main',
-          links: [],
-          extensions: {
-            name: 'main',
-            owner: null,
-            is_built_in: true,
-            is_editable: false,
-            layout_type: 'relative_grid',
-            display: { title: 'Overview' }
-          }
-        }
-      ]
-    })
-  ),
-  http.get(`${API}/domain-types/view/collections/all`, () =>
-    HttpResponse.json({ domainType: 'view', id: 'all', links: [], value: [] })
-  )
+  dashboardMetadataListHandler([dashboardMetadata('main', 'Overview', null)], { allOwners: false }),
+  viewsHandler([])
 )
 
 function renderConfig(

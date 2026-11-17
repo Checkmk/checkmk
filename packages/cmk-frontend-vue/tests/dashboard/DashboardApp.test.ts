@@ -6,7 +6,6 @@
 import { fromDate } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { configure, fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
-import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -37,6 +36,7 @@ import {
 } from '@/graphing/GlobalTimePicker/globalTimeState'
 import { durationSeconds, endsNow } from '@/graphing/GlobalTimePicker/private/timeRange'
 
+import { dashboardMetadataHandlers } from '@tests/dashboard/apiHandlers'
 import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
 
 // reka's dialog warns about the missing DialogTitle of the bare slide-in, which fails the test.
@@ -324,29 +324,6 @@ const pageProperties: DashboardPageProperties = {
   drill_up: null
 }
 
-function metadataObject(
-  extensions: DashboardMetadata
-): components['schemas']['DashboardMetadataModel'] {
-  return {
-    domainType: 'dashboard_metadata',
-    id: extensions.name,
-    title: extensions.display.title,
-    links: [],
-    extensions
-  }
-}
-
-function metadataCollection(
-  dashboards: DashboardMetadata[]
-): components['schemas']['DashboardMetadataCollectionModel'] {
-  return {
-    domainType: 'dashboard_metadata',
-    id: 'all',
-    links: [],
-    value: dashboards.map(metadataObject)
-  }
-}
-
 const refusal = { title: 'Bad Request', status: 400, detail: REFUSAL }
 
 function emptyCollection<DomainType extends string>(domainType: DomainType) {
@@ -412,12 +389,7 @@ const server = useMswServer(
       extensions: constants
     })
   ),
-  restApiHttp.get('/objects/dashboard_metadata/{dashboard_id}', ({ response }) =>
-    response(200).json(metadataObject(metadata))
-  ),
-  restApiHttp.get('/domain-types/dashboard_metadata/collections/all', ({ response }) =>
-    response(200).json(metadataCollection([metadata]))
-  ),
+  ...dashboardMetadataHandlers([metadata]),
   restApiHttp.get('/objects/dashboard_relative_grid/{dashboard_id}', ({ params, response }) =>
     response(200).json({
       domainType: 'dashboard',
@@ -489,9 +461,7 @@ type Grid = keyof typeof hostsTableDashboards
 function showHostsTableFailingToReschedule(grid: Grid): DashboardPageProperties {
   const gridMetadata = { ...metadata, layout_type: grid }
   server.use(
-    restApiHttp.get('/objects/dashboard_metadata/{dashboard_id}', ({ response }) =>
-      response(200).json(metadataObject(gridMetadata))
-    ),
+    ...dashboardMetadataHandlers([gridMetadata]),
     restApiHttp.get('/objects/dashboard_relative_grid/{dashboard_id}', ({ response }) =>
       response(200).json({
         domainType: 'dashboard',
@@ -679,16 +649,7 @@ describe('DashboardApp on a switch to another dashboard', () => {
   })
 
   function serveTheOtherDashboard(): void {
-    server.use(
-      restApiHttp.get('/domain-types/dashboard_metadata/collections/all', ({ response }) =>
-        response(200).json(metadataCollection([metadata, otherMetadata]))
-      ),
-      restApiHttp.get('/objects/dashboard_metadata/{dashboard_id}', ({ params, response }) =>
-        response(200).json(
-          metadataObject(params.dashboard_id === OTHER_ID ? otherMetadata : metadata)
-        )
-      )
-    )
+    server.use(...dashboardMetadataHandlers([metadata, otherMetadata]))
   }
 
   it('takes the alerts of the actions run in its widgets away', async () => {

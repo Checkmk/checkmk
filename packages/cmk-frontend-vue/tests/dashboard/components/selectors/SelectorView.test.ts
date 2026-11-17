@@ -5,15 +5,13 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitForElementToBeRemoved } from '@testing-library/vue'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 import { describe, expect, it } from 'vitest'
 
 import SelectorView from '@/dashboard/components/selectors/SelectorView.vue'
 import type { ViewModel } from '@/dashboard/types/api'
 
-const API = `${location.protocol}//${location.host}/api/internal`
+import { viewsHandler } from '@tests/dashboard/apiHandlers'
 
 function view(id: string, title: string, owner: string, single: string[] = []): ViewModel {
   return {
@@ -36,16 +34,9 @@ const HOST_VIEW = view('host', 'Single host', '', ['host'])
 const SERVICE_VIEW = view('service', 'Single service', '', ['service', 'host'])
 
 useMswServer(
-  http.get(`${API}/domain-types/view/collections/all`, () =>
-    HttpResponse.json({
-      domainType: 'view',
-      id: 'all',
-      links: [],
-      value: [ALLHOSTS, HOST_VIEW, SERVICE_VIEW]
-    })
-  ),
-  http.get(`${API}/objects/constant/data_source/collections/all`, () =>
-    HttpResponse.json({
+  viewsHandler([ALLHOSTS, HOST_VIEW, SERVICE_VIEW]),
+  restApiHttp.get('/objects/constant/data_source/collections/all', ({ response }) =>
+    response(200).json({
       domainType: 'constant',
       id: 'data_source',
       links: [],

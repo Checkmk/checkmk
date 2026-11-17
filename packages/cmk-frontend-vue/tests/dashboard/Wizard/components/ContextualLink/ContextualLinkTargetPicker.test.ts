@@ -6,33 +6,20 @@
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
-// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
 import ContextualLinkTargetPicker from '@/dashboard/components/Wizard/components/ContextualLink/ContextualLinkTargetPicker.vue'
 import type { VisualLocation } from '@/dashboard/components/Wizard/components/ContextualLink/contextualLink'
+import type { ViewModel } from '@/dashboard/types/api'
 
-const API = `${location.protocol}//${location.host}/api/internal`
+import {
+  dashboardMetadata,
+  dashboardMetadataListHandler,
+  viewsHandler
+} from '@tests/dashboard/apiHandlers'
 
-function dashboard(name: string, title: string, owner: string | null = null) {
-  return {
-    domainType: 'dashboard_metadata',
-    id: name,
-    links: [],
-    extensions: {
-      name,
-      owner,
-      is_built_in: owner === null,
-      is_editable: false,
-      layout_type: 'relative_grid',
-      display: { title }
-    }
-  }
-}
-
-function view(name: string, title: string, owner = '') {
+function view(name: string, title: string, owner = ''): ViewModel {
   return {
     domainType: 'view',
     id: name,
@@ -48,26 +35,18 @@ function view(name: string, title: string, owner = '') {
   }
 }
 
+const COPIES = [
+  dashboardMetadata('main', 'Overview', null),
+  dashboardMetadata('mine', 'My hosts', 'cmkadmin')
+]
+
 useMswServer(
+  dashboardMetadataListHandler(COPIES, { allOwners: false }),
   // Asked for all owners, the list holds every copy, such as another user's.
-  http.get(`${API}/domain-types/dashboard_metadata/collections/all`, ({ request }) => {
-    const allOwners = new URL(request.url).searchParams.get('all_owners') === 'true'
-    const copies = [dashboard('main', 'Overview'), dashboard('mine', 'My hosts', 'cmkadmin')]
-    return HttpResponse.json({
-      domainType: 'dashboard_metadata',
-      id: 'all',
-      links: [],
-      value: allOwners ? [...copies, dashboard('main', 'Overview', 'harry')] : copies
-    })
+  dashboardMetadataListHandler([...COPIES, dashboardMetadata('main', 'Overview', 'harry')], {
+    allOwners: true
   }),
-  http.get(`${API}/domain-types/view/collections/all`, () =>
-    HttpResponse.json({
-      domainType: 'view',
-      id: 'all',
-      links: [],
-      value: [view('allhosts', 'All hosts')]
-    })
-  )
+  viewsHandler([view('allhosts', 'All hosts')])
 )
 
 const user = userEvent.setup()

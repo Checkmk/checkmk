@@ -1,4 +1,4 @@
-title: Checkmk: Site Broker Status
+title: Checkmk Site: Broker Status
 agents: linux
 catalog: app/cmk
 license: GPLv2

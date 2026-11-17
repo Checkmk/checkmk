@@ -1,4 +1,4 @@
-title: Checkmk: Site disk usage
+title: Checkmk Site: Disk Usage
 agents: linux
 catalog: app/cmk
 license: GPLv2

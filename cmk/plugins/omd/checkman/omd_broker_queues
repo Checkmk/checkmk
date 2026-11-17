@@ -1,4 +1,4 @@
-title: Checkmk: Site Broker Queues
+title: Checkmk Site: Broker Queues
 agents: linux
 catalog: app/cmk
 license: GPLv2

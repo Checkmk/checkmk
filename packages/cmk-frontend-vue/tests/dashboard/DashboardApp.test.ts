@@ -6,9 +6,9 @@
 import { fromDate } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { configure, fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
-// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
+import { HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, toRaw } from 'vue'
 
@@ -17,12 +17,15 @@ import {
   type DashboardConstants,
   DashboardFeatures,
   DashboardLayout,
-  type DashboardMetadata
+  type DashboardMetadata,
+  type RelativeGridDashboardResponse,
+  type ResponsiveGridDashboardResponse
 } from '@/dashboard/types/dashboard'
 import type { DashboardPageProperties } from '@/dashboard/types/page'
 import type {
   AlertOverview,
   ComputedMonitoringTable,
+  RelativeGridWidget,
   ResponsiveGridWidgetLayout,
   ResponsiveGridWidgetLayouts,
   WidgetTimeRange
@@ -58,12 +61,10 @@ vi.mock('cmk-ui-library/components/CmkSlideIn', () => ({
 vi.setConfig({ testTimeout: 20_000 })
 configure({ asyncUtilTimeout: 5_000 })
 
-const API = `${location.protocol}//${location.host}/api/internal`
 const OWNER = 'harry'
 const SOURCE_ID = 'anchored_source'
 const SOURCE_TITLE = 'Anchored dashboard to migrate'
 const REFUSAL = 'Dashboard ID already exists'
-const CLONE_ENDPOINT = `${API}/domain-types/dashboard_responsive_grid/actions/clone_from_relative_grid/invoke`
 
 const widgetConstants: DashboardConstants['widgets'][string] = {
   filter_context: { restricted_to_single: [] },
@@ -121,7 +122,7 @@ const generalSettings = {
   description: '',
   menu: { topic: 'overview', sort_index: 99, search_terms: [], is_show_more: false },
   visibility: { hide_in_monitor_menu: false, hide_in_drop_down_menus: false, share: 'no' }
-}
+} satisfies RelativeGridDashboardResponse['general_settings']
 
 function staticTextWidget(
   title: string,
@@ -136,7 +137,7 @@ function staticTextWidget(
     content: { type: 'static_text', text: `Content of ${title}` },
     filter_context: { uses_infos: [], filters: {} },
     layout: { type: 'relative_grid', position, size }
-  }
+  } satisfies RelativeGridWidget
 }
 
 // Relative grid units are 10 px raster cells: two widgets side by side above one as wide as both.
@@ -155,12 +156,13 @@ const sourceDashboard = {
   general_settings: generalSettings,
   filter_context: {
     restricted_to_single: [],
+    uses_infos: [],
     filters: {},
     mandatory_context_filters: []
   },
   layout: { type: 'relative_grid' },
   widgets: sourceWidgets
-}
+} satisfies RelativeGridDashboardResponse
 
 const TABLE_WIDGET_ID = 'hosts'
 
@@ -180,7 +182,7 @@ const hostsTableWidget = {
     read_only: false
   },
   filter_context: { uses_infos: [], filters: {} }
-}
+} satisfies Omit<RelativeGridWidget, 'layout'>
 
 const BREAKPOINTS = ['XS', 'S', 'M', 'L', 'XL'] as const
 
@@ -194,12 +196,12 @@ const hostsTableDashboards = {
         layout: { type: 'relative_grid', position: { x: 1, y: 1 }, size: { width: 80, height: 40 } }
       }
     }
-  },
+  } satisfies RelativeGridDashboardResponse,
   responsive_grid: {
     ...sourceDashboard,
     layout: {
       type: 'responsive_grid',
-      layouts: { default: { title: 'Default', breakpoints: BREAKPOINTS } }
+      layouts: { default: { title: 'Default', breakpoints: [...BREAKPOINTS] } }
     },
     widgets: {
       [TABLE_WIDGET_ID]: {
@@ -217,7 +219,7 @@ const hostsTableDashboards = {
         }
       }
     }
-  }
+  } satisfies ResponsiveGridDashboardResponse
 }
 
 // An alert overview over the dashboard's window, the whole dashboard wide.
@@ -234,7 +236,7 @@ const alertOverviewDashboard = {
       layout: { type: 'relative_grid', position: { x: 1, y: 1 }, size: { width: 80, height: 40 } }
     }
   }
-}
+} satisfies RelativeGridDashboardResponse
 
 const alertOverview: AlertOverview = {
   elements: [
@@ -321,31 +323,56 @@ const pageProperties: DashboardPageProperties = {
   drill_up: null
 }
 
-function emptyCollection(domainType: string) {
-  return HttpResponse.json({ domainType, id: 'all', links: [], value: [] })
+function metadataObject(
+  extensions: DashboardMetadata
+): components['schemas']['DashboardMetadataModel'] {
+  return {
+    domainType: 'dashboard_metadata',
+    id: extensions.name,
+    title: extensions.display.title,
+    links: [],
+    extensions
+  }
 }
 
-function refusal() {
-  return HttpResponse.json({ title: 'Bad Request', status: 400, detail: REFUSAL }, { status: 400 })
+function metadataCollection(
+  dashboards: DashboardMetadata[]
+): components['schemas']['DashboardMetadataCollectionModel'] {
+  return {
+    domainType: 'dashboard_metadata',
+    id: 'all',
+    links: [],
+    value: dashboards.map(metadataObject)
+  }
+}
+
+const refusal = { title: 'Bad Request', status: 400, detail: REFUSAL }
+
+function emptyCollection<DomainType extends string>(domainType: DomainType) {
+  return { domainType, id: 'all', links: [], value: [] }
 }
 
 const server = useMswServer(
-  http.get(`${API}/domain-types/visual_filter/collections/all`, () =>
-    emptyCollection('visual_filter')
+  restApiHttp.get('/domain-types/visual_filter/collections/all', ({ response }) =>
+    response(200).json(emptyCollection('visual_filter'))
   ),
-  http.get(`${API}/domain-types/visual_filter_group/collections/all`, () =>
-    emptyCollection('visual_filter_group')
+  restApiHttp.get('/domain-types/visual_filter_group/collections/all', ({ response }) =>
+    response(200).json(emptyCollection('visual_filter_group'))
   ),
-  http.get(`${API}/objects/constant/visual_info/collections/all`, () =>
-    emptyCollection('constant')
+  restApiHttp.get('/objects/constant/visual_info/collections/all', ({ response }) =>
+    response(200).json(emptyCollection('constant'))
   ),
-  http.get(`${API}/domain-types/icon/collections/all`, () => emptyCollection('icon')),
-  http.get(`${API}/domain-types/icon_category/collections/all`, () =>
-    emptyCollection('icon_category')
+  restApiHttp.get('/domain-types/icon/collections/all', ({ response }) =>
+    response(200).json(emptyCollection('icon'))
   ),
-  http.get(`${API}/domain-types/icon_emblem/collections/all`, () => emptyCollection('icon_emblem')),
-  http.get(`${API}/domain-types/pagetype_topic/collections/all`, () =>
-    HttpResponse.json({
+  restApiHttp.get('/domain-types/icon_category/collections/all', ({ response }) =>
+    response(200).json(emptyCollection('icon_category'))
+  ),
+  restApiHttp.get('/domain-types/icon_emblem/collections/all', ({ response }) =>
+    response(200).json(emptyCollection('icon_emblem'))
+  ),
+  restApiHttp.get('/domain-types/pagetype_topic/collections/all', ({ response }) =>
+    response(200).json({
       domainType: 'pagetype_topic',
       id: 'all',
       links: [],
@@ -355,14 +382,14 @@ const server = useMswServer(
           id: 'overview',
           title: 'Overview',
           links: [],
-          extensions: { sort_index: 1, is_default: true }
+          extensions: { sort_index: 1, is_default: true, description: '' }
         }
       ]
     })
   ),
-  http.post(`${API}/domain-types/dashboard/actions/compute-widget-titles/invoke`, () =>
-    HttpResponse.json({
-      domainType: 'dashboard',
+  restApiHttp.post('/domain-types/dashboard/actions/compute-widget-titles/invoke', ({ response }) =>
+    response(200).json({
+      domainType: 'dashboard-widget-titles',
       id: 'titles',
       links: [],
       extensions: {
@@ -375,34 +402,34 @@ const server = useMswServer(
       }
     })
   ),
-  http.get(`${API}/objects/constant/dashboard`, () =>
-    HttpResponse.json({ domainType: 'constant', id: 'dashboard', links: [], extensions: constants })
-  ),
-  http.get(`${API}/objects/dashboard_metadata/${SOURCE_ID}`, () =>
-    HttpResponse.json({
-      domainType: 'dashboard_metadata',
-      id: SOURCE_ID,
+  restApiHttp.get('/objects/constant/dashboard', ({ response }) =>
+    response(200).json({
+      domainType: 'constant',
+      id: 'dashboard',
+      title: 'Dashboard',
       links: [],
-      extensions: metadata
+      extensions: constants
     })
   ),
-  http.get(`${API}/domain-types/dashboard_metadata/collections/all`, () =>
-    HttpResponse.json({
-      domainType: 'dashboard_metadata',
-      id: 'all',
-      links: [],
-      value: [{ domainType: 'dashboard_metadata', id: SOURCE_ID, links: [], extensions: metadata }]
-    })
+  restApiHttp.get('/objects/dashboard_metadata/{dashboard_id}', ({ response }) =>
+    response(200).json(metadataObject(metadata))
   ),
-  http.get(`${API}/objects/dashboard_relative_grid/${SOURCE_ID}`, () =>
-    HttpResponse.json({
-      domainType: 'dashboard_relative_grid',
-      id: SOURCE_ID,
+  restApiHttp.get('/domain-types/dashboard_metadata/collections/all', ({ response }) =>
+    response(200).json(metadataCollection([metadata]))
+  ),
+  restApiHttp.get('/objects/dashboard_relative_grid/{dashboard_id}', ({ params, response }) =>
+    response(200).json({
+      domainType: 'dashboard',
+      id: params.dashboard_id,
+      title: SOURCE_TITLE,
       links: [],
       extensions: sourceDashboard
     })
   ),
-  http.post(CLONE_ENDPOINT, refusal)
+  restApiHttp.post(
+    '/domain-types/dashboard_responsive_grid/actions/clone_from_relative_grid/invoke',
+    ({ response }) => response(400).json(refusal)
+  )
 )
 
 // The page loads core-js, whose structuredClone copies the reactive proxies the app clones;
@@ -419,13 +446,14 @@ function captureMigrationRequests(): {
 }[] {
   const sentBodies: { widget_layouts: Record<string, ResponsiveGridWidgetLayouts> }[] = []
   server.use(
-    http.post(CLONE_ENDPOINT, async ({ request }) => {
-      sentBodies.push(
-        (await request.json()) as { widget_layouts: Record<string, ResponsiveGridWidgetLayouts> }
-      )
-      // Accepting the clone would navigate to the copy, which jsdom cannot do.
-      return refusal()
-    })
+    restApiHttp.post(
+      '/domain-types/dashboard_responsive_grid/actions/clone_from_relative_grid/invoke',
+      async ({ request, response }) => {
+        sentBodies.push(await request.json())
+        // Accepting the clone would navigate to the copy, which jsdom cannot do.
+        return response(400).json(refusal)
+      }
+    )
   )
   return sentBodies
 }
@@ -460,32 +488,40 @@ type Grid = keyof typeof hostsTableDashboards
 function showHostsTableFailingToReschedule(grid: Grid): DashboardPageProperties {
   const gridMetadata = { ...metadata, layout_type: grid }
   server.use(
-    http.get(`${API}/objects/dashboard_metadata/${SOURCE_ID}`, () =>
-      HttpResponse.json({
-        domainType: 'dashboard_metadata',
-        id: SOURCE_ID,
-        links: [],
-        extensions: gridMetadata
-      })
+    restApiHttp.get('/objects/dashboard_metadata/{dashboard_id}', ({ response }) =>
+      response(200).json(metadataObject(gridMetadata))
     ),
-    http.get(`${API}/objects/dashboard_${grid}/${SOURCE_ID}`, () =>
-      HttpResponse.json({
-        domainType: `dashboard_${grid}`,
-        id: SOURCE_ID,
-        links: [],
-        extensions: hostsTableDashboards[grid]
-      })
-    ),
-    http.post(`${API}/domain-types/dashboard/actions/compute-widget-titles/invoke`, () =>
-      HttpResponse.json({
+    restApiHttp.get('/objects/dashboard_relative_grid/{dashboard_id}', ({ response }) =>
+      response(200).json({
         domainType: 'dashboard',
-        id: 'titles',
+        id: SOURCE_ID,
+        title: SOURCE_TITLE,
         links: [],
-        extensions: { titles: { [TABLE_WIDGET_ID]: 'Hosts' } }
+        extensions: hostsTableDashboards.relative_grid
       })
     ),
-    http.post(`${API}/domain-types/dashboard/actions/compute-monitoring-table/invoke`, () =>
-      HttpResponse.json({ domainType: 'widget-compute', value: hostsTable })
+    restApiHttp.get('/objects/dashboard_responsive_grid/{dashboard_id}', ({ response }) =>
+      response(200).json({
+        domainType: 'dashboard',
+        id: SOURCE_ID,
+        title: SOURCE_TITLE,
+        links: [],
+        extensions: hostsTableDashboards.responsive_grid
+      })
+    ),
+    restApiHttp.post(
+      '/domain-types/dashboard/actions/compute-widget-titles/invoke',
+      ({ response }) =>
+        response(200).json({
+          domainType: 'dashboard-widget-titles',
+          id: 'titles',
+          links: [],
+          extensions: { titles: { [TABLE_WIDGET_ID]: 'Hosts' } }
+        })
+    ),
+    restApiHttp.post(
+      '/domain-types/dashboard/actions/compute-monitoring-table/invoke',
+      ({ response }) => response(200).json({ domainType: 'widget-compute', value: hostsTable })
     ),
     restApiHttp.get('/monitor/hosts/{hostname}/action_menu', ({ response }) =>
       response(200).json({ items: [] })
@@ -574,36 +610,15 @@ describe('DashboardApp on a switch to another dashboard', () => {
     window.history.replaceState({}, '', pageUrl)
   })
 
-  function serveTheOtherDashboard(otherDashboard: object = sourceDashboard): void {
+  function serveTheOtherDashboard(): void {
     server.use(
-      http.get(`${API}/domain-types/dashboard_metadata/collections/all`, () =>
-        HttpResponse.json({
-          domainType: 'dashboard_metadata',
-          id: 'all',
-          links: [],
-          value: [metadata, otherMetadata].map((extensions) => ({
-            domainType: 'dashboard_metadata',
-            id: extensions.name,
-            links: [],
-            extensions
-          }))
-        })
+      restApiHttp.get('/domain-types/dashboard_metadata/collections/all', ({ response }) =>
+        response(200).json(metadataCollection([metadata, otherMetadata]))
       ),
-      http.get(`${API}/objects/dashboard_metadata/${OTHER_ID}`, () =>
-        HttpResponse.json({
-          domainType: 'dashboard_metadata',
-          id: OTHER_ID,
-          links: [],
-          extensions: otherMetadata
-        })
-      ),
-      http.get(`${API}/objects/dashboard_relative_grid/${OTHER_ID}`, () =>
-        HttpResponse.json({
-          domainType: 'dashboard_relative_grid',
-          id: OTHER_ID,
-          links: [],
-          extensions: otherDashboard
-        })
+      restApiHttp.get('/objects/dashboard_metadata/{dashboard_id}', ({ params, response }) =>
+        response(200).json(
+          metadataObject(params.dashboard_id === OTHER_ID ? otherMetadata : metadata)
+        )
       )
     )
   }
@@ -611,22 +626,22 @@ describe('DashboardApp on a switch to another dashboard', () => {
   /** Both dashboards show an alert overview; returns the windows that the overviews fetch for. */
   function serveAlertOverviewsOnBoth(): WidgetTimeRange[] {
     const fetchedWindows: WidgetTimeRange[] = []
-    serveTheOtherDashboard(alertOverviewDashboard)
+    serveTheOtherDashboard()
     server.use(
-      http.get(`${API}/objects/dashboard_relative_grid/${SOURCE_ID}`, () =>
-        HttpResponse.json({
-          domainType: 'dashboard_relative_grid',
-          id: SOURCE_ID,
+      restApiHttp.get('/objects/dashboard_relative_grid/{dashboard_id}', ({ params, response }) =>
+        response(200).json({
+          domainType: 'dashboard',
+          id: params.dashboard_id,
+          title: SOURCE_TITLE,
           links: [],
           extensions: alertOverviewDashboard
         })
       ),
-      http.post(
-        `${API}/domain-types/dashboard/actions/compute-alert-overview/invoke`,
-        async ({ request }) => {
-          const body = (await request.json()) as { time_range: WidgetTimeRange }
-          fetchedWindows.push(body.time_range)
-          return HttpResponse.json({ domainType: 'widget-compute', value: alertOverview })
+      restApiHttp.post(
+        '/domain-types/dashboard/actions/compute-alert-overview/invoke',
+        async ({ request, response }) => {
+          fetchedWindows.push((await request.json()).time_range)
+          return response(200).json({ domainType: 'widget-compute', value: alertOverview })
         }
       )
     )

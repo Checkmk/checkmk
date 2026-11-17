@@ -51,6 +51,8 @@ _MAP_STATES = {
 def parse_hp_proliant_raid(string_table: StringTable) -> dict[str, HpProRaid]:
     parsed: dict[str, HpProRaid] = {}
     for number, name, status, size_str, rebuild in string_table:
+        if not number:
+            continue
         itemname = sanitize_item(f"{name} {number}".strip())
         parsed.setdefault(
             itemname,

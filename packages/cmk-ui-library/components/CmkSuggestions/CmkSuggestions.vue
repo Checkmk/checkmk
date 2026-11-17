@@ -268,8 +268,10 @@ async function handleSuggestionsUpdate(
       filterString.value = foundSuggestion?.title ?? newSelectedSuggestion.getName()
       isSelectedSuggestionSetAsFilter.value = true
     }
-    if (foundSuggestion && newSuggestions.type !== 'filtered') {
+    if (foundSuggestion && (newSuggestions.type !== 'filtered' || effectiveQuery === '')) {
       activeSuggestion.value = foundSuggestion
+      await nextTick()
+      scrollCurrentActiveIntoView()
     } else {
       activeSuggestion.value = null
       setSiblingOrFirstActive(0)

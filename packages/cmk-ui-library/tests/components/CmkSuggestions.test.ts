@@ -154,6 +154,41 @@ test('marks the matching item as selected when selectedSuggestion is provided', 
   expect(screen.getByRole('option', { name: 'Option Three' })).not.toHaveClass('selected')
 })
 
+test('filtered mode marks the selected item and scrolls it into view', async () => {
+  const scrollIntoView = vi.spyOn(window.HTMLElement.prototype, 'scrollIntoView')
+  render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new SelectionWithTitle('option2', 'Option Two'),
+      suggestions: { type: 'filtered', suggestions: flatSuggestions },
+      role: 'option'
+    }
+  })
+
+  const selected = await screen.findByRole('option', { name: 'Option Two' })
+  expect(selected).toHaveClass('selected')
+  expect(screen.getByRole('option', { name: 'Option One' })).not.toHaveClass('selected')
+  await waitFor(() => expect(scrollIntoView.mock.contexts).toContain(selected))
+  scrollIntoView.mockRestore()
+})
+
+test('filtered mode marks the first match once the user filters', async () => {
+  const user = userEvent.setup()
+  render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new SelectionWithTitle('option2', 'Option Two'),
+      suggestions: { type: 'filtered', suggestions: flatSuggestions },
+      role: 'option'
+    }
+  })
+
+  await user.type(screen.getByLabelText('filter'), 'Option')
+
+  await waitFor(() =>
+    expect(screen.getByRole('option', { name: 'Option One' })).toHaveClass('selected')
+  )
+  expect(screen.getByRole('option', { name: 'Option Two' })).not.toHaveClass('selected')
+})
+
 async function typeFilter(value: string): Promise<void> {
   const input = screen.getByRole('textbox', { name: 'filter' })
   await fireEvent.update(input, value)

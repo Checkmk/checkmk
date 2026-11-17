@@ -5,15 +5,32 @@ license: GPLv2
 distribution: check_mk
 description:
  This check monitors a backup proxy of a Veeam Backup & Replication server,
- collected via the Veeam special agent. It reports the proxy type,
- description, host and its online, disabled and out-of-date states.
+ collected via the Veeam special agent. Its summary shows the proxy's three
+ conditions and its type; the details show its description and host.
 
- This check is {CRIT} if the proxy is offline, since an unreachable proxy
- cannot run a backup. It is {WARN} if the proxy's components are out of
- date. It is {OK} by default if the proxy is disabled; the state is
- configurable, since a deliberately disabled proxy is normal in some
- estates. These three states are evaluated independently: a proxy can be
- online and disabled, or offline and enabled, at the same time.
+ A proxy has three independent conditions, always shown in the order below.
+ A proxy can be online and disabled, or offline and enabled, at the same
+ time.
+
+ Connection ({Online} or {Offline}): whether the backup server can reach
+ the proxy. An offline proxy is {CRIT}, since it cannot run a backup,
+ unless it is disabled; then the configured state for a disabled proxy
+ applies instead.
+
+ Admin state ({Enabled} or {Disabled}): whether the proxy has been
+ disabled in Veeam, so that no backups are assigned to it. A disabled
+ proxy is {OK} by default; the state is configurable, since a deliberately
+ disabled proxy is normal in some estates.
+
+ Components ({Up to date} or {Out of date}): whether the Veeam components
+ installed on the proxy match the backup server's version. Out-of-date
+ components are {WARN}.
+
+ The type is one of: a VMware proxy ("VMware vSphere"), which processes
+ backups of VMware vSphere virtual machines; a Hyper-V off-host proxy
+ ("Hyper-V"), which takes the processing of Hyper-V backups off the
+ Hyper-V hosts; or a general-purpose proxy ("General purpose"), which is
+ used for agent, file share and object storage backups.
 
 discovery:
  One service is created for each backup proxy reported by the API.

@@ -94,12 +94,6 @@ def check_veeam_proxies(item: str, params: CheckParameters, section: Section) ->
     if (proxy := section.get(item)) is None:
         return
 
-    state_words = ["Online" if proxy.is_online else "Offline"]
-    if proxy.is_disabled:
-        state_words.append("Disabled")
-    if proxy.is_out_of_date:
-        state_words.append("Out of date")
-
     # A deliberately disabled proxy is normally also offline; only let "offline"
     # escalate to CRIT when the proxy isn't disabled, so disabled_state remains
     # in control of the overall state for a disabled proxy.
@@ -111,7 +105,12 @@ def check_veeam_proxies(item: str, params: CheckParameters, section: Section) ->
     )
     yield Result(
         state=overall_state,
-        summary=f"{_type_display_name(proxy.type)}, {', '.join(state_words)}",
+        summary=(
+            f"Connection: {'Online' if proxy.is_online else 'Offline'}, "
+            f"Admin state: {'Disabled' if proxy.is_disabled else 'Enabled'}, "
+            f"Components: {'Out of date' if proxy.is_out_of_date else 'Up to date'}, "
+            f"Type: {_type_display_name(proxy.type)}"
+        ),
     )
 
     yield Result(

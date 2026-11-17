@@ -136,10 +136,22 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
         0, [r"Restore points kept: 10\b", r"Encryption: disabled\b"]
     ),
     "Veeam Backup proxy Backup Proxy": ExpectedServiceResult(
-        0, [r"\bGeneral purpose\b", r"\bOnline\b", r"Host: This server\b"]
+        0,
+        [
+            r"Connection: Online\b",
+            r"Admin state: Enabled\b",
+            r"Type: General purpose\b",
+            r"Host: This server\b",
+        ],
     ),
     "Veeam Backup proxy VMware Backup Proxy": ExpectedServiceResult(
-        0, [r"\bVMware vSphere\b", r"\bOnline\b", r"Host: This server\b"]
+        0,
+        [
+            r"Connection: Online\b",
+            r"Admin state: Enabled\b",
+            r"Type: VMware vSphere\b",
+            r"Host: This server\b",
+        ],
     ),
     "Veeam Backup repository Performance Extent - Backup Repository on Linux (22d8ed25)": (
         ExpectedServiceResult(0, [r"Host: 172\.31\.26\.65\b", r"Path: /backups\b"])

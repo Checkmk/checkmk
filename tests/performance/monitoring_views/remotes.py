@@ -30,11 +30,12 @@ from cmk.ccc.site import SiteId
 from .livestatus_fake import EstateShape, FakeSite, FakeVersion, QueryLog
 
 #: The fixed16 response header the client expects in front of every payload.
-_RESPONSE_HEADER = "{code:<3} {length:>11}\n"
+_RESPONSE_HEADER = "{livestatus_code:<3} {length:>11}\n"
 
 
-def response_frame(payload: bytes, code: int = 200) -> bytes:
-    return _RESPONSE_HEADER.format(code=code, length=len(payload)).encode("ascii") + payload
+def response_frame(payload: bytes, livestatus_code: int = 200) -> bytes:
+    header = _RESPONSE_HEADER.format(livestatus_code=livestatus_code, length=len(payload))
+    return header.encode("ascii") + payload
 
 
 def build_sites(
@@ -219,7 +220,7 @@ class _RemoteServer(threading.Thread):
                             time.sleep(self._site.latency)
                         frame = response_frame(payload)
                     except Exception as exc:
-                        frame = response_frame(str(exc).encode("utf-8"), code=400)
+                        frame = response_frame(str(exc).encode("utf-8"), livestatus_code=400)
                     try:
                         connection.sendall(frame)
                     except OSError:

@@ -101,7 +101,6 @@ class HTTPStatusLiteralChecker(ASTVisitorChecker):
             # Livestatus status codes merely resemble HTTP ones.
             "non-free/packages/cmk-liveproxyd/**",
             "packages/cmk-livestatus-client/**",
-            "tests/performance/monitoring_views/remotes.py",
             "doc/**",  # standalone example scripts for customers, also excluded from ruff
         }
     )

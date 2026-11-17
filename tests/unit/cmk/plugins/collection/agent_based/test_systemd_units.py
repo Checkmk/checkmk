@@ -1111,6 +1111,36 @@ SECTION = Section(
             [Service(item="virtualbox"), Service(item="check-mk-enterprise-2021.09.07")],
             id="description-and-state",
         ),
+        pytest.param(
+            SECTION,
+            [
+                {
+                    "descriptions": [],
+                    "names": [{"match": "regex", "pattern": "virtualbox"}],
+                    "states": [],
+                },
+            ],
+            [Service(item="virtualbox")],
+            id="empty-condition-lists-do-not-restrict",
+        ),
+        pytest.param(
+            SECTION,
+            [
+                {
+                    "names": [{"match": "regex", "pattern": ""}],
+                    "descriptions": [{"match": "regex", "pattern": "LSB"}],
+                    "states": ["active"],
+                },
+            ],
+            [Service(item="virtualbox"), Service(item="check-mk-enterprise-2021.09.07")],
+            id="empty-regex-pattern-matches-every-unit",
+        ),
+        pytest.param(
+            SECTION,
+            [{"names": [{"match": "exact", "pattern": ""}]}],
+            [],
+            id="empty-exact-pattern-matches-no-unit",
+        ),
         (
             Section(services={}, sockets={}),
             [

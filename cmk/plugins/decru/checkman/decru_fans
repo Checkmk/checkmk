@@ -1,4 +1,4 @@
-title: DECRU NAS: Cooling Fans
+title: Decru NAS: Fans
 agents: snmp
 catalog: hw/network/decru
 license: GPLv2

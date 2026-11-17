@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 REPO_PATH="$(dirname "$(dirname "${SCRIPT_DIR}")")"
+
 BRANCH="$(make --no-print-directory --file="${REPO_PATH}/defines.make" print-BRANCH_VERSION)"
 [ "${VERSION}" == "daily" ] && unset VERSION
+# exported for the tests and for perftest_upload.sh, so both agree on the release
 export VERSION="${VERSION:-${BRANCH}-$(date '+%Y.%m.%d')}"
 export EDITION="${EDITION:-pro}"
 RELEASE="${RELEASE:-${VERSION}.${EDITION}}"
-ROOT_DIR="${RESULT_PATH:-${REPO_PATH}/results}/performance"
-BENCHMARK_DIR="${ROOT_DIR}/${RELEASE}"
+BENCHMARK_DIR="${RESULT_PATH:-${REPO_PATH}/results}/performance/${RELEASE}"
 mkdir -p "${BENCHMARK_DIR}"
 pytest "${SCRIPT_DIR}/system" \
     --benchmark-json="${BENCHMARK_DIR}/benchmark.json" \
@@ -18,22 +19,5 @@ pytest "${SCRIPT_DIR}/system" \
     --self-contained-html --ignore-running-procs \
     --log-level=INFO --log-cli-level=INFO "${@}"
 RC=$?
-if [ -n "${CI}" ]; then
-    # update database; generate report and check weekly baseline
-    "${SCRIPT_DIR}/reporting/perftest_plot.py" --update --branch-version="${BRANCH}" \
-        --product-release="${VERSION}" \
-        --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net --require-database \
-        --validate-baselines --warn-only || exit 200
-    # check monthly baseline
-    "${SCRIPT_DIR}/reporting/perftest_plot.py" --branch-version="${BRANCH}" \
-        --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net --require-database \
-        --validate-baselines --warn-only \
-        --skip-filesystem-writes --skip-database-writes --baseline-offset=30 || exit 200
-    # check yearly baseline
-    "${SCRIPT_DIR}/reporting/perftest_plot.py" --branch-version="${BRANCH}" \
-        --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net --require-database \
-        --validate-baselines --warn-only \
-        --skip-filesystem-writes --skip-database-writes --baseline-offset=365 || exit 200
-fi
-echo "ROOT_DIR=${ROOT_DIR}"
+"${SCRIPT_DIR}/perftest_upload.sh" --site || exit $?
 exit "$RC"

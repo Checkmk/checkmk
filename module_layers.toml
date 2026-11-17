@@ -406,20 +406,60 @@ allows = ["cmk.utils.paths"]
 allows = []
 
 [components."cmk.ai_control_plane"]
+allows = []
+
+[components."cmk.ai_control_plane.api"]
 allows = [
-  "@ccc",
-  "@trace",
+  "cmk.ai_control_plane.conversation",
+  "cmk.ai_control_plane.llm",
   "cmk.ai_control_plane.protocols",
-  "cmk.crash",
+  "cmk.ai_control_plane.site",
+  "cmk.ai_control_plane.storage",
+  "cmk.ai_control_plane.usage_data",
   "cmk.fastapi",
   "cmk.password_store.v1",
-  "cmk.product_usage.site_id",
-  "cmk.schema_manager",
   "cmk.schema_migrations.ai_control_plane",
+]
+
+[components."cmk.ai_control_plane.conversation"]
+allows = [
+  "cmk.ai_control_plane.protocols",
+  "cmk.ai_control_plane.site",
+  "cmk.ai_control_plane.storage",
+  "cmk.ai_control_plane.usage_data",
+  "cmk.password_store.v1",
+]
+
+[components."cmk.ai_control_plane.llm"]
+allows = [
+  "@ccc",
+  "cmk.ai_control_plane.conversation",
+  "cmk.ai_control_plane.protocols",
+  "cmk.password_store.v1",
 ]
 
 [components."cmk.ai_control_plane.protocols"]
 allows = []
+
+[components."cmk.ai_control_plane.site"]
+allows = ["@ccc", "@trace", "cmk.crash"]
+
+[components."cmk.ai_control_plane.storage"]
+allows = [
+  "cmk.ai_control_plane.protocols",
+  "cmk.ai_control_plane.site",
+  "cmk.schema_manager",
+  "cmk.schema_migrations.ai_control_plane",
+]
+
+[components."cmk.ai_control_plane.usage_data"]
+allows = [
+  "@ccc",
+  "@trace",
+  "cmk.ai_control_plane.llm",
+  "cmk.ai_control_plane.protocols",
+  "cmk.product_usage.site_id",
+]
 
 [components."cmk.agent_receiver"]
 allows = ["@ccc", "@crypto", "@relay_protocols", "cmk.licensing.basics.options"]

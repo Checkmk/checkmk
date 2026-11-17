@@ -1,4 +1,4 @@
-title: IBM Lotus Domino: Number of Transactions
+title: IBM Lotus Domino: Transactions
 agents: snmp
 catalog: app/lotusnotes
 license: GPLv2

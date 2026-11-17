@@ -1,4 +1,4 @@
-title: IBM Lotus Domino: Informational Data
+title: IBM Lotus Domino: Server Info
 agents: snmp
 catalog: app/lotusnotes
 license: GPLv2

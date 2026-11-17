@@ -1,4 +1,4 @@
-title: IBM Lotus Domino: Count of Tasks
+title: IBM Lotus Domino: Tasks
 agents: snmp
 catalog: app/lotusnotes
 license: GPLv2

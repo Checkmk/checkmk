@@ -1,4 +1,4 @@
-title: ICOM Repeater: PLL Lock Voltage
+title: Icom Repeater: PLL Lock Voltage
 agents: snmp
 catalog: hw/network/icom
 license: GPLv2

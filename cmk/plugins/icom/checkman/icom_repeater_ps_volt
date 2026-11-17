@@ -1,4 +1,4 @@
-title: ICOM Repeater: Power Supply Voltage
+title: Icom Repeater: Power Supply Voltage
 agents: snmp
 catalog: hw/network/icom
 license: GPLv2

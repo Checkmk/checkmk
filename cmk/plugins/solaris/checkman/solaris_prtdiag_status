@@ -1,4 +1,4 @@
-title: Solaris: Health (prtdiag)
+title: Solaris: Hardware Health via prtdiag
 agents: solaris
 catalog: os/services
 license: GPLv2

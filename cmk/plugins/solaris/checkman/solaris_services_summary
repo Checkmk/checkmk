@@ -1,4 +1,4 @@
-title: SMF Solaris: Services Summary
+title: Solaris: SMF Services Summary
 agents: solaris
 catalog: os/services
 license: GPLv2

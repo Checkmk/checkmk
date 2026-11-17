@@ -5,7 +5,6 @@
 
 import json
 import os
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -146,7 +145,7 @@ def test_create_werk_consumes_a_reserved_id(tmp_path: Path) -> None:
     assert remaining == [11112, 11113]
 
 
-def test_create_werk_sets_the_current_version(tmp_path: Path) -> None:
+def test_create_werk_omits_the_version(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()
     write_secret(home)
@@ -158,7 +157,7 @@ def test_create_werk_sets_the_current_version(tmp_path: Path) -> None:
     _create_werk(home, repo_path)
 
     werk_file = (repo_path / ".werks/11111.md").read_text()
-    assert re.search(r"^version +\| 0\.1\.0$", werk_file, re.MULTILINE)
+    assert "version" not in werk_file
 
 
 def test_create_werk_logs_the_consumed_id(tmp_path: Path) -> None:
@@ -245,10 +244,10 @@ def _pick_werk(tmp_path: Path, werk: str) -> WerkV2ParseResult | WerkV3ParseResu
     )
 
 
-def test_pick_sets_the_current_version(tmp_path: Path) -> None:
+def test_pick_removes_the_version(tmp_path: Path) -> None:
     picked = _pick_werk(tmp_path, werk_text(version="2.5.0p3"))
 
-    assert picked.metadata["version"] == "0.1.0"
+    assert "version" not in picked.metadata
 
 
 def test_pick_converts_a_werk_v2_to_v3(tmp_path: Path) -> None:

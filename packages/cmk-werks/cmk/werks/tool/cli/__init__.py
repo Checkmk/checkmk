@@ -411,7 +411,7 @@ def _adapt_picked_werk(ctx: Context, werk_path: Path, werk_version: WerkVersion)
     content = werk.content
     if isinstance(content, WerkV2ParseResult):
         content = werkv2_to_werkv3(content, ctx.config)
-    content.metadata["version"] = ctx.config.current_version
+    content.metadata.pop("version", None)
     save_werk(werk._replace(content=content), werk_version)
     _git_add(werk_path)
 
@@ -735,7 +735,6 @@ def main_new(ctx: Context, args: argparse.Namespace) -> None:
     metadata: WerkMetadata = {}
     metadata["id"] = str(werk_id)
     metadata["date"] = datetime.datetime.now(datetime.UTC).isoformat()
-    metadata["version"] = ctx.config.current_version
     metadata["title"] = args.title or get_input("Title")
     if metadata["title"] == "":
         sys.stderr.write("Cancelled.\n")
@@ -1082,7 +1081,7 @@ def werk_cherry_pick(
             # git add will be executed by _adapt_picked_werk
 
         # Adapt the werk before checking the pick return code.
-        # Otherwise the dev may forget to change the version
+        # Otherwise the dev may forget to remove the version
         _adapt_picked_werk(ctx, found_werk_path.destination, werk_version)
         log.info(
             "launcher:%(launcher)s, action:pick, werk ID:%(werk_id)s, werk file:%(werk_file)s",
@@ -1093,8 +1092,8 @@ def werk_cherry_pick(
             },
         )
         sys.stdout.write(
-            f"Changed version of Werk {found_werk_path.destination} "
-            f"to {ctx.config.current_version}.\n"
+            f"Removed the version of Werk {found_werk_path.destination}, "
+            "it gets the version of the release it ships with.\n"
         )
 
     if pick.returncode:

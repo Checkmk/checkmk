@@ -168,12 +168,14 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
     "Veeam Protection group PG-Windows-Test": ExpectedServiceResult(
         0, [r"\bIndividual computers\b", r"\b1 configured computer\b"]
     ),
-    "Veeam Managed server 172.31.26.65": ExpectedServiceResult(0, [r"\bLinux\b", r"\bAvailable\b"]),
+    "Veeam Managed server 172.31.26.65": ExpectedServiceResult(
+        0, [r"Type: Linux\b", r"Status in Veeam: Available\b", r"Roles: none\b"]
+    ),
     f"Veeam Managed server {BACKUP_SERVER_NAME}": ExpectedServiceResult(
         0,
         [
-            r"\bMicrosoft Windows\b",
-            r"\bAvailable\b",
+            r"Type: Microsoft Windows\b",
+            r"Status in Veeam: Available\b",
             r"Roles: Backup server, Default mount server\b",
         ],
     ),

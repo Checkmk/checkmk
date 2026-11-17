@@ -131,7 +131,10 @@ def check_veeam_managed_servers(
 
     yield Result(
         state=_status_state(server.status, params),
-        summary=f"{_type_display_name(server.type)}, {server.status or 'no status reported'}",
+        summary=(
+            f"Type: {_type_display_name(server.type)}, "
+            f"Status in Veeam: {server.status or 'no status reported'}"
+        ),
     )
 
     yield Result(
@@ -146,8 +149,7 @@ def check_veeam_managed_servers(
         )
         if is_set
     ]
-    if roles:
-        yield Result(state=State.OK, notice=f"Roles: {', '.join(roles)}")
+    yield Result(state=State.OK, notice=f"Roles: {', '.join(roles) or 'none'}")
     yield Result(state=State.OK, notice=f"Server ID: {server.id}")
 
 

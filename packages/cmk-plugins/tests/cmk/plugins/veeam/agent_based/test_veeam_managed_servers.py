@@ -74,38 +74,50 @@ def test_parse_veeam_managed_servers_without_status_or_roles() -> None:
 def test_check_veeam_managed_servers_available_is_ok() -> None:
     section = parse_veeam_managed_servers([[_server()]])
     results = list(check_veeam_managed_servers("vcenter01.tech.local", PARAMS, section))
-    assert results[0] == Result(state=State.OK, summary="VMware vSphere, Available")
+    assert results[0] == Result(
+        state=State.OK, summary="Type: VMware vSphere, Status in Veeam: Available"
+    )
 
 
 def test_check_veeam_managed_servers_unavailable_is_crit() -> None:
     section = parse_veeam_managed_servers([[_server(status="Unavailable")]])
     results = list(check_veeam_managed_servers("vcenter01.tech.local", PARAMS, section))
-    assert results[0] == Result(state=State.CRIT, summary="VMware vSphere, Unavailable")
+    assert results[0] == Result(
+        state=State.CRIT, summary="Type: VMware vSphere, Status in Veeam: Unavailable"
+    )
 
 
 def test_check_veeam_managed_servers_unavailable_state_is_configurable() -> None:
     section = parse_veeam_managed_servers([[_server(status="Unavailable")]])
     params = CheckParameters(status_available=0, status_unavailable=1)
     results = list(check_veeam_managed_servers("vcenter01.tech.local", params, section))
-    assert results[0] == Result(state=State.WARN, summary="VMware vSphere, Unavailable")
+    assert results[0] == Result(
+        state=State.WARN, summary="Type: VMware vSphere, Status in Veeam: Unavailable"
+    )
 
 
 def test_check_veeam_managed_servers_unrecognized_status_is_unknown() -> None:
     section = parse_veeam_managed_servers([[_server(status="Maintenance")]])
     results = list(check_veeam_managed_servers("vcenter01.tech.local", PARAMS, section))
-    assert results[0] == Result(state=State.UNKNOWN, summary="VMware vSphere, Maintenance")
+    assert results[0] == Result(
+        state=State.UNKNOWN, summary="Type: VMware vSphere, Status in Veeam: Maintenance"
+    )
 
 
 def test_check_veeam_managed_servers_missing_status_is_unknown() -> None:
     section = parse_veeam_managed_servers([[_server_without("status")]])
     results = list(check_veeam_managed_servers("vcenter01.tech.local", PARAMS, section))
-    assert results[0] == Result(state=State.UNKNOWN, summary="VMware vSphere, no status reported")
+    assert results[0] == Result(
+        state=State.UNKNOWN, summary="Type: VMware vSphere, Status in Veeam: no status reported"
+    )
 
 
 def test_check_veeam_managed_servers_type_falls_back_to_raw_value_when_unrecognized() -> None:
     section = parse_veeam_managed_servers([[_server(type="SomeFutureType")]])
     results = list(check_veeam_managed_servers("vcenter01.tech.local", PARAMS, section))
-    assert results[0] == Result(state=State.OK, summary="SomeFutureType, Available")
+    assert results[0] == Result(
+        state=State.OK, summary="Type: SomeFutureType, Status in Veeam: Available"
+    )
 
 
 def test_check_veeam_managed_servers_details() -> None:
@@ -125,6 +137,7 @@ def test_check_veeam_managed_servers_details_without_roles() -> None:
     results = list(check_veeam_managed_servers("vcenter01.tech.local", PARAMS, section))
     assert results[1:] == [
         Result(state=State.OK, notice="Description: none"),
+        Result(state=State.OK, notice="Roles: none"),
         Result(state=State.OK, notice="Server ID: id-1"),
     ]
 

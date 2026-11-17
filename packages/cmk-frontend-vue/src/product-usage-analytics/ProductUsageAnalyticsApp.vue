@@ -34,7 +34,7 @@ const shareNoteParts = _tp(
 ).split('%{link}')
 const changeNoteParts = _tp(
   '%{link} is a link to the global setting with the text "global settings"',
-  'You can change your decision at any time in %{link}.'
+  'You can disable this reminder or change your decision at any time in the %{link}.'
 ).split('%{link}')
 
 /**
@@ -96,7 +96,7 @@ async function enable(): Promise<void> {
           <b>{{ _t('We do NOT collect: ') }}</b
           >{{
             _t(
-              'any data about users or their behavior (e.g., PII) or possibly sensitive identifiers about your environment (e.g., hostnames, file paths, service names).'
+              'any data about users or their behavior (e.g., personally identifiable information) or possibly sensitive identifiers about your environment (e.g., hostnames, file paths, service names).'
             )
           }}
         </li>
@@ -121,7 +121,13 @@ async function enable(): Promise<void> {
         <b>{{ _t('Product usage analytics is turned off by default. ') }}</b>
         {{ shareNoteParts[0]
         }}<CmkLink :href="props.manifest_link" target="_blank" inline>{{ _t('manifest') }}</CmkLink
-        >{{ shareNoteParts[1] }} {{ changeNoteParts[0]
+        >{{ shareNoteParts[1] }}
+      </p>
+
+      <CmkSpace direction="horizontal" size="small" />
+
+      <p>
+        {{ changeNoteParts[0]
         }}<CmkLink :href="props.global_settings_link" target="main" inline @click="deferDecision">{{
           _t('global settings')
         }}</CmkLink

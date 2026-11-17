@@ -1,4 +1,4 @@
-title: APC Modular PDU: Modul Status
+title: APC PDU: Modular PDU Modules
 agents: snmp
 catalog: hw/power/apc
 license: GPLv2

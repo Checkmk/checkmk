@@ -1,4 +1,4 @@
-title: APC NetShelter PDU: Power and Current
+title: APC PDU: NetShelter Power and Current
 agents: snmp
 catalog: hw/power/apc
 license: GPLv2

@@ -1,4 +1,4 @@
-title: APC InRow Cooling Devices: Fanspeed
+title: APC InRow: Fan Speed
 agents: snmp
 catalog: hw/environment/apc
 license: GPLv2

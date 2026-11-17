@@ -1,4 +1,4 @@
-title: APC Netbotz: Get the States of Dry Contact Sensors
+title: APC NetBotz: Dry Contacts
 agents: snmp
 catalog: hw/power/apc
 license: GPLv2

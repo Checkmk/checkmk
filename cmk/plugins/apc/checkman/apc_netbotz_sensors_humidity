@@ -1,4 +1,4 @@
-title: APC Netbotz Devices: Humidity Sensor
+title: APC NetBotz: Humidity
 agents: snmp
 catalog: hw/power/apc
 license: GPLv2

@@ -1,4 +1,4 @@
-title: APC Powerswitch/APC PDU: Power Outlet Status
+title: APC PDU: Switched Outlets
 agents: snmp
 catalog: hw/power/apc
 license: GPLv2

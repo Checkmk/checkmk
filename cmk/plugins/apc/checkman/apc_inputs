@@ -1,4 +1,4 @@
-title: APC UPS: Input Contacts
+title: APC: UPS Input Contacts
 agents: snmp
 catalog: hw/power/apc
 license: GPLv2

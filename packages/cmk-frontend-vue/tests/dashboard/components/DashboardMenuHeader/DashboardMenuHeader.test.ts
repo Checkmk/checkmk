@@ -10,13 +10,15 @@ import type { DrillUpButton } from 'cmk-shared-typing/typescript/drill_up_button
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
 import { kioskMode } from 'cmk-ui-library/lib/kiosk'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 
 import DashboardMenuHeader from '@/dashboard/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import type { SelectedDashboard } from '@/dashboard/components/DashboardMenuHeader/types'
-import type { DashboardMetadata, DashboardTokenModel } from '@/dashboard/types/dashboard'
+import type { DashboardTokenModel } from '@/dashboard/types/dashboard'
 import { DashboardOwnerType } from '@/dashboard/types/dashboard'
-import { copyToClipboard, dashboardAPI } from '@/dashboard/utils.ts'
+
+import { dashboardMetadata, dashboardMetadataListHandler } from '@tests/dashboard/apiHandlers'
 
 const TZ = 'Europe/Berlin'
 
@@ -38,15 +40,11 @@ const testGlobalTimePicker: GlobalTimePickerProps = {
   }
 }
 
-vi.mock('@/dashboard/utils.ts', () => ({
-  copyToClipboard: vi.fn().mockResolvedValue(undefined),
-  dashboardAPI: {
-    listDashboardMetadata: vi.fn().mockResolvedValue([])
-  },
-  urlHandler: {
-    getDashboardUrl: vi.fn().mockReturnValue(new URL('http://localhost/dashboard.py'))
-  }
-}))
+useMswServer(
+  dashboardMetadataListHandler([dashboardMetadata('test-dashboard', 'Test Dashboard', 'admin')], {
+    allOwners: true
+  })
+)
 
 const customDashboard: SelectedDashboard = {
   name: 'my-dashboard',
@@ -277,15 +275,6 @@ describe('DashboardMenuHeader', () => {
     })
 
     it('emits set-dashboard when a dashboard is selected from DashboardSelector', async () => {
-      vi.mocked(dashboardAPI.listDashboardMetadata).mockResolvedValueOnce([
-        {
-          name: 'test-dashboard',
-          owner: 'admin',
-          is_built_in: false,
-          display: { title: 'Test Dashboard', hide_in_drop_down_menus: false, sort_index: 0 }
-        }
-      ] as DashboardMetadata[])
-
       const { emitted } = renderHeader()
       await fireEvent.focus(screen.getByRole('textbox'))
 
@@ -299,14 +288,13 @@ describe('DashboardMenuHeader', () => {
       ])
     })
 
-    it('calls copyToClipboard when "Copy internal link" is clicked', async () => {
+    it('copies the address of the page when "Copy internal link" is clicked', async () => {
+      const user = userEvent.setup()
       renderHeader()
-      await fireEvent.click(screen.getByRole('button', { name: 'Share' }))
-      await waitFor(() => {
-        expect(screen.getByText('Copy internal link')).toBeInTheDocument()
-      })
-      await fireEvent.click(screen.getByText('Copy internal link'))
-      expect(copyToClipboard).toHaveBeenCalledOnce()
+      await user.click(screen.getByRole('button', { name: 'Share' }))
+      await user.click(await screen.findByText('Copy internal link'))
+
+      expect(await navigator.clipboard.readText()).toBe(window.location.href)
     })
   })
 

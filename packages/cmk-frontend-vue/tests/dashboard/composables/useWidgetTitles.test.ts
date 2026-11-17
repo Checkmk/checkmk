@@ -5,19 +5,16 @@
  */
 import { render } from '@testing-library/vue'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { type Ref, computed, defineComponent, h, nextTick, ref } from 'vue'
 
 import type { WidgetCore } from '@/dashboard/composables/useDashboardWidgets'
 import { type WidgetTitles, useComputeWidgetTitles } from '@/dashboard/composables/useWidgetTitles'
-import type { ComputeWidgetTitlesResponse } from '@/dashboard/types/api'
-import { dashboardAPI } from '@/dashboard/utils'
+import type { ComputeWidgetTitlesRequest } from '@/dashboard/types/api'
 
-vi.mock('@/dashboard/utils', () => ({
-  dashboardAPI: {
-    computeWidgetTitles: vi.fn()
-  }
-}))
+import { useAnsweredRequestsAfterEach, useRequestRecords } from '@tests/dashboard/apiHandlers'
 
 function makeWidgetCore(widgetId: string): WidgetCore {
   return {
@@ -31,34 +28,51 @@ function makeWidgetCore(widgetId: string): WidgetCore {
   }
 }
 
-function makeResponse(titles: Record<string, string>): ComputeWidgetTitlesResponse {
-  return {
-    domainType: 'dashboard-widget-titles',
-    extensions: { titles },
-    links: []
-  } as ComputeWidgetTitlesResponse
+type Outcome = { titles: Record<string, string> } | 'failure'
+
+interface PendingRequest {
+  body: ComputeWidgetTitlesRequest
+  settle: (outcome: Outcome) => void
 }
 
-interface Deferred {
-  resolve: (response: ComputeWidgetTitlesResponse) => void
-  reject: (error: unknown) => void
+const pending = useRequestRecords<PendingRequest>()
+
+function pendingRequestFor(widgetId: string): PendingRequest {
+  const request = pending.find(({ body }) => widgetId in body.widgets)
+  if (request === undefined) {
+    throw new Error(`No request computes the title of ${widgetId}`)
+  }
+  return request
 }
+
+const server = useMswServer(
+  restApiHttp.post(
+    '/domain-types/dashboard/actions/compute-widget-titles/invoke',
+    async ({ request, response }) => {
+      const body = await request.json()
+      const outcome = await new Promise<Outcome>((settle) => {
+        pending.push({ body, settle })
+      })
+      return outcome === 'failure'
+        ? response.untyped(HttpResponse.json({ title: 'Internal error' }, { status: 500 }))
+        : response(200).json({
+            domainType: 'dashboard-widget-titles',
+            id: 'titles',
+            links: [],
+            extensions: { titles: outcome.titles }
+          })
+    }
+  )
+)
+useAnsweredRequestsAfterEach(server)
 
 describe('useComputeWidgetTitles', () => {
-  let pending: Deferred[]
-
   beforeEach(() => {
     vi.useFakeTimers()
-    pending = []
-    vi.mocked(dashboardAPI.computeWidgetTitles).mockImplementation(
-      () =>
-        new Promise<ComputeWidgetTitlesResponse>((resolve, reject) => {
-          pending.push({ resolve, reject })
-        })
-    )
   })
 
   afterEach(() => {
+    pending.forEach(({ settle }) => settle({ titles: {} }))
     vi.useRealTimers()
   })
 
@@ -87,13 +101,14 @@ describe('useComputeWidgetTitles', () => {
 
   it('does not compute the titles again for an equal set of widgets', async () => {
     const { widgetCores } = setup({ widget: makeWidgetCore('widget') })
-    pending[0]!.resolve(makeResponse({ widget: 'Some title' }))
+    await flushPendingWork()
+    pendingRequestFor('widget').settle({ titles: { widget: 'Some title' } })
     await flushPendingWork()
 
     widgetCores.value = { widget: makeWidgetCore('widget') }
     await flushPendingWork()
 
-    expect(dashboardAPI.computeWidgetTitles).toHaveBeenCalledOnce()
+    expect(pending).toHaveLength(1)
   })
 
   it('computes the titles once when a switch changes widgets and then filters', async () => {
@@ -104,7 +119,7 @@ describe('useComputeWidgetTitles', () => {
       }
     )
     await flushPendingWork()
-    vi.mocked(dashboardAPI.computeWidgetTitles).mockClear()
+    const beforeSwitch = pending.length
 
     // Activating the dashboard and resetting its runtime filters are separate writes
     widgetCores.value = { new_widget: makeWidgetCore('new_widget') }
@@ -112,8 +127,9 @@ describe('useComputeWidgetTitles', () => {
     baseFilters.value = {}
     await flushPendingWork()
 
-    expect(dashboardAPI.computeWidgetTitles).toHaveBeenCalledOnce()
-    const request = vi.mocked(dashboardAPI.computeWidgetTitles).mock.calls[0]![0]
+    const afterSwitch = pending.slice(beforeSwitch)
+    expect(afterSwitch).toHaveLength(1)
+    const request = afterSwitch[0]!.body
     expect(Object.keys(request.widgets)).toEqual(['new_widget'])
     expect(request.widgets['new_widget']!.filters).toEqual({})
   })
@@ -123,9 +139,9 @@ describe('useComputeWidgetTitles', () => {
     widgetCores.value = { new_widget: makeWidgetCore('new_widget') }
     await flushPendingWork()
 
-    pending[1]!.resolve(makeResponse({ new_widget: 'New title' }))
+    pendingRequestFor('new_widget').settle({ titles: { new_widget: 'New title' } })
     await flushPendingWork()
-    pending[0]!.resolve(makeResponse({ old_widget: 'Old title' }))
+    pendingRequestFor('old_widget').settle({ titles: { old_widget: 'Old title' } })
     await flushPendingWork()
 
     expect(widgetTitles.value).toEqual({ new_widget: 'New title' })
@@ -134,12 +150,13 @@ describe('useComputeWidgetTitles', () => {
   it('keeps the previously computed titles when a computation fails', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { widgetCores, widgetTitles } = setup({ widget: makeWidgetCore('widget') })
-    pending[0]!.resolve(makeResponse({ widget: 'Some title' }))
+    await flushPendingWork()
+    pendingRequestFor('widget').settle({ titles: { widget: 'Some title' } })
     await flushPendingWork()
 
     widgetCores.value = { widget: makeWidgetCore('widget'), other: makeWidgetCore('other') }
     await flushPendingWork()
-    pending[1]!.reject(new Error('Internal server error'))
+    pendingRequestFor('other').settle('failure')
     await flushPendingWork()
 
     expect(widgetTitles.value).toEqual({ widget: 'Some title' })

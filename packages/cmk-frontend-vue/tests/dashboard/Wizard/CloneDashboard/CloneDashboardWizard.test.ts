@@ -24,16 +24,6 @@ vi.mock('@/dashboard/components/Wizard/components/DashboardSettings/GeneralPrope
   default: { template: '<div data-testid="general-properties-stub" />' }
 }))
 
-vi.mock('@/dashboard/utils', () => ({
-  dashboardAPI: {
-    listMainMenuTopics: vi.fn().mockResolvedValue([
-      { id: 'monitoring', title: 'Monitoring', sortIndex: 1, isDefault: true },
-      { id: 'other', title: 'Other', sortIndex: 2, isDefault: false }
-    ]),
-    listDashboardMetadata: vi.fn().mockResolvedValue([])
-  }
-}))
-
 const mockValidateGeneralSettings = vi.hoisted(() => vi.fn().mockResolvedValue(true))
 const mockBuildSettings = vi.hoisted(() =>
   vi.fn().mockReturnValue({

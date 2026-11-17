@@ -3,7 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { describe, expect, it, vi } from 'vitest'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { describe, expect, it } from 'vitest'
 
 import {
   generateUniqueId,
@@ -12,16 +13,19 @@ import {
   toSnakeCase
 } from '@/dashboard/components/Wizard/components/DashboardSettings/utils'
 
-vi.mock('@/dashboard/utils', () => ({
-  dashboardAPI: {
-    listDashboardMetadata: vi.fn().mockResolvedValue([
-      { name: 'existing_dashboard', owner: 'admin' },
-      { name: 'another_dashboard', owner: 'admin' },
-      { name: 'guest_dashboard', owner: 'guest' },
-      { name: 'guest_dashboard_1', owner: 'guest' }
-    ])
-  }
-}))
+import { dashboardMetadata, dashboardMetadataListHandler } from '@tests/dashboard/apiHandlers'
+
+useMswServer(
+  dashboardMetadataListHandler(
+    [
+      dashboardMetadata('existing_dashboard', 'Existing dashboard', 'admin'),
+      dashboardMetadata('another_dashboard', 'Another dashboard', 'admin'),
+      dashboardMetadata('guest_dashboard', 'Guest dashboard', 'guest'),
+      dashboardMetadata('guest_dashboard_1', 'Guest dashboard 1', 'guest')
+    ],
+    { allOwners: true }
+  )
+)
 
 describe('toSnakeCase', () => {
   it.each([

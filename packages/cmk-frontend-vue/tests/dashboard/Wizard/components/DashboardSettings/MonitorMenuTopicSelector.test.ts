@@ -3,20 +3,22 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
-import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { describe, expect, it } from 'vitest'
 
 import MonitorMenuTopicSelector from '@/dashboard/components/Wizard/components/DashboardSettings/MonitorMenuTopicSelector.vue'
 
-vi.mock('@/dashboard/utils', () => ({
-  dashboardAPI: {
-    listMainMenuTopics: vi.fn().mockResolvedValue([
-      { id: 'monitoring', title: 'Monitoring', sortIndex: 1, isDefault: true },
-      { id: 'other', title: 'Other', sortIndex: 2, isDefault: false },
-      { id: 'network', title: 'Network', sortIndex: 0, isDefault: false }
-    ])
-  }
-}))
+import { mainMenuTopicsHandler, useAnsweredRequestsAfterEach } from '@tests/dashboard/apiHandlers'
+
+const server = useMswServer(
+  mainMenuTopicsHandler([
+    { id: 'monitoring', title: 'Monitoring', sortIndex: 1, isDefault: true },
+    { id: 'other', title: 'Other', sortIndex: 2, isDefault: false },
+    { id: 'network', title: 'Network', sortIndex: 0, isDefault: false }
+  ])
+)
+useAnsweredRequestsAfterEach(server)
 
 describe('MonitorMenuTopicSelector', () => {
   describe('Rendering', () => {
@@ -64,15 +66,15 @@ describe('MonitorMenuTopicSelector', () => {
       const { emitted } = render(MonitorMenuTopicSelector, {
         props: { showInMonitorMenu: true, selectedTopic: '' }
       })
-      await screen.findByLabelText('Select option')
-      expect(emitted()['update:selectedTopic']).toEqual([['monitoring']])
+      await waitFor(() => expect(emitted()['update:selectedTopic']).toEqual([['monitoring']]))
     })
 
     it('does not override selectedTopic when it is already set', async () => {
       const { emitted } = render(MonitorMenuTopicSelector, {
         props: { showInMonitorMenu: true, selectedTopic: 'other' }
       })
-      await screen.findByLabelText('Select option')
+      const dropdown = await screen.findByLabelText('Select option')
+      await waitFor(() => expect(dropdown).toHaveTextContent('Other'))
       expect(emitted()['update:selectedTopic']).toBeUndefined()
     })
   })

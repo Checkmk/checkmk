@@ -4,21 +4,18 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent } from 'vue'
 
 import DashboardSettingsWizard from '@/dashboard/components/Wizard/wizards/dashboard-settings/DashboardSettingsWizard.vue'
 import type { DashboardGeneralSettings } from '@/dashboard/types/dashboard'
 
+import { dashboardMetadata, dashboardMetadataListHandler } from '@tests/dashboard/apiHandlers'
+
 import { flushPromises, wrapInSuspense } from '../../../utils.ts'
 
-const mockListDashboardMetadata = vi.hoisted(() => vi.fn().mockResolvedValue([]))
-
-vi.mock('@/dashboard/utils', () => ({
-  dashboardAPI: {
-    listDashboardMetadata: mockListDashboardMetadata
-  }
-}))
+const server = useMswServer(dashboardMetadataListHandler([], { allOwners: true }))
 
 vi.mock('@/dashboard/components/Wizard/components/IconSelector/IconSelector.vue', () => ({
   default: defineComponent({
@@ -88,7 +85,6 @@ describe('DashboardSettingsWizard (inner)', () => {
   beforeEach(() => {
     // Vue emits a console.info for <Suspense> being experimental; silence it for fail-on-console.
     vi.spyOn(console, 'info').mockImplementation(() => {})
-    mockListDashboardMetadata.mockResolvedValue([])
   })
 
   describe('Rendering', () => {
@@ -165,10 +161,15 @@ describe('DashboardSettingsWizard (inner)', () => {
     })
 
     it('does not emit "save" when another dashboard of the user has the unique ID', async () => {
-      mockListDashboardMetadata.mockResolvedValue([
-        { name: 'my_dashboard', owner: 'admin' },
-        { name: 'other_dashboard', owner: 'admin' }
-      ])
+      server.use(
+        dashboardMetadataListHandler(
+          [
+            dashboardMetadata('my_dashboard', 'My dashboard', 'admin'),
+            dashboardMetadata('other_dashboard', 'Other dashboard', 'admin')
+          ],
+          { allOwners: true }
+        )
+      )
       const onSave = vi.fn()
       await renderWizard({}, { onSave })
       await fireEvent.update(
@@ -183,7 +184,11 @@ describe('DashboardSettingsWizard (inner)', () => {
     })
 
     it('emits "save" when the dashboard keeps its own unique ID', async () => {
-      mockListDashboardMetadata.mockResolvedValue([{ name: 'my_dashboard', owner: 'admin' }])
+      server.use(
+        dashboardMetadataListHandler([dashboardMetadata('my_dashboard', 'My dashboard', 'admin')], {
+          allOwners: true
+        })
+      )
       const onSave = vi.fn()
       await renderWizard({}, { onSave })
       await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
@@ -343,8 +348,7 @@ describe('DashboardSettingsWizard (inner)', () => {
       const onSave = vi.fn()
       await renderWizard({ activeDashboardId: '  my_dashboard  ' }, { onSave })
       await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
-      await flushPromises()
-      expect(onSave).toHaveBeenCalledOnce()
+      await waitFor(() => expect(onSave).toHaveBeenCalledOnce())
       const [dashboardId] = onSave.mock.calls[0]!
       expect(dashboardId).toBe('my_dashboard')
     })

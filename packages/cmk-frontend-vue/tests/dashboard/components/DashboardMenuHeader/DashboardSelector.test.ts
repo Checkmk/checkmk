@@ -4,50 +4,38 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import { describe, expect, it, vi } from 'vitest'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { describe, expect, it } from 'vitest'
 
 import DashboardSelector from '@/dashboard/components/DashboardMenuHeader/DashboardSelector.vue'
 import type { SelectedDashboard } from '@/dashboard/components/DashboardMenuHeader/types'
 import type { DashboardMetadata } from '@/dashboard/types/dashboard'
 import { DashboardOwnerType } from '@/dashboard/types/dashboard'
-import { dashboardAPI } from '@/dashboard/utils.ts'
 
-vi.mock('@/dashboard/utils.ts', () => ({
-  dashboardAPI: {
-    listDashboardMetadata: vi.fn().mockResolvedValue([
-      {
-        name: 'custom-b',
-        owner: 'admin',
-        is_built_in: false,
-        display: { title: 'Custom B', hide_in_drop_down_menus: false, sort_index: 0 }
-      },
-      {
-        name: 'custom-a',
-        owner: 'admin',
-        is_built_in: false,
-        display: { title: 'Custom A', hide_in_drop_down_menus: false, sort_index: 0 }
-      },
-      {
-        name: 'builtin-b',
-        owner: '',
-        is_built_in: true,
-        display: { title: 'Built-in B', hide_in_drop_down_menus: false, sort_index: 2 }
-      },
-      {
-        name: 'builtin-a',
-        owner: '',
-        is_built_in: true,
-        display: { title: 'Built-in A', hide_in_drop_down_menus: false, sort_index: 1 }
-      },
-      {
-        name: 'hidden',
-        owner: 'admin',
-        is_built_in: false,
-        display: { title: 'Hidden', hide_in_drop_down_menus: true, sort_index: 0 }
-      }
-    ] as DashboardMetadata[])
-  }
-}))
+import { dashboardMetadata, dashboardMetadataListHandler } from '@tests/dashboard/apiHandlers'
+
+function listed(
+  name: string,
+  title: string,
+  owner: string | null,
+  display: Partial<DashboardMetadata['display']> = {}
+): DashboardMetadata {
+  const metadata = dashboardMetadata(name, title, owner)
+  return { ...metadata, display: { ...metadata.display, ...display } }
+}
+
+const server = useMswServer(
+  dashboardMetadataListHandler(
+    [
+      listed('custom-b', 'Custom B', 'admin'),
+      listed('custom-a', 'Custom A', 'admin'),
+      listed('builtin-b', 'Built-in B', null, { sort_index: 2 }),
+      listed('builtin-a', 'Built-in A', null, { sort_index: 1 }),
+      listed('hidden', 'Hidden', 'admin', { hide_in_drop_down_menus: true })
+    ],
+    { allOwners: true }
+  )
+)
 
 function renderSelector(
   props: Partial<{
@@ -138,20 +126,15 @@ describe('DashboardSelector', () => {
     })
 
     it('sorts built-in dashboards by sort_index', async () => {
-      vi.mocked(dashboardAPI.listDashboardMetadata).mockResolvedValueOnce([
-        {
-          name: 'builtin-alpha',
-          owner: '',
-          is_built_in: true,
-          display: { title: 'Alpha', hide_in_drop_down_menus: false, sort_index: 20 }
-        },
-        {
-          name: 'builtin-zebra',
-          owner: '',
-          is_built_in: true,
-          display: { title: 'Zebra', hide_in_drop_down_menus: false, sort_index: 10 }
-        }
-      ] as DashboardMetadata[])
+      server.use(
+        dashboardMetadataListHandler(
+          [
+            listed('builtin-alpha', 'Alpha', null, { sort_index: 20 }),
+            listed('builtin-zebra', 'Zebra', null, { sort_index: 10 })
+          ],
+          { allOwners: true }
+        )
+      )
 
       renderSelector()
       await fireEvent.focus(screen.getByRole('textbox'))

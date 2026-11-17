@@ -36,7 +36,7 @@ import {
 } from '@/graphing/GlobalTimePicker/globalTimeState'
 import { durationSeconds, endsNow } from '@/graphing/GlobalTimePicker/private/timeRange'
 
-import { dashboardMetadataHandlers } from '@tests/dashboard/apiHandlers'
+import { dashboardMetadataHandlers, mainMenuTopicsHandler } from '@tests/dashboard/apiHandlers'
 import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
 
 // reka's dialog warns about the missing DialogTitle of the bare slide-in, which fails the test.
@@ -349,22 +349,7 @@ const server = useMswServer(
   restApiHttp.get('/domain-types/icon_emblem/collections/all', ({ response }) =>
     response(200).json(emptyCollection('icon_emblem'))
   ),
-  restApiHttp.get('/domain-types/pagetype_topic/collections/all', ({ response }) =>
-    response(200).json({
-      domainType: 'pagetype_topic',
-      id: 'all',
-      links: [],
-      value: [
-        {
-          domainType: 'pagetype_topic',
-          id: 'overview',
-          title: 'Overview',
-          links: [],
-          extensions: { sort_index: 1, is_default: true, description: '' }
-        }
-      ]
-    })
-  ),
+  mainMenuTopicsHandler([{ id: 'overview', title: 'Overview', sortIndex: 1, isDefault: true }]),
   restApiHttp.post('/domain-types/dashboard/actions/compute-widget-titles/invoke', ({ response }) =>
     response(200).json({
       domainType: 'dashboard-widget-titles',

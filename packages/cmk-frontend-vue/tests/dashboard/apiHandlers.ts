@@ -4,11 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
-import { restApiHttp } from 'cmk-ui-library/vitest.msw'
-import { beforeEach } from 'vitest'
+import { restApiHttp, type useMswServer } from 'cmk-ui-library/vitest.msw'
+import { afterEach, beforeEach, expect, vi } from 'vitest'
 
 import type { ViewModel } from '@/dashboard/types/api'
-import type { DashboardMetadata } from '@/dashboard/types/dashboard'
+import type { DashboardMainMenuTopic, DashboardMetadata } from '@/dashboard/types/dashboard'
 
 /** Answers the title request of a widget wizard preview, which shows the widget under the title. */
 export function widgetTitlesHandler(title: string) {
@@ -117,6 +117,39 @@ export function viewsHandler(views: ViewModel[]) {
   return restApiHttp.get('/domain-types/view/collections/all', ({ response }) =>
     response(200).json({ domainType: 'view', id: 'all', links: [], value: views })
   )
+}
+
+/** Serves the topics of the main menu. */
+export function mainMenuTopicsHandler(topics: DashboardMainMenuTopic[]) {
+  return restApiHttp.get('/domain-types/pagetype_topic/collections/all', ({ response }) =>
+    response(200).json({
+      domainType: 'pagetype_topic',
+      id: 'all',
+      links: [],
+      value: topics.map((topic) => ({
+        domainType: 'pagetype_topic',
+        id: topic.id,
+        title: topic.title,
+        links: [],
+        extensions: { sort_index: topic.sortIndex, is_default: topic.isDefault, description: '' }
+      }))
+    })
+  )
+}
+
+/** Waits after each test until every request that the test started has an answer. */
+export function useAnsweredRequestsAfterEach(server: ReturnType<typeof useMswServer>): void {
+  const unanswered = new Map<string, string>()
+  server.events.on('request:start', ({ request, requestId }) => {
+    unanswered.set(requestId, `${request.method} ${new URL(request.url).pathname}`)
+  })
+  server.events.on('request:end', ({ requestId }) => {
+    unanswered.delete(requestId)
+  })
+  beforeEach(() => {
+    unanswered.clear()
+  })
+  afterEach(() => vi.waitFor(() => expect([...unanswered.values()]).toEqual([])))
 }
 
 /** A list of request records that is empty at the start of each test. */

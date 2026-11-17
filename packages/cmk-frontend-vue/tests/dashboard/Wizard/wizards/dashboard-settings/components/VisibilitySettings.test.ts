@@ -4,18 +4,20 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
-import { describe, expect, it, vi } from 'vitest'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { describe, expect, it } from 'vitest'
 
 import VisibilitySettings from '@/dashboard/components/Wizard/wizards/dashboard-settings/components/VisibilitySettings.vue'
 
-vi.mock('@/dashboard/utils', () => ({
-  dashboardAPI: {
-    listMainMenuTopics: vi.fn().mockResolvedValue([
-      { id: 'monitoring', title: 'Monitoring', sortIndex: 0, isDefault: true },
-      { id: 'problems', title: 'Problems', sortIndex: 1, isDefault: false }
-    ])
-  }
-}))
+import { mainMenuTopicsHandler, useAnsweredRequestsAfterEach } from '@tests/dashboard/apiHandlers'
+
+const server = useMswServer(
+  mainMenuTopicsHandler([
+    { id: 'monitoring', title: 'Monitoring', sortIndex: 0, isDefault: true },
+    { id: 'problems', title: 'Problems', sortIndex: 1, isDefault: false }
+  ])
+)
+useAnsweredRequestsAfterEach(server)
 
 const defaultProps = {
   hideInMonitorMenu: false,

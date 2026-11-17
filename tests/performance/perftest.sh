@@ -12,7 +12,7 @@ RELEASE="${RELEASE:-${VERSION}.${EDITION}}"
 ROOT_DIR="${RESULT_PATH:-${REPO_PATH}/results}/performance"
 BENCHMARK_DIR="${ROOT_DIR}/${RELEASE}"
 mkdir -p "${BENCHMARK_DIR}"
-pytest "${SCRIPT_DIR}" \
+pytest "${SCRIPT_DIR}/system" \
     --benchmark-json="${BENCHMARK_DIR}/benchmark.json" \
     --benchmark-verbose --html="${BENCHMARK_DIR}/report.htm" \
     --self-contained-html --ignore-running-procs \

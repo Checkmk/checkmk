@@ -1,4 +1,4 @@
-title: Postfix: Mailqueue Status
+title: Postfix: Mail Queue Status
 agents: linux
 catalog: app/postfix
 license: GPLv2

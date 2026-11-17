@@ -26,8 +26,7 @@ from .readers import assign, parsed
 type CommandTracer = Callable[[CLIContext, RunCommand], AbstractContextManager[None]]
 
 
-type CrashReporter = Callable[[], str]
-"""Saves a crash report and returns the message to print instead of a traceback"""
+type _CrashReporter = Callable[[], str]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -35,7 +34,7 @@ class Runtime:
     discover: Callable[[], Sequence[DiscoveredCommand]]
     trace_command: CommandTracer
     on_sigint: Callable[[int, FrameType | None], object]
-    crash_reporter_for: Callable[[Path, Sequence[str], Mapping[str, str]], CrashReporter]
+    report_crash: Callable[[Path, Sequence[str], Mapping[str, str]], str]
     enable_profiling: Callable[[], None]
     log_to_file: Callable[[Path, logging.Logger], None]
     write_profile: Callable[[Path], None]
@@ -47,7 +46,7 @@ class Runtime:
 def dispatch(
     command: Callable[[], CLIExitCode],
     logger: logging.Logger,
-    crash_reporter: CrashReporter,
+    crash_reporter: _CrashReporter,
     *,
     debug: bool,
 ) -> CLIExitCode:
@@ -133,7 +132,7 @@ def run(
         return dispatch(
             command,
             logger,
-            runtime.crash_reporter_for(omd_root, argv, environ),
+            partial(runtime.report_crash, omd_root, argv, environ),
             debug=global_options.debug,
         ).value
     finally:

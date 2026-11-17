@@ -198,7 +198,7 @@ def _runtime(
         discover=lambda: commands,
         trace_command=trace_command,
         on_sigint=on_sigint,
-        crash_reporter_for=lambda _omd_root, _argv, _environ: FakeCrashReporter(),
+        report_crash=lambda _omd_root, _argv, _environ: _CRASH_MESSAGE,
         enable_profiling=enable_profiling,
         log_to_file=log_to_file,
         write_profile=write_profile,

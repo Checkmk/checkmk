@@ -29,7 +29,7 @@ from cmk.trace.export import exporter_from_config, init_span_processor
 from .arguments import RunCommand
 from .discovery import discover_commands
 from .output import write_paged, write_stderr
-from .run import CommandTracer, CrashReporter, run, Runtime
+from .run import CommandTracer, run, Runtime
 
 tracer = trace.get_tracer()
 
@@ -50,24 +50,19 @@ def _configure_logging() -> logging.Logger:
     return logger
 
 
-def _saving_crash_reporter(
-    omd_root: Path, argv: Sequence[str], environ: Mapping[str, str]
-) -> CrashReporter:
-    def report() -> str:
-        crash = BaseCrashReport(
-            crash_report_base_path=make_crash_report_base_path(omd_root),
-            crash_info=BaseCrashReport.make_crash_info(
-                cmk_version_info.get_general_version_infos(omd_root),
-                BaseDetails(argv=list(argv), env=dict(environ)),
-            ),
-        )
-        CrashReportStore().save(crash)
-        return (
-            f"{crash.crash_info['exc_type']}: {crash.crash_info['exc_value']} "
-            f"- please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
-        )
-
-    return report
+def _save_crash_report(omd_root: Path, argv: Sequence[str], environ: Mapping[str, str]) -> str:
+    crash = BaseCrashReport(
+        crash_report_base_path=make_crash_report_base_path(omd_root),
+        crash_info=BaseCrashReport.make_crash_info(
+            cmk_version_info.get_general_version_infos(omd_root),
+            BaseDetails(argv=list(argv), env=dict(environ)),
+        ),
+    )
+    CrashReportStore().save(crash)
+    return (
+        f"{crash.crash_info['exc_type']}: {crash.crash_info['exc_value']} "
+        f"- please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
+    )
 
 
 def _tracing(environ: Mapping[str, str]) -> CommandTracer:
@@ -119,7 +114,7 @@ def main() -> int:
                     discover=discover_commands,
                     trace_command=_tracing(os.environ),
                     on_sigint=signal.default_int_handler,
-                    crash_reporter_for=_saving_crash_reporter,
+                    report_crash=_save_crash_report,
                     enable_profiling=profiling.enable,
                     log_to_file=_enable_file_logging,
                     write_profile=_write_profile,

@@ -51,7 +51,8 @@ def main() {
     // building enterprise only on days other than Sunday. Using JJB would build the job twice at night
     if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 12..15 || Calendar.getInstance().get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
         // build only enterprise on high noon or a little bit later
-        editions_to_test = ["enterprise"];
+        // build cloud edition as test_license_verification_distributed_mixed_editions requires a CCE remote site based on the daily CCE
+        editions_to_test = ["enterprise", "cloud"];
     }
 
     if (override_editions) {

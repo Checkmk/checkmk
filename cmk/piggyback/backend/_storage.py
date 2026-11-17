@@ -109,6 +109,9 @@ def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
                 _last_processed_time = int(time.time())
                 continue
 
+            if event.type & Masks.IGNORED:
+                continue
+
             # check if a new piggybacked host folder was created
             if event.watchee == watch_for_new_piggybacked_hosts:
                 if event.type & Masks.CREATE:

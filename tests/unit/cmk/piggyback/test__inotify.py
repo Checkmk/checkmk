@@ -111,3 +111,32 @@ def test_overflow_event_does_not_crash() -> None:
 
     assert event.type & Masks.Q_OVERFLOW
     assert event.watchee == Watchee(-1, Path())
+
+
+def test_ignored_event_is_reported_and_untracks_watch() -> None:
+    parser = _EventParser()
+    parser.track(1, Path("/some/folder"))
+
+    events = list(parser.iterate_parsed_events(pack("iIII", 1, 0x8000, 0, 0)))
+
+    assert events == [Event(Watchee(1, Path("/some/folder")), Masks.IGNORED, Cookie(0), "")]
+    assert not list(parser.watch_descriptors())
+
+
+def test_event_on_unknown_watch_descriptor_is_skipped() -> None:
+    parser = _EventParser()
+    parser.track(1, Path("/some/folder"))
+
+    assert not list(parser.iterate_parsed_events(pack("iIII", 42, 0x80, 0, 0)))
+
+
+def test_rm_watch_after_watched_folder_was_removed(tmp_path: Path) -> None:
+    folder = tmp_path / "folder"
+    folder.mkdir()
+
+    with INotify() as inotify:
+        watchee = inotify.add_watch(folder, Masks.DELETE_SELF)
+        folder.rmdir()
+
+        assert [e.type for e in inotify.read(timeout=1)] == [Masks.DELETE_SELF, Masks.IGNORED]
+        inotify.rm_watch(watchee)

@@ -5,10 +5,11 @@
 
 import subprocess
 import sys
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
+from typing import Protocol
 
 import cmk.ccc.cleanup
 import cmk.utils.paths
@@ -42,6 +43,8 @@ from cmk.plugins.checkmk.cli.snmp import (
 )
 from cmk.utils import ip_lookup
 from cmk.utils.log import console
+
+type _TranslateWalk = Callable[[str], Sequence[tuple[bytes, bytes]]]
 
 
 def _translate_walk(walk_name: str) -> Sequence[tuple[bytes, bytes]]:
@@ -87,23 +90,27 @@ def _translate_walk(walk_name: str) -> Sequence[tuple[bytes, bytes]]:
     return list(zip(walk, data_translated))
 
 
-def _run_snmptranslate(context: CLIContext, walk_name: str | None, _args: CLIArgs) -> CLIExitCode:
-    try:
-        if not walk_name:
-            raise MKGeneralException("Please provide the name of a SNMP walk file")
-        translated = _translate_walk(walk_name)
-    except MKGeneralException as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _SNMPTranslateCommand:
+    translate_walk: _TranslateWalk
 
-    for element_input, element_translated in translated:
-        sys.stdout.buffer.write(element_input.strip())
-        sys.stdout.buffer.write(b" --> ")
-        sys.stdout.buffer.write(element_translated.strip())
-        sys.stdout.buffer.write(b"\n")
-    return CLIExitCode.SUCCESS
+    def run(self, context: CLIContext, walk_name: str | None, _args: CLIArgs) -> CLIExitCode:
+        try:
+            if not walk_name:
+                raise MKGeneralException("Please provide the name of a SNMP walk file")
+            translated = self.translate_walk(walk_name)
+        except MKGeneralException as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+
+        for element_input, element_translated in translated:
+            sys.stdout.buffer.write(element_input.strip())
+            sys.stdout.buffer.write(b" --> ")
+            sys.stdout.buffer.write(element_translated.strip())
+            sys.stdout.buffer.write(b"\n")
+        return CLIExitCode.SUCCESS
 
 
 _SNMPWalkOptions = dict[str, list[OID]]
@@ -168,6 +175,10 @@ def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
         raise MKGeneralException(str(exc)) from exc
 
 
+class _WalkHosts(Protocol):
+    def __call__(self, request: WalkRequest, *, debug: bool) -> None: ...
+
+
 def _walk_hosts(request: WalkRequest, *, debug: bool) -> None:
     walk_options: _SNMPWalkOptions = {}
     if request.oids:
@@ -194,19 +205,25 @@ def _walk_hosts(request: WalkRequest, *, debug: bool) -> None:
         _do_snmpwalk(walk_options, backend=_make_backend(snmp_config), debug=debug)
 
 
-def _run_snmpwalk(context: CLIContext, request: WalkRequest, _args: CLIArgs) -> CLIExitCode:
-    try:
-        if request.oids and request.extra_oids:
-            raise MKGeneralException("You cannot specify --oid and --extraoid at the same time.")
-        if not request.hosts:
-            raise MKBailOut("Please specify host names to walk on.")
-        _walk_hosts(request, debug=context.global_options.debug)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
-    return CLIExitCode.SUCCESS
+@dataclass(frozen=True, kw_only=True)
+class _SNMPWalkCommand:
+    walk_hosts: _WalkHosts
+
+    def run(self, context: CLIContext, request: WalkRequest, _args: CLIArgs) -> CLIExitCode:
+        try:
+            if request.oids and request.extra_oids:
+                raise MKGeneralException(
+                    "You cannot specify --oid and --extraoid at the same time."
+                )
+            if not request.hosts:
+                raise MKBailOut("Please specify host names to walk on.")
+            self.walk_hosts(request, debug=context.global_options.debug)
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+        return CLIExitCode.SUCCESS
 
 
 @dataclass(frozen=True)
@@ -214,6 +231,10 @@ class _OIDValue:
     host: HostName
     address: HostAddress | None
     value: SNMPDecodedString | None
+
+
+class _GetOIDValues(Protocol):
+    def __call__(self, oid: OID, request: GetRequest, *, debug: bool) -> Iterable[_OIDValue]: ...
 
 
 def _get_oid_values(oid: OID, request: GetRequest, *, debug: bool) -> Iterator[_OIDValue]:
@@ -256,21 +277,33 @@ def _get_oid_values(oid: OID, request: GetRequest, *, debug: bool) -> Iterator[_
         )
 
 
-def _run_snmpget(context: CLIContext, request: GetRequest, _args: CLIArgs) -> CLIExitCode:
-    assert request.oid is not None
-    try:
-        for got in _get_oid_values(request.oid, request, debug=context.global_options.debug):
-            sys.stdout.write(f"{got.host} ({got.address}): {got.value!r}\n")
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
-    return CLIExitCode.SUCCESS
+@dataclass(frozen=True, kw_only=True)
+class _SNMPGetCommand:
+    get_oid_values: _GetOIDValues
+
+    def run(self, context: CLIContext, request: GetRequest, _args: CLIArgs) -> CLIExitCode:
+        assert request.oid is not None
+        try:
+            for got in self.get_oid_values(
+                request.oid, request, debug=context.global_options.debug
+            ):
+                sys.stdout.write(f"{got.host} ({got.address}): {got.value!r}\n")
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+        return CLIExitCode.SUCCESS
 
 
-cli_handler_snmptranslate = CLIHandler(command=cli_command_snmptranslate, run=_run_snmptranslate)
+cli_handler_snmptranslate = CLIHandler(
+    command=cli_command_snmptranslate, run=_SNMPTranslateCommand(translate_walk=_translate_walk).run
+)
 
-cli_handler_snmpwalk = CLIHandler(command=cli_command_snmpwalk, run=_run_snmpwalk)
+cli_handler_snmpwalk = CLIHandler(
+    command=cli_command_snmpwalk, run=_SNMPWalkCommand(walk_hosts=_walk_hosts).run
+)
 
-cli_handler_snmpget = CLIHandler(command=cli_command_snmpget, run=_run_snmpget)
+cli_handler_snmpget = CLIHandler(
+    command=cli_command_snmpget, run=_SNMPGetCommand(get_oid_values=_get_oid_values).run
+)

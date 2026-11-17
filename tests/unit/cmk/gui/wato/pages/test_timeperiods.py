@@ -11,7 +11,6 @@ from cmk.gui.wato.pages.timeperiods import ModeEditTimeperiod
 from cmk.gui.watolib.timeperiods import save_timeperiods
 
 
-@pytest.mark.xfail(strict=True, reason="Crash report 3571: TimePeriodAlreadyExistsError")
 @pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_saving_a_clone_under_the_cloned_name_is_rejected() -> None:
     save_timeperiods({"office_hours": {"alias": "Office hours", "monday": [("08:00", "17:00")]}})

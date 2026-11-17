@@ -597,7 +597,7 @@ class ModeEditTimeperiod(WatoMode):
         self._validate_alias(value["name"], value["alias"], "%s_p_alias" % varprefix)
 
     def _validate_id(self, value, varprefix):
-        if self._name is None and value in self._timeperiods:
+        if self._new and value in self._timeperiods:
             raise MKUserError(
                 varprefix, _("This name is already being used by another time period.")
             )

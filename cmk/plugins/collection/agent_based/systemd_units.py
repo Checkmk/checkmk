@@ -16,6 +16,7 @@ from typing import Any, NamedTuple, Self
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -634,7 +635,7 @@ def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> C
     # A service found in the discovery phase can vanish in subsequent runs. I.e. the systemd service was deleted during an update
     if item not in units:
         yield Result(
-            state=State(params["else"]),
+            state=State(params["unit_not_found"]),
             summary="Unit not found",
             details="Only units currently in memory are found. These can be shown with `systemctl --all --type service --type socket`.",
         )
@@ -645,32 +646,32 @@ def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> C
     yield Result(state=State(state), summary=f"Status: {unit.active_status}")
     yield Result(state=State.OK, summary=unit.description)
     if unit.cpu_seconds:
-        yield from check_levels_v1(
+        yield from check_levels(
             unit.cpu_seconds.value,
-            levels_upper=params.get("cpu_time"),
+            levels_upper=params["cpu_time"],
             label="CPU Time",
             metric_name="cpu_time",
             render_func=render.timespan,
         )
     if unit.time_since_change is not None and unit.active_status == "active":
-        yield from check_levels_v1(
+        yield from check_levels(
             unit.time_since_change.total_seconds(),
-            levels_lower=params.get("active_since_lower"),
-            levels_upper=params.get("active_since_upper"),
+            levels_lower=params["active_since_lower"],
+            levels_upper=params["active_since_upper"],
             label="Active since",
             metric_name="active_since",
             render_func=render.timespan,
         )
     if unit.memory:
-        yield from check_levels_v1(
+        yield from check_levels(
             unit.memory.bytes,
-            levels_upper=params.get("memory"),
+            levels_upper=params["memory"],
             label="Memory",
             metric_name="mem_used",
             render_func=render.bytes,
         )
     if unit.number_of_tasks:
-        yield from check_levels_v1(
+        yield from check_levels(
             unit.number_of_tasks,
             label="Number of tasks",
             metric_name="number_of_tasks",
@@ -685,7 +686,11 @@ CHECK_DEFAULT_PARAMETERS = {
         "failed": 2,
     },
     "states_default": 2,
-    "else": 2,  # misleading name, used if service vanishes
+    "unit_not_found": 2,
+    "memory": ("no_levels", None),
+    "cpu_time": ("no_levels", None),
+    "active_since_lower": ("no_levels", None),
+    "active_since_upper": ("no_levels", None),
 }
 
 DISCOVERY_DEFAULT_PARAMETERS = {"names": ["(never discover)^"]}

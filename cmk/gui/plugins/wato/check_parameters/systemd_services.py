@@ -6,9 +6,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Container
-from typing import Literal
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -17,9 +14,8 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
 )
+from cmk.gui.valuespec import Dictionary as LegacyDictionary
 from cmk.gui.valuespec import (
-    Dictionary,
-    Filesize,
     FixedValue,
     Labels,
     ListChoice,
@@ -27,14 +23,29 @@ from cmk.gui.valuespec import (
     MonitoringState,
     TextInput,
     TextOrRegExp,
-    TimeSpan,
-    Tuple,
     ValueSpec,
 )
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DataSize,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    IECMagnitude,
+    InputHint,
+    LevelDirection,
+    migrate_to_float_simple_levels,
+    migrate_to_integer_simple_levels,
+    ServiceState,
+    SimpleLevels,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _valuespec_discovery_systemd_units_services_rules() -> Dictionary:
-    return Dictionary(
+def _valuespec_discovery_systemd_units_services_rules() -> LegacyDictionary:
+    return LegacyDictionary(
         title=_("Systemd single services discovery"),
         elements=[
             (
@@ -156,8 +167,10 @@ def _valuespec_discovery_systemd_units_elements() -> list:
     ]
 
 
-def _valuespec_discovery_systemd_units_base(elements: list[tuple[str, ValueSpec]]) -> Dictionary:
-    return Dictionary(
+def _valuespec_discovery_systemd_units_base(
+    elements: list[tuple[str, ValueSpec]],
+) -> LegacyDictionary:
+    return LegacyDictionary(
         title=_("Systemd single unit discovery"),
         elements=elements,
         help=_(
@@ -173,14 +186,14 @@ def _valuespec_discovery_systemd_units_base(elements: list[tuple[str, ValueSpec]
     )
 
 
-def _valuespec_discovery_systemd_units_addon() -> Dictionary:
+def _valuespec_discovery_systemd_units_addon() -> LegacyDictionary:
     return _valuespec_discovery_systemd_units_base(
         _valuespec_discovery_systemd_units_elements()
         + _valuespec_discovery_systemd_units_host_labels()
     )
 
 
-def _valuespec_discovery_systemd_units() -> Dictionary:
+def _valuespec_discovery_systemd_units() -> LegacyDictionary:
     return _valuespec_discovery_systemd_units_base(_valuespec_discovery_systemd_units_elements())
 
 
@@ -206,11 +219,11 @@ rulespec_registry.register(
 
 
 def _parameter_valuespec_systemd_services():
-    return Dictionary(
+    return LegacyDictionary(
         elements=[
             (
                 "states",
-                Dictionary(
+                LegacyDictionary(
                     title=_("Map systemd states to monitoring states"),
                     elements=[
                         (
@@ -271,133 +284,130 @@ rulespec_registry.register(
     )
 )
 
-MIN_SEC_MS: Container[Literal["minutes", "seconds", "milliseconds"]] = [
-    "minutes",
-    "seconds",
-    "milliseconds",
-]
+_TIME_MAGNITUDES = [TimeMagnitude.MINUTE, TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND]
 
 
-def _parameter_valuespec_systemd_units() -> Dictionary:
+def _time_levels(title: Title, help_text: Help, direction: LevelDirection) -> SimpleLevels[float]:
+    return SimpleLevels(
+        title=title,
+        help_text=help_text,
+        level_direction=direction,
+        form_spec_template=TimeSpan(displayed_magnitudes=_TIME_MAGNITUDES),
+        prefill_fixed_levels=InputHint((0.0, 0.0)),
+        migrate=migrate_to_float_simple_levels,
+    )
+
+
+def _migrate_unit_not_found_key(value: object) -> dict[str, object]:
+    if not isinstance(value, dict):
+        raise TypeError(value)
+    return {("unit_not_found" if key == "else" else key): v for key, v in value.items()}
+
+
+def _parameter_form_systemd_units() -> Dictionary:
     return Dictionary(
-        elements=[
-            (
-                "states",
-                Dictionary(
-                    title=_("Map systemd states to monitoring states"),
-                    elements=[
-                        (
-                            "active",
-                            MonitoringState(
-                                title=_("Monitoring state if unit is active"),
-                                default_value=0,
+        elements={
+            "states": DictElement(
+                parameter_form=Dictionary(
+                    title=Title("Map systemd states to monitoring states"),
+                    elements={
+                        "active": DictElement(
+                            parameter_form=ServiceState(
+                                title=Title("Monitoring state if unit is active"),
+                                prefill=DefaultValue(ServiceState.OK),
                             ),
                         ),
-                        (
-                            "inactive",
-                            MonitoringState(
-                                title=_("Monitoring state if unit is inactive"),
-                                default_value=0,
+                        "inactive": DictElement(
+                            parameter_form=ServiceState(
+                                title=Title("Monitoring state if unit is inactive"),
+                                prefill=DefaultValue(ServiceState.OK),
                             ),
                         ),
-                        (
-                            "failed",
-                            MonitoringState(
-                                title=_("Monitoring state if unit is failed"),
-                                default_value=2,
+                        "failed": DictElement(
+                            parameter_form=ServiceState(
+                                title=Title("Monitoring state if unit is failed"),
+                                prefill=DefaultValue(ServiceState.CRIT),
                             ),
                         ),
-                    ],
+                    },
                 ),
             ),
-            (
-                "states_default",
-                MonitoringState(
-                    title=_("Monitoring state for any other unit state"),
-                    default_value=2,
+            "states_default": DictElement(
+                parameter_form=ServiceState(
+                    title=Title("Monitoring state for any other unit state"),
+                    prefill=DefaultValue(ServiceState.CRIT),
                 ),
             ),
-            (
-                "else",
-                MonitoringState(
-                    title=_("Monitoring state if a monitored unit is not found at all."),
-                    default_value=2,
+            "unit_not_found": DictElement(
+                parameter_form=ServiceState(
+                    title=Title("Monitoring state if a monitored unit is not found at all"),
+                    prefill=DefaultValue(ServiceState.CRIT),
                 ),
             ),
-            # TODO: add these to the plugins default parameters upon migration to the ruleset API!
-            (
-                "memory",
-                Tuple(
-                    title=_("Memory upper levels"),
-                    help=_("Define the upper levels for memory usage."),
-                    elements=[
-                        Filesize(title=_("Warning at")),
-                        Filesize(title=_("Critical at")),
-                    ],
+            "memory": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Memory upper levels"),
+                    help_text=Help("Define the upper levels for memory usage."),
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=DataSize(
+                        displayed_magnitudes=[
+                            IECMagnitude.BYTE,
+                            IECMagnitude.KIBI,
+                            IECMagnitude.MEBI,
+                            IECMagnitude.GIBI,
+                            IECMagnitude.TEBI,
+                        ]
+                    ),
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    migrate=migrate_to_integer_simple_levels,
                 ),
             ),
-            (
-                "cpu_time",
-                Tuple(
-                    title=_("CPU time upper levels"),
-                    help=_("Define the upper levels for the consumed CPU time."),
-                    elements=[
-                        TimeSpan(title=_("Warning at"), display=MIN_SEC_MS),
-                        TimeSpan(title=_("Critical at"), display=MIN_SEC_MS),
-                    ],
+            "cpu_time": DictElement(
+                parameter_form=_time_levels(
+                    Title("CPU time upper levels"),
+                    Help("Define the upper levels for the consumed CPU time."),
+                    LevelDirection.UPPER,
                 ),
             ),
-            (
-                "active_since_lower",
-                Tuple(
-                    title=_("Lower levels for the time the service is active"),
-                    help=_(
+            "active_since_lower": DictElement(
+                parameter_form=_time_levels(
+                    Title("Lower levels for the time the service is active"),
+                    Help(
                         "Define the lower levels for the time, the systemd service is active since."
                     ),
-                    elements=[
-                        TimeSpan(title=_("Warning at"), display=MIN_SEC_MS),
-                        TimeSpan(title=_("Critical at"), display=MIN_SEC_MS),
-                    ],
+                    LevelDirection.LOWER,
                 ),
             ),
-            (
-                "active_since_upper",
-                Tuple(
-                    title=_("Upper levels for the time the service is active"),
-                    help=_(
+            "active_since_upper": DictElement(
+                parameter_form=_time_levels(
+                    Title("Upper levels for the time the service is active"),
+                    Help(
                         "Define the upper levels for the time, the systemd service is active since."
                     ),
-                    elements=[
-                        TimeSpan(title=_("Warning at"), display=MIN_SEC_MS),
-                        TimeSpan(title=_("Critical at"), display=MIN_SEC_MS),
-                    ],
+                    LevelDirection.UPPER,
                 ),
             ),
-        ],
-        help=_(
+        },
+        help_text=Help(
             "This rule set only applies when individual systemd units are discovered. "
             "The user needs to configure this option in the discovery section."
         ),
+        migrate=_migrate_unit_not_found_key,
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="systemd_units_services",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Name of the service"), allow_empty=False),
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_systemd_units,
-        title=lambda: _("Systemd single service"),
-    )
+rule_spec_systemd_units_services = CheckParameters(
+    name="systemd_units_services",
+    title=Title("Systemd single service"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_systemd_units,
+    condition=HostAndItemCondition(item_title=Title("Name of the service")),
 )
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="systemd_units_sockets",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Name of the socket"), allow_empty=False),
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_systemd_units,
-        title=lambda: _("Systemd single socket"),
-    )
+
+rule_spec_systemd_units_sockets = CheckParameters(
+    name="systemd_units_sockets",
+    title=Title("Systemd single socket"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_systemd_units,
+    condition=HostAndItemCondition(item_title=Title("Name of the socket")),
 )

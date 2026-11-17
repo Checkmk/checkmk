@@ -96,6 +96,7 @@ def _item(
         "title": _l("Some menu"),
         "sort_index": 0,
         "shortcut": NavItemShortcut(key=id_.value[0]),
+        "hint": _l("Some hint"),
     }
     defaults.update(kwargs)
     return MainMenuItem(**defaults)  # type: ignore[arg-type]
@@ -170,6 +171,7 @@ def test_a_link_item_becomes_a_nav_link_item(monkeypatch: pytest.MonkeyPatch) ->
                     title=_l("Help"),
                     sort_index=1,
                     shortcut=NavItemShortcut(key="h"),
+                    hint=_l("Some hint"),
                     get_url=lambda req: "help.py",  # noqa: ARG005
                 ),
             ],
@@ -190,11 +192,13 @@ def test_a_configurable_item_is_resolved_to_its_instance(
         title=_l("Help"),
         sort_index=1,
         shortcut=NavItemShortcut(key="h"),
+        hint=_l("Some hint"),
         get_item_instance=lambda item, usr: MainMenuLinkItem(  # noqa: ARG005
             id=NavItemIdEnum.help,
             title=_l("Help"),
             sort_index=1,
             shortcut=NavItemShortcut(key="h"),
+            hint=_l("Some hint"),
             get_url=lambda req: "resolved.py",  # noqa: ARG005
         ),
     )
@@ -220,6 +224,7 @@ def test_a_link_item_with_only_a_static_url_loses_it(monkeypatch: pytest.MonkeyP
                     title=_l("Help"),
                     sort_index=1,
                     shortcut=NavItemShortcut(key="h"),
+                    hint=_l("Some hint"),
                     url="help.py",
                 ),
             ],
@@ -407,6 +412,7 @@ def _toggle_item(**kwargs: object) -> MainMenuToggleItem:
         "title": _l("AI Assistant"),
         "sort_index": 0,
         "shortcut": NavItemShortcut(key=" ", ctrl=True),
+        "hint": _l("Some hint"),
     }
     defaults.update(kwargs)
     return MainMenuToggleItem(**defaults)  # type: ignore[arg-type]

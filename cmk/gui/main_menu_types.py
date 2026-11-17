@@ -24,7 +24,7 @@ from cmk.web.utils.speaklater import LazyString
 @dataclass(frozen=True, kw_only=True)
 class MainMenuItemBase:
     title: LazyString
-    hint: LazyString | None = None
+    hint: LazyString
 
 
 @dataclass(frozen=True, kw_only=True)

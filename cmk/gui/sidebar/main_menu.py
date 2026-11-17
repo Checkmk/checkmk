@@ -128,7 +128,7 @@ class MainMenuConfigCreator:
                 title=str(menu.title),
                 sort_index=menu.sort_index,
                 shortcut=menu.shortcut,
-                hint=str(menu.hint) if menu.hint else None,
+                hint=str(menu.hint),
             )
             for menu in sorted(main_menu_registry.values(), key=lambda g: g.sort_index)
             if isinstance(menu, MainMenuToggleItem) and not (menu.hide and menu.hide())

@@ -64,7 +64,8 @@ const navItems = (shortcut: NavItemShortcut): NavItems => [
     type: 'item',
     title: 'Setup',
     sort_index: 10,
-    shortcut
+    shortcut,
+    hint: 'Some hint'
   }
 ]
 
@@ -81,7 +82,8 @@ const mainItems: NavItems = [
     type: 'item',
     title: 'Help',
     sort_index: 20,
-    shortcut: { key: 'h', alt: true }
+    shortcut: { key: 'h', alt: true },
+    hint: 'Some hint'
   }
 ]
 
@@ -91,7 +93,8 @@ const userItems: NavItems = [
     type: 'item',
     title: 'User',
     sort_index: 30,
-    shortcut: { key: 'u', alt: true }
+    shortcut: { key: 'u', alt: true },
+    hint: 'Some hint'
   }
 ]
 
@@ -168,6 +171,7 @@ describe('main menu service pending changes badge', () => {
       title: 'Changes',
       sort_index: 10,
       shortcut: { key: 'n', alt: true },
+      hint: 'Some hint',
       badge: {
         mode: 'num-pending-changes',
         url: 'pending_changes_badge.py',

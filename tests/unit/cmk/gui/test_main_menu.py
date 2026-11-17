@@ -51,6 +51,7 @@ def _menu_item(id_: NavItemIdEnum) -> MainMenuItem:
         title=_l("Some menu"),
         sort_index=0,
         shortcut=NavItemShortcut(key=id_.value[0]),
+        hint=_l("Some hint"),
     )
 
 
@@ -209,6 +210,7 @@ def test_registry_accessor_rejects_a_link_item() -> None:
             title=_l("Help"),
             sort_index=0,
             shortcut=NavItemShortcut(key="h"),
+            hint=_l("Some hint"),
         )
     )
 

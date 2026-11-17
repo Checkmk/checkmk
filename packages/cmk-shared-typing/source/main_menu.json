@@ -43,7 +43,7 @@
           "$ref": "#/$defs/nav_item_badge"
         }
       },
-      "required": ["id", "title", "sort_index", "shortcut"]
+      "required": ["id", "title", "sort_index", "shortcut", "hint"]
     },
     "nav_item": {
       "allOf": [{ "$ref": "#/$defs/nav_common_item" }],

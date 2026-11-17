@@ -51,6 +51,7 @@
   "tests/lib/keyboard-cheat-sheet/cheatSheetKey.test.ts",
   "tests/lib/keyboard-cheat-sheet/mountKeyboardCheatSheet.test.ts",
   "tests/main-menu/MainMenuApp.test.ts",
+  "tests/main-menu/components/NavItem.test.ts",
   "tests/main-menu/components/NavToggleItem.test.ts",
   "tests/maps/map/commands/useObjectActions.test.ts",
   "tests/maps/map/edit/settings/MapSettingsForm.test.ts",

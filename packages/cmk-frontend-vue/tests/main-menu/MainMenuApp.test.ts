@@ -35,7 +35,8 @@ const toggle: NavToggleItem = {
   type: 'toggle',
   title: 'AI Assistant',
   sort_index: 0,
-  shortcut: { key: ' ', ctrl: true, prevent_default: true }
+  shortcut: { key: ' ', ctrl: true, prevent_default: true },
+  hint: 'Open the AI assistant'
 }
 
 function renderMainMenu() {

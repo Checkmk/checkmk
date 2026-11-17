@@ -42,7 +42,7 @@ const altHint = computed(() => mainMenu.isAltHinted(props.item.shortcut))
       'mm-nav-toggle-item__li--highlight-ai': navToggle.highlight === 'ai',
       'mm-nav-toggle-item__li--alt-hint': altHint
     }"
-    :title="item.hint || item.title"
+    :title="item.hint"
   >
     <button type="button" :aria-pressed="active" @click="navToggle.toggle()">
       <CmkIcon :name="navToggle.icon" size="xxlarge" class="mm-nav-toggle-item__icon" />

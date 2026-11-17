@@ -61,7 +61,7 @@ const target = computed<string | undefined>(() => {
       'mm-nav-item__li--small': hideItemTitle,
       'mm-nav-item__li--alt-hint': altHint
     }"
-    :title="hideItemTitle ? item.title : item.hint"
+    :title="item.hint"
     @mouseenter="highlightCombo(combo)"
     @mouseleave="highlightCombo(null)"
   >
@@ -79,7 +79,6 @@ const target = computed<string | undefined>(() => {
       <CmkMultitoneIcon
         :name="icon"
         :primary-color="color"
-        :title="hideItemTitle ? item.title : item.hint"
         :aria-label="hideItemTitle ? (item.title as TranslatedString) : undefined"
         size="xlarge"
         class="mm-nav-item__icon"

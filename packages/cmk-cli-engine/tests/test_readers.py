@@ -15,6 +15,7 @@ from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Count as CLICount
 from cmk.cli.internal import Flag as CLIFlag
+from cmk.cli.internal import OptionalArgument as CLIOptionalArgument
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 
@@ -30,7 +31,7 @@ _PLUGINS_FLAG = CLIFlag(long="plugins", help="the plugins", deprecated_names=fro
 
 _HOST_ARGUMENT = CLIArgument(placeholder="HOST", parse=str)
 
-_ADDRESS_ARGUMENT = CLIArgument(placeholder="ADDRESS", parse=str, optional=True)
+_ADDRESS_ARGUMENT = CLIOptionalArgument(placeholder="ADDRESS", parse=str)
 
 _NUMBERS_ARGUMENTS = CLIArguments(placeholder="N...", parse=int)
 

@@ -27,6 +27,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import no_options as cli_no_options
+from cmk.cli.internal import OptionalArgument as CLIOptionalArgument
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 
@@ -254,7 +255,7 @@ def test_a_sub_option_reaches_the_command_parsed() -> None:
     assert seen == [5]
 
 
-_HOST_ARGUMENT: Final = CLIArgument(placeholder="HOST", parse=str, optional=True)
+_HOST_ARGUMENT: Final = CLIOptionalArgument(placeholder="HOST", parse=str)
 
 
 def _host_request(options: CLIReader) -> str | None:

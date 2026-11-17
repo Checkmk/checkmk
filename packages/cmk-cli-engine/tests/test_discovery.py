@@ -24,6 +24,7 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.cli.internal import no_options as cli_no_options
+from cmk.cli.internal import OptionalArgument as CLIOptionalArgument
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import PluginLocation
@@ -171,7 +172,7 @@ def test_the_handler_of_another_command_is_rejected() -> None:
 
 _HOST_ARGUMENT = CLIArgument(placeholder="HOST", parse=str)
 
-_ADDRESS_ARGUMENT = CLIArgument(placeholder="ADDRESS", parse=str, optional=True)
+_ADDRESS_ARGUMENT = CLIOptionalArgument(placeholder="ADDRESS", parse=str)
 
 _NUMBERS_ARGUMENTS = CLIArguments(placeholder="N...", parse=int)
 

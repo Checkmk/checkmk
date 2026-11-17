@@ -13,6 +13,7 @@ from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Flag as CLIFlag
+from cmk.cli.internal import OptionalArgument as CLIOptionalArgument
 from cmk.cli.internal import Reader as CLIReader
 
 from .options import (
@@ -63,9 +64,7 @@ def _checking_request(options: CLIReader) -> CheckingRequest:
         plugin_selection=plugin_selection_request(options, CHECK_PLUGINS_VALUE),
         fake_dns=options.value(FAKE_DNS_VALUE),
         host=options.argument(CLIArgument(placeholder="HOST", parse=HostName)),
-        address=options.argument(
-            CLIArgument(placeholder="IPADDRESS", parse=HostAddress, optional=True)
-        ),
+        address=options.argument(CLIOptionalArgument(placeholder="IPADDRESS", parse=HostAddress)),
     )
 
 

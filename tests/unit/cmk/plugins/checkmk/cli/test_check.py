@@ -10,6 +10,7 @@ from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Declaration as CLIDeclaration
+from cmk.cli.internal import OptionalArgument as CLIOptionalArgument
 from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli.check import (
     _checking_request,
@@ -42,7 +43,7 @@ def test_the_checking_request_is_read_from_the_command_line() -> None:
         DETECT_PLUGINS_VALUE: ["cpu_loads"],
         FAKE_DNS_VALUE: ["1.2.3.4"],
         CLIArgument(placeholder="HOST", parse=HostName): ["myhost"],
-        CLIArgument(placeholder="IPADDRESS", parse=HostAddress, optional=True): ["10.0.0.1"],
+        CLIOptionalArgument(placeholder="IPADDRESS", parse=HostAddress): ["10.0.0.1"],
     }
 
     assert _checking_request(

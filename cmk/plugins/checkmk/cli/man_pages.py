@@ -7,9 +7,9 @@
 from dataclasses import dataclass
 from typing import Final, Literal
 
-from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import no_options as cli_no_options
+from cmk.cli.internal import OptionalArgument as CLIOptionalArgument
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 
@@ -44,7 +44,7 @@ class ManRequest:
 def _man_request(options: CLIReader) -> ManRequest:
     return ManRequest(
         renderer=options.value(_RENDERER_VALUE),
-        check_type=options.argument(CLIArgument(placeholder="CHECKTYPE", parse=str, optional=True)),
+        check_type=options.argument(CLIOptionalArgument(placeholder="CHECKTYPE", parse=str)),
     )
 
 

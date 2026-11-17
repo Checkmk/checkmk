@@ -113,8 +113,16 @@ class Argument[T]:
     """What the help shows in its place, e.g. ``"HOST"``"""
     parse: Callable[[str], T]
     """Parses the argument; a ``ValueError`` rejects the command line"""
-    optional: bool = False
-    """Whether the command line may end before it"""
+
+
+@dataclass(frozen=True, kw_only=True)
+class OptionalArgument[T]:
+    """A positional argument the command line may leave out: reading it parses the next one, if any"""
+
+    placeholder: str
+    """What the help shows in its place, e.g. ``"DIR"``"""
+    parse: Callable[[str], T]
+    """Parses the argument; a ``ValueError`` rejects the command line"""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -128,7 +136,13 @@ class Arguments[T]:
 
 
 type Declaration = (
-    Flag | Count | Value[object] | Values[object] | Argument[object] | Arguments[object]
+    Flag
+    | Count
+    | Value[object]
+    | Values[object]
+    | Argument[object]
+    | OptionalArgument[object]
+    | Arguments[object]
 )
 
 
@@ -160,7 +174,7 @@ class Reader:
     def values[T](self, option: Values[T]) -> Sequence[T]:
         return tuple(_parse(option.parse, f"--{option.long}", each) for each in self.given(option))
 
-    def argument[T](self, argument: Argument[T]) -> T | None:
+    def argument[T](self, argument: Argument[T] | OptionalArgument[T]) -> T | None:
         given = self.given(argument)
         return _parse(argument.parse, argument.placeholder, given[-1]) if given else None
 
@@ -283,6 +297,7 @@ __all__ = [
     "GlobalOptions",
     "Handler",
     "no_options",
+    "OptionalArgument",
     "Reader",
     "Value",
     "Values",

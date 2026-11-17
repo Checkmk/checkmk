@@ -10,7 +10,6 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
@@ -23,6 +22,7 @@ from .options import (
     GetoptOptions,
     HELP_WIDTH,
     HelpColumn,
+    is_required,
     long_getopt_specs,
     Option,
     placeholder,
@@ -73,11 +73,7 @@ def _spelled(command: DiscoveredCommand) -> str:
 
 
 def _bracketed_unless_required(positional: Positional) -> str:
-    match positional:
-        case CLIArgument(optional=False):
-            return positional.placeholder
-        case _:
-            return f"[{positional.placeholder}]"
+    return positional.placeholder if is_required(positional) else f"[{positional.placeholder}]"
 
 
 def _spelled_argument(command: DiscoveredCommand) -> str:

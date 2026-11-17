@@ -13,6 +13,7 @@ from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Count as CLICount
 from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import Flag as CLIFlag
+from cmk.cli.internal import OptionalArgument as CLIOptionalArgument
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.cli.internal import Values as CLIValues
@@ -43,7 +44,7 @@ def record(request: Callable[[CLIReader], object]) -> Recorded:
         positional=[
             declaration
             for declaration in read
-            if isinstance(declaration, CLIArgument | CLIArguments)
+            if isinstance(declaration, CLIArgument | CLIOptionalArgument | CLIArguments)
         ],
     )
 
@@ -55,9 +56,9 @@ def assign(
     unread = arguments
     for declaration in positional:
         match declaration:
-            case CLIArgument(optional=False) if not unread:
+            case CLIArgument() if not unread:
                 raise ValueError(f"{declaration.placeholder}: Missing argument")
-            case CLIArgument():
+            case CLIArgument() | CLIOptionalArgument():
                 assigned[declaration.placeholder], unread = unread[:1], unread[1:]
             case CLIArguments():
                 assigned[declaration.placeholder], unread = unread, ()
@@ -88,7 +89,7 @@ def parsed(
         match declaration:
             case CLIFlag() | CLICount() | CLIValue() | CLIValues():
                 return _given_option(options, declaration, logger)
-            case CLIArgument() | CLIArguments():
+            case CLIArgument() | CLIOptionalArgument() | CLIArguments():
                 return assigned.get(declaration.placeholder, ())
 
     return CLIReader(given)

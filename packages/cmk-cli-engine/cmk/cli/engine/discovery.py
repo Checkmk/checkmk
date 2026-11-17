@@ -17,7 +17,7 @@ from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
 
 from .commands import binder, DiscoveredCommand
-from .options import Positional
+from .options import is_required, Positional
 from .readers import record
 
 
@@ -25,7 +25,7 @@ def _selector[R](
     command: CLICommand[R], positional: Sequence[Positional]
 ) -> CLIFlag | CLIValue[str]:
     match positional:
-        case [CLIArgument(optional=False, placeholder=placeholder)]:
+        case [CLIArgument(placeholder=placeholder)]:
             return CLIValue(
                 long=command.long,
                 short=command.short,
@@ -59,16 +59,8 @@ def load_handler[R](command: CLICommand[R]) -> CLIHandler[R]:
             raise TypeError(f"{command.handler} is a {type(other).__name__}, not a Handler")
 
 
-def _is_required(positional: Positional) -> bool:
-    match positional:
-        case CLIArgument(optional=False):
-            return True
-        case _:
-            return False
-
-
 def _requires_one_after_an_optional(positional: Sequence[Positional]) -> bool:
-    required = [_is_required(each) for each in positional]
+    required = [is_required(each) for each in positional]
     return False in required and any(required[required.index(False) :])
 
 

@@ -14,6 +14,7 @@ from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Count as CLICount
 from cmk.cli.internal import Flag as CLIFlag
+from cmk.cli.internal import OptionalArgument as CLIOptionalArgument
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.cli.internal import Values as CLIValues
@@ -22,7 +23,15 @@ type GetoptOptions = Sequence[tuple[str, str]]
 
 type Option = CLIFlag | CLICount | CLIValue[object] | CLIValues[object]
 
-type Positional = CLIArgument[object] | CLIArguments[object]
+type Positional = CLIArgument[object] | CLIOptionalArgument[object] | CLIArguments[object]
+
+
+def is_required(positional: Positional) -> bool:
+    match positional:
+        case CLIArgument():
+            return True
+        case CLIOptionalArgument() | CLIArguments():
+            return False
 
 
 @dataclass(frozen=True, kw_only=True)

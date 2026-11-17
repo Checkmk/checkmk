@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { DualListElement } from 'cmk-ui-library/components/CmkDualList'
 import { type InjectionKey, inject, provide } from 'vue'
 
 import type { CustomGraphPublishPermissions } from '@/dashboard/types/page'
@@ -10,11 +11,15 @@ import type { CustomGraphPublishPermissions } from '@/dashboard/types/page'
 export interface CustomGraphPermissions {
   edit: boolean
   publish: CustomGraphPublishPermissions
+  shareableContactGroups: DualListElement[]
+  shareableSites: DualListElement[]
 }
 
 const NO_PERMISSIONS: CustomGraphPermissions = {
   edit: false,
-  publish: { allUsers: false, contactGroups: false, sites: false }
+  publish: { allUsers: false, contactGroups: false, sites: false },
+  shareableContactGroups: [],
+  shareableSites: []
 }
 
 const customGraphPermissionsKey: InjectionKey<CustomGraphPermissions> =

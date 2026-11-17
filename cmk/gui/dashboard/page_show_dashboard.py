@@ -131,6 +131,9 @@ def page_dashboard_app(ctx: PageContext) -> None:
         dashboard_features = "unrestricted"
 
     drill_up = requested_drill_up(ctx.request)
+    contact_groups = load_contact_group_information()
+    own_contact_groups = userdb.contactgroups_of_user(user.id) if user.id else []
+    authorized_sites = user.authorized_sites(ctx.config.sites)
     page_properties = {
         "initial_breadcrumb": [
             asdict(EvaluatedBreadcrumbItem.from_breadcrumb_item(item)) for item in breadcrumb
@@ -156,14 +159,24 @@ def page_dashboard_app(ctx: PageContext) -> None:
         },
         "permissions": _dashboard_permissions(),
         "shareable_contact_groups": shareable_contact_groups(
-            load_contact_group_information(),
-            userdb.contactgroups_of_user(user.id) if user.id else [],
+            contact_groups,
+            own_contact_groups,
             may_share_with_own=user.may("general.publish_dashboards_to_groups"),
             may_share_with_foreign=user.may("general.publish_dashboards_to_foreign_groups"),
         ),
         "shareable_sites": shareable_sites(
-            user.authorized_sites(ctx.config.sites),
+            authorized_sites,
             may_share=user.may("general.publish_dashboards_to_sites"),
+        ),
+        "shareable_custom_graph_contact_groups": shareable_contact_groups(
+            contact_groups,
+            own_contact_groups,
+            may_share_with_own=user.may("general.publish_to_groups_custom_graph"),
+            may_share_with_foreign=user.may("general.publish_to_foreign_groups_custom_graph"),
+        ),
+        "shareable_custom_graph_sites": shareable_sites(
+            authorized_sites,
+            may_share=user.may("general.publish_to_sites_custom_graph"),
         ),
         "logged_in_user": user.id,
         "global_time_picker": asdict(get_global_time_picker_props(ctx.config)),

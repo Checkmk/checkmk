@@ -150,7 +150,9 @@ function renderWizard(editWidgetSpec: WidgetSpec | null = null, mayEditCustomGra
       useProvideDashboardConstants(CONSTANTS)
       useProvideCustomGraphPermissions({
         edit: mayEditCustomGraph,
-        publish: { allUsers: false, contactGroups: false, sites: false }
+        publish: { allUsers: false, contactGroups: false, sites: false },
+        shareableContactGroups: [],
+        shareableSites: []
       })
       useProvideMissingRuntimeFiltersAction(ref(true), () => {})
       return () =>

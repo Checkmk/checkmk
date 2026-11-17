@@ -212,7 +212,9 @@ useProvideCustomGraphPermissions({
       props.permissions.publish_custom_graph_to_contact_groups ||
       props.permissions.publish_custom_graph_to_foreign_contact_groups,
     sites: props.permissions.publish_custom_graph_to_sites
-  }
+  },
+  shareableContactGroups: props.shareable_custom_graph_contact_groups,
+  shareableSites: props.shareable_custom_graph_sites
 })
 const dashboardWidgetWorkflows = getDashboardWidgetWorkflows({
   ntopActive: props.available_features.ntop_active,

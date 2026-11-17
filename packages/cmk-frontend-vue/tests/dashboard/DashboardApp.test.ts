@@ -303,6 +303,8 @@ const pageProperties: DashboardPageProperties = {
   },
   shareable_contact_groups: [],
   shareable_sites: [],
+  shareable_custom_graph_contact_groups: [],
+  shareable_custom_graph_sites: [],
   logged_in_user: OWNER,
   global_time_picker: {
     custom_time_ranges: [],

@@ -24,10 +24,6 @@ import useId from 'cmk-ui-library/lib/useId'
 import { DialogTitle } from 'reka-ui'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
-import {
-  getContactGroups,
-  getSites
-} from '@/dashboard/components/Wizard/wizards/dashboard-settings/api'
 import { useInjectCustomGraphPermissions } from '@/dashboard/composables/useProvideCustomGraphPermissions'
 import {
   type CreateCustomGraphRequest,
@@ -84,7 +80,11 @@ const titleId = useId()
 const nameId = useId()
 const titleInput = ref<{ focus: () => void } | null>(null)
 
-const { publish: publishPermissions } = useInjectCustomGraphPermissions()
+const {
+  publish: publishPermissions,
+  shareableContactGroups,
+  shareableSites
+} = useInjectCustomGraphPermissions()
 const publishTargets = computed(() => {
   const targets: { name: PublishTarget; title: TranslatedString }[] = []
   if (publishPermissions.allUsers) {
@@ -100,17 +100,27 @@ const publishTargets = computed(() => {
 })
 const isPublished = ref(false)
 const publishTarget = ref<PublishTarget | null>(publishTargets.value[0]?.name ?? null)
-const availableRecipients = ref<DualListElement[]>([])
 const recipients = ref<DualListElement[]>([])
-// Why there is nothing to pick from, shown in place of the list.
-const recipientsUnavailable = ref<TranslatedString | null>(null)
-let recipientsRequest = 0
 
 const publishesToList = computed(
   () =>
     isPublished.value &&
     (publishTarget.value === 'contact_groups' || publishTarget.value === 'sites')
 )
+const availableRecipients = computed((): DualListElement[] => {
+  if (!publishesToList.value) {
+    return []
+  }
+  return publishTarget.value === 'sites' ? shareableSites : shareableContactGroups
+})
+const recipientsUnavailable = computed((): TranslatedString | null => {
+  if (!publishesToList.value || availableRecipients.value.length > 0) {
+    return null
+  }
+  return publishTarget.value === 'sites'
+    ? _t('No sites available.')
+    : _t('No contact groups available.')
+})
 
 const title = ref('')
 const name = ref('')
@@ -162,38 +172,10 @@ const visibility = computed((): Metadata['public'] => {
   return { type: 'all_users' }
 })
 
-// Loaded once the user publishes to a list, as the first target may already be one.
 watch(
   () => (isPublished.value ? publishTarget.value : null),
-  async (target) => {
+  () => {
     recipients.value = []
-    availableRecipients.value = []
-    recipientsUnavailable.value = null
-    if (target !== 'contact_groups' && target !== 'sites') {
-      return
-    }
-    const request = ++recipientsRequest
-    try {
-      const loaded = await (target === 'sites' ? getSites() : getContactGroups())
-      if (request === recipientsRequest) {
-        availableRecipients.value = loaded
-        if (loaded.length === 0) {
-          recipientsUnavailable.value =
-            target === 'sites' ? _t('No sites available.') : _t('No contact groups available.')
-        }
-      }
-    } catch (e) {
-      // A failed request (e.g. no permission to read the list) is shown; anything else is a bug.
-      if (!(e instanceof CmkApiError)) {
-        throw e
-      }
-      if (request === recipientsRequest) {
-        recipientsUnavailable.value =
-          target === 'sites'
-            ? _t('Could not load the sites.')
-            : _t('Could not load the contact groups.')
-      }
-    }
   }
 )
 

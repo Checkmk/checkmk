@@ -15,7 +15,6 @@ import { useProvideCustomGraphPermissions } from '@/dashboard/composables/usePro
 import type { CustomGraphPublishPermissions } from '@/dashboard/types/page'
 
 const CREATE_PATH = '/domain-types/custom_graph/collections/all'
-const CONTACT_GROUPS_PATH = '/domain-types/contact_group_config/collections/all'
 
 const ALL_PUBLISHING: CustomGraphPublishPermissions = {
   allUsers: true,
@@ -27,6 +26,9 @@ const NO_PUBLISHING: CustomGraphPublishPermissions = {
   contactGroups: false,
   sites: false
 }
+
+const SHAREABLE_CONTACT_GROUPS = [{ name: 'admins', title: 'Administrators' }]
+const SHAREABLE_SITES = [{ name: 'site1', title: 'Site 1' }]
 
 const DEFINITION = {
   data_sources: [],
@@ -42,10 +44,8 @@ function ok(data: unknown): never {
 }
 
 function catalogWith(...names: string[]) {
-  vi.spyOn(client, 'GET').mockImplementation(async (path: unknown) =>
-    path === CONTACT_GROUPS_PATH
-      ? ok({ value: [{ id: 'admins', title: 'Administrators' }] })
-      : ok({ value: names.map((id) => ({ id, title: id, extensions: { owner: 'admin' } })) })
+  vi.spyOn(client, 'GET').mockResolvedValue(
+    ok({ value: names.map((id) => ({ id, title: id, extensions: { owner: 'admin' } })) })
   )
 }
 
@@ -74,11 +74,21 @@ async function publishTo(target: string): Promise<void> {
   await userEvent.click(await screen.findByRole('option', { name: target }))
 }
 
-function renderPopup(nameBase?: string, publishPermissions = ALL_PUBLISHING) {
+function renderPopup(
+  nameBase?: string,
+  publishPermissions = ALL_PUBLISHING,
+  shareableContactGroups = SHAREABLE_CONTACT_GROUPS,
+  shareableSites = SHAREABLE_SITES
+) {
   const onSaved = vi.fn()
   const provider = defineComponent({
     setup() {
-      useProvideCustomGraphPermissions({ edit: true, publish: publishPermissions })
+      useProvideCustomGraphPermissions({
+        edit: true,
+        publish: publishPermissions,
+        shareableContactGroups,
+        shareableSites
+      })
       return () =>
         h(SaveToCatalogPopup, {
           definition: DEFINITION,
@@ -204,27 +214,9 @@ describe('SaveToCatalogPopup', () => {
     expect(postSpy).not.toHaveBeenCalled()
   })
 
-  test('tells when the contact groups could not be loaded', async () => {
-    vi.spyOn(client, 'GET').mockImplementation(async (path: unknown) =>
-      path === CONTACT_GROUPS_PATH
-        ? ({
-            data: undefined,
-            error: { title: 'Forbidden', detail: 'No permission.' },
-            response: new Response('', { status: 403, statusText: 'Forbidden' })
-          } as never)
-        : ok({ value: [] })
-    )
-    renderPopup()
-    await idInput()
-
-    await publishTo('Publish to members of contact groups')
-
-    expect(await screen.findByText('Could not load the contact groups.')).toBeVisible()
-  })
-
   test('tells when there are no contact groups to publish to', async () => {
-    vi.spyOn(client, 'GET').mockResolvedValue(ok({ value: [] }))
-    renderPopup()
+    catalogWith()
+    renderPopup(undefined, ALL_PUBLISHING, [])
     await idInput()
 
     await publishTo('Publish to members of contact groups')
@@ -232,9 +224,30 @@ describe('SaveToCatalogPopup', () => {
     expect(await screen.findByText('No contact groups available.')).toBeVisible()
   })
 
+  test('publishes the graph to the selected sites', async () => {
+    catalogWith()
+    const postSpy = createdOk()
+    const { onSaved } = renderPopup()
+    await idInput()
+    await fillTitle()
+
+    await publishTo('Publish to users of sites')
+    await screen.findByText('Site 1')
+    await userEvent.click(screen.getByRole('button', { name: 'Add all >>' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Save to catalog & place widget' }))
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith('custom_graph_1'))
+    expect(createdVisibility(postSpy)).toEqual({ type: 'sites', sites: ['site1'] })
+  })
+
   test('offers only the targets the user may publish to', async () => {
     catalogWith()
-    renderPopup(undefined, { allUsers: false, contactGroups: false, sites: true })
+    renderPopup(
+      undefined,
+      { allUsers: false, contactGroups: false, sites: true },
+      SHAREABLE_CONTACT_GROUPS,
+      []
+    )
     await idInput()
     await userEvent.click(
       screen.getByRole('checkbox', { name: 'Make this custom graph available for other users' })

@@ -142,6 +142,7 @@ pkg_files(
     name = "qemu_tests_controller",
     srcs = [":cmk-agent-ctl-windows"],
     prefix = "packages/cmk-agent-ctl",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -153,6 +154,7 @@ pkg_files(
         ":test_pull-windows",
         ":test_status-windows",
     ],
+    tags = ["manual"],
 )
 
 # The guest's directory, the tests' cwd:
@@ -167,6 +169,7 @@ pkg_tar(
         "//bazel/tools/windows_vm:run_rust_tests",
     ],
     extension = "tar.gz",
+    tags = ["manual"],
 )
 
 # The Wine complement inside the real-Windows QEMU VM: the

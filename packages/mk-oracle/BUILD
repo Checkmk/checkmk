@@ -336,6 +336,7 @@ pkg_files(
         ":test_ora_no_db-windows",
         ":test_ora_with_db-windows",
     ],
+    tags = ["manual"],
 )
 
 # The OCI client below MK_LIBDIR (rust-test-qemu.cmd), where the
@@ -356,6 +357,7 @@ pkg_files(
     ],
     prefix = "packages/mk-oracle",
     strip_prefix = strip_prefix.from_pkg(),
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -381,6 +383,7 @@ pkg_tar(
         "//bazel/tools/windows_vm:run_rust_tests",
     ],
     extension = "tar.gz",
+    tags = ["manual"],
 )
 
 # Runs the cross-built component tests inside the real-Windows QEMU VM

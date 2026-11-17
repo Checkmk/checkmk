@@ -850,6 +850,18 @@ def non_json_tags_get(url: str, **kwargs: object) -> MockResponse:
     return default_requests_mock_get(url, **kwargs)
 
 
+def malformed_tag_get(url: str, **kwargs: object) -> MockResponse:
+    if "tags" in url:
+        return MockResponse([{"name": "v2.5.0"}])
+    return default_requests_mock_get(url, **kwargs)
+
+
+def non_list_tags_get(url: str, **kwargs: object) -> MockResponse:
+    if "tags" in url:
+        return MockResponse({"message": "Not Found"})
+    return default_requests_mock_get(url, **kwargs)
+
+
 class _RequestsGet(Protocol):
     def __call__(self, url: str, **kwargs: object) -> MockResponse: ...
 
@@ -858,6 +870,8 @@ class _RequestsGet(Protocol):
     "tags_get",
     [
         pytest.param(non_json_tags_get, id="non-json"),
+        pytest.param(malformed_tag_get, id="tag-without-commit"),
+        pytest.param(non_list_tags_get, id="not-a-list"),
     ],
 )
 def test_bazel_cache_agent_output_without_version_on_unexpected_tags_response(

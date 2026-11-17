@@ -19,7 +19,7 @@ from typing import NamedTuple
 
 import requests
 import urllib3
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1 import report_agent_crashes, Storage, vcrtrace
@@ -55,6 +55,18 @@ class BazelVersionInfo(BaseModel):
     latest: BazelVersion
 
 
+class TagCommit(BaseModel):
+    sha: str
+
+
+class Tag(BaseModel):
+    name: str
+    commit: TagCommit
+
+
+TAGS = TypeAdapter(list[Tag])
+
+
 class VersionCache:
     VERSION_CACHE_KEY = "bazel_version_cache"
 
@@ -67,7 +79,7 @@ class VersionCache:
             return info
         try:
             return self._renew_cached_version_info(url, commit)
-        except (requests.exceptions.RequestException, ValueError, KeyError, TypeError) as e:
+        except (requests.exceptions.RequestException, ValidationError) as e:
             LOGGER.warning("Skipping version information: %(error)s", {"error": e})
             return None
 
@@ -87,11 +99,11 @@ class VersionCache:
         resp = requests.get(tags_url, params={"per_page": TAGS_PER_PAGE}, timeout=30)
         resp.raise_for_status()
         timestamp = time.time()
-        items = resp.json()
+        tags = TAGS.validate_python(resp.json())
         versions = {
-            item["commit"]["sha"]: version
-            for item in items
-            if (version := _parse_version_tag(item["name"])) is not None
+            tag.commit.sha: version
+            for tag in tags
+            if (version := _parse_version_tag(tag.name)) is not None
         }
         current_version = versions.get(commit_hash)
 

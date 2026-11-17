@@ -253,11 +253,11 @@ def test_agent_test(dashboard_page: MainDashboard) -> None:
 
     try:
         agent_download_dialog = dashboard_page.main_area.locator(
-            ".setup-agent-download-dialog__dialog"
+            ".setup-agent-download-dialog__alert, .setup-agent-download-dialog__inline-alert"
         )
         expect(agent_download_dialog).to_be_visible()
 
-        agent_download_button = dashboard_page.main_area.locator(
+        agent_download_button = agent_download_dialog.locator(
             "div.cmk-alert__actions > button"
         ).first
         agent_download_button.click()

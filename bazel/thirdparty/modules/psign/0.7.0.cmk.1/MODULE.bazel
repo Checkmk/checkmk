@@ -5,11 +5,13 @@ module(
     compatibility_level = 1,
 )
 
-bazel_dep(name = "rules_rust", version = "0.70.0")
+# >=0.72.0: older versions enforce the lockfile digest on non-root modules,
+# which fails against the shipped checksum. See the README next to metadata.json.
+bazel_dep(name = "rules_rust", version = "0.72.0")
 
 # Non-root crate_universe repositories cannot be repinned, so the lockfile is
-# shipped with the overlay. See the README next to metadata.json on how to
-# regenerate it.
+# shipped with the overlay and trusted as-is. See the README next to
+# metadata.json on how to regenerate it.
 crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 crate.from_cargo(
     name = "psign_crates",

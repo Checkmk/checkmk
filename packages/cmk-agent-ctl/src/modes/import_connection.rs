@@ -32,8 +32,8 @@ impl ImportDataProvider for ImportDataFromFile {
         let additional_error_hint = String::new();
         ProxyPullData::load(&self.path).context(format!(
             "Failed to read file {}.{}",
-            &self.path.display(),
-            &additional_error_hint
+            self.path.display(),
+            additional_error_hint
         ))
     }
 }
@@ -47,7 +47,7 @@ impl ImportDataProvider for ImportDataFromStdin {
             .read_line(&mut buffer)
             .context("Failed to read from stdin")?;
         serde_json::from_str(&buffer)
-            .context(format!("Failed to deserialize JSON data:\n{}", &buffer))
+            .context(format!("Failed to deserialize JSON data:\n{}", buffer))
     }
 }
 

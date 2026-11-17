@@ -26,11 +26,15 @@ cp Cargo.Bazel.lock "$OLDPWD/$M/overlay/"
 ```
 
 Afterwards update the integrity hashes of the changed files in `source.json`.
+Run `bazel shutdown` first; the server caches registry files.
 
-On 2.5.0 (rules_rust 0.70.0), also add the root's
-`rust.toolchain(versions = ["1.90.0"])` to the generated `MODULE.bazel`. This
-rules_rust keys the lockfile digest by the manifest labels, which differ
-between the standalone root (`//:Cargo.toml`) and check_mk
-(`@@psign+//:Cargo.toml`). So afterwards set `"checksum"` in
-`Cargo.Bazel.lock` to the "Expected Digest" a check_mk build reports, then
-rehash it. Run `bazel shutdown` first; the server caches registry files.
+Since rules_rust 0.72.0 the digest check is skipped for non-root modules and
+repinning is never attempted, so the shipped `"checksum"` is inert: bumping the
+root's rustc or rules_rust version does not require regenerating this lockfile.
+
+Up to rules_rust 0.70.0 the digest was enforced, which is why the checksum
+carries the "Expected Digest" a check_mk build reported (rules_rust 0.70.0,
+rustc 1.90.0) rather than the one standalone regeneration produces. That value
+is now stale and unreachable, so the `bazel_dep` on rules_rust in
+`MODULE.bazel` is a real floor: below 0.72.0 the stale checksum is enforced and
+the build fails.

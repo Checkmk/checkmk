@@ -233,7 +233,7 @@ impl AgentRecvPortDiscoverer<'_> {
         protocol: Protocol,
     ) -> AnyhowResult<u16> {
         let url = self.url(protocol)?;
-        let error_msg = format!("Failed to discover agent receiver port from {}", &url);
+        let error_msg = format!("Failed to discover agent receiver port from {}", url);
         client
             .get(url)
             .send()
@@ -300,7 +300,7 @@ impl ProtocolDiscoverer<'_> {
         protocol: Protocol,
     ) -> AnyhowResult<()> {
         let url = self.url(protocol)?;
-        let error_msg = format!("Failed to test protocol {} with {}", protocol, &url);
+        let error_msg = format!("Failed to test protocol {} with {}", protocol, url);
 
         client
             .get(url)

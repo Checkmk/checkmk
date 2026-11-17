@@ -5,7 +5,7 @@
   "overlay": {
     "BUILD.bazel": "sha256-pOFrUuwf8asL8KWGyko/b9RccZ46l8g/4QYAFbTI5AU=",
     "Cargo.Bazel.lock": "sha256-z6CMsE76bqtptRY9tWpoJ5x/0iTwSDKfxTwz1MGQi68=",
-    "MODULE.bazel": "sha256-MUXlotyvtC3ELE2fgfyyfctp7MJpL5v6Mi+bjyhL8oo=",
+    "MODULE.bazel": "sha256-gD/qNjJBoxdRwxCa26Z9Fq1Z+aSMjGthdujYRYjUdEw=",
     "crates/psign-authenticode-trust/BUILD.bazel": "sha256-GJhQiln8YZwGG9xI73ATStEId9XmjtkCU2d/xVGDGnE=",
     "crates/psign-azure-kv-rest/BUILD.bazel": "sha256-scRv6PuwWd9kF9ggYiysLTuXXux9o6SE/07Hbbhm8QE=",
     "crates/psign-codesigning-rest/BUILD.bazel": "sha256-SuAEm54aL5Vjvs0vmBpvfxdpMj5eYFa5D9sDYUiw7Gc=",

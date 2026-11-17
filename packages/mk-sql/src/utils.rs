@@ -13,7 +13,7 @@ use std::time::UNIX_EPOCH;
 
 pub fn prepare_error(e: &anyhow::Error) -> String {
     let msg = e.to_string();
-    format!("ERROR: {}", &msg.replace('\n', " "))
+    format!("ERROR: {}", msg.replace('\n', " "))
 }
 
 pub fn read_file(file_name: &Path) -> Result<String> {

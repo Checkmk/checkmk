@@ -502,7 +502,7 @@ impl Connection {
                         .unwrap_or_default()
                         .to_lowercase();
                     Backend::from_string(value.as_str()).unwrap_or_else(|| {
-                        log::error!("Unknown backend '{}'", &value);
+                        log::error!("Unknown backend '{}'", value);
                         Backend::default()
                     })
                 },

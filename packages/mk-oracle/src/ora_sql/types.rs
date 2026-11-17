@@ -159,8 +159,8 @@ impl Target {
                 self.host,
                 self.port,
                 service_name,
-                &format_entry(self.service_type(), ":"),
-                &format_entry(instance_name, "/"),
+                format_entry(self.service_type(), ":"),
+                format_entry(instance_name, "/"),
             );
             log::info!("Using normal connection: {conn_string}");
             conn_string

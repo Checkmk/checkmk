@@ -113,7 +113,7 @@ pub fn agent_channel() -> types::AgentChannel {
                     .strip_prefix("/")
                     .unwrap(),
             );
-            debug!("Using debug UNIX socket: {:?}", &sock);
+            debug!("Using debug UNIX socket: {:?}", sock);
             sock.into()
         }
     }

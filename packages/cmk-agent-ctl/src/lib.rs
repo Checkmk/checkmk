@@ -45,12 +45,12 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
     let mut registry = config::Registry::from_file(&paths.registry_path).with_context(|| {
         format!(
             "Error while loading registered connections from {:?}.",
-            &paths.registry_path
+            paths.registry_path
         )
     })?;
     info!(
         "Loaded config from '{:?}', connection registry from '{:?}'",
-        &paths.config_path, &paths.registry_path
+        paths.config_path, paths.registry_path
     );
     match cli.mode {
         cli::Mode::Register(reg_opts) => registration::register_existing(

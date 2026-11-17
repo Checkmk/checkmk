@@ -233,7 +233,7 @@ impl ConnectionStatus {
         format!(
             "{}\n\tUUID: {}\n\tLocal:\n\t\t{}\n\tRemote:\n\t\t{}",
             match &self.site_data {
-                Some(site_data) => format!("Connection: {}", &site_data.site_id),
+                Some(site_data) => format!("Connection: {}", site_data.site_id),
                 None => "Imported connection:".to_string(),
             },
             self.uuid,

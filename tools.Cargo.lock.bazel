@@ -1,5 +1,5 @@
 {
-  "checksum": "cfa1711b6bf9ee9461e369f00aebfe7fa3e245edbe1da73816ba424b7a5d3dda",
+  "checksum": "a4bbc422d37181eb1123d8b320d9102877136175f1f6d69c8285135b4a5a551d",
   "crates": {
     "anstream 0.6.21": {
       "name": "anstream",
@@ -335,12 +335,9 @@
           ],
           "selects": {}
         },
-        "deps": {
+        "extra_deps": {
           "common": [
-            {
-              "id": "anyhow 1.0.100",
-              "target": "build_script_build"
-            }
+            ":build_script_build"
           ],
           "selects": {}
         },
@@ -958,12 +955,9 @@
           ],
           "selects": {}
         },
-        "deps": {
+        "extra_deps": {
           "common": [
-            {
-              "id": "crossbeam-utils 0.8.21",
-              "target": "build_script_build"
-            }
+            ":build_script_build"
           ],
           "selects": {}
         },
@@ -1425,10 +1419,6 @@
             {
               "id": "cfg-if 1.0.4",
               "target": "cfg_if"
-            },
-            {
-              "id": "getrandom 0.3.4",
-              "target": "build_script_build"
             }
           ],
           "selects": {
@@ -1493,6 +1483,12 @@
               }
             ]
           }
+        },
+        "extra_deps": {
+          "common": [
+            ":build_script_build"
+          ],
+          "selects": {}
         },
         "edition": "2021",
         "version": "0.3.4"
@@ -1803,12 +1799,9 @@
           ],
           "selects": {}
         },
-        "deps": {
+        "extra_deps": {
           "common": [
-            {
-              "id": "libc 0.2.178",
-              "target": "build_script_build"
-            }
+            ":build_script_build"
           ],
           "selects": {}
         },
@@ -2343,10 +2336,6 @@
               "target": "cfg_if"
             },
             {
-              "id": "parking_lot_core 0.9.12",
-              "target": "build_script_build"
-            },
-            {
               "id": "smallvec 1.15.1",
               "target": "smallvec"
             }
@@ -2371,6 +2360,12 @@
               }
             ]
           }
+        },
+        "extra_deps": {
+          "common": [
+            ":build_script_build"
+          ],
+          "selects": {}
         },
         "edition": "2021",
         "version": "0.9.12"
@@ -2522,13 +2517,15 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.103",
-              "target": "build_script_build"
-            },
-            {
               "id": "unicode-ident 1.0.22",
               "target": "unicode_ident"
             }
+          ],
+          "selects": {}
+        },
+        "extra_deps": {
+          "common": [
+            ":build_script_build"
           ],
           "selects": {}
         },
@@ -2606,11 +2603,13 @@
             {
               "id": "proc-macro2 1.0.103",
               "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.42",
-              "target": "build_script_build"
             }
+          ],
+          "selects": {}
+        },
+        "extra_deps": {
+          "common": [
+            ":build_script_build"
           ],
           "selects": {}
         },
@@ -2777,11 +2776,13 @@
             {
               "id": "crossbeam-utils 0.8.21",
               "target": "crossbeam_utils"
-            },
-            {
-              "id": "rayon-core 1.13.0",
-              "target": "build_script_build"
             }
+          ],
+          "selects": {}
+        },
+        "extra_deps": {
+          "common": [
+            ":build_script_build"
           ],
           "selects": {}
         },
@@ -2911,10 +2912,6 @@
             {
               "id": "bitflags 2.10.0",
               "target": "bitflags"
-            },
-            {
-              "id": "rustix 1.1.2",
-              "target": "build_script_build"
             }
           ],
           "selects": {
@@ -2953,6 +2950,12 @@
               }
             ]
           }
+        },
+        "extra_deps": {
+          "common": [
+            ":build_script_build"
+          ],
+          "selects": {}
         },
         "edition": "2021",
         "version": "1.1.2"
@@ -3265,13 +3268,15 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.228",
-              "target": "build_script_build"
-            },
-            {
               "id": "serde_core 1.0.228",
               "target": "serde_core"
             }
+          ],
+          "selects": {}
+        },
+        "extra_deps": {
+          "common": [
+            ":build_script_build"
           ],
           "selects": {}
         },
@@ -3353,12 +3358,9 @@
           ],
           "selects": {}
         },
-        "deps": {
+        "extra_deps": {
           "common": [
-            {
-              "id": "serde_core 1.0.228",
-              "target": "build_script_build"
-            }
+            ":build_script_build"
           ],
           "selects": {}
         },
@@ -3521,10 +3523,6 @@
             {
               "id": "serde_core 1.0.228",
               "target": "serde_core"
-            },
-            {
-              "id": "serde_json 1.0.145",
-              "target": "build_script_build"
             }
           ],
           "selects": {
@@ -3535,6 +3533,12 @@
               }
             ]
           }
+        },
+        "extra_deps": {
+          "common": [
+            ":build_script_build"
+          ],
+          "selects": {}
         },
         "edition": "2021",
         "version": "1.0.145"
@@ -3826,12 +3830,9 @@
           ],
           "selects": {}
         },
-        "deps": {
+        "extra_deps": {
           "common": [
-            {
-              "id": "thiserror 2.0.17",
-              "target": "build_script_build"
-            }
+            ":build_script_build"
           ],
           "selects": {}
         },
@@ -4286,12 +4287,7 @@
           "**"
         ],
         "deps": {
-          "common": [
-            {
-              "id": "winapi 0.3.9",
-              "target": "build_script_build"
-            }
-          ],
+          "common": [],
           "selects": {
             "i686-pc-windows-gnu": [
               {
@@ -4306,6 +4302,12 @@
               }
             ]
           }
+        },
+        "extra_deps": {
+          "common": [
+            ":build_script_build"
+          ],
+          "selects": {}
         },
         "edition": "2015",
         "version": "0.3.9"
@@ -4369,12 +4371,9 @@
         "compile_data_glob": [
           "**"
         ],
-        "deps": {
+        "extra_deps": {
           "common": [
-            {
-              "id": "winapi-i686-pc-windows-gnu 0.4.0",
-              "target": "build_script_build"
-            }
+            ":build_script_build"
           ],
           "selects": {}
         },
@@ -4490,12 +4489,9 @@
         "compile_data_glob": [
           "**"
         ],
-        "deps": {
+        "extra_deps": {
           "common": [
-            {
-              "id": "winapi-x86_64-pc-windows-gnu 0.4.0",
-              "target": "build_script_build"
-            }
+            ":build_script_build"
           ],
           "selects": {}
         },
@@ -4648,12 +4644,9 @@
         "compile_data_glob": [
           "**"
         ],
-        "deps": {
+        "extra_deps": {
           "common": [
-            {
-              "id": "wit-bindgen 0.46.0",
-              "target": "build_script_build"
-            }
+            ":build_script_build"
           ],
           "selects": {}
         },

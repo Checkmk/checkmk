@@ -330,7 +330,7 @@ fn custom_format(
         now.format("%Y-%m-%d %H:%M:%S%.3f %:z"),
         record.level(),
         record.module_path().unwrap_or("<unnamed>"),
-        &record.args()
+        record.args()
     )
 }
 

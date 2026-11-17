@@ -340,7 +340,7 @@ impl Section {
                     "Resolved `path:` {:?} for section '{}' to SQL file {:?}",
                     path,
                     self.query_name(),
-                    &sql_file
+                    sql_file
                 );
                 Some(contents)
             }
@@ -459,12 +459,12 @@ fn read_versioned_query(
                 options.permissions_check(),
                 options.permissions_safe_entries(),
             ) {
-                log::warn!("SQL file {:?} rejected: {reason}", &sql_file);
+                log::warn!("SQL file {:?} rejected: {reason}", sql_file);
                 return None;
             }
             read_to_string(&sql_file)
                 .inspect_err(|e| {
-                    log::error!("Can't read file {:?} {}", &sql_file, &e);
+                    log::error!("Can't read file {:?} {}", sql_file, e);
                 })
                 .ok()
                 .map(|contents| (sql_file, contents))
@@ -500,10 +500,8 @@ fn get_file_version(path: &Path, section_name: &str) -> Option<u32> {
                     return Some(min_version.parse::<u32>().unwrap_or(0));
                 }
             }
-            [stem] => {
-                if stem.to_lowercase() == section_name.to_lowercase() {
-                    return Some(0);
-                }
+            [stem] if stem.to_lowercase() == section_name.to_lowercase() => {
+                return Some(0);
             }
             _ => {}
         }

@@ -40,7 +40,7 @@ for target in $(bazel query --output=label "tests(//tests/performance:bazel_perf
     cp "${testlog_dir}/test.xml" "${BENCHMARK_DIR}/junit.xml"
     if [ -n "${CI}" ]; then
         PLOT_ARGS=(
-            --branch-version="${BRANCH}" --root-dir="${ROOT_DIR}"
+            --branch-version="${BRANCH}" --product-release="${VERSION}" --root-dir="${ROOT_DIR}"
             --dbname="${database}" --dbhost=qa.lan.checkmk.net --require-database
             --log-level=INFO --validate-baselines
         )

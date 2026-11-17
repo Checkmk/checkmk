@@ -39,6 +39,7 @@ Options:
     --dbport                 Database port (default: 5432).
     --require-database       Fail if the database can not be reached.
     --append-db              Replace only the uploaded scenarios of existing jobs.
+    --product-release        The product release of the stored jobs.
     --validate-baselines     Whether to perform baseline validation.
     --alert-on-failure       Whether to alert on failed baseline validation.
     --warn-only              Report failed baseline validation without a non-zero exit code.
@@ -694,6 +695,7 @@ class PerformanceDb:
         job_name: str,
         job_starttime: Datetime,
         job_endtime: Datetime,
+        product_release: str,
         scenario_name: str,
         test_starttime: Datetime,
         test_endtime: Datetime,
@@ -710,6 +712,7 @@ class PerformanceDb:
             job_name (str): Name of the job.
             job_starttime (Datetime): Timestamp when the job started.
             job_endtime (Datetime): Timestamp when the job ended.
+            product_release (str): Product release the job measured.
             scenario_name (str): Name of the test scenario.
             test_starttime (Datetime): Timestamp when the test started.
             test_endtime (Datetime): Timestamp when the test ended.
@@ -728,7 +731,7 @@ class PerformanceDb:
             job_name=job_name,
             start_timestamp=job_starttime,
             end_timestamp=job_endtime,
-            product_release="",
+            product_release=product_release,
             system_name=str(machine_info.get("system", "")),
             system_release=str(machine_info.get("release", "")),
             system_machine=str(machine_info.get("machine", "")),
@@ -808,6 +811,7 @@ class PerftestPlotArgs(argparse.Namespace):
         update_db (bool): If True, update existing job data in the database.
         purge_db (bool): If True, delete existing job data from the database.
         append_db (bool): If True, replace only the uploaded scenarios of existing jobs.
+        product_release (str): The product release of the stored jobs.
         baseline_offset (int): The offset for the baseline validation.
         cpu_tolerance (float): The tolerance level for the CPU baseline validation.
         mem_tolerance (float): The tolerance level for the memory baseline validation.
@@ -845,6 +849,7 @@ class PerftestPlotArgs(argparse.Namespace):
     update_db: bool
     purge_db: bool
     append_db: bool
+    product_release: str
     baseline_offset: int
     cpu_tolerance: float
     mem_tolerance: float
@@ -1583,7 +1588,10 @@ class PerftestPlot:
                 job_starttime = (
                     Datetime.fromisoformat(str(_ts))
                     if (_ts := benchmark_data.get("start_time"))
-                    else job_endtime
+                    else min(
+                        Datetime.fromisoformat(str(performance_data[0].get("time", "")))
+                        for performance_data in new_scenario_data.values()
+                    )
                 )
                 db_job_name = job_name
                 if not (self.update_db or self.append_db):
@@ -1597,6 +1605,7 @@ class PerftestPlot:
                         job_name=db_job_name,
                         job_starttime=job_starttime,
                         job_endtime=job_endtime,
+                        product_release=self.args.product_release,
                         scenario_name=scenario_name,
                         test_starttime=Datetime.fromisoformat(
                             str(performance_data[0].get("time", ""))
@@ -2106,6 +2115,13 @@ def parse_args() -> PerftestPlotArgs:
             "Specifies if the scenarios will be added to existing jobs, replacing only the stored"
             " results of the same scenarios."
         ),
+    )
+    parser.add_argument(
+        "--product-release",
+        dest="product_release",
+        type=str,
+        default="",
+        help="The product release of the stored jobs, e.g. 2.6.0-2026.11.16 (default: none).",
     )
     parser.add_argument(
         "--baseline-offset",

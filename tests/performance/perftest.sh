@@ -21,6 +21,7 @@ RC=$?
 if [ -n "${CI}" ]; then
     # update database; generate report and check weekly baseline
     "${SCRIPT_DIR}/reporting/perftest_plot.py" --update --branch-version="${BRANCH}" \
+        --product-release="${VERSION}" \
         --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net --require-database \
         --validate-baselines --warn-only || exit 200
     # check monthly baseline

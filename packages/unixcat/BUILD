@@ -52,6 +52,8 @@ cc_test(
     name = "test",
     size = "small",
     srcs = ["test/test.cc"],
+    data = ["//omd/packages/cpp-libs:runtime"],
+    env = {"LD_LIBRARY_PATH": "$(rootpath //omd/packages/cpp-libs:runtime)"},
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     tags = ["cpp"],
     deps = [":unixcat"],

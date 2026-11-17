@@ -27,6 +27,7 @@ cc_test(
     size = "small",
     srcs = ["test/test_arguments.cc"],
     copts = ["-std=c++20"],
+    features = ["static_libstdcpp"],
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     tags = ["cpp"],
     deps = [
@@ -55,6 +56,7 @@ cc_test(
     size = "small",
     srcs = ["test/test_connection_schedule.cc"],
     copts = ["-std=c++20"],
+    features = ["static_libstdcpp"],
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     tags = ["cpp"],
     deps = [

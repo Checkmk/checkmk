@@ -1,3 +1,4 @@
+load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@gcc_toolchain//:cpp_libs.bzl", "CPP_LIBS_ELF", "SYMLINK_MAPPINGS")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
@@ -26,6 +27,16 @@ set_runpath(
     name = "set_runpath",
     srcs = [":strip"],
     tags = ["manual"],
+)
+
+# The shipped libraries, for tests to load via LD_LIBRARY_PATH like the site does
+copy_to_directory(
+    name = "runtime",
+    srcs = [":set_runpath"],
+    replace_prefixes = {dict(SYMLINK_MAPPINGS)["libstdc++.so.6"]: "libstdc++.so.6"},
+    root_paths = ["omd/packages/cpp-libs/set_runpath"],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
 )
 
 # Collect all files for packaging

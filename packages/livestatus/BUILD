@@ -149,6 +149,8 @@ cc_test(
         ],
     ),
     copts = ["-std=c++20"],
+    data = ["//omd/packages/cpp-libs:runtime"],
+    env = {"LD_LIBRARY_PATH": "$(rootpath //omd/packages/cpp-libs:runtime)"},
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     tags = ["cpp"],
     deps = [

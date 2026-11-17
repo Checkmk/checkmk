@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
 from cmk.ccc import store
+from cmk.product_usage.collectors.user_store import load_users
 from cmk.product_usage.schema import AuditLog, AuditLogActorClass
 
 # The audit log writes this user ID for pseudo users and for actions without a user.
@@ -21,7 +22,7 @@ def collect(
     *,
     platform_user_ids: frozenset[str],
 ) -> AuditLog:
-    users = _load_user_ids(default_config_dir)
+    users = frozenset(load_users(default_config_dir))
     automation_users = frozenset(u for u in users if _is_automation_user(var_dir, u))
     interactive, automation, platform = _Tally(), _Tally(), _Tally()
     for user_id, time in _read_entries(var_dir / "wato/log"):
@@ -77,17 +78,6 @@ def _parse(line: str) -> tuple[str, int] | None:
             return user_id, time
         case _:
             return None
-
-
-def _load_user_ids(default_config_dir: Path) -> frozenset[str]:
-    """The IDs of the users in the GUI's user store"""
-    users: Mapping[str, object] = store.load_from_mk_file(
-        default_config_dir / "multisite.d/wato/users.mk",
-        key="multisite_users",
-        default={},
-        lock=False,
-    )
-    return frozenset(users)
 
 
 def _is_automation_user(var_dir: Path, user_id: str) -> bool:

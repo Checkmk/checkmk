@@ -55,7 +55,7 @@ The ``cmk-product-usage`` command-line tool (``cmk.product_usage.cli``) is the s
 A per-site cron job invokes it every 30 minutes, but a collection actually happens only about once every 30 days (7 days on a Cloud trial site) -- see `Collection and transmission`_.
 
 **Collectors.**
-Five collectors read from Livestatus and the filesystem: check usage (``collectors/checks.py``), site info (``collectors/site_info.py``), a previously recorded Grafana-usage snapshot (``collectors/grafana.py``), and, on a Cloud trial site only, the audit log entries per actor class (``collectors/audit_log.py``) and the number of hosts with default services only (``collectors/host_services.py``).
+Six collectors read from Livestatus and the filesystem: check usage (``collectors/checks.py``), site info (``collectors/site_info.py``), a previously recorded Grafana-usage snapshot (``collectors/grafana.py``), and, on a Cloud trial site only, the audit log entries per actor class (``collectors/audit_log.py``), the user counts (``collectors/users.py``), and the number of hosts with default services only (``collectors/host_services.py``).
 
 **Config and consent.**
 The config module reads the site's consent decision and HTTP-proxy setting from ``product_usage_analytics.mk``, a Checkmk global-settings file that a GUI page also reads and writes.
@@ -105,9 +105,11 @@ The CLI checks whether a site is a Cloud trial (``is_cloud_trial``) once per run
   The collector reads the current and the rotated audit logs and the GUI's user store; it sends no user IDs.
 * On a Cloud trial site only, the number of activated hosts whose only services are ``Check_MK`` and ``Check_MK Discovery``, or that have no services -- hosts that deliver no data yet.
   The collector reads the services of each host from Livestatus's hosts table, so a host counts only after its changes are activated; it sends no host or service names.
+* On a Cloud trial site only, the number of users of the Cognito login, split into business and non-business by the domain of their email address, which is their user ID.
+  A domain on the collector's free-mail list, or a subdomain of one, is non-business; any other domain is business. No address or domain is sent.
 
 The result is wrapped in a ``SelfDescribingModel`` envelope (``{"metadata": {version, namespace, name}, "data": {...}}``) and stored as ``var/check_mk/product_usage/product_usage_<timestamp>.json``.
-A Cloud trial site sends ``CloudTrialPayload`` (``cloud_trial_analytics``) instead of ``ProductUsagePayload`` (``product_usage_analytics``): the same data plus trial signals; of these, only the audit log and the number of hosts with default services only are collected so far, the others are still ``null``.
+A Cloud trial site sends ``CloudTrialPayload`` (``cloud_trial_analytics``) instead of ``ProductUsagePayload`` (``product_usage_analytics``): the same data plus trial signals; of these, only the audit log, the user counts, and the number of hosts with default services only are collected so far, the others are still ``null``.
 A trial signal whose collector fails is ``null``: the error goes to ``var/log/product_usage_analytics.log`` and the rest of the payload is sent as usual.
 
 **Transmission and retry.**
@@ -230,6 +232,8 @@ Risks and technical debts
 7. The count of hosts with default services only knows these services by their fixed names, ``Check_MK`` and ``Check_MK Discovery``.
    A site that still uses the legacy name ``Check_MK inventory`` counts such hosts as monitored; Cloud trial sites are new and use the new name.
    In a cluster, the clustered services belong to the cluster host, so a node whose services are all clustered counts although it delivers data.
+8. The user counts include every Cognito user who has ever signed in: the site keeps users that are removed from the tenant, and a user whose email address changes is counted twice.
+   The free-mail list is a copy of cloudmk's list plus the major providers it lacks, and nothing keeps the two in sync; a free-mail domain missing from the list counts as business, so the business count is an upper bound.
 
 See Also
 ========

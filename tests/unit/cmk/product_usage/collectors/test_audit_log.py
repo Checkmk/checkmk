@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,6 +12,7 @@ import pytest
 import cmk.product_usage.collectors.audit_log as audit_log_collector
 from cmk.ccc import store
 from cmk.product_usage.schema import AuditLog, AuditLogActorClass
+from tests.unit.cmk.product_usage.user_store import write_user_store
 
 NO_ENTRIES = AuditLogActorClass(entries=0, last_entry_at=None)
 
@@ -94,7 +95,7 @@ def test_actor_class_skips_an_audit_log_line_that_is_not_valid_utf8(tmp_path: Pa
 def test_existing_user_that_is_no_automation_user_is_interactive(
     tmp_path: Path, user_id: str, connector: str
 ) -> None:
-    _write_users(tmp_path, {user_id: {"connector": connector}})
+    write_user_store(tmp_path, {user_id: {"connector": connector}})
     _write_audit_log(
         tmp_path / "wato/log/wato_audit.log", [_Entry(user_id=user_id, time=1767790000)]
     )
@@ -109,7 +110,7 @@ def test_existing_user_that_is_no_automation_user_is_interactive(
 
 
 def test_existing_automation_user_is_automation(tmp_path: Path) -> None:
-    _write_users(tmp_path, {"ansible": {"connector": "htpasswd"}})
+    write_user_store(tmp_path, {"ansible": {"connector": "htpasswd"}})
     _write_automation_user_flag(tmp_path, "ansible")
     _write_audit_log(
         tmp_path / "wato/log/wato_audit.log", [_Entry(user_id="ansible", time=1767790000)]
@@ -125,7 +126,7 @@ def test_existing_automation_user_is_automation(tmp_path: Path) -> None:
 
 
 def test_platform_user_is_platform_also_when_it_is_an_automation_user(tmp_path: Path) -> None:
-    _write_users(tmp_path, {"api_user": {"connector": "htpasswd"}})
+    write_user_store(tmp_path, {"api_user": {"connector": "htpasswd"}})
     _write_automation_user_flag(tmp_path, "api_user")
     _write_audit_log(
         tmp_path / "wato/log/wato_audit.log", [_Entry(user_id="api_user", time=1767790000)]
@@ -183,7 +184,7 @@ def test_platform_user_is_platform_also_when_it_is_not_in_the_user_store(tmp_pat
 
 
 def test_audit_log_carries_no_user_id(tmp_path: Path) -> None:
-    _write_users(tmp_path, {"jane@acme.com": {"connector": "cognito"}})
+    write_user_store(tmp_path, {"jane@acme.com": {"connector": "cognito"}})
     _write_audit_log(
         tmp_path / "wato/log/wato_audit.log",
         [
@@ -229,13 +230,6 @@ def _line(entry: _Entry | str) -> str:
             "diff_text": None,
         }
     )
-
-
-def _write_users(default_config_dir: Path, users: Mapping[str, Mapping[str, object]]) -> None:
-    """Write the users in the format of the GUI's user store"""
-    path = default_config_dir / "multisite.d/wato/users.mk"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    store.save_to_mk_file(path, key="multisite_users", value=users)
 
 
 def _write_automation_user_flag(var_dir: Path, user_id: str) -> None:

@@ -194,3 +194,16 @@ def test_transform_value_and_json() -> None:
 
     assert valuespec.value_to_json({"KEY1": "value1"}) == {"key1": "value1"}
     assert valuespec.value_from_json({"key1": "value1"}) == {"key1": "value1"}
+
+
+@pytest.mark.xfail(strict=True, raises=AttributeError, reason="crash group 4861")
+def test_validate_datatype_rejects_a_value_the_transform_cannot_read() -> None:
+    # The REST API passes a rule value of any type here, e.g. a list for the
+    # host notification options, whose transform expects a string like "d,r".
+    transform = vs.Transform(
+        vs.ListChoice(choices=[("d", "Down"), ("r", "Recovery")]),
+        to_valuespec=lambda x: x != "n" and x.split(",") or [],
+        from_valuespec=lambda x: ",".join(str(e) for e in x) or "n",
+    )
+
+    expect_validate_failure_migrate_or_transform(transform, [])

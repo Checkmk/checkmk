@@ -8,12 +8,13 @@
 
 import typing
 import urllib
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from typing import Any
 
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.store import load_mk_file, save_mk_file, save_to_mk_file
 from cmk.gui.logged_in import user
 from cmk.gui.utils.roles import UserPermissions
@@ -361,6 +362,30 @@ def test_create_rule_rejects_a_value_its_migration_cannot_read(clients: ClientRe
                 ],
             }
         ),
+        conditions={},
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+
+
+@pytest.fixture
+def discard_rest_api_crash_reports() -> Iterator[None]:
+    yield
+    for crash_file in (make_crash_report_base_path(paths.omd_root) / "rest_api").glob(
+        "*/crash.info"
+    ):
+        crash_file.unlink()
+
+
+@pytest.mark.usefixtures("discard_rest_api_crash_reports")
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="crash group 4861")
+def test_create_rule_rejects_a_value_its_transform_cannot_read(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="extra_host_conf:notification_options",
+        folder="/",
+        properties={"description": "list instead of string", "disabled": False},
+        value_raw="[]",
         conditions={},
         expect_ok=False,
     )

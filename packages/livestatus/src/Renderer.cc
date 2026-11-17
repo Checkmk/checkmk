@@ -7,7 +7,6 @@
 
 #include <cmath>
 #include <cstddef>
-#include <cstdint>
 
 #include "livestatus/Logger.h"
 #include "livestatus/RendererBrokenCSV.h"

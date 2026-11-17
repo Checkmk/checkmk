@@ -31,4 +31,4 @@ inline std::string serialize(const std::unique_ptr<const IComment> &data) {
 }
 }  // namespace column::detail
 
-#endif
+#endif  // CommentRenderer_h

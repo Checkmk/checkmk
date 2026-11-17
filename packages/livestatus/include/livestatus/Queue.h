@@ -196,4 +196,4 @@ bool Queue<T, Q>::done() const {
     return false;
 }
 
-#endif
+#endif  // Queue_h

@@ -3,11 +3,12 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include <functional>
 #include <string>
+#include <unordered_set>
 
 #include "StubObjects.h"
 #include "gtest/gtest.h"
-#include "livestatus/Interface.h"
 #include "livestatus/User.h"
 
 TEST(UserTest, AuthUserMatchingContactName) {

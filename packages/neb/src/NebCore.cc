@@ -9,7 +9,6 @@
 #include <atomic>
 #include <cstdlib>
 #include <iterator>
-#include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <system_error>

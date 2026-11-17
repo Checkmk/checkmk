@@ -5,10 +5,7 @@
 
 #include "test_utilities.h"
 
-#include <string>
 #include <utility>
-
-#include "neb/nagios.h"
 
 // Older Nagios headers are not const-correct... :-P
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)

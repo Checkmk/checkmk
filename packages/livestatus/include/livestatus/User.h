@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef auth_h
-#define auth_h
+#ifndef User_h
+#define User_h
 
 #include <functional>
 #include <string>
@@ -172,4 +172,4 @@ public:
     }
 };
 
-#endif  // auth_h
+#endif  // User_h

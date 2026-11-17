@@ -42,4 +42,4 @@ struct RRDFetchBinPayloadHeader {
     std::string endianness;
 };
 
-#endif
+#endif  // RRDFetch_h

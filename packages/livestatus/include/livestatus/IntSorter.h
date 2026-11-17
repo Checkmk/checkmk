@@ -31,4 +31,4 @@ private:
     callback_t getValue_;
 };
 
-#endif
+#endif  // IntSorter_h

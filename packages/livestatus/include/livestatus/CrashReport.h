@@ -33,4 +33,4 @@ bool delete_id(const std::filesystem::path &base_path, const std::string &id,
 
 }  // namespace mk::crash_report
 
-#endif
+#endif  // CrashReport_h

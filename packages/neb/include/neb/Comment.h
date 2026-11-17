@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef Comment_h
-#define Comment_h
+#ifndef neb_Comment_h
+#define neb_Comment_h
 
 #include <chrono>
 #include <string>
@@ -29,4 +29,4 @@ public:
     bool _expires;
 };
 
-#endif  // Comment_h
+#endif  // neb_Comment_h

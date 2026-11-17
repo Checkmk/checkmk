@@ -35,4 +35,4 @@ private:
     callback_t getValue_;
 };
 
-#endif
+#endif  // StringSorter_h

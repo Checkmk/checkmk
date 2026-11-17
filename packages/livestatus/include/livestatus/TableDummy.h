@@ -19,4 +19,4 @@ public:
                      const ICore & /*unused*/) override {}
 };
 
-#endif  //  TableDummy_h
+#endif  // TableDummy_h

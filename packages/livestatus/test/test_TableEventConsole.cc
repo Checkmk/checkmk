@@ -24,7 +24,6 @@
 #include "asio/read.hpp"
 #include "asio/write.hpp"
 #include "gtest/gtest.h"
-#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/ParsedQuery.h"

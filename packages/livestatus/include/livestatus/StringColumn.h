@@ -92,4 +92,4 @@ public:
     }
 };
 
-#endif
+#endif  // StringColumn_h

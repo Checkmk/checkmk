@@ -38,4 +38,4 @@ private:
     verbosity verbosity_;
 };
 
-#endif
+#endif  // RRDUDSSocket_h

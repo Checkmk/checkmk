@@ -6,7 +6,6 @@
 #include "livestatus/Logfile.h"
 
 #include <cerrno>
-#include <chrono>
 #include <fstream>
 #include <ranges>
 #include <stdexcept>

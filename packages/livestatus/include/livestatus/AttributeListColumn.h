@@ -59,4 +59,4 @@ public:
     }
 };
 
-#endif
+#endif  // AttributeListColumn_h

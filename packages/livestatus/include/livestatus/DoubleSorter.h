@@ -35,4 +35,4 @@ private:
     callback_t getValue_;
 };
 
-#endif
+#endif  // DoubleSorter_h

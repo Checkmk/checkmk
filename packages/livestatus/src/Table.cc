@@ -10,7 +10,6 @@
 #include <stdexcept>
 
 #include "livestatus/Column.h"
-#include "livestatus/DynamicColumn.h"
 #include "livestatus/Logger.h"
 
 Table::~Table() = default;

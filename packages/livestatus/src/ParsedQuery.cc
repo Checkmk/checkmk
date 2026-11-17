@@ -23,7 +23,6 @@
 #include "livestatus/Column.h"
 #include "livestatus/NullColumn.h"
 #include "livestatus/OringFilter.h"
-#include "livestatus/StatsColumn.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/opids.h"
 

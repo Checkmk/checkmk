@@ -154,4 +154,4 @@ private:
     function_type f_;
 };
 
-#endif
+#endif  // ListColumn_h

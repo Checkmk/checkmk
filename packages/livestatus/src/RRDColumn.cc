@@ -25,7 +25,6 @@
 #include "livestatus/Metric.h"
 #include "livestatus/PnpUtils.h"
 #include "livestatus/RRDConsolidate.h"
-#include "livestatus/RRDFetch.h"
 #include "livestatus/RRDRPN.h"
 #include "livestatus/RRDUDSSocket.h"
 #include "livestatus/StringUtils.h"

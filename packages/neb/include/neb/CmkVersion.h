@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef CmkVersion_h
-#define CmkVersion_h
+#ifndef neb_CmkVersion_h
+#define neb_CmkVersion_h
 
 #include <string>
 
@@ -17,4 +17,4 @@ namespace cmk {
 std::string version();
 }  // namespace cmk
 
-#endif  // Comment_h
+#endif  // neb_CmkVersion_h

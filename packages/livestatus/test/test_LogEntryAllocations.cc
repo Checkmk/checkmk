@@ -8,7 +8,6 @@
 // allocations by replacing the global operator new, which is why it is a
 // binary of its own.
 
-#include <cstddef>
 #include <cstdlib>
 #include <new>
 #include <string>

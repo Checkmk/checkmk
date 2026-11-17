@@ -149,4 +149,4 @@ private:
     function_type f_;
 };
 
-#endif
+#endif  // DictColumn_h

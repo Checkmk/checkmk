@@ -10,18 +10,14 @@
 #include <cstddef>
 #include <sstream>
 #include <stdexcept>
-#include <string>
-#include <utility>
 #include <variant>
 
-#include "livestatus/Aggregator.h"
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"
 #include "livestatus/Logger.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Row.h"
-#include "livestatus/Sorter.h"
 #include "livestatus/StatsColumn.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/Table.h"

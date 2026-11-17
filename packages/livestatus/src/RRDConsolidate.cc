@@ -9,7 +9,6 @@
 #include <cmath>
 #include <iostream>
 #include <iterator>
-#include <limits>
 
 namespace {
 constexpr double NaN = std::numeric_limits<double>::quiet_NaN();

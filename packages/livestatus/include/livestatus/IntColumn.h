@@ -125,4 +125,4 @@ public:
               }} {}
 };
 
-#endif
+#endif  // IntColumn_h

@@ -29,4 +29,4 @@ public:
                                           const ICore &core) const = 0;
 };
 
-#endif
+#endif  // Sorter_h

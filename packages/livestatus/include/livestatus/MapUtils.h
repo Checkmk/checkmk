@@ -32,4 +32,4 @@ std::vector<typename T::mapped_type> map_values(const T &map) {
 }
 }  // namespace mk
 
-#endif
+#endif  // MapUtils_h

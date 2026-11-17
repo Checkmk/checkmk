@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef LogwatchListColumn_h
-#define LogwatchListColumn_h
+#ifndef LogwatchList_h
+#define LogwatchList_h
 
 #include <filesystem>
 #include <string>
@@ -15,4 +15,4 @@ class Column;
 [[nodiscard]] std::vector<std::string> getLogwatchList(
     const std::filesystem::path &dir, const Column &col);
 
-#endif  // LogwatchListColumn_h
+#endif  // LogwatchList_h

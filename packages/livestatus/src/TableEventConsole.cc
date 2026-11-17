@@ -7,7 +7,6 @@
 
 #include <cctype>
 #include <chrono>
-#include <cstddef>
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
@@ -17,11 +16,9 @@
 #include <iterator>
 #include <optional>
 #include <stdexcept>
-#include <string>
 #include <string_view>
 #include <unordered_set>
 #include <utility>
-#include <vector>
 
 #include "livestatus/Column.h"
 #include "livestatus/ColumnFilter.h"

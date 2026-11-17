@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef Downtime_h
-#define Downtime_h
+#ifndef neb_Downtime_h
+#define neb_Downtime_h
 
 #include <chrono>
 #include <cstdint>
@@ -30,4 +30,4 @@ public:
     bool _is_active;
 };
 
-#endif  // Downtime_h
+#endif  // neb_Downtime_h

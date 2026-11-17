@@ -36,4 +36,4 @@ struct AttributeBitmaskColumn : IntColumn<T, Default> {
     }
 };
 
-#endif
+#endif  // AttributeBitmaskColumn_h

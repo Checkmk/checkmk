@@ -3,6 +3,9 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#ifndef RRDConsolidate_h
+#define RRDConsolidate_h
+
 #include <cstddef>
 #include <ios>
 #include <limits>
@@ -66,3 +69,5 @@ private:
 [[nodiscard]] std::pair<std::vector<double>, std::size_t> rrd_consolidate(
     const std::unique_ptr<CF> &f, const std::vector<double> &input,
     std::size_t act_step, std::size_t target);
+
+#endif  // RRDConsolidate_h

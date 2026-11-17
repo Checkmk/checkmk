@@ -6,10 +6,12 @@
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <map>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -17,6 +19,7 @@
 #include "StubObjects.h"
 #include "TemporaryDirectory.h"
 #include "gtest/gtest.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/LogCache.h"
 #include "livestatus/Logger.h"

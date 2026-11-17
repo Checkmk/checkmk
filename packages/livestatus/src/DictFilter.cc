@@ -10,9 +10,6 @@
 #include <memory>
 #include <utility>
 
-#include "livestatus/DoubleFilter.h"
-#include "livestatus/Row.h"
-#include "livestatus/StringFilter.h"
 #include "livestatus/opids.h"
 
 namespace {

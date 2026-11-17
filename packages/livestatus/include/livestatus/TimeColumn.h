@@ -101,4 +101,4 @@ private:
     function_type f_;
 };
 
-#endif
+#endif  // TimeColumn_h

@@ -36,4 +36,4 @@ private:
     callback_t getValue_;
 };
 
-#endif
+#endif  // TimeSorter_h

@@ -10,10 +10,8 @@
 #include <limits>
 #include <memory>
 #include <optional>
-#include <string>
 #include <utility>
 
-#include "livestatus/Row.h"
 #include "livestatus/opids.h"
 
 // We parse the value leniently, e.g. "5.0" as 5, so we keep the int we actually

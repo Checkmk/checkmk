@@ -36,7 +36,7 @@ const { _t } = usei18n()
   >
     {{
       _t(
-        "License verification postponed. The site keeps full features for %{days} days from site creation. Verify your license before then — otherwise the site falls back to the limited free edition (%{services} services). We'll remind you every %{interval}.",
+        "License verification postponed. The site keeps full features for %{days} days from site creation. Verify your license before then — otherwise the site falls back to the limited free license state (%{services} services). We'll remind you every %{interval}.",
         {
           days: `${trialLengthDays}`,
           services: `${freeServicesLimit}`,

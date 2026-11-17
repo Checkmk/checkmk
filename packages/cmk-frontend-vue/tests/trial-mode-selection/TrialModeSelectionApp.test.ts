@@ -1313,7 +1313,7 @@ describe('TrialModeSelectionApp', () => {
 
       expect(
         screen.getByText(
-          'This site is now linked to jane.doe@example.com. Your 30-day trial of Checkmk Ultimate runs until August 13, 2026 — after that, the site reverts to the free edition unless you add a license.'
+          'This site is now linked to jane.doe@example.com. Your 30-day trial of Checkmk Ultimate runs until August 13, 2026 — after that, the site reverts to the free license state unless you add a license.'
         )
       ).toBeInTheDocument()
     })

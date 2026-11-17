@@ -1,4 +1,4 @@
-title: Pandacom SpeedCarrier Chassis 5u: Power Supply State
+title: Pandacom SpeedCarrier: Power Supplies
 agents: snmp
 catalog: hw/network/pandacom
 license: GPLv2

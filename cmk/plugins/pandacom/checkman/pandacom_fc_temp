@@ -1,4 +1,4 @@
-title: Pandacom SpeedCarrier Chassis 5u: FC Module Temperature
+title: Pandacom SpeedCarrier: FC Module Temperature
 agents: snmp
 catalog: hw/network/pandacom
 license: GPLv2

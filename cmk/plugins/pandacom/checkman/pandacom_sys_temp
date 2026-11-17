@@ -1,4 +1,4 @@
-title: Pandacom SpeedCarrier Chassis 5u: System Temperature
+title: Pandacom SpeedCarrier: System Temperature
 agents: snmp
 catalog: hw/network/pandacom
 license: GPLv2

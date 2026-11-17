@@ -1,4 +1,4 @@
-title: Pandacom SpeedCarrier Chassis 5u: 10 GM Module Temperature
+title: Pandacom SpeedCarrier: 10GM Module Temperature
 agents: snmp
 catalog: hw/network/pandacom
 license: GPLv2

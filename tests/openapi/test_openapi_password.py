@@ -78,7 +78,6 @@ def test_openapi_password_editable_by(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["editable_by"] == "group1"
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="crash group 4868")
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")
 def test_openapi_password_rejects_unknown_editor_group(clients: ClientRegistry) -> None:
     resp = clients.Password.create(
@@ -87,6 +86,59 @@ def test_openapi_password_rejects_unknown_editor_group(clients: ClientRegistry) 
         password="tt",
         shared=[],
         editable_by="no_such_group",
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")
+def test_normal_user_cannot_hand_a_new_password_to_a_foreign_group(
+    clients: ClientRegistry,
+    with_automation_user_not_admin: tuple[str, str],
+) -> None:
+    # The user would lose access to the password right away: it used to be
+    # saved anyway, and the response could not be built (KeyError).
+    clients.Password.set_credentials(*with_automation_user_not_admin)
+
+    resp = clients.Password.create(
+        ident="handed_away",
+        title="Checkmk",
+        password="tt",
+        shared=[],
+        editable_by="admin",
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")
+def test_normal_user_must_name_the_editor_group_of_a_new_password(
+    clients: ClientRegistry,
+    with_automation_user_not_admin: tuple[str, str],
+) -> None:
+    # The default editor group "admin" is out of reach for a normal user.
+    clients.Password.set_credentials(*with_automation_user_not_admin)
+
+    resp = clients.Password.create(
+        ident="no_editor",
+        title="Checkmk",
+        password="tt",
+        shared=[],
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")
+def test_openapi_password_rejects_unknown_shared_group(clients: ClientRegistry) -> None:
+    resp = clients.Password.create(
+        ident="test_unknown_share",
+        title="Checkmk",
+        password="tt",
+        shared=["no_such_group"],
         expect_ok=False,
     )
 

@@ -44,12 +44,16 @@ class CreatePassword:
         example="password",
         description="The password string",
     )
-    editable_by: str | ApiOmitted = api_field(
-        example="admin",
-        description="Each password is owned by a group of users which are able to edit, delete and use existing passwords. By default, the admin group is the owner of a password.",
-        default_factory=ApiOmitted,
+    editable_by: Annotated[str, AfterValidator(PasswordConverter.editable_by)] | ApiOmitted = (
+        api_field(
+            example="admin",
+            description="Each password is owned by a group of users which are able to edit, delete and use existing passwords. By default, the admin group is the owner of a password. Users without the permission to edit all passwords have to specify one of their contact groups.",
+            default_factory=ApiOmitted,
+        )
     )
-    shared_with: list[str] | ApiOmitted = api_field(
+    shared_with: (
+        Annotated[list[str], AfterValidator(PasswordConverter.shareable_with)] | ApiOmitted
+    ) = api_field(
         example=["all"],
         description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
         serialization_alias="shared",
@@ -74,13 +78,23 @@ class CreatePassword:
         )
         return self
 
+    @model_validator(mode="after")
+    def validate_default_editable_by(self) -> Self:
+        if isinstance(self.editable_by, ApiOmitted):
+            PasswordConverter.default_editable_by()
+        return self
+
     def to_internal(self) -> PasswordConfig:
         password = PasswordConfig(
             title=self.title,
             comment=self.comment,
             docu_url=self.documentation_url,
             password=self.password,
-            owned_by=self.editable_by if isinstance(self.editable_by, str) else "admin",
+            owned_by=(
+                self.editable_by
+                if isinstance(self.editable_by, str)
+                else PasswordConverter.default_editable_by()
+            ),
             shared_with=self.shared_with if isinstance(self.shared_with, list) else [],
         )
         if isinstance(self.customer, str):
@@ -110,12 +124,16 @@ class UpdatePassword:
         description="The password string",
         default_factory=ApiOmitted,
     )
-    editable_by: str | ApiOmitted = api_field(
-        example="admin",
-        description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
-        default_factory=ApiOmitted,
+    editable_by: Annotated[str, AfterValidator(PasswordConverter.editable_by)] | ApiOmitted = (
+        api_field(
+            example="admin",
+            description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
+            default_factory=ApiOmitted,
+        )
     )
-    shared_with: list[str] | ApiOmitted = api_field(
+    shared_with: (
+        Annotated[list[str], AfterValidator(PasswordConverter.shareable_with)] | ApiOmitted
+    ) = api_field(
         example=["all"],
         description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
         serialization_alias="shared",

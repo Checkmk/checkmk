@@ -1,4 +1,4 @@
-title: Alcatel Switches (>=AOS7): Fan Status
+title: Alcatel: Fans for AOS 7+
 agents: snmp
 catalog: hw/network/alcatel
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Alcatel Switches (>=AOS7): Board Temperatures
+title: Alcatel: Board Temperature for AOS 7+
 agents: snmp
 catalog: hw/network/alcatel
 license: GPLv2

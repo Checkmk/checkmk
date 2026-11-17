@@ -51,6 +51,7 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-licensing/cmk/licensing/basics",
         "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:bakery",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-wsgi",

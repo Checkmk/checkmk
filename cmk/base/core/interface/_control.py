@@ -22,13 +22,11 @@ from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
 from cmk.ccc import config_path
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
-from cmk.ccc.store import activation_lock
 from cmk.ccc.version import Edition
 from cmk.checkengine.checker_helper_config import make_packed_config_writer
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.fetcher_utils.trigger import FetcherTriggerFactory
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
-from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.core_client import CoreAction, CoreClient
 from cmk.licensing.basics.paths import get_licensed_state_file_path
 from cmk.licensing.handler import LicensingHandlerFactory
@@ -39,13 +37,11 @@ from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.log import console
 from cmk.utils.servicename import ServiceName
 
+from ._activation_lock import activation_lock, LockingMode
 from ._snapshot_local_dir import snapshot_local_dir
 from ._snapshot_trusted_cas import snapshot_trusted_cas
 
 tracer = trace.get_tracer()
-
-
-type _LockingMode = Literal["abort", "wait"] | None
 
 
 def build_and_activate_monitoring_config(
@@ -73,7 +69,7 @@ def build_and_activate_monitoring_config(
     config_builders: Sequence[MonitoringConfigBuilder],
     hosts_to_update: set[HostName] | None = None,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
-    locking_mode: _LockingMode,
+    locking_mode: LockingMode,
     duplicates: Sequence[HostName],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
     licensing_handler_factory: LicensingHandlerFactory,
@@ -83,10 +79,7 @@ def build_and_activate_monitoring_config(
     debug: bool,
 ) -> None:
     try:
-        with activation_lock(
-            main_mk_file=BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).main_mk,
-            mode=locking_mode,
-        ):
+        with activation_lock(mode=locking_mode):
             do_create_config(
                 core_client=core_client,
                 config_builders=config_builders,

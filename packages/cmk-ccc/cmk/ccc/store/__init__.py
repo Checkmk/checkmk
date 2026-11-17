@@ -33,7 +33,6 @@ from cmk.ccc.store._file import (
 )
 from cmk.ccc.store._locks import (
     acquire_lock,
-    activation_lock,
     cleanup_locks,
     have_lock,
     lock_checkmk_configuration,
@@ -49,7 +48,6 @@ if TYPE_CHECKING:
     from cmk.trace import Tracer
 
 __all__ = [
-    "activation_lock",
     "bootstrap_statement",
     "BytesSerializer",
     "DimSerializer",

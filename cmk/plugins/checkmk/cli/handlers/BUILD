@@ -16,7 +16,6 @@ py_library(
         "//cmk/base:inventory",
         "//cmk/base/config",
         "//cmk/base/core",
-        "//cmk/config",
         "//cmk/piggyback:backend",
         "//cmk/plugins/checkmk/cli",
         "//cmk/server_side_calls_backend",

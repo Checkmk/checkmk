@@ -253,3 +253,6 @@ catch {
     Write-Error "Totally unexpected and unhandled error occured:`n Item: $errItem`n Error Message: $errMsg"
     Break
 }
+finally {
+    Disconnect-VBRServer -ErrorAction SilentlyContinue
+}

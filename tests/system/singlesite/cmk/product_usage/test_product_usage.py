@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 import logging
-from collections.abc import Generator, Iterator
+from collections.abc import Callable, Generator, Iterator
 from pathlib import Path
 
 import pytest
@@ -110,14 +110,32 @@ def run_product_usage_upload(site: Site, mock_url: str) -> None:
     assert result.wait() == 0, f"Product usage upload failed: {result.stderr}"
 
 
-def validate_product_usage_request(headers: dict[str, str], body: bytes) -> bool:
-    """Validate that the product usage request contains required metadata and data."""
-    data = json.loads(body)
-    assert "metadata" in data, "Missing metadata in request"
-    assert "data" in data, "Missing data in request"
-    assert data["metadata"]["name"] == "product_usage_analytics"
-    assert data["metadata"]["namespace"] == "checkmk"
-    return True
+def expected_payload_name(site: Site) -> str:
+    """Return the payload name the site sends.
+
+    A fresh Cloud site runs in the trial license state and therefore sends the
+    Cloud trial payload instead of the product usage payload.
+    """
+    if site.edition.is_cloud_edition():
+        return "cloud_trial_analytics"
+    return "product_usage_analytics"
+
+
+def make_product_usage_request_validator(
+    expected_name: str,
+) -> Callable[[dict[str, str], bytes], bool]:
+    def validate_product_usage_request(headers: dict[str, str], body: bytes) -> bool:
+        """Validate that the product usage request contains required metadata and data."""
+        data = json.loads(body)
+        assert "metadata" in data, "Missing metadata in request"
+        assert "data" in data, "Missing data in request"
+        assert data["metadata"]["name"] == expected_name, (
+            f"Expected payload name {expected_name!r}, got {data['metadata']['name']!r}"
+        )
+        assert data["metadata"]["namespace"] == "checkmk"
+        return True
+
+    return validate_product_usage_request
 
 
 @pytest.mark.usefixtures("default_cfg")
@@ -199,7 +217,9 @@ def test_successful_https_product_usage_data_transmission(
     mock_https_server.add_endpoint(
         MockEndpoint(method=MockMethod.POST, path="/upload"),
         MockResponse(
-            status=200, body=b'{"status": "ok"}', request_validator=validate_product_usage_request
+            status=200,
+            body=b'{"status": "ok"}',
+            request_validator=make_product_usage_request_validator(expected_payload_name(site)),
         ),
     )
 

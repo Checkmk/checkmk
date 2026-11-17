@@ -10,6 +10,10 @@ read from the same icon-and-action registry via ``get_icons``, so every register
 service icon (logwatch, graphs, custom actions, ...) shows up automatically and stays
 permission-gated exactly as in the legacy view.
 
+A page may also ask for the links into Setup on the service, which the legacy menu lacks: they are
+checked the way Setup checks them, which costs reading Setup's folders, so only a page that offers
+them nowhere else asks.
+
 The models carry a "Service" prefix because the OpenAPI spec registers component schemas
 by class name across every endpoint family, where the hosts action menu already owns the
 unprefixed names.
@@ -25,8 +29,12 @@ from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
-from cmk.gui.monitor.shared import resolved_icon
+from cmk.gui.monitor.command import service_setup_links, SetupLink
+from cmk.gui.monitor.setup_folders import SetupFolderSource
+from cmk.gui.monitor.shared import may_open_in_setup, resolved_icon
 from cmk.gui.openapi.framework import (
+    ApiConfig,
+    ApiContext,
     APIVersion,
     EndpointBehavior,
     EndpointDoc,
@@ -53,11 +61,16 @@ from cmk.utils.servicename import ServiceName
 from cmk.web.utils import permission_verification as permissions
 from cmk.web.utils.icons import DynamicIcon, StaticIcon
 
+from .._models import CheckType
 from ._family import MONITOR_SERVICES_FAMILY
 
 # Shared by the table row and the slide-in, so only what both offer on their own is left out:
-# "Parameters" (rule_editor) is a row action and a slide-in header button.
+# "Parameters" (rule_editor) is a row action, a slide-in header button, or one of the Setup links
+# below, which ask what Setup asks before it opens the page.
 _EXCLUDED_IDENTS = frozenset({"rule_editor"})
+
+# Read for the Setup links whichever icons the menu shows, as the configuration decides that.
+_SETUP_LINK_COLUMNS = ("host_filename", "service_check_type")
 
 
 @api_model
@@ -122,34 +135,26 @@ def _serialize_entry(entry: IconEntry, row: Row) -> ServiceActionMenuItem | None
     )
 
 
-def get_service_action_menu(
-    hostname: Annotated[
-        AnnotatedHostName,
-        PathParam(description="Host name", example="web-server-01"),
-    ],
-    site_id: Annotated[
-        Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_be_authorized)],
-        QueryParam(description="An existing site id", example="local"),
-    ],
-    service_name: Annotated[
-        str,
-        QueryParam(description="The service name", example="CPU utilization"),
-    ],
-) -> ServiceActionMenuResponse:
-    """List the action menu entries for a single service of a host."""
-    display_options.load_from_html(request, html)
-    try:
-        row = query_icon_row("service", hostname, site_id, ServiceName(service_name))
-    except MKLivestatusNotFoundError:
-        raise ProblemException(
-            status=HTTPStatus.NOT_FOUND,
-            title="The requested service was not found",
-            detail=(
-                f"The service {service_name!r} of host {hostname!r} was not found on site "
-                f"{site_id!r}"
-            ),
-        ) from None
+def _setup_link_item(link: SetupLink, hostname: str, service_name: str) -> ServiceActionMenuItem:
+    return ServiceActionMenuItem(
+        ident=link.ident,
+        icon_name=link.icon,
+        title=link.title,
+        url=link.url_for(host=hostname, service=service_name),
+    )
 
+
+def _offers_setup_links(row: Row, config: ApiConfig) -> bool:
+    """Whether the service of ``row`` gets links into Setup at all, whoever asks.
+
+    The parameters stand in for the legacy rule editor icon, so they follow its rules: a shadow
+    service has no parameters, and the admin may hide the link from every service.
+    """
+    return row["service_check_type"] != CheckType.SHADOW and config.multisite_draw_ruleicon
+
+
+def _icon_items(row: Row, hostname: str, service_name: str) -> list[ServiceActionMenuItem]:
+    """The entries the registered service icons offer, as the legacy action menu shows them."""
     entries = get_icons(
         "service",
         row,
@@ -180,27 +185,102 @@ def get_service_action_menu(
             continue
         items.append(item)
 
-    return ServiceActionMenuResponse(items=items)
+    return items
 
 
-ENDPOINT_GET_SERVICE_ACTION_MENU = VersionedEndpoint(
-    metadata=EndpointMetadata(
-        path="/monitor/hosts/{hostname}/service/action_menu",
-        link_relation="cmk/service_action_menu",
-        method="get",
-    ),
-    permissions=EndpointPermissions(
-        # Declared for the permission tracker: the livestatus row query scopes visibility and
-        # get_icons gates each action per user, so no permission is required up front. This
-        # mirrors the legacy action menu popup, which is accessible to normal users too. Which
-        # permissions are checked depends on the icons registered in the edition.
-        required=permissions.Undocumented(
-            permissions.DynamicRuntimePerm(
-                description="Visibility of each action is gated per user at runtime.",
+def make_endpoint_get_service_action_menu(setup_folders: SetupFolderSource) -> VersionedEndpoint:
+    """The endpoint listing the actions on one service, asking `setup_folders` who may open its
+    host in Setup."""
+
+    def get_service_action_menu(
+        hostname: Annotated[
+            AnnotatedHostName,
+            PathParam(description="Host name", example="web-server-01"),
+        ],
+        site_id: Annotated[
+            Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_be_authorized)],
+            QueryParam(description="An existing site id", example="local"),
+        ],
+        service_name: Annotated[
+            str,
+            QueryParam(description="The service name", example="CPU utilization"),
+        ],
+        api_context: ApiContext,
+        include_setup_links: Annotated[
+            bool,
+            QueryParam(
+                description=(
+                    "Also list the links into Setup on the service the user may follow, such as "
+                    "its parameters. Asking Setup costs reading its folders, so only ask where "
+                    "the page offers these links nowhere else."
+                ),
+                example="true",
+            ),
+        ] = False,
+    ) -> ServiceActionMenuResponse:
+        """List the action menu entries for a single service of a host."""
+        display_options.load_from_html(request, html)
+        try:
+            row = query_icon_row(
+                "service",
+                hostname,
+                site_id,
+                ServiceName(service_name),
+                extra_columns=_SETUP_LINK_COLUMNS if include_setup_links else (),
             )
+        except MKLivestatusNotFoundError:
+            raise ProblemException(
+                status=HTTPStatus.NOT_FOUND,
+                title="The requested service was not found",
+                detail=(
+                    f"The service {service_name!r} of host {hostname!r} was not found on site "
+                    f"{site_id!r}"
+                ),
+            ) from None
+
+        setup_links = (
+            service_setup_links(api_context.config, api_context.user)
+            if include_setup_links and _offers_setup_links(row, api_context.config)
+            else []
         )
-    ),
-    doc=EndpointDoc(family=MONITOR_SERVICES_FAMILY.name),
-    behavior=EndpointBehavior(skip_locking=True),
-    versions={APIVersion.INTERNAL: EndpointHandler(handler=get_service_action_menu)},
-)
+        # Setup restricts a host to the contact groups its permissions name, so it may refuse a
+        # user the host even where they may see its parameters. Setup is asked about the folder
+        # the host's file is in alone.
+        if setup_links and not may_open_in_setup(
+            setup_folders(api_context.config, api_context.user).may_read_host,
+            hostname,
+            row["host_filename"],
+        ):
+            setup_links = []
+
+        # The Setup links lead the menu: a row puts the commands it runs itself, such as
+        # rescheduling, ahead of the menu, so they follow those right away.
+        return ServiceActionMenuResponse(
+            items=[
+                *(_setup_link_item(link, hostname, service_name) for link in setup_links),
+                *_icon_items(row, hostname, service_name),
+            ]
+        )
+
+    return VersionedEndpoint(
+        metadata=EndpointMetadata(
+            path="/monitor/hosts/{hostname}/service/action_menu",
+            link_relation="cmk/service_action_menu",
+            method="get",
+        ),
+        permissions=EndpointPermissions(
+            # Declared for the permission tracker: the livestatus row query scopes visibility and
+            # get_icons gates each action per user, so no permission is required up front. This
+            # mirrors the legacy action menu popup, which is accessible to normal users too. Which
+            # permissions are checked depends on the icons registered in the edition, and on
+            # whether the Setup links were asked for.
+            required=permissions.Undocumented(
+                permissions.DynamicRuntimePerm(
+                    description="Visibility of each action is gated per user at runtime.",
+                )
+            )
+        ),
+        doc=EndpointDoc(family=MONITOR_SERVICES_FAMILY.name),
+        behavior=EndpointBehavior(skip_locking=True),
+        versions={APIVersion.INTERNAL: EndpointHandler(handler=get_service_action_menu)},
+    )

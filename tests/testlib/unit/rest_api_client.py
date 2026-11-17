@@ -6002,11 +6002,15 @@ class MonitorHostsClient(RestApiClient):
         site_id: str,
         service_name: str,
         expect_ok: bool = True,
+        include_setup_links: bool | None = None,
     ) -> Response:
+        query_params = {"site_id": site_id, "service_name": service_name}
+        if include_setup_links is not None:
+            query_params["include_setup_links"] = str(include_setup_links).lower()
         return self.request(
             "get",
             url=f"/monitor/hosts/{hostname}/service/action_menu",
-            query_params={"site_id": site_id, "service_name": service_name},
+            query_params=query_params,
             expect_ok=expect_ok,
         )
 

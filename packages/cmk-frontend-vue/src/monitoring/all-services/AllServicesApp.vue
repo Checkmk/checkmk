@@ -223,6 +223,11 @@ const slideInHost = computed<HostRef>(() =>
   slideInService.value === null ? NO_HOST : hostRefOfService(slideInService.value)
 )
 
+// A row offers the parameters of its service in its menu alone. Whether the user may open them
+// depends on the host, so it is asked when a menu opens rather than for every row listed. The
+// slide-in shows them in its header, so its menu does not ask.
+const ROW_MENU_OPTIONS = { includeSetupLinks: true } as const
+
 function loadSlideInActionMenu(service: string): Promise<CellAction[]> {
   return serviceListing.loadActionMenu(slideInHost.value, service)
 }
@@ -432,7 +437,8 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
             :table-row="tableRow"
             :may-reschedule="serviceListing.mayReschedule"
             :load-action-menu="
-              (service: string) => serviceListing.loadActionMenu(hostRefOfService(row), service)
+              (service: string) =>
+                serviceListing.loadActionMenu(hostRefOfService(row), service, ROW_MENU_OPTIONS)
             "
             :display-options="displayOptions"
             @open="openServiceSlideIn(row)"

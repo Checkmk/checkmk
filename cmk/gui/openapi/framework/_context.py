@@ -88,6 +88,7 @@ class ApiConfig:
     graph_timeranges: list[GraphTimerange]
     is_provider_site: bool
     liveproxyd_enabled: bool
+    multisite_draw_ruleicon: bool
     password_policy: PasswordPolicy
     reschedule_timeout: float
     sites: SiteConfigurations
@@ -117,6 +118,7 @@ class ApiConfig:
             graph_timeranges=config.graph_timeranges,
             is_provider_site=is_provider_site(config),
             liveproxyd_enabled=config.liveproxyd_enabled,
+            multisite_draw_ruleicon=config.multisite_draw_ruleicon,
             password_policy=config.password_policy,
             reschedule_timeout=config.reschedule_timeout,
             sites=config.sites,

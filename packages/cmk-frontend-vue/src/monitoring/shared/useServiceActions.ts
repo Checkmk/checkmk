@@ -7,7 +7,10 @@ import type { ServiceActionIdent } from 'cmk-shared-typing/typescript/monitoring
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import { ServiceActionMenuApi } from '@/monitoring/shared/api/serviceActionMenu'
+import {
+  ServiceActionMenuApi,
+  type ServiceActionMenuOptions
+} from '@/monitoring/shared/api/serviceActionMenu'
 import type { HostRef, ServiceRef } from '@/monitoring/shared/api/types'
 import {
   ACK_ACTION_ID,
@@ -65,8 +68,15 @@ export interface ServiceActions {
   mayActOnSelection: boolean
   /** The service commands of the action pane. */
   registry: MonitoringActionRegistry<ServiceRef>
-  /** The legacy action-menu links of a service (graphs, log file viewer, custom actions, ...). */
-  loadActionMenu: (host: HostRef, service: string) => Promise<CellAction[]>
+  /**
+   * The legacy action-menu links of a service (graphs, log file viewer, custom actions, ...), and
+   * the links into Setup where the options ask for them.
+   */
+  loadActionMenu: (
+    host: HostRef,
+    service: string,
+    options?: ServiceActionMenuOptions
+  ) => Promise<CellAction[]>
 }
 
 // Actions the action bar runs immediately with their default values when exactly one service is
@@ -84,8 +94,12 @@ export function useServiceActions(payload: MonitoringCommandsPayload): ServiceAc
 
   const actionMenuApi = new ServiceActionMenuApi()
 
-  async function loadActionMenu(host: HostRef, service: string): Promise<CellAction[]> {
-    const items = await actionMenuApi.fetchActionMenu(host, service)
+  async function loadActionMenu(
+    host: HostRef,
+    service: string,
+    options: ServiceActionMenuOptions = {}
+  ): Promise<CellAction[]> {
+    const items = await actionMenuApi.fetchActionMenu(host, service, options)
     return items.map((item) => ({
       id: `${item.title}|${item.url}`,
       label: item.title as TranslatedString,

@@ -9,6 +9,8 @@ from typing import Literal
 
 import pytest
 
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec, Row
 from cmk.gui.utils.roles import UserPermissions
@@ -19,7 +21,10 @@ from cmk.gui.views.icon import (
 )
 from cmk.gui.views.icon import registry as icon_registry
 from cmk.gui.views.icon.base import IconSpec as IconSpecUnion
+from cmk.gui.views.icon.entries import iconpainter_columns, query_icon_row
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.ruleset_matcher.tags import TagID
+from cmk.utils.servicename import ServiceName
 from cmk.web.utils.icons import DynamicIconName
 
 
@@ -175,3 +180,39 @@ def test_config_override_builtin_icons(monkeypatch: pytest.MonkeyPatch) -> None:
             },
         )
         assert icon_registry.all_icons()["test_icon"].toplevel is True
+
+
+@pytest.mark.usefixtures("request_context")
+def test_icon_row_carries_the_columns_its_caller_names_whichever_icons_there_are(
+    monkeypatch: pytest.MonkeyPatch, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # No icon asks for the host's file, so the row carries it only because the caller names it.
+    monkeypatch.setattr(icon_registry, "icon_and_action_registry", icon_registry.IconRegistry())
+    assert "host_filename" not in iconpainter_columns("service", toplevel=False)
+    mock_livestatus.add_table(
+        "services",
+        [
+            {
+                "host_name": "heute",
+                "host_address": "127.0.0.1",
+                "host_custom_variable_names": [],
+                "host_custom_variable_values": [],
+                "host_filename": "/wato/hosts.mk",
+                "service_description": "CPU load",
+                "service_custom_variable_names": [],
+                "service_custom_variable_values": [],
+            }
+        ],
+    )
+    mock_livestatus.expect_query(["GET services"], match_type="loose", sites=["NO_SITE"])
+
+    with mock_livestatus(expect_status_query=True):
+        row = query_icon_row(
+            "service",
+            HostName("heute"),
+            SiteId("NO_SITE"),
+            ServiceName("CPU load"),
+            extra_columns=["host_filename"],
+        )
+
+    assert row["host_filename"] == "/wato/hosts.mk"

@@ -11,7 +11,7 @@ Keeping them apart lets a consumer take the entries without pulling in the paint
 
 import contextlib
 import traceback
-from collections.abc import Container, Iterator
+from collections.abc import Container, Iterator, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -255,9 +255,14 @@ def query_icon_row(
     host: HostName,
     site: SiteId,
     service_description: ServiceName | None = None,
+    extra_columns: Sequence[ColumnName] = (),
 ) -> Row:
-    """Fetch the livestatus row carrying all columns the action-menu icons need."""
-    columns = list(iconpainter_columns(what, toplevel=False))
+    """Fetch the livestatus row carrying all columns the action-menu icons need.
+
+    Which icons the menu shows is configurable, and so are their columns: a caller reading a column
+    for itself names it in ``extra_columns`` rather than rely on an icon asking for it too.
+    """
+    columns = list(dict.fromkeys([*iconpainter_columns(what, toplevel=False), *extra_columns]))
     with contextlib.suppress(ValueError):
         columns.remove("site")
 

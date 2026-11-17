@@ -8,7 +8,7 @@ from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 
 from ._acknowledge import ENDPOINT_ACKNOWLEDGE, ENDPOINT_REMOVE_ACKNOWLEDGEMENTS
-from ._action_menu import ENDPOINT_GET_SERVICE_ACTION_MENU
+from ._action_menu import make_endpoint_get_service_action_menu
 from ._comment import ENDPOINT_ADD_COMMENT
 from ._custom_notification import ENDPOINT_SEND_CUSTOM_NOTIFICATION
 from ._downtime import ENDPOINT_REMOVE_DOWNTIMES, ENDPOINT_SCHEDULE_DOWNTIME
@@ -34,7 +34,7 @@ def register_endpoints(
     versioned_endpoint_registry.register(ENDPOINT_LIST_HOST_SERVICES)
     versioned_endpoint_registry.register(ENDPOINT_LIST_ALL_SERVICES)
     versioned_endpoint_registry.register(make_endpoint_get_service_overview(setup_folders))
-    versioned_endpoint_registry.register(ENDPOINT_GET_SERVICE_ACTION_MENU)
+    versioned_endpoint_registry.register(make_endpoint_get_service_action_menu(setup_folders))
     versioned_endpoint_registry.register(ENDPOINT_RESCHEDULE_CHECKS)
     versioned_endpoint_registry.register(ENDPOINT_SEND_CUSTOM_NOTIFICATION)
     versioned_endpoint_registry.register(ENDPOINT_FAKE_CHECK_RESULT)

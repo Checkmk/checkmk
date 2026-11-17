@@ -2464,6 +2464,111 @@ class TestMonitorServiceActionMenu:
         assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
+    @staticmethod
+    def _menu_urls(
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        include_setup_links: bool | None,
+        row_overrides: Mapping[str, object] | None = None,
+    ) -> list[str]:
+        mock_livestatus.add_table(
+            "services", [{**_ACTION_MENU_SERVICE_ROW, **(row_overrides or {})}]
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Filter: host_name = {_HOSTNAME}",
+                f"Filter: service_description = {_SERVICE_DESCRIPTION}",
+            ],
+            match_type="loose",
+            sites=[_SITE_ID],
+        )
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.service_action_menu(
+                hostname=_HOSTNAME,
+                site_id=_SITE_ID,
+                service_name=_SERVICE_DESCRIPTION,
+                include_setup_links=include_setup_links,
+            )
+        return [item["url"] for item in resp.json["items"]]
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_lists_the_parameters_of_a_host_setup_grants_when_asked(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        urls = self._menu_urls(clients, mock_livestatus, include_setup_links=True)
+
+        assert f"wato.py?mode=object_parameters&host={_HOSTNAME}&service=CPU+load" in urls
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_lists_the_parameters_ahead_of_the_other_actions(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        # The row puts its reschedule ahead of the menu, so the parameters follow it right away.
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        urls = self._menu_urls(clients, mock_livestatus, include_setup_links=True)
+
+        assert "mode=object_parameters" in urls[0]
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_parameters_for_a_shadow_service(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        urls = self._menu_urls(
+            clients,
+            mock_livestatus,
+            include_setup_links=True,
+            row_overrides={"service_check_type": 2},
+        )
+
+        assert not any("mode=object_parameters" in url for url in urls)
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_parameters_where_the_rule_editor_icon_is_hidden(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        set_config: SetConfig,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        with set_config(multisite_draw_ruleicon=False):
+            urls = self._menu_urls(clients, mock_livestatus, include_setup_links=True)
+
+        assert not any("mode=object_parameters" in url for url in urls)
+
+    def test_no_parameters_for_a_host_setup_does_not_grant(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        urls = self._menu_urls(clients, mock_livestatus, include_setup_links=True)
+
+        assert not any("mode=object_parameters" in url for url in urls)
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_parameters_unless_asked(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        urls = self._menu_urls(clients, mock_livestatus, include_setup_links=None)
+
+        assert not any("mode=object_parameters" in url for url in urls)
+
 
 _SITE_ID = "NO_SITE"
 _HOSTNAME = "heute"

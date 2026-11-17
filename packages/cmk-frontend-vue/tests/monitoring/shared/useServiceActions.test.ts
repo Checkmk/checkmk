@@ -7,9 +7,16 @@ import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 
 import { useServiceActions } from '@/monitoring/shared/useServiceActions'
 
+const askedForSetupLinks: (string | null)[] = []
+
+beforeEach(() => {
+  askedForSetupLinks.length = 0
+})
+
 useMswServer(
-  restApiHttp.get('/monitor/hosts/{hostname}/service/action_menu', ({ response }) =>
-    response(200).json({
+  restApiHttp.get('/monitor/hosts/{hostname}/service/action_menu', ({ request, response }) => {
+    askedForSetupLinks.push(new URL(request.url).searchParams.get('include_setup_links'))
+    return response(200).json({
       items: [
         {
           ident: 'logwatch',
@@ -20,7 +27,7 @@ useMswServer(
         }
       ]
     })
-  )
+  })
 )
 
 test('offers rescheduling and a selection when the user may reschedule', () => {
@@ -66,4 +73,22 @@ test('lists the action-menu links of a service as menu entries', async () => {
       ident: 'logwatch'
     }
   ])
+})
+
+test('leaves the links into Setup out of the action menu unless asked for', async () => {
+  const actions = useServiceActions({})
+
+  await actions.loadActionMenu({ name: 'web-1', site_id: 'local' }, 'Log')
+
+  expect(askedForSetupLinks).toEqual([null])
+})
+
+test('asks the action menu for the links into Setup where the options want them', async () => {
+  const actions = useServiceActions({})
+
+  await actions.loadActionMenu({ name: 'web-1', site_id: 'local' }, 'Log', {
+    includeSetupLinks: true
+  })
+
+  expect(askedForSetupLinks).toEqual(['true'])
 })

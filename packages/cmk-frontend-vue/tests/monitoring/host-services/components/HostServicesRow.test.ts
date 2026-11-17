@@ -667,6 +667,25 @@ test('leaves the reschedule out for a user who may not reschedule', () => {
   expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
 })
 
+test('lists the entries it loads right after its reschedule, in the order they come', async () => {
+  mountRow(makeService({ reschedule: reschedulesItself('CPU load') }), makeTableRow(), {
+    mayReschedule: true,
+    loadActionMenu: async () => [
+      { id: 'parameters', label: 'Parameters', icon: 'rulesets', url: 'wato.py' },
+      { id: 'logwatch', label: 'Open log file viewer', icon: 'logwatch', url: 'view.py' }
+    ]
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+  await screen.findByRole('menuitem', { name: /Parameters/ })
+
+  expect(screen.getAllByRole('menuitem').map((item) => item.textContent?.trim())).toEqual([
+    'Reschedule check',
+    'Parameters',
+    'Open log file viewer'
+  ])
+})
+
 function makeServiceOfHost(): ServiceEntry {
   return { ...makeService(), host_name: 'web-2', site_id: 'remote', host_state: 'UP' }
 }

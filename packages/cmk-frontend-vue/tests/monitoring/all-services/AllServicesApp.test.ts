@@ -299,6 +299,22 @@ describe('with the rows laid out', () => {
     expect(requestedFor(ACTION_MENU_PATH, 'web-1', 'local')).toBe(false)
   })
 
+  test('asks the action menu of a row for the links into Setup', async () => {
+    mockServices(SAME_NAMED_SERVICES_ON_TWO_HOSTS())
+    renderApp()
+
+    const menus = await screen.findAllByRole('button', { name: 'More actions' })
+    await userEvent.click(menus[0]!)
+
+    await vi.waitUntil(() =>
+      getSpy.mock.calls.some(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ([calledPath, init]: [string, any]) =>
+          calledPath === ACTION_MENU_PATH && init.params.query.include_setup_links === 'true'
+      )
+    )
+  })
+
   test('loads the slide-in of a row from its own host and site', async () => {
     mockServices(SAME_NAMED_SERVICES_ON_TWO_HOSTS())
     renderApp()

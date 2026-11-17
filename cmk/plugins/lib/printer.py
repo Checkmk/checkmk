@@ -22,6 +22,7 @@ from cmk.agent_based.v2 import (
 
 Section = dict[str, int]
 
+OID_sysDescr = ".1.3.6.1.2.1.1.1.0"
 OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
 
 PRINTER_MANUFACTURERS = [
@@ -96,7 +97,9 @@ PRINTER_MANUFACTURERS = [
 ]
 
 DETECT_PRINTER_MANUFACTURER = any_of(
-    *[startswith(OID_sysObjectID, oid) for oid in PRINTER_MANUFACTURERS]
+    *[startswith(OID_sysObjectID, oid) for oid in PRINTER_MANUFACTURERS],
+    # Some HP JetDirect printers report the sysObjectID ".0.0"
+    startswith(OID_sysDescr, "HP ETHERNET MULTI-ENVIRONMENT"),
 )
 
 DETECT_PRINTER = all_of(

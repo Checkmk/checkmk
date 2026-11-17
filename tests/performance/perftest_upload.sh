@@ -18,6 +18,12 @@
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 REPO_PATH="$(dirname "$(dirname "${SCRIPT_DIR}")")"
 
+# perftest_plot.py imports the rest of the reporting as tests.performance.reporting, so it runs
+# as a module from the repository root.
+perftest_plot() {
+    PYTHONPATH="${REPO_PATH}${PYTHONPATH:+:${PYTHONPATH}}" python3 -m tests.performance.reporting.perftest_plot "$@"
+}
+
 # upload <root_dir> <database> [plot options]
 # In CI, write a suite's results to its database, generate the report and check the weekly,
 # monthly and yearly baselines. The plot options go to all three calls.
@@ -31,12 +37,12 @@ upload() {
         --log-level=INFO --validate-baselines "$@"
     )
     # write to the database; generate report and check weekly baseline
-    "${SCRIPT_DIR}/reporting/perftest_plot.py" "${plot_args[@]}" || exit 200
+    perftest_plot "${plot_args[@]}" || exit 200
     # check monthly baseline
-    "${SCRIPT_DIR}/reporting/perftest_plot.py" "${plot_args[@]}" \
+    perftest_plot "${plot_args[@]}" \
         --skip-filesystem-writes --skip-database-writes --baseline-offset=30 || exit 200
     # check yearly baseline
-    "${SCRIPT_DIR}/reporting/perftest_plot.py" "${plot_args[@]}" \
+    perftest_plot "${plot_args[@]}" \
         --skip-filesystem-writes --skip-database-writes --baseline-offset=365 || exit 200
 }
 

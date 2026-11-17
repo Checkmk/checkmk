@@ -10,11 +10,9 @@ from cmk.cli.engine.options import GlobalOptions as CLIEngineGlobalOptions
 from cmk.cli.engine.options import read_global_options as cli_read_global_options
 from cmk.cli.engine.readers import parsed as cli_parsed
 
-from ._logger import null_logger
-
 
 def _read(options: Sequence[tuple[str, str]]) -> CLIEngineGlobalOptions:
-    return cli_read_global_options(cli_parsed(options, {}, null_logger()))
+    return cli_read_global_options(cli_parsed(options, {}))
 
 
 def test_a_general_flag_is_collected() -> None:

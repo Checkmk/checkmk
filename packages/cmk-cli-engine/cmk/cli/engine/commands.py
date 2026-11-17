@@ -32,8 +32,6 @@ from .options import (
     spellings,
 )
 
-type BoundCommand = Callable[[CLIContext], CLIExitCode]
-
 _COMMAND_COLUMN: Final = HelpColumn(indent=" cmk ", width=36)
 
 _SUB_OPTION_COLUMN: Final = HelpColumn(indent="    ", width=24)
@@ -41,6 +39,13 @@ _SUB_OPTION_COLUMN: Final = HelpColumn(indent="    ", width=24)
 _ENGINE_OPTION_COLUMN: Final = HelpColumn(indent="  ", width=21)
 
 type Run[R] = Callable[[CLIContext, R], CLIExitCode]
+
+
+@dataclass(frozen=True, kw_only=True)
+class BoundCommand:
+    request: object
+    run: Callable[[CLIContext], CLIExitCode]
+
 
 type Binder = Callable[[CLIReader], BoundCommand]
 
@@ -59,7 +64,7 @@ class DiscoveredCommand:
 def binder[R](command: CLICommand[R], load: Callable[[], Run[R]]) -> Binder:
     def bind(reader: CLIReader) -> BoundCommand:
         request = command.request(reader)
-        return lambda context: load()(context, request)
+        return BoundCommand(request=request, run=lambda context: load()(context, request))
 
     return bind
 

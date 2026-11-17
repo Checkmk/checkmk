@@ -18,10 +18,9 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 
-from .arguments import InvalidArguments, parse, rejection, RunCommand, ShowHelp
+from .arguments import InvalidArguments, parse, RunCommand, ShowHelp
 from .commands import Commands, DiscoveredCommand
 from .options import GlobalOptions
-from .readers import assign, parsed
 
 type CommandTracer = Callable[[CLIContext, RunCommand], AbstractContextManager[None]]
 
@@ -81,22 +80,14 @@ def _show_help(commands: Commands, runtime: Runtime) -> CLIExitCode:
     return CLIExitCode.SUCCESS
 
 
-def _run_command(
-    run_command: RunCommand, context: CLIContext, argv: Sequence[str], runtime: Runtime
-) -> CLIExitCode:
-    try:
-        bound = run_command.command.bind(
-            parsed(
-                run_command.options,
-                assign(run_command.command.positional, run_command.args),
-                context.logger,
-            )
+def _run_command(run_command: RunCommand, context: CLIContext, runtime: Runtime) -> CLIExitCode:
+    for deprecation in run_command.deprecations:
+        context.logger.warning(
+            "%(deprecated)r is deprecated in favour of option %(name)r",
+            {"deprecated": deprecation.spelling, "name": deprecation.replacement},
         )
-    except ValueError as error:
-        runtime.write_error(rejection(argv, error))
-        return CLIExitCode.UNKNOWN
     with runtime.trace_command(context, run_command):
-        return bound(context)
+        return run_command.bound.run(context)
 
 
 def run(
@@ -110,7 +101,7 @@ def run(
     commands = Commands(commands=runtime.discover())
     logger = runtime.logger.getChild("cli")
 
-    match parse(commands, argv, logger):
+    match parse(commands, argv):
         case InvalidArguments(message=message):
             runtime.write_error(message)
             return CLIExitCode.UNKNOWN.value
@@ -122,7 +113,7 @@ def run(
                 global_options=CLIGlobalOptions(debug=global_options.debug),
                 logger=logger,
             )
-            command = partial(_run_command, run_command, context, argv, runtime)
+            command = partial(_run_command, run_command, context, runtime)
         case unexpected:
             assert_never(unexpected)
 

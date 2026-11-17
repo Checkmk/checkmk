@@ -5,14 +5,19 @@
 
 
 import getopt
-import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from .commands import Commands, DiscoveredCommand, takes_value
+from .commands import BoundCommand, Commands, DiscoveredCommand, takes_value
 from .options import GetoptOptions, GlobalOptions, HELP_OPTION, read_global_options, spellings
-from .readers import parsed
+from .readers import assign, parsed
+
+
+@dataclass(frozen=True)
+class Deprecation:
+    spelling: str
+    replacement: str
 
 
 @dataclass(frozen=True)
@@ -21,6 +26,8 @@ class RunCommand:
     global_options: GlobalOptions
     options: GetoptOptions
     args: Sequence[str]
+    bound: BoundCommand
+    deprecations: Sequence[Deprecation]
 
 
 @dataclass(frozen=True)
@@ -50,11 +57,18 @@ def _selected(
     return None
 
 
-def _parse(
-    commands: Commands, argv: Sequence[str], logger: logging.Logger
-) -> RunCommand | ShowHelp:
+def _deprecations(options: GetoptOptions, command: DiscoveredCommand) -> Sequence[Deprecation]:
+    return [
+        Deprecation(spelling=spec, replacement=option.long)
+        for spec, _argument in options
+        for option in command.options
+        if spec in spellings(option) and spec.lstrip("-") in option.deprecated_names
+    ]
+
+
+def _parse(commands: Commands, argv: Sequence[str]) -> RunCommand | ShowHelp:
     options, positional = commands.getopt(argv[1:])
-    global_options = read_global_options(parsed(options, {}, logger))
+    global_options = read_global_options(parsed(options, {}))
     if any(option in spellings(HELP_OPTION) for option, _argument in options):
         return ShowHelp(global_options)
 
@@ -62,8 +76,14 @@ def _parse(
         case None:
             return ShowHelp(global_options)
         case command, argument:
+            args = _args(command, argument, positional)
             return RunCommand(
-                command, global_options, options, _args(command, argument, positional)
+                command,
+                global_options,
+                options,
+                args,
+                command.bind(parsed(options, assign(command.positional, args))),
+                _deprecations(options, command),
             )
 
 
@@ -71,10 +91,8 @@ def rejection(argv: Sequence[str], error: Exception) -> str:
     return f"ERROR: {error} (see `{Path(argv[0]).name} --help` for valid options)\n"
 
 
-def parse(
-    commands: Commands, argv: Sequence[str], logger: logging.Logger
-) -> RunCommand | ShowHelp | InvalidArguments:
+def parse(commands: Commands, argv: Sequence[str]) -> RunCommand | ShowHelp | InvalidArguments:
     try:
-        return _parse(commands, argv, logger)
+        return _parse(commands, argv)
     except (getopt.GetoptError, ValueError) as error:
         return InvalidArguments(rejection(argv, error))

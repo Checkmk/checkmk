@@ -81,7 +81,7 @@ def test_binding_a_command_does_not_load_its_handler() -> None:
             name="snmpwalk", handler=HANDED_IN, long="snmpwalk", request=_walk_request, help="Walk"
         ),
         load,
-    ).bind(cli_parsed([("--oid", "iso")], {}, null_logger()))
+    ).bind(cli_parsed([("--oid", "iso")], {}))
 
     assert loaded == []
 
@@ -103,11 +103,9 @@ def test_a_commands_handler_receives_its_request_parsed() -> None:
         ),
         _record,
     )
-    bound = command.bind(
-        cli_parsed([("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], {}, null_logger())
-    )
+    bound = command.bind(cli_parsed([("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], {}))
 
-    bound(
+    bound.run(
         CLIContext(
             omd_root=_OMD_ROOT,
             global_options=CLIGlobalOptions(),

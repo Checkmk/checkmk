@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import logging
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 
@@ -67,28 +66,16 @@ def assign(
     return assigned
 
 
-def _given_option(options: GetoptOptions, option: Option, logger: logging.Logger) -> Sequence[str]:
+def _given_option(options: GetoptOptions, option: Option) -> Sequence[str]:
     option_spellings = spellings(option)
-    given = []
-    for spec, argument in options:
-        if spec not in option_spellings:
-            continue
-        if spec.lstrip("-") in option.deprecated_names:
-            logger.warning(
-                "%(deprecated)r is deprecated in favour of option %(name)r",
-                {"deprecated": spec, "name": option.long},
-            )
-        given.append(argument)
-    return given
+    return [argument for spec, argument in options if spec in option_spellings]
 
 
-def parsed(
-    options: GetoptOptions, assigned: Mapping[str, Sequence[str]], logger: logging.Logger
-) -> CLIReader:
+def parsed(options: GetoptOptions, assigned: Mapping[str, Sequence[str]]) -> CLIReader:
     def given(declaration: CLIDeclaration) -> Sequence[str]:
         match declaration:
             case CLIFlag() | CLICount() | CLIValue() | CLIValues():
-                return _given_option(options, declaration, logger)
+                return _given_option(options, declaration)
             case CLIArgument() | CLIOptionalArgument() | CLIArguments():
                 return assigned.get(declaration.placeholder, ())
 

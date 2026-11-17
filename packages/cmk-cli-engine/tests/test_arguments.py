@@ -8,6 +8,7 @@ from typing import Final, NoReturn
 
 import pytest
 
+from cmk.cli.engine.arguments import Deprecation as CLIDeprecation
 from cmk.cli.engine.arguments import InvalidArguments as CLIInvalidArguments
 from cmk.cli.engine.arguments import parse as cli_parse
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
@@ -31,7 +32,6 @@ from cmk.cli.internal import Value as CLIValue
 from cmk.cli.internal import Values as CLIValues
 
 from ._commands import command_with, HANDED_IN
-from ._logger import null_logger
 
 
 def _unreachable(_context: CLIContext, _request: object) -> NoReturn:
@@ -144,7 +144,7 @@ _GENERAL_OPTIONS: Final = [option for option in CLI_ENGINE_OPTIONS if option is 
 
 
 def _parse(argv: Sequence[str]) -> CLIRunCommand | CLIShowHelp | CLIInvalidArguments:
-    return cli_parse(_COMMANDS, argv, null_logger())
+    return cli_parse(_COMMANDS, argv)
 
 
 def _general_option_argv(option: CLIOption) -> Sequence[str]:
@@ -233,6 +233,13 @@ def test_a_deprecated_sub_option_is_kept_under_its_own_spelling() -> None:
     assert parsed.options == [("--default", ""), ("--legacy-name", "value")]
 
 
+def test_a_deprecated_spelling_is_noted_with_its_replacement() -> None:
+    parsed = _parse(["cmk", "--default", "--legacy-name=value", "myhost"])
+
+    assert isinstance(parsed, CLIRunCommand)
+    assert parsed.deprecations == [CLIDeprecation(spelling="--legacy-name", replacement="renamed")]
+
+
 def test_a_short_option_takes_the_next_argument_as_its_value() -> None:
     parsed = _parse(["cmk", "--default", "-n", "5", "myhost"])
 
@@ -250,7 +257,7 @@ def test_positional_arguments_alone_run_the_default_command() -> None:
 def test_without_a_default_command_positional_arguments_show_the_help() -> None:
     commands = CLICommands(commands=[_PLAIN])
 
-    assert isinstance(cli_parse(commands, ["cmk", "myhost"], null_logger()), CLIShowHelp)
+    assert isinstance(cli_parse(commands, ["cmk", "myhost"]), CLIShowHelp)
 
 
 def test_an_unknown_option_is_rejected() -> None:

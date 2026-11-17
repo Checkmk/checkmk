@@ -55,6 +55,10 @@ export class MainMenuService extends ServiceBase {
   protected itemBadge: { [key: string]: Ref<MenuItemBadge | null> } = {}
   protected api: MainMenuApiClient = new MainMenuApiClient()
   private badgeUpdateTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map()
+  /** Badge polls skipped while the tab was hidden, to be caught up once it is visible again. */
+  private badgesAwaitingVisibility: Map<NavItemIdEnum, NavItemBadge> = new Map()
+  private readonly onVisibilityChange = () => this.resumeBadgesAwaitingVisibility()
+  private disposed = false
 
   public constructor(
     protected mainItems: NavItems = [],
@@ -361,6 +365,14 @@ export class MainMenuService extends ServiceBase {
   }
 
   private async updateBadgeValue(id: NavItemIdEnum, badge: NavItemBadge) {
+    if (this.disposed) {
+      return
+    }
+    if (document.hidden) {
+      this.badgesAwaitingVisibility.set(id, badge)
+      return
+    }
+
     let success = true
     try {
       switch (badge.mode) {
@@ -389,6 +401,10 @@ export class MainMenuService extends ServiceBase {
       })
     }
 
+    // A request still in flight on dispose() must not schedule the next poll.
+    if (this.disposed) {
+      return
+    }
     if (badge.interval_in_seconds) {
       const timeout = setTimeout(
         () => {
@@ -401,6 +417,7 @@ export class MainMenuService extends ServiceBase {
   }
 
   public pauseBadgeUpdate(id: NavItemIdEnum) {
+    this.badgesAwaitingVisibility.delete(id)
     const existing = this.badgeUpdateTimeouts.get(id)
     if (existing !== undefined) {
       clearTimeout(existing)
@@ -409,6 +426,7 @@ export class MainMenuService extends ServiceBase {
   }
 
   public restartBadgeUpdate(id: NavItemIdEnum) {
+    this.badgesAwaitingVisibility.delete(id)
     const existing = this.badgeUpdateTimeouts.get(id)
     if (existing !== undefined) {
       clearTimeout(existing)
@@ -420,7 +438,30 @@ export class MainMenuService extends ServiceBase {
     }
   }
 
+  /** Cancels the scheduled badge polls and the catch-up when the tab becomes visible again. */
+  public dispose() {
+    this.disposed = true
+    document.removeEventListener('visibilitychange', this.onVisibilityChange)
+    this.badgesAwaitingVisibility.clear()
+    for (const timeout of this.badgeUpdateTimeouts.values()) {
+      clearTimeout(timeout)
+    }
+    this.badgeUpdateTimeouts.clear()
+  }
+
+  private resumeBadgesAwaitingVisibility() {
+    if (document.hidden) {
+      return
+    }
+    const awaiting = [...this.badgesAwaitingVisibility]
+    this.badgesAwaitingVisibility.clear()
+    for (const [id, badge] of awaiting) {
+      void this.updateBadgeValue(id, badge)
+    }
+  }
+
   private initBadgeUpdate() {
+    document.addEventListener('visibilitychange', this.onVisibilityChange)
     for (const item of this.mainItems.concat(this.userItems)) {
       if (item.badge) {
         void this.updateBadgeValue(item.id, item.badge)

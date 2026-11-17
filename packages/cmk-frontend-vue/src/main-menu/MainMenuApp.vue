@@ -17,7 +17,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { comboKey, highlightCombo, highlightedCombo } from 'cmk-ui-library/lib/keyboardHelp'
-import { computed, onMounted, provide, ref } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
 
 import { toggleCheatSheetPin, useCheatSheetPinned } from '@/lib/keyboard-cheat-sheet/cheatSheetKey'
 
@@ -43,6 +43,7 @@ const mainMenu = new MainMenuService(
   new KeyShortcutService(window, iFrames, iFrames)
 )
 provide(mainMenuKey, mainMenu)
+onUnmounted(() => mainMenu.dispose())
 
 const registeredToggles = computed(() =>
   (props.toggles ?? []).flatMap((item) => {

@@ -158,3 +158,117 @@ describe('main menu service user badge', () => {
     expect(service.getNavItemBadge('user')).toBeNull()
   })
 })
+
+describe('main menu service pending changes badge', () => {
+  const pollIntervalSeconds = 60
+  const changesItems: NavItems = [
+    {
+      id: 'changes',
+      type: 'item',
+      title: 'Changes',
+      sort_index: 10,
+      shortcut: { key: 'n', alt: true },
+      badge: {
+        mode: 'num-pending-changes',
+        url: 'pending_changes_badge.py',
+        interval_in_seconds: pollIntervalSeconds
+      }
+    }
+  ]
+
+  const answerPendingChanges = (count: number) => {
+    const requested = vi.fn()
+    server.use(
+      untypedHttp.get('*/pending_changes_badge.py', () => {
+        requested()
+        return HttpResponse.json({ result_code: 0, result: { number_of_pending_changes: count } })
+      })
+    )
+    return requested
+  }
+
+  const services: MainMenuService[] = []
+  afterEach(() => services.splice(0).forEach((service) => service.dispose()))
+
+  const changesService = () => {
+    const service = new MainMenuService(changesItems, [], new KeyShortcutService(window))
+    services.push(service)
+    return service
+  }
+
+  const setTabHidden = (hidden: boolean) => {
+    vi.spyOn(document, 'hidden', 'get').mockReturnValue(hidden)
+    document.dispatchEvent(new Event('visibilitychange'))
+  }
+
+  // Only the poll timers are faked, so the mocked HTTP layer keeps running on real time.
+  const fakePollTimers = () => vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+
+  const skipPollIntervals = (count: number) =>
+    vi.advanceTimersByTimeAsync(count * pollIntervalSeconds * 1000)
+
+  test('stops polling the pending changes once the tab is hidden', async () => {
+    fakePollTimers()
+    const requested = answerPendingChanges(3)
+    setTabHidden(false)
+    const service = changesService()
+    await vi.waitFor(() => {
+      expect(service.getNavItemBadge('changes')).toMatchObject({ content: '3' })
+    })
+
+    setTabHidden(true)
+    await skipPollIntervals(3)
+
+    expect(requested).toHaveBeenCalledTimes(1)
+  })
+
+  test('keeps a paused badge paused when the tab is shown again', async () => {
+    fakePollTimers()
+    const requested = answerPendingChanges(3)
+    setTabHidden(true)
+    const service = changesService()
+
+    service.pauseBadgeUpdate('changes')
+    setTabHidden(false)
+    await skipPollIntervals(3)
+
+    expect(requested).not.toHaveBeenCalled()
+  })
+
+  test('polls the skipped pending changes once the tab becomes visible', async () => {
+    answerPendingChanges(3)
+    setTabHidden(true)
+    const service = changesService()
+
+    setTabHidden(false)
+
+    await vi.waitFor(() => {
+      expect(service.getNavItemBadge('changes')).toMatchObject({ content: '3' })
+    })
+  })
+
+  test('stops polling when disposed while a poll is in flight', async () => {
+    fakePollTimers()
+    const requested = vi.fn()
+    let answer: () => void = () => {}
+    server.use(
+      untypedHttp.get('*/pending_changes_badge.py', async () => {
+        requested()
+        await new Promise<void>((resolve) => (answer = resolve))
+        return HttpResponse.json({ result_code: 0, result: { number_of_pending_changes: 3 } })
+      })
+    )
+    setTabHidden(false)
+    const service = changesService()
+    await vi.waitFor(() => expect(requested).toHaveBeenCalledTimes(1))
+
+    service.dispose()
+    answer()
+    await vi.waitFor(() => {
+      expect(service.getNavItemBadge('changes')).toMatchObject({ content: '3' })
+    })
+    await skipPollIntervals(3)
+
+    expect(requested).toHaveBeenCalledTimes(1)
+  })
+})

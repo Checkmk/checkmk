@@ -49,33 +49,32 @@ def test_offers_no_host_links_where_setup_is_off() -> None:
     assert _host_idents(_ALL, wato_enabled=False) == []
 
 
-@pytest.mark.parametrize(
-    "granted",
-    [
-        pytest.param({"wato.use", "wato.seeall"}, id="see-all"),
-        pytest.param({"wato.use", "wato.hosts"}, id="hosts"),
-    ],
-)
-def test_offers_editing_with_setup_and_access_to_the_hosts(granted: set[str]) -> None:
-    assert _host_idents(granted) == ["edit"]
+def test_offers_both_to_a_user_who_may_see_all_of_setup() -> None:
+    assert _host_idents({"wato.use", "wato.seeall"}) == ["edit", "parameters"]
+
+
+def test_offers_editing_with_setup_and_access_to_the_hosts() -> None:
+    assert _host_idents({"wato.use", "wato.hosts"}) == ["edit"]
+
+
+def test_offers_parameters_with_setup_and_access_to_the_hosts_and_the_rules() -> None:
+    assert _host_idents({"wato.use", "wato.hosts", "wato.rulesets"}) == ["edit", "parameters"]
 
 
 @pytest.mark.parametrize(
     "granted",
     [
-        pytest.param({"wato.seeall", "wato.hosts"}, id="without-setup"),
-        pytest.param({"wato.use"}, id="without-access-to-the-hosts"),
+        pytest.param({"wato.seeall", "wato.hosts", "wato.rulesets"}, id="without-setup"),
+        pytest.param({"wato.use", "wato.rulesets"}, id="without-access-to-the-hosts"),
+        pytest.param({"wato.rulesets"}, id="with-the-rules-alone"),
     ],
 )
-def test_withholds_editing_without_the_needed_permissions(granted: set[str]) -> None:
+def test_withholds_both_without_the_needed_permissions(granted: set[str]) -> None:
+    """Setup would refuse either page, so a link to it would only lead to an error."""
     assert _host_idents(granted) == []
 
 
-def test_offers_host_parameters_with_the_rulesets_permission_alone() -> None:
-    assert _host_idents({"wato.rulesets"}) == ["parameters"]
-
-
-_PARAMETERS = {"wato.rulesets"}
+_PARAMETERS = {"wato.use", "wato.hosts", "wato.rulesets"}
 
 
 def _service_urls(granted: set[str], *, wato_enabled: bool = True) -> list[str]:
@@ -102,8 +101,15 @@ def test_offers_no_service_links_where_setup_is_off() -> None:
     assert _service_urls(_PARAMETERS, wato_enabled=False) == []
 
 
-def test_offers_no_service_links_without_the_rulesets_permission() -> None:
-    assert _service_urls({"wato.use", "wato.seeall", "wato.hosts"}) == []
+@pytest.mark.parametrize(
+    "granted",
+    [
+        pytest.param({"wato.use", "wato.hosts"}, id="without-the-rules"),
+        pytest.param({"wato.hosts", "wato.rulesets"}, id="without-setup"),
+    ],
+)
+def test_offers_no_service_links_without_the_needed_permissions(granted: set[str]) -> None:
+    assert _service_urls(granted) == []
 
 
 def test_fills_in_the_host_and_the_service_as_query_values() -> None:

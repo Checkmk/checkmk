@@ -1858,6 +1858,8 @@ class TestMonitorServiceOverview:
         # Setup grants the host, so only the missing permission withholds the link.
         clients.HostConfig.create(_HOSTNAME, folder="/")
         roles = roles_without_permission(load_config, "admin", "wato.rulesets")
+        # Setup waives the rules permission for those who may see all of it.
+        roles["admin"]["permissions"]["wato.seeall"] = False
 
         with set_config(roles=roles):
             assert self._get_overview_link(clients, mock_livestatus) is None

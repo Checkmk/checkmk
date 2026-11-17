@@ -559,7 +559,8 @@ def test_a_reader_who_may_not_act_is_offered_no_commands(
 def test_a_reader_who_may_not_edit_rules_is_offered_no_link_to_the_parameters_of_a_host(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    _log_in_with_admin_permissions_but(clients, {"wato.rulesets": "no"})
+    # Setup waives the rules permission for those who may see all of it.
+    _log_in_with_admin_permissions_but(clients, {"wato.rulesets": "no", "wato.seeall": "no"})
 
     response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
 

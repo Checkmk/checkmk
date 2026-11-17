@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The links into Setup every page offers on a host or a service, in one place.
 
-Which hosts Setup lets the user open is a question per host, left to the pages that show them.
+A link is offered only where Setup would open the page behind it, so that no page leads its
+user into a permission error. Which hosts Setup lets the user open is a question per host, left
+to the pages that show them.
 """
 
 from dataclasses import dataclass
@@ -93,5 +95,5 @@ def service_parameters_link(config: SetupSwitch, user: PermissionChecker) -> Set
 
 
 def _may_reach_parameters(config: SetupSwitch, user: PermissionChecker) -> bool:
-    """The pages have offered the parameters to everyone who may edit rules."""
-    return config.wato_enabled and user.may("wato.rulesets")
+    """The parameters page shows the rules of a host, so it needs both."""
+    return may_reach_setup(config, user, "hosts", "rulesets")

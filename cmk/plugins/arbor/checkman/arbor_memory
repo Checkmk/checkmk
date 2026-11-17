@@ -1,4 +1,4 @@
-title: Arbor Peakflow: Memory and Swap
+title: Arbor: Memory and Swap
 agents: snmp
 catalog: hw/network/arbor
 license: GPLv2

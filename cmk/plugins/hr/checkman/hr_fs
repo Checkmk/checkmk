@@ -1,4 +1,4 @@
-title: SNMP HOST-RESOURCES-MIB: Used Space in Filesystems
+title: Filesystems: Used Space via SNMP
 agents: snmp
 catalog: os/storage
 license: GPLv2

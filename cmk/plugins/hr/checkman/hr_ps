@@ -1,4 +1,4 @@
-title: SNMP HOST-RESOURCES-MIB: Processes
+title: Processes: State and Count via SNMP
 agents: snmp
 catalog: os/kernel
 license: GPLv2

@@ -27,6 +27,8 @@ def __parse_docker_container_cpu(info):
         return parsed
 
     # data comes from mk_docker.py agent plugin
+    if len(docker.cleanup_oci_error_message(info)) > 2:
+        return {}
     raw = docker.parse(info).data
     # https://github.com/moby/moby/blob/646072ed6524f159c214f830f0049369db5a9441/docs/api/v1.41.yaml#L6125-L6127
     if (online_cpus := raw.get("online_cpus")) is not None:

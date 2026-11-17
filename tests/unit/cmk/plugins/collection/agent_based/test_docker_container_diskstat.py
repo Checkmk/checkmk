@@ -409,3 +409,12 @@ def test_docker_container_diskstat_all_zeros_returns_no_io_section() -> None:
         MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_ALL_ZEROS
     )
     assert isinstance(result, NoIOSection)
+
+
+def test_docker_container_on_multiple_nodes_has_no_diskstat_section() -> None:
+    string_table = (
+        MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_0
+        + MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_60
+    )
+
+    assert agent_section_docker_container_diskstat.parse_function(string_table) is None

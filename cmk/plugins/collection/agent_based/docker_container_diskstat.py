@@ -102,11 +102,13 @@ def _parse_docker_container_diskstat_agent(info: StringTable) -> diskstat.Sectio
 
 def parse_docker_container_diskstat(
     string_table: StringTable,
-) -> diskstat.Section | diskstat.NoIOSection:
+) -> diskstat.Section | diskstat.NoIOSection | None:
     version = docker.get_version(string_table)
     if version is None:
         result = _parse_docker_container_diskstat_agent(string_table)
     else:
+        if len(docker.cleanup_oci_error_message(string_table)) > 2:
+            return None
         result_intermediate = _parse_docker_container_diskstat_plugin(string_table)
         if isinstance(result_intermediate, diskstat.NoIOSection):
             return result_intermediate

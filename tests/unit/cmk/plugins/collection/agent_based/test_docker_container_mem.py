@@ -194,3 +194,9 @@ def test_docker_container_diskstat(
 ) -> None:
     assert (section := docker_container_mem.parse_docker_container_mem(string_table)) is not None
     assert list(mem_used.check_mem_used({"levels": (80, 90)}, section)) == expected_result
+
+
+def test_docker_container_on_multiple_nodes_has_no_memory_section() -> None:
+    string_table = PLUGIN_OUTPUT_MEM_NO_LIMIT + PLUGIN_OUTPUT_MEM_LIMIT
+
+    assert docker_container_mem.parse_docker_container_mem(string_table) is None

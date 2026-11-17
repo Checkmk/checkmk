@@ -224,7 +224,8 @@ class IdleOptionModel:
 @api_model
 class DefaultTimeRangeModel:
     option: Literal["default"] = api_field(
-        description="Use the default, which is the first configured graph time range.",
+        description="Use the default: 'Last 4 h' if configured, otherwise the first configured "
+        "graph time range.",
     )
 
     def to_internal_dict(self) -> TimeRangeDetails:
@@ -239,8 +240,8 @@ class IndividualTimeRangeModel:
     duration: int = api_field(
         description="The duration in seconds of one of the configured graph time ranges ('Custom "
         "graph time ranges' global setting). A duration that is no longer configured falls back "
-        "to the first configured time range when the picker is rendered.",
-        example=14400,
+        "to the default time range when the picker is rendered.",
+        example=90000,
     )
 
     def to_internal_dict(self) -> TimeRangeDetails:

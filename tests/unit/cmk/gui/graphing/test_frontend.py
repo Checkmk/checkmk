@@ -158,16 +158,16 @@ _GRAPH_TIMERANGES: list[GraphTimerange] = [
 
 
 def test_resolve_default_time_range_seconds_no_preference() -> None:
-    assert resolve_default_time_range_seconds(_GRAPH_TIMERANGES, None) == 3600
+    assert resolve_default_time_range_seconds(_GRAPH_TIMERANGES, None) == 14400
 
 
 def test_resolve_default_time_range_seconds_preference_honored() -> None:
-    assert resolve_default_time_range_seconds(_GRAPH_TIMERANGES, 14400) == 14400
+    assert resolve_default_time_range_seconds(_GRAPH_TIMERANGES, 3600) == 3600
 
 
 def test_resolve_default_time_range_seconds_stale_preference_falls_back() -> None:
     # e.g. an admin removed that time range from the global setting.
-    assert resolve_default_time_range_seconds(_GRAPH_TIMERANGES, 90000) == 3600
+    assert resolve_default_time_range_seconds(_GRAPH_TIMERANGES, 90000) == 14400
 
 
 def test_stored_time_range_seconds_is_the_views_own_setting() -> None:

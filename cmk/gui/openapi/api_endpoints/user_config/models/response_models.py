@@ -43,7 +43,8 @@ class ConcreteDisabledNotificationsModel:
 class GraphDefaultTimeRangeOutputModel:
     option: Literal["default", "individual"] = api_field(
         description="This field indicates if the default time range of the global time picker "
-        "uses the default (the first configured graph time range) or an individual time range",
+        "uses the default ('Last 4 h' if configured, otherwise the first configured graph time "
+        "range) or an individual time range",
     )
     duration: int | ApiOmitted = api_field(
         description="The duration in seconds of the individual time range if individual is "

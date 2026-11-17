@@ -73,6 +73,7 @@ py_library(
         "confirm_with_preview.py",
         "encrypter.py",
         "graph_refresh.py",
+        "graph_time_range.py",
         "htpasswd.py",
         "json.py",
         "labels.py",

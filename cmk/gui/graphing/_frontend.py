@@ -20,6 +20,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GraphTimerange, PainterParameters, VerticalAxisWidth
 from cmk.gui.utils.graph_refresh import GRAPH_REFRESH_INTERVALS_SECONDS
+from cmk.gui.utils.graph_time_range import default_graph_time_range
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
@@ -65,18 +66,17 @@ def resolve_default_time_range_seconds(
     graph_timeranges: Sequence[GraphTimerange], preferred_duration: int | None
 ) -> int:
     """The preferred duration wins as long as it references a configured graph time range;
-    otherwise (no or stale preference) the first graph time range definition applies."""
+    otherwise (no or stale preference) the default graph time range applies."""
     if preferred_duration is not None and any(
         timerange["duration"] == preferred_duration for timerange in graph_timeranges
     ):
         return preferred_duration
-    return graph_timeranges[0]["duration"]
+    return default_graph_time_range(graph_timeranges)["duration"]
 
 
 def default_time_range_seconds() -> int:
     """Graph time range shown by default: resolves to the user's preferred graph time range or the
-    first of the global settings' graph time range definitions. With builtin time ranges and no
-    user preference this resolves to "Last 1 h".
+    default graph time range ("Last 4 h" if configured, otherwise the first configured one).
     Keeps graph rendering and global time picker in sync.
 
     Must be called per-request (not cached at import time) as active_config is only bound within a

@@ -14,6 +14,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.utils.graph_refresh import GRAPH_REFRESH_INTERVALS_SECONDS
+from cmk.gui.utils.graph_time_range import default_graph_time_range
 from cmk.gui.utils.temperature_unit import temperature_unit_choices
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -506,6 +507,15 @@ class StartOfWeekUserAttribute(UserAttribute):
         return "multisite"
 
 
+class _DefaultGraphTimeRange(FixedValue[None]):
+    # Lazy: active_config is only bound within a request context.
+    @override
+    def title(self) -> str:
+        return _("Use the default time range (%(time_range)s)") % {
+            "time_range": default_graph_time_range(active_config.graph_timeranges)["title"]
+        }
+
+
 class GraphDefaultTimeRangeUserAttribute(UserAttribute):
     @classmethod
     @override
@@ -521,6 +531,14 @@ class GraphDefaultTimeRangeUserAttribute(UserAttribute):
         return Alternative(
             title=_("Global time picker default range"),
             orientation="horizontal",
+            # A range an admin has since removed shows as the default it now resolves to
+            match=lambda value: (
+                1
+                if any(
+                    timerange["duration"] == value for timerange in active_config.graph_timeranges
+                )
+                else 0
+            ),
             help=_(
                 "The time range preselected by the global time picker on graph pages. The "
                 "available time ranges can be configured <a href='%(configvar_url)s'>here</a>."
@@ -533,11 +551,7 @@ class GraphDefaultTimeRangeUserAttribute(UserAttribute):
                 ),
             },
             elements=[
-                FixedValue(
-                    value=None,
-                    title=_("Use the default time range (first configured time range)"),
-                    totext="",
-                ),
+                _DefaultGraphTimeRange(value=None, totext=""),
                 DropdownChoice(
                     title=_("Set custom time range"),
                     # Lazy: active_config is only bound within a request context.
@@ -547,7 +561,7 @@ class GraphDefaultTimeRangeUserAttribute(UserAttribute):
                     ],
                     # Every user edit validates every attribute, so complaining about a time
                     # range an admin has since removed would block unrelated edits of that user.
-                    # The picker falls back to the first configured range instead.
+                    # The picker falls back to the default time range instead.
                     invalid_choice="replace",
                 ),
             ],

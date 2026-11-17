@@ -55,4 +55,16 @@ broken down by scenario:
 - `scenario_cpu_usage.sql`, `scenario_memory_usage.sql`,
   `scenario_mean_runtime.sql`.
 
+**Spread graphs**: raw values per scenario for Metabase's box plot chart type,
+which draws the quartiles and range itself:
+
+- `scenario_{runtime,cpu,memory}_spread_latest.sql`: within the newest job of
+  the selected release, its round times (runtime) or its resource samples (CPU,
+  memory).
+- `scenario_{runtime,cpu,memory}_spread_monthly.sql`: over a month, one value
+  per job of the release's 30 newest jobs.
+
+Both, like the drilldown baselines, take only the first run of a day, not its
+reruns (`_2`, `_3`, ...).
+
 Each file also carries a short header comment describing what it produces.

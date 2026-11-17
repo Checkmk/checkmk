@@ -8,7 +8,7 @@
 import ast
 import typing
 import urllib
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable
 from http import HTTPStatus
 from typing import Any
 
@@ -17,7 +17,6 @@ from pytest_mock import MockerFixture
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.store import load_mk_file, save_mk_file, save_to_mk_file
-from cmk.crash import make_crash_report_base_path
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.user_sites import activation_sites
@@ -400,17 +399,6 @@ def test_create_rule_rejects_a_value_its_migration_cannot_read(clients: ClientRe
     resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
-@pytest.fixture
-def discard_rest_api_crash_reports() -> Iterator[None]:
-    yield
-    for crash_file in (make_crash_report_base_path(paths.omd_root) / "rest_api").glob(
-        "*/crash.info"
-    ):
-        crash_file.unlink()
-
-
-@pytest.mark.usefixtures("discard_rest_api_crash_reports")
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="crash group 4861")
 def test_create_rule_rejects_a_value_its_transform_cannot_read(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
         ruleset="extra_host_conf:notification_options",

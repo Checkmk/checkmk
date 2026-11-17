@@ -6,8 +6,10 @@
 import itertools
 import logging
 import sys
-from collections.abc import Iterable
+from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 import cmk.base.dump_host
 import cmk.livestatus_client as livestatus
@@ -19,7 +21,7 @@ from cmk.base.config import handle_ip_lookup_failure
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, OnError
-from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.fetcher_abc import Mode as FetchMode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcherConfig
@@ -28,18 +30,18 @@ from cmk.checkengine.filecache import MaxAge
 from cmk.checkengine.helper_interface import FetcherType
 from cmk.checkengine.parser import make_parser, NO_SELECTION, parse_raw_data, SectionStore
 from cmk.checkengine.source_builder import SourceBuilder
+from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.checkengine.summarize import summarize
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.plugins.checkmk.cli.dump import (
     cli_command_dump,
     cli_command_dump_agent,
     DumpAgentRequest,
+    DumpHostsRequest,
 )
-from cmk.plugins.checkmk.cli.options import host_address, host_addresses
 from cmk.plugins.checkmk.cli.output import write_stdout
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import ExecutableFinder, load_secrets_file
@@ -51,16 +53,36 @@ from ._file_cache import make_file_cache_options
 from .agent_based import load_checks
 
 
-def _mode_dump_agent(
-    omd_root: Path, global_options: CLIGlobalOptions, request: DumpAgentRequest, args: CLIArgs
-) -> CLIExitCode:
+@dataclass(frozen=True)
+class _AgentDump:
+    output: bytes
+    warnings: Sequence[str]
+    errors: Sequence[str]
+
+
+def _source_dump(ident: str, output: bytes, results: Sequence[ActiveCheckResult]) -> _AgentDump:
+    summaries = ", ".join(r.summary for r in results)
+    if any(r.state not in (0, 1) for r in results):
+        return _AgentDump(output, (), (f"ERROR [{ident}]: {summaries}",))
+    if any(r.state == 1 for r in results):
+        return _AgentDump(output, (f"WARNING [{ident}]: {summaries}",), ())
+    return _AgentDump(output, (), ())
+
+
+class _DumpAgent(Protocol):
+    def __call__(
+        self, host: HostAddress, /, request: DumpAgentRequest, *, omd_root: Path, debug: bool
+    ) -> _AgentDump: ...
+
+
+def _dump_agent(
+    hostname: HostAddress, request: DumpAgentRequest, *, omd_root: Path, debug: bool
+) -> _AgentDump:
     app = make_app(omd_root)
-    raw_host_name = args[0]
-    hostname = host_address(raw_host_name)
     file_cache_options = make_file_cache_options(request.file_cache)
 
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
+    plugins = load_checks(debug=debug)
+    loading_result = config.load(validate_hosts=True, debug=debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -112,9 +134,7 @@ def _mode_dump_agent(
             site_crt=Path(cmk.utils.paths.site_cert_file),
         )
 
-        output = []
-        warnings = []
-        errors = []
+        dumps = []
 
         secrets = (
             AdHocSecrets(
@@ -156,7 +176,7 @@ def _mode_dump_agent(
                         config_cache.label_manager.labels_of_host,
                     ),
                     force_stored_walks=False,
-                    debug=global_options.debug,
+                    debug=debug,
                 ),
             ),
             simulation_mode=loaded_config.simulation_mode,
@@ -211,7 +231,7 @@ def _mode_dump_agent(
                 source.fetcher(),
                 FetchMode.CHECKING,
                 secrets,
-                debug=global_options.debug,
+                debug=debug,
             ).raw_data
             host_sections = parse_raw_data(
                 make_parser(
@@ -232,7 +252,7 @@ def _mode_dump_agent(
                         section_cache_path=section_cache_path,
                     ),
                     keep_outdated=file_cache_options.keep_outdated,
-                    debug=global_options.debug,
+                    debug=debug,
                 ),
                 raw_data,
                 selection=NO_SELECTION,
@@ -242,49 +262,58 @@ def _mode_dump_agent(
                 config_cache.summary_config(hostname, source_info.ident),
                 fetcher_type=source_info.fetcher_type,
             )
-            summaries = ", ".join(r.summary for r in source_results)
-            if any(r.state not in (0, 1) for r in source_results):
-                errors.append(f"ERROR [{source_info.ident}]: {summaries}")
-            elif any(r.state == 1 for r in source_results):
-                warnings.append(f"WARNING [{source_info.ident}]: {summaries}")
-
+            output = b""
             if raw_data.is_ok():
                 assert raw_data.ok is not None
-                output.append(raw_data.ok)
+                output = raw_data.ok
+            dumps.append(_source_dump(source_info.ident, output, source_results))
 
-        write_stdout(b"".join(output).decode(errors="surrogateescape"))
-        for warn in warnings:
+        return _AgentDump(
+            b"".join(dump.output for dump in dumps),
+            [warning for dump in dumps for warning in dump.warnings],
+            [error for dump in dumps for error in dump.errors],
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class _DumpAgentCommand:
+    dump_agent: _DumpAgent
+
+    def run(self, context: CLIContext, request: DumpAgentRequest, _args: CLIArgs) -> CLIExitCode:
+        assert request.host is not None
+        try:
+            dump = self.dump_agent(
+                request.host, request, omd_root=context.omd_root, debug=context.global_options.debug
+            )
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+
+        write_stdout(dump.output.decode(errors="surrogateescape"))
+        for warn in dump.warnings:
             console.warning(warn, file=sys.stderr)
-        for err in errors:
+        for err in dump.errors:
             console.error(err, file=sys.stderr)
-
-        return CLIExitCode.FAILURE if errors else CLIExitCode.SUCCESS
-
-
-def _run_dump_agent(context: CLIContext, request: DumpAgentRequest, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_dump_agent(context.omd_root, context.global_options, request, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+        return CLIExitCode.FAILURE if dump.errors else CLIExitCode.SUCCESS
 
 
-def _mode_dump_hosts(
-    _omd_root: Path, global_options: CLIGlobalOptions, fake_dns: HostAddress | None, args: CLIArgs
-) -> CLIExitCode:
-    hostlist: Iterable[HostName] = host_addresses(args)
+class _DumpHosts(Protocol):
+    def __call__(self, request: DumpHostsRequest, *, debug: bool) -> None: ...
+
+
+def _dump_hosts(request: DumpHostsRequest, *, debug: bool) -> None:
     logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
+    plugins = load_checks(debug=debug)
+    loading_result = config.load(validate_hosts=True, debug=debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     config_cache = loading_result.config_cache
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.hosts_config
-    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fake_dns)
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_lookup.make_lookup_ip_address(ip_lookup_config),
@@ -298,9 +327,7 @@ def _mode_dump_hosts(
         for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
         if config_cache.is_active(hn) and config_cache.is_online(hn)
     }
-    hosts = set(hostlist)
-    if not hosts:
-        hosts = all_hosts
+    hosts = set(request.hosts) or all_hosts
 
     with ruleset_matcher.ruleset_optimizer.processed_hosts(hosts):
         service_name_config = config_cache.make_passive_service_name_config(
@@ -337,23 +364,29 @@ def _mode_dump_hosts(
                 timeperiod_active=timeperiod.TimeperiodActiveCoreLookup(
                     livestatus.get_optional_timeperiods_active_map, log=logger.warning
                 ).get,
-                debug=global_options.debug,
+                debug=debug,
             )
+
+
+@dataclass(frozen=True, kw_only=True)
+class _DumpHostsCommand:
+    dump_hosts: _DumpHosts
+
+    def run(self, context: CLIContext, request: DumpHostsRequest, _args: CLIArgs) -> CLIExitCode:
+        try:
+            self.dump_hosts(request, debug=context.global_options.debug)
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
         return CLIExitCode.SUCCESS
 
 
-def _run_dump_hosts(
-    context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs
-) -> CLIExitCode:
-    try:
-        return _mode_dump_hosts(context.omd_root, context.global_options, fake_dns, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+cli_handler_dump_agent = CLIHandler(
+    command=cli_command_dump_agent, run=_DumpAgentCommand(dump_agent=_dump_agent).run
+)
 
-
-cli_handler_dump_agent = CLIHandler(command=cli_command_dump_agent, run=_run_dump_agent)
-
-cli_handler_dump = CLIHandler(command=cli_command_dump, run=_run_dump_hosts)
+cli_handler_dump = CLIHandler(
+    command=cli_command_dump, run=_DumpHostsCommand(dump_hosts=_dump_hosts).run
+)

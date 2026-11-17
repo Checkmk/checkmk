@@ -3,8 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from pathlib import Path
+
 import cmk.ccc.version as cmk_version
-from cmk.ccc.version import edition
+from cmk.ccc.version import Edition, edition
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
@@ -14,10 +18,16 @@ from cmk.plugins.checkmk.cli.version import (
     cli_command_version,
 )
 
+type _EditionOf = Callable[[Path], Edition]
 
-def _mode_version(context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
-    write_stdout(
-        """This is %s version %s
+
+@dataclass(frozen=True, kw_only=True)
+class _VersionCommand:
+    edition_of: _EditionOf
+
+    def run(self, context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+        write_stdout(
+            """This is %s version %s
 Copyright (C) 2009 Checkmk GmbH
 
     This program is free software; you can redistribute it and/or modify
@@ -36,12 +46,14 @@ Copyright (C) 2009 Checkmk GmbH
     Boston, MA 02111-1307, USA.
 
 """
-        % (
-            edition(context.omd_root).title,
-            cmk_version.__version__,
+            % (
+                self.edition_of(context.omd_root).title,
+                cmk_version.__version__,
+            )
         )
-    )
-    return CLIExitCode.SUCCESS
+        return CLIExitCode.SUCCESS
 
 
-cli_handler_version = CLIHandler(command=cli_command_version, run=_mode_version)
+cli_handler_version = CLIHandler(
+    command=cli_command_version, run=_VersionCommand(edition_of=edition).run
+)

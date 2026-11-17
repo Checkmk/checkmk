@@ -9,6 +9,8 @@ from collections.abc import Mapping, Sequence
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.plugins import CheckPluginName
 from cmk.checkengine.snmplib import SNMPBackendEnum
+from cmk.cli.internal import Argument as CLIArgument
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli.discovery import (
@@ -35,6 +37,7 @@ def test_the_check_discovery_request_is_read_from_the_command_line() -> None:
         CACHE_FLAG: [""],
         SNMP_BACKEND_VALUE: ["inline"],
         FAKE_DNS_VALUE: ["1.2.3.4"],
+        CLIArgument(placeholder="HOSTNAME", parse=HostAddress): ["myhost"],
     }
 
     assert _check_discovery_request(
@@ -44,6 +47,7 @@ def test_the_check_discovery_request_is_read_from_the_command_line() -> None:
         usewalk=False,
         snmp_backend=SNMPBackendEnum.INLINE,
         fake_dns=HostAddress("1.2.3.4"),
+        host=HostAddress("myhost"),
     )
 
 
@@ -53,6 +57,7 @@ def test_the_discover_request_counts_the_commands_own_option() -> None:
         _ONLY_HOST_LABELS_FLAG: [""],
         _DISCOVER_COUNT: ["", ""],
         CHECK_PLUGINS_VALUE: ["df,mem"],
+        CLIArguments(placeholder="HOST1 HOST2...", parse=str): ["myhost", "@mytag"],
     }
 
     assert _discover_request(
@@ -69,4 +74,5 @@ def test_the_discover_request_counts_the_commands_own_option() -> None:
         ),
         only_host_labels=True,
         fake_dns=None,
+        hosts=("myhost", "@mytag"),
     )

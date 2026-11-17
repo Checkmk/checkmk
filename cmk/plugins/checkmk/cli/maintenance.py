@@ -4,9 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The site maintenance commands: --flush, --update-dns-cache and --cleanup-piggyback."""
 
+from collections.abc import Sequence
+
+from cmk.ccc.hostaddress import HostAddress
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import no_options as cli_no_options
+from cmk.cli.internal import Reader as CLIReader
 
 from .options import fake_dns_request
 
@@ -28,12 +32,15 @@ cli_command_cleanup_piggyback = CLICommand(
 )
 
 
+def _hosts_request(options: CLIReader) -> Sequence[HostAddress]:
+    return options.arguments(CLIArguments(placeholder="HOST1 HOST2...", parse=HostAddress))
+
+
 cli_command_flush = CLICommand(
     name="flush",
     handler="cmk.plugins.checkmk.cli.handlers.maintenance:cli_handler_flush",
     long="flush",
-    request=cli_no_options,
-    arguments=CLIArguments(placeholder="HOST1 HOST2...", parse=str),
+    request=_hosts_request,
     help="Flush all data of some or all hosts",
     description=[
         (

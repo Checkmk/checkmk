@@ -5,6 +5,7 @@
 """The HW/SW inventory commands: --inventory and --inventorize-marked-hosts."""
 
 import dataclasses
+from collections.abc import Sequence
 from typing import Final
 
 from cmk.ccc.hostaddress import HostAddress
@@ -41,6 +42,7 @@ class InventoryRequest:
     force: bool
     plugin_selection: PluginSelectionRequest[InventoryPluginName]
     fake_dns: HostAddress | None
+    hosts: Sequence[str]
 
 
 def _inventory_request(options: CLIReader) -> InventoryRequest:
@@ -51,6 +53,7 @@ def _inventory_request(options: CLIReader) -> InventoryRequest:
         force=options.flag(_FORCE_FLAG),
         plugin_selection=plugin_selection_request(options, INVENTORY_PLUGINS_VALUE),
         fake_dns=options.value(FAKE_DNS_VALUE),
+        hosts=options.arguments(CLIArguments(placeholder="HOST1 HOST2...", parse=str)),
     )
 
 
@@ -60,7 +63,6 @@ cli_command_inventory = CLICommand(
     long="inventory",
     short="i",
     request=_inventory_request,
-    arguments=CLIArguments(placeholder="HOST1 HOST2...", parse=str),
     help="Do a HW/SW Inventory on some or all hosts",
     description=[
         (

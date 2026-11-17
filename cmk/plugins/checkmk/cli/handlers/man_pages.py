@@ -4,92 +4,126 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.licensing.basics.finder import blocked_feature_files
 from cmk.plugins.checkmk.cli.man_pages import (
     cli_command_browse_man,
     cli_command_man,
-    Renderer,
+    ManRequest,
 )
 from cmk.utils import man_pages
 from cmk.utils.paths import omd_root
 
 
-def _mode_man(
-    _omd_root: Path, global_options: CLIGlobalOptions, requested: Renderer | None, args: CLIArgs
-) -> CLIExitCode:
-    man_page_path_map = man_pages.make_man_page_path_map(
-        discover_families(raise_errors=global_options.debug),
+class _ManPagePaths(Protocol):
+    def __call__(self, *, debug: bool) -> Mapping[str, Path]: ...
+
+
+type _PrintManPageTable = Callable[[Mapping[str, Path]], None]
+
+
+class _ParseManPage(Protocol):
+    def __call__(self, name: str, path: Path, *, debug: bool) -> man_pages.ManPage: ...
+
+
+def _man_page_paths(*, debug: bool) -> Mapping[str, Path]:
+    return man_pages.make_man_page_path_map(
+        discover_families(raise_errors=debug),
         PluginGroup.CHECKMAN.value,
         blocked_paths=blocked_feature_files(omd_root),
     )
-    if not args:
-        man_pages.print_man_page_table(man_page_path_map)
-        return CLIExitCode.SUCCESS
-
-    if (man_page_path := man_page_path_map.get(args[0])) is None:
-        raise MKBailOut(f"No manpage for {args[0]}. Sorry.")
-
-    man_page = man_pages.parse_man_page(args[0], man_page_path, debug=global_options.debug)
-    renderer: type[man_pages.ConsoleManPageRenderer] | type[man_pages.NowikiManPageRenderer]
-    match requested:
-        case "console" | None:
-            renderer = man_pages.ConsoleManPageRenderer
-        case "nowiki":
-            renderer = man_pages.NowikiManPageRenderer
-
-    try:
-        rendered = renderer(man_page).render_page()
-    except Exception as exc:
-        sys.stderr.write(f"ERROR: Invalid check manpage {args[0]}: {exc}\n")
-        return CLIExitCode.FAILURE
-
-    man_pages.write_output(rendered)
-    return CLIExitCode.SUCCESS
 
 
-def _run_man(context: CLIContext, requested: Renderer | None, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_man(context.omd_root, context.global_options, requested, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _ManCommand:
+    paths: _ManPagePaths
+    print_table: _PrintManPageTable
+    parse: _ParseManPage
+
+    def run(self, context: CLIContext, request: ManRequest, _args: CLIArgs) -> CLIExitCode:
+        try:
+            man_page_path_map = self.paths(debug=context.global_options.debug)
+            if request.check_type is None:
+                self.print_table(man_page_path_map)
+                return CLIExitCode.SUCCESS
+
+            if (man_page_path := man_page_path_map.get(request.check_type)) is None:
+                raise MKBailOut(f"No manpage for {request.check_type}. Sorry.")
+
+            man_page = self.parse(
+                request.check_type, man_page_path, debug=context.global_options.debug
+            )
+            renderer: type[man_pages.ConsoleManPageRenderer] | type[man_pages.NowikiManPageRenderer]
+            match request.renderer:
+                case "console" | None:
+                    renderer = man_pages.ConsoleManPageRenderer
+                case "nowiki":
+                    renderer = man_pages.NowikiManPageRenderer
+
+            try:
+                rendered = renderer(man_page).render_page()
+            except Exception as exc:
+                sys.stderr.write(f"ERROR: Invalid check manpage {request.check_type}: {exc}\n")
+                return CLIExitCode.FAILURE
+
+            man_pages.write_output(rendered)
+            return CLIExitCode.SUCCESS
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
 
 
-def _mode_browse_man(
-    _omd_root: Path, global_options: CLIGlobalOptions, _request: None, _args: CLIArgs
-) -> CLIExitCode:
+class _BrowseManPages(Protocol):
+    def __call__(self, *, debug: bool) -> None: ...
+
+
+def _browse_man_pages(*, debug: bool) -> None:
     man_pages.print_man_page_browser(
         man_pages.load_man_page_catalog(
-            discover_families(raise_errors=global_options.debug),
+            discover_families(raise_errors=debug),
             PluginGroup.CHECKMAN.value,
             blocked_paths=blocked_feature_files(omd_root),
-            debug=global_options.debug,
+            debug=debug,
         )
     )
-    return CLIExitCode.SUCCESS
 
 
-def _run_browse_man(context: CLIContext, request: None, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_browse_man(context.omd_root, context.global_options, request, args)
-    except MKGeneralException as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _BrowseManCommand:
+    browse: _BrowseManPages
+
+    def run(self, context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+        try:
+            self.browse(debug=context.global_options.debug)
+        except MKGeneralException as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+        return CLIExitCode.SUCCESS
 
 
-cli_handler_man = CLIHandler(command=cli_command_man, run=_run_man)
+cli_handler_man = CLIHandler(
+    command=cli_command_man,
+    run=_ManCommand(
+        paths=_man_page_paths,
+        print_table=man_pages.print_man_page_table,
+        parse=man_pages.parse_man_page,
+    ).run,
+)
 
-cli_handler_browse_man = CLIHandler(command=cli_command_browse_man, run=_run_browse_man)
+cli_handler_browse_man = CLIHandler(
+    command=cli_command_browse_man, run=_BrowseManCommand(browse=_browse_man_pages).run
+)

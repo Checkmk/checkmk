@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The "cmk --automation" command, the entry point of the automation calls."""
 
+from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Final
 
 import cmk.ccc.version as cmk_version
@@ -29,15 +31,23 @@ _FOR_CMK_VERSION_VALUE: Final = CLIValue(
 )
 
 
-def _for_cmk_version_request(options: CLIReader) -> str | None:
-    return options.value(_FOR_CMK_VERSION_VALUE)
+@dataclass(frozen=True, kw_only=True)
+class AutomationRequest:
+    for_cmk_version: str | None
+    arguments: Sequence[str]
+
+
+def _automation_request(options: CLIReader) -> AutomationRequest:
+    return AutomationRequest(
+        for_cmk_version=options.value(_FOR_CMK_VERSION_VALUE),
+        arguments=options.arguments(CLIArguments(placeholder="COMMAND...", parse=str)),
+    )
 
 
 cli_command_automation = CLICommand(
     name="automation",
     handler="cmk.plugins.checkmk.cli.handlers.automation:cli_handler_automation",
     long="automation",
-    request=_for_cmk_version_request,
-    arguments=CLIArguments(placeholder="COMMAND...", parse=str),
+    request=_automation_request,
     help="Internal helper to invoke Check_MK actions",
 )

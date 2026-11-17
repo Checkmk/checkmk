@@ -5,14 +5,16 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.ccc.hostaddress import HostAddress
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPBackendEnum
+from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli.check import (
     _checking_request,
     _NO_SUBMIT_FLAG,
+    _PERFDATA_FLAG,
     CheckingRequest,
 )
 from cmk.plugins.checkmk.cli.options import (
@@ -33,11 +35,14 @@ def test_the_checking_request_is_read_from_the_command_line() -> None:
         NO_CACHE_FLAG: [""],
         USEWALK_FLAG: [""],
         _NO_SUBMIT_FLAG: [""],
+        _PERFDATA_FLAG: [""],
         SNMP_BACKEND_VALUE: ["classic"],
         DETECT_SECTIONS_VALUE: ["df,mem"],
         CHECK_PLUGINS_VALUE: ["df"],
         DETECT_PLUGINS_VALUE: ["cpu_loads"],
         FAKE_DNS_VALUE: ["1.2.3.4"],
+        CLIArgument(placeholder="HOST", parse=HostName): ["myhost"],
+        CLIArgument(placeholder="IPADDRESS", parse=HostAddress, optional=True): ["10.0.0.1"],
     }
 
     assert _checking_request(
@@ -47,11 +52,13 @@ def test_the_checking_request_is_read_from_the_command_line() -> None:
         usewalk=True,
         snmp_backend=SNMPBackendEnum.CLASSIC,
         no_submit=True,
-        perfdata=False,
+        perfdata=True,
         plugin_selection=PluginSelectionRequest(
             detect_sections=frozenset({SectionName("df"), SectionName("mem")}),
             plugins=frozenset({CheckPluginName("df")}),
             detect_plugins=frozenset({"cpu_loads"}),
         ),
         fake_dns=HostAddress("1.2.3.4"),
+        host=HostName("myhost"),
+        address=HostAddress("10.0.0.1"),
     )

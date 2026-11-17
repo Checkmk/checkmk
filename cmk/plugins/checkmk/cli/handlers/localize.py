@@ -7,6 +7,7 @@ import logging
 import os
 import subprocess
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 
 import cmk.utils.paths
@@ -32,10 +33,6 @@ class LocalizeException(MKException):
 
 
 domain = "multisite"
-
-
-def _mode_localize(_context: CLIContext, _request: None, args: CLIArgs) -> CLIExitCode:
-    return do_localize(list(args))
 
 
 def _locale_base() -> Path:
@@ -89,7 +86,7 @@ Available commands are:
     )
 
 
-def do_localize(args: list[str]) -> CLIExitCode:
+def do_localize(args: Sequence[str]) -> CLIExitCode:
     if len(args) == 0:
         _write_usage_to_stderr()
         return CLIExitCode.FAILURE
@@ -313,4 +310,8 @@ def _initialize_local_po_file(lang: LanguageName) -> None:
         )
 
 
-cli_handler_localize = CLIHandler(command=cli_command_localize, run=_mode_localize)
+def _run_localize(_context: CLIContext, arguments: Sequence[str], _args: CLIArgs) -> CLIExitCode:
+    return do_localize(arguments)
+
+
+cli_handler_localize = CLIHandler(command=cli_command_localize, run=_run_localize)

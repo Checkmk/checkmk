@@ -8,7 +8,9 @@ import itertools
 import sys
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import suppress
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -40,7 +42,7 @@ from cmk.base.errorhandling import (
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, OnError
-from cmk.ccc.hostaddress import HostName, Hosts
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checking import make_timing_results
 from cmk.checkengine.discovery import (
     AutochecksStore,
@@ -58,7 +60,6 @@ from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.plugins.checkmk.cli.discovery import (
     CheckDiscoveryRequest,
@@ -66,7 +67,6 @@ from cmk.plugins.checkmk.cli.discovery import (
     cli_command_discover,
     DiscoverRequest,
 )
-from cmk.plugins.checkmk.cli.options import host_address
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
@@ -84,19 +84,23 @@ def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:
     return check_result.state
 
 
-def _mode_check_discovery(
-    omd_root: Path, global_options: CLIGlobalOptions, request: CheckDiscoveryRequest, args: CLIArgs
-) -> CLIExitCode:
+class _CheckDiscovery(Protocol):
+    def __call__(
+        self, host: HostAddress, /, request: CheckDiscoveryRequest, *, omd_root: Path, debug: bool
+    ) -> ActiveCheckResult: ...
+
+
+def _check_discovery(
+    hostname: HostAddress, request: CheckDiscoveryRequest, *, omd_root: Path, debug: bool
+) -> ActiveCheckResult:
     app = make_app(omd_root)
-    raw_host_name = args[0]
-    hostname = host_address(raw_host_name)
     file_cache_options = make_file_cache_options(request.file_cache)
 
     # We do not resolve the `latest` link here, as any given serial might be removed by the core.
     latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
 
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
+    plugins = load_checks(debug=debug)
+    loading_result = config.load(validate_hosts=True, debug=debug)
     loaded_config = loading_result.loaded_config
     config_cache = loading_result.config_cache
     ruleset_matcher = config_cache.ruleset_matcher
@@ -105,11 +109,7 @@ def _mode_check_discovery(
     if hostname not in hosts_config.all_configured_hosts:
         # There is no configuration to discover from, hence no data source to contact.
         # Such a host must not be reported as "all up to date".
-        return state_exit_code(
-            _write_active_check_result(
-                ActiveCheckResult(state=3, summary=f"Unknown host: {hostname}")
-            )
-        )
+        return ActiveCheckResult(state=3, summary=f"Unknown host: {hostname}")
 
     host_tags = loading_result.host_tags
     set_global_logwatch_config(
@@ -118,7 +118,7 @@ def _mode_check_discovery(
         label_manager,
         omd_root=cmk.utils.paths.omd_root,
         var_dir=cmk.utils.paths.var_dir,
-        debug=global_options.debug,
+        debug=debug,
     )
 
     with ruleset_matcher.ruleset_optimizer.processed_hosts({hostname}):
@@ -179,7 +179,7 @@ def _mode_check_discovery(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
                     force_stored_walks=request.usewalk,
-                    debug=global_options.debug,
+                    debug=debug,
                 ),
             ),
             plugins=plugins,
@@ -209,7 +209,7 @@ def _mode_check_discovery(
                 path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
                 secrets=secrets,
             ),
-            debug=global_options.debug,
+            debug=debug,
         )
         parser = CMKParser(
             config.make_parser_config(
@@ -220,7 +220,7 @@ def _mode_check_discovery(
             ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
-            debug=global_options.debug,
+            debug=debug,
         )
         summarizer = CMKSummarizer(
             hostname,
@@ -237,7 +237,7 @@ def _mode_check_discovery(
             snmp_backend=config_cache.get_snmp_backend(hostname),
             keepalive=False,
             get_agent_output=lambda: recording_fetcher.serialized(hostname),
-            debug=global_options.debug,
+            debug=debug,
         )
 
         check_results: Sequence[ActiveCheckResult] = []
@@ -278,9 +278,9 @@ def _mode_check_discovery(
                     enforced_services=enforced_services_table(hostname),
                     read_autochecks=lambda hn: AutochecksStore(
                         hn, cmk.utils.paths.autochecks_dir
-                    ).read(debug=global_options.debug),
+                    ).read(debug=debug),
                     read_discovered_host_labels=label_manager.discovered_labels_of_host,
-                    debug=global_options.debug,
+                    debug=debug,
                 )
             check_results = [
                 *check_results,
@@ -294,21 +294,27 @@ def _mode_check_discovery(
         if error_handler.result is not None:
             check_results = (error_handler.result,)
 
-        return state_exit_code(
-            _write_active_check_result(ActiveCheckResult.from_subresults(*check_results))
-        )
+        return ActiveCheckResult.from_subresults(*check_results)
 
 
-def _run_check_discovery(
-    context: CLIContext, request: CheckDiscoveryRequest, args: CLIArgs
-) -> CLIExitCode:
-    try:
-        return _mode_check_discovery(context.omd_root, context.global_options, request, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _CheckDiscoveryCommand:
+    check_discovery: _CheckDiscovery
+
+    def run(
+        self, context: CLIContext, request: CheckDiscoveryRequest, _args: CLIArgs
+    ) -> CLIExitCode:
+        assert request.host is not None
+        try:
+            check_result = self.check_discovery(
+                request.host, request, omd_root=context.omd_root, debug=context.global_options.debug
+            )
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+        return state_exit_code(_write_active_check_result(check_result))
 
 
 def _preprocess_hostnames(
@@ -337,12 +343,14 @@ def _preprocess_hostnames(
     return node_names
 
 
-def _mode_discover(
-    omd_root: Path, global_options: CLIGlobalOptions, request: DiscoverRequest, args: CLIArgs
-) -> CLIExitCode:
+class _Discover(Protocol):
+    def __call__(self, request: DiscoverRequest, *, omd_root: Path, debug: bool) -> bool: ...
+
+
+def _discover(request: DiscoverRequest, *, omd_root: Path, debug: bool) -> bool:
     app = make_app(omd_root)
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
+    plugins = load_checks(debug=debug)
+    loading_result = config.load(validate_hosts=True, debug=debug)
     loaded_config = loading_result.loaded_config
     hosts_config = loading_result.hosts_config
     host_tags = loading_result.host_tags
@@ -355,7 +363,7 @@ def _mode_discover(
         label_manager,
         omd_root=cmk.utils.paths.omd_root,
         var_dir=cmk.utils.paths.var_dir,
-        debug=global_options.debug,
+        debug=debug,
     )
 
     discovery_config = DiscoveryConfig(
@@ -383,7 +391,7 @@ def _mode_discover(
         error_handler=config.handle_ip_lookup_failure,
     )
 
-    hostnames = config.parse_hostname_list(config_cache, hosts_config, host_tags, args)
+    hostnames = config.parse_hostname_list(config_cache, hosts_config, host_tags, request.hosts)
     if hostnames:
         # In case of discovery with host restriction, do not use the cache
         # file by default as -I and -II are used for debugging.
@@ -402,7 +410,7 @@ def _mode_discover(
             request.file_cache, defaults=file_cache_options
         )
 
-        on_error = OnError.RAISE if global_options.debug else OnError.WARN
+        on_error = OnError.RAISE if debug else OnError.WARN
         selected_sections, run_plugin_names = extract_plugin_selection(
             detect_plugins=request.plugin_selection.detect_plugins,
             detect_sections=request.plugin_selection.detect_sections,
@@ -422,7 +430,7 @@ def _mode_discover(
             ),
             selected_sections=selected_sections,
             keep_outdated=file_cache_options.keep_outdated,
-            debug=global_options.debug,
+            debug=debug,
         )
         fetcher = CMKFetcher(
             config_cache,
@@ -457,7 +465,7 @@ def _mode_discover(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
                     force_stored_walks=request.usewalk,
-                    debug=global_options.debug,
+                    debug=debug,
                 ),
             ),
             plugins=plugins,
@@ -488,7 +496,7 @@ def _mode_discover(
                 path=cmk.utils.password_store.pending_secrets_path_site(),
                 secrets=secrets,
             ),
-            debug=global_options.debug,
+            debug=debug,
         )
         recording_fetcher = RecordingFetcher(fetcher)
         any_failed = False
@@ -549,25 +557,35 @@ def _mode_discover(
                 autochecks_dir=cmk.utils.paths.autochecks_dir,
                 discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
                 inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
-                debug=global_options.debug,
+                debug=debug,
             )
             any_failed |= not succeeded
 
-        return CLIExitCode.FAILURE if any_failed else CLIExitCode.SUCCESS
+        return not any_failed
 
 
-def _run_discover(context: CLIContext, request: DiscoverRequest, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_discover(context.omd_root, context.global_options, request, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _DiscoverCommand:
+    discover: _Discover
+
+    def run(self, context: CLIContext, request: DiscoverRequest, _args: CLIArgs) -> CLIExitCode:
+        try:
+            succeeded = self.discover(
+                request, omd_root=context.omd_root, debug=context.global_options.debug
+            )
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+        return CLIExitCode.SUCCESS if succeeded else CLIExitCode.FAILURE
 
 
 cli_handler_check_discovery = CLIHandler(
-    command=cli_command_check_discovery, run=_run_check_discovery
+    command=cli_command_check_discovery,
+    run=_CheckDiscoveryCommand(check_discovery=_check_discovery).run,
 )
 
-cli_handler_discover = CLIHandler(command=cli_command_discover, run=_run_discover)
+cli_handler_discover = CLIHandler(
+    command=cli_command_discover, run=_DiscoverCommand(discover=_discover).run
+)

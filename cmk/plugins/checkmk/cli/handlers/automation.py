@@ -4,26 +4,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import sys
-from contextlib import nullcontext, suppress
+from contextlib import nullcontext
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk import trace
 from cmk.automations.engine import AutomationError, Automations, discover_automations
-from cmk.automations.internal import AutomationID
+from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.base import config
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout
 from cmk.ccc.store import lock_checkmk_configuration
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.plugins.checkmk.cli.automation import (
+    AutomationRequest,
     cli_command_automation,
 )
+from cmk.plugins.checkmk.cli.output import write_stdout
 
 logger = logging.getLogger(__name__)
 
@@ -39,62 +41,79 @@ def _automation_error_exit_code(error: AutomationError) -> CLIExitCode:
             return CLIExitCode.ERROR
 
 
-def _mode_automation(
-    omd_root: Path, global_options: CLIGlobalOptions, requested_version: str | None, args: CLIArgs
-) -> CLIExitCode:
-    if not args:
-        raise MKBailOut("You need to provide arguments")
+class _ExecuteAutomation(Protocol):
+    def __call__(
+        self, name: AutomationID, args: list[str], *, omd_root: Path, debug: bool
+    ) -> AutomationResult | AutomationError: ...
 
-    name, automation_args = AutomationID(args[0]), list(args[1:])
-    for_cmk_version = cmk_version.__version__ if requested_version is None else requested_version
-    automations = Automations(discover_automations(), debug=global_options.debug)
+
+def _execute_automation(
+    name: AutomationID, args: list[str], *, omd_root: Path, debug: bool
+) -> AutomationResult | AutomationError:
+    automations = Automations(discover_automations(), debug=debug)
     with tracer.span(
         f"mode_automation[{name}]",
         attributes={
             "cmk.automation.name": name,
-            "cmk.automation.args": automation_args,
+            "cmk.automation.args": args,
         },
     ):
-        # Report a broken configuration the way the engine reports a failing automation.
         try:
             with (
                 lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile)
                 if automations.wants_configuration_lock(name)
                 else nullcontext(),
-                config.exit_on_config_file_load_error(debug=global_options.debug),
+                config.exit_on_config_file_load_error(debug=debug),
             ):
                 raw_config = config.load_raw_config()
             automations.update(omd_root, raw_config)
         except (MKGeneralException, MKTimeout) as e:
             logger.error("Loading the configuration failed: %(error)s", {"error": e})  # noqa: TRY400
-            if global_options.debug:
+            if debug:
                 raise
-            return _automation_error_exit_code(AutomationError.KNOWN_ERROR)
+            return AutomationError.KNOWN_ERROR
         except Exception:
             logger.exception("Loading the configuration failed")
-            if global_options.debug:
+            if debug:
                 raise
-            return _automation_error_exit_code(AutomationError.UNKNOWN_ERROR)
+            return AutomationError.UNKNOWN_ERROR
 
-        result = automations.execute(name, automation_args)
-        if isinstance(result, AutomationError):
-            return _automation_error_exit_code(result)
-        with suppress(IOError):
-            sys.stdout.write(result.serialize(for_cmk_version) + "\n")
-            sys.stdout.flush()
-        return CLIExitCode.SUCCESS
+        return automations.execute(name, args)
 
 
-def _run_automation(
-    context: CLIContext, requested_version: str | None, args: CLIArgs
-) -> CLIExitCode:
-    try:
-        return _mode_automation(context.omd_root, context.global_options, requested_version, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _AutomationCommand:
+    execute: _ExecuteAutomation
+
+    def run(self, context: CLIContext, request: AutomationRequest, _args: CLIArgs) -> CLIExitCode:
+        try:
+            if not request.arguments:
+                raise MKBailOut("You need to provide arguments")
+
+            name, *args = request.arguments
+            result = self.execute(
+                AutomationID(name),
+                args,
+                omd_root=context.omd_root,
+                debug=context.global_options.debug,
+            )
+            if isinstance(result, AutomationError):
+                return _automation_error_exit_code(result)
+
+            for_cmk_version = (
+                cmk_version.__version__
+                if request.for_cmk_version is None
+                else request.for_cmk_version
+            )
+            write_stdout(result.serialize(for_cmk_version) + "\n")
+            return CLIExitCode.SUCCESS
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
 
 
-cli_handler_automation = CLIHandler(command=cli_command_automation, run=_run_automation)
+cli_handler_automation = CLIHandler(
+    command=cli_command_automation, run=_AutomationCommand(execute=_execute_automation).run
+)

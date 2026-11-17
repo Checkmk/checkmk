@@ -7,6 +7,7 @@
 from collections.abc import Mapping, Sequence
 
 from cmk.checkengine.plugins import InventoryPluginName, SectionName
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli.inventory import (
@@ -29,6 +30,7 @@ def test_the_inventory_request_is_read_from_the_command_line() -> None:
         _FORCE_FLAG: [""],
         DETECT_SECTIONS_VALUE: ["lnx_if"],
         INVENTORY_PLUGINS_VALUE: ["lnx_if"],
+        CLIArguments(placeholder="HOST1 HOST2...", parse=str): ["myhost"],
     }
 
     assert _inventory_request(
@@ -44,4 +46,5 @@ def test_the_inventory_request_is_read_from_the_command_line() -> None:
             detect_plugins=None,
         ),
         fake_dns=None,
+        hosts=("myhost",),
     )

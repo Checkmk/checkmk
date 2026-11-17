@@ -6,10 +6,9 @@
 import dataclasses
 import enum
 import itertools
-import sys
 from collections.abc import Iterable, Sequence
-from contextlib import suppress
-from pathlib import Path
+from dataclasses import dataclass
+from typing import Protocol
 
 from cmk.base import config
 from cmk.base.config import ConfigCache
@@ -27,7 +26,6 @@ from cmk.checkengine.plugins import (
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.plugins.checkmk.cli.list_config import (
@@ -51,7 +49,6 @@ def _list_all_hosts(
     config_cache: ConfigCache,
     hosts_config: Hosts,
     core_objects_config: config.CoreObjectsConfig,
-    hostgroups: Sequence[str],
     request: ListHostsRequest,
 ) -> list[HostName]:
     hostnames: Iterable[HostName]
@@ -71,50 +68,54 @@ def _list_all_hosts(
         )
 
     hostnames = sorted(set(hostnames))
-    if not hostgroups:
+    if not request.host_groups:
         return hostnames
 
     hostlist = []
     for hn in hostnames:
         for hg in core_objects_config.hostgroups(hn):
-            if hg in hostgroups:
+            if hg in request.host_groups:
                 hostlist.append(hn)
                 break
 
     return hostlist
 
 
-def _mode_list_hosts(
-    _omd_root: Path, global_options: CLIGlobalOptions, request: ListHostsRequest, args: CLIArgs
-) -> CLIExitCode:
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
+class _ListHosts(Protocol):
+    def __call__(self, request: ListHostsRequest, *, debug: bool) -> Sequence[HostName]: ...
+
+
+def _list_hosts(request: ListHostsRequest, *, debug: bool) -> Sequence[HostName]:
+    loading_result = config.load(validate_hosts=True, debug=debug)
     config_cache = loading_result.config_cache
     core_objects_config = config.CoreObjectsConfig(
         loading_result.loaded_config,
         config_cache.ruleset_matcher,
         config_cache.label_manager,
     )
-    hosts = _list_all_hosts(
+    return _list_all_hosts(
         config_cache,
         loading_result.hosts_config,
         core_objects_config,
-        args,
         request,
     )
-    with suppress(IOError):
-        sys.stdout.write("\n".join(hosts) + "\n")
-        sys.stdout.flush()
-    return CLIExitCode.SUCCESS
 
 
-def _run_list_hosts(context: CLIContext, request: ListHostsRequest, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_list_hosts(context.omd_root, context.global_options, request, args)
-    except MKGeneralException as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _ListHostsCommand:
+    list_hosts: _ListHosts
+
+    def run(self, context: CLIContext, request: ListHostsRequest, _args: CLIArgs) -> CLIExitCode:
+        try:
+            hosts = self.list_hosts(request, debug=context.global_options.debug)
+        except MKGeneralException as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+
+        write_stdout("\n".join(hosts) + "\n")
+        return CLIExitCode.SUCCESS
 
 
 def _list_all_hosts_with_tags(
@@ -142,30 +143,37 @@ def _list_all_hosts_with_tags(
     return hosts
 
 
-def _mode_list_tag(
-    _omd_root: Path, global_options: CLIGlobalOptions, _request: None, args: CLIArgs
-) -> CLIExitCode:
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
-    hosts = _list_all_hosts_with_tags(
-        tuple(TagID(_) for _ in args),
+class _ListHostsWithTags(Protocol):
+    def __call__(self, tags: Sequence[TagID], *, debug: bool) -> Sequence[HostName]: ...
+
+
+def _list_hosts_with_tags(tags: Sequence[TagID], *, debug: bool) -> Sequence[HostName]:
+    loading_result = config.load(validate_hosts=True, debug=debug)
+    return _list_all_hosts_with_tags(
+        tags,
         loading_result.config_cache,
         loading_result.hosts_config,
         loading_result.host_tags,
     )
-    write_stdout("\n".join(sorted(hosts)))
-    if hosts:
-        write_stdout("\n")
-    return CLIExitCode.SUCCESS
 
 
-def _run_list_tag(context: CLIContext, request: None, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_list_tag(context.omd_root, context.global_options, request, args)
-    except MKGeneralException as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _ListTagCommand:
+    list_hosts_with_tags: _ListHostsWithTags
+
+    def run(self, context: CLIContext, tags: Sequence[TagID], _args: CLIArgs) -> CLIExitCode:
+        try:
+            hosts = self.list_hosts_with_tags(tags, debug=context.global_options.debug)
+        except MKGeneralException as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+
+        write_stdout("\n".join(sorted(hosts)))
+        if hosts:
+            write_stdout("\n")
+        return CLIExitCode.SUCCESS
 
 
 class _DSType(enum.Enum):
@@ -219,19 +227,21 @@ def _get_ds_type(
     return _DSType.AGENT_SNMP
 
 
-def _mode_list_checks(
-    _omd_root: Path, global_options: CLIGlobalOptions, _request: None, _args: CLIArgs
-) -> CLIExitCode:
-    plugins = load_checks(debug=global_options.debug)
+class _CheckTable(Protocol):
+    def __call__(self, *, debug: bool) -> Sequence[_TableRow]: ...
+
+
+def _check_table(*, debug: bool) -> Sequence[_TableRow]:
+    plugins = load_checks(debug=debug)
     section_plugins: Iterable[AgentSectionPlugin | SNMPSectionPlugin] = [
         *plugins.agent_sections.values(),
         *plugins.snmp_sections.values(),
     ]
 
     all_check_manuals = {
-        n: man_pages.parse_man_page(n, p, debug=global_options.debug)
+        n: man_pages.parse_man_page(n, p, debug=debug)
         for n, p in man_pages.make_man_page_path_map(
-            discover_families(raise_errors=global_options.debug),
+            discover_families(raise_errors=debug),
             PluginGroup.CHECKMAN.value,
         ).items()
     }
@@ -242,14 +252,14 @@ def _mode_list_checks(
         except KeyError:
             return "(no man page present)"
 
-    table = [
+    return [
         *(
             _TableRow(
                 name=(name := f"check_{p.name}"),
                 ds_type=_DSType.ACTIVE,
                 title=_get_title(name),
             )
-            for p in load_active_checks(raise_errors=global_options.debug).values()
+            for p in load_active_checks(raise_errors=debug).values()
         ),
         *(
             _TableRow(
@@ -261,23 +271,34 @@ def _mode_list_checks(
         ),
     ]
 
-    for e in sorted(table, key=lambda e: e.name):
-        write_stdout(f"{e.render_tty()}\n")
-    return CLIExitCode.SUCCESS
+
+@dataclass(frozen=True, kw_only=True)
+class _ListChecksCommand:
+    check_table: _CheckTable
+
+    def run(self, context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+        try:
+            table = self.check_table(debug=context.global_options.debug)
+        except MKGeneralException as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+
+        for row in sorted(table, key=lambda row: row.name):
+            write_stdout(f"{row.render_tty()}\n")
+        return CLIExitCode.SUCCESS
 
 
-def _run_list_checks(context: CLIContext, request: None, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_list_checks(context.omd_root, context.global_options, request, args)
-    except MKGeneralException as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+cli_handler_list_hosts = CLIHandler(
+    command=cli_command_list_hosts, run=_ListHostsCommand(list_hosts=_list_hosts).run
+)
 
+cli_handler_list_tag = CLIHandler(
+    command=cli_command_list_tag,
+    run=_ListTagCommand(list_hosts_with_tags=_list_hosts_with_tags).run,
+)
 
-cli_handler_list_hosts = CLIHandler(command=cli_command_list_hosts, run=_run_list_hosts)
-
-cli_handler_list_tag = CLIHandler(command=cli_command_list_tag, run=_run_list_tag)
-
-cli_handler_list_checks = CLIHandler(command=cli_command_list_checks, run=_run_list_checks)
+cli_handler_list_checks = CLIHandler(
+    command=cli_command_list_checks, run=_ListChecksCommand(check_table=_check_table).run
+)

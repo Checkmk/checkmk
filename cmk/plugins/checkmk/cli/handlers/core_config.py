@@ -6,7 +6,9 @@
 import itertools
 import sys
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 import cmk.ccc.site
 import cmk.utils.password_store
@@ -23,15 +25,14 @@ from cmk.ccc.store import activation_lock
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.plugins.checkmk.cli.core_config import (
     cli_command_nagios_config,
     cli_command_reload,
     cli_command_restart,
     cli_command_update,
+    CoreConfigRequest,
 )
-from cmk.plugins.checkmk.cli.options import host_addresses
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import config_warnings, ip_lookup, timeperiod
@@ -40,17 +41,15 @@ from cmk.utils.log import console
 from .agent_based import load_checks
 
 
-def _mode_dump_nagios_config(
-    omd_root: Path,
-    global_options: CLIGlobalOptions,
-    fake_dns: HostAddress | None,
-    raw_host_names: CLIArgs,
-) -> CLIExitCode:
-    app = make_app(omd_root)
-    args = host_addresses(raw_host_names)
+class _ConfigureCore(Protocol):
+    def __call__(self, request: CoreConfigRequest, *, omd_root: Path, debug: bool) -> None: ...
 
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
+
+def _dump_nagios_config(request: CoreConfigRequest, *, omd_root: Path, debug: bool) -> None:
+    app = make_app(omd_root)
+
+    plugins = load_checks(debug=debug)
+    loading_result = config.load(validate_hosts=True, debug=debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -58,9 +57,7 @@ def _mode_dump_nagios_config(
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.hosts_config
 
-    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
-
-    hostnames = args if args else None
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fake_dns)
 
     if loaded_config.host_notification_periods:
         config_warnings.warn(
@@ -72,16 +69,14 @@ def _mode_dump_nagios_config(
             "service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead."
         )
 
-    if hostnames is None:
-        hostnames = sorted(
-            {
-                hn
-                for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
-                if config_cache.is_active(hn) and config_cache.is_online(hn)
-            }
-        )
-    else:
-        hostnames = sorted(hostnames)
+    hostnames = sorted(
+        request.hosts
+        or {
+            hn
+            for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        }
+    )
 
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
     service_name_config = config_cache.make_passive_service_name_config(final_service_name_config)
@@ -108,7 +103,7 @@ def _mode_dump_nagios_config(
         hostnames=hostnames,
         # This only dumps the configuration; unlike an activation it deliberately
         # does not persist the licensed state.
-        licensing_handler=app.licensing_handler_factory(debug=global_options.debug),
+        licensing_handler=app.licensing_handler_factory(debug=debug),
         passwords=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         default_address_family=ip_lookup_config.default_address_family,
@@ -120,24 +115,11 @@ def _mode_dump_nagios_config(
         service_depends_on=config.ServiceDependsOn(
             tag_list=loading_result.host_tags.tag_list,
             service_dependencies=loading_result.loaded_config.service_dependencies,
-            debug=global_options.debug,
+            debug=debug,
         ),
         timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
         get_relay_id=lambda host_name: config.get_relay_id(label_manager.labels_of_host(host_name)),
     )
-    return CLIExitCode.SUCCESS
-
-
-def _run_dump_nagios_config(
-    context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs
-) -> CLIExitCode:
-    try:
-        return _mode_dump_nagios_config(context.omd_root, context.global_options, fake_dns, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
 
 
 def _make_configured_notify_relay(
@@ -166,12 +148,14 @@ def _make_configured_notify_relay(
     ).publish_new_config
 
 
-def _mode_update(
-    omd_root: Path, global_options: CLIGlobalOptions, fake_dns: HostAddress | None, _args: CLIArgs
-) -> CLIExitCode:
+class _Update(Protocol):
+    def __call__(self, fake_dns: HostAddress | None, *, omd_root: Path, debug: bool) -> bool: ...
+
+
+def _update(fake_dns: HostAddress | None, *, omd_root: Path, debug: bool) -> bool:
     app = make_app(omd_root)
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
+    plugins = load_checks(debug=debug)
+    loading_result = config.load(validate_hosts=True, debug=debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -225,7 +209,7 @@ def _mode_update(
                 service_depends_on=config.ServiceDependsOn(
                     tag_list=loading_result.host_tags.tag_list,
                     service_dependencies=loading_result.loaded_config.service_dependencies,
-                    debug=global_options.debug,
+                    debug=debug,
                 ),
                 duplicates=sorted(
                     hosts_config.duplicates(
@@ -240,151 +224,152 @@ def _mode_update(
                 edition=app.edition,
                 loaded_config=loaded_config,
                 make_fetcher_trigger=app.make_fetcher_trigger,
-                debug=global_options.debug,
+                debug=debug,
             )
     except Exception as e:
         console.error(f"Configuration Error: {e}", file=sys.stderr)
-        if global_options.debug:
+        if debug:
             raise
-        return CLIExitCode.FAILURE
+        return False
 
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
-    return CLIExitCode.SUCCESS
+    return True
 
 
-def _run_update(context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_update(context.omd_root, context.global_options, fake_dns, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _UpdateCommand:
+    update: _Update
 
-
-def _mode_activate(
-    action: core_interface.CoreAction,
-    omd_root: Path,
-    global_options: CLIGlobalOptions,
-    fake_dns: HostAddress | None,
-    raw_host_names: CLIArgs,
-) -> CLIExitCode:
-    app = make_app(omd_root)
-    args = host_addresses(raw_host_names)
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
-    loaded_config = loading_result.loaded_config
-    ruleset_matcher = loading_result.config_cache.ruleset_matcher
-    label_manager = loading_result.config_cache.label_manager
-    core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
-    hosts_config = loading_result.hosts_config
-
-    ip_lookup_config = loading_result.config_cache.ip_lookup_config(fake_dns=fake_dns)
-
-    ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        allow_empty=hosts_config.clusters,
-        error_handler=ip_lookup.CollectFailedHosts(),
-    )
-    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
-    final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
-    passive_service_name_config = loading_result.config_cache.make_passive_service_name_config(
-        final_service_name_config
-    )
-
-    core, core_client = app.create_core(loaded_config)
-
-    core_interface.build_and_activate_monitoring_config(
-        action,
-        loading_result.config_cache,
-        core_objects_config,
-        hosts_config,
-        loading_result.host_tags,
-        final_service_name_config,
-        passive_service_name_config,
-        config.EnforcedServicesTable(
-            BundledHostRulesetMatcher(
-                loaded_config.static_checks,
-                ruleset_matcher,
-                label_manager.labels_of_host,
-            ),
-            passive_service_name_config,
-            plugins.check_plugins,
-            label_manager.labels_of_service,
-        ),
-        ip_lookup_config.ip_stack_config,
-        ip_lookup_config.default_address_family,
-        ip_address_of,
-        ip_address_of_mgmt,
-        core_client,
-        plugins,
-        config_builders=core_interface.config_builders(core),
-        hosts_to_update=set(args) if args else None,
-        locking_mode=loaded_config.restart_locking,
-        service_depends_on=config.ServiceDependsOn(
-            tag_list=loading_result.host_tags.tag_list,
-            service_dependencies=loaded_config.service_dependencies,
-            debug=global_options.debug,
-        ),
-        duplicates=sorted(
-            hosts_config.duplicates(
-                lambda hn: (
-                    loading_result.config_cache.is_active(hn)
-                    and loading_result.config_cache.is_online(hn)
-                )
+    def run(self, context: CLIContext, fake_dns: HostAddress | None, _args: CLIArgs) -> CLIExitCode:
+        try:
+            updated = self.update(
+                fake_dns, omd_root=context.omd_root, debug=context.global_options.debug
             )
-        ),
-        notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
-        licensing_handler_factory=app.licensing_handler_factory,
-        edition=app.edition,
-        loaded_config=loaded_config,
-        make_fetcher_trigger=app.make_fetcher_trigger,
-        debug=global_options.debug,
-    )
-    for warning in ip_address_of.error_handler.format_errors():
-        console.warning(tty.format_warning(f"\n{warning}"))
-    return CLIExitCode.SUCCESS
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+        return CLIExitCode.SUCCESS if updated else CLIExitCode.FAILURE
 
 
-def _run_restart(context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_activate(
-            core_interface.CoreAction.RESTART,
-            context.omd_root,
-            context.global_options,
-            fake_dns,
-            args,
+@dataclass(frozen=True, kw_only=True)
+class _Activation:
+    action: core_interface.CoreAction
+
+    def activate(self, request: CoreConfigRequest, *, omd_root: Path, debug: bool) -> None:
+        app = make_app(omd_root)
+        plugins = load_checks(debug=debug)
+        loading_result = config.load(validate_hosts=True, debug=debug)
+        loaded_config = loading_result.loaded_config
+        ruleset_matcher = loading_result.config_cache.ruleset_matcher
+        label_manager = loading_result.config_cache.label_manager
+        core_objects_config = config.CoreObjectsConfig(
+            loaded_config, ruleset_matcher, label_manager
         )
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+        hosts_config = loading_result.hosts_config
 
+        ip_lookup_config = loading_result.config_cache.ip_lookup_config(fake_dns=request.fake_dns)
 
-def _run_reload(context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_activate(
-            core_interface.CoreAction.RELOAD,
-            context.omd_root,
-            context.global_options,
-            fake_dns,
-            args,
+        ip_address_of = ip_lookup.ConfiguredIPLookup(
+            ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            allow_empty=hosts_config.clusters,
+            error_handler=ip_lookup.CollectFailedHosts(),
         )
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+        ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
+        final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
+        passive_service_name_config = loading_result.config_cache.make_passive_service_name_config(
+            final_service_name_config
+        )
+
+        core, core_client = app.create_core(loaded_config)
+
+        core_interface.build_and_activate_monitoring_config(
+            self.action,
+            loading_result.config_cache,
+            core_objects_config,
+            hosts_config,
+            loading_result.host_tags,
+            final_service_name_config,
+            passive_service_name_config,
+            config.EnforcedServicesTable(
+                BundledHostRulesetMatcher(
+                    loaded_config.static_checks,
+                    ruleset_matcher,
+                    label_manager.labels_of_host,
+                ),
+                passive_service_name_config,
+                plugins.check_plugins,
+                label_manager.labels_of_service,
+            ),
+            ip_lookup_config.ip_stack_config,
+            ip_lookup_config.default_address_family,
+            ip_address_of,
+            ip_address_of_mgmt,
+            core_client,
+            plugins,
+            config_builders=core_interface.config_builders(core),
+            hosts_to_update=set(request.hosts) if request.hosts else None,
+            locking_mode=loaded_config.restart_locking,
+            service_depends_on=config.ServiceDependsOn(
+                tag_list=loading_result.host_tags.tag_list,
+                service_dependencies=loaded_config.service_dependencies,
+                debug=debug,
+            ),
+            duplicates=sorted(
+                hosts_config.duplicates(
+                    lambda hn: (
+                        loading_result.config_cache.is_active(hn)
+                        and loading_result.config_cache.is_online(hn)
+                    )
+                )
+            ),
+            notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
+            licensing_handler_factory=app.licensing_handler_factory,
+            edition=app.edition,
+            loaded_config=loaded_config,
+            make_fetcher_trigger=app.make_fetcher_trigger,
+            debug=debug,
+        )
+        for warning in ip_address_of.error_handler.format_errors():
+            console.warning(tty.format_warning(f"\n{warning}"))
+
+
+@dataclass(frozen=True, kw_only=True)
+class _ConfigureCoreCommand:
+    configure_core: _ConfigureCore
+
+    def run(self, context: CLIContext, request: CoreConfigRequest, _args: CLIArgs) -> CLIExitCode:
+        try:
+            self.configure_core(
+                request, omd_root=context.omd_root, debug=context.global_options.debug
+            )
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+        return CLIExitCode.SUCCESS
 
 
 cli_handler_nagios_config = CLIHandler(
-    command=cli_command_nagios_config, run=_run_dump_nagios_config
+    command=cli_command_nagios_config,
+    run=_ConfigureCoreCommand(configure_core=_dump_nagios_config).run,
 )
 
-cli_handler_update = CLIHandler(command=cli_command_update, run=_run_update)
+cli_handler_update = CLIHandler(command=cli_command_update, run=_UpdateCommand(update=_update).run)
 
-cli_handler_restart = CLIHandler(command=cli_command_restart, run=_run_restart)
+cli_handler_restart = CLIHandler(
+    command=cli_command_restart,
+    run=_ConfigureCoreCommand(
+        configure_core=_Activation(action=core_interface.CoreAction.RESTART).activate
+    ).run,
+)
 
-cli_handler_reload = CLIHandler(command=cli_command_reload, run=_run_reload)
+cli_handler_reload = CLIHandler(
+    command=cli_command_reload,
+    run=_ConfigureCoreCommand(
+        configure_core=_Activation(action=core_interface.CoreAction.RELOAD).activate
+    ).run,
+)

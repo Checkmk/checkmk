@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The dumping commands: --dump-agent and --dump."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from cmk.ccc.hostaddress import HostAddress
@@ -14,7 +15,6 @@ from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Reader as CLIReader
 
 from .options import (
-    fake_dns_request,
     FAKE_DNS_VALUE,
     file_cache_request,
     FileCacheRequest,
@@ -27,6 +27,7 @@ class DumpAgentRequest:
     file_cache: FileCacheRequest
     snmp_backend: SNMPBackendEnum | None
     fake_dns: HostAddress | None
+    host: HostAddress | None
 
 
 def _dump_agent_request(options: CLIReader) -> DumpAgentRequest:
@@ -34,6 +35,20 @@ def _dump_agent_request(options: CLIReader) -> DumpAgentRequest:
         file_cache=file_cache_request(options),
         snmp_backend=options.value(SNMP_BACKEND_VALUE),
         fake_dns=options.value(FAKE_DNS_VALUE),
+        host=options.argument(CLIArgument(placeholder="HOSTNAME|ADDRESS", parse=HostAddress)),
+    )
+
+
+@dataclass(frozen=True, kw_only=True)
+class DumpHostsRequest:
+    fake_dns: HostAddress | None
+    hosts: Sequence[HostAddress]
+
+
+def _dump_hosts_request(options: CLIReader) -> DumpHostsRequest:
+    return DumpHostsRequest(
+        fake_dns=options.value(FAKE_DNS_VALUE),
+        hosts=options.arguments(CLIArguments(placeholder="H1 H2...", parse=HostAddress)),
     )
 
 
@@ -43,7 +58,6 @@ cli_command_dump_agent = CLICommand(
     long="dump-agent",
     short="d",
     request=_dump_agent_request,
-    arguments=CLIArgument(placeholder="HOSTNAME|ADDRESS", parse=str),
     help="Show raw information from agent",
     description=[
         (
@@ -60,8 +74,7 @@ cli_command_dump = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.dump:cli_handler_dump",
     long="dump",
     short="D",
-    arguments=CLIArguments(placeholder="H1 H2...", parse=str),
-    request=fake_dns_request,
+    request=_dump_hosts_request,
     help="Dump info about all or some hosts",
     description=[
         (

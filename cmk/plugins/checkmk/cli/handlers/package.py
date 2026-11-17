@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from collections.abc import Sequence
 
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
@@ -15,9 +16,9 @@ from cmk.plugins.checkmk.cli.package import (
 )
 
 
-def _fail_with_deprecation_msg(_context: CLIContext, _request: None, argv: CLIArgs) -> CLIExitCode:
-    sys.stderr.write(DEPRECATION_MSG % " ".join(("", *argv)) + "\n")
+def _run_package(_context: CLIContext, arguments: Sequence[str], _args: CLIArgs) -> CLIExitCode:
+    sys.stderr.write(DEPRECATION_MSG % " ".join(("", *arguments)) + "\n")
     return CLIExitCode.FAILURE
 
 
-cli_handler_package = CLIHandler(command=cli_command_package, run=_fail_with_deprecation_msg)
+cli_handler_package = CLIHandler(command=cli_command_package, run=_run_package)

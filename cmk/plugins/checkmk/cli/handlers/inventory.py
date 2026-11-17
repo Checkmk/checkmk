@@ -9,7 +9,9 @@ import itertools
 import sys
 import time
 from collections.abc import Container, Sequence
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 import cmk.ccc.cleanup
 import cmk.livestatus_client as livestatus
@@ -44,7 +46,6 @@ from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.store import InventoryStore
@@ -64,14 +65,16 @@ from ._file_cache import make_file_cache_options
 from .agent_based import extract_plugin_selection, load_checks
 
 
-def _mode_inventory(
-    omd_root: Path, global_options: CLIGlobalOptions, request: InventoryRequest, args: CLIArgs
-) -> CLIExitCode:
+class _Inventorize(Protocol):
+    def __call__(self, request: InventoryRequest, *, omd_root: Path, debug: bool) -> None: ...
+
+
+def _inventorize(request: InventoryRequest, *, omd_root: Path, debug: bool) -> None:
     app = make_app(omd_root)
     file_cache_options = make_file_cache_options(request.file_cache)
 
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
+    plugins = load_checks(debug=debug)
+    loading_result = config.load(validate_hosts=True, debug=debug)
     loaded_config = loading_result.loaded_config
     host_tags = loading_result.host_tags
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -99,9 +102,9 @@ def _mode_inventory(
         error_handler=config.handle_ip_lookup_failure,
     )
 
-    if args:
+    if request.hosts:
         hostnames = config.parse_hostname_list(
-            config_cache, hosts_config, host_tags, args, with_clusters=True
+            config_cache, hosts_config, host_tags, request.hosts, with_clusters=True
         )
         console.verbose(f"Doing HW/SW Inventory on: {', '.join(hostnames)}")
     else:
@@ -117,7 +120,7 @@ def _mode_inventory(
 
     with (
         config_cache.ruleset_matcher.ruleset_optimizer.processed_hosts(hostnames)
-        if args
+        if request.hosts
         else contextlib.nullcontext()
     ):
         if request.force:
@@ -166,7 +169,7 @@ def _mode_inventory(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
                     force_stored_walks=request.usewalk,
-                    debug=global_options.debug,
+                    debug=debug,
                 ),
             ),
             plugins=plugins,
@@ -199,7 +202,7 @@ def _mode_inventory(
             secrets_config_site=StoredSecrets(
                 path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
             ),
-            debug=global_options.debug,
+            debug=debug,
         )
         recording_fetcher = RecordingFetcher(fetcher)
         parser = CMKParser(
@@ -211,7 +214,7 @@ def _mode_inventory(
             ),
             selected_sections=selected_sections,
             keep_outdated=file_cache_options.keep_outdated,
-            debug=global_options.debug,
+            debug=debug,
         )
 
         section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
@@ -267,7 +270,7 @@ def _mode_inventory(
                         parameters=parameters,
                         raw_intervals_from_config=raw_intervals_from_config,
                         previous_tree=previous_tree,
-                        debug=global_options.debug,
+                        debug=debug,
                     ).check_results
 
                 check_result = ActiveCheckResult.from_subresults(*check_results)
@@ -277,42 +280,49 @@ def _mode_inventory(
                     section.section_success(check_result.summary)
 
             except Exception as e:
-                if global_options.debug:
+                if debug:
                     raise
                 section.section_error("%s" % e)
             finally:
                 cmk.ccc.cleanup.cleanup_globals()
+
+
+@dataclass(frozen=True, kw_only=True)
+class _InventoryCommand:
+    inventorize: _Inventorize
+
+    def run(self, context: CLIContext, request: InventoryRequest, _args: CLIArgs) -> CLIExitCode:
+        try:
+            self.inventorize(request, omd_root=context.omd_root, debug=context.global_options.debug)
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
         return CLIExitCode.SUCCESS
 
 
-def _run_inventory(context: CLIContext, request: InventoryRequest, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_inventory(context.omd_root, context.global_options, request, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+class _InventorizeMarkedHosts(Protocol):
+    def __call__(
+        self, request: InventorizeMarkedHostsRequest, *, omd_root: Path, debug: bool
+    ) -> None: ...
 
 
-def _mode_inventorize_marked_hosts(
-    omd_root: Path,
-    global_options: CLIGlobalOptions,
-    request: InventorizeMarkedHostsRequest,
-    _args: CLIArgs,
-) -> CLIExitCode:
+def _inventorize_marked_hosts(
+    request: InventorizeMarkedHostsRequest, *, omd_root: Path, debug: bool
+) -> None:
     app = make_app(omd_root)
     file_cache_options = make_file_cache_options(request.file_cache)
 
     if not (queue := AutoQueue(InventoryPaths(cmk.utils.paths.omd_root).auto_dir)):
         console.verbose("Autoinventory: No hosts marked by inventory check")
-        return CLIExitCode.SUCCESS
+        return
 
     # We do not resolve the `latest` link here, as any given serial might be removed by the core.
     latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
 
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
+    plugins = load_checks(debug=debug)
+    loading_result = config.load(validate_hosts=True, debug=debug)
     loaded_config = loading_result.loaded_config
     hosts_config = loading_result.hosts_config
     host_tags = loading_result.host_tags
@@ -349,7 +359,7 @@ def _mode_inventorize_marked_hosts(
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
-        debug=global_options.debug,
+        debug=debug,
     )
     fetcher = CMKFetcher(
         config_cache,
@@ -376,7 +386,7 @@ def _mode_inventorize_marked_hosts(
                     loaded_config, ruleset_matcher, label_manager.labels_of_host
                 ),
                 force_stored_walks=request.usewalk,
-                debug=global_options.debug,
+                debug=debug,
             ),
         ),
         plugins=plugins,
@@ -404,7 +414,7 @@ def _mode_inventorize_marked_hosts(
             path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
             secrets=secrets,
         ),
-        debug=global_options.debug,
+        debug=debug,
     )
 
     def summarizer(host_name: HostName) -> CMKSummarizer:
@@ -426,7 +436,7 @@ def _mode_inventorize_marked_hosts(
 
     if queue.oldest() is None:
         console.verbose("Autoinventory: No hosts marked by inventory check")
-        return CLIExitCode.SUCCESS
+        return
 
     console.verbose("Autoinventory: Inventorize all hosts marked by inventory check:")
     try:
@@ -474,29 +484,36 @@ def _mode_inventorize_marked_hosts(
                     inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
                     discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
                     autodiscovery_dir=cmk.utils.paths.autodiscovery_dir,
-                    debug=global_options.debug,
+                    debug=debug,
                 )
     except (MKTimeout, TimeoutError) as exc:
         console.verbose_no_lf(str(exc), file=sys.stderr)
-    return CLIExitCode.SUCCESS
 
 
-def _run_inventorize_marked_hosts(
-    context: CLIContext, request: InventorizeMarkedHostsRequest, args: CLIArgs
-) -> CLIExitCode:
-    try:
-        return _mode_inventorize_marked_hosts(
-            context.omd_root, context.global_options, request, args
-        )
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _InventorizeMarkedHostsCommand:
+    inventorize_marked_hosts: _InventorizeMarkedHosts
+
+    def run(
+        self, context: CLIContext, request: InventorizeMarkedHostsRequest, _args: CLIArgs
+    ) -> CLIExitCode:
+        try:
+            self.inventorize_marked_hosts(
+                request, omd_root=context.omd_root, debug=context.global_options.debug
+            )
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+        return CLIExitCode.SUCCESS
 
 
-cli_handler_inventory = CLIHandler(command=cli_command_inventory, run=_run_inventory)
+cli_handler_inventory = CLIHandler(
+    command=cli_command_inventory, run=_InventoryCommand(inventorize=_inventorize).run
+)
 
 cli_handler_inventorize_marked_hosts = CLIHandler(
-    command=cli_command_inventorize_marked_hosts, run=_run_inventorize_marked_hosts
+    command=cli_command_inventorize_marked_hosts,
+    run=_InventorizeMarkedHostsCommand(inventorize_marked_hosts=_inventorize_marked_hosts).run,
 )

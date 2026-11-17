@@ -13,11 +13,11 @@ py_library(
     ],
     deps = [
         "//cmk/utils",
-        "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-plugin-apis:cli",
+        "//packages/cmk-ruleset-matcher",
     ],
 )

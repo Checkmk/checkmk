@@ -5,11 +5,9 @@
 
 
 import dataclasses
-from collections.abc import Sequence
 from typing import Final
 
-from cmk.ccc.exceptions import MKBailOut
-from cmk.ccc.hostaddress import HostAddress, HostNameValidationError
+from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.plugins import (
     CheckPluginName,
     InventoryPluginName,
@@ -34,17 +32,6 @@ def parse_snmp_backend(backend: str) -> SNMPBackendEnum:
             return SNMPBackendEnum.STORED_WALK
         case _:
             raise ValueError(backend)
-
-
-def host_address(raw_host_address: str) -> HostAddress:
-    try:
-        return HostAddress(raw_host_address)
-    except HostNameValidationError as exc:
-        raise MKBailOut(str(exc)) from exc
-
-
-def host_addresses(raw_host_addresses: Sequence[str]) -> Sequence[HostAddress]:
-    return [host_address(raw_host_address) for raw_host_address in raw_host_addresses]
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

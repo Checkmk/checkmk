@@ -6,7 +6,10 @@
 import itertools
 import os
 import time
+from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 import cmk.utils.paths
 from cmk.base import config
@@ -18,7 +21,6 @@ from cmk.checkengine.discovery import remove_autochecks_of_host
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.inventory.paths import InventoryPaths
 from cmk.piggyback import backend as piggyback_backend
@@ -27,17 +29,18 @@ from cmk.plugins.checkmk.cli.maintenance import (
     cli_command_flush,
     cli_command_update_dns_cache,
 )
-from cmk.plugins.checkmk.cli.options import host_addresses
 from cmk.plugins.checkmk.cli.output import write_stdout
 from cmk.utils import ip_lookup
 
 from .agent_based import load_checks
 
 
-def _mode_update_dns_cache(
-    _omd_root: Path, global_options: CLIGlobalOptions, fake_dns: HostAddress | None, _args: CLIArgs
-) -> CLIExitCode:
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
+class _UpdateDNSCache(Protocol):
+    def __call__(self, fake_dns: HostAddress | None, *, debug: bool) -> None: ...
+
+
+def _update_dns_cache(fake_dns: HostAddress | None, *, debug: bool) -> None:
+    loading_result = config.load(validate_hosts=True, debug=debug)
     config_cache = loading_result.config_cache
     hosts_config = loading_result.hosts_config
     ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
@@ -49,52 +52,61 @@ def _mode_update_dns_cache(
         ),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         lookup_ip_address=(ip_lookup.make_lookup_ip_address(ip_lookup_config)),
-        debug=global_options.debug,
+        debug=debug,
     )
-    return CLIExitCode.SUCCESS
 
 
-def _run_update_dns_cache(
-    context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs
-) -> CLIExitCode:
-    try:
-        return _mode_update_dns_cache(context.omd_root, context.global_options, fake_dns, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _UpdateDNSCacheCommand:
+    update_dns_cache: _UpdateDNSCache
+
+    def run(self, context: CLIContext, fake_dns: HostAddress | None, _args: CLIArgs) -> CLIExitCode:
+        try:
+            self.update_dns_cache(fake_dns, debug=context.global_options.debug)
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+        return CLIExitCode.SUCCESS
 
 
-def _mode_cleanup_piggyback(
-    omd_root: Path, global_options: CLIGlobalOptions, _request: None, _args: CLIArgs
-) -> CLIExitCode:
-    loaded_config = config.load(validate_hosts=True, debug=global_options.debug).loaded_config
+class _CleanupPiggyback(Protocol):
+    def __call__(self, omd_root: Path, *, debug: bool) -> None: ...
+
+
+def _cleanup_piggyback(omd_root: Path, *, debug: bool) -> None:
+    loaded_config = config.load(validate_hosts=True, debug=debug).loaded_config
     piggyback_backend.cleanup_piggyback_files(
         now=time.time(),
         max_cache_file_age=loaded_config.piggyback_max_cachefile_age,
         all_configured_rule_values=(r["value"] for r in loaded_config.piggybacked_host_files),
         omd_root=omd_root,
     )
-    return CLIExitCode.SUCCESS
 
 
-def _run_cleanup_piggyback(context: CLIContext, request: None, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_cleanup_piggyback(context.omd_root, context.global_options, request, args)
-    except MKGeneralException as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _CleanupPiggybackCommand:
+    cleanup_piggyback: _CleanupPiggyback
+
+    def run(self, context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+        try:
+            self.cleanup_piggyback(context.omd_root, debug=context.global_options.debug)
+        except MKGeneralException as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+        return CLIExitCode.SUCCESS
 
 
-def _mode_flush(
-    _omd_root: Path, global_options: CLIGlobalOptions, _request: None, args: CLIArgs
-) -> CLIExitCode:
-    hosts = host_addresses(args)
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
+class _Flush(Protocol):
+    def __call__(self, hosts: Sequence[HostAddress], *, debug: bool) -> None: ...
+
+
+def _flush(hosts: Sequence[HostAddress], *, debug: bool) -> None:
+    plugins = load_checks(debug=debug)
+    loading_result = config.load(validate_hosts=True, debug=debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     hosts_config = loading_result.hosts_config
@@ -108,14 +120,13 @@ def _mode_flush(
         config_cache, plugins.check_plugins, service_name_config
     ).effective_host
 
-    if not hosts:
-        hosts = sorted(
-            {
-                hn
-                for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
-                if config_cache.is_active(hn) and config_cache.is_online(hn)
-            }
-        )
+    hosts = hosts or sorted(
+        {
+            hn
+            for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        }
+    )
 
     for host in hosts:
         write_stdout("%-20s: " % host)
@@ -173,7 +184,7 @@ def _mode_flush(
                 host,
                 effective_host_callback,
                 cmk.utils.paths.autochecks_dir,
-                debug=global_options.debug,
+                debug=debug,
             )
             for node in (hosts_config.clusters.get(host) or [host])
         )
@@ -193,25 +204,31 @@ def _mode_flush(
             write_stdout("(nothing)")
 
         write_stdout(tty.normal + "\n")
-    return CLIExitCode.SUCCESS
 
 
-def _run_flush(context: CLIContext, request: None, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_flush(context.omd_root, context.global_options, request, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _FlushCommand:
+    flush: _Flush
+
+    def run(self, context: CLIContext, hosts: Sequence[HostAddress], _args: CLIArgs) -> CLIExitCode:
+        try:
+            self.flush(hosts, debug=context.global_options.debug)
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+        return CLIExitCode.SUCCESS
 
 
 cli_handler_update_dns_cache = CLIHandler(
-    command=cli_command_update_dns_cache, run=_run_update_dns_cache
+    command=cli_command_update_dns_cache,
+    run=_UpdateDNSCacheCommand(update_dns_cache=_update_dns_cache).run,
 )
 
 cli_handler_cleanup_piggyback = CLIHandler(
-    command=cli_command_cleanup_piggyback, run=_run_cleanup_piggyback
+    command=cli_command_cleanup_piggyback,
+    run=_CleanupPiggybackCommand(cleanup_piggyback=_cleanup_piggyback).run,
 )
 
-cli_handler_flush = CLIHandler(command=cli_command_flush, run=_run_flush)
+cli_handler_flush = CLIHandler(command=cli_command_flush, run=_FlushCommand(flush=_flush).run)

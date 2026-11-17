@@ -8,6 +8,7 @@
 """
 
 import dataclasses
+from collections.abc import Sequence
 from typing import Final
 
 from cmk.cli.internal import Arguments as CLIArguments
@@ -15,6 +16,7 @@ from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import no_options as cli_no_options
 from cmk.cli.internal import Reader as CLIReader
+from cmk.ruleset_matcher.tags import TagID
 
 _ALL_SITES_FLAG: Final = CLIFlag(
     long="all-sites",
@@ -32,13 +34,19 @@ _INCLUDE_OFFLINE_FLAG: Final = CLIFlag(
 class ListHostsRequest:
     all_sites: bool
     include_offline: bool
+    host_groups: Sequence[str]
 
 
 def _list_hosts_request(options: CLIReader) -> ListHostsRequest:
     return ListHostsRequest(
         all_sites=options.flag(_ALL_SITES_FLAG),
         include_offline=options.flag(_INCLUDE_OFFLINE_FLAG),
+        host_groups=options.arguments(CLIArguments(placeholder="G1 G2...", parse=str)),
     )
+
+
+def _tags_request(options: CLIReader) -> Sequence[TagID]:
+    return options.arguments(CLIArguments(placeholder="TAG1 TAG2...", parse=TagID))
 
 
 cli_command_list_hosts = CLICommand(
@@ -46,7 +54,6 @@ cli_command_list_hosts = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.list_config:cli_handler_list_hosts",
     long="list-hosts",
     short="l",
-    arguments=CLIArguments(placeholder="G1 G2...", parse=str),
     request=_list_hosts_request,
     help="Print list of all hosts or members of host groups",
     description=[
@@ -63,8 +70,7 @@ cli_command_list_tag = CLICommand(
     name="list_tag",
     handler="cmk.plugins.checkmk.cli.handlers.list_config:cli_handler_list_tag",
     long="list-tag",
-    request=cli_no_options,
-    arguments=CLIArguments(placeholder="TAG1 TAG2...", parse=str),
+    request=_tags_request,
     help="List hosts having certain tags",
     description=["Prints all hosts that have all of the specified tags at once."],
 )

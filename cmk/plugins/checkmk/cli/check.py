@@ -7,10 +7,10 @@
 import dataclasses
 from typing import Final
 
-from cmk.ccc.hostaddress import HostAddress
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import CheckPluginName
 from cmk.checkengine.snmplib import SNMPBackendEnum
-from cmk.cli.internal import Arguments as CLIArguments
+from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import Reader as CLIReader
@@ -49,6 +49,8 @@ class CheckingRequest:
     perfdata: bool
     plugin_selection: PluginSelectionRequest[CheckPluginName]
     fake_dns: HostAddress | None
+    host: HostName | None
+    address: HostAddress | None
 
 
 def _checking_request(options: CLIReader) -> CheckingRequest:
@@ -60,6 +62,10 @@ def _checking_request(options: CLIReader) -> CheckingRequest:
         perfdata=options.flag(_PERFDATA_FLAG),
         plugin_selection=plugin_selection_request(options, CHECK_PLUGINS_VALUE),
         fake_dns=options.value(FAKE_DNS_VALUE),
+        host=options.argument(CLIArgument(placeholder="HOST", parse=HostName)),
+        address=options.argument(
+            CLIArgument(placeholder="IPADDRESS", parse=HostAddress, optional=True)
+        ),
     )
 
 
@@ -68,7 +74,6 @@ cli_command_check = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.check:cli_handler_check",
     long="check",
     request=_checking_request,
-    arguments=CLIArguments(placeholder="HOST [IPADDRESS]", parse=str),
     default=True,
     help="Check all services on the given HOST",
     description=[

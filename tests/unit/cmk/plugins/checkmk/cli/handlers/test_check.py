@@ -4,27 +4,78 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Mapping, Sequence
 from pathlib import Path
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.cli.internal import Context as CLIContext
-from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Reader as CLIReader
-from cmk.plugins.checkmk.cli.check import _checking_request
-from cmk.plugins.checkmk.cli.handlers.check import cli_handler_check
+from cmk.plugins.checkmk.cli.check import CheckingRequest
+from cmk.plugins.checkmk.cli.handlers.check import _CheckCommand
+from cmk.plugins.checkmk.cli.options import FileCacheRequest, PluginSelectionRequest
+
+_OMD_ROOT = Path("/omd/sites/mysite")
 
 
-def test_more_than_a_host_and_an_address_are_rejected() -> None:
-    logger = logging.getLogger(__name__)
-    context = CLIContext(
-        omd_root=Path("/nonexistent"), global_options=CLIGlobalOptions(), logger=logger
+class _FakeCheckHost:
+    def __init__(self, state: ServiceState = 0, error: MKGeneralException | None = None) -> None:
+        self.checked: list[tuple[HostName, CheckingRequest, Path, bool]] = []
+        self._state = state
+        self._error = error
+
+    def __call__(
+        self, host: HostName, request: CheckingRequest, *, omd_root: Path, debug: bool
+    ) -> ServiceState:
+        self.checked.append((host, request, omd_root, debug))
+        if self._error is not None:
+            raise self._error
+        return self._state
+
+
+def _context() -> CLIContext:
+    return CLIContext(
+        omd_root=_OMD_ROOT,
+        global_options=CLIGlobalOptions(),
+        logger=logging.getLogger(__name__),
     )
-    given: Mapping[CLIDeclaration, Sequence[str]] = {}
 
-    request = _checking_request(CLIReader(lambda declaration: given.get(declaration, ())))
+
+def _request() -> CheckingRequest:
+    return CheckingRequest(
+        file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=False),
+        usewalk=False,
+        snmp_backend=None,
+        no_submit=False,
+        perfdata=False,
+        plugin_selection=PluginSelectionRequest(
+            detect_sections=None, plugins=None, detect_plugins=None
+        ),
+        fake_dns=None,
+        host=HostName("myhost"),
+        address=None,
+    )
+
+
+def test_the_requested_host_is_checked() -> None:
+    check_host = _FakeCheckHost()
+
+    _CheckCommand(check_host=check_host).run(_context(), _request(), ())
+
+    assert check_host.checked == [(HostName("myhost"), _request(), _OMD_ROOT, False)]
+
+
+def test_the_check_exits_with_the_hosts_state() -> None:
+    assert (
+        _CheckCommand(check_host=_FakeCheckHost(state=2)).run(_context(), _request(), ())
+        == CLIExitCode.ERROR
+    )
+
+
+def test_a_failed_check_exits_three() -> None:
+    check_host = _FakeCheckHost(error=MKGeneralException("Unknown host"))
 
     assert (
-        cli_handler_check.run(context, request, ["host1", "host2", "host3"]) == CLIExitCode.UNKNOWN
+        _CheckCommand(check_host=check_host).run(_context(), _request(), ()) == CLIExitCode.UNKNOWN
     )

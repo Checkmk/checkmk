@@ -3,341 +3,154 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="type-arg"
-
 import logging
-from collections.abc import Mapping, Sequence
-from dataclasses import replace
 from pathlib import Path
-from typing import Any, Final, NoReturn, override
+from typing import Final
 
 import pytest
 
-import cmk.ccc.resulttype as result
-import cmk.checkengine.fetchers.snmp._fetcher as _snmp_module
-import cmk.utils.paths as cmk_paths
-from cmk.base import config
-from cmk.base.base_app import CheckmkBaseApp
-from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.ccc.version import Edition
-from cmk.checkengine.fetcher_abc import Fetcher, Mode
-from cmk.checkengine.fetcher_utils.secrets import FetcherSecrets
-from cmk.checkengine.fetcher_utils.trigger import PlainFetcherTrigger
-from cmk.checkengine.fetchers.piggyback import PiggybackFetcher
-from cmk.checkengine.snmp_backend_builder import make_backend
-from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
-from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
-from cmk.checkengine.snmplib import SNMPBackendEnum
-from cmk.checkengine.sources._sources import SNMPSource
+from cmk.ccc.hostaddress import HostAddress
+from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.cli.internal import Context as CLIContext
-from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli.dump import (
-    _dump_agent_request,
     DumpAgentRequest,
+    DumpHostsRequest,
 )
-from cmk.plugins.checkmk.cli.handlers import dump
-from cmk.plugins.checkmk.cli.handlers.dump import cli_handler_dump_agent
-from cmk.plugins.checkmk.cli.options import FileCacheRequest, NO_TCP_FLAG, SNMP_BACKEND_VALUE
-from cmk.ruleset_matcher.tags import TagGroupID, TagID
-from tests.testlib.unit.base_configuration_scenario import Scenario
-from tests.testlib.unit.empty_config import EMPTY_CONFIG
-
-
-class _MockFetcherTrigger(PlainFetcherTrigger):
-    def __init__(self, fetched: bytes | Exception) -> None:
-        super().__init__(omd_root=Path("/"))
-        self._fetched = fetched
-
-    @override
-    def _trigger(self, fetcher: Fetcher, mode: Mode, secret: FetcherSecrets) -> result.Result:
-        if isinstance(fetcher, PiggybackFetcher):
-            return result.OK(b"")
-        if isinstance(self._fetched, Exception):
-            return result.Error(self._fetched)
-        return result.OK(self._fetched)
-
+from cmk.plugins.checkmk.cli.handlers.dump import (
+    _AgentDump,
+    _DumpAgentCommand,
+    _DumpHostsCommand,
+    _source_dump,
+)
+from cmk.plugins.checkmk.cli.options import FileCacheRequest
 
 _OMD_ROOT: Final = Path("/omd/sites/mysite")
 
 
-def test_the_dump_agent_request_is_read_from_the_command_line() -> None:
-    given: Mapping[CLIDeclaration, Sequence[str]] = {
-        NO_TCP_FLAG: [""],
-        SNMP_BACKEND_VALUE: ["stored-walk"],
-    }
+class _FakeDumpAgent:
+    def __init__(self, dump: _AgentDump) -> None:
+        self.asked: list[tuple[HostAddress, DumpAgentRequest, Path, bool]] = []
+        self._dump = dump
 
-    assert _dump_agent_request(
-        CLIReader(lambda declaration: given.get(declaration, ()))
-    ) == DumpAgentRequest(
-        file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=True),
-        snmp_backend=SNMPBackendEnum.STORED_WALK,
+    def __call__(
+        self, host: HostAddress, request: DumpAgentRequest, *, omd_root: Path, debug: bool
+    ) -> _AgentDump:
+        self.asked.append((host, request, omd_root, debug))
+        return self._dump
+
+
+def _agent_request(host: HostAddress) -> DumpAgentRequest:
+    return DumpAgentRequest(
+        file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=False),
+        snmp_backend=None,
         fake_dns=None,
+        host=host,
     )
 
 
-def _dump_agent(hostname: HostName, options: Mapping[CLIDeclaration, Sequence[str]]) -> CLIExitCode:
-    logger = logging.getLogger(__name__)
-    return cli_handler_dump_agent.run(
-        CLIContext(omd_root=_OMD_ROOT, global_options=CLIGlobalOptions(), logger=logger),
-        _dump_agent_request(CLIReader(lambda declaration: options.get(declaration, ()))),
-        [hostname],
+_CONTEXT: Final = CLIContext(
+    omd_root=_OMD_ROOT,
+    global_options=CLIGlobalOptions(),
+    logger=logging.getLogger(__name__),
+)
+
+
+def test_the_agent_output_of_the_requested_host_is_dumped() -> None:
+    dump_agent = _FakeDumpAgent(_AgentDump(b"", (), ()))
+
+    _DumpAgentCommand(dump_agent=dump_agent).run(
+        _CONTEXT, _agent_request(HostAddress("myhost")), ()
+    )
+
+    assert dump_agent.asked == [
+        (HostAddress("myhost"), _agent_request(HostAddress("myhost")), _OMD_ROOT, False)
+    ]
+
+
+def test_the_agent_output_is_written(capsys: pytest.CaptureFixture[str]) -> None:
+    context = CLIContext(
+        omd_root=_OMD_ROOT,
+        global_options=CLIGlobalOptions(),
+        logger=logging.getLogger(__name__),
+    )
+    dump_agent = _FakeDumpAgent(_AgentDump(b"<<<check_mk>>>\n", (), ()))
+
+    _DumpAgentCommand(dump_agent=dump_agent).run(context, _agent_request(HostAddress("myhost")), ())
+
+    assert capsys.readouterr().out == "<<<check_mk>>>\n"
+
+
+def test_an_agent_dump_with_errors_exits_one() -> None:
+    dump_agent = _FakeDumpAgent(_AgentDump(b"", (), ("ERROR [agent]: refused",)))
+
+    assert (
+        _DumpAgentCommand(dump_agent=dump_agent).run(
+            _CONTEXT, _agent_request(HostAddress("myhost")), ()
+        )
+        == CLIExitCode.FAILURE
     )
 
 
-def _patch_fetcher_trigger(monkeypatch: pytest.MonkeyPatch, fetched: bytes | Exception) -> None:
-    """Make the command build an application that fetches the given data.
+def test_the_warnings_and_errors_are_reported(capsys: pytest.CaptureFixture[str]) -> None:
+    dump_agent = _FakeDumpAgent(
+        _AgentDump(b"", ("WARNING [agent]: denied",), ("ERROR [agent]: refused",))
+    )
 
-    The command builds its own application, so the fake has to go in where it
-    does that.
-    """
+    _DumpAgentCommand(dump_agent=dump_agent).run(
+        _CONTEXT, _agent_request(HostAddress("myhost")), ()
+    )
 
-    def _not_called(*_a: object, **_kw: object) -> NoReturn:
-        raise AssertionError("call not expected here")
+    assert capsys.readouterr().err == "WARNING [agent]: denied\nERROR [agent]: refused\n"
 
-    monkeypatch.setattr(
-        dump,
-        "make_app",
-        lambda _omd_root: CheckmkBaseApp(
-            edition=Edition.COMMUNITY,
-            create_core=_not_called,
-            licensing_handler_factory=_not_called,
-            make_fetcher_trigger=lambda *_a: _MockFetcherTrigger(fetched),
-        ),
+
+class _FakeDumpHosts:
+    def __init__(self) -> None:
+        self.asked: list[tuple[DumpHostsRequest, bool]] = []
+
+    def __call__(self, request: DumpHostsRequest, *, debug: bool) -> None:
+        self.asked.append((request, debug))
+
+
+def test_the_requested_hosts_are_dumped() -> None:
+    dump_hosts = _FakeDumpHosts()
+    request = DumpHostsRequest(fake_dns=None, hosts=(HostAddress("myhost"),))
+
+    _DumpHostsCommand(dump_hosts=dump_hosts).run(_CONTEXT, request, ())
+
+    assert dump_hosts.asked == [(request, False)]
+
+
+def test_a_source_with_a_warning_reports_it() -> None:
+    results = [
+        ActiveCheckResult(state=0, summary="Success"),
+        ActiveCheckResult(state=1, summary="Section foo denied"),
+    ]
+
+    assert _source_dump("agent", b"", results).warnings == (
+        "WARNING [agent]: Success, Section foo denied",
     )
 
 
-class TestDumpAgent:
-    @pytest.fixture
-    def hostname(self) -> HostName:
-        return HostName("testhost")
+def test_a_source_with_a_failure_reports_an_error() -> None:
+    results = [ActiveCheckResult(state=2, summary="Something broke")]
 
-    @pytest.fixture
-    def ipaddress(self) -> HostAddress:
-        return HostAddress("1.2.3.4")
-
-    @pytest.fixture
-    def raw_data(self, hostname: HostName) -> bytes:  # noqa: ARG002
-        return b"<<<check_mk>>>\nraw data"
-
-    @pytest.fixture
-    def patch_config_load(
-        self, monkeypatch: pytest.MonkeyPatch, hostname: HostName, ipaddress: HostAddress
-    ) -> None:
-        loaded_config = replace(
-            EMPTY_CONFIG,
-            ipaddresses={hostname: ipaddress},
-            host_tags={
-                hostname: {
-                    TagGroupID("checkmk-agent"): TagID("checkmk-agent"),
-                    TagGroupID("piggyback"): TagID("auto-piggyback"),
-                    TagGroupID("networking"): TagID("lan"),
-                    TagGroupID("agent"): TagID("cmk-agent"),
-                    TagGroupID("criticality"): TagID("prod"),
-                    TagGroupID("snmp_ds"): TagID("no-snmp"),
-                    TagGroupID("site"): TagID("unit"),
-                    TagGroupID("address_family"): TagID("ip-v4-only"),
-                    TagGroupID("tcp"): TagID("tcp"),
-                    TagGroupID("ip-v4"): TagID("ip-v4"),
-                }
-            },
-        )
-        monkeypatch.setattr(
-            config,
-            config.load.__name__,
-            lambda *a, **kw: config.LoadingResult(  # noqa: ARG005
-                loaded_config=loaded_config,
-                hosts_config=config.make_hosts_config(loaded_config),
-                host_tags=config.make_host_tags(
-                    loaded_config, config.make_hosts_config(loaded_config)
-                ),
-                config_cache=config.ConfigCache(
-                    loaded_config,
-                    config.make_hosts_config(loaded_config),
-                    config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
-                    autochecks_dir=cmk_paths.autochecks_dir,
-                    discovered_host_labels_dir=cmk_paths.discovered_host_labels_dir,
-                    builtin_host_labels_file=cmk_paths.builtin_host_labels_file,
-                    debug=False,
-                ),
-            ),
-        )
-
-    @pytest.fixture
-    def scenario(
-        self, hostname: HostName, ipaddress: HostAddress, monkeypatch: pytest.MonkeyPatch
-    ) -> Scenario:
-        ts = Scenario()
-        ts.add_host(hostname)
-        ts.set_option("ipaddresses", {hostname: ipaddress})
-        ts.apply(monkeypatch)
-        return ts
-
-    @pytest.mark.usefixtures("scenario")
-    @pytest.mark.usefixtures("patch_config_load")
-    def test_success(
-        self,
-        hostname: HostName,
-        raw_data: bytes,
-        capsys: pytest.CaptureFixture[str],
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        _patch_fetcher_trigger(monkeypatch, raw_data)
-
-        _dump_agent(hostname, {})
-
-        assert capsys.readouterr().out == raw_data.decode()
-
-    @pytest.mark.usefixtures("scenario")
-    @pytest.mark.usefixtures("patch_config_load")
-    def test_agent_warning_does_not_fail(
-        self,
-        hostname: HostName,
-        capsys: pytest.CaptureFixture[str],
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        _patch_fetcher_trigger(
-            monkeypatch,
-            b"<<<check_mk>>>\nraw data\n"
-            b"<<<<>>>>\n<<<cmk_agent_messages:sep(0)>>>\n"
-            b'{"level": "warning", "message": "Section foo denied"}\n',
-        )
-
-        exit_code = _dump_agent(hostname, {})
-
-        assert exit_code == CLIExitCode.SUCCESS
-        assert capsys.readouterr().err == "WARNING [agent]: Success, Section foo denied\n"
-
-    @pytest.mark.usefixtures("scenario")
-    @pytest.mark.usefixtures("patch_config_load")
-    def test_unknown_fetch_failure_fails(
-        self,
-        hostname: HostName,
-        capsys: pytest.CaptureFixture[str],
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        _patch_fetcher_trigger(monkeypatch, Exception("Something broke"))
-
-        exit_code = _dump_agent(hostname, {})
-
-        assert exit_code == CLIExitCode.FAILURE
-        assert capsys.readouterr().err == "ERROR [agent]: Something broke\n"
+    assert _source_dump("agent", b"", results).errors == ("ERROR [agent]: Something broke",)
 
 
-class TestDumpAgentSnmpBackend:
-    @pytest.fixture
-    def hostname(self) -> HostName:
-        return HostName("snmphost")
+def test_an_error_outranks_a_warning() -> None:
+    results = [
+        ActiveCheckResult(state=1, summary="denied"),
+        ActiveCheckResult(state=3, summary="unknown"),
+    ]
 
-    @pytest.fixture
-    def ipaddress(self) -> HostAddress:
-        return HostAddress("1.2.3.4")
-
-    @pytest.fixture
-    def patch_config_load(
-        self, monkeypatch: pytest.MonkeyPatch, hostname: HostName, ipaddress: HostAddress
-    ) -> None:
-        loaded_config = replace(
-            EMPTY_CONFIG,
-            ipaddresses={hostname: ipaddress},
-            host_tags={
-                hostname: {
-                    TagGroupID("snmp_ds"): TagID("snmp-v2"),
-                    TagGroupID("piggyback"): TagID("auto-piggyback"),
-                    TagGroupID("networking"): TagID("lan"),
-                    TagGroupID("criticality"): TagID("prod"),
-                    TagGroupID("site"): TagID("unit"),
-                    TagGroupID("address_family"): TagID("ip-v4-only"),
-                    TagGroupID("ip-v4"): TagID("ip-v4"),
-                }
-            },
-        )
-        monkeypatch.setattr(
-            config,
-            config.load.__name__,
-            lambda *a, **kw: config.LoadingResult(  # noqa: ARG005
-                loaded_config=loaded_config,
-                hosts_config=config.make_hosts_config(loaded_config),
-                host_tags=config.make_host_tags(
-                    loaded_config, config.make_hosts_config(loaded_config)
-                ),
-                config_cache=config.ConfigCache(
-                    loaded_config,
-                    config.make_hosts_config(loaded_config),
-                    config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
-                    autochecks_dir=cmk_paths.autochecks_dir,
-                    discovered_host_labels_dir=cmk_paths.discovered_host_labels_dir,
-                    builtin_host_labels_file=cmk_paths.builtin_host_labels_file,
-                    debug=False,
-                ),
-            ),
-        )
-
-    @pytest.fixture
-    def scenario(
-        self,
-        hostname: HostName,
-        ipaddress: HostAddress,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        ts = Scenario()
-        ts.add_host(hostname, tags={TagGroupID("snmp_ds"): TagID("snmp-v2")})
-        ts.set_option("ipaddresses", {hostname: ipaddress})
-        ts.apply(monkeypatch)
-
-    @pytest.mark.usefixtures("scenario", "patch_config_load")
-    @pytest.mark.parametrize(
-        ["options", "expected_backend_type"],
-        [
-            pytest.param({}, ClassicSNMPBackend, id="default"),
-            pytest.param(
-                {SNMP_BACKEND_VALUE: ["stored-walk"]}, StoredWalkSNMPBackend, id="stored-walk"
-            ),
-        ],
+    assert _source_dump("agent", b"", results) == _AgentDump(
+        b"", (), ("ERROR [agent]: denied, unknown",)
     )
-    def test_the_snmp_backend_option_selects_the_backend(
-        self,
-        hostname: HostName,
-        options: Mapping[CLIDeclaration, Sequence[str]],
-        expected_backend_type: type,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        # Spy on make_backend to capture the backend it returns
-        captured_backends: list = []
 
-        def spy_make_backend(*args: Any, **kwargs: Any) -> object:
-            backend = make_backend(*args, **kwargs)
-            captured_backends.append(backend)
-            return backend
 
-        monkeypatch.setattr(_snmp_module, "make_backend", spy_make_backend)
-
-        # Capture the SNMPSource that make_sources creates during mode_dump_agent
-        captured_sources: list = []
-        original_snmp_source_init = SNMPSource.__init__
-
-        def capturing_snmp_source_init(self: SNMPSource, *args: Any, **kwargs: Any) -> None:
-            original_snmp_source_init(self, *args, **kwargs)
-            captured_sources.append(self)
-
-        monkeypatch.setattr(SNMPSource, "__init__", capturing_snmp_source_init)
-
-        _patch_fetcher_trigger(monkeypatch, b"")
-        _dump_agent(hostname, options)
-
-        # Open the SNMP fetcher manually to drive make_backend
-        assert len(captured_sources) == 1
-        # StoredWalkSNMPBackend requires the walk file to exist; create an empty one
-        walk_file = cmk_paths.snmpwalks_dir / str(hostname)
-        walk_file.parent.mkdir(parents=True, exist_ok=True)
-        walk_file.touch()
-        fetcher = captured_sources[0].fetcher()
-        fetcher.open()
-        try:
-            assert len(captured_backends) == 1
-            assert isinstance(captured_backends[0], expected_backend_type)
-        finally:
-            fetcher.close()
+def test_a_successful_source_reports_nothing() -> None:
+    assert _source_dump(
+        "agent", b"<<<check_mk>>>\n", [ActiveCheckResult(state=0, summary="Success")]
+    ) == _AgentDump(b"<<<check_mk>>>\n", (), ())

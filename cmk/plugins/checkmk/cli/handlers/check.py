@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Protocol
 
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -13,12 +14,13 @@ from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.checking import run_checking
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.plugins import CheckPluginName
+from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.plugins.checkmk.cli.check import (
     CheckingRequest,
@@ -30,17 +32,19 @@ from ._exit_code import state_exit_code
 from ._file_cache import make_file_cache_options
 from .agent_based import extract_plugin_selection, load_checks
 
-_HOST_AND_ADDRESS: Final = 2
+
+class _CheckHost(Protocol):
+    def __call__(
+        self, host: HostName, request: CheckingRequest, *, omd_root: Path, debug: bool
+    ) -> ServiceState: ...
 
 
-def _mode_check(
-    omd_root: Path, global_options: CLIGlobalOptions, request: CheckingRequest, args: CLIArgs
-) -> CLIExitCode:
-    if len(args) > _HOST_AND_ADDRESS:
-        raise MKBailOut("Checking takes a HOST and an optional IPADDRESS, nothing more")
+def _check_host(
+    host: HostName, request: CheckingRequest, *, omd_root: Path, debug: bool
+) -> ServiceState:
     app = make_app(omd_root)
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
+    plugins = load_checks(debug=debug)
+    loading_result = config.load(validate_hosts=True, debug=debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -56,7 +60,7 @@ def _mode_check(
         type_=CheckPluginName,
     )
 
-    state = run_checking(
+    return run_checking(
         app,
         loaded_config,
         ruleset_matcher,
@@ -69,9 +73,9 @@ def _mode_check(
         config.ServiceDependsOn(
             tag_list=loading_result.host_tags.tag_list,
             service_dependencies=loaded_config.service_dependencies,
-            debug=global_options.debug,
+            debug=debug,
         ),
-        args,
+        [host] if request.address is None else [host, request.address],
         file_cache_options=make_file_cache_options(request.file_cache),
         snmp_backend=request.snmp_backend,
         usewalk=request.usewalk,
@@ -90,19 +94,32 @@ def _mode_check(
         ),
         trusted_ca_file=cmk.utils.paths.trusted_ca_file,
         fake_dns=request.fake_dns,
-        debug=global_options.debug,
+        debug=debug,
     )
-    return state_exit_code(state)
 
 
-def _run_check(context: CLIContext, request: CheckingRequest, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_check(context.omd_root, context.global_options, request, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _CheckCommand:
+    check_host: _CheckHost
+
+    def run(self, context: CLIContext, request: CheckingRequest, _args: CLIArgs) -> CLIExitCode:
+        assert request.host is not None
+        try:
+            return state_exit_code(
+                self.check_host(
+                    request.host,
+                    request,
+                    omd_root=context.omd_root,
+                    debug=context.global_options.debug,
+                )
+            )
+        except (MKBailOut, MKGeneralException) as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
 
 
-cli_handler_check = CLIHandler(command=cli_command_check, run=_run_check)
+cli_handler_check = CLIHandler(
+    command=cli_command_check, run=_CheckCommand(check_host=_check_host).run
+)

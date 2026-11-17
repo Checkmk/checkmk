@@ -15,11 +15,13 @@ from cmk.plugins.checkmk.cli.handlers.package import cli_handler_package
 
 def test_the_retired_command_refers_to_mkp_on_stderr(capsys: pytest.CaptureFixture[str]) -> None:
     context = CLIContext(
-        omd_root=Path("/nonexistent"),
+        omd_root=Path("/omd/sites/mysite"),
         global_options=CLIGlobalOptions(),
         logger=logging.getLogger(__name__),
     )
 
-    cli_handler_package.run(context, None, ["list"])
+    cli_handler_package.run(context, ("list",), ())
 
-    assert "`mkp list`" in capsys.readouterr().err
+    assert capsys.readouterr().err == (
+        "This command is no longer supported. Please use `mkp list` instead.\n"
+    )

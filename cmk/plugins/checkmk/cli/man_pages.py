@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The "cmk --man" and "cmk --browse-man" commands."""
 
+from dataclasses import dataclass
 from typing import Final, Literal
 
-from cmk.cli.internal import Arguments as CLIArguments
+from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import no_options as cli_no_options
 from cmk.cli.internal import Reader as CLIReader
@@ -34,8 +35,17 @@ _RENDERER_VALUE: Final = CLIValue(
 )
 
 
-def _renderer_request(options: CLIReader) -> Renderer | None:
-    return options.value(_RENDERER_VALUE)
+@dataclass(frozen=True, kw_only=True)
+class ManRequest:
+    renderer: Renderer | None
+    check_type: str | None
+
+
+def _man_request(options: CLIReader) -> ManRequest:
+    return ManRequest(
+        renderer=options.value(_RENDERER_VALUE),
+        check_type=options.argument(CLIArgument(placeholder="CHECKTYPE", parse=str, optional=True)),
+    )
 
 
 cli_command_man = CLICommand(
@@ -43,8 +53,7 @@ cli_command_man = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.man_pages:cli_handler_man",
     long="man",
     short="M",
-    arguments=CLIArguments(placeholder="CHECKTYPE", parse=str),
-    request=_renderer_request,
+    request=_man_request,
     help="Show manpage for check CHECKTYPE",
     description=[
         (

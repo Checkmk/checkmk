@@ -4,18 +4,36 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The core configuration commands: --nagios-config, --update, --restart and --reload."""
 
+from collections.abc import Sequence
+from dataclasses import dataclass
+
+from cmk.ccc.hostaddress import HostAddress
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Reader as CLIReader
 
-from .options import fake_dns_request
+from .options import fake_dns_request, FAKE_DNS_VALUE
+
+
+@dataclass(frozen=True, kw_only=True)
+class CoreConfigRequest:
+    fake_dns: HostAddress | None
+    hosts: Sequence[HostAddress]
+
+
+def _core_config_request(options: CLIReader) -> CoreConfigRequest:
+    return CoreConfigRequest(
+        fake_dns=options.value(FAKE_DNS_VALUE),
+        hosts=options.arguments(CLIArguments(placeholder="HOST1 HOST2...", parse=HostAddress)),
+    )
+
 
 cli_command_nagios_config = CLICommand(
     name="nagios_config",
     handler="cmk.plugins.checkmk.cli.handlers.core_config:cli_handler_nagios_config",
     long="nagios-config",
     short="N",
-    arguments=CLIArguments(placeholder="HOST1 HOST2...", parse=str),
-    request=fake_dns_request,
+    request=_core_config_request,
     help="Output Nagios configuration",
     description=[
         (
@@ -51,8 +69,7 @@ cli_command_restart = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.core_config:cli_handler_restart",
     long="restart",
     short="R",
-    arguments=CLIArguments(placeholder="[HostA, HostB]", parse=str),
-    request=fake_dns_request,
+    request=_core_config_request,
     help="Create core config + core restart",
     description=[
         (
@@ -69,8 +86,7 @@ cli_command_reload = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.core_config:cli_handler_reload",
     long="reload",
     short="O",
-    arguments=CLIArguments(placeholder="[HostA, HostB]", parse=str),
-    request=fake_dns_request,
+    request=_core_config_request,
     help="Create core config + core reload",
     description=[
         (

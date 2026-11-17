@@ -3,16 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import no_options as cli_no_options
+from cmk.cli.internal import Reader as CLIReader
+
+
+def _localize_request(options: CLIReader) -> Sequence[str]:
+    return options.arguments(CLIArguments(placeholder="COMMAND", parse=str))
+
 
 cli_command_localize = CLICommand(
     name="localize",
     handler="cmk.plugins.checkmk.cli.handlers.localize:cli_handler_localize",
     long="localize",
-    request=cli_no_options,
-    arguments=CLIArguments(placeholder="COMMAND", parse=str),
+    request=_localize_request,
     help="Do localization operations",
     description=[
         (

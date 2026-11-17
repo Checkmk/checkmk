@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The service discovery commands: --check-discovery and --discover."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
@@ -35,6 +36,7 @@ class CheckDiscoveryRequest:
     usewalk: bool
     snmp_backend: SNMPBackendEnum | None
     fake_dns: HostAddress | None
+    host: HostAddress | None
 
 
 def _check_discovery_request(options: CLIReader) -> CheckDiscoveryRequest:
@@ -43,6 +45,7 @@ def _check_discovery_request(options: CLIReader) -> CheckDiscoveryRequest:
         usewalk=options.flag(USEWALK_FLAG),
         snmp_backend=options.value(SNMP_BACKEND_VALUE),
         fake_dns=options.value(FAKE_DNS_VALUE),
+        host=options.argument(CLIArgument(placeholder="HOSTNAME", parse=HostAddress)),
     )
 
 
@@ -51,7 +54,6 @@ cli_command_check_discovery = CLICommand(
     handler="cmk.plugins.checkmk.cli.handlers.discovery:cli_handler_check_discovery",
     long="check-discovery",
     request=_check_discovery_request,
-    arguments=CLIArgument(placeholder="HOSTNAME", parse=str),
     help="Check for not yet monitored services",
     description=[
         (
@@ -87,6 +89,7 @@ class DiscoverRequest:
     plugin_selection: PluginSelectionRequest[CheckPluginName]
     only_host_labels: bool
     fake_dns: HostAddress | None
+    hosts: Sequence[str]
 
 
 def _discover_request(options: CLIReader) -> DiscoverRequest:
@@ -98,6 +101,7 @@ def _discover_request(options: CLIReader) -> DiscoverRequest:
         plugin_selection=plugin_selection_request(options, CHECK_PLUGINS_VALUE),
         only_host_labels=options.flag(_ONLY_HOST_LABELS_FLAG),
         fake_dns=options.value(FAKE_DNS_VALUE),
+        hosts=options.arguments(CLIArguments(placeholder="HOST1 HOST2...", parse=str)),
     )
 
 
@@ -107,7 +111,6 @@ cli_command_discover = CLICommand(
     long="discover",
     short="I",
     request=_discover_request,
-    arguments=CLIArguments(placeholder="[-I] HOST1 HOST2...", parse=str),
     help="Find new services",
     description=[
         (

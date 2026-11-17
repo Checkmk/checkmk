@@ -1,4 +1,4 @@
-title: zOS Mainframes: Used Space in Filesystems
+title: IBM z/OS: Filesystem Used Space
 agents: z_os
 catalog: os/storage
 license: GPLv2

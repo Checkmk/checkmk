@@ -1,4 +1,4 @@
-title: NetApp Filer: Used Space in Filesystems
+title: NetApp ONTAP: Aggregate and Volume Used Space via SNMP
 agents: snmp
 catalog: hw/storagehw/netapp
 license: GPLv2

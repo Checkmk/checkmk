@@ -13,7 +13,6 @@ from datetime import timedelta
 from enum import Enum
 from typing import Any, NamedTuple, Self
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     check_levels,
@@ -760,7 +759,7 @@ def _check_temporary_state(
         elapsed_time = service.time_since_change
         if elapsed_time is None:
             continue
-        yield from check_levels_v1(
+        yield from check_levels(
             elapsed_time.total_seconds(),
             levels_upper=levels,
             render_func=render.timespan,
@@ -859,9 +858,9 @@ CHECK_DEFAULT_PARAMETERS_SUMMARY = {
         "failed": 2,
     },
     "states_default": 2,
-    "activating_levels": None,
-    "deactivating_levels": (30, 60),
-    "reloading_levels": None,
+    "activating_levels": ("no_levels", None),
+    "deactivating_levels": ("fixed", (30.0, 60.0)),
+    "reloading_levels": ("no_levels", None),
     "ignored": [],
 }
 

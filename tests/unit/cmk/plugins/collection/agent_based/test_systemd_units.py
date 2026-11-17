@@ -1354,14 +1354,13 @@ def test_check_systemd_units_sockets(
     [
         pytest.param(
             {
-                "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
                 "disabled_critical": False,
                 "ignored": [],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
+                "activating_levels": ("fixed", (30.0, 60.0)),
+                "deactivating_levels": ("fixed", (30.0, 60.0)),
+                "reloading_levels": ("fixed", (30.0, 60.0)),
             },
             SECTION,
             [
@@ -1374,14 +1373,13 @@ def test_check_systemd_units_sockets(
         ),
         pytest.param(
             {
-                "else": 2,
                 "states": {"active": 0, "failed": 1, "inactive": 0},
                 "states_default": 2,
                 "disabled_critical": False,
                 "ignored": [],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
+                "activating_levels": ("fixed", (30.0, 60.0)),
+                "deactivating_levels": ("fixed", (30.0, 60.0)),
+                "reloading_levels": ("fixed", (30.0, 60.0)),
             },
             SECTION,
             [
@@ -1395,9 +1393,9 @@ def test_check_systemd_units_sockets(
         pytest.param(
             {
                 "ignored": ["virtual"],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
+                "activating_levels": ("fixed", (30.0, 60.0)),
+                "deactivating_levels": ("fixed", (30.0, 60.0)),
+                "reloading_levels": ("fixed", (30.0, 60.0)),
             },
             Section(
                 sockets={},
@@ -1423,9 +1421,9 @@ def test_check_systemd_units_sockets(
         pytest.param(
             {
                 "ignored": [],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
+                "activating_levels": ("fixed", (30.0, 60.0)),
+                "deactivating_levels": ("fixed", (30.0, 60.0)),
+                "reloading_levels": ("fixed", (30.0, 60.0)),
                 "disabled_critical": False,
             },
             Section(
@@ -1463,9 +1461,9 @@ def test_check_systemd_units_sockets(
         pytest.param(
             {
                 "ignored": [],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
+                "activating_levels": ("fixed", (30.0, 60.0)),
+                "deactivating_levels": ("fixed", (30.0, 60.0)),
+                "reloading_levels": ("fixed", (30.0, 60.0)),
                 "disabled_critical": False,
             },
             Section(
@@ -1493,9 +1491,9 @@ def test_check_systemd_units_sockets(
         pytest.param(
             {
                 "ignored": [],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
+                "activating_levels": ("fixed", (30.0, 60.0)),
+                "deactivating_levels": ("fixed", (30.0, 60.0)),
+                "reloading_levels": ("fixed", (30.0, 60.0)),
                 "disabled_critical": False,
             },
             Section(
@@ -1523,9 +1521,9 @@ def test_check_systemd_units_sockets(
         pytest.param(
             {
                 "ignored": [],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
+                "activating_levels": ("fixed", (30.0, 60.0)),
+                "deactivating_levels": ("fixed", (30.0, 60.0)),
+                "reloading_levels": ("fixed", (30.0, 60.0)),
                 "disabled_critical": False,
             },
             Section(
@@ -1550,14 +1548,13 @@ def test_check_systemd_units_sockets(
         ),
         pytest.param(
             {
-                "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
                 "disabled_critical": False,
                 "ignored": [],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
+                "activating_levels": ("fixed", (30.0, 60.0)),
+                "deactivating_levels": ("fixed", (30.0, 60.0)),
+                "reloading_levels": ("fixed", (30.0, 60.0)),
             },
             Section(
                 sockets={},
@@ -1582,7 +1579,6 @@ def test_check_systemd_units_sockets(
         ),
         pytest.param(
             {
-                "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
                 "disabled_critical": False,
@@ -1591,9 +1587,9 @@ def test_check_systemd_units_sockets(
                     "systemd-ask-password-console",
                     "zfs-import@fgprs\\x2dpbs02\\x2dpool1\\x2d100",
                 ],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
+                "activating_levels": ("fixed", (30.0, 60.0)),
+                "deactivating_levels": ("fixed", (30.0, 60.0)),
+                "reloading_levels": ("fixed", (30.0, 60.0)),
             },
             Section(
                 sockets={},
@@ -1618,16 +1614,15 @@ def test_check_systemd_units_sockets(
         ),
         pytest.param(
             {
-                "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
                 "disabled_critical": False,
                 "ignored": [
                     "systemd.",
                 ],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
+                "activating_levels": ("fixed", (30.0, 60.0)),
+                "deactivating_levels": ("fixed", (30.0, 60.0)),
+                "reloading_levels": ("fixed", (30.0, 60.0)),
             },
             Section(
                 sockets={},
@@ -1664,14 +1659,13 @@ def test_check_systemd_units_sockets(
         ),
         pytest.param(
             {
-                "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
                 "disabled_critical": False,
                 "ignored": [],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
+                "activating_levels": ("fixed", (30.0, 60.0)),
+                "deactivating_levels": ("fixed", (30.0, 60.0)),
+                "reloading_levels": ("fixed", (30.0, 60.0)),
             },
             Section(
                 sockets={},
@@ -1696,13 +1690,12 @@ def test_check_systemd_units_sockets(
         pytest.param(
             {
                 "disabled_critical": True,
-                "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
                 "ignored": [],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
+                "activating_levels": ("fixed", (30.0, 60.0)),
+                "deactivating_levels": ("fixed", (30.0, 60.0)),
+                "reloading_levels": ("fixed", (30.0, 60.0)),
             },
             Section(
                 sockets={},
@@ -1726,14 +1719,13 @@ def test_check_systemd_units_sockets(
         ),
         pytest.param(
             {
-                "else": 2,
                 "states": {"active": 0, "failed": 0, "inactive": 0},
                 "states_default": 2,
                 "disabled_critical": False,
                 "ignored": [],
-                "activating_levels": (30, 60),
-                "deactivating_levels": (30, 60),
-                "reloading_levels": (30, 60),
+                "activating_levels": ("fixed", (30.0, 60.0)),
+                "deactivating_levels": ("fixed", (30.0, 60.0)),
+                "reloading_levels": ("fixed", (30.0, 60.0)),
             },
             Section(
                 sockets={},
@@ -1818,7 +1810,7 @@ testing.service loaded reloading reload reload testing.service
     # Reason: The current output format does not offer the correct information.
     # In the future we may get this required information in a proper way.
     params = CHECK_DEFAULT_PARAMETERS_SUMMARY.copy()
-    params["reloading_levels"] = (30, 60)
+    params["reloading_levels"] = ("fixed", (30.0, 60.0))
     assert parsed is not None
     assert list(check_systemd_units_services_summary(params=params, section=parsed)) == [
         Result(state=State.OK, summary="Total: 1"),
@@ -1868,7 +1860,7 @@ phpsessionclean.service loaded activating start Clean PHP session files
     parsed = parse(string_table)
     assert parsed is not None
 
-    params = {**CHECK_DEFAULT_PARAMETERS_SUMMARY, "activating_levels": (300, 600)}
+    params = {**CHECK_DEFAULT_PARAMETERS_SUMMARY, "activating_levels": ("fixed", (300.0, 600.0))}
     results = list(check_systemd_units_services_summary(params=params, section=parsed))
 
     spurious = [

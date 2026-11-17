@@ -1,4 +1,4 @@
-title: STULZ Clima Unit: Alerts
+title: STULZ: Alerts
 agents: snmp
 catalog: hw/environment/stulz
 license: GPLv2

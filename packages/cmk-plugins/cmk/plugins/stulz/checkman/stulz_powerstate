@@ -1,4 +1,4 @@
-title: STULZ Clima Unit: Power State
+title: STULZ: Power State
 agents: snmp
 catalog: hw/environment/stulz
 license: GPLv2

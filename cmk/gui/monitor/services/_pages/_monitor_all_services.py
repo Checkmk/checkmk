@@ -28,6 +28,7 @@ from cmk.gui.monitor.command import (
 from cmk.gui.monitor.export import EXPORT_EVENT, MonitorExportMenu
 from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.monitor.services._api._limits import LIMIT_TIERS
+from cmk.gui.monitor.services._legacy_view_link import ALL_SERVICES_SURVEY_URL
 from cmk.gui.monitor.services._supported_actions import SERVICE_SUPPORTED_ACTIONS
 from cmk.gui.monitor.shared import any_custom_icons
 from cmk.gui.page_menu import PageMenu
@@ -166,6 +167,7 @@ class MonitorAllServicesPage(Page):
                             filename="view.py",
                         ),
                         title=_("Return to classic view"),
+                        survey_url=ALL_SERVICES_SURVEY_URL,
                     ),
                 )
             ),

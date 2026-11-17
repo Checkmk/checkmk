@@ -13,7 +13,7 @@ from cmk.web.utils.urls import makeuri_contextless
 
 _LEGACY_VIEW_NAME = "host"
 _LEGACY_ALL_SERVICES_VIEW_NAME = "allservices"
-_ALL_SERVICES_SURVEY_URL = "https://survey.checkmk.com/index.php/527348?lang=en"
+ALL_SERVICES_SURVEY_URL = "https://survey.checkmk.com/index.php/527348?lang=en"
 
 
 class HostServicesLinkButton:
@@ -51,7 +51,7 @@ class AllServicesLinkButton:
                     url=makeuri_contextless(request, [], filename="monitor_all_services.py"),
                     title=_('Try the new "All services" view'),
                     teleport_target=self._teleport_target,
-                    survey_url=_ALL_SERVICES_SURVEY_URL,
+                    survey_url=ALL_SERVICES_SURVEY_URL,
                 )
             ),
         )

@@ -9,7 +9,6 @@ from cmk.gui.views.inventory._painters import _compute_attribute_painter_data
 from cmk.inventory.structured_data import SDKey, SDNodeName
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="crash group 4806")
 @pytest.mark.usefixtures("request_context")
 def test_attribute_of_a_row_without_host_name() -> None:
     # A view of another data source, e.g. the log, can show a host inventory

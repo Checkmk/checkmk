@@ -64,7 +64,8 @@ class MultipleInventoryTreesError(Exception):
 
 def _validate_inventory_tree_uniqueness(row: Row) -> None:
     raw_hostname = row.get("host_name")
-    assert isinstance(raw_hostname, str)
+    if not isinstance(raw_hostname, str):
+        return
 
     if (
         len(
@@ -79,6 +80,10 @@ def _validate_inventory_tree_uniqueness(row: Row) -> None:
             % (raw_hostname, ", ".join(sites_with_same_named_hosts))
         )
         raise MultipleInventoryTreesError()
+
+
+def _get_inventory_tree(row: Row) -> ImmutableTree:
+    return tree if isinstance(tree := row.get("host_inventory"), ImmutableTree) else ImmutableTree()
 
 
 class PainterOptionShowInternalTreePaths(PainterOption):
@@ -118,7 +123,7 @@ class PainterInventoryTree(Painter):
         except MultipleInventoryTreesError:
             return ImmutableTree()
 
-        return row.get("host_inventory", ImmutableTree())
+        return _get_inventory_tree(row)
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if not (tree := self._compute_data(row, cell, user)):
@@ -318,7 +323,7 @@ def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
         return None
-    return row.get("host_inventory", ImmutableTree()).get_tree(path).attributes
+    return _get_inventory_tree(row).get_tree(path).attributes
 
 
 def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDValue:
@@ -468,7 +473,7 @@ def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
     except MultipleInventoryTreesError:
         return ImmutableTree()
 
-    return row.get("host_inventory", ImmutableTree()).get_tree(path)
+    return _get_inventory_tree(row).get_tree(path)
 
 
 def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterOptions) -> CellSpec:

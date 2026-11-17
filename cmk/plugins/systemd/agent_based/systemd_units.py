@@ -715,7 +715,7 @@ def discovery_systemd_units_sockets(
 
 
 def _matches_any(conditions: Sequence[Mapping[str, str]] | None, text: str) -> bool:
-    return conditions is None or any(
+    return not conditions or any(
         re.match(c["pattern"], text) if c["match"] == "regex" else c["pattern"] == text
         for c in conditions
     )
@@ -730,7 +730,7 @@ def _match_systemd_units(
             if (
                 _matches_any(settings.get("descriptions"), unit.description)
                 and _matches_any(settings.get("names"), unit.name)
-                and (states is None or unit.active_status in states)
+                and (not states or unit.active_status in states)
             ):
                 yield unit, settings
 

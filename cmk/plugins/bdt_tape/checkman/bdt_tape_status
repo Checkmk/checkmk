@@ -1,4 +1,4 @@
-title: BDT Tape Library: Status
+title: BDT: Tape Library Status
 agents: snmp
 catalog: hw/storagehw/bdt
 license: GPLv2

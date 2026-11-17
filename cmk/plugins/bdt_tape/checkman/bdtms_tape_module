@@ -1,4 +1,4 @@
-title: BDTMS Tape Library: Modules
+title: BDT: BDTMS Tape Library Modules
 agents: snmp
 catalog: hw/storagehw/bdt
 license: GPLv2

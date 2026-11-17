@@ -1,4 +1,4 @@
-title: Viprinet: Temperature Levels
+title: Viprinet: Temperature
 agents: snmp
 catalog: hw/network/viprinet
 license: GPLv2

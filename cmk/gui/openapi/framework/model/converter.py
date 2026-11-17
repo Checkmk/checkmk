@@ -27,7 +27,7 @@ from cmk.gui.userdb import connection_choices
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import Host, strip_hostname_whitespace_chars
-from cmk.gui.watolib.passwords import load_passwords
+from cmk.gui.watolib.passwords import contact_group_choices, load_passwords
 from cmk.gui.watolib.userroles import role_exists, RoleID
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables import Hostgroups, Servicegroups
@@ -400,6 +400,34 @@ class PasswordConverter:
         if ident not in load_passwords():
             raise ValueError(f'Password "{ident}" is not known.')
         return ident
+
+    @staticmethod
+    def editable_by(group: str) -> str:
+        if user.may("wato.edit_all_passwords"):
+            permitted = [group_id for group_id, _alias in contact_group_choices()] + ["admin"]
+        else:
+            permitted = [group_id for group_id, _alias in contact_group_choices(only_own=True)]
+        if group not in permitted:
+            raise ValueError(
+                f"Specified contact group does not exist or you do not have the necessary permissions: {group!r}"
+            )
+        return group
+
+    @staticmethod
+    def default_editable_by() -> str:
+        if not user.may("wato.edit_all_passwords"):
+            raise ValueError(
+                "Without the permission to edit all passwords, editable_by must name one of your contact groups."
+            )
+        return "admin"
+
+    @staticmethod
+    def shareable_with(groups: list[str]) -> list[str]:
+        shareable = ["all", *(group_id for group_id, _alias in contact_group_choices())]
+        for group in groups:
+            if group not in shareable:
+                raise ValueError(f"The password cannot be shared with specified group: {group!r}")
+        return groups
 
 
 @dataclass(slots=True)

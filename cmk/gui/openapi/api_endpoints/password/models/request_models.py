@@ -45,19 +45,25 @@ class CreatePassword:
         description="The password string",
     )
     # TODO: DEPRECATED(17274) - remove in 2.5
-    owned_by: str | ApiOmitted = api_field(
-        example="admin",
-        description="Deprecated - use `editable_by` instead. Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
-        serialization_alias="owner",
-        default_factory=ApiOmitted,
-        deprecated=True,
+    owned_by: Annotated[str, AfterValidator(PasswordConverter.editable_by)] | ApiOmitted = (
+        api_field(
+            example="admin",
+            description="Deprecated - use `editable_by` instead. Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
+            serialization_alias="owner",
+            default_factory=ApiOmitted,
+            deprecated=True,
+        )
     )
-    editable_by: str | ApiOmitted = api_field(
-        example="admin",
-        description="Each password is owned by a group of users which are able to edit, delete and use existing passwords. By default, the admin group is the owner of a password.",
-        default_factory=ApiOmitted,
+    editable_by: Annotated[str, AfterValidator(PasswordConverter.editable_by)] | ApiOmitted = (
+        api_field(
+            example="admin",
+            description="Each password is owned by a group of users which are able to edit, delete and use existing passwords. By default, the admin group is the owner of a password. Users without the permission to edit all passwords must specify one of their contact groups.",
+            default_factory=ApiOmitted,
+        )
     )
-    shared_with: list[str] | ApiOmitted = api_field(
+    shared_with: (
+        Annotated[list[str], AfterValidator(PasswordConverter.shareable_with)] | ApiOmitted
+    ) = api_field(
         example=["all"],
         description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
         serialization_alias="shared",
@@ -92,13 +98,19 @@ class CreatePassword:
             )
         return self
 
+    @model_validator(mode="after")
+    def validate_default_editable_by(self) -> Self:
+        if isinstance(self.owned_by, ApiOmitted) and isinstance(self.editable_by, ApiOmitted):
+            PasswordConverter.default_editable_by()
+        return self
+
     def to_internal(self) -> Password:
         if isinstance(self.editable_by, str):
             owned_by = self.editable_by
         elif isinstance(self.owned_by, str):
             owned_by = self.owned_by
         else:
-            owned_by = "admin"
+            owned_by = PasswordConverter.default_editable_by()
         password = Password(
             title=self.title,
             comment=self.comment,
@@ -135,19 +147,25 @@ class UpdatePassword:
         default_factory=ApiOmitted,
     )
     # TODO: DEPRECATED(17274) - remove in 2.5
-    owned_by: str | ApiOmitted = api_field(
-        example="admin",
-        description="Deprecated - use `editable_by` instead. Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
-        serialization_alias="owner",
-        default_factory=ApiOmitted,
-        deprecated=True,
+    owned_by: Annotated[str, AfterValidator(PasswordConverter.editable_by)] | ApiOmitted = (
+        api_field(
+            example="admin",
+            description="Deprecated - use `editable_by` instead. Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
+            serialization_alias="owner",
+            default_factory=ApiOmitted,
+            deprecated=True,
+        )
     )
-    editable_by: str | ApiOmitted = api_field(
-        example="admin",
-        description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
-        default_factory=ApiOmitted,
+    editable_by: Annotated[str, AfterValidator(PasswordConverter.editable_by)] | ApiOmitted = (
+        api_field(
+            example="admin",
+            description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
+            default_factory=ApiOmitted,
+        )
     )
-    shared_with: list[str] | ApiOmitted = api_field(
+    shared_with: (
+        Annotated[list[str], AfterValidator(PasswordConverter.shareable_with)] | ApiOmitted
+    ) = api_field(
         example=["all"],
         description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
         serialization_alias="shared",

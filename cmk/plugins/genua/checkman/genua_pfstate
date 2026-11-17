@@ -1,4 +1,4 @@
-title: Genua: State of Packetfilter Engine
+title: genuscreen: Packet Filter State
 agents: snmp
 catalog: hw/network/genua
 license: GPLv2

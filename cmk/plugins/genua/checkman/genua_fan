@@ -1,4 +1,4 @@
-title: Genua: Fan State and RPM
+title: genuscreen: Fan State and Speed
 agents: snmp
 catalog: hw/network/genua
 license: GPLv2

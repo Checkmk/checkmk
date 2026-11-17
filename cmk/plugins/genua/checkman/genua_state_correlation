@@ -1,4 +1,4 @@
-title: Genua: Correlation of the State of Carp Interfaces
+title: genuscreen: CARP State Correlation
 agents: snmp
 catalog: hw/network/genua
 license: GPLv2

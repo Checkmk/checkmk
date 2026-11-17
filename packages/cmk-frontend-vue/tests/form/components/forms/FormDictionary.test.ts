@@ -3,8 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { nextTick } from 'vue'
 
 import FormEdit from '@/form/FormEdit.vue'
 import FormDictionary from '@/form/private/forms/FormDictionary/FormDictionary.vue'
@@ -131,9 +133,66 @@ test('FormDictionary render backend validation message of children', async () =>
       ]
     }
   })
-  screen.getByText('Backend error message')
 
+  await nextTick()
+
+  screen.getByText('Backend error message')
   await screen.findByDisplayValue('other_value')
+})
+
+test('FormDictionary drops the backend validation message of an edited element', async () => {
+  render(FormEdit, {
+    props: {
+      spec,
+      data: { bar: 'some_value' },
+      backendValidation: [
+        { location: ['bar'], message: 'Backend error message', replacement_value: 'other_value' }
+      ]
+    }
+  })
+  await screen.findByText('Backend error message')
+
+  await userEvent.type(screen.getByRole('textbox', { name: 'barLabel' }), 'x')
+
+  expect(screen.queryByText('Backend error message')).toBeNull()
+})
+
+test('FormDictionary keeps the backend validation message of a checkbox list', async () => {
+  const statesFormSpec: FormSpec.CheckboxListChoice = {
+    type: 'checkbox_list_choice',
+    title: 'statesTitle',
+    help: '',
+    elements: [{ name: 'active', title: 'active' }],
+    validators: [],
+    i18n: { and_x_more: '' },
+    no_element_label: ''
+  }
+  const checkboxListSpec: FormSpec.Dictionary = {
+    ...spec,
+    elements: [
+      {
+        name: 'states',
+        render_only: false,
+        required: false,
+        default_value: [],
+        group: null,
+        parameter_form: statesFormSpec
+      }
+    ]
+  }
+  render(FormEdit, {
+    props: {
+      spec: checkboxListSpec,
+      data: { states: [] },
+      backendValidation: [
+        { location: ['states'], message: 'Backend error message', replacement_value: [] }
+      ]
+    }
+  })
+
+  await nextTick()
+
+  expect(screen.getByRole('alert')).toHaveTextContent('Backend error message')
 })
 
 test('FormDictionary renders required only once depending on label presence', async () => {

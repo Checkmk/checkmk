@@ -72,8 +72,9 @@ immediateWatch(
 props.spec.elements.forEach((element) => {
   watch(
     () => data.value[element.name],
-    () => {
-      if (elementValidation.value[element.name]?.length) {
+    (value) => {
+      const messages = elementValidation.value[element.name]!
+      if (messages.length && messages.every((m) => m.replacement_value !== value)) {
         elementValidation.value[element.name] = []
       }
     }

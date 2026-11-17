@@ -6699,7 +6699,7 @@ class Transform(ValueSpec[T]):
     def validate_datatype(self, value: Any, varprefix: str) -> None:
         try:
             converted = self.to_valuespec(value)
-        except (KeyError, IndexError, TypeError, ValueError) as exc:
+        except (AttributeError, KeyError, IndexError, TypeError, ValueError) as exc:
             raise MKUserError(varprefix, _("The value has an unknown format: %s") % exc) from exc
         self._valuespec.validate_datatype(converted, varprefix)
 

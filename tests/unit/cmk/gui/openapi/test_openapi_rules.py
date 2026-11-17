@@ -5,7 +5,7 @@
 import os
 import typing
 import urllib
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 import pytest
@@ -294,15 +294,6 @@ def test_create_rule_rejects_a_value_its_migration_cannot_read(clients: ClientRe
     resp.assert_status_code(400)
 
 
-@pytest.fixture
-def discard_rest_api_crash_reports() -> Iterator[None]:
-    yield
-    for crash_file in (paths.crash_dir / "rest_api").glob("*/crash.info"):
-        crash_file.unlink()
-
-
-@pytest.mark.usefixtures("discard_rest_api_crash_reports")
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="crash group 4861")
 def test_create_rule_rejects_a_value_its_transform_cannot_read(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
         ruleset="extra_host_conf:notification_options",

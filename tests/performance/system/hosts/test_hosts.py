@@ -10,8 +10,8 @@ from functools import partial
 import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 
-from tests.performance.hosts import scenario
-from tests.performance.perftest import PerformanceTest
+from tests.performance.system.hosts import scenario
+from tests.performance.system.perftest import PerformanceTest
 
 
 def test_performance_hosts_restart(perftest: PerformanceTest, benchmark: BenchmarkFixture) -> None:

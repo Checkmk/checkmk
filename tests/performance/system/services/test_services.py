@@ -15,8 +15,8 @@ from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.ccc.version import Edition
 
-from tests.performance.perftest import PerformanceTest
-from tests.performance.services import scenario
+from tests.performance.system.perftest import PerformanceTest
+from tests.performance.system.services import scenario
 
 
 @pytest.mark.skipif(

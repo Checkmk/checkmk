@@ -12,7 +12,7 @@ from urllib.parse import parse_qs, urlencode, urljoin, urlparse, urlunparse
 
 from playwright.sync_api import BrowserContext
 
-from tests.performance.perftest import PerformanceTest
+from tests.performance.system.perftest import PerformanceTest
 
 logger = logging.getLogger(__name__)
 

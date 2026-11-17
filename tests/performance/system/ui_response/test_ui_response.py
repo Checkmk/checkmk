@@ -11,9 +11,9 @@ import pytest
 from playwright.sync_api import BrowserContext
 from pytest_benchmark.fixture import BenchmarkFixture
 
-from tests.performance.perftest import PerformanceTest
-from tests.performance.ui_response import scenario
-from tests.performance.ui_response.scenario import CmkPageUrl
+from tests.performance.system.perftest import PerformanceTest
+from tests.performance.system.ui_response import scenario
+from tests.performance.system.ui_response.scenario import CmkPageUrl
 
 #: Deliberately loose. These are the first figures anyone has for the monitoring pages, and
 #: the first runs are for learning what they are rather than policing a threshold nobody has

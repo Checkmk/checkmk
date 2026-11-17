@@ -23,8 +23,8 @@ from tests.testlib.site import (
 )
 from tests.testlib.utils import is_containerized, run
 
-from tests.performance.perftest import PerformanceTest
 from tests.performance.sysmon import track_resources
+from tests.performance.system.perftest import PerformanceTest
 
 site_factory = get_site_factory(prefix="perf_")
 

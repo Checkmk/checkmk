@@ -10,8 +10,8 @@ from functools import partial
 
 from pytest_benchmark.fixture import BenchmarkFixture
 
-from tests.performance.activation import scenario
-from tests.performance.perftest import PerformanceTest
+from tests.performance.system.activation import scenario
+from tests.performance.system.perftest import PerformanceTest
 
 
 def test_performance_bulk_change_activation(

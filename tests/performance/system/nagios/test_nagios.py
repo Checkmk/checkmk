@@ -12,8 +12,8 @@ from functools import partial
 import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 
-from tests.performance.nagios import scenario
-from tests.performance.perftest import PerformanceTest
+from tests.performance.system.nagios import scenario
+from tests.performance.system.perftest import PerformanceTest
 
 logger = logging.getLogger(__name__)
 

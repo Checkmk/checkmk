@@ -13,7 +13,9 @@ from unittest import mock
 
 from git.repo import Repo
 
+from cmk.werks.tool import parse_werk
 from cmk.werks.tool.cli.stash import Stash
+from cmk.werks.tool.parse import WerkV2ParseResult, WerkV3ParseResult
 
 from ._werk_files import werk_text
 
@@ -223,6 +225,37 @@ def test_pick_without_commit_names_the_commit_to_reuse(tmp_path: Path) -> None:
     _returncode, output = call_output("pick", "--no-commit", picked, home=home, cwd=repo_path)
 
     assert f"git commit -C '{picked}'" in output
+
+
+def _pick_werk(tmp_path: Path, werk: str) -> WerkV2ParseResult | WerkV3ParseResult:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo"
+    repo = initialize_werks_project(repo_path, first_free=11_111)
+    base = repo.head.commit.hexsha
+    (repo_path / ".werks/11111.md").write_text(werk, encoding="utf-8")
+    repo.index.add([".werks/11111.md"])
+    picked = repo.index.commit("11111 picked werk").hexsha
+    repo.git.checkout("-b", "target", base)
+
+    call_output("pick", picked, home=home, cwd=repo_path)
+
+    return parse_werk(
+        (repo_path / ".werks/11111.md").read_text(encoding="utf-8"), "11111.md", v1_defaults={}
+    )
+
+
+def test_pick_sets_the_current_version(tmp_path: Path) -> None:
+    picked = _pick_werk(tmp_path, werk_text(version="2.5.0p3"))
+
+    assert picked.metadata["version"] == "0.1.0"
+
+
+def test_pick_converts_a_werk_v2_to_v3(tmp_path: Path) -> None:
+    picked = _pick_werk(tmp_path, werk_text(werk_format="v2", version="2.4.0p17", edition="cre"))
+
+    assert isinstance(picked, WerkV3ParseResult)
+    assert picked.metadata["edition"] == "community"
 
 
 def test_commit_config(tmp_path: Path) -> None:

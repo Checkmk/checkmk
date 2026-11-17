@@ -6,7 +6,9 @@
 
 import pytest
 
-from cmk.werks.tool.convert import werkv1_to_werkv2
+from cmk.werks.flavor.cmk.config import CmkConfig
+from cmk.werks.tool.convert import werkv1_to_werkv2, werkv2_to_werkv3
+from cmk.werks.tool.parse import WerkV2ParseResult, WerkV3ParseResult
 
 WERK_V1_SIMPLE = """Title: Simple Title
 Class: fix
@@ -176,3 +178,25 @@ def test_a_v1_line_without_a_key_is_rejected() -> None:
 
     with pytest.raises(RuntimeError, match="Can not parse line 'Class fix' of werk 1234"):
         werkv1_to_werkv2(werk_v1, 1234, _DEFAULTS)
+
+
+def test_werkv2_to_werkv3_maps_the_edition() -> None:
+    werk = WerkV2ParseResult({"id": "1234", "edition": "cre", "class": "fix"}, "A description.")
+
+    config = CmkConfig(
+        flavor="cmk",
+        components=[],
+        classes=[],
+        levels=[],
+        compatible=[],
+        online_url="",
+        current_version="3.0.0b1",
+        editions=[],
+        edition_components={},
+    )
+
+    converted = werkv2_to_werkv3(werk, config)
+
+    assert converted == WerkV3ParseResult(
+        {"id": "1234", "edition": "community", "class": "fix"}, "A description."
+    )

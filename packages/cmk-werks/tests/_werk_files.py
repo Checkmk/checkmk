@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
 
 def werk_text(
     *,
+    werk_format: Literal["v2", "v3"] = "v3",
     title: str = "A werk title",
     version: str | None = "2.5.0",
     edition: str = "community",
@@ -14,7 +17,7 @@ def werk_text(
     werk_class: str = "fix",
 ) -> str:
     version_row = "" if version is None else f"version | {version}\n"
-    return f"""[//]: # (werk v3)
+    return f"""[//]: # (werk {werk_format})
 # {title}
 
 key | value

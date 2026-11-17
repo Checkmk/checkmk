@@ -24,6 +24,7 @@ from rich.console import Console
 
 from .. import parse_werk
 from ..config import BaseConfig
+from ..convert import werkv2_to_werkv3
 from ..flavor import Flavor
 from ..flavor_registry import get_flavor, load_config
 from ..format import format_as_markdown_werk
@@ -405,12 +406,13 @@ def save_werk(werk: Werk, werk_version: WerkVersion, destination: Path | None = 
     save_last_werkid(werk.id)
 
 
-def change_werk_version(
-    ctx: Context, werk_path: Path, new_version: str, werk_version: WerkVersion
-) -> None:
+def _adapt_picked_werk(ctx: Context, werk_path: Path, werk_version: WerkVersion) -> None:
     werk = load_werk(ctx, werk_path)
-    werk.content.metadata["version"] = new_version
-    save_werk(werk, werk_version)
+    content = werk.content
+    if isinstance(content, WerkV2ParseResult):
+        content = werkv2_to_werkv3(content, ctx.config)
+    content.metadata["version"] = ctx.config.current_version
+    save_werk(werk._replace(content=content), werk_version)
     _git_add(werk_path)
 
 
@@ -1071,22 +1073,17 @@ def werk_cherry_pick(
     pick = subprocess.run(cmd, check=False)
 
     if found_werk_path is not None:
-        # Find werks that have been cherry-picked and change their version
-        # to our current checkmk version.
-
         # maybe we need to adapt the filename:
         if found_werk_path.source.suffix != found_werk_path.destination.suffix:
             # but this also means we need to change the content
             werk = load_werk(ctx, found_werk_path.source)
             git_move(found_werk_path.source, found_werk_path.destination)
             save_werk(werk, werk_version, found_werk_path.destination)
-            # git add will be executed by change_werk_version
+            # git add will be executed by _adapt_picked_werk
 
-        # Change the werk's version before checking the pick return code.
+        # Adapt the werk before checking the pick return code.
         # Otherwise the dev may forget to change the version
-        change_werk_version(
-            ctx, found_werk_path.destination, ctx.config.current_version, werk_version
-        )
+        _adapt_picked_werk(ctx, found_werk_path.destination, werk_version)
         log.info(
             "launcher:%(launcher)s, action:pick, werk ID:%(werk_id)s, werk file:%(werk_file)s",
             {

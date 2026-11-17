@@ -265,7 +265,7 @@ void archive_and_process_reports(Map args) {
         );
     }
     xunit([Custom(
-        customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
+        customXSL: "${checkout_dir}/buildscripts/scripts/schema/pytest-xunit.xsl",
         deleteOutputFiles: true,
         failIfNotNew: true,
         pattern: "**/junit.xml",

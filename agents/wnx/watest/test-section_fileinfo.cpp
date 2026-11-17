@@ -199,6 +199,17 @@ TEST_F(FileInfoFixture, ConfigWithoutFiles) {
     EXPECT_TRUE(!table[1].empty());
 }
 
+TEST_F(FileInfoFixture, ConfigWithoutPath) {
+    auto cfg = cfg::GetLoadedConfig();
+    cfg[cfg::groups::kFileInfo].remove(cfg::vars::kFileInfoPath);
+
+    const auto table = generate();
+
+    ASSERT_EQ(table.size(), 2);
+    EXPECT_EQ(table[0], hdr);
+    EXPECT_GT(std::stoll(table[1]), 100000);
+}
+
 TEST_F(FileInfoFixture, ConfigWithFiles) {
     // we simulate changing in config
     loadFilesInConfig();

@@ -597,11 +597,11 @@ std::string FileInfo::generateFileList(const YAML::Node &path_array) const {
 }  // namespace provider
 
 std::string FileInfo::makeBody() {
-    auto path_array_val = GetPathArray(cfg::GetLoadedConfig());
-    auto file_list = generateFileList(*path_array_val);
     auto ref_timestamp = std::to_string(tools::SecondsSinceEpoch()) + "\n";
-    return path_array_val.has_value() ? ref_timestamp + file_list
-                                      : ref_timestamp;
+    const auto path_array = GetPathArray(cfg::GetLoadedConfig());
+    return path_array.has_value()
+               ? ref_timestamp + generateFileList(*path_array)
+               : ref_timestamp;
 }
 
 bool FileInfo::ContainsGlobSymbols(std::string_view name) {

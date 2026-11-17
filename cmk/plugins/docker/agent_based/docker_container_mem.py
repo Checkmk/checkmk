@@ -92,6 +92,8 @@ def parse_docker_container_mem(string_table: StringTable) -> memory.SectionMemUs
     else:
         # this is the output of mk_docker.py
         # it has to handle both cgroupv1 and cgroupv2
+        if len(docker.cleanup_oci_error_message(string_table)) > 2:
+            return None
         parsed = _parse_docker_container_mem_plugin(string_table)
     return parsed.to_mem_used()
 

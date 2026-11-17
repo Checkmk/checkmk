@@ -1,4 +1,4 @@
-title: Infoblox Devices: DHCP Statistics
+title: Infoblox: DHCP Statistics
 agents: snmp
 catalog: hw/network/infoblox
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Infoblox Devices: Services
+title: Infoblox: Services
 agents: snmp
 catalog: hw/network/infoblox
 license: GPLv2

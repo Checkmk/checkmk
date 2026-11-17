@@ -16,9 +16,10 @@ jobs:
     env:
       PYTHONWARNINGS: ignore:DeprecationWarning
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-24.04]
-        include:
+        test:
         - name: Bandit tests
           target: test-bandit
         - name: Python formatting
@@ -64,8 +65,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install ksh libpango1.0-dev librrd-dev libldap2-dev libsasl2-dev libkrb5-dev libglib2.0-dev gettext "^g\+\+-14$"
         make .venv
-    - name: Run ${{ matrix.name  }}
+    - name: Run ${{ matrix.test.name }}
       env:
-        TEST_TARGETS: ${{ matrix.target }}
+        TEST_TARGETS: ${{ matrix.test.target }}
       run: |
         make -C tests $TEST_TARGETS

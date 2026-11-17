@@ -1,4 +1,4 @@
-title: Safenet HSM: NTLS Clients
+title: SafeNet HSM: NTLS Clients
 agents: snmp
 catalog: hw/network/safenet
 license: GPLv2

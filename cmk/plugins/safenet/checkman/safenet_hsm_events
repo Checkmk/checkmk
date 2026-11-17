@@ -1,4 +1,4 @@
-title: Safenet HSM: Event Stats
+title: SafeNet HSM: Event Statistics
 agents: snmp
 catalog: hw/network/safenet
 license: GPLv2

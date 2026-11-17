@@ -1,4 +1,4 @@
-title: Safenet HSM: NTLS Connection Rate
+title: SafeNet HSM: NTLS Connection Rate
 agents: snmp
 catalog: hw/network/safenet
 license: GPLv2

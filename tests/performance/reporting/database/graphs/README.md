@@ -44,7 +44,7 @@ split into backend and UI (`test_performance_ui_*`) variants:
 - `runtime_history.sql` / `runtime_history_ui.sql` — average test runtime.
 
 **Drilldown graphs** — a single release and scenario, overlaid with fixed
-reference baselines for releases `3.0.0` / `2.5.0` / `2.4.0` / `2.3.0`:
+reference baselines for releases `3.0.0` / `2.5.0` / `2.4.0`:
 
 - `cpu_history_drilldown.sql`, `memory_history_drilldown.sql`,
   `runtime_history_drilldown.sql`.

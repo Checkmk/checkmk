@@ -9,7 +9,6 @@ from datetime import datetime
 from typing import override
 from uuid import uuid4, uuid5
 
-from cmk.ccc import store
 from cmk.ccc.site import omd_site, url_prefix
 from cmk.ccc.user import UserId
 from cmk.events.notify_types import (
@@ -37,6 +36,7 @@ from cmk.gui.userdb import (
     save_users,
     UserSpec,
 )
+from cmk.gui.utils.configuration_lock import lock_checkmk_configuration
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.watolib.config_domain_name import ActivationContext
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
@@ -61,7 +61,6 @@ from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import (
     builtin_host_labels_file,
-    configuration_lockfile,
     htpasswd_file,
     site_cert_file,
 )
@@ -92,7 +91,7 @@ def init_wato_datastructures(tree: FolderTree, with_wato_lock: bool = False) -> 
         _create_sample_config(tree)
 
     if with_wato_lock:
-        with store.lock_checkmk_configuration(configuration_lockfile):
+        with lock_checkmk_configuration():
             init()
     else:
         init()

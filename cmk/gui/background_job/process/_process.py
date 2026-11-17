@@ -45,6 +45,7 @@ from cmk.gui.features import features_registry
 from cmk.gui.i18n import _
 from cmk.gui.session_context import SuperUserContext, UserContext
 from cmk.gui.single_global_setting import load_gui_log_levels
+from cmk.gui.utils.configuration_lock import lock_checkmk_configuration
 from cmk.gui.utils.roles import UserPermissions
 from cmk.trace import (
     get_tracer,
@@ -97,11 +98,7 @@ def run_process(job_parameters: JobParameters) -> None:
                 },
                 links=[Link(origin_span_context.to_span_context())],
             ),
-            (
-                store.lock_checkmk_configuration(paths.configuration_lockfile)
-                if lock_wato
-                else nullcontext()
-            ),
+            lock_checkmk_configuration() if lock_wato else nullcontext(),
         ):
             logger.log(
                 VERBOSE, "Initialized background job (Job ID: %(job_id)s)", {"job_id": job_id}

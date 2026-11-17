@@ -45,6 +45,7 @@ from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import AnnotatedUserId, CustomHostAttrSpec
+from cmk.gui.utils.configuration_lock import lock_checkmk_configuration
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
@@ -86,7 +87,7 @@ from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 from cmk.rulesets.v1 import form_specs as fs
 from cmk.rulesets.v1 import Label, Title
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
-from cmk.utils.paths import configuration_lockfile, tmp_run_dir
+from cmk.utils.paths import tmp_run_dir
 
 DoFullScan = NewType("DoFullScan", bool)
 
@@ -696,7 +697,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
     ) -> None:
         # The following code updates the host config. The progress from loading the Setup folder
         # until it has been saved needs to be locked.
-        with store.lock_checkmk_configuration(configuration_lockfile):
+        with lock_checkmk_configuration():
             tree.invalidate_caches()
             folder = tree.folder(task.folder_path)
             hosts = folder.hosts()

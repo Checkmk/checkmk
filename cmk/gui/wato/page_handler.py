@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
@@ -13,6 +12,7 @@ from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.utils.configuration_lock import lock_checkmk_configuration
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.watolib import read_only
 from cmk.gui.watolib.activate_changes import update_config_generation
@@ -20,7 +20,6 @@ from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.mode import mode_registry, WatoMode
 from cmk.gui.watolib.setup_access import ensure_provider_site, ensure_setup_enabled
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
-from cmk.utils.paths import configuration_lockfile
 from cmk.web.utils.flashed_messages import get_flashed_messages_with_categories
 
 from .pages._html_elements import wato_html_head, wato_html_page
@@ -71,7 +70,7 @@ def page_handler(edition: Edition, ctx: PageContext) -> None:
     with wato_html_page(show_body_end=display_options.enabled(display_options.H)):
         # If we do an action, we acquire an exclusive lock on the complete Setup.
         if request.has_var("_transid"):
-            with store.lock_checkmk_configuration(configuration_lockfile):
+            with lock_checkmk_configuration():
                 _wato_page_handler(ctx.config, current_mode, mode_instance)
         else:
             _wato_page_handler(ctx.config, current_mode, mode_instance)

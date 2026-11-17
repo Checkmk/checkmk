@@ -14,7 +14,6 @@ from collections.abc import Sequence
 from datetime import timedelta
 from typing import Literal, NamedTuple, override, TypeGuard
 
-from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
@@ -31,6 +30,7 @@ from cmk.gui.permissions import all_permissions
 from cmk.gui.session_context import UserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.utils.configuration_lock import lock_checkmk_configuration
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.pending_changes import (
@@ -38,7 +38,6 @@ from cmk.gui.watolib.pending_changes import (
     PendingChanges,
     PendingChangesStore,
 )
-from cmk.utils.paths import configuration_lockfile
 
 from . import bakery, builtin_attributes
 from .automation_commands import AutomationCommand, AutomationCommandRegistry
@@ -233,7 +232,7 @@ def _add_scanned_hosts_to_folder(
         if not tree.host_exists(host_name):
             entries.append((host_name, attrs, None))
 
-    with store.lock_checkmk_configuration(configuration_lockfile):
+    with lock_checkmk_configuration():
         folder.create_hosts(
             entries,
             pprint_value=pprint_value,
@@ -248,7 +247,7 @@ def _add_scanned_hosts_to_folder(
 
 def _save_network_scan_result(tree: FolderTree, folder: Folder, result: NetworkScanResult) -> None:
     # Reload the folder, lock Setup before to protect against concurrency problems.
-    with store.lock_checkmk_configuration(configuration_lockfile):
+    with lock_checkmk_configuration():
         # A user might have changed the folder somehow since starting the scan. Load the
         # folder again to get the current state.
         write_folder = tree.folder(folder.path())

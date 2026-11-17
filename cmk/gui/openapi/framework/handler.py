@@ -16,7 +16,6 @@ from werkzeug.datastructures import MIMEAccept
 from werkzeug.http import parse_accept_header
 
 from cmk import trace
-from cmk.ccc import store
 from cmk.gui.exceptions import MKAuthException, MKUnauthenticatedException
 from cmk.gui.fields.fields_filter import FieldsFilter
 from cmk.gui.http import FILE_EXTENSIONS as CONTENT_TYPE_FILE_EXTENSIONS
@@ -34,7 +33,7 @@ from cmk.gui.openapi.utils import (
     RestAPIResponseException,
     RestAPIWatoDisabledException,
 )
-from cmk.utils.paths import configuration_lockfile
+from cmk.gui.utils.configuration_lock import lock_checkmk_configuration
 
 from ._context import ApiContext
 from ._types import RawRequestData
@@ -150,7 +149,7 @@ def _optional_config_lock(
     if skip_locking or method == "get":
         return contextlib.nullcontext()
 
-    return store.lock_checkmk_configuration(configuration_lockfile)
+    return lock_checkmk_configuration()
 
 
 def _identify_fields_filter(

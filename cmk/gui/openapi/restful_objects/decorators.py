@@ -26,7 +26,6 @@ from marshmallow import Schema, ValidationError
 from werkzeug.http import parse_options_header
 
 from cmk import trace
-from cmk.ccc import store
 from cmk.ccc.version import Edition
 from cmk.gui import http as cmk_http
 from cmk.gui.config import active_config
@@ -68,13 +67,13 @@ from cmk.gui.openapi.utils import (
     RestAPIPermissionException,
     RestAPIWatoDisabledException,
 )
+from cmk.gui.utils.configuration_lock import lock_checkmk_configuration
 from cmk.gui.watolib.activate_changes import (
     update_config_generation as activate_changes_update_config_generation,
 )
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.openapi_fields import request_schema_context
 from cmk.licensing.basics.options import OptionName
-from cmk.utils.paths import configuration_lockfile
 from cmk.web.utils import permission_verification as permissions
 
 tracer = trace.get_tracer()
@@ -716,7 +715,7 @@ class Endpoint:
             @functools.wraps(func)
             def _wrapper(param: Mapping[str, Any]) -> cmk_http.Response:  # type: ignore[misc]
                 if not self.skip_locking and self.method != "get":
-                    with store.lock_checkmk_configuration(configuration_lockfile):
+                    with lock_checkmk_configuration():
                         response = func(param)
                 else:
                     response = func(param)

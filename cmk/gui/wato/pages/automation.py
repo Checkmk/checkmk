@@ -38,6 +38,7 @@ from cmk.gui.session_context import SuperUserContext
 from cmk.gui.type_defs import CustomUserAttrSpec
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.userdb import get_user_attributes
+from cmk.gui.utils.configuration_lock import lock_checkmk_configuration
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
@@ -48,7 +49,6 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, make_folder_tree
 from cmk.utils.local_secrets import DistributedSetupSecret
-from cmk.utils.paths import configuration_lockfile
 
 tracer = trace.get_tracer()
 
@@ -174,11 +174,7 @@ class PageAutomation(AjaxPage):
         # the normal Setup page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,
         # we request the lock in all cases.
-        with (
-            store.lock_checkmk_configuration(configuration_lockfile)
-            if self._needs_configuration_lock()
-            else nullcontext()
-        ):
+        with lock_checkmk_configuration() if self._needs_configuration_lock() else nullcontext():
             self._execute_automation(ctx.config)
         return None
 

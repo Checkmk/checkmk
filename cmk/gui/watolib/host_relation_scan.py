@@ -38,6 +38,7 @@ from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import AnnotatedUserId, CustomHostAttrSpec
+from cmk.gui.utils.configuration_lock import lock_checkmk_configuration
 from cmk.gui.utils.host_relations import RelationDirection
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
@@ -78,7 +79,6 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
-from cmk.utils.paths import configuration_lockfile
 
 ValueSource = Literal["label", "attribute"]
 
@@ -769,7 +769,7 @@ class RelationDetectionBackgroundJob(BackgroundJob):
                     all_permissions(),
                 )
             ),
-            store.lock_checkmk_configuration(configuration_lockfile),
+            lock_checkmk_configuration(),
         ):
             job_interface.send_progress_update(_("Acquired lock"))
             self._do_execute(

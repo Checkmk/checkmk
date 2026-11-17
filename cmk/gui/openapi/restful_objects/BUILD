@@ -49,7 +49,6 @@ py_library(
         "//cmk/gui/watolib:timeperiods",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:site",
-        "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:tar-archive",
         "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client",

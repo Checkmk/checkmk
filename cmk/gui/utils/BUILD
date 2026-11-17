@@ -29,6 +29,7 @@ py_library(
 py_library(
     name = "middle",
     srcs = [
+        "configuration_lock.py",
         "dataclasses.py",
         "doc_reference_urls.py",
         "host_relation_kinds.py",

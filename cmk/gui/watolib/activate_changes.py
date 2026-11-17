@@ -103,6 +103,7 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
 from cmk.gui.userdb.store import load_users_uncached, save_users
+from cmk.gui.utils.configuration_lock import lock_checkmk_configuration
 from cmk.gui.utils.misc import gen_id, validate_uuid_str
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.roles import (
@@ -197,7 +198,6 @@ from cmk.shared_typing.changes import (
 )
 from cmk.utils import agent_registration, paths, render
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
-from cmk.utils.paths import configuration_lockfile
 from cmk.web.utils import escaping
 from cmk.web.utils.urls import makeuri_contextless
 
@@ -2288,7 +2288,7 @@ class ActivateChangesManager:
         newer changes than the ones to be activated.
 
         """
-        with store.lock_checkmk_configuration(configuration_lockfile):
+        with lock_checkmk_configuration():
             if not self.changes.pending_changes:
                 raise MKUserError(None, _("Currently there are no changes to activate."))
 
@@ -2529,7 +2529,7 @@ class ActivationCleanupJob:
 
     def do_execute(self) -> None:
         """Cleanup non-running activation directories"""
-        with store.lock_checkmk_configuration(configuration_lockfile):
+        with lock_checkmk_configuration():
             for activation_id in self._existing_activation_ids():
                 logger.info("Check activation: %(activation_id)s", {"activation_id": activation_id})
                 delete = False
@@ -4115,7 +4115,7 @@ class AutomationGetConfigSyncState(AutomationCommand[list[ReplicationPath]]):
 
     @override
     def execute(self, api_request: list[ReplicationPath]) -> GetConfigSyncStateResponse:
-        with store.lock_checkmk_configuration(configuration_lockfile):
+        with lock_checkmk_configuration():
             file_infos = _get_config_sync_file_infos(api_request, base_dir=cmk.utils.paths.omd_root)
             transport_file_infos = {
                 k: (v.st_mode, v.st_size, v.link_target, v.file_hash) for k, v in file_infos.items()
@@ -4308,7 +4308,7 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
             # Enter the lock via the stack, so that the timing of the (potentially long
             # lasting) lock acquisition is reported on its own.
             with _debug_log_message("Acquiring configuration lock"):
-                stack.enter_context(store.lock_checkmk_configuration(configuration_lockfile))
+                stack.enter_context(lock_checkmk_configuration())
 
             if api_request.config_generation != _get_current_config_generation():
                 raise MKGeneralException(

@@ -10,7 +10,6 @@ from typing import Literal, override
 from pydantic import BaseModel
 
 from cmk.automations.results import Gateway, GatewayResult
-from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.resulttype import Result
@@ -31,6 +30,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.utils.configuration_lock import lock_checkmk_configuration
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
@@ -55,7 +55,6 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
-from cmk.utils.paths import configuration_lockfile
 
 
 @dataclass(frozen=True)
@@ -227,7 +226,7 @@ class ParentScanBackgroundJob(BackgroundJob):
             if result.state in ["direct", "root", "gateway"]:
                 # The following code updates the host config. The progress from loading the Setup folder
                 # until it has been saved needs to be locked.
-                with store.lock_checkmk_configuration(configuration_lockfile):
+                with lock_checkmk_configuration():
                     self._configure_host_and_gateway(
                         task,
                         settings,

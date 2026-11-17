@@ -16,9 +16,6 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from cmk.ccc.exceptions import MKTimeout
-from cmk.ccc.i18n import _
-
 __all__ = [
     "acquire_lock",
     "cleanup_locks",
@@ -45,20 +42,10 @@ logger = logging.getLogger("cmk.store")
 #   '----------------------------------------------------------------------'
 
 
+# This is **almost** the same as 'locked'. Dare we to remove this variant?
 @contextmanager
 def lock_checkmk_configuration(lockfile: Path) -> Iterator[None]:
-    try:
-        acquire_lock(lockfile)
-    except MKTimeout as e:
-        raise MKTimeout(
-            _(
-                "Couldn't lock the Checkmk configuration. Another "
-                "process is running that holds this lock. In order for you to be "
-                "able to perform the desired action, you have to wait until the "
-                "other process has finished. Please try again later."
-            )
-        ) from e
-
+    acquire_lock(lockfile)
     try:
         yield
     finally:

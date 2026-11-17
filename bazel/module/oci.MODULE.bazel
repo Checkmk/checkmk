@@ -8,3 +8,14 @@ oci.pull(
     tag = "latest",
 )
 use_repo(oci, "ubuntu_24.04", "ubuntu_24.04_linux_amd64")
+
+# The base of py_service_image: glibc, libgcc and the CA certificates,
+# without a shell and without a package manager.
+oci.pull(
+    name = "distroless_cc_debian13",
+    digest = "sha256:cb87acc574abe719b6e5c547384defa2f7b1f24af9605d3f618cf852495d8be2",
+    image = "gcr.io/distroless/cc-debian13",
+    platforms = ["linux/amd64"],
+    tag = "nonroot",
+)
+use_repo(oci, "distroless_cc_debian13", "distroless_cc_debian13_linux_amd64")

@@ -2080,7 +2080,7 @@
     "@@rules_oci+//oci:extensions.bzl%oci": {
       "general": {
         "bzlTransitiveDigest": "6Tm3vMEV6m7ZKJpypznEh6Pj8zzssqdPh2Bq3yEpsok=",
-        "usagesDigest": "m/S6hvoXJXI+pfisMq45o6Z/tZEiOLYrU4o0Wzhbfhs=",
+        "usagesDigest": "WtvqIes7u43UOI+yNrrSr2SdtKQL7DWXo8rudVVU53A=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -2111,6 +2111,35 @@
                 "@@platforms//cpu:x86_64": "@ubuntu_24.04_linux_amd64"
               },
               "bzlmod_repository": "ubuntu_24.04",
+              "reproducible": true
+            }
+          },
+          "distroless_cc_debian13_linux_amd64": {
+            "repoRuleId": "@@rules_oci+//oci/private:pull.bzl%oci_pull",
+            "attributes": {
+              "www_authenticate_challenges": {},
+              "scheme": "https",
+              "registry": "gcr.io",
+              "repository": "distroless/cc-debian13",
+              "identifier": "sha256:cb87acc574abe719b6e5c547384defa2f7b1f24af9605d3f618cf852495d8be2",
+              "platform": "linux/amd64",
+              "target_name": "distroless_cc_debian13_linux_amd64",
+              "bazel_tags": []
+            }
+          },
+          "distroless_cc_debian13": {
+            "repoRuleId": "@@rules_oci+//oci/private:pull.bzl%oci_alias",
+            "attributes": {
+              "target_name": "distroless_cc_debian13",
+              "www_authenticate_challenges": {},
+              "scheme": "https",
+              "registry": "gcr.io",
+              "repository": "distroless/cc-debian13",
+              "identifier": "sha256:cb87acc574abe719b6e5c547384defa2f7b1f24af9605d3f618cf852495d8be2",
+              "platforms": {
+                "@@platforms//cpu:x86_64": "@distroless_cc_debian13_linux_amd64"
+              },
+              "bzlmod_repository": "distroless_cc_debian13",
               "reproducible": true
             }
           },
@@ -2231,7 +2260,9 @@
         "moduleExtensionMetadata": {
           "explicitRootModuleDirectDeps": [
             "ubuntu_24.04",
-            "ubuntu_24.04_linux_amd64"
+            "ubuntu_24.04_linux_amd64",
+            "distroless_cc_debian13",
+            "distroless_cc_debian13_linux_amd64"
           ],
           "explicitRootModuleDirectDevDeps": [],
           "useAllRepos": "NO",

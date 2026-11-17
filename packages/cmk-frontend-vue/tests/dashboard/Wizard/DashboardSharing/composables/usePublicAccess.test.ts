@@ -3,19 +3,18 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick, ref } from 'vue'
 
 import type { DashboardTokenModel } from '@/dashboard/components/Wizard/wizards/dashboard-sharing/api'
-import * as api from '@/dashboard/components/Wizard/wizards/dashboard-sharing/api'
 import { usePublicAccess } from '@/dashboard/components/Wizard/wizards/dashboard-sharing/composables/usePublicAccess'
 import { DashboardFeatures } from '@/dashboard/types/dashboard'
 
-vi.mock('@/dashboard/components/Wizard/wizards/dashboard-sharing/api', () => ({
-  createToken: vi.fn().mockResolvedValue({ token_id: 'new-token', is_disabled: false }),
-  deleteToken: vi.fn().mockResolvedValue(undefined),
-  updateToken: vi.fn().mockResolvedValue({ token_id: 'updated-token', is_disabled: false })
-}))
+import { dashboardTokenHandlers, useDashboardTokenRequests } from '../dashboardTokenHandlers'
+
+const tokens = useDashboardTokenRequests()
+useMswServer(...dashboardTokenHandlers(tokens))
 
 const makeToken = (overrides: Partial<DashboardTokenModel> = {}): DashboardTokenModel => ({
   token_id: 'token-123',
@@ -338,7 +337,7 @@ describe('usePublicAccess', () => {
   })
 
   describe('createToken()', () => {
-    it('calls the API with dashboardName and dashboardOwner', async () => {
+    it('creates the token for the dashboard of the owner', async () => {
       const publicToken = ref<DashboardTokenModel | null>(null)
       const handler = usePublicAccess(
         'my-dashboard',
@@ -349,7 +348,9 @@ describe('usePublicAccess', () => {
 
       await handler.createToken()
 
-      expect(api.createToken).toHaveBeenCalledWith('my-dashboard', 'owner1', null)
+      expect(tokens.created).toEqual([
+        { dashboard_id: 'my-dashboard', dashboard_owner: 'owner1', comment: '', expires_at: null }
+      ])
     })
 
     it('passes the current validUntil date to the API when set', async () => {
@@ -367,8 +368,7 @@ describe('usePublicAccess', () => {
 
       await handler.createToken()
 
-      const [, , calledDate] = vi.mocked(api.createToken).mock.calls[0]!
-      expect(calledDate).toEqual(future)
+      expect(tokens.created.map((created) => created.expires_at)).toEqual([future.toISOString()])
     })
 
     it('RESTRICTED + hasValidity=false auto-sets expiration ~1 month ahead', async () => {
@@ -386,19 +386,16 @@ describe('usePublicAccess', () => {
 
       await handler.createToken()
 
-      expect(api.createToken).toHaveBeenCalledOnce()
-      const [, , calledDate] = vi.mocked(api.createToken).mock.calls[0]!
-      expect(calledDate).not.toBeNull()
-
-      // The auto-generated date should be exactly 1 month from the frozen "now"
       const expectedExpiry = new Date('2026-01-15T12:00:00.000Z')
       expectedExpiry.setMonth(expectedExpiry.getMonth() + 1)
-      expect(calledDate).toEqual(expectedExpiry)
+      expect(tokens.created.map((created) => created.expires_at)).toEqual([
+        expectedExpiry.toISOString()
+      ])
     })
   })
 
   describe('deleteToken()', () => {
-    it('calls the API with dashboardName and dashboardOwner', async () => {
+    it('deletes the token of the dashboard of the owner', async () => {
       const publicToken = ref<DashboardTokenModel | null>(makeToken())
       const handler = usePublicAccess(
         'my-dashboard',
@@ -409,8 +406,7 @@ describe('usePublicAccess', () => {
 
       await handler.deleteToken()
 
-      expect(api.deleteToken).toHaveBeenCalledWith('my-dashboard', 'owner2')
-      expect(api.deleteToken).toHaveBeenCalledOnce()
+      expect(tokens.deleted).toEqual([{ dashboard_id: 'my-dashboard', dashboard_owner: 'owner2' }])
     })
   })
 
@@ -428,8 +424,7 @@ describe('usePublicAccess', () => {
 
       await handler.updateToken()
 
-      const [, , , calledDate] = vi.mocked(api.updateToken).mock.calls[0]!
-      expect(calledDate).toBeNull()
+      expect(tokens.edited.map((edited) => edited.expires_at)).toEqual([null])
     })
 
     it('passes a Date with time set to 23:59:59 when hasValidity=true', async () => {
@@ -448,11 +443,9 @@ describe('usePublicAccess', () => {
 
       await handler.updateToken()
 
-      const [, , , calledDate] = vi.mocked(api.updateToken).mock.calls[0]!
-      expect(calledDate).not.toBeNull()
-      expect(calledDate!.getHours()).toBe(23)
-      expect(calledDate!.getMinutes()).toBe(59)
-      expect(calledDate!.getSeconds()).toBe(59)
+      const endOfDay = new Date(future)
+      endOfDay.setHours(23, 59, 59, 999)
+      expect(tokens.edited.map((edited) => edited.expires_at)).toEqual([endOfDay.toISOString()])
     })
 
     it('passes isDisabled and comment correctly to the API', async () => {
@@ -470,27 +463,15 @@ describe('usePublicAccess', () => {
 
       await handler.updateToken()
 
-      expect(api.updateToken).toHaveBeenCalledWith(
-        'my-dashboard',
-        'owner3',
-        true,
-        null,
-        'a comment'
-      )
-    })
-
-    it('calls the API exactly once', async () => {
-      const publicToken = ref<DashboardTokenModel | null>(makeToken())
-      const handler = usePublicAccess(
-        'my-dashboard',
-        'owner',
-        publicToken,
-        DashboardFeatures.UNRESTRICTED
-      )
-
-      await handler.updateToken()
-
-      expect(api.updateToken).toHaveBeenCalledOnce()
+      expect(tokens.edited).toEqual([
+        {
+          dashboard_id: 'my-dashboard',
+          dashboard_owner: 'owner3',
+          is_disabled: true,
+          expires_at: null,
+          comment: 'a comment'
+        }
+      ])
     })
   })
 

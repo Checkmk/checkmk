@@ -6,7 +6,6 @@
   "tests/dashboard/Wizard/CreateDashboard/CreateDashboardWizard.test.ts",
   "tests/dashboard/Wizard/DashboardSharing/DashboardSharingWizard.test.ts",
   "tests/dashboard/Wizard/DashboardSharing/PublicAccess.test.ts",
-  "tests/dashboard/Wizard/DashboardSharing/composables/usePublicAccess.test.ts",
   "tests/dashboard/Wizard/components/DashboardSettings/DashboardScope.test.ts",
   "tests/dashboard/Wizard/components/DashboardSettings/GeneralProperties.test.ts",
   "tests/dashboard/Wizard/components/WidgetVisualization/useWidgetVisualization.test.ts",

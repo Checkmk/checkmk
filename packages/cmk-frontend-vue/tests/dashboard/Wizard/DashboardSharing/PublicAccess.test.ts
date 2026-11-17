@@ -3,16 +3,18 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 // eslint-disable-next-line no-restricted-imports -- TODO: migrate to @testing-library/vue, see https://checkmk-int.atlassian.net/wiki/x/no9lD
 import { flushPromises } from '@vue/test-utils'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import PublicAccess from '@/dashboard/components/Wizard/wizards/dashboard-sharing/PublicAccess.vue'
 import type { DashboardTokenModel } from '@/dashboard/components/Wizard/wizards/dashboard-sharing/api'
-import * as api from '@/dashboard/components/Wizard/wizards/dashboard-sharing/api'
 import { DashboardFeatures } from '@/dashboard/types/dashboard'
+
+import { dashboardTokenHandlers, useDashboardTokenRequests } from './dashboardTokenHandlers'
 
 // PopupDialog uses Radix-Vue DialogPortal which does not work in jsdom.
 // Replace it with a simple inline version that exposes buttons to the DOM.
@@ -80,12 +82,8 @@ vi.mock(
   })
 )
 
-// Mock API so no real HTTP calls are made.
-vi.mock('@/dashboard/components/Wizard/wizards/dashboard-sharing/api', () => ({
-  createToken: vi.fn().mockResolvedValue({ token_id: 'new-tok', is_disabled: false }),
-  deleteToken: vi.fn().mockResolvedValue(undefined),
-  updateToken: vi.fn().mockResolvedValue({ token_id: 'upd-tok', is_disabled: false })
-}))
+const tokens = useDashboardTokenRequests()
+const server = useMswServer(...dashboardTokenHandlers(tokens))
 
 // Also mock urlHandler.getSharedDashboardLink to return a predictable URL.
 vi.mock('@/dashboard/utils', () => ({
@@ -193,9 +191,10 @@ describe('PublicAccess', () => {
       renderPublicAccess({ hasRuntimeFilters: true })
 
       await fireEvent.click(screen.getByRole('button', { name: 'Generate public link' }))
+      await flushPromises()
 
       expect(screen.getByTestId('runtime-filters-warning')).toBeInTheDocument()
-      expect(api.createToken).not.toHaveBeenCalled()
+      expect(tokens.created).toEqual([])
     })
 
     it('emits reviewFilters when the warning button is clicked', async () => {
@@ -218,14 +217,13 @@ describe('PublicAccess', () => {
   })
 
   describe('Create token flow', () => {
-    it('calls createToken API and emits refreshDashboardSettings on success', async () => {
+    it('creates a token and refreshes the dashboard settings', async () => {
       const { emitted } = renderPublicAccess()
 
       await fireEvent.click(screen.getByRole('button', { name: 'Generate public link' }))
-      await flushPromises()
 
-      expect(api.createToken).toHaveBeenCalledOnce()
-      expect(emitted()['refreshDashboardSettings']).toHaveLength(1)
+      await waitFor(() => expect(emitted()['refreshDashboardSettings']).toHaveLength(1))
+      expect(tokens.created).toHaveLength(1)
     })
   })
 
@@ -238,26 +236,25 @@ describe('PublicAccess', () => {
       expect(screen.getByTestId('popup-dialog')).toBeInTheDocument()
     })
 
-    it('calls deleteToken API and emits refreshDashboardSettings after dialog confirmation', async () => {
+    it('deletes the token and refreshes the dashboard settings after the confirmation', async () => {
       const { emitted } = renderPublicAccess({ publicToken: makeToken() })
 
       await fireEvent.click(screen.getByRole('link', { name: 'Delete' }))
       // Click the confirm button inside the mocked dialog
       await fireEvent.click(screen.getByRole('button', { name: 'Delete public link?' }))
-      await flushPromises()
 
-      expect(api.deleteToken).toHaveBeenCalledOnce()
-      expect(emitted()['refreshDashboardSettings']).toHaveLength(1)
+      await waitFor(() => expect(emitted()['refreshDashboardSettings']).toHaveLength(1))
+      expect(tokens.deleted).toHaveLength(1)
     })
 
-    it('does not call deleteToken if dialog Cancel is clicked', async () => {
+    it('sends no delete request when the user cancels the dialog', async () => {
       renderPublicAccess({ publicToken: makeToken() })
 
       await fireEvent.click(screen.getByRole('link', { name: 'Delete' }))
       await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
       await flushPromises()
 
-      expect(api.deleteToken).not.toHaveBeenCalled()
+      expect(tokens.deleted).toEqual([])
     })
   })
 
@@ -270,14 +267,13 @@ describe('PublicAccess', () => {
       expect(screen.getByTestId('popup-dialog')).toBeInTheDocument()
     })
 
-    it('calls updateToken API and emits refreshDashboardSettings after confirming disable', async () => {
+    it('disables the token and refreshes the dashboard settings after the confirmation', async () => {
       const { emitted } = renderPublicAccess({ publicToken: makeToken({ is_disabled: false }) })
       await fireEvent.click(screen.getByRole('button', { name: 'Disable access' }))
       await fireEvent.click(screen.getByTestId('disable-access-popup-action'))
-      await flushPromises()
 
-      expect(api.updateToken).toHaveBeenCalledOnce()
-      expect(emitted()['refreshDashboardSettings']).toHaveLength(1)
+      await waitFor(() => expect(emitted()['refreshDashboardSettings']).toHaveLength(1))
+      expect(tokens.edited.map((edited) => edited.is_disabled)).toEqual([true])
     })
   })
 
@@ -290,22 +286,25 @@ describe('PublicAccess', () => {
       expect(screen.getByTestId('popup-dialog')).toBeInTheDocument()
     })
 
-    it('calls updateToken API and emits refreshDashboardSettings after confirming enable', async () => {
+    it('enables the token and refreshes the dashboard settings after the confirmation', async () => {
       const { emitted } = renderPublicAccess({ publicToken: makeToken({ is_disabled: true }) })
 
       await fireEvent.click(screen.getByRole('button', { name: 'Enable access' }))
       await fireEvent.click(screen.getByTestId('enable-access-popup-action'))
-      await flushPromises()
 
-      expect(api.updateToken).toHaveBeenCalledOnce()
-      expect(emitted()['refreshDashboardSettings']).toHaveLength(1)
+      await waitFor(() => expect(emitted()['refreshDashboardSettings']).toHaveLength(1))
+      expect(tokens.edited.map((edited) => edited.is_disabled)).toEqual([false])
     })
   })
 
   describe('Action in progress', () => {
     it('disables the "Generate public link" button while a create action is in progress', async () => {
-      // Make createToken hang so we can inspect the in-progress state
-      vi.mocked(api.createToken).mockReturnValueOnce(new Promise(() => {}))
+      server.use(
+        restApiHttp.post(
+          '/domain-types/dashboard_token/collections/all',
+          () => new Promise<never>(() => {})
+        )
+      )
 
       renderPublicAccess()
 

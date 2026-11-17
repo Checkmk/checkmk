@@ -61,20 +61,18 @@ Example:
 
 import json
 import logging
-import re
 from collections.abc import Sequence
-from datetime import date, timedelta
 from datetime import datetime as Datetime
+from datetime import timedelta
 from os import getenv
 from pathlib import Path
-from statistics import fmean
 from sys import exit as sys_exit
-from typing import NamedTuple
 
 import psycopg
 from jira import JIRA
 
 from tests.performance.reporting.performance_args import parse_args, PerftestPlotArgs
+from tests.performance.reporting.performance_baselines import PerformanceBaselines
 from tests.performance.reporting.performance_db import (
     Measurements,
     MeasurementsList,
@@ -85,39 +83,6 @@ from tests.performance.reporting.performance_graphs import PerformanceGraphs
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
-
-
-class AverageValues(NamedTuple):
-    avg_time: float
-    avg_cpu: float
-    avg_mem: float
-
-
-class SkippedScenario(NamedTuple):
-    """Represents a scenario that should be skipped during validation.
-
-    Attributes:
-        pattern: A regex pattern to match the scenario name against.
-        reason: Human-readable explanation for why the scenario is skipped.
-        condition: Optional boolean indicating if the scenario should be skipped.
-    """
-
-    pattern: str
-    reason: str
-    condition: bool = True
-
-
-class BaselineAlert(NamedTuple):
-    """Represents a finding of the baseline validation.
-
-    Attributes:
-        message: Human-readable description of the finding.
-        is_failure: Whether the finding should fail the job. Findings that merely report
-            the absence of data are reported, but do not fail the job.
-    """
-
-    message: str
-    is_failure: bool = True
 
 
 class PerftestPlot:
@@ -560,210 +525,6 @@ class PerftestPlot:
                         performance_data=performance_data,
                     )
 
-    @staticmethod
-    def _get_mean_value(measurements: MeasurementsList, metric_name: str) -> float:
-        """
-        Compute the arithmetic mean for a specified metric across a list of measurement records.
-
-        Parameters:
-            measurements : MeasurementsList
-                Iterable / list of measurement rows containing the target metric.
-            metric_name : str
-                The key/name of the metric to extract from each measurement row.
-
-        Returns:
-            float
-                The mean (floating-point) value of the metric across all measurements.
-                Returns 0.0 if the input list is empty.
-        """
-        values: list[float] = [float(str(row[metric_name])) for row in measurements]
-        return fmean(values or [0])
-
-    def _calculate_baseline(self, scenario_name: str) -> AverageValues:
-        """
-        Compute average (baseline) metrics for a given benchmark scenario across all loaded jobs.
-
-        This method iterates over all jobs, searches its benchmark list for the specified scenario
-        and aggregates mean values for the execution time, the CPU usage and the memory usage.
-
-        If a scenario is missing in a job, an error is logged and that job is skipped.
-        If no values are collected for a metric, its baseline defaults to 0 (via fmean([0])).
-
-        Parameters:
-            scenario_name : str
-                The name of the benchmark scenario to aggregate across all jobs.
-
-        Returns:
-                AverageValues
-        """
-        time_averages: list[float] = []
-        cpu_averages: list[float] = []
-        mem_averages: list[float] = []
-        for job_name, job in self.jobs.items():
-            if not isinstance(benchmarks := job[0]["benchmarks"], list):
-                continue
-            benchmark = next((_ for _ in benchmarks if _["name"] == scenario_name), None)
-            if not benchmark:
-                logger.warning('Scenario "%s" not found in job "%s"!', scenario_name, job_name)
-                continue
-            time_averages.append(benchmark["stats"]["mean"])
-            if scenario_name not in job[1]:
-                continue
-            if not (measurements := job[1][scenario_name]):
-                continue
-            cpu_averages.append(self._get_mean_value(measurements, self.cpu_usage_metric))
-            mem_averages.append(self._get_mean_value(measurements, self.memory_usage_metric))
-        time_baseline = fmean(time_averages) if time_averages else 0.0
-        cpu_baseline = fmean(cpu_averages) if cpu_averages else 0.0
-        mem_baseline = fmean(mem_averages) if mem_averages else 0.0
-
-        return AverageValues(*(time_baseline, cpu_baseline, mem_baseline))
-
-    def _current_averages(self, scenario_name: str) -> AverageValues | None:
-        """
-        Return averaged performance metrics for a given benchmark scenario of the most recent job.
-
-        If the benchmarks collection is not a list, or the named scenario is not present,
-        the method returns None.
-
-        Parameters:
-            scenario_name : str
-                    The exact benchmark scenario name to search for in the most recent job.
-
-        Returns:
-            AverageValues | None
-                    An AverageValues instance containing (time_avg, cpu_avg, mem_avg) if the
-                    scenario is found; otherwise None.
-        """
-        job = self.jobs[self.job_names[-1]]
-        benchmarks = job[0]["benchmarks"]
-        if not isinstance(benchmarks, list):
-            return None
-        benchmark = next((_ for _ in benchmarks if _["name"] == scenario_name), None)
-        if not benchmark:
-            return None
-        time_avg = benchmark["stats"]["mean"]
-        cpu_avg = self._get_mean_value(job[1][scenario_name], self.cpu_usage_metric)
-        mem_avg = self._get_mean_value(job[1][scenario_name], self.memory_usage_metric)
-
-        return AverageValues(*(time_avg, cpu_avg, mem_avg))
-
-    @staticmethod
-    def _skipped_scenario(
-        scenario_name: str,
-        baseline_name: str,
-        skipped_scenarios: list[SkippedScenario],
-    ) -> bool:
-        """
-        Check if a scenario should be skipped based on pattern matching and an optional condition.
-
-        Args:
-            scenario_name: The name of the scenario to check.
-            baseline_name: The name of the baseline being evaluated.
-            skipped_scenarios: A list of SkippedScenario objects.
-
-        Returns:
-            True if the scenario should be skipped, False otherwise.
-        """
-        for skipped_scenario in skipped_scenarios:
-            if re.fullmatch(skipped_scenario.pattern, scenario_name) and skipped_scenario.condition:
-                logger.info(
-                    "Ignoring baseline %s scenario %s due to %s.",
-                    baseline_name,
-                    scenario_name,
-                    skipped_scenario.reason,
-                )
-                return True
-        return False
-
-    def validate_performance_baselines(self) -> list[BaselineAlert]:
-        """
-        Validate current performance metrics against calculated baselines for each test scenario.
-
-        For every scenario the method retrieves the current averaged metrics (time, CPU, memory)
-        and a computed baseline, then compares them using a fixed overshoot tolerance (+10%).
-
-        An alert is generated when any of the following averaged metrics exceeds its baseline by
-        more than the tolerance percentage:
-            - Execution time (avg_time)
-            - CPU usage (avg_cpu)
-            - Memory usage (avg_mem)
-
-        If no current data (averages) are available for a scenario, a non-failing alert is
-        added: the scenario is reported, but a missing measurement is not a regression.
-
-        Returns:
-            list[BaselineAlert]
-                A list of alerts in scenario order. The list is empty if all scenarios
-                are within tolerated performance bounds.
-        """
-        cpu_tolerance = self.args.cpu_tolerance
-        mem_tolerance = self.args.mem_tolerance
-        runtime_tolerance = self.args.runtime_tolerance
-        baseline_offset = self.args.baseline_offset
-        baseline_name = {0: "weekly", 30: "monthly", 365: "yearly"}.get(
-            baseline_offset, f"{baseline_offset}d"
-        )
-        baseline_date = date.today() - timedelta(days=baseline_offset)
-
-        skipped_scenarios = [
-            SkippedScenario(pattern="test_performance_piggyback", reason="CMK-27171"),
-            SkippedScenario(
-                pattern="test_performance_ui_response_.*",
-                reason="scenario changes on 2026-02-06",
-                condition=baseline_date < date(2026, 2, 6),
-            ),
-        ]
-
-        alerts: list[BaselineAlert] = []
-        for scenario_name in self.scenario_names:
-            if not scenario_name.startswith("test_"):
-                continue
-            if self._skipped_scenario(scenario_name, baseline_name, skipped_scenarios):
-                continue
-
-            msg_prefix = f"Scenario {scenario_name}: "
-            msg_suffix = (
-                f"; tolerance: +{cpu_tolerance}% CPU"
-                f", +{mem_tolerance}% memory"
-                f", +{runtime_tolerance}% time)"
-            )
-            averages = self._current_averages(scenario_name)
-            if not averages:
-                alerts.append(
-                    BaselineAlert(
-                        f"{msg_prefix}Missing data! Test aborted or skipped?", is_failure=False
-                    )
-                )
-                continue
-            baseline = self._calculate_baseline(scenario_name)
-            if averages.avg_time > baseline.avg_time * (100 + runtime_tolerance) / 100:
-                overshoot = round((averages.avg_time / baseline.avg_time) * 100 - 100, 2)
-                msg = (
-                    f"Execution time baseline {baseline_name} exceeded by {overshoot}% "
-                    f"(baseline: {round(baseline.avg_time, 2)};"
-                    f" actual: {round(averages.avg_time, 2)}"
-                )
-
-                alerts.append(BaselineAlert(f"{msg_prefix}{msg}{msg_suffix}"))
-            if averages.avg_cpu > baseline.avg_cpu * (100 + cpu_tolerance) / 100:
-                overshoot = round((averages.avg_cpu / baseline.avg_cpu) * 100 - 100, 2)
-                msg = (
-                    f"CPU usage baseline {baseline_name} exceeded by {overshoot}% "
-                    f"(baseline: {round(baseline.avg_cpu, 2)}%;"
-                    f" actual: {round(averages.avg_cpu, 2)}%"
-                )
-                alerts.append(BaselineAlert(f"{msg_prefix}{msg} {msg_suffix}"))
-            if averages.avg_mem > baseline.avg_mem * (100 + mem_tolerance) / 100:
-                overshoot = round((averages.avg_mem / baseline.avg_mem) * 100 - 100, 2)
-                msg = (
-                    f"Memory usage baseline {baseline_name} exceeded by {overshoot}% "
-                    f"(baseline: {round(baseline.avg_mem, 2)}%;"
-                    f" actual: {round(averages.avg_mem, 2)}%"
-                )
-                alerts.append(BaselineAlert(f"{msg_prefix}{msg}{msg_suffix}"))
-        return alerts
-
     def create_ticket(self, summary: str, description: str) -> None:
         """
         Create an alert ticket by POSTing summary and description to the Jira server.
@@ -830,7 +591,18 @@ def main() -> None:
         graphs.plot_resource_graph(app.output_dir / "history.resources.png", history=True)
 
     if app.validate_baselines:
-        alerts = app.validate_performance_baselines()
+        baselines = PerformanceBaselines(
+            jobs=app.jobs,
+            job_names=app.job_names,
+            scenario_names=app.scenario_names,
+            cpu_usage_metric=app.cpu_usage_metric,
+            memory_usage_metric=app.memory_usage_metric,
+            cpu_tolerance=args.cpu_tolerance,
+            mem_tolerance=args.mem_tolerance,
+            runtime_tolerance=args.runtime_tolerance,
+            baseline_offset=args.baseline_offset,
+        )
+        alerts = baselines.validate_performance_baselines()
         summary = f"Validate performance test {list(app.jobs.keys())[-1]}"
         messages = [alert.message for alert in alerts]
         description = (f"\n  {'\n  '.join(messages)}") if messages else "PASSED!"

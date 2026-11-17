@@ -13,7 +13,14 @@ import cmk.product_usage.collectors.grafana as grafana_collector
 import cmk.product_usage.collectors.host_services as host_services_collector
 import cmk.product_usage.collectors.sessions as sessions_collector
 import cmk.product_usage.collectors.site_info as site_info_collector
-from cmk.product_usage.schema import AuditLog, CloudTrialPayload, ProductUsagePayload, Session
+import cmk.product_usage.collectors.users as users_collector
+from cmk.product_usage.schema import (
+    AuditLog,
+    CloudTrialPayload,
+    ProductUsagePayload,
+    Session,
+    UserCount,
+)
 
 
 def collect_data(
@@ -66,12 +73,21 @@ def collect_cloud_trial_data(
 ) -> CloudTrialPayload:
     return CloudTrialPayload(
         **dict(product_usage),
+        count_users=_collect_count_users(default_config_dir, logger),
         sessions=_collect_sessions(var_dir, logger),
         audit_log=_collect_audit_log(var_dir, default_config_dir, logger),
         count_hosts_default_services_only=_count_hosts_with_only_default_services(
             read_services_per_host, logger
         ),
     )
+
+
+def _collect_count_users(default_config_dir: Path, logger: logging.Logger) -> UserCount | None:
+    try:
+        return users_collector.collect(default_config_dir)
+    except Exception:
+        logger.exception("Could not count the users, sending no user counts")
+        return None
 
 
 def _collect_audit_log(

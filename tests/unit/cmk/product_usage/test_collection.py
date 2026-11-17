@@ -18,7 +18,9 @@ from cmk.product_usage.schema import (
     CloudTrialPayload,
     ProductUsagePayload,
     Session,
+    UserCount,
 )
+from tests.unit.cmk.product_usage.user_store import write_user_store
 
 NO_ENTRIES = AuditLogActorClass(entries=0, last_entry_at=None)
 
@@ -56,23 +58,31 @@ def test_cloud_trial_payload_counts_the_cloud_platform_users_as_platform(
     )
 
 
-def test_cloud_trial_payload_has_no_audit_log_when_its_collection_fails(tmp_path: Path) -> None:
+def test_cloud_trial_payload_has_no_audit_log_and_no_user_counts_when_the_user_store_is_corrupt(
+    tmp_path: Path,
+) -> None:
     complete_payload = _collect_from_site(tmp_path)
     _write_corrupt_user_store(tmp_path)
 
     payload = _collect_from_site(tmp_path)
 
-    assert payload == complete_payload.model_copy(update={"audit_log": None})
+    assert payload == complete_payload.model_copy(update={"audit_log": None, "count_users": None})
 
 
-def test_failed_audit_log_collection_logs_the_error(
+def test_corrupt_user_store_logs_the_error_of_each_signal_with_its_cause(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     _write_corrupt_user_store(tmp_path)
 
     _collect_from_site(tmp_path)
 
-    assert [record.levelname for record in caplog.records] == ["ERROR"]
+    assert sorted(
+        (record.levelname, record.getMessage(), record.exc_info is not None)
+        for record in caplog.records
+    ) == [
+        ("ERROR", "Could not collect the audit log, sending no audit log", True),
+        ("ERROR", "Could not count the users, sending no user counts", True),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -90,6 +100,35 @@ def test_cloud_trial_payload_contains_no_user_id_of_the_audit_log(
     payload = _collect_from_site(tmp_path)
 
     assert user_id not in payload.model_dump_with_metadata_json().decode()
+
+
+def test_cloud_trial_payload_carries_the_user_counts_of_the_site(tmp_path: Path) -> None:
+    write_user_store(
+        tmp_path,
+        {"jane@acme.com": {"connector": "cognito"}, "john@gmail.com": {"connector": "cognito"}},
+    )
+
+    payload = _collect_from_site(tmp_path)
+
+    assert payload.count_users == UserCount(business=1, non_business=1)
+
+
+def test_cloud_trial_payload_contains_no_address_domain_or_provider_of_the_users(
+    tmp_path: Path,
+) -> None:
+    write_user_store(
+        tmp_path,
+        {"jane@acme.com": {"connector": "cognito"}, "john@gmail.com": {"connector": "cognito"}},
+    )
+
+    payload = _collect_from_site(tmp_path)
+
+    # Without user counts, the payload would contain nothing to leak.
+    assert payload.count_users is not None
+    dumped = payload.model_dump_with_metadata_json().decode()
+    assert [
+        text for text in ("jane@acme.com", "john@gmail.com", "acme", "gmail") if text in dumped
+    ] == []
 
 
 def test_cloud_trial_payload_carries_the_count_of_hosts_with_default_services_only(

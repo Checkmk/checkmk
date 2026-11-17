@@ -105,6 +105,17 @@ class AuditLog(pydantic.BaseModel):
     )
 
 
+class UserCount(pydantic.BaseModel):
+    business: int = pydantic.Field(
+        description="The number of users whose email address domain is not a free-mail domain.",
+        examples=[2],
+    )
+    non_business: int = pydantic.Field(
+        description="The number of users whose email address domain is a free-mail domain.",
+        examples=[1],
+    )
+
+
 class Session(pydantic.BaseModel):
     started_at: int = pydantic.Field(
         description="Unix timestamp in seconds of when the session started.",
@@ -126,13 +137,14 @@ class CloudTrialPayload(ProductUsagePayload):
         description="Unix timestamp in seconds of when the site was created.",
         examples=[None],
     )
-    count_users: None = pydantic.Field(
+    count_users: UserCount | None = pydantic.Field(
         default=None,
         description=(
-            "The number of interactive users, counted by business and non-business email"
-            " address domain. Addresses and domains are never collected."
+            "The number of users of the Cognito login who have signed in at least once,"
+            " counted by business and non-business email address domain."
+            " Addresses and domains are never collected."
         ),
-        examples=[None],
+        examples=[{"business": 2, "non_business": 1}],
     )
     sessions: list[Session] | None = pydantic.Field(
         default=None,

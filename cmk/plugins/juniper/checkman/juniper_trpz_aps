@@ -1,4 +1,4 @@
-title: Juniper Devices: Number of Online Access Points
+title: Juniper Trapeze: Online Access Points
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

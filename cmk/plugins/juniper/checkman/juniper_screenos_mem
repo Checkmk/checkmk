@@ -1,4 +1,4 @@
-title: Juniper/ScreenOS: Memory Usage
+title: Juniper ScreenOS: Memory Usage
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

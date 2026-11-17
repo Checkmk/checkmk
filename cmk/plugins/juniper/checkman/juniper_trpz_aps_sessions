@@ -1,4 +1,4 @@
-title: Juniper Devices: Radios Data and Sessions of Online Access Points
+title: Juniper Trapeze: Access Point Radios and Sessions
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

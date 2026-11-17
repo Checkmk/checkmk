@@ -1,4 +1,4 @@
-title: Juniper Ethernet Switch: Chassis Alarm
+title: Juniper: Chassis Alarm
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

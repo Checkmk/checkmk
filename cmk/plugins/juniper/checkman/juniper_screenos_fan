@@ -1,4 +1,4 @@
-title: Juniper/ScreenOS: FAN Health Status
+title: Juniper ScreenOS: Fans
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Juniper Routers: BGP Status
+title: Juniper: BGP Status
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

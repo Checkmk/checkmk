@@ -1,4 +1,4 @@
-title: Juniper Ethernet Switch: Fan
+title: Juniper: Fans
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

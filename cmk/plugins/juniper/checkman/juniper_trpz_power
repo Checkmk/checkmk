@@ -1,4 +1,4 @@
-title: Juniper/Trapeze: Check for PSU Units
+title: Juniper Trapeze: Power Supplies
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

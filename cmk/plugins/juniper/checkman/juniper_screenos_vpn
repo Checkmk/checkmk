@@ -1,4 +1,4 @@
-title: Juniper/ScreenOS: VPN Tunnel State
+title: Juniper ScreenOS: VPN Tunnel State
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Juniper Ethernet Switch: Temperature
+title: Juniper: Temperature
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

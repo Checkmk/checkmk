@@ -1,4 +1,4 @@
-title: Juniper/Trapeze: Check Flash States
+title: Juniper Trapeze: Flash Usage
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

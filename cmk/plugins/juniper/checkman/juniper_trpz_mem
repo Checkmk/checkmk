@@ -1,4 +1,4 @@
-title: Juniper/Trapeze: Memory Usage
+title: Juniper Trapeze: Memory Usage
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

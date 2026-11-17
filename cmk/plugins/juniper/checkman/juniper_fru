@@ -1,4 +1,4 @@
-title: Juniper Ethernet Switch: Power Supply
+title: Juniper: Power Supplies
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

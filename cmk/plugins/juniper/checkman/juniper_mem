@@ -1,4 +1,4 @@
-title: Juniper Ethernet Switch: Memory
+title: Juniper: Memory Usage
 agents: snmp
 catalog: hw/network/juniper
 license: GPLv2

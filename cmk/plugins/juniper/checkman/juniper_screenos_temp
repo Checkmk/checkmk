@@ -1,4 +1,4 @@
-title: Juniper/ScreenOS: Temperature Sensors
+title: Juniper ScreenOS: Temperature Sensors
 catalog: hw/network/juniper
 agents: snmp
 license: GPLv2

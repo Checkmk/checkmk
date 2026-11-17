@@ -16,18 +16,19 @@ from cmk.piggyback.backend import (
 )
 from cmk.piggyback.hub import _payload as payload
 
+_PAYLOAD = payload.PiggybackPayload(
+    source_host=HostName("source"),
+    raw_data={HostName("target"): [b"line1\nline2"]},
+    message_timestamp=1640000020,
+    contact_timestamp=1640000000,
+)
+
 
 def test__on_message() -> None:
     test_logger = logging.getLogger("test")
-    input_payload = payload.PiggybackPayload(
-        source_host=HostName("source"),
-        raw_data={HostName("target"): [b"line1\nline2"]},
-        message_timestamp=1640000020,
-        contact_timestamp=1640000000,
-    )
     on_message = payload.save_payload_on_message(test_logger, cmk.utils.paths.omd_root)
 
-    on_message(Mock(), DeliveryTag(0), input_payload)
+    on_message(Mock(), DeliveryTag(0), payload.PiggybackHubMessage(_PAYLOAD))
 
     expected_payload = [
         PiggybackMessage(
@@ -42,3 +43,25 @@ def test__on_message() -> None:
     ]
     actual_payload = get_messages_for(HostName("target"), cmk.utils.paths.omd_root)
     assert actual_payload == expected_payload
+
+
+def test_payload_message_is_unchanged_on_the_wire() -> None:
+    # sites that only know the payload model have to keep parsing it
+    assert payload.PiggybackHubMessage(_PAYLOAD).model_dump_json() == _PAYLOAD.model_dump_json()
+
+
+def test__on_message_removes_data() -> None:
+    on_message = payload.save_payload_on_message(
+        logging.getLogger("test"), cmk.utils.paths.omd_root
+    )
+    on_message(Mock(), DeliveryTag(0), payload.PiggybackHubMessage(_PAYLOAD))
+
+    on_message(
+        Mock(),
+        DeliveryTag(1),
+        payload.PiggybackHubMessage.model_validate_json(
+            '{"source_host": "source", "piggybacked_host": "target"}'
+        ),
+    )
+
+    assert not get_messages_for(HostName("target"), cmk.utils.paths.omd_root)

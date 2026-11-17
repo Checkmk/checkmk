@@ -101,6 +101,47 @@ def test_get_piggyback_raw_data_not_sending() -> None:
     assert info.last_update == _REF_TIME
 
 
+def test_remove_piggyback_raw_data_keeps_other_hosts_of_the_source() -> None:
+    backend.store_piggyback_raw_data(
+        HostAddress("source1"),
+        {_TEST_HOST_NAME: _PAYLOAD, HostAddress("other-host"): _PAYLOAD},
+        message_timestamp=_REF_TIME,
+        contact_timestamp=_REF_TIME,
+        omd_root=cmk.utils.paths.omd_root,
+    )
+
+    backend.remove_piggyback_raw_data(
+        HostAddress("source1"), _TEST_HOST_NAME, cmk.utils.paths.omd_root
+    )
+
+    assert not backend.get_messages_for(_TEST_HOST_NAME, cmk.utils.paths.omd_root)
+    assert _get_only_raw_data_element(HostAddress("other-host")).meta.last_contact == _REF_TIME
+
+
+def test_remove_piggyback_raw_data_keeps_the_status_file_with_the_last_data() -> None:
+    backend.store_piggyback_raw_data(
+        HostAddress("source1"),
+        {_TEST_HOST_NAME: _PAYLOAD},
+        message_timestamp=_REF_TIME,
+        contact_timestamp=_REF_TIME,
+        omd_root=cmk.utils.paths.omd_root,
+    )
+
+    backend.remove_piggyback_raw_data(
+        HostAddress("source1"), _TEST_HOST_NAME, cmk.utils.paths.omd_root
+    )
+
+    assert backend.remove_source_status_file(HostAddress("source1"), cmk.utils.paths.omd_root)
+
+
+def test_remove_piggyback_raw_data_without_data() -> None:
+    backend.remove_piggyback_raw_data(
+        HostAddress("source1"), _TEST_HOST_NAME, cmk.utils.paths.omd_root
+    )
+
+    assert not backend.get_messages_for(_TEST_HOST_NAME, cmk.utils.paths.omd_root)
+
+
 def test_remove_source_status_file_not_existing() -> None:
     assert (
         backend.remove_source_status_file(HostAddress("nosource"), cmk.utils.paths.omd_root)

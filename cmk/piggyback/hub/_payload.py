@@ -12,19 +12,33 @@ from multiprocessing.synchronize import Event
 from pathlib import Path
 from typing import override, Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 
 from cmk.ccc.hostaddress import HostName
-from cmk.messaging import Channel, CMKConnectionError, DeliveryTag, RoutingKey
+from cmk.messaging import BindingKey, Channel, CMKConnectionError, DeliveryTag, RoutingKey
 from cmk.piggyback.backend import (
     get_messages_for,
     PiggybackMessage,
+    remove_piggyback_raw_data,
     store_piggyback_raw_data,
     watch_new_messages,
 )
 
 from ._config import AnnotatedHostName, load_config, PiggybackHubConfig
 from ._utils import make_connection, make_log_and_exit
+
+PAYLOAD_ROUTE = RoutingKey("payload")
+# Older sites have no binding for it, so they drop removals instead of failing to parse them.
+# Removals share the payload queue, which keeps their order relative to the payload messages.
+PAYLOAD_REMOVAL_ROUTE = RoutingKey("payload-removal")
+PAYLOAD_BINDINGS = (BindingKey(PAYLOAD_ROUTE.value), BindingKey(PAYLOAD_REMOVAL_ROUTE.value))
+
+
+class PiggybackPayloadRemoval(BaseModel):
+    """The source has no data for the piggybacked host anymore"""
+
+    source_host: AnnotatedHostName
+    piggybacked_host: AnnotatedHostName
 
 
 class PiggybackPayload(BaseModel):
@@ -43,24 +57,42 @@ class PiggybackPayload(BaseModel):
         )
 
 
+class PiggybackHubMessage(RootModel[PiggybackPayload | PiggybackPayloadRemoval]):
+    """A message on the payload queue; the JSON is the one of the wrapped model"""
+
+
 def save_payload_on_message(
     logger: logging.Logger,
     omd_root: Path,
-) -> Callable[[Channel[PiggybackPayload], DeliveryTag, PiggybackPayload], None]:
+) -> Callable[[Channel[PiggybackHubMessage], DeliveryTag, PiggybackHubMessage], None]:
     def _on_message(
-        channel: Channel[PiggybackPayload], delivery_tag: DeliveryTag, received: PiggybackPayload
+        channel: Channel[PiggybackHubMessage],
+        delivery_tag: DeliveryTag,
+        received: PiggybackHubMessage,
     ) -> None:
-        logger.debug(
-            "Received payload for piggybacked host from source host '%(source_host)s'",
-            {"source_host": received.source_host},
-        )
-        store_piggyback_raw_data(
-            source_hostname=received.source_host,
-            piggybacked_raw_data=received.raw_data,
-            message_timestamp=received.message_timestamp,
-            contact_timestamp=received.contact_timestamp,
-            omd_root=omd_root,
-        )
+        match received.root:
+            case PiggybackPayload() as payload:
+                logger.debug(
+                    "Received payload for piggybacked host from source host '%(source_host)s'",
+                    {"source_host": payload.source_host},
+                )
+                store_piggyback_raw_data(
+                    source_hostname=payload.source_host,
+                    piggybacked_raw_data=payload.raw_data,
+                    message_timestamp=payload.message_timestamp,
+                    contact_timestamp=payload.contact_timestamp,
+                    omd_root=omd_root,
+                )
+            case PiggybackPayloadRemoval() as removal:
+                logger.debug(
+                    "Received removal of payload for host '%(piggybacked_host)s' "
+                    "from source host '%(source_host)s'",
+                    {
+                        "piggybacked_host": removal.piggybacked_host,
+                        "source_host": removal.source_host,
+                    },
+                )
+                remove_piggyback_raw_data(removal.source_host, removal.piggybacked_host, omd_root)
         channel.acknowledge(delivery_tag)
 
     return _on_message

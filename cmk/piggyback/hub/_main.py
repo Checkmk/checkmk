@@ -27,7 +27,8 @@ from cmk.messaging import Channel, DeliveryTag, QueueName, set_logging_level
 from ._config import CONFIG_QUEUE, ConfigType, PiggybackHubConfig, save_config
 from ._paths import RELATIVE_CONFIG_PATH
 from ._payload import (
-    PiggybackPayload,
+    PAYLOAD_BINDINGS,
+    PiggybackHubMessage,
     save_payload_on_message,
     send_messages_oneshot,
     SendingPayloadProcess,
@@ -133,11 +134,12 @@ def run_piggyback_hub(
             logger,
             omd_root,
             omd_site,
-            PiggybackPayload,
+            PiggybackHubMessage,
             save_payload_on_message(logger, omd_root),
             crash_report_callback,
             QueueName("payload"),
             message_ttl=600,
+            bindings=PAYLOAD_BINDINGS,
         ),
         SendingPayloadProcess(logger, omd_root, reload_config, crash_report_callback),
         ReceivingProcess(

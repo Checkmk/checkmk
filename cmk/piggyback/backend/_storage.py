@@ -271,6 +271,17 @@ def remove_source_status_file(source_hostname: HostName, omd_root: Path) -> bool
     return _remove_piggyback_file(source_status_path)
 
 
+def remove_piggyback_raw_data(
+    source_hostname: HostName, piggybacked_hostname: HostName, omd_root: Path
+) -> None:
+    """Remove the data of a source for one host; folders and status files expire by cleanup."""
+    # A status file is only read for payload files of its source, so a leftover one is harmless.
+    # Removing it with the last payload file would mean scanning all host folders per removal.
+    _remove_piggyback_file(
+        _get_piggybacked_file_path(source_hostname, piggybacked_hostname, omd_root)
+    )
+
+
 def store_piggyback_raw_data(
     source_hostname: HostName,
     piggybacked_raw_data: Mapping[HostName, Sequence[bytes]],

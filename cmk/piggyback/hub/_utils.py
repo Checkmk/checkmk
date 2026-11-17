@@ -9,13 +9,21 @@ import multiprocessing
 import signal
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import override
 
 from pydantic import BaseModel
 
-from cmk.messaging import AppName, Channel, CMKConnectionError, Connection, DeliveryTag, QueueName
+from cmk.messaging import (
+    AppName,
+    BindingKey,
+    Channel,
+    CMKConnectionError,
+    Connection,
+    DeliveryTag,
+    QueueName,
+)
 
 APP_NAME = AppName("piggyback-hub")
 
@@ -39,6 +47,7 @@ class ReceivingProcess[ModelT: BaseModel](multiprocessing.Process):
         crash_report_callback: Callable[[], str],
         queue: QueueName,
         message_ttl: int | None,
+        bindings: Sequence[BindingKey] | None = None,
     ) -> None:
         super().__init__()
         self.logger = logger
@@ -49,6 +58,7 @@ class ReceivingProcess[ModelT: BaseModel](multiprocessing.Process):
         self.crash_report_callback = crash_report_callback
         self.queue = queue
         self.message_ttl = message_ttl
+        self.bindings = bindings
         self.task_name = f"receiving on queue '{self.queue.value}'"
 
     @override
@@ -63,7 +73,9 @@ class ReceivingProcess[ModelT: BaseModel](multiprocessing.Process):
                 with make_connection(self.omd_root, self.site, self.logger, self.task_name) as conn:
                     try:
                         channel: Channel[ModelT] = conn.channel(self.model)
-                        channel.queue_declare(queue=self.queue, message_ttl=self.message_ttl)
+                        channel.queue_declare(
+                            queue=self.queue, bindings=self.bindings, message_ttl=self.message_ttl
+                        )
 
                         self.logger.debug("Consuming: %(task_name)s", {"task_name": self.task_name})
                         channel.consume(self.queue, self.callback)

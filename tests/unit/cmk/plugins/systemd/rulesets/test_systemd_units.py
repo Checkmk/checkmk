@@ -7,8 +7,8 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
-from cmk.gui.plugins.wato.check_parameters.systemd_services import (
+from cmk.gui.form_specs import get_visitor, RawDiskData, registration, VisitorOptions
+from cmk.plugins.systemd.rulesets.systemd_units import (
     _migrate_to_label_list,
     _migrate_unit_not_found_key,
     rule_spec_discovery_systemd_units_services,
@@ -34,6 +34,11 @@ def test_migrate_unit_not_found_key(value: object, expected: dict[str, object]) 
     assert _migrate_unit_not_found_key(value) == expected
 
 
+@pytest.fixture
+def _register_form_spec_visitors() -> None:
+    registration.register()
+
+
 def _validate(rule: Mapping[str, object]) -> Sequence[object]:
     return get_visitor(
         rule_spec_discovery_systemd_units_services.parameter_form(),
@@ -48,6 +53,7 @@ def _migrate(rule: Mapping[str, object]) -> object:
     ).to_disk(RawDiskData(rule))
 
 
+@pytest.mark.usefixtures("_register_form_spec_visitors")
 @pytest.mark.parametrize(
     "stored, expected",
     [
@@ -59,10 +65,12 @@ def test_legacy_name_condition_is_migrated(stored: str, expected: Mapping[str, s
     assert _migrate({"names": [stored]}) == {"names": [expected]}
 
 
+@pytest.mark.usefixtures("_register_form_spec_visitors")
 def test_legacy_automatic_host_labels_flag_is_migrated() -> None:
     assert _migrate({"host_labels_auto": True}) == {"host_labels_auto": None}
 
 
+@pytest.mark.usefixtures("_register_form_spec_visitors")
 @pytest.mark.parametrize("match", ["exact", "regex"])
 def test_empty_pattern_is_rejected(match: str) -> None:
     rule = {"names": [{"match": match, "pattern": ""}]}
@@ -70,12 +78,14 @@ def test_empty_pattern_is_rejected(match: str) -> None:
     assert _validate(rule)
 
 
+@pytest.mark.usefixtures("_register_form_spec_visitors")
 def test_invalid_regex_is_rejected() -> None:
     rule = {"names": [{"match": "regex", "pattern": "ssh("}]}
 
     assert _validate(rule)
 
 
+@pytest.mark.usefixtures("_register_form_spec_visitors")
 def test_invalid_regex_is_accepted_as_explicit_text() -> None:
     rule = {"names": [{"match": "exact", "pattern": "ssh("}]}
 

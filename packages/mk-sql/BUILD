@@ -228,12 +228,14 @@ pkg_files(
         ":test_ms_sql-windows",
         ":test_running_instances-windows",
     ],
+    tags = ["manual"],
 )
 
 pkg_files(
     name = "qemu_tests_binary",
     srcs = [":mk-sql-windows"],
     prefix = "packages/mk-sql",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -260,6 +262,7 @@ pkg_tar(
         "//bazel/tools/windows_vm:run_rust_tests",
     ],
     extension = "tar.gz",
+    tags = ["manual"],
 )
 
 # Runs the Windows lib and integration tests inside the real-Windows QEMU

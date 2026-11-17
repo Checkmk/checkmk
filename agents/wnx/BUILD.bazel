@@ -603,12 +603,14 @@ pkg_files(
         "install/msi-install-qemu.ps1",
         ":check_mk_agent_msi",
     ],
+    tags = ["manual"],
 )
 
 pkg_tar(
     name = "msi_install_qemu_stage",
     srcs = [":msi_install_qemu_files"],
     extension = "tar.gz",
+    tags = ["manual"],
 )
 
 qemu_test(

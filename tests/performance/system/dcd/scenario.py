@@ -13,7 +13,7 @@ every host; what is timed is that run rather than the daemon's own schedule.
 import logging
 import subprocess
 
-from tests.performance.perftest import PerformanceTest
+from tests.performance.system.perftest import PerformanceTest
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.dcd import execute_dcd_cycle

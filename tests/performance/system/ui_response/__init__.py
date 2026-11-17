@@ -7,4 +7,4 @@ import pytest
 
 # Show the values of a failing assertion in the scenario too, not only in the test module.
 # This runs before the scenario's first import, as a module is rewritten only on import.
-pytest.register_assert_rewrite("tests.performance.ui_response.scenario")
+pytest.register_assert_rewrite("tests.performance.system.ui_response.scenario")

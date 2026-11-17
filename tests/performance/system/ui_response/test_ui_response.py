@@ -12,9 +12,9 @@ import pytest
 from playwright.sync_api import BrowserContext
 from pytest_benchmark.fixture import BenchmarkFixture
 
-from tests.performance.perftest import PerformanceTest
-from tests.performance.ui_response import scenario
-from tests.performance.ui_response.scenario import CmkPageUrl
+from tests.performance.system.perftest import PerformanceTest
+from tests.performance.system.ui_response import scenario
+from tests.performance.system.ui_response.scenario import CmkPageUrl
 from tests.testlib.common.repo import repo_path
 
 #: A data row of the shared monitoring table. Its rows are virtualized, so only the ones on

@@ -8,7 +8,7 @@
 import itertools
 import logging
 
-from tests.performance.perftest import PerformanceTest
+from tests.performance.system.perftest import PerformanceTest
 
 logger = logging.getLogger(__name__)
 

@@ -34,7 +34,7 @@ from playwright._impl._api_structures import SetCookieParam
 from playwright.sync_api import BrowserContext, Page
 from requests.auth import HTTPBasicAuth
 
-from tests.performance.mock_remote_sites import mock_remote_site_cluster
+from tests.performance.system.mock_remote_sites import mock_remote_site_cluster
 from tests.testlib.site import ADMIN_USER as site_admin_user
 from tests.testlib.site import Site
 

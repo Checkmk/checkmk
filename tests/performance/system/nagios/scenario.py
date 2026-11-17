@@ -8,8 +8,8 @@
 import logging
 from pathlib import Path
 
-from tests.performance.perftest import PerformanceTest
 from tests.performance.sysmon import track_resources
+from tests.performance.system.perftest import PerformanceTest
 from tests.testlib.site import PythonHelper
 from tests.testlib.utils import check_output
 

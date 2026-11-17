@@ -12,8 +12,8 @@ from functools import partial
 import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 
-from tests.performance.activation import scenario
-from tests.performance.perftest import PerformanceTest
+from tests.performance.system.activation import scenario
+from tests.performance.system.perftest import PerformanceTest
 from tests.testlib.version import CMKVersion, version_from_env
 
 

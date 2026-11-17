@@ -11,8 +11,8 @@ from functools import partial
 import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 
-from tests.performance.dcd import scenario
-from tests.performance.perftest import PerformanceTest
+from tests.performance.system.dcd import scenario
+from tests.performance.system.perftest import PerformanceTest
 
 
 @pytest.fixture(name="dcd_piggyback_env", scope="function")

@@ -29,9 +29,10 @@ def test_semantic_version_from_string(raw_version: str) -> None:
         pytest.param("", id="blank string"),
         pytest.param("2.0", id="missing patch version"),
         pytest.param("2-0-1", id="hyphen delimeter not supported"),
+        pytest.param("20261116", id="digits only, as in a date tag"),
         pytest.param("major.minor.patch", id="only digits matched with correct pattern"),
     ],
 )
 def test_semantic_version_from_string_raises(raw_version: str) -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="No semantic version detected"):
         SemanticVersion.from_string(raw_version)

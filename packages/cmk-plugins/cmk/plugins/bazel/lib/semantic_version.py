@@ -33,7 +33,7 @@ class SemanticVersion:
         SemanticVersion(major=2, minor=0, patch=1)
 
         """
-        if not (match := re.compile(r"\d+.\d+.\d+").search(string)):
+        if not (match := re.compile(r"\d+\.\d+\.\d+").search(string)):
             raise ValueError(f"No semantic version detected in string: {string!r}.")
 
         major, minor, patch = match.group().split(".")

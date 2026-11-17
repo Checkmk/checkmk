@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DualListElement } from 'cmk-ui-library/components/CmkDualList'
 import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -31,6 +32,7 @@ const props = defineProps<{
   dashboardRestrictedToSingle: string[]
   loggedInUser: string
   permissions: DashboardPermissions
+  shareableContactGroups: DualListElement[]
 }>()
 
 const emit = defineEmits<{
@@ -205,6 +207,7 @@ const hasVisibilityErrors = computed(() => sortIndexError.value.length > 0)
               v-model:share="generalSettings.visibility.share"
               :errors="accessErrors"
               :permissions="permissions"
+              :shareable-contact-groups="shareableContactGroups"
             />
           </CmkTabContent>
           <CmkTabContent id="visibility" class="db-settings-wizard__box">

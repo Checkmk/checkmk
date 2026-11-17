@@ -62,7 +62,8 @@ const defaultProps = {
     publish_custom_graph_to_contact_groups: true,
     publish_custom_graph_to_foreign_contact_groups: true,
     publish_custom_graph_to_sites: true
-  }
+  },
+  shareableContactGroups: []
 }
 
 async function renderWizard(

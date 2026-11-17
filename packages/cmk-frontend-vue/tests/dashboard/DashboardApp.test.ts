@@ -301,6 +301,7 @@ const pageProperties: DashboardPageProperties = {
     publish_custom_graph_to_foreign_contact_groups: false,
     publish_custom_graph_to_sites: false
   },
+  shareable_contact_groups: [],
   logged_in_user: OWNER,
   global_time_picker: {
     custom_time_ranges: [],

@@ -8,13 +8,15 @@
 of the dashboard to render is given in the HTML variable 'name'.
 """
 
+from collections.abc import Collection
 from dataclasses import asdict
 from typing import Literal
 
 import cmk.ccc.version as cmk_version
-from cmk.gui import hooks, visuals
+from cmk.gui import hooks, userdb, visuals
 from cmk.gui.dashboard.global_time_picker_options import get_global_time_picker_props
 from cmk.gui.exceptions import MKAuthException
+from cmk.gui.groups import GroupName, GroupSpecs
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
@@ -28,6 +30,7 @@ from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.views.drilldown_filters import dropped_filters_warning
 from cmk.gui.visuals import visual_page_breadcrumb
 from cmk.gui.visuals._filter_context import requested_context_from_request
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.utils import paths
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
@@ -151,6 +154,12 @@ def page_dashboard_app(ctx: PageContext) -> None:
             "ntop_active": ntop_connection().is_active(),
         },
         "permissions": _dashboard_permissions(),
+        "shareable_contact_groups": shareable_contact_groups(
+            load_contact_group_information(),
+            userdb.contactgroups_of_user(user.id) if user.id else [],
+            may_share_with_own=user.may("general.publish_dashboards_to_groups"),
+            may_share_with_foreign=user.may("general.publish_dashboards_to_foreign_groups"),
+        ),
         "logged_in_user": user.id,
         "global_time_picker": asdict(get_global_time_picker_props(ctx.config)),
         "drill_up": None if drill_up is None else asdict(drill_up),
@@ -186,6 +195,20 @@ def _dashboard_permissions() -> dict[str, bool]:
         ),
         "publish_custom_graph_to_sites": user.may("general.publish_to_sites_custom_graph"),
     }
+
+
+def shareable_contact_groups(
+    contact_groups: GroupSpecs,
+    own_groups: Collection[GroupName],
+    *,
+    may_share_with_own: bool,
+    may_share_with_foreign: bool,
+) -> list[dict[str, str]]:
+    return [
+        {"name": name, "title": spec.get("alias") or name}
+        for name, spec in contact_groups.items()
+        if may_share_with_foreign or (may_share_with_own and name in own_groups)
+    ]
 
 
 def _get_default_dashboard_name() -> str:

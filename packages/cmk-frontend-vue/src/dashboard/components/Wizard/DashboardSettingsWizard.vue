@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DualListElement } from 'cmk-ui-library/components/CmkDualList'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkSlideIn from 'cmk-ui-library/components/CmkSlideIn'
 
@@ -18,6 +19,7 @@ defineProps<{
   dashboardRestrictedToSingle: string[]
   loggedInUser: string
   permissions: DashboardPermissions
+  shareableContactGroups: DualListElement[]
 }>()
 
 const emit = defineEmits<{
@@ -39,6 +41,7 @@ const save = (dashboardId: string, generalSettings: DashboardGeneralSettings) =>
         :dashboard-restricted-to-single="dashboardRestrictedToSingle"
         :logged-in-user="loggedInUser"
         :permissions="permissions"
+        :shareable-contact-groups="shareableContactGroups"
         @cancel="() => emit('cancel')"
         @save="save"
       />

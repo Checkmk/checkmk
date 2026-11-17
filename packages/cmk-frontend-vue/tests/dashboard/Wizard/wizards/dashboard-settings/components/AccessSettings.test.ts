@@ -26,12 +26,10 @@ const allPermissions: DashboardPermissions = {
   publish_custom_graph_to_sites: true
 }
 
-const mockGetContactGroups = vi.hoisted(() =>
-  vi.fn().mockResolvedValue([
-    { name: 'admins', title: 'Administrators' },
-    { name: 'operators', title: 'Operators' }
-  ])
-)
+const shareableContactGroups = [
+  { name: 'admins', title: 'Administrators' },
+  { name: 'operators', title: 'Operators' }
+]
 
 const mockGetSites = vi.hoisted(() =>
   vi.fn().mockResolvedValue([
@@ -41,14 +39,14 @@ const mockGetSites = vi.hoisted(() =>
 )
 
 vi.mock('@/dashboard/components/Wizard/wizards/dashboard-settings/api', () => ({
-  getContactGroups: mockGetContactGroups,
   getSites: mockGetSites
 }))
 
 async function renderAccessSettings(
   share: DashboardShare = 'no',
   errors: string[] = [],
-  permissions: DashboardPermissions = allPermissions
+  permissions: DashboardPermissions = allPermissions,
+  contactGroups = shareableContactGroups
 ) {
   const shareRef = ref(share)
   const wrapper = defineComponent({
@@ -58,7 +56,8 @@ async function renderAccessSettings(
           share: shareRef.value,
           'onUpdate:share': (v: DashboardShare) => (shareRef.value = v),
           errors,
-          permissions
+          permissions,
+          shareableContactGroups: contactGroups
         })
     }
   })
@@ -98,15 +97,19 @@ describe('AccessSettings', () => {
     })
   })
 
-  describe('Contact groups loading', () => {
-    it('fetches contact groups on mount', async () => {
-      await renderAccessSettings()
-      expect(mockGetContactGroups).toHaveBeenCalled()
+  describe('Shareable contact groups', () => {
+    it('enables "Members of contact groups" with only the own contact group permission', async () => {
+      await renderAccessSettings('no', [], {
+        ...allPermissions,
+        publish_to_all: false,
+        publish_to_foreign_contact_groups: false,
+        publish_to_sites: false
+      })
+      expect(getToggleButton('Members of contact groups')).toBeEnabled()
     })
 
-    it('disables the contact groups option when getContactGroups returns empty', async () => {
-      mockGetContactGroups.mockResolvedValueOnce([])
-      await renderAccessSettings()
+    it('disables "Members of contact groups" when there is no group to share with', async () => {
+      await renderAccessSettings('no', [], allPermissions, [])
       expect(getToggleButton('Members of contact groups')).toBeDisabled()
     })
   })
@@ -149,18 +152,6 @@ describe('AccessSettings', () => {
   })
 
   describe('API error handling', () => {
-    it('disables contact groups option on 403 from getContactGroups', async () => {
-      mockGetContactGroups.mockRejectedValueOnce(new CmkApiError('Forbidden', null, '', 403))
-      await renderAccessSettings()
-      expect(getToggleButton('Members of contact groups')).toBeDisabled()
-    })
-
-    it('disables contact groups option on 401 from getContactGroups', async () => {
-      mockGetContactGroups.mockRejectedValueOnce(new CmkApiError('Unauthorized', null, '', 401))
-      await renderAccessSettings()
-      expect(getToggleButton('Members of contact groups')).toBeDisabled()
-    })
-
     it('clears available elements on 403 from getSites during loadAvailableElements', async () => {
       mockGetSites.mockRejectedValueOnce(new CmkApiError('Forbidden', null, '', 403))
       await renderAccessSettings({ type: 'with_sites', sites: [] })

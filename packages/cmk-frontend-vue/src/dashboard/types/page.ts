@@ -6,6 +6,7 @@
 import type { DrillUpButton } from 'cmk-shared-typing/typescript/drill_up_button'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
+import type { DualListElement } from 'cmk-ui-library/components/CmkDualList'
 
 import type { GlobalTimePickerProps } from '@/graphing/GlobalTimePicker'
 
@@ -70,6 +71,7 @@ export interface DashboardPageProperties {
     ntop_active: boolean
   }
   permissions: DashboardPermissions
+  shareable_contact_groups: DualListElement[]
   logged_in_user: string
   global_time_picker: GlobalTimePickerProps
   /** The way back to the page a drill-down opened this dashboard from. */

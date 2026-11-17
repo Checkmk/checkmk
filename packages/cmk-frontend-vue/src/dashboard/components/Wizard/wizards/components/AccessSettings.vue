@@ -18,13 +18,14 @@ import { computed, ref } from 'vue'
 import type { DashboardPermissions } from '@/dashboard/types/page'
 import { type DashboardShare } from '@/dashboard/types/shared'
 
-import { getContactGroups, getSites } from '../dashboard-settings/api'
+import { getSites } from '../dashboard-settings/api'
 
 const { _t } = usei18n()
 
 interface AccessSettingsProps {
   errors: TranslatedString[]
   permissions: DashboardPermissions
+  shareableContactGroups: DualListElement[]
 }
 
 const props = defineProps<AccessSettingsProps>()
@@ -38,16 +39,7 @@ const availableElements = ref<DualListElement[]>([])
 const selectedContactGroups = ref<string[]>([])
 const selectedSites = ref<string[]>([])
 
-let contactGroups: DualListElement[] = []
-try {
-  contactGroups = await getContactGroups()
-} catch (e) {
-  if (!(e instanceof CmkApiError && (e.statusCode === 401 || e.statusCode === 403))) {
-    throw e
-  }
-  // 401/403 are silently caught. contactGroups stays empty, so the option will be disabled below.
-}
-const isContactGroupOptionDisabled = ref<boolean>(contactGroups.length === 0)
+const isContactGroupOptionDisabled = computed(() => props.shareableContactGroups.length === 0)
 
 if (share.value !== 'no' && share.value.type === 'with_contact_groups') {
   selectedContactGroups.value = share.value.contact_groups
@@ -86,7 +78,7 @@ const selectedElements = computed({
 
 const loadAvailableElements = async (shareMode: ShareType) => {
   const fetchers: Record<string, () => Promise<DualListElement[]>> = {
-    with_contact_groups: getContactGroups,
+    with_contact_groups: async () => props.shareableContactGroups,
     with_sites: getSites
   }
 
@@ -162,7 +154,7 @@ const shareOptions = computed((): ToggleButtonOption[] => {
       label: _t('Members of contact groups'),
       value: 'with_contact_groups',
       disabled: isContactGroupOptionDisabled.value,
-      disabledTooltip: _t('No contact groups found')
+      disabledTooltip: _t('No contact groups to share with')
     })
   }
 

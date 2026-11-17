@@ -862,6 +862,7 @@ const { range, refreshTick, timeRangeVariables, updateTimeRange, resetTimeContro
           "
           :logged-in-user="logged_in_user"
           :permissions="permissions"
+          :shareable-contact-groups="shareable_contact_groups"
           @cancel="openDashboardSettings = false"
           @save="updateDashboardSettings"
         />

@@ -283,12 +283,14 @@ class AssertResult(NamedTuple):
 def assert_presence_on_download_server(
     version: Version, internal_only: bool, artifact_name: str, credentials: Credentials
 ) -> AssertResult:
-    if file_exists_on_download_server(artifact_name, version, credentials) == internal_only:
+    # Release candidates upload all artifacts (including internal-only ones) to the internal tstbuild server, so every artifact must be present there.
+    is_internal_only = internal_only and not version.release_candidate.value
+    if file_exists_on_download_server(artifact_name, version, credentials) == is_internal_only:
         return AssertResult(
             assertion_ok=False,
             message=(
-                f"{ArtifactState().present if internal_only else ArtifactState().missing}: "
-                f"{artifact_name} should {'not ' if internal_only else ''}"
+                f"{ArtifactState().present if is_internal_only else ArtifactState().missing}: "
+                f"{artifact_name} should {'not ' if is_internal_only else ''}"
                 "be available on download server!"
             ),
         )

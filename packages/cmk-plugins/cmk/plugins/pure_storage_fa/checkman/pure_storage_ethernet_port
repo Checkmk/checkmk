@@ -1,4 +1,4 @@
-title: Pure Storage FlashArray: Ethernet Port
+title: Pure Storage FlashArray: Ethernet Ports
 agents: pure_storage_fa
 catalog: hw/storagehw/pure_storage
 license: GPLv2

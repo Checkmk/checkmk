@@ -8,19 +8,22 @@ from logging import Logger
 from typing import override
 
 from cmk.base import config as base_config
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.site_config import all_activation_sites
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.hosts_and_folders import Folder, make_folder_tree
 from cmk.gui.watolib.pending_changes import (
     NoopPendingChangesStore,
     PendingChanges,
 )
 from cmk.gui.watolib.rulesets import Ruleset, RulesetCollection
-from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
+from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError, Rulespec
+from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.update_config.internal import ExpiryVersion, UpdateAction
 from cmk.update_config.lib import format_warning
 from cmk.update_config.plugins.lib.rulesets import load_and_transform, RuleOutcome, SKIP_ACTION
@@ -52,8 +55,8 @@ class UpdateRulesets(UpdateAction):
 def validate_transformed_rule_values(all_rulesets: RulesetCollection) -> Iterator[RuleOutcome]:
     """Validate every transformed rule value against the current definition
 
-    One outcome per rule. An MKUserError is an invalid value, any other
-    exception a broken ruleset implementation.
+    One outcome per rule. An MKUserError is a value the user can fix in the
+    GUI, any other exception a broken migration or ruleset implementation.
     """
     for ruleset in all_rulesets.get_rulesets().values():
         if ruleset.name in SKIP_ACTION:
@@ -63,27 +66,42 @@ def validate_transformed_rule_values(all_rulesets: RulesetCollection) -> Iterato
         # "thanks" to the load_and_transform call from above..
         for folder, index, rule in ruleset.get_rules():
             try:
-                try:
-                    visitor = get_visitor(
-                        ruleset.rulespec.form_spec,
-                        VisitorOptions(migrate_values=False, mask_values=True),
-                    )
-                    validation_errors = visitor.validate(RawDiskData(rule.value))
-                    if validation_errors:
-                        raise ValueError(f"Validation errors: {validation_errors}")
-                except FormSpecNotImplementedError:
-                    ruleset.rulespec.valuespec.validate_datatype(
-                        rule.value,
-                        "",
-                    )
-                    ruleset.rulespec.valuespec.validate_value(
-                        rule.value,
-                        "",
-                    )
+                _validate_rule_value(ruleset.rulespec, rule.value)
             except Exception as exc:
                 yield RuleOutcome(ruleset, folder, index, rule, exc)
             else:
                 yield RuleOutcome(ruleset, folder, index, rule, None)
+
+
+class UnparsableRuleValue(Exception):
+    pass
+
+
+def _validate_rule_value(rulespec: Rulespec, value: object) -> None:
+    try:
+        form_spec = rulespec.form_spec
+    except FormSpecNotImplementedError:
+        _validate_valuespec_value(rulespec.valuespec, value)
+    else:
+        _validate_form_spec_value(form_spec, RawDiskData(value))
+
+
+def _validate_form_spec_value[T](form_spec: FormSpec[T], value: RawDiskData) -> None:
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=False, mask_values=True))
+    try:
+        visitor.to_disk(value)
+    except MKGeneralException as e:
+        raise UnparsableRuleValue(str(e)) from e
+    if validation_errors := visitor.validate(value):
+        raise MKUserError(None, f"Validation errors: {validation_errors}")
+
+
+def _validate_valuespec_value[T](valuespec: ValueSpec[T], value: T) -> None:
+    try:
+        valuespec.validate_datatype(value, "")
+    except MKUserError as e:
+        raise UnparsableRuleValue(str(e)) from e
+    valuespec.validate_value(value, "")
 
 
 def validate_rule_values(

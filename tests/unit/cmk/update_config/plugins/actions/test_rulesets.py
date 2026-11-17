@@ -15,12 +15,32 @@ from cmk.gui.valuespec import Dictionary, Float, Integer, Tuple
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
-from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec
+from cmk.gui.watolib.rulespecs import FormSpecDefinition, HostRulespec, Rulespec
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.matcher import RulesetName
+from cmk.rulesets.v1 import form_specs
 from cmk.update_config.plugins.actions import rulesets as rulesets_updater
 
+_FORM_SPEC_RULESET = RuleGroup.CheckgroupParameters("form_spec_only")
+
 _ARTIFICIAL_RULESPECS: Mapping[RulesetName, Rulespec] = {
+    _FORM_SPEC_RULESET: HostRulespec(
+        name=_FORM_SPEC_RULESET,
+        group=RulespecGroupMonitoringConfigurationVarious,
+        valuespec=lambda: Dictionary(elements=[]),
+        form_spec_definition=FormSpecDefinition(
+            lambda: form_specs.Dictionary(
+                elements={
+                    "name": form_specs.DictElement(
+                        parameter_form=form_specs.String(
+                            custom_validate=(form_specs.validators.LengthInRange(min_value=1),),
+                        ),
+                    ),
+                },
+            ),
+            None,
+        ),
+    ),
     RuleGroup.CheckgroupParameters("ntp_time"): HostRulespec(
         name=RuleGroup.CheckgroupParameters("ntp_time"),
         group=RulespecGroupMonitoringConfigurationVarious,
@@ -127,9 +147,57 @@ def test_validate_transformed_rule_values_reports_the_invalid_rule(tree: FolderT
     assert [
         (outcome.ruleset.name, outcome.index, type(outcome.problem)) for outcome in outcomes
     ] == [
-        ("logwatch_rules", 0, MKUserError),
+        ("logwatch_rules", 0, rulesets_updater.UnparsableRuleValue),
         (RuleGroup.CheckgroupParameters("ntp_time"), 0, type(None)),
     ]
+
+
+@pytest.mark.parametrize(
+    ["ruleset_name", "rule_value", "expected_problem"],
+    [
+        pytest.param(
+            "logwatch_rules",
+            {"reclassify_patterns": [("W", "\\H", "invalid_regex")]},
+            MKUserError,
+            id="valuespec rejects the value",
+        ),
+        pytest.param(
+            "logwatch_rules",
+            "not a dictionary",
+            rulesets_updater.UnparsableRuleValue,
+            id="valuespec cannot parse the value",
+        ),
+        pytest.param(
+            _FORM_SPEC_RULESET,
+            {"name": ""},
+            MKUserError,
+            id="form spec rejects the value",
+        ),
+        pytest.param(
+            _FORM_SPEC_RULESET,
+            {"name": 5},
+            rulesets_updater.UnparsableRuleValue,
+            id="form spec cannot parse the value",
+        ),
+    ],
+)
+def test_validate_transformed_rule_values_tells_unparsable_from_rejected_values(
+    tree: FolderTree,
+    ruleset_name: RulesetName,
+    rule_value: object,
+    expected_problem: type[Exception],
+) -> None:
+    all_rulesets = RulesetCollection(
+        {
+            ruleset_name: _instantiate_ruleset(
+                tree, ruleset_name, rule_value, _ARTIFICIAL_RULESPECS.get(ruleset_name)
+            )
+        }
+    )
+
+    outcomes = list(rulesets_updater.validate_transformed_rule_values(all_rulesets))
+
+    assert [type(outcome.problem) for outcome in outcomes] == [expected_problem]
 
 
 def test_a_broken_ruleset_gets_a_crash_report_of_its_exception(

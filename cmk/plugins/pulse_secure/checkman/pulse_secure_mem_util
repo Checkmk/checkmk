@@ -1,4 +1,4 @@
-title: Pulse Secure: IVE Memory Utilization
+title: Pulse Secure: Memory Utilization
 agents: snmp
 catalog: app/pulse_secure
 license: GPLv2

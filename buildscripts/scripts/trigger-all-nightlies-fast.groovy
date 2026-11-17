@@ -52,11 +52,11 @@ def main() {
     if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 12..15 || Calendar.getInstance().get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
         // build only enterprise on high noon or a little bit later
         // build cloud edition as test_license_verification_distributed_mixed_editions requires a CCE remote site based on the daily CCE
-        editions_to_test = ["enterprise", "cloud"];
+        editions_to_test = ["cloud", "enterprise"];
     }
 
     if (override_editions) {
-        editions_to_test = override_editions.replaceAll(',', ' ').split(' ').grep();
+        editions_to_test = override_editions.replaceAll(',', ' ').split(' ').grep().sort();
     }
 
     print(
@@ -74,34 +74,32 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    def stages = all_editions.collectEntries { edition ->
-        [("${edition}") : {
-            def stepName = "Trigger ${edition}";
-            def run_condition = edition in editions_to_test;
+    def stages = all_editions.collect { edition ->
+        def stepName = "Trigger ${edition}";
+        def run_condition = edition in editions_to_test;
 
-            /// this makes sure the whole parallel thread is marked as skipped
-            if (! run_condition){
-                Utils.markStageSkippedForConditional(stepName);
-            }
+        /// this makes sure the stage is marked as skipped
+        if (! run_condition){
+            Utils.markStageSkippedForConditional(stepName);
+        }
 
-            smart_stage(
-                name: stepName,
-                condition: run_condition,
-                raiseOnError: true,
-            ) {
-                smart_build(
-                    use_upstream_build: true,
-                    relative_job_name: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
-                    build_params: job_parameters,
-                    build_params_no_check: job_parameters_no_check,
-                    download: false,
-                );
-            }
-        }]
+        smart_stage(
+            name: stepName,
+            condition: run_condition,
+            raiseOnError: false,
+        ) {
+            smart_build(
+                use_upstream_build: true,
+                relative_job_name: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
+                build_params: job_parameters,
+                build_params_no_check: job_parameters_no_check,
+                download: false,
+            );
+        }[0]
     }
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
-        currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
+        currentBuild.result = stages.every { it } ? "SUCCESS" : "FAILURE"
     }
 }
 

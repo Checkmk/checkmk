@@ -28,6 +28,7 @@ from cmk.gui.monitor.command import ModifiableAttribute
 from cmk.gui.monitor.hosts import reader_unavailable_sites
 from cmk.gui.monitor.shared import IconSource
 from cmk.gui.monitor.site_scope import MonitorSites
+from cmk.gui.utils.relay import is_scheduled_by_relay
 from cmk.livestatus_client import (
     ChangeServiceModifiedAttributes,
     Command,
@@ -145,6 +146,7 @@ class LiveStatusHostServicesRepository:
                 Services.check_type,
                 Services.cached_at,
                 Services.cache_interval,
+                Services.host_labels,
             ],
             And(Services.host_name == hostname, Services.description == service_name),
         )
@@ -202,6 +204,11 @@ class LiveStatusHostServicesRepository:
             current_attempt=row["current_attempt"],
             max_check_attempts=row["max_check_attempts"],
             next_check=int(row["next_check"]) or None,
+            scheduled_by_relay=is_scheduled_by_relay(
+                next_check=row["next_check"],
+                check_type=row["check_type"],
+                host_labels=row["host_labels"],
+            ),
             tags=dict(row["tags"]),
             # The overview does not expose contacts, so its query does not read them.
             contacts=[],

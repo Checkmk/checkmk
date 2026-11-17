@@ -1626,6 +1626,7 @@ class TestMonitorServiceOverview:
                     "tags": {"criticality": "prod"},
                     "labels": {"cmk/check_plugin": "cpu_load"},
                     "label_sources": {"cmk/check_plugin": "discovered"},
+                    "host_labels": {},
                 }
             ],
         )
@@ -1747,6 +1748,7 @@ class TestMonitorServiceOverview:
                     "tags": {"criticality": "prod"},
                     "labels": {"cmk/check_plugin": "cpu_load"},
                     "label_sources": {"cmk/check_plugin": "discovered"},
+                    "host_labels": {},
                     **columns,
                 }
             ],
@@ -1972,6 +1974,7 @@ class TestMonitorServiceOverview:
                     "contacts": ["hh"],
                     "labels": {},
                     "label_sources": {},
+                    "host_labels": {},
                     "tags": {},
                 }
             ],
@@ -2043,6 +2046,7 @@ class TestMonitorServiceOverview:
                     "contacts": ["hh"],
                     "labels": {},
                     "label_sources": {},
+                    "host_labels": {},
                     "tags": {},
                 }
             ],
@@ -2115,6 +2119,7 @@ class TestMonitorServiceOverview:
                     "contacts": ["hh"],
                     "labels": {},
                     "label_sources": {},
+                    "host_labels": {},
                     "tags": {},
                 }
             ],
@@ -2520,6 +2525,7 @@ _OVERVIEW_SERVICE_ROW = {
     "contacts": [],
     "labels": {},
     "label_sources": {},
+    "host_labels": {},
     "tags": {},
 }
 _SERVICE_OVERVIEW_COLUMNS = (
@@ -2529,7 +2535,7 @@ _SERVICE_OVERVIEW_COLUMNS = (
     "host_has_been_checked host_acknowledged host_scheduled_downtime_depth contact_groups "
     "long_plugin_output "
     "current_attempt max_check_attempts next_check tags labels label_sources perf_data "
-    "check_command pnpgraph_present check_type cached_at cache_interval"
+    "check_command pnpgraph_present check_type cached_at cache_interval host_labels"
 )
 _LIMIT = 1000
 _OTHER_SITE_ID = "remote"

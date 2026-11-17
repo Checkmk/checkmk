@@ -11,6 +11,7 @@ py_library(
     srcs = [
         "host_relations.py",
         "images.py",
+        "relay.py",
     ],
     imports = ["../../.."],
     visibility = [

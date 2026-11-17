@@ -47,6 +47,7 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
     current_attempt: 1,
     max_check_attempts: 3,
     next_check: 1783942800,
+    scheduled_by_relay: false,
     tags: {},
     labels: {},
     ...overrides
@@ -107,6 +108,17 @@ describe('ServiceOverviewTab', () => {
     })
 
     expect(screen.getByText('–')).toBeInTheDocument()
+  })
+
+  it('names the relay as managing the next check of an active check it runs', () => {
+    render(ServiceOverviewTab, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        data: makeOverview({ next_check: null, scheduled_by_relay: true })
+      }
+    })
+
+    expect(screen.getByText('Managed by the relay')).toBeInTheDocument()
   })
 
   it('dashes out the state age of a service that has never been checked', () => {

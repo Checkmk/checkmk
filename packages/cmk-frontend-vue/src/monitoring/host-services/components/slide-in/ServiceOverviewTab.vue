@@ -57,11 +57,12 @@ const stateAge = computed(() =>
     : formatDisplayTimestamp(props.data.last_state_change, props.displayOptions)
 )
 
-const nextCheck = computed(() =>
-  props.data.next_check === null
-    ? '–'
-    : formatDisplayTimestamp(props.data.next_check, props.displayOptions)
-)
+const nextCheck = computed(() => {
+  if (props.data.next_check !== null) {
+    return formatDisplayTimestamp(props.data.next_check, props.displayOptions)
+  }
+  return props.data.scheduled_by_relay ? _t('Managed by the relay') : '–'
+})
 </script>
 
 <template>

@@ -104,6 +104,7 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
     current_attempt: 1,
     max_check_attempts: 3,
     next_check: 1783942800,
+    scheduled_by_relay: false,
     tags: {},
     labels: {},
     ...overrides

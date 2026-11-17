@@ -48,6 +48,7 @@ from cmk.gui.theme import Theme
 from cmk.gui.type_defs import PainterParameters, Row, VisualLinkSpec
 from cmk.gui.utils.host_relations import RELATIONS_CUSTOM_VARIABLE
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.relay import is_scheduled_by_relay
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Checkbox,
@@ -1035,11 +1036,10 @@ def make_svc_check_cache_info_painter() -> InternalPainter:
 def _render_svc_next_check(
     row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    # The core schedules no active check that a relay runs.
-    if (
-        not row["service_next_check"]
-        and row["service_check_type"] == 0
-        and "cmk/relay" in row["host_labels"]
+    if is_scheduled_by_relay(
+        next_check=row["service_next_check"],
+        check_type=row["service_check_type"],
+        host_labels=row["host_labels"],
     ):
         return "", _("Managed by the relay")
     return _paint_future_time(

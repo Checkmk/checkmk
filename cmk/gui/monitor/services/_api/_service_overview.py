@@ -162,6 +162,13 @@ class ServiceOverviewResponse:
         ),
         example=1752405600,
     )
+    scheduled_by_relay: bool = api_field(
+        description=(
+            "True for an active check that a relay runs. The relay schedules it, so next_check "
+            "is null."
+        ),
+        example=False,
+    )
     tags: dict[str, str] = api_field(
         description="Service tags",
         example={"criticality": "prod"},
@@ -211,6 +218,7 @@ class ServiceOverviewResponse:
             current_attempt=service.current_attempt,
             max_check_attempts=service.max_check_attempts,
             next_check=service.next_check,
+            scheduled_by_relay=service.scheduled_by_relay,
             tags=read(service.tags, "tags"),
             labels=read(service.labels, "labels"),
         )

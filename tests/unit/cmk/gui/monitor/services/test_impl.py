@@ -21,6 +21,7 @@ from cmk.gui.monitor.services._models import (
     HostState,
     ServiceFilter,
     ServiceOptionalField,
+    ServiceOverview,
     ServiceSort,
     ServiceSortColumn,
     ServiceSortDirection,
@@ -738,11 +739,8 @@ def test_fetch_leaves_the_graphs_unread_when_not_asked_for() -> None:
     assert [service.has_graphs for service in services] == [None]
 
 
-@pytest.mark.usefixtures("request_context")
-def test_get_overview_puts_each_detail_of_the_long_output_on_its_own_line(
-    mock_livestatus: MockLiveStatusConnection,
-) -> None:
-    row = {
+def _overview_row(**overrides: object) -> dict[str, object]:
+    return {
         "description": "Filesystem /",
         "host_name": _UNKNOWN_HOSTNAME,
         "state": 0,
@@ -775,6 +773,7 @@ def test_get_overview_puts_each_detail_of_the_long_output_on_its_own_line(
         "next_check": 0,
         "tags": {},
         "labels": {},
+        "host_labels": {},
         "label_sources": {},
         "perf_data": "",
         "check_command": "check_mk-df",
@@ -782,15 +781,56 @@ def test_get_overview_puts_each_detail_of_the_long_output_on_its_own_line(
         "check_type": 0,
         "cached_at": 0,
         "cache_interval": 0,
+        **overrides,
     }
+
+
+def _get_overview(
+    mock_livestatus: MockLiveStatusConnection, row: dict[str, object]
+) -> ServiceOverview:
     mock_livestatus.add_table("services", [row])
     mock_livestatus.expect_query("GET services", match_type="loose", sites=["NO_SITE"])
     with mock_livestatus(expect_status_query=True):
-        overview = LiveStatusHostServicesRepository(connection=sites.live()).get_overview(
-            hostname=_UNKNOWN_HOSTNAME, service_name="Filesystem /", site_id="NO_SITE"
+        return LiveStatusHostServicesRepository(connection=sites.live()).get_overview(
+            hostname=_UNKNOWN_HOSTNAME, service_name=str(row["description"]), site_id="NO_SITE"
         )
 
+
+@pytest.mark.usefixtures("request_context")
+def test_get_overview_puts_each_detail_of_the_long_output_on_its_own_line(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    overview = _get_overview(
+        mock_livestatus, _overview_row(long_plugin_output="Used: 29.61%\\nInodes used: 10.26%")
+    )
+
     assert overview.long_output == "Used: 29.61%\nInodes used: 10.26%"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_get_overview_of_an_active_check_the_relay_runs_is_scheduled_by_the_relay(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    row = _overview_row(next_check=0, check_type=0, host_labels={"cmk/relay": "relay-01"})
+
+    assert _get_overview(mock_livestatus, row).scheduled_by_relay
+
+
+@pytest.mark.parametrize(
+    "row",
+    [
+        pytest.param(
+            _overview_row(next_check=0, check_type=1, host_labels={"cmk/relay": "relay-01"}),
+            id="passive service of a relay host",
+        ),
+        pytest.param(_overview_row(next_check=0, check_type=0), id="active check of a site host"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_get_overview_of_a_service_the_relay_does_not_run_is_not_scheduled_by_the_relay(
+    mock_livestatus: MockLiveStatusConnection, row: dict[str, object]
+) -> None:
+    assert not _get_overview(mock_livestatus, row).scheduled_by_relay
 
 
 def test_all_services_fetch_has_no_host_filter() -> None:

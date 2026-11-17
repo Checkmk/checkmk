@@ -175,6 +175,8 @@ class ServiceOverview(Service):
     max_check_attempts: int
     # Passive services are never scheduled, so livestatus reports no next check for them.
     next_check: UnixTimestamp | None
+    # A relay runs this active check and schedules it, so the core reports no next check.
+    scheduled_by_relay: bool
 
 
 class ServiceOptionalField(enum.StrEnum):

@@ -10,6 +10,7 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 import { immediateWatch } from '@/lib/watch'
 
+import type { DualListElement } from '@/components/CmkDualList'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
@@ -34,6 +35,7 @@ const props = defineProps<{
   dashboardRestrictedToSingle: string[]
   loggedInUser: string
   permissions: DashboardPermissions
+  shareableContactGroups: DualListElement[]
 }>()
 
 const emit = defineEmits<{
@@ -226,6 +228,7 @@ const hasVisibilityErrors = computed(() => sortIndexError.value.length > 0)
               v-model:share="generalSettings.visibility.share"
               :errors="accessErrors"
               :permissions="permissions"
+              :shareable-contact-groups="shareableContactGroups"
             />
           </CmkTabContent>
           <CmkTabContent id="visibility" class="db-settings-wizard__box">

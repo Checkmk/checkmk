@@ -12,12 +12,14 @@
 of the dashboard to render is given in the HTML variable 'name'.
 """
 
+from collections.abc import Collection
 from dataclasses import asdict
 from typing import Literal
 
 import cmk.ccc.version as cmk_version
-from cmk.gui import hooks, visuals
+from cmk.gui import hooks, userdb, visuals
 from cmk.gui.exceptions import MKAuthException
+from cmk.gui.groups import GroupName, GroupSpecs
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
@@ -31,6 +33,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm, makeuri_contextless
 from cmk.gui.visuals import visual_page_breadcrumb
 from cmk.gui.visuals._filter_context import requested_context_from_request
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_licensing_user_effect
 
@@ -152,6 +155,12 @@ def page_dashboard_app(ctx: PageContext) -> None:
             ),
             "publish_to_sites": user.may("general.publish_dashboards_to_sites"),
         },
+        "shareable_contact_groups": shareable_contact_groups(
+            load_contact_group_information(),
+            userdb.contactgroups_of_user(user.id) if user.id else [],
+            may_share_with_own=user.may("general.publish_dashboards_to_groups"),
+            may_share_with_foreign=user.may("general.publish_dashboards_to_foreign_groups"),
+        ),
         "logged_in_user": user.id,
     }
 
@@ -162,6 +171,20 @@ def page_dashboard_app(ctx: PageContext) -> None:
     # parent dashboard document so panels triggered from dashlet iframes render
     # at dashboard scope, not inside the dashlet.
     hooks.call("dashboard-page-rendered")
+
+
+def shareable_contact_groups(
+    contact_groups: GroupSpecs,
+    own_groups: Collection[GroupName],
+    *,
+    may_share_with_own: bool,
+    may_share_with_foreign: bool,
+) -> list[dict[str, str]]:
+    return [
+        {"name": name, "title": spec.get("alias") or name}
+        for name, spec in contact_groups.items()
+        if may_share_with_foreign or (may_share_with_own and name in own_groups)
+    ]
 
 
 def _get_default_dashboard_name() -> str:

@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { DualListElement } from '@/components/CmkDualList'
+
 import type {
   DashboardConstants,
   DashboardFeatures,
@@ -51,6 +53,7 @@ export interface DashboardPageProperties {
   available_layouts: DashboardLayout[]
   available_features: { dashboard_features: DashboardFeatures; ntop_active: boolean }
   permissions: DashboardPermissions
+  shareable_contact_groups: DualListElement[]
   logged_in_user: string
 }
 

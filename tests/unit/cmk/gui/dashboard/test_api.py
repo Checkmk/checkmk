@@ -1142,9 +1142,14 @@ class TestSharePermissionEnforcement:
         contact_groups: tuple[str, str],
     ) -> None:
         own, _foreign = contact_groups
-        # Without the foreign-groups permission, sharing with an own group still works.
+        # Only the own-groups permission is needed, not "User management" or the others.
         with set_config(
-            roles=_admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
+            roles=_admin_roles_without(
+                load_config,
+                "general.publish_dashboards",
+                "general.publish_dashboards_to_foreign_groups",
+                "wato.users",
+            )
         ):
             resp = clients.DashboardClient.create_relative_grid_dashboard(
                 _payload_with_share(

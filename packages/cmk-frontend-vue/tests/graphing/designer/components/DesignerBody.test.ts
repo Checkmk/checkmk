@@ -227,10 +227,10 @@ beforeEach(() => {
   vi.spyOn(client, 'POST').mockResolvedValue(fetchDataResponse())
 })
 
-function echoingPostSpy() {
+function echoingPostSpy(answer: unknown = fetchDataResponse()) {
   const postSpy = vi.spyOn(client, 'POST')
   postSpy.mockImplementation(async (_path: unknown, options: unknown) => {
-    const response = fetchDataResponse() as { data: Record<string, unknown> }
+    const response = answer as { data: Record<string, unknown> }
     const { requested_time_range: requested } = (
       options as { body: { requested_time_range: unknown } }
     ).body
@@ -343,7 +343,7 @@ function statsOfRow(title: string, scope: HTMLElement = document.body): string[]
 }
 
 test('the detached view-mode legend prints values at the resolution the preview reports', async () => {
-  vi.spyOn(client, 'POST').mockResolvedValue(closeValuesResponse() as never)
+  echoingPostSpy(closeValuesResponse())
   renderBody('view')
   await waitFor(() => expect(drawnTitles()).toBe('CPU,Memory'))
   expect(statsOfRow('CPU')).toEqual(statsOfRow('Memory'))
@@ -354,7 +354,7 @@ test('the detached view-mode legend prints values at the resolution the preview 
 })
 
 test('the appearance table prints values at the resolution the preview reports', async () => {
-  vi.spyOn(client, 'POST').mockResolvedValue(closeValuesResponse() as never)
+  echoingPostSpy(closeValuesResponse())
   renderBody('edit')
   await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
   await waitFor(() => expect(drawnTitles()).toBe('CPU,Memory'))
@@ -1132,11 +1132,11 @@ describe('with the calculation inline', () => {
 })
 
 test('hiding the first source re-labels the table in the unit the preview axis moves to', async () => {
-  vi.spyOn(client, 'POST').mockResolvedValue(
+  echoingPostSpy(
     fetchDataResponse([
       metric('A', 'metric-a', 'CPU', [1, 2], siUnit('B')),
       metric('B', 'metric-b', 'Memory', [1, 2], siUnit('W'))
-    ]) as never
+    ])
   )
   renderBody('edit')
   await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))

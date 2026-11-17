@@ -4,9 +4,23 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { TimeRange } from '../components/TimeSeriesGraph'
+import { indexOfValueCovering } from '../components/TimeSeriesGraph/axes/timeAxis'
 import { MIN_ZOOM_SAMPLES, MIN_ZOOM_TIME_RANGE_SECONDS } from '../components/constants'
-import type { RequestedTimeRange, TimeRangeCommitKind, TimestampedRequest } from '../types'
-import { BIN_UNIT_SECONDS, type BinUnit, binEdges, binStart, gridStep } from './bins'
+import type {
+  RequestedTimeRange,
+  SampleIndexRange,
+  TimeInterval,
+  TimeRangeCommitKind,
+  TimestampedRequest
+} from '../types'
+import {
+  BIN_UNIT_SECONDS,
+  type BinUnit,
+  binEdges,
+  binStart,
+  foldedSampleIndices,
+  gridStep
+} from './bins'
 
 export function sameRequestedTimeRange(a: RequestedTimeRange, b: RequestedTimeRange): boolean {
   return a.start === b.start && a.end === b.end
@@ -24,13 +38,20 @@ export function nowInSeconds(): number {
   return Math.floor(Date.now() / 1000)
 }
 
+// RRD writes a sample at the first check after its interval; checks run once a minute by default.
+const SAMPLE_WRITE_DELAY_SECONDS = 60
+
 function drawnEnd(requested: TimestampedRequest, served: TimeRange): number {
-  const newestClosedSampleTime = snapDownToGrid(requested.requestedAt, served.step)
-  const reachesIntoTheOpenInterval = requested.end > newestClosedSampleTime
-  const end = reachesIntoTheOpenInterval
+  const endsInTheFuture = requested.end > requested.requestedAt
+  const newestWrittenSampleTime = snapDownToGrid(
+    requested.requestedAt - SAMPLE_WRITE_DELAY_SECONDS,
+    served.step
+  )
+  const end = endsInTheFuture
     ? snapDownToGrid(requested.end, served.step)
-    : requested.end
-  return Math.min(end, served.end)
+    : Math.min(requested.end, newestWrittenSampleTime)
+  const keepsTheZoomFloor = end - requested.start >= minZoomSpan(served)
+  return Math.min(keepsTheZoomFloor ? end : requested.end, served.end)
 }
 
 export function drawnTimeRange(requested: TimestampedRequest, served: TimeRange): TimeRange {
@@ -40,6 +61,16 @@ export function drawnTimeRange(requested: TimestampedRequest, served: TimeRange)
     start: requested.start,
     end: collapsesTheWindow ? requested.end : end,
     step: served.step
+  }
+}
+
+function samplesCovering(drawn: TimeInterval, served: TimeRange): SampleIndexRange | null {
+  if (!hasUsableStep(served)) {
+    return null
+  }
+  return {
+    firstIndex: Math.max(0, indexOfValueCovering(served, drawn.start)),
+    lastIndex: indexOfValueCovering(served, drawn.end)
   }
 }
 
@@ -91,6 +122,8 @@ export interface TimeAxis {
   binUnit: BinUnit | null
   planFetchWindow: FetchWindowPlanner
   drawnTimeRange(requested: TimestampedRequest, served: TimeRange): TimeRange
+  /** The samples a drawn window shows; null when the served step cannot place them. */
+  drawnSamples(drawn: TimeInterval, served: TimeRange): SampleIndexRange | null
   /** The shortest span a time zoom may reach, given the host's own minimum and the data on screen. */
   minSpan(hostMinimum: number | null, served: TimeRange | undefined): number | null
   /** The span at which a time zoom is refused, given the data on screen. */
@@ -103,6 +136,7 @@ export function continuousTimeAxis(): TimeAxis {
     binUnit: null,
     planFetchWindow: planFetchWindowByWidth,
     drawnTimeRange,
+    drawnSamples: samplesCovering,
     minSpan: (hostMinimum) => hostMinimum,
     zoomFloor: (served) => minZoomSpan(served)
   }
@@ -126,6 +160,10 @@ export function binnedTimeAxis(binUnit: BinUnit, timeZone: string): TimeAxis {
       end: requested.end,
       step: served.step
     }),
+    drawnSamples: (drawn, served) =>
+      hasUsableStep(served)
+        ? foldedSampleIndices(binEdges(binUnit, drawn, timeZone), served)
+        : null,
     minSpan: (hostMinimum, served) => Math.max(hostMinimum ?? 0, binnedZoomFloor(binUnit, served)),
     zoomFloor: (served) => binnedZoomFloor(binUnit, served)
   }

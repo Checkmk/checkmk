@@ -16,6 +16,7 @@ import {
   useGlobalTimeRange
 } from '@/graphing/GlobalTimePicker/globalTimeState'
 import { durationSeconds, rollingRange } from '@/graphing/GlobalTimePicker/private/timeRange'
+import type { TimeRange } from '@/graphing/components/TimeSeriesGraph'
 import CustomGraphDesignerApp from '@/graphing/designer/CustomGraphDesignerApp.vue'
 
 import { filterDefinitions } from './fixtures'
@@ -81,9 +82,16 @@ function graphObject(
 
 const FETCH_DATA_PATH = '/domain-types/custom_graph/actions/fetch_data/invoke'
 
-function fetchDataResponse(series: { sourceId: string; points: number[] }[]): unknown {
+interface FetchDataCall {
+  body: { requested_time_range: TimeRange }
+}
+
+function fetchDataResponse(
+  series: { sourceId: string; points: number[] }[],
+  timeRange: TimeRange = { start: 0, end: 3600, step: 60 }
+): unknown {
   return {
-    time_range: { start: 0, end: 3600, step: 60 },
+    time_range: timeRange,
     metrics: series.map(({ sourceId, points }) => ({
       source_id: sourceId,
       metadata: {
@@ -444,14 +452,17 @@ test('cancelling discards edits by re-seeding from the loaded graph', async () =
 
 test('edit mode fetches hidden rows as visible and shows their stats', async () => {
   mockGraphGet(graphObject({ hiddenSource: true }))
-  postSpy.mockImplementation((path: string) =>
+  postSpy.mockImplementation((path: string, options: FetchDataCall) =>
     Promise.resolve(
       path === FETCH_DATA_PATH
         ? okResponse(
-            fetchDataResponse([
-              { sourceId: 'A', points: [1, 2] },
-              { sourceId: 'B', points: [123, 123] }
-            ])
+            fetchDataResponse(
+              [
+                { sourceId: 'A', points: [1, 2] },
+                { sourceId: 'B', points: [123, 123] }
+              ],
+              options.body.requested_time_range
+            )
           )
         : okResponse({
             time_range: { start: 0, end: 3600, step: 60 },

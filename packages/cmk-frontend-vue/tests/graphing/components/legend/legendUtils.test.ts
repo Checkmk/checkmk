@@ -66,6 +66,18 @@ test('last reports the final present sample of a series ending in a gap', () => 
   expect(stats.last).toBe(renderedAlone(finalSample))
 })
 
+test('stats leave out the samples fetched around the drawn ones', () => {
+  const drawnSamples = [3, 1, 2]
+  const fetchedSamples = [9, ...drawnSamples, 7]
+
+  const stats = metricStats(makeMetric(fetchedSamples), null, null, {
+    firstIndex: 1,
+    lastIndex: drawnSamples.length
+  })
+
+  expect(stats).toEqual(metricStats(makeMetric(drawnSamples)))
+})
+
 test('min, average and max are taken over the present samples, skipping the gaps', () => {
   const stats = metricStats(makeMetric([4, null, 1, 7, null]))
 

@@ -1209,6 +1209,40 @@ test('leaving a legend row clears the highlight again', async () => {
   expect(screen.getByTestId('highlighted')).toBeEmptyDOMElement()
 })
 
+function statsOfLegendRow(metricTitle: string): string[] {
+  const row = legendRowFor(metricTitle)
+  return [...row.querySelectorAll('td')].slice(-4).map((cell) => cell.textContent!.trim())
+}
+
+test('the legend leaves out the newest sample, which a window ending now does not draw', () => {
+  const sampleCount = (TIME_RANGE.end - TIME_RANGE.start) / TIME_RANGE.step
+  const steady = {
+    ...makeMetric('steady', 'Steady'),
+    data_points: Array.from({ length: sampleCount }, () => 5)
+  }
+  const jumpingInTheNewestSample = {
+    ...makeMetric('jumping', 'Jumping'),
+    data_points: [...Array.from({ length: sampleCount - 1 }, () => 5), 9]
+  }
+
+  render(GraphPanel, {
+    props: {
+      metrics: [steady, jumpingInTheNewestSample],
+      answer: {
+        dataTimeRange: TIME_RANGE,
+        request: { ...REQUESTED, requestedAt: REQUESTED.end }
+      },
+      requestedTimeRange: REQUESTED,
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: INTERACTION_NONE,
+      showLegend: true
+    }
+  })
+
+  expect(statsOfLegendRow('Jumping')).toEqual(statsOfLegendRow('Steady'))
+})
+
 test('hiding every metric keeps the frame and states why', () => {
   render(GraphPanel, {
     props: {

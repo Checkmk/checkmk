@@ -5,6 +5,7 @@
  */
 import { describe, expect, test } from 'vitest'
 
+import { timestampAt } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
 import { MIN_ZOOM_SAMPLES, MIN_ZOOM_TIME_RANGE_SECONDS } from '@/graphing/components/constants'
 import { drawnBinEdges, foldIntoBins } from '@/graphing/utils/bins'
 import { binnedTimeAxis, continuousTimeAxis, drawnTimeRange } from '@/graphing/utils/timeRange'
@@ -13,7 +14,7 @@ import { HOUR, SIX_HOUR_GRID, type ServedGrid, ones, servedGrid } from './localT
 
 describe('drawnTimeRange', () => {
   const STEP = 60
-  const NEWEST_GRID_BOUNDARY_COVERED = 1_000_620
+  const ONE_MINUTE = 60
   const SERVED = { start: 1_000_020, end: 1_000_740, step: STEP }
   const LONG_AFTER_EVERY_WINDOW = 2_000_000
 
@@ -30,12 +31,54 @@ describe('drawnTimeRange', () => {
     expect(drawn.end).toBe(bothEndsMidInterval.end)
   })
 
-  test('ends a window reaching into the still open interval on the newest closed sample', () => {
+  test('ends a window ending now on the newest sample a once-a-minute check has written', () => {
     const endingNow = { start: 1_000_037, end: 1_000_637, requestedAt: 1_000_637 }
 
     const drawn = drawnTimeRange(endingNow, SERVED)
 
-    expect(drawn.end).toBe(NEWEST_GRID_BOUNDARY_COVERED)
+    expect(drawn.end % STEP).toBe(0)
+    expect(endingNow.requestedAt - drawn.end).toBeGreaterThanOrEqual(ONE_MINUTE)
+    expect(endingNow.requestedAt - drawn.end).toBeLessThan(ONE_MINUTE + STEP)
+  })
+
+  test('ends a window ending now at a coarse step a minute back, not a whole step back', () => {
+    const FIVE_MINUTES = 300
+    const servedFiveMinutely = { start: 999_900, end: 1_003_800, step: FIVE_MINUTES }
+    const endingMoreThanAMinuteIntoAStep = {
+      start: 1_000_100,
+      end: 1_003_400,
+      requestedAt: 1_003_400
+    }
+
+    const drawn = drawnTimeRange(endingMoreThanAMinuteIntoAStep, servedFiveMinutely)
+
+    expect(drawn.end % FIVE_MINUTES).toBe(0)
+    expect(endingMoreThanAMinuteIntoAStep.requestedAt - drawn.end).toBeGreaterThanOrEqual(
+      ONE_MINUTE
+    )
+    expect(endingMoreThanAMinuteIntoAStep.requestedAt - drawn.end).toBeLessThan(FIVE_MINUTES)
+  })
+
+  test('draws a window ending after it was requested up to the last grid point inside it', () => {
+    const endingInTheFuture = { start: 1_000_037, end: 1_000_637, requestedAt: 1_000_300 }
+
+    const drawn = drawnTimeRange(endingInTheFuture, SERVED)
+
+    expect(drawn.end % STEP).toBe(0)
+    expect(drawn.end).toBeGreaterThan(endingInTheFuture.requestedAt)
+    expect(endingInTheFuture.end - drawn.end).toBeLessThan(STEP)
+  })
+
+  test('keeps a window ending now at the zoom floor as wide as it was requested', () => {
+    const atTheZoomFloor = {
+      start: 1_000_637 - MIN_ZOOM_TIME_RANGE_SECONDS,
+      end: 1_000_637,
+      requestedAt: 1_000_637
+    }
+
+    const drawn = drawnTimeRange(atTheZoomFloor, SERVED)
+
+    expect(drawn.end - drawn.start).toBe(atTheZoomFloor.end - atTheZoomFloor.start)
   })
 
   test('keeps a window lying inside the still open interval drawable', () => {
@@ -76,6 +119,47 @@ describe('drawnTimeRange', () => {
 
     expect(drawn.start).toBe(window.start)
     expect(drawn.end).toBe(window.end)
+  })
+})
+
+describe('the samples a continuous time axis draws', () => {
+  const STEP = 60
+  const SERVED = { start: 1_000_020, end: 1_000_740, step: STEP }
+
+  function intervalOfSample(served: { start: number; step: number; end: number }, index: number) {
+    const end = timestampAt(served, index)
+    return { start: end - served.step, end }
+  }
+
+  test('run from the sample whose interval holds the start to the one holding the end', () => {
+    const drawn = { start: 1_000_137, end: 1_000_437 }
+
+    const samples = continuousTimeAxis().drawnSamples(drawn, SERVED)
+
+    const first = intervalOfSample(SERVED, samples!.firstIndex)
+    const last = intervalOfSample(SERVED, samples!.lastIndex)
+    expect(drawn.start).toBeGreaterThan(first.start)
+    expect(drawn.start).toBeLessThanOrEqual(first.end)
+    expect(drawn.end).toBeGreaterThan(last.start)
+    expect(drawn.end).toBeLessThanOrEqual(last.end)
+  })
+
+  test('hold the one sample a window inside a single interval lies in', () => {
+    const SIX_HOURS = 21_600
+    const servedSixHourly = { start: 0, end: 10 * SIX_HOURS, step: SIX_HOURS }
+    const tenMinutesInsideOneStep = { start: 3 * SIX_HOURS + 1_000, end: 3 * SIX_HOURS + 1_600 }
+
+    const samples = continuousTimeAxis().drawnSamples(tenMinutesInsideOneStep, servedSixHourly)
+
+    expect(samples!.lastIndex).toBe(samples!.firstIndex)
+  })
+
+  test('are not placed without a usable step', () => {
+    const servedWithoutStep = { start: 0, end: 1_000, step: 0 }
+
+    const samples = continuousTimeAxis().drawnSamples({ start: 500, end: 900 }, servedWithoutStep)
+
+    expect(samples).toBeNull()
   })
 })
 
@@ -207,6 +291,10 @@ describe('binnedTimeAxis', () => {
 
 const PLOT_WIDTH = 750
 
+function sumOf(values: number[]): number {
+  return values.reduce((total, value) => total + value, 0)
+}
+
 function drawnBars(
   unit: 'hour' | 'day',
   timeZone: string,
@@ -232,5 +320,31 @@ describe('the bars of a binned time axis', () => {
     expect(bins).toEqual([
       { start: Date.UTC(2026, 0, 1, 18) / 1000, end: Date.UTC(2026, 0, 2) / 1000, value: 1 }
     ])
+  })
+
+  test('count in the legend exactly the samples the bars fold in', () => {
+    const axis = binnedTimeAxis('hour', 'UTC')
+    const requested = {
+      start: Date.UTC(2026, 0, 1, 6, 37) / 1000,
+      end: Date.UTC(2026, 0, 1, 10, 37) / 1000
+    }
+    const served = {
+      start: Date.UTC(2026, 0, 1, 5) / 1000,
+      end: Date.UTC(2026, 0, 1, 11) / 1000,
+      step: HOUR
+    }
+    const distinctlySummingValues = ones(served).map((_one, index) => 2 ** index)
+    const view = axis.drawnTimeRange({ ...requested, requestedAt: requested.end }, served)
+    const bars = foldIntoBins(
+      distinctlySummingValues,
+      served,
+      drawnBinEdges('hour', view, PLOT_WIDTH, 'UTC'),
+      'sum'
+    )
+
+    const samples = axis.drawnSamples(view, served)
+
+    const counted = distinctlySummingValues.slice(samples!.firstIndex, samples!.lastIndex + 1)
+    expect(sumOf(counted)).toBe(sumOf(bars.map((bar) => bar.value ?? 0)))
   })
 })

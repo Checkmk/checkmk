@@ -18,6 +18,7 @@ import type {
   GraphPanelEmits,
   GraphPanelProps,
   RequestedTimeRange,
+  SampleIndexRange,
   TimeRange,
   TimeRangeCommitKind
 } from '../types.ts'
@@ -67,6 +68,13 @@ const baselineTimeRange = computed<TimeRange>(() => {
 const headerTimeRange = computed<TimeRange | undefined>(() =>
   props.answer ? baselineTimeRange.value : undefined
 )
+
+const drawnSamples = computed<SampleIndexRange | null>(() =>
+  props.answer
+    ? timeAxis.value.drawnSamples(baselineTimeRange.value, props.answer.dataTimeRange)
+    : null
+)
+watch(drawnSamples, (samples) => emit('update:drawnSamples', samples), { immediate: true })
 
 const {
   viewValueRange,
@@ -334,6 +342,7 @@ const legendAlignedWithPlot = computed(() =>
         :hidden-line-names="hiddenLineNames"
         :value-resolution="valueResolution"
         :axis-unit="effectiveYAxis?.unit ?? null"
+        :drawn-samples="drawnSamples"
         @update:hidden-metric-names="hiddenMetricNames = $event"
         @update:hidden-line-names="hiddenLineNames = $event"
         @hover-metrics="highlightedMetricNames = $event"

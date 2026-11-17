@@ -36,7 +36,13 @@ import {
 } from '../../composables/useGraphNotice'
 import { useLocalTimeRange } from '../../composables/useLocalTimeRange'
 import { useRequestedTimeRange } from '../../composables/useRequestedTimeRange'
-import type { PanelKey, RequestedTimeRange, TimeRange, TimeRangeCommitKind } from '../../types'
+import type {
+  PanelKey,
+  RequestedTimeRange,
+  SampleIndexRange,
+  TimeRange,
+  TimeRangeCommitKind
+} from '../../types'
 import { sameRequestedTimeRange } from '../../utils/timeRange'
 import type { CustomGraphMetric, CustomGraphOptions } from '../api'
 import {
@@ -142,6 +148,7 @@ const hiddenMetricNames = ref<string[]>([])
 const hiddenLineNames = ref<string[]>([])
 const highlightedMetricNames = ref<string[]>([])
 const valueResolution = ref<number | null>(null)
+const drawnSamples = ref<SampleIndexRange | null>(null)
 
 const graphContainer = ref<HTMLElement | null>(null)
 const figureWidth = ref(DEFAULT_FIGURE_WIDTH)
@@ -380,6 +387,7 @@ const addTo = computed<AddTo | null>(() =>
         :add-to="addTo"
         @update:requested-time-range="onPanelTimeRange"
         @update:value-resolution="valueResolution = $event"
+        @update:drawn-samples="drawnSamples = $event"
         @inspect="pauseRefresh"
       >
         <template #notice>
@@ -406,6 +414,7 @@ const addTo = computed<AddTo | null>(() =>
         :consolidation-fn="consolidationFn"
         :value-resolution="valueResolution"
         :axis-unit="axisUnit"
+        :drawn-samples="drawnSamples"
         @hover-metrics="highlightedMetricNames = $event"
       />
 
@@ -453,6 +462,7 @@ const addTo = computed<AddTo | null>(() =>
                 :resolved-titles="data.resolvedTitles.value"
                 :value-resolution="valueResolution"
                 :axis-unit="axisUnit"
+                :drawn-samples="drawnSamples"
                 @hover-metrics="highlightedMetricNames = $event"
               />
             </CmkTabContent>

@@ -13,7 +13,7 @@ the series the backend fetched for the graph.
 import json
 import re
 import time
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from typing import Final, NamedTuple
 
@@ -407,6 +407,23 @@ def test_compact_legend_names_every_series_in_a_single_row(
     ), f"The compact legend spreads over more than one row: {boxes}"
 
 
+def _points_drawn(
+    served: Mapping[str, int], data_points: Sequence[float | None], start: int, end: int
+) -> list[float | None]:
+    """The served data points a graph draws for the range from start to end.
+
+    The backend also serves the steps next to the range, which the graph and its legend leave
+    out. Each point covers the step that ends at its time.
+    """
+    step = served["step"]
+    step_starts = range(served["start"], served["end"], step)
+    return [
+        point
+        for step_start, point in zip(step_starts, data_points, strict=True)
+        if step_start < end and step_start + step >= start
+    ]
+
+
 def _wait_for_samples_in_compared_range(test_site: Site, graph: _GraphWithSeries) -> None:
     """Wait until every metric of the graph has a sample in the compared range.
 
@@ -415,15 +432,18 @@ def _wait_for_samples_in_compared_range(test_site: Site, graph: _GraphWithSeries
 
     def _every_metric_has_a_sample() -> bool:
         now = int(time.time())
+        start = now - _COMPARED_RANGE_START_AGO
         # The picker takes the range to the minute, which only ever moves its end earlier.
         end = (now - _COMPARED_RANGE_END_AGO) // 60 * 60
         fetched = test_site.openapi.graph.fetch_data(
-            graph.internal,
-            {"start": now - _COMPARED_RANGE_START_AGO, "end": end, "step": 60},
-            "avg",
+            graph.internal, {"start": start, "end": end, "step": 60}, "avg"
         )
+        served = fetched["time_range"]
         return all(
-            any(point is not None for point in metric["data_points"])
+            any(
+                point is not None
+                for point in _points_drawn(served, metric["data_points"], start, end)
+            )
             for metric in fetched["metrics"]
         )
 

@@ -1570,10 +1570,13 @@ msgstr ""
 msgid ""
 "<b>Experimental.</b> When enabled, the AI assistant sends usage information "
 "to Checkmk's central telemetry collector, so we can understand how the "
-"assistant is used and improve it.<br><br>We collect: when the assistant "
-"starts, the Checkmk version and edition, and the random site ID of product "
-"usage analytics.<br><br>We do not collect: your site name, host names, or "
-"the content of your prompts and the assistant's answers."
+"assistant is used and improve it.<br><br>We collect: which AI provider and "
+"model the assistant uses, which of its actions and tools are used, how long "
+"they take and whether they fail, the tokens used per question, and the "
+"Checkmk version and edition.<br><br>We do not collect: your site name, host "
+"names, the assistant instructions, or the content of your prompts and the "
+"assistant's answers.<br><br>For the full list of fields, see "
+"LINK_PLACEHOLDER."
 msgstr ""
 
 msgid ""
@@ -3077,9 +3080,9 @@ msgid "AP name"
 msgstr "Nom de l'AP"
 
 msgid ""
-"APACHE_FORWARDED_HEADERS is set to 'manual', but no matching RequestHeader "
-"configuration was found in the usual system Apache locations. Is this "
-"intentional?"
+"APACHE_FORWARDED_HEADERS is set to 'manual', but the request reached the "
+"site without an X-Forwarded-Proto header. The proxy or load balancer in "
+"front of the system Apache has to set it."
 msgstr ""
 
 msgid "APC InRow system events"
@@ -28958,14 +28961,6 @@ msgstr ""
 "recommandé de changer ce mot de passe."
 
 #, python-format
-msgid ""
-"Found a RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl in %(files)s. "
-"Checkmk already sets this header itself; remove the manual entry to avoid "
-"duplicate or conflicting configuration, or set APACHE_FORWARDED_HEADERS to "
-"'manual' if this Apache needs it."
-msgstr ""
-
-#, python-format
 msgid "Found all %d groups."
 msgstr "Tous les groupes %d ont été trouvés."
 
@@ -36352,8 +36347,7 @@ msgid ""
 "If your system Apache sits behind another proxy or load balancer that "
 "terminates TLS and forwards plain HTTP to it, that automatic value would be "
 "wrong. Run <tt>omd config set APACHE_FORWARDED_HEADERS manual</tt> for the "
-"site and set the headers yourself in the system Apache configuration "
-"instead, e.g. <tt>RequestHeader set X-Forwarded-Proto \"https\"</tt>."
+"site and have that proxy or load balancer set the headers instead."
 msgstr ""
 
 msgid ""
@@ -74369,6 +74363,14 @@ msgstr "Le rapport que vous essayez de visualiser n'est pas disponible"
 msgid "The request is missing the filter infos to render"
 msgstr "La première ligne du fichier contient les titres."
 
+msgid ""
+"The request reached the site without an X-Forwarded-Proto header, so the "
+"system Apache does not set it. Run <tt>omd update-apache-config</tt> for the "
+"site as root and make sure the Apache module mod_headers is enabled. If the "
+"site is not reached through the system Apache, e.g. in a container, the "
+"proxy in front of it has to set the header."
+msgstr ""
+
 #, python-format
 msgid "The requested %s %s does not exist"
 msgstr "Le %s %s demandé n'existe pas"
@@ -80555,6 +80557,11 @@ msgid ""
 msgstr ""
 "Ce modèle est utilisé pour les pages de couverture, la table des matières et "
 "d'autres éléments de la matière première"
+
+msgid ""
+"This test checks whether the request that executes it reached the site with "
+"an X-Forwarded-Proto header. It is not executed on remote sites."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -93025,10 +93032,11 @@ msgstr "Mauvais certificat's subject alt name"
 msgid "Wrong customer"
 msgstr "Mauvais client"
 
-msgid "X-Forwarded-Proto/-Ssl are configured manually, as configured"
-msgstr ""
+#, fuzzy
+msgid "X-Forwarded-Proto is set automatically"
+msgstr "détecter automatiquement"
 
-msgid "X-Forwarded-Proto/-Ssl are set automatically"
+msgid "X-Forwarded-Proto is set by the proxy in front of the system Apache"
 msgstr ""
 
 msgid "XDA hitratio"
@@ -102071,6 +102079,11 @@ msgstr "L'intégration de ntopng n'est pas activée dans les paramètres globaux
 msgid "The AI provider is configured but not activated yet."
 msgstr ""
 
+msgid ""
+"Can’t delete chat “%{title}” while it’s answering. Wait until it finishes or "
+"stop it, then try again."
+msgstr ""
+
 #, fuzzy
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "Activer les notifications périodiques"
@@ -102610,12 +102623,71 @@ msgstr "Containerisation"
 msgid "Next steps with Checkmk"
 msgstr "MIBs livrées avec Checkmk"
 
-#, fuzzy
-msgid "Activate Changes"
-msgstr "Activé les changements"
-
-msgid "1 Step | Takes 1-3 min"
+msgid "Set up a Checkmk Relay first"
 msgstr ""
+
+msgctxt "%{link} is the link text \"Checkmk Relay\""
+msgid "Systems behind a firewall? Set up a %{link} first."
+msgstr ""
+
+msgid "2 Steps | Takes 7-10 min"
+msgstr ""
+
+msgid ""
+"A host is anything you monitor: a server, a network device, a VM, a "
+"container platform,\n"
+"a cloud account or an application. Checkmk finds its services automatically."
+msgstr ""
+
+#, fuzzy
+msgid "Servers & operating systems"
+msgstr "Systèmes d'exploitation invités"
+
+#, fuzzy
+msgid "Linux, Windows & Unix servers"
+msgstr "Services Windows"
+
+msgid "Solaris, AIX, FreeBSD, macOS, ..."
+msgstr ""
+
+#, fuzzy
+msgid "Network devices need a Checkmk Relay"
+msgstr "Analyse du réseau"
+
+msgid ""
+"Checkmk Cloud cannot reach systems inside your network directly. Set up a "
+"Checkmk Relay in your network first, then add network devices."
+msgstr ""
+
+#, fuzzy
+msgid "Set up Checkmk Relay"
+msgstr "Utiliser la barre latérale Checkmk"
+
+#, fuzzy
+msgid "Network devices"
+msgstr "Analyse du réseau"
+
+msgid "Switches, routers, firewalls & other SNMP devices"
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk Relay"
+msgstr "Barre latérale Checkmk"
+
+#, fuzzy
+msgid "Cloud platforms"
+msgstr "Plate-forme Google Cloud"
+
+msgid "Microsoft Azure"
+msgstr "Microsoft Azure"
+
+#, fuzzy
+msgid "Applications & databases"
+msgstr "Passerelles d'application"
+
+#, fuzzy
+msgid "OpenTelemetry (Beta)"
+msgstr "Intervalle de collecte des données"
 
 msgid ""
 "In Checkmk, configuration changes are first saved as pending and do not "
@@ -102633,8 +102705,8 @@ msgstr "Aucun changement en cours"
 
 msgid ""
 "If there are pending changes, you’ll see a yellow badge on the “Changes” "
-"menu item in the main navigation,\n"
-"      reminding you that your setup is not yet active."
+"menu item in the main navigation, reminding you that your setup is not yet "
+"active."
 msgstr ""
 
 #, fuzzy
@@ -102643,66 +102715,6 @@ msgstr "Aucun changement en cours"
 
 msgid "Mark as done"
 msgstr ""
-
-msgid "2 Steps | Takes 7-10 min"
-msgstr ""
-
-msgid ""
-"In Checkmk, a host is any standalone physical or virtual system that is "
-"monitored.\n"
-"Each host has services which represent what is monitored, for example CPU "
-"usage, disk space, processes, or hardware sensors.\n"
-"The service discovery of Checkmk automatically detects these services.\n"
-"This allows monitoring to start with minimal configuration effort."
-msgstr ""
-
-#, fuzzy
-msgid "Set up basic folder structure"
-msgstr "Guide du débutant : Structures des dossiers de l'hôte"
-
-msgid ""
-"In Checkmk, folders are the foundation for organizing hosts and applying "
-"settings consistently.\n"
-"            Creating a folder (or folder structure) before adding your first "
-"host helps you keep things tidy from\n"
-"            the start and makes it easier to manage similar hosts later on "
-"through inheritance. Learn more about\n"
-"            folders and inheritance in the"
-msgstr ""
-
-#, fuzzy
-msgid "documentation."
-msgstr "URL de la documentation"
-
-#, fuzzy
-msgid "On-premises hosts"
-msgstr "Niveaux Hôtes"
-
-#, fuzzy
-msgid "Server (Linux, Windows, Solaris, ...)"
-msgstr "Inventaire matériel/logiciel (Linux, Windows, Solaris, AIX)"
-
-#, fuzzy
-msgid "Network devices and SNMP"
-msgstr "Analyse du réseau"
-
-msgid "Checkmk Relay (objects behind a firewall)"
-msgstr ""
-
-#, fuzzy
-msgid "Cloud platforms"
-msgstr "Plate-forme Google Cloud"
-
-msgid "Microsoft Azure"
-msgstr "Microsoft Azure"
-
-#, fuzzy
-msgid "Application monitoring"
-msgstr "Nom du pool d'applications"
-
-#, fuzzy
-msgid "OpenTelemetry (Beta)"
-msgstr "Intervalle de collecte des données"
 
 #, fuzzy
 msgid "Adjust service thresholds"
@@ -102808,6 +102820,10 @@ msgid ""
 "more about working with multiple\n"
 "          users in the"
 msgstr ""
+
+#, fuzzy
+msgid "documentation."
+msgstr "URL de la documentation"
 
 #, fuzzy
 msgid "Create a contact group"
@@ -102964,6 +102980,33 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+msgid "To explore"
+msgstr "Essai expiré"
+
+msgid "Done"
+msgstr ""
+
+#, fuzzy
+#~ msgid "Activate Changes"
+#~ msgstr "Activé les changements"
+
+#, fuzzy
+#~ msgid "Set up basic folder structure"
+#~ msgstr "Guide du débutant : Structures des dossiers de l'hôte"
+
+#, fuzzy
+#~ msgid "On-premises hosts"
+#~ msgstr "Niveaux Hôtes"
+
+#, fuzzy
+#~ msgid "Server (Linux, Windows, Solaris, ...)"
+#~ msgstr "Inventaire matériel/logiciel (Linux, Windows, Solaris, AIX)"
+
+#, fuzzy
+#~ msgid "Application monitoring"
+#~ msgstr "Nom du pool d'applications"
 
 #, fuzzy
 #~ msgid "not disabled"

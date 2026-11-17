@@ -1529,10 +1529,13 @@ msgstr ""
 msgid ""
 "<b>Experimental.</b> When enabled, the AI assistant sends usage information "
 "to Checkmk's central telemetry collector, so we can understand how the "
-"assistant is used and improve it.<br><br>We collect: when the assistant "
-"starts, the Checkmk version and edition, and the random site ID of product "
-"usage analytics.<br><br>We do not collect: your site name, host names, or "
-"the content of your prompts and the assistant's answers."
+"assistant is used and improve it.<br><br>We collect: which AI provider and "
+"model the assistant uses, which of its actions and tools are used, how long "
+"they take and whether they fail, the tokens used per question, and the "
+"Checkmk version and edition.<br><br>We do not collect: your site name, host "
+"names, the assistant instructions, or the content of your prompts and the "
+"assistant's answers.<br><br>For the full list of fields, see "
+"LINK_PLACEHOLDER."
 msgstr ""
 "<b>実験的機能。</b> この機能を有効にすると、CheckmkはMCPリクエストの使用状況"
 "を収集し、Checkmkの中央Telemetryコレクターに転送します。これにより、MCPサー"
@@ -2969,9 +2972,9 @@ msgid "AP name"
 msgstr "AP名"
 
 msgid ""
-"APACHE_FORWARDED_HEADERS is set to 'manual', but no matching RequestHeader "
-"configuration was found in the usual system Apache locations. Is this "
-"intentional?"
+"APACHE_FORWARDED_HEADERS is set to 'manual', but the request reached the "
+"site without an X-Forwarded-Proto header. The proxy or load balancer in "
+"front of the system Apache has to set it."
 msgstr ""
 
 msgid "APC InRow system events"
@@ -27232,14 +27235,6 @@ msgstr ""
 "更することを強くお勧めします。"
 
 #, python-format
-msgid ""
-"Found a RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl in %(files)s. "
-"Checkmk already sets this header itself; remove the manual entry to avoid "
-"duplicate or conflicting configuration, or set APACHE_FORWARDED_HEADERS to "
-"'manual' if this Apache needs it."
-msgstr ""
-
-#, python-format
 msgid "Found all %d groups."
 msgstr "すべての%dグループが見つかりました。"
 
@@ -34029,8 +34024,7 @@ msgid ""
 "If your system Apache sits behind another proxy or load balancer that "
 "terminates TLS and forwards plain HTTP to it, that automatic value would be "
 "wrong. Run <tt>omd config set APACHE_FORWARDED_HEADERS manual</tt> for the "
-"site and set the headers yourself in the system Apache configuration "
-"instead, e.g. <tt>RequestHeader set X-Forwarded-Proto \"https\"</tt>."
+"site and have that proxy or load balancer set the headers instead."
 msgstr ""
 
 msgid ""
@@ -69986,6 +69980,14 @@ msgstr "プレビューしようとしているレポートは利用できませ
 msgid "The request is missing the filter infos to render"
 msgstr "このリクエストには、レンダリングに必要なフィルター情報が欠けています"
 
+msgid ""
+"The request reached the site without an X-Forwarded-Proto header, so the "
+"system Apache does not set it. Run <tt>omd update-apache-config</tt> for the "
+"site as root and make sure the Apache module mod_headers is enabled. If the "
+"site is not reached through the system Apache, e.g. in a container, the "
+"proxy in front of it has to set the header."
+msgstr ""
+
 #, python-format
 msgid "The requested %s %s does not exist"
 msgstr "要求された %s%s は存在しません"
@@ -75977,6 +75979,11 @@ msgid ""
 "This template is used for cover pages, table of contents and other elements "
 "of the front matter"
 msgstr "このテンプレートは、表紙、目次、その他の前書きの要素に使用されます"
+
+msgid ""
+"This test checks whether the request that executes it reached the site with "
+"an X-Forwarded-Proto header. It is not executed on remote sites."
+msgstr ""
 
 msgid ""
 "This text is a regular expression that is being searched in the output of "
@@ -87299,10 +87306,11 @@ msgstr "証明書のサブジェクトのalt名間違い"
 msgid "Wrong customer"
 msgstr "間違ったカスタマー"
 
-msgid "X-Forwarded-Proto/-Ssl are configured manually, as configured"
-msgstr ""
+#, fuzzy
+msgid "X-Forwarded-Proto is set automatically"
+msgstr "自動検出"
 
-msgid "X-Forwarded-Proto/-Ssl are set automatically"
+msgid "X-Forwarded-Proto is set by the proxy in front of the system Apache"
 msgstr ""
 
 msgid "XDA hitratio"
@@ -96229,6 +96237,11 @@ msgstr "ntopng統合は、グローバル設定ではアクティブ化されま
 msgid "The AI provider is configured but not activated yet."
 msgstr ""
 
+msgid ""
+"Can’t delete chat “%{title}” while it’s answering. Wait until it finishes or "
+"stop it, then try again."
+msgstr ""
+
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"
 
@@ -96810,11 +96823,71 @@ msgstr "コンテナ化"
 msgid "Next steps with Checkmk"
 msgstr "Checkmkに同梱されているMIB"
 
-msgid "Activate Changes"
-msgstr "変更をアクティブにする"
+msgid "Set up a Checkmk Relay first"
+msgstr ""
 
-msgid "1 Step | Takes 1-3 min"
-msgstr "１ステップ｜所要時間1～3分"
+msgctxt "%{link} is the link text \"Checkmk Relay\""
+msgid "Systems behind a firewall? Set up a %{link} first."
+msgstr ""
+
+msgid "2 Steps | Takes 7-10 min"
+msgstr "２ステップ｜所要時間7～10分"
+
+msgid ""
+"A host is anything you monitor: a server, a network device, a VM, a "
+"container platform,\n"
+"a cloud account or an application. Checkmk finds its services automatically."
+msgstr ""
+
+#, fuzzy
+msgid "Servers & operating systems"
+msgstr "ゲストオペレーティングシステム"
+
+#, fuzzy
+msgid "Linux, Windows & Unix servers"
+msgstr "Windowsサービス"
+
+msgid "Solaris, AIX, FreeBSD, macOS, ..."
+msgstr ""
+
+#, fuzzy
+msgid "Network devices need a Checkmk Relay"
+msgstr "ネットワークスキャン"
+
+msgid ""
+"Checkmk Cloud cannot reach systems inside your network directly. Set up a "
+"Checkmk Relay in your network first, then add network devices."
+msgstr ""
+
+#, fuzzy
+msgid "Set up Checkmk Relay"
+msgstr "Checkmkサイドバーを使用"
+
+#, fuzzy
+msgid "Network devices"
+msgstr "ネットワークスキャン"
+
+msgid "Switches, routers, firewalls & other SNMP devices"
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk Relay"
+msgstr "Checkmkサイドバー"
+
+#, fuzzy
+msgid "Cloud platforms"
+msgstr "Google Cloud Platform"
+
+msgid "Microsoft Azure"
+msgstr "Microsoft Azure"
+
+#, fuzzy
+msgid "Applications & databases"
+msgstr "アプリケーションゲートウェイ"
+
+#, fuzzy
+msgid "OpenTelemetry (Beta)"
+msgstr "OpenTelemetry（実験的）"
 
 msgid ""
 "In Checkmk, configuration changes are first saved as pending and do not "
@@ -96837,10 +96910,11 @@ msgstr ""
 msgid "Spotting pending changes"
 msgstr "保留中の変更はありません"
 
+#, fuzzy
 msgid ""
 "If there are pending changes, you’ll see a yellow badge on the “Changes” "
-"menu item in the main navigation,\n"
-"      reminding you that your setup is not yet active."
+"menu item in the main navigation, reminding you that your setup is not yet "
+"active."
 msgstr ""
 "未反映の変更がある場合、メインナビゲーションの「変更」メニュー項目に黄色の"
 "バッジが表示され、\n"
@@ -96852,77 +96926,6 @@ msgstr "保留中の変更はありません"
 
 msgid "Mark as done"
 msgstr "完了としてマークする"
-
-msgid "2 Steps | Takes 7-10 min"
-msgstr "２ステップ｜所要時間7～10分"
-
-msgid ""
-"In Checkmk, a host is any standalone physical or virtual system that is "
-"monitored.\n"
-"Each host has services which represent what is monitored, for example CPU "
-"usage, disk space, processes, or hardware sensors.\n"
-"The service discovery of Checkmk automatically detects these services.\n"
-"This allows monitoring to start with minimal configuration effort."
-msgstr ""
-"Checkmkにおいて、ホストとは、監視対象となる独立した物理システムまたは仮想シス"
-"テムを指します。\n"
-"各ホストには、CPU使用率、ディスク容量、プロセス、ハードウェアセンサーなど、監"
-"視対象となる項目を表すサービスが設定されています。\n"
-"Checkmkはサービス検出機能を使用してこれらのサービスを自動的に検知します。\n"
-"これにより、最小限の設定作業で監視を監視を開始することができます。"
-
-#, fuzzy
-msgid "Set up basic folder structure"
-msgstr "初心者向けガイド: ホストフォルダの構造"
-
-msgid ""
-"In Checkmk, folders are the foundation for organizing hosts and applying "
-"settings consistently.\n"
-"            Creating a folder (or folder structure) before adding your first "
-"host helps you keep things tidy from\n"
-"            the start and makes it easier to manage similar hosts later on "
-"through inheritance. Learn more about\n"
-"            folders and inheritance in the"
-msgstr ""
-"Checkmkにおいて、フォルダはホストを整理し、設定を一貫して適用するための基盤と"
-"なります。\n"
-"            最初のホストを追加する前にフォルダ（またはフォルダ構造）を作成し"
-"ておくと、\n"
-"            最初から整理整頓された状態を保て、後々、継承機能を通じて類似した"
-"ホストの管理が容易になります。\n"
-"            フォルダと継承の詳細については、以下"
-
-msgid "documentation."
-msgstr "ドキュメント。"
-
-#, fuzzy
-msgid "On-premises hosts"
-msgstr "レベルホスト"
-
-#, fuzzy
-msgid "Server (Linux, Windows, Solaris, ...)"
-msgstr "ハードウェア / ソフトウェアインベントリ(Linux、Windows、Solaris、AIX)"
-
-#, fuzzy
-msgid "Network devices and SNMP"
-msgstr "ネットワークスキャン"
-
-msgid "Checkmk Relay (objects behind a firewall)"
-msgstr "Checkmkリレー（ファイアウォール内のオブジェクト）"
-
-#, fuzzy
-msgid "Cloud platforms"
-msgstr "Google Cloud Platform"
-
-msgid "Microsoft Azure"
-msgstr "Microsoft Azure"
-
-msgid "Application monitoring"
-msgstr "アプリケーション監視"
-
-#, fuzzy
-msgid "OpenTelemetry (Beta)"
-msgstr "OpenTelemetry（実験的）"
 
 #, fuzzy
 msgid "Adjust service thresholds"
@@ -97062,6 +97065,9 @@ msgstr ""
 "          そうしなければ、不必要な複雑さや混乱を招く恐れがあります。複数ユー"
 "ザーでの運用に関する詳細は、\n"
 "          以下の"
+
+msgid "documentation."
+msgstr "ドキュメント。"
 
 #, fuzzy
 msgid "Create a contact group"
@@ -97257,6 +97263,71 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#, fuzzy
+msgid "To explore"
+msgstr "試用期間満了"
+
+msgid "Done"
+msgstr ""
+
+#~ msgid "Activate Changes"
+#~ msgstr "変更をアクティブにする"
+
+#~ msgid "1 Step | Takes 1-3 min"
+#~ msgstr "１ステップ｜所要時間1～3分"
+
+#~ msgid ""
+#~ "In Checkmk, a host is any standalone physical or virtual system that is "
+#~ "monitored.\n"
+#~ "Each host has services which represent what is monitored, for example CPU "
+#~ "usage, disk space, processes, or hardware sensors.\n"
+#~ "The service discovery of Checkmk automatically detects these services.\n"
+#~ "This allows monitoring to start with minimal configuration effort."
+#~ msgstr ""
+#~ "Checkmkにおいて、ホストとは、監視対象となる独立した物理システムまたは仮想"
+#~ "システムを指します。\n"
+#~ "各ホストには、CPU使用率、ディスク容量、プロセス、ハードウェアセンサーな"
+#~ "ど、監視対象となる項目を表すサービスが設定されています。\n"
+#~ "Checkmkはサービス検出機能を使用してこれらのサービスを自動的に検知しま"
+#~ "す。\n"
+#~ "これにより、最小限の設定作業で監視を監視を開始することができます。"
+
+#, fuzzy
+#~ msgid "Set up basic folder structure"
+#~ msgstr "初心者向けガイド: ホストフォルダの構造"
+
+#~ msgid ""
+#~ "In Checkmk, folders are the foundation for organizing hosts and applying "
+#~ "settings consistently.\n"
+#~ "            Creating a folder (or folder structure) before adding your "
+#~ "first host helps you keep things tidy from\n"
+#~ "            the start and makes it easier to manage similar hosts later "
+#~ "on through inheritance. Learn more about\n"
+#~ "            folders and inheritance in the"
+#~ msgstr ""
+#~ "Checkmkにおいて、フォルダはホストを整理し、設定を一貫して適用するための基"
+#~ "盤となります。\n"
+#~ "            最初のホストを追加する前にフォルダ（またはフォルダ構造）を作成"
+#~ "しておくと、\n"
+#~ "            最初から整理整頓された状態を保て、後々、継承機能を通じて類似し"
+#~ "たホストの管理が容易になります。\n"
+#~ "            フォルダと継承の詳細については、以下"
+
+#, fuzzy
+#~ msgid "On-premises hosts"
+#~ msgstr "レベルホスト"
+
+#, fuzzy
+#~ msgid "Server (Linux, Windows, Solaris, ...)"
+#~ msgstr ""
+#~ "ハードウェア / ソフトウェアインベントリ(Linux、Windows、Solaris、AIX)"
+
+#~ msgid "Checkmk Relay (objects behind a firewall)"
+#~ msgstr "Checkmkリレー（ファイアウォール内のオブジェクト）"
+
+#~ msgid "Application monitoring"
+#~ msgstr "アプリケーション監視"
 
 #~ msgid "not disabled"
 #~ msgstr "無効ではない"

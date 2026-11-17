@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
 
 from cmk.agent_based.v2 import render, Result, Service, State
 from cmk.plugins.hp_proliant.agent_based.hp_proliant_raid import (
@@ -64,3 +65,13 @@ def test_check_hp_proliant_raid_progress_cannot_be_determined() -> None:
         ),
         Result(state=State.OK, summary="Rebuild: undetermined"),
     ]
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValueError,
+    reason="Crash report eaecca2a-e262-11f1-bdd7-005056bee7db: ValueError",
+)
+def test_discover_hp_proliant_raid_skips_empty_row() -> None:
+    section = parse_hp_proliant_raid([["", "", "", "", ""]])
+    assert not list(discover_hp_proliant_raid(section))

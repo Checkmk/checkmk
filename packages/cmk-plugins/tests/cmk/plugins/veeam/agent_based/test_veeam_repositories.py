@@ -107,12 +107,53 @@ def test_parse_veeam_repositories_scaleout_extent_uses_extent_type_as_category()
     assert repository.extent_type == "WinLocal"
 
 
-def test_check_veeam_repositories_offline_is_crit_and_reports_nothing_else(
+def _summaries(section: veeam_repositories.Section) -> list[str]:
+    return [
+        r.summary
+        for r in check_veeam_repositories(_ITEM, PARAMS, section)
+        if isinstance(r, Result) and r.summary
+    ]
+
+
+def test_check_veeam_repositories_offline_is_crit_and_reports_only_the_path(
     _value_store: None,
 ) -> None:
     section = parse_veeam_repositories([[_repository(isOnline=False)]])
     results = list(check_veeam_repositories(_ITEM, PARAMS, section))
-    assert results == [Result(state=State.CRIT, summary="Offline")]
+    assert results == [
+        Result(state=State.OK, summary="Path: C:\\Backups"),
+        Result(state=State.CRIT, summary="Offline"),
+    ]
+
+
+def test_check_veeam_repositories_online_summary_starts_with_the_path(
+    _value_store: None,
+) -> None:
+    summaries = _summaries(parse_veeam_repositories([[_repository()]]))
+    assert summaries[0] == "Path: C:\\Backups"
+    assert summaries[1].startswith("Used:")
+
+
+def test_check_veeam_repositories_out_of_date_summary_starts_with_the_path(
+    _value_store: None,
+) -> None:
+    summaries = _summaries(parse_veeam_repositories([[_repository(isOutOfDate=True)]]))
+    assert summaries[:2] == ["Path: C:\\Backups", "Out of date"]
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param(None, id="path is null"),
+        pytest.param("", id="path is empty"),
+    ],
+)
+def test_check_veeam_repositories_without_path_shows_no_path(
+    _value_store: None, path: str | None
+) -> None:
+    section = parse_veeam_repositories([[_repository(path=path)]])
+    results = list(check_veeam_repositories(_ITEM, PARAMS, section))
+    assert not any(isinstance(r, Result) and "Path:" in r.details for r in results)
 
 
 def test_check_veeam_repositories_out_of_date_is_warn(_value_store: None) -> None:
@@ -165,7 +206,6 @@ def test_check_veeam_repositories_details(_value_store: None) -> None:
     section = parse_veeam_repositories([[_repository()]])
     results = list(check_veeam_repositories(_ITEM, PARAMS, section))
     assert Result(state=State.OK, notice="Host: repo-host-1") in results
-    assert Result(state=State.OK, notice="Path: C:\\Backups") in results
     assert Result(state=State.OK, notice="Description: Primary repository") in results
 
 

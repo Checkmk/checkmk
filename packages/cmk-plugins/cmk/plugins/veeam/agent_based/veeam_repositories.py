@@ -87,6 +87,9 @@ def check_veeam_repositories(item: str, params: Mapping[str, Any], section: Sect
     if (repository := section.get(item)) is None:
         return
 
+    if repository.path:
+        yield Result(state=State.OK, summary=f"Path: {repository.path}")
+
     if not repository.is_online:
         yield Result(state=State.CRIT, summary="Offline")
         return
@@ -108,8 +111,6 @@ def check_veeam_repositories(item: str, params: Mapping[str, Any], section: Sect
 
     if repository.host_name is not None:
         yield Result(state=State.OK, notice=f"Host: {repository.host_name}")
-    if repository.path is not None:
-        yield Result(state=State.OK, notice=f"Path: {repository.path}")
     if repository.description:
         yield Result(state=State.OK, notice=f"Description: {repository.description}")
 

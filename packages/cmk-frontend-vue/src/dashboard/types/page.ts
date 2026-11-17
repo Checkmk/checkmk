@@ -72,6 +72,7 @@ export interface DashboardPageProperties {
   }
   permissions: DashboardPermissions
   shareable_contact_groups: DualListElement[]
+  shareable_sites: DualListElement[]
   logged_in_user: string
   global_time_picker: GlobalTimePickerProps
   /** The way back to the page a drill-down opened this dashboard from. */

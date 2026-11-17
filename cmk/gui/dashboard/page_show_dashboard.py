@@ -32,6 +32,7 @@ from cmk.gui.visuals import visual_page_breadcrumb
 from cmk.gui.visuals._filter_context import requested_context_from_request
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.licensing.registry import get_licensing_user_effect
+from cmk.livestatus_client import SiteConfigurations
 from cmk.utils import paths
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.html import HTML
@@ -160,6 +161,10 @@ def page_dashboard_app(ctx: PageContext) -> None:
             may_share_with_own=user.may("general.publish_dashboards_to_groups"),
             may_share_with_foreign=user.may("general.publish_dashboards_to_foreign_groups"),
         ),
+        "shareable_sites": shareable_sites(
+            user.authorized_sites(ctx.config.sites),
+            may_share=user.may("general.publish_dashboards_to_sites"),
+        ),
         "logged_in_user": user.id,
         "global_time_picker": asdict(get_global_time_picker_props(ctx.config)),
         "drill_up": None if drill_up is None else asdict(drill_up),
@@ -209,6 +214,12 @@ def shareable_contact_groups(
         for name, spec in contact_groups.items()
         if may_share_with_foreign or (may_share_with_own and name in own_groups)
     ]
+
+
+def shareable_sites(sites: SiteConfigurations, *, may_share: bool) -> list[dict[str, str]]:
+    if not may_share:
+        return []
+    return [{"name": site_id, "title": spec["alias"] or site_id} for site_id, spec in sites.items()]
 
 
 def _get_default_dashboard_name() -> str:

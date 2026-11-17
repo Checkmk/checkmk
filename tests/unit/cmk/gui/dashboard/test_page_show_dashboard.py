@@ -10,14 +10,19 @@ from typing import override
 
 import pytest
 
-from cmk.gui.dashboard.page_show_dashboard import shareable_contact_groups
+from cmk.ccc.site import SiteId
+from cmk.gui.dashboard.page_show_dashboard import shareable_contact_groups, shareable_sites
 from cmk.gui.groups import GroupSpecs
+from cmk.livestatus_client import SiteConfigurations
+from tests.testlib.unit.fake_site import no_site_configuration
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 _CONTACT_GROUPS: GroupSpecs = {
     "own": {"alias": "Own group"},
     "foreign": {"alias": "Foreign group"},
 }
+
+_SITES = SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()})
 
 
 class _ComponentData(HTMLParser):
@@ -91,3 +96,19 @@ def test_shareable_contact_groups_without_alias_are_titled_by_name() -> None:
     )
 
     assert groups == [{"name": "own", "title": "own"}]
+
+
+def test_shareable_sites_without_publish_permission_are_empty() -> None:
+    assert shareable_sites(_SITES, may_share=False) == []
+
+
+def test_shareable_sites_with_publish_permission_are_titled_by_alias() -> None:
+    assert shareable_sites(_SITES, may_share=True) == [
+        {"name": "NO_SITE", "title": "Local site NO_SITE"}
+    ]
+
+
+def test_shareable_sites_without_alias_are_titled_by_name() -> None:
+    sites = SiteConfigurations({SiteId("NO_SITE"): {**no_site_configuration(), "alias": ""}})
+
+    assert shareable_sites(sites, may_share=True) == [{"name": "NO_SITE", "title": "NO_SITE"}]

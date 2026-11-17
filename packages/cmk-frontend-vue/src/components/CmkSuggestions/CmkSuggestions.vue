@@ -232,8 +232,10 @@ async function handleSuggestionsUpdate(
         isSelectedSuggestionSetAsFilter.value = true
       }
     }
-    if (foundSuggestion && newSuggestions.type !== 'filtered') {
+    if (foundSuggestion && (newSuggestions.type !== 'filtered' || query === '')) {
       activeSuggestion.value = foundSuggestion
+      await nextTick()
+      scrollCurrentActiveIntoView()
     } else {
       activeSuggestion.value = null
       setSiblingOrFirstActive(0)

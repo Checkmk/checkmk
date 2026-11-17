@@ -9,7 +9,7 @@ from cmk.rulesets.v1 import form_specs, Help, rule_specs, Title
 def _formspec_fritzbox() -> form_specs.Dictionary:
     return form_specs.Dictionary(
         help_text=Help(
-            "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
+            "This rule selects the FRITZ!Box agent, which uses UPNP to gather information "
             "about configuration and connection status information."
         ),
         elements={
@@ -33,7 +33,7 @@ def _formspec_fritzbox() -> form_specs.Dictionary:
 
 rule_spec_fritzbox = rule_specs.SpecialAgent(
     name="fritzbox",
-    title=Title("Fritz!Box devices"),
+    title=Title("FRITZ!Box devices"),
     topic=rule_specs.Topic.NETWORKING,
     parameter_form=_formspec_fritzbox,
 )

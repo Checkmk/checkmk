@@ -117,7 +117,7 @@ def setup_logging(verbose: bool) -> None:
 
 class FritzConnection:
     def __init__(self, host_address: str, timeout: int) -> None:
-        # Fritz!Box with firmware >= 6.0 use a new url.
+        # FRITZ!Box with firmware >= 6.0 use a new url.
         # Try the newer one first and switch if needed
         self._urlidx = 0
         self._urls: Final = (

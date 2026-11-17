@@ -27,6 +27,8 @@ logger = logging.getLogger(__name__)
 
 Measurements = Mapping[str, object]
 MeasurementsList = list[Measurements]
+#: The loaded jobs: per job name its benchmark data and, per scenario, its resource samples.
+PerformanceData = dict[str, tuple[Measurements, dict[str, MeasurementsList]]]
 SslMode = Literal["disable", "allow", "prefer", "require", "verify-ca", "verify-full"]
 
 

@@ -251,3 +251,6 @@ catch {
     Write-Error "Totally unexpected and unhandled error occurred:`n$($_ | Out-String)"
     break
 }
+finally {
+    Disconnect-VBRServer -ErrorAction SilentlyContinue
+}

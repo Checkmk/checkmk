@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 """The baseline checks of perftest_plot.py: the latest of the loaded jobs against the average of
-all of them, per scenario, for runtime, CPU and memory usage."""
+the earlier ones, per scenario, for runtime, CPU and memory usage."""
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
@@ -26,6 +26,17 @@ class AverageValues(NamedTuple):
     avg_time: float
     avg_cpu: float
     avg_mem: float
+
+
+class BaselineValues(NamedTuple):
+    """The average of each metric over the earlier jobs, or None if none of them has it.
+
+    A metric is checked only against a baseline above 0.
+    """
+
+    avg_time: float | None
+    avg_cpu: float | None
+    avg_mem: float | None
 
 
 class SkippedScenario(NamedTuple):
@@ -56,7 +67,7 @@ class BaselineAlert(NamedTuple):
 
 
 class PerformanceBaselines:
-    """Checks the latest of the loaded jobs against the baseline of all of them."""
+    """Checks the latest of the loaded jobs against the baseline of the earlier ones."""
 
     def __init__(
         self,
@@ -101,27 +112,31 @@ class PerformanceBaselines:
         values: list[float] = [float(str(row[metric_name])) for row in measurements]
         return fmean(values or [0])
 
-    def _calculate_baseline(self, scenario_name: str) -> AverageValues:
+    def _calculate_baseline(self, scenario_name: str) -> BaselineValues:
         """
-        Compute average (baseline) metrics for a given benchmark scenario across all loaded jobs.
+        Compute average (baseline) metrics for a given benchmark scenario across the loaded jobs
+        before the latest one, which is the one checked against them.
 
-        This method iterates over all jobs, searches its benchmark list for the specified scenario
-        and aggregates mean values for the execution time, the CPU usage and the memory usage.
+        This method iterates over these jobs, searches their benchmark lists for the specified
+        scenario and aggregates mean values for the execution time, the CPU usage and the memory
+        usage.
 
         If a scenario is missing in a job, an error is logged and that job is skipped.
-        If no values are collected for a metric, its baseline defaults to 0 (via fmean([0])).
+        If no values are collected for a metric, it has no baseline (None).
 
         Parameters:
             scenario_name : str
                 The name of the benchmark scenario to aggregate across all jobs.
 
         Returns:
-                AverageValues
+                BaselineValues
         """
         time_averages: list[float] = []
         cpu_averages: list[float] = []
         mem_averages: list[float] = []
         for job_name, job in self.jobs.items():
+            if job_name == self.job_names[-1]:
+                continue
             if not isinstance(benchmarks := job[0]["benchmarks"], list):
                 continue
             benchmark = next((_ for _ in benchmarks if _["name"] == scenario_name), None)
@@ -135,11 +150,11 @@ class PerformanceBaselines:
                 continue
             cpu_averages.append(self._get_mean_value(measurements, self.cpu_usage_metric))
             mem_averages.append(self._get_mean_value(measurements, self.memory_usage_metric))
-        time_baseline = fmean(time_averages) if time_averages else 0.0
-        cpu_baseline = fmean(cpu_averages) if cpu_averages else 0.0
-        mem_baseline = fmean(mem_averages) if mem_averages else 0.0
-
-        return AverageValues(*(time_baseline, cpu_baseline, mem_baseline))
+        return BaselineValues(
+            avg_time=fmean(time_averages) if time_averages else None,
+            avg_cpu=fmean(cpu_averages) if cpu_averages else None,
+            avg_mem=fmean(mem_averages) if mem_averages else None,
+        )
 
     def _current_averages(self, scenario_name: str) -> AverageValues | None:
         """
@@ -259,7 +274,28 @@ class PerformanceBaselines:
                 )
                 continue
             baseline = self._calculate_baseline(scenario_name)
-            if averages.avg_time > baseline.avg_time * (100 + runtime_tolerance) / 100:
+            # A metric without a baseline (None) is not checked. Neither is a baseline of 0: no
+            # overshoot can be computed against it, so it is reported without failing.
+            if zero_metrics := [
+                metric
+                for metric, value in (
+                    ("execution time", baseline.avg_time),
+                    ("CPU usage", baseline.avg_cpu),
+                    ("memory usage", baseline.avg_mem),
+                )
+                if value == 0
+            ]:
+                alerts.append(
+                    BaselineAlert(
+                        f"{msg_prefix}{', '.join(zero_metrics)} baseline {baseline_name} is 0,"
+                        " not checked",
+                        is_failure=False,
+                    )
+                )
+            if (
+                baseline.avg_time
+                and averages.avg_time > baseline.avg_time * (100 + runtime_tolerance) / 100
+            ):
                 overshoot = round((averages.avg_time / baseline.avg_time) * 100 - 100, 2)
                 msg = (
                     f"Execution time baseline {baseline_name} exceeded by {overshoot}% "
@@ -268,7 +304,10 @@ class PerformanceBaselines:
                 )
 
                 alerts.append(BaselineAlert(f"{msg_prefix}{msg}{msg_suffix}"))
-            if averages.avg_cpu > baseline.avg_cpu * (100 + cpu_tolerance) / 100:
+            if (
+                baseline.avg_cpu
+                and averages.avg_cpu > baseline.avg_cpu * (100 + cpu_tolerance) / 100
+            ):
                 overshoot = round((averages.avg_cpu / baseline.avg_cpu) * 100 - 100, 2)
                 msg = (
                     f"CPU usage baseline {baseline_name} exceeded by {overshoot}% "
@@ -276,7 +315,10 @@ class PerformanceBaselines:
                     f" actual: {round(averages.avg_cpu, 2)}%"
                 )
                 alerts.append(BaselineAlert(f"{msg_prefix}{msg} {msg_suffix}"))
-            if averages.avg_mem > baseline.avg_mem * (100 + mem_tolerance) / 100:
+            if (
+                baseline.avg_mem
+                and averages.avg_mem > baseline.avg_mem * (100 + mem_tolerance) / 100
+            ):
                 overshoot = round((averages.avg_mem / baseline.avg_mem) * 100 - 100, 2)
                 msg = (
                     f"Memory usage baseline {baseline_name} exceeded by {overshoot}% "

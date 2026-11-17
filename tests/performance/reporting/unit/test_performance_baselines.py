@@ -76,6 +76,32 @@ def test_a_metric_beyond_its_tolerance_fails_the_check(latest: Usage, finding: s
     assert finding in alerts[0].message
 
 
+def test_the_latest_run_does_not_count_towards_its_own_baseline() -> None:
+    baselines = _baselines(_jobs({"test_x": (1.0, 50.0, 40.0)}, {"test_x": (1.15, 50.0, 40.0)}))
+
+    alerts = baselines.validate_performance_baselines()
+
+    assert [alert.is_failure for alert in alerts] == [True]
+
+
+def test_a_scenario_without_earlier_runs_raises_no_alert() -> None:
+    baselines = _baselines(_jobs({}, {"test_x": (1.0, 50.0, 40.0)}))
+
+    alerts = baselines.validate_performance_baselines()
+
+    assert alerts == []
+
+
+def test_a_baseline_of_zero_is_reported_without_failing() -> None:
+    baselines = _baselines(_jobs({"test_x": (1.0, 0.0, 40.0)}, {"test_x": (1.0, 50.0, 40.0)}))
+
+    alerts = baselines.validate_performance_baselines()
+
+    assert [
+        (alert.is_failure, "CPU usage baseline weekly is 0" in alert.message) for alert in alerts
+    ] == [(False, True)]
+
+
 def test_a_scenario_missing_from_the_latest_run_is_reported_without_failing() -> None:
     baselines = _baselines(_jobs({"test_x": (1.0, 50.0, 40.0)}, {}))
 

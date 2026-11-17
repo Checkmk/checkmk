@@ -82,7 +82,6 @@ void main() {
         CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
     ];
-    def success = true;
 
     run_docker_integration_test = [
         run_docker_integration_test,
@@ -160,6 +159,24 @@ void main() {
                 force_build: force_build,
                 relative_job_name: "${builders_base_folder}/trigger-cmk-distro-package",
                 build_params: job_parameters_packages,
+                build_params_no_check: job_parameters_no_check,
+                download: false,
+            );
+        }
+
+        // this job is responsible to upload CMK package artifacts to remote locations
+        smart_stage(
+            name: "Upload package",
+            condition: currentBuild.result != "FAILURE",
+            raiseOnError: false,
+        ) {
+            smart_build(
+                use_upstream_build: true,
+                force_build: force_build,
+                relative_job_name: "${edition_base_folder}/build-cmk-deliverables",
+                build_params: job_parameters_packages + [
+                    OVERRIDE_DISTROS: distro,
+                ],
                 build_params_no_check: job_parameters_no_check,
                 download: false,
             );
@@ -283,33 +300,14 @@ void main() {
             },
         ];
 
-        // use the negative path as currentBuild might not be set yet if everything passed so far
+        // use the negative path as currentBuild might not be set yet if everything passed
         if (currentBuild.result != "FAILURE") {
+            // Jenkins can not overwrite a negative build result with a positive (SUCCESS)
             currentBuild.result = parallel(parallel_stages).values().every { it } ? "SUCCESS" : "FAILURE";
         } else {
             /// this makes sure the whole parallel thread is marked as skipped
             Utils.markStageSkippedForConditional("Package or image build error occured");
         }
-
-        // this job is responsible to upload CMK package artifacts to remote locations
-        success &= smart_stage(
-            name: "Upload package",
-            condition: currentBuild.result != "FAILURE",
-            raiseOnError: false,
-        ) {
-            smart_build(
-                use_upstream_build: true,
-                force_build: force_build,
-                relative_job_name: "${edition_base_folder}/build-cmk-deliverables",
-                build_params: job_parameters_packages + [
-                    OVERRIDE_DISTROS: distro,
-                ],
-                build_params_no_check: job_parameters_no_check,
-                download: false,
-            );
-        }[0]
-
-        currentBuild.result = success ? "SUCCESS" : "FAILURE";
     }
 }
 

@@ -53,6 +53,7 @@ def update_value_and_calc_rate(
     timestamp: float,
     value: float,
     raise_overflow: bool = False,
+    wrap_at: int | None = None,
 ) -> float:
     """
     1. Update value store.
@@ -70,6 +71,8 @@ def update_value_and_calc_rate(
         timestamp:       Timestamp of new value
         value:           The new value
         raise_overflow:  Raise a :class:`GetRateError` if the rate is negative
+        wrap_at:         Width of the counter, if it is known. A decreasing value is then
+                         read as a wrapped counter instead of an error.
 
     This function returns the rate of a measurement rₙ as the quotient of the `value` and `time`
     provided to the current function call (xₙ, tₙ) and the `value` and `time` provided to the
@@ -99,7 +102,7 @@ def update_value_and_calc_rate(
     try:
         data_point = DataPoint(timestamp, value)
         prev = update_store(value_store, key, data_point)
-        return calc_rate(prev, new=data_point, raise_overflow=raise_overflow)
+        return calc_rate(prev, new=data_point, raise_overflow=raise_overflow, wrap_at=wrap_at)
     except GetRateError as e:
         raise type(e)(f"At {key!r}: {str(e)}")
 
@@ -155,6 +158,7 @@ def calc_rate(
     *,
     new: DataPoint,
     raise_overflow: bool = False,
+    wrap_at: int | None = None,
 ) -> float:
     """
     Calculate rate based on two data points, last one and new one.
@@ -164,6 +168,8 @@ def calc_rate(
         prev:      timestamp + value from update_store
         new:       current timestamp + value
         raise_overflow:  Raise a :class:`GetRateError` if the rate is negative
+        wrap_at:         Width of the counter, if it is known. A decreasing value is then
+                         read as a wrapped counter instead of an error.
 
     This function returns the rate of a measurement rₙ as the quotient of the `value` and `time`
     provided to the current function call (xₙ, tₙ) and the `value` and `time` provided to the
@@ -194,12 +200,17 @@ def calc_rate(
     if new_time <= prev_time:
         raise GetRateErrorTime(f"No time difference: {new_time} <= {prev_time}")
 
-    rate = (new_value - prev_value) / (new_time - prev_time)
+    value_delta = new_value - prev_value
+    if value_delta < 0 and wrap_at is not None and prev_value < wrap_at:
+        # The counter wrapped. A counter reset (reboot, disk replaced) looks the same here,
+        # but it resets the 64 bit counters of the same disk as well. Those still raise, and
+        # the caller drops the whole disk for one interval. See _compute_rates_single_disk.
+        value_delta += wrap_at
+
+    rate = value_delta / (new_time - prev_time)
     if raise_overflow and rate < 0:
-        # Do not try to handle wrapped counters. We do not know
-        # whether they are 32 or 64 bit. It also could happen counter
-        # reset (reboot, etc.). Better is to leave this value undefined
-        # and wait for the next check interval.
+        # Counter of unknown width. It also could happen counter reset (reboot, etc.).
+        # Better is to leave this value undefined and wait for the next check interval.
         raise GetRateErrorCounter(f"Value overflow: {new_value} <= {prev_value}")
 
     return rate
@@ -268,6 +279,11 @@ def calc_rate(
 #
 # Result is (7 - 3) / 2 /(2 - 1) = 2
 #            N1  N0   F   D1  D0
+#
+# The check does not use this formula. N is a DWORD and restarts within minutes on a busy
+# disk, so the summed time comes from the 64 bit queue length row of the same direction
+# instead, which counts the same sum in fixed units of 100 ns. See _numerator_value. F is
+# therefore not needed.
 
 # NOTE! Data Row
 # FirstColumn = CounterNameTitleIndex(as in MSDN) - CounterForPhydisk
@@ -290,6 +306,32 @@ _LINE_TO_METRIC: Final = {
     "1170": "write_ql",  # 1402 Avg. Disc Write Queue length
     "-26": "average_read_wait",  # 208 Avg. Disc sec/Read
     "-24": "average_write_wait",  # 210 Avg. Disc sec/Write
+}
+
+# Windows stores a counter either as a DWORD or as a LARGE, see the PERF_SIZE_* bits of
+# PERF_COUNTER_DEFINITION.CounterType. The agent reads exactly that width, so a DWORD counter
+# wraps at 2**32 (wtools.cpp, GetCounterValueFromBlock). The rows listed below are
+# PERF_COUNTER_COUNTER and PERF_AVERAGE_BASE, both PERF_SIZE_DWORD. They count operations, so
+# they wrap at most once between two checks. The throughput and queue length rows are
+# PERF_SIZE_LARGE and never wrap.
+_WRAP_AT_DWORD: Final = 1 << 32
+
+_DWORD_METRICS: Final = frozenset(
+    {
+        "read_ios",  # counter
+        "write_ios",  # counter
+        "average_read_wait_base",  # average_base
+        "average_write_wait_base",  # average_base
+    }
+)
+
+# The queue length row of a direction counts the summed time of all its IO operations as a
+# 64 bit value, in units of 100 ns.
+_QUEUE_LENGTH_TICKS_PER_SECOND: Final = 10_000_000.0
+
+_QUEUE_LENGTH_OF_WAIT: Final = {
+    "average_read_wait": "read_ql",
+    "average_write_wait": "write_ql",
 }
 
 DiskType = dict[str, int | float]
@@ -442,7 +484,6 @@ class _ComputeSpec:
     value_store: MutableMapping[str, Any]
     value_store_suffix: str
     timestamp: float
-    frequency: float | None
 
 
 class _Denom(NamedTuple):
@@ -475,15 +516,16 @@ def _compute_rates_single_disk(
         value_store=value_store,
         value_store_suffix=value_store_suffix,
         timestamp=disk["timestamp"],
-        frequency=disk.get("frequency"),
     )
     bad_results = False
     metric_values = [(metric, value) for metric, value in disk.items() if _is_work_metric(metric)]
     for metric, value in metric_values:
+        if (numerator := _numerator_value(metric, disk, value)) is None:
+            continue
         denom = _calc_denom(metric, disk, compute_specs)
         try:
             # we must update value_store here
-            nom = _update_value_and_calc_rate(metric, compute_specs, value)
+            nom = _update_value_and_calc_rate(metric, compute_specs, numerator)
             disk_with_rates[metric] = denom.calc_smart(nom)
         except IgnoreResultsError:
             bad_results = True
@@ -492,6 +534,30 @@ def _compute_rates_single_disk(
         raise IgnoreResultsError("Initializing counters!")
 
     return disk_with_rates
+
+
+def _numerator_value(metric: str, disk: diskstat.Disk, value: float) -> float | None:
+    """Raw value the rate of `metric` is computed from.
+
+    Args:
+
+        metric:  The metric the rate is computed for
+        disk:    The raw values of this disk
+        value:   The raw value the section carries under `metric`
+
+    A wait metric is the summed time of its IO operations divided by their count. Windows
+    publishes that sum twice: as the PERF_AVERAGE_TIMER row of _LINE_TO_METRIC, which the
+    agent reads as a DWORD and which wraps within minutes on a busy disk, and as the queue
+    length row of the same direction, which is 64 bit. The check reads the 64 bit one.
+
+    Returns:
+
+        The raw value, or None when the host delivers no queue length row for a wait metric
+    """
+    if (queue_length_metric := _QUEUE_LENGTH_OF_WAIT.get(metric)) is None:
+        return value
+
+    return disk.get(queue_length_metric)
 
 
 def _is_work_metric(metric: str) -> bool:
@@ -509,7 +575,7 @@ def _as_denom_metric(metric: str) -> str:
 
 def _calc_denom(metric: str, disk: diskstat.Disk, compute_specs: _ComputeSpec) -> _Denom:
     if metric.endswith(MetricSuffix.QUEUE_LENGTH):
-        return _Denom(10_000_000.0, False)
+        return _Denom(_QUEUE_LENGTH_TICKS_PER_SECOND, False)
     if not metric.endswith(MetricSuffix.WAIT):
         return _Denom(1.0, False)
 
@@ -517,8 +583,6 @@ def _calc_denom(metric: str, disk: diskstat.Disk, compute_specs: _ComputeSpec) -
 
 
 def _calc_denom_for_wait(metric: str, disk: diskstat.Disk, compute_specs: _ComputeSpec) -> _Denom:
-    if compute_specs.frequency is None:
-        return _Denom(None, False)
     denom_value = disk.get(_as_denom_metric(metric))
     if denom_value is None:
         return _Denom(None, False)
@@ -532,16 +596,33 @@ def _calc_denom_for_wait(metric: str, disk: diskstat.Disk, compute_specs: _Compu
     except IgnoreResultsError:
         return _Denom(None, True)
 
-    return _Denom(denom_rate * compute_specs.frequency, False)
+    return _Denom(denom_rate * _QUEUE_LENGTH_TICKS_PER_SECOND, False)
+
+
+def _value_store_key(metric: str) -> str:
+    """Key the raw value of `metric` is kept under between two checks.
+
+    The wait metrics changed their raw source: earlier versions stored the 32 bit
+    PERF_AVERAGE_TIMER value under the name of the metric, the check now reads the 64 bit queue
+    length of the same direction. The two count different things and differ by orders of
+    magnitude, so the queue length gets a key of its own. The first check after an update then
+    initializes that key instead of subtracting the entry the older version left behind, which
+    would report a latency of minutes.
+    """
+    if metric not in _QUEUE_LENGTH_OF_WAIT:
+        return metric
+
+    return f"{metric}_{MetricSuffix.QUEUE_LENGTH}"
 
 
 def _update_value_and_calc_rate(metric: str, compute_specs: _ComputeSpec, value: float) -> float:
     return update_value_and_calc_rate(
         compute_specs.value_store,
-        metric + compute_specs.value_store_suffix,
+        _value_store_key(metric) + compute_specs.value_store_suffix,
         timestamp=compute_specs.timestamp,
         value=value,
         raise_overflow=True,
+        wrap_at=_WRAP_AT_DWORD if metric in _DWORD_METRICS else None,
     )
 
 

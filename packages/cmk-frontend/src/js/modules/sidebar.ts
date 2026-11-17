@@ -1221,6 +1221,13 @@ function handle_pending_changes(_data: any, response_text: string) {
 }
 
 function update_pending_changes() {
+  // Skip the poll while the browser tab is hidden. Retry after a short time,
+  // so that the count is current as soon as the user returns to the tab.
+  if (!is_window_active()) {
+    g_pending_changes_timeout = setTimeout(update_pending_changes, 250)
+    return
+  }
+
   call_ajax('ajax_sidebar_get_number_of_pending_changes.py', {
     response_handler: handle_pending_changes,
     error_handler: stop_polling_when_unauthenticated,

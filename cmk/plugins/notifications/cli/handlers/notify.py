@@ -6,7 +6,10 @@
 import ast
 import logging
 import sys
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
@@ -26,7 +29,6 @@ from cmk.ccc.version import edition as edition_of_site
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.plugins.notifications.cli.notify import (
     cli_command_notify,
@@ -48,23 +50,47 @@ def _notification_exit_code(returncode: object) -> CLIExitCode:
             return CLIExitCode.ERROR
 
 
-def _mode_notify(
-    omd_root: Path, global_options: CLIGlobalOptions, request: NotifyRequest, args: CLIArgs
-) -> CLIExitCode:
-    edition = edition_of_site(omd_root)
-    community_edition = edition is Edition.COMMUNITY
-    if not community_edition and "spoolfile" in args:
-        return _do_notify_via_automation(log_to_stdout=request.log_to_stdout, args=list(args))
+type _EditionOf = Callable[[Path], Edition]
 
-    if keepalive := not community_edition and request.keepalive:
-        raise_mkterminate_on_sigint()
 
+type _ExecuteNotifyAutomation = Callable[[Sequence[str]], str]
+
+
+class _Notify(Protocol):
+    def __call__(
+        self,
+        args: Sequence[str],
+        *,
+        edition: Edition,
+        log_to_stdout: bool,
+        keepalive: bool,
+        debug: bool,
+    ) -> int | None: ...
+
+
+def _execute_notify_automation(args: Sequence[str]) -> str:
+    return (
+        HelperExecutor()
+        .execute(
+            command=AutomationID("notify"),
+            args=args,
+            stdin="",
+            timeout=None,
+            for_cmk_version=cmk_version.__version__,
+        )
+        .output
+    )
+
+
+def _notify(
+    args: Sequence[str], *, edition: Edition, log_to_stdout: bool, keepalive: bool, debug: bool
+) -> int | None:
     with store.lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
-        loading_result = config.load(validate_hosts=False, debug=global_options.debug)
+        loading_result = config.load(validate_hosts=False, debug=debug)
 
-    exit_status = do_notify(
+    return do_notify(
         list(args),
-        log_to_stdout=request.log_to_stdout,
+        log_to_stdout=log_to_stdout,
         notification_config=make_notification_config(
             edition,
             loading_result.loaded_config,
@@ -80,50 +106,33 @@ def _mode_notify(
         timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
             livestatus.get_optional_timeperiods_active_map, logger.warning
         ),
-        debug=global_options.debug,
+        debug=debug,
     )
-    return _notification_exit_code(exit_status)
 
 
-def _run_notify(context: CLIContext, request: NotifyRequest, args: CLIArgs) -> CLIExitCode:
+def _do_notify_via_automation(
+    execute_automation: _ExecuteNotifyAutomation,
+    context: CLIContext,
+    *,
+    log_to_stdout: bool,
+    args: Sequence[str],
+) -> CLIExitCode:
     try:
-        return _mode_notify(context.omd_root, context.global_options, request, args)
-    except MKTerminate:
-        context.logger.error("<Interrupted>")  # noqa: TRY400
-        return CLIExitCode.INTERRUPTED
-    except MKGeneralException as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
-
-
-def _do_notify_via_automation(*, log_to_stdout: bool, args: list[str]) -> CLIExitCode:
-    if log_to_stdout:
-        args.insert(0, "--log-to-stdout")
-
-    try:
-        result = HelperExecutor().execute(
-            command=AutomationID("notify"),
-            args=args,
-            stdin="",
-            timeout=None,
-            for_cmk_version=cmk_version.__version__,
-        )
+        output = execute_automation(["--log-to-stdout", *args] if log_to_stdout else args)
     except AutomationHelperUnavailable:
-        logger.exception(
+        context.logger.exception(
             "The automation-helper service is required for the notification spooler. "
             "Please make sure all site services are started."
         )
         return CLIExitCode.FAILURE
     except Exception:
-        logger.exception("Error running automation call 'notify'")
+        context.logger.exception("Error running automation call 'notify'")
         return CLIExitCode.FAILURE
 
     try:
-        data = ast.literal_eval(result.output)
+        data = ast.literal_eval(output)
     except SyntaxError, ValueError, TypeError:
-        logger.exception("Could not parse automation result %(output)r", {"output": result.output})
+        context.logger.exception("Could not parse automation result %(output)r", {"output": output})
         return CLIExitCode.ERROR
 
     if isinstance(data, dict):
@@ -132,8 +141,55 @@ def _do_notify_via_automation(*, log_to_stdout: bool, args: list[str]) -> CLIExi
             sys.stdout.flush()
         return _notification_exit_code(data.get("exit_code"))
 
-    logger.error("Unexpected automation result format: %(data)r", {"data": data})
+    context.logger.error("Unexpected automation result format: %(data)r", {"data": data})
     return CLIExitCode.ERROR
 
 
-cli_handler_notify = CLIHandler(command=cli_command_notify, run=_run_notify)
+@dataclass(frozen=True, kw_only=True)
+class _NotifyCommand:
+    edition_of: _EditionOf
+    execute_automation: _ExecuteNotifyAutomation
+    notify: _Notify
+
+    def run(self, context: CLIContext, request: NotifyRequest, _args: CLIArgs) -> CLIExitCode:
+        try:
+            edition = self.edition_of(context.omd_root)
+            community_edition = edition is Edition.COMMUNITY
+            if not community_edition and "spoolfile" in request.arguments:
+                return _do_notify_via_automation(
+                    self.execute_automation,
+                    context,
+                    log_to_stdout=request.log_to_stdout,
+                    args=request.arguments,
+                )
+
+            if keepalive := not community_edition and request.keepalive:
+                raise_mkterminate_on_sigint()
+
+            return _notification_exit_code(
+                self.notify(
+                    request.arguments,
+                    edition=edition,
+                    log_to_stdout=request.log_to_stdout,
+                    keepalive=keepalive,
+                    debug=context.global_options.debug,
+                )
+            )
+        except MKTerminate:
+            context.logger.error("<Interrupted>")  # noqa: TRY400
+            return CLIExitCode.INTERRUPTED
+        except MKGeneralException as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
+
+
+cli_handler_notify = CLIHandler(
+    command=cli_command_notify,
+    run=_NotifyCommand(
+        edition_of=edition_of_site,
+        execute_automation=_execute_notify_automation,
+        notify=_notify,
+    ).run,
+)

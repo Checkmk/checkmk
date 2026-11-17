@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The "cmk --notify" command."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
@@ -27,12 +28,14 @@ _KEEPALIVE_FLAG: Final = CLIFlag(
 class NotifyRequest:
     log_to_stdout: bool
     keepalive: bool
+    arguments: Sequence[str]
 
 
 def _notify_request(options: CLIReader) -> NotifyRequest:
     return NotifyRequest(
         log_to_stdout=options.flag(_LOG_TO_STDOUT_FLAG),
         keepalive=options.flag(_KEEPALIVE_FLAG),
+        arguments=options.arguments(CLIArguments(placeholder="MODE", parse=str)),
     )
 
 
@@ -41,6 +44,5 @@ cli_command_notify = CLICommand(
     handler="cmk.plugins.notifications.cli.handlers.notify:cli_handler_notify",
     long="notify",
     request=_notify_request,
-    arguments=CLIArguments(placeholder="MODE", parse=str),
     help="Used to send notifications from core",
 )

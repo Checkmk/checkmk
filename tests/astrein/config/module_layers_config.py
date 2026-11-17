@@ -341,6 +341,50 @@ CROSS_DEPENDING_UTILS_MODULES = (
 )
 
 COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
+    Component("cmk.ai_control_plane.api"): _allow(
+        *PACKAGE_CCC,
+        "cmk.ai_control_plane.conversation",
+        "cmk.ai_control_plane.llm",
+        "cmk.ai_control_plane.protocols",
+        "cmk.ai_control_plane.site",
+        "cmk.ai_control_plane.storage",
+        "cmk.ai_control_plane.usage_data",
+        "cmk.fastapi",
+        "cmk.password_store.v1_unstable",
+        "cmk.schema_migrations.ai_control_plane",
+    ),
+    Component("cmk.ai_control_plane.conversation"): _allow(
+        "cmk.ai_control_plane.protocols",
+        "cmk.ai_control_plane.site",
+        "cmk.ai_control_plane.storage",
+        "cmk.ai_control_plane.usage_data",
+        "cmk.password_store.v1_unstable",
+    ),
+    Component("cmk.ai_control_plane.llm"): _allow(
+        *PACKAGE_CCC,
+        "cmk.ai_control_plane.conversation",
+        "cmk.ai_control_plane.protocols",
+        "cmk.password_store.v1_unstable",
+    ),
+    Component("cmk.ai_control_plane.protocols"): _allow(),
+    Component("cmk.ai_control_plane.site"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_TRACE,
+        "cmk.password_store.v1_unstable",
+    ),
+    Component("cmk.ai_control_plane.storage"): _allow(
+        "cmk.ai_control_plane.protocols",
+        "cmk.ai_control_plane.site",
+        "cmk.schema_manager",
+        "cmk.schema_migrations.ai_control_plane",
+    ),
+    Component("cmk.ai_control_plane.usage_data"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_TRACE,
+        "cmk.ai_control_plane.llm",
+        "cmk.ai_control_plane.protocols",
+    ),
+    Component("cmk.ai_control_plane"): _allow(),
     Component("cmk.automations"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_TRACE,

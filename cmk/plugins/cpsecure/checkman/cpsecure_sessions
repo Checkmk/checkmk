@@ -1,4 +1,4 @@
-title: Netgear CPSECURE Content Security Gateway: Number of Sessions
+title: NETGEAR: Content Security Gateway Sessions
 agents: snmp
 catalog: hw/network/netgear
 license: GPLv2

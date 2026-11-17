@@ -262,6 +262,24 @@ def test_check_heartbeat_crm_ok(section_1: Section) -> None:
         ]
 
 
+@pytest.mark.xfail(strict=True, raises=KeyError, reason="CMK-42471: KeyError 'num_nodes'")
+def test_check_heartbeat_crm_enforced_service_without_expected_counts(
+    section_1: Section,
+) -> None:
+    # An enforced service has no discovered parameters, so only the rule's
+    # values (plus the defaults) reach the check.
+    with time_machine.travel(datetime.datetime(2020, 9, 8, 10, 36, 36, tzinfo=ZoneInfo("UTC"))):
+        assert list(
+            _check_heartbeat_crm(
+                {"max_age": 60},
+                section_1,
+                1589939704.5458105,
+            )
+        ) == [
+            Result(state=State.OK, summary="DC: ha02"),
+        ]
+
+
 def test_check_heartbeat_crm_crit(section_2: Section) -> None:
     with time_machine.travel(datetime.datetime(2019, 8, 18, 10, 36, 36, tzinfo=ZoneInfo("UTC"))):
         assert list(

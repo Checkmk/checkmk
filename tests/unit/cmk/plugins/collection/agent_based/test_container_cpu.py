@@ -276,3 +276,10 @@ def test_container_cpu_cgroupv1(
         Result(state=State.OK, summary=f"Total CPU: {util:.2f}%"),
         Metric("util", util, boundaries=(0.0, None)),
     ]
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash report 4813: ValueError")
+def test_docker_container_on_multiple_nodes_has_no_cpu_section() -> None:
+    string_table = MK_DOCKER_CONTAINER_CPU_CGROUPV1_0 + MK_DOCKER_CONTAINER_CPU_CGROUPV1_10
+
+    assert agent_section_docker_container_cpu.parse_function(string_table) is None

@@ -12,6 +12,9 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v2 import GetRateError, Metric, Result, State, StringTable
+from cmk.plugins.collection.agent_based.docker_container_cpu import (
+    parse_docker_container_cpu_cgroupv1,
+)
 
 # the following string tables should display 150% cpu usage
 # two cpus were working at 75% `stress-ng -c2 -l75`
@@ -254,3 +257,10 @@ def test_container_cpu_cgroupv1(
         Result(state=State.OK, summary=f"Total CPU: {util:.2f}%"),
         Metric("util", util, boundaries=(0.0, None)),
     ]
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash report 4813: ValueError")
+def test_docker_container_on_multiple_nodes_has_no_cpu_section() -> None:
+    string_table = MK_DOCKER_CONTAINER_CPU_CGROUPV1_0 + MK_DOCKER_CONTAINER_CPU_CGROUPV1_10
+
+    assert parse_docker_container_cpu_cgroupv1(string_table) is None

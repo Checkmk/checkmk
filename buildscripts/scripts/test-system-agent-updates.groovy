@@ -18,6 +18,7 @@ void main() {
     ]);
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
+    def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
     def disable_cache = params.DISABLE_CACHE;
     def disable_signing = params.DISABLE_CMK_DISTRO_PACKAGE_SIGNING;
@@ -69,21 +70,28 @@ void main() {
             privileged: true,
         ) {
             try {
-                stage("Run `make ${make_target}`") {
-                    single_tests.run_make_target(
-                        result_path: "${checkout_dir}/${result_dir}/${distro}",
-                        edition: edition,
-                        docker_tag: setup_values.docker_tag,
-                        version: setup_values.cmk_version,
-                        distro: distro,
-                        branch_name: setup_values.safe_branch_name,
-                        make_target: make_target,
-                        run_tests_script: "non-free/tests/run_tests.sh",
-                        test_filter: params.TEST_FILTER,
-                        faked_artifacts: fake_artifacts,
-                        timeout: 60,
-                    );
-                }
+                helper.execute_test([
+                    name: "`make ${make_target}`",
+                    callback: single_tests.&run_make_target,
+                    // The tests in windows/ log in to win-agenttest-ci.lan.checkmk.net with this key.
+                    // run-dockerized.py copies the key file into the test container.
+                    creds_env: [
+                        sshUserPrivateKey(
+                            credentialsId: "jenkins-oracle-win-ssh-key",
+                            keyFileVariable: "WINDOWS_HOST_SSH_KEY_FILE"),
+                    ],
+                    result_path: "${checkout_dir}/${result_dir}/${distro}",
+                    edition: edition,
+                    docker_tag: setup_values.docker_tag,
+                    version: setup_values.cmk_version,
+                    distro: distro,
+                    branch_name: setup_values.safe_branch_name,
+                    make_target: make_target,
+                    run_tests_script: "non-free/tests/run_tests.sh",
+                    test_filter: params.TEST_FILTER,
+                    faked_artifacts: fake_artifacts,
+                    timeout: 60,
+                ]);
             } finally {
                 stage("Archive / process test reports") {
                     single_tests.archive_and_process_reports(test_results: "${result_dir}/**");

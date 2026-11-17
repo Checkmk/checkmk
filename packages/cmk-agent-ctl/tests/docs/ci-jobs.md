@@ -62,6 +62,9 @@ flowchart TD
   `start: test-system-agent-updates` on a change. It runs on `ubuntu-24.04` with the Ultimate
   edition, as the nightly run does, so it runs all cases against the baked deb and the prebuilt
   deb.
+- **The tests in `windows/`** run on the shared host `win-agenttest-ci.lan.checkmk.net`, with an
+  SSH key from a Jenkins credential. See "The Windows test host" in
+  [test-systems.md](test-systems.md).
 - **The suite tests the baked package and the prebuilt package.** `agents/BUILD`,
   `agents/debian/` and the `.spec` files build the prebuilt package, and the site of every
   edition ships it. The cases in `non-free/tests/system/agent_updates/prebuilt/` download it

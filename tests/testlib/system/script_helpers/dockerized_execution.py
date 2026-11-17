@@ -24,7 +24,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from http import HTTPStatus
 from io import BytesIO
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Literal, TypedDict, Unpack
 
 import docker
@@ -44,6 +44,11 @@ _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
 # Increase this to enforce invalidation of all existing images
 _DOCKER_BUILD_ID = 1
 _TESTUSER = "testuser"
+# A CI job hands a key to the tests as a file, and names the file in a variable on the left. The
+# test container gets a copy of the file, and the QA_ variable on the right names the copy. The test
+# container writes every QA_ variable into its logs, so a QA_ variable never holds a key.
+_KEY_FILE_VARIABLES = {"WINDOWS_HOST_SSH_KEY_FILE": "QA_WINDOWS_HOST_SSH_KEY"}
+_KEY_DIR = PurePosixPath("/tmp/ci-keys")
 
 # Docker mounts /sys/fs/cgroup read-only in every container that is not privileged. systemd
 # cannot create its own cgroup tree under such a mount and exits immediately without writing
@@ -208,16 +213,20 @@ def execute_tests_in_container(
             return 0
 
         # Now execute the real test in the container context
-        exit_code = _exec_run(
-            container,
-            command,
-            check=False,
-            user=_TESTUSER,
-            environment=container_env,
-            workdir="/git",
-            stream=True,
-            tty=True,  # NOTE: Some tests require a tty (e.g. test-system-update)!
-        )
+        try:
+            exit_code = _exec_run(
+                container,
+                command,
+                check=False,
+                user=_TESTUSER,
+                environment=container_env | copy_key_files(container, os.environ),
+                workdir="/git",
+                stream=True,
+                tty=True,  # NOTE: Some tests require a tty (e.g. test-system-update)!
+            )
+        finally:
+            # With CLEANUP=0 the container stays, and the keys must not stay with it.
+            _exec_run(container, ["rm", "-rf", str(_KEY_DIR)], check=False)
 
         if systemd:
             _dump_systemd_state(container, Path("/results/systemd"))
@@ -689,6 +698,43 @@ def get_current_cmk_hash_for_artifact(version: CMKVersion, package_name: str) ->
             f"match the expected package name ({package_name})"
         )
     return _hash
+
+
+def copy_key_files(
+    container: docker.models.containers.Container, environ: Mapping[str, str]
+) -> dict[str, str]:
+    """Copy the key files that environ names into the container, and return the QA_ variables
+    that name the copies.
+
+    Only the test user can read a copy. The test user has the uid and gid of this process, see
+    _prepare_testuser(), and ssh refuses a key that other users can read.
+    """
+    sources = {
+        qa_variable: Path(environ[variable])
+        for variable, qa_variable in _KEY_FILE_VARIABLES.items()
+        if environ.get(variable)
+    }
+    if not sources:
+        return {}
+    archive = BytesIO()
+    with tarfile.open(fileobj=archive, mode="w") as tar:
+        tar.addfile(_owned_by_testuser(tarfile.TarInfo(_KEY_DIR.name), tarfile.DIRTYPE, 0o700))
+        for qa_variable, source in sources.items():
+            content = source.read_bytes()
+            entry = tarfile.TarInfo(f"{_KEY_DIR.name}/{qa_variable.lower()}")
+            entry.size = len(content)
+            tar.addfile(_owned_by_testuser(entry, tarfile.REGTYPE, 0o600), BytesIO(content))
+    container.put_archive(str(_KEY_DIR.parent), archive.getvalue())
+    return {qa_variable: str(_KEY_DIR / qa_variable.lower()) for qa_variable in sources}
+
+
+def _owned_by_testuser(entry: tarfile.TarInfo, kind: bytes, mode: int) -> tarfile.TarInfo:
+    entry.type = kind
+    entry.mode = mode
+    entry.uid = os.getuid()
+    entry.gid = os.getgid()
+    entry.mtime = int(time.time())
+    return entry
 
 
 def _image_build_binds() -> dict[str, Mapping[str, str]]:

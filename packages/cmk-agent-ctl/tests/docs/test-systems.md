@@ -149,3 +149,25 @@ lock has expired fails with "lost the lock" at its next step on the host.
 While the host is out of service, set `WINDOWS_HOST_OUT_OF_SERVICE` in `windows/_windows.py` to a
 reason, and merge that change. The tests then skip and report the reason. In every other case the
 tests run, and they fail when the host does not answer.
+
+### How a run gets the key
+
+`run-dockerized.py` copies the key file that `WINDOWS_HOST_SSH_KEY_FILE` names into the test
+container. Only the test user can read the copy, and `QA_WINDOWS_HOST_SSH_KEY` names it. The key
+itself never enters a `QA_` variable, because the test container logs those variables. In CI, the
+key comes from a Jenkins credential.
+
+To run the Windows tests locally, take these steps:
+
+1. Get a key that `C:\ProgramData\ssh\administrators_authorized_keys` on the host accepts.
+2. Run the suite with the path of the key file:
+
+   ```console
+   WINDOWS_HOST_SSH_KEY_FILE=~/.ssh/win-agenttest-ci \
+       non-free/tests/run_tests.sh test-system-agent-updates-docker
+   ```
+
+   Set `WINDOWS_HOST_SSH_KEY_FILE` for this one command only, never in a shell profile.
+   `run-dockerized.py` copies the key into the test container of every target that it starts.
+
+A local run takes the lock like a CI run, and it removes every Checkmk agent from the host.

@@ -321,6 +321,10 @@ div.floatfilter {
       padding-right: 0;
     }
 
+    select + span.select2-container--default {
+      min-width: 0;
+    }
+
     div.label_group select[id$='_vs'] + span.select2-container--default {
       width: auto !important;
       max-width: $label-filters-label-max-width;

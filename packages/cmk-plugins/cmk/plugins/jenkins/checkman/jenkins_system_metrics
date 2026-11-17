@@ -1,4 +1,4 @@
-title: Jenkins: System metrics
+title: Jenkins: System Metrics
 agents: jenkins
 catalog: app/jenkins
 license: GPLv2

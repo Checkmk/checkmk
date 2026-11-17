@@ -46,7 +46,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     strip_hostname_whitespace_chars,
 )
 from cmk.gui.watolib.openapi_fields import folder_tree_of
-from cmk.gui.watolib.passwords import contact_group_choices, load_passwords, password_id_in_use
+from cmk.gui.watolib.passwords import load_passwords, password_id_in_use
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_config_read_only
 from cmk.licensing.basics.options import OptionName
@@ -1042,73 +1042,6 @@ class PasswordIdent(base.String):
             raise self.make_error("should_not_exist", name=value)
 
 
-class PasswordEditableBy(base.String):
-    """A field representing which group can edit a password"""
-
-    default_error_messages = {
-        "invalid": "Specified contact group does not exist or you do not have the necessary permissions: {name!r}",
-    }
-
-    def __init__(
-        self,
-        example: str,
-        required: bool = True,
-        validate: Callable[[str], str] | list[Callable[[str], str]] | None = None,
-        **kwargs: object,
-    ) -> None:
-        super().__init__(
-            example=example,
-            required=required,
-            validate=validate,
-            **kwargs,
-        )
-
-    @override
-    def _validate(self, value: str) -> None:
-        """Verify if the specified editor is valid for the logged-in user
-
-        Non-admin users cannot specify admin as the editor
-        """
-        super()._validate(value)
-        if user.may("wato.edit_all_passwords"):
-            permitted_group_ids = [group[0] for group in contact_group_choices(only_own=False)]
-            permitted_group_ids.append("admin")
-        else:
-            permitted_group_ids = [group[0] for group in contact_group_choices(only_own=True)]
-
-        if value not in permitted_group_ids:
-            raise self.make_error("invalid", name=value)
-
-
-class PasswordShare(base.String):
-    """A field representing a password share group"""
-
-    default_error_messages = {
-        "invalid": "The password cannot be shared with specified group: {name!r}",
-    }
-
-    def __init__(
-        self,
-        example: str,
-        required: bool = True,
-        validate: Callable[[str], str] | list[Callable[[str], str]] | None = None,
-        **kwargs: object,
-    ) -> None:
-        super().__init__(
-            example=example,
-            required=required,
-            validate=validate,
-            **kwargs,
-        )
-
-    @override
-    def _validate(self, value: str) -> None:
-        super()._validate(value)
-        shareable_groups = [group[0] for group in contact_group_choices()]
-        if value not in ["all", *shareable_groups]:
-            raise self.make_error("invalid", name=value)
-
-
 def from_timestamp(value: float) -> datetime:
     return datetime.fromtimestamp(value, tz=UTC)
 
@@ -1332,9 +1265,7 @@ __all__ = [
     "GroupField",
     "HostField",
     "MultiNested",
-    "PasswordEditableBy",
     "PasswordIdent",
-    "PasswordShare",
     "PythonString",
     "query_field",
     "SiteField",

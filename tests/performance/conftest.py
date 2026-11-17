@@ -16,26 +16,15 @@ from typing import Literal
 
 import pytest
 
-# Has to precede the imports below: a module already imported cannot be rewritten, and it is
-# the scenarios that carry the assertions now - `perftest` holds only the state they share.
-pytest.register_assert_rewrite(
-    "tests.performance.activation.scenario",
-    "tests.performance.dcd.scenario",
-    "tests.performance.hosts.scenario",
-    "tests.performance.nagios.scenario",
-    "tests.performance.services.scenario",
-    "tests.performance.ui_response.scenario",
-)
-
-from tests.performance.perftest import PerformanceTest  # noqa: E402
-from tests.performance.sysmon import track_resources  # noqa: E402
-from tests.testlib.common.utils2 import is_containerized, run  # noqa: E402
-from tests.testlib.pytest_helpers import (  # noqa: E402
+from tests.performance.perftest import PerformanceTest
+from tests.performance.sysmon import track_resources
+from tests.testlib.common.utils2 import is_containerized, run
+from tests.testlib.pytest_helpers import (
     diagnostics,
     registration,
 )
-from tests.testlib.system.pytest_helpers import cmk_package  # noqa: E402
-from tests.testlib.system.site import (  # noqa: E402
+from tests.testlib.system.pytest_helpers import cmk_package
+from tests.testlib.system.site import (
     connection,
     get_site_factory,
     GlobalSettingsUpdate,

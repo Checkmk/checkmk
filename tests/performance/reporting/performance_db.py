@@ -373,6 +373,18 @@ class PerformanceDb:
             raise ValueError(f'Error adding scenario "{scenario_name}"!')
         return scenario_id
 
+    def set_scenario_description(self, scenario_id: int, scenario_description: str | None) -> None:
+        """Set the description of a scenario, or clear it with None."""
+        with self._cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE scenarios
+                SET scenario_description = %s
+                WHERE scenario_id = %s AND scenario_description IS DISTINCT FROM %s
+                """,
+                (scenario_description, scenario_id, scenario_description),
+            )
+
     def get_scenario(self, scenario_name: str) -> ScenarioDetails | None:
         """
         Retrieves the details of a scenario from the database by its name.
@@ -651,7 +663,12 @@ class PerformanceDb:
             system_machine=str(machine_info.get("machine", "")),
             host_name=str(machine_info.get("node", "")),
         )
+        assert isinstance(benchmarks := benchmark_data["benchmarks"], list)
+        benchmark = next((_ for _ in benchmarks if _["name"] == scenario_name), None)
         scenario_id = self._add_scenario(scenario_name)
+        # Older benchmark files carry no description; keep the stored one then.
+        if benchmark and "description" in benchmark:
+            self.set_scenario_description(scenario_id, benchmark["description"] or None)
         if not self.get_test(job_id=job_id, scenario_id=scenario_id):
             test_id = self._add_test(
                 job_id=job_id,
@@ -677,10 +694,7 @@ class PerformanceDb:
                     data,
                 )
 
-            assert isinstance(benchmarks := benchmark_data["benchmarks"], list)
-            benchmark_statistics: Measurements | None = next(
-                (_["stats"] for _ in benchmarks if _["name"] == scenario_name), None
-            )
+            benchmark_statistics: Measurements | None = benchmark["stats"] if benchmark else None
             if benchmark_statistics:
                 self.write_benchmark_data(
                     test_id=test_id,

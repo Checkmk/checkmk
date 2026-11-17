@@ -16,6 +16,7 @@ from typing import Literal
 
 import pytest
 
+from tests.performance import benchmark_json
 from tests.performance.sysmon import track_resources
 from tests.performance.system.perftest import PerformanceTest
 from tests.testlib.common.utils2 import is_containerized, run
@@ -38,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 
 def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
-    registration.register_pytest_plugins(pluginmanager, cmk_package, diagnostics)
+    registration.register_pytest_plugins(pluginmanager, benchmark_json, cmk_package, diagnostics)
     parser.addoption(
         "--iterations",
         action="store",

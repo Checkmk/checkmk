@@ -42,6 +42,7 @@ py_library(
     ),
     imports = ["../.."],
     deps = [
+        ":benchmark_json",
         ":pkg",
         ":sysmon",
         "//tests/performance/testlib:livestatus_fake",

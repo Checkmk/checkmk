@@ -45,7 +45,7 @@ const endDate = computed(() =>
 
 const summary = computed(() =>
   _t(
-    'This site is now linked to %{email}. Your %{days}-day trial of %{edition} runs until %{endDate} — after that, the site reverts to the free edition unless you add a license.',
+    'This site is now linked to %{email}. Your %{days}-day trial of %{edition} runs until %{endDate} — after that, the site reverts to the free license state unless you add a license.',
     { email, days: `${trialLengthDays}`, edition: editionTitle, endDate: endDate.value }
   )
 )

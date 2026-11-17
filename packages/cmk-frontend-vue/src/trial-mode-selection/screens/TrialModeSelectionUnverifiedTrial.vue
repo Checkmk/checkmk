@@ -36,7 +36,7 @@ const { _t } = usei18n()
   >
     {{
       _t(
-        'Trial started without verification. Full features for %{days} days from site creation, then fallback to the limited free edition (%{services} services). While the site is under %{days} days old, the dialog reappears on admin login (at most once every %{interval}) as another chance to verify or license.',
+        'Trial started without verification. Full features for %{days} days from site creation, then the site falls back to the limited free license state (%{services} services). While the site is under %{days} days old, the dialog reappears on admin login (at most once every %{interval}) as another chance to verify or license.',
         {
           days: `${trialLengthDays}`,
           services: `${freeServicesLimit}`,

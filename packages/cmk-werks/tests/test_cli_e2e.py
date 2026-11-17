@@ -15,7 +15,11 @@ from unittest import mock
 
 from git.repo import Repo
 
+from cmk.werks import parse_werk
+from cmk.werks.parse import WerkV2ParseResult, WerkV3ParseResult
 from cmk.werks.schemas.werk import Stash
+
+from ._werk_files import werk_text
 
 
 def initialize_werks_project(
@@ -194,6 +198,38 @@ def test_delete_werk_logs_the_returned_id(tmp_path: Path) -> None:
     call_output("delete", "11111", home=home, cwd=repo_path)
 
     assert read_log(home)[-1] == "launcher:bazel, action:delete, werk ID:11111"
+
+
+def _pick_werk(tmp_path: Path, werk: str) -> WerkV2ParseResult | WerkV3ParseResult:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo"
+    repo = initialize_werks_project(repo_path, first_free=11_111)
+    base = repo.head.commit.hexsha
+    (repo_path / ".werks/11111.md").write_text(werk, encoding="utf-8")
+    repo.index.add([".werks/11111.md"])
+    picked = repo.index.commit("11111 picked werk").hexsha
+    repo.git.checkout("-b", "target", base)
+
+    call_output("pick", picked, home=home, cwd=repo_path)
+
+    return parse_werk(
+        file_content=(repo_path / ".werks/11111.md").read_text(encoding="utf-8"),
+        file_name="11111.md",
+    )
+
+
+def test_pick_sets_the_current_version(tmp_path: Path) -> None:
+    picked = _pick_werk(tmp_path, werk_text(version="2.5.0p3"))
+
+    assert picked.metadata["version"] == "0.1.0"
+
+
+def test_pick_converts_a_werk_v2_to_v3(tmp_path: Path) -> None:
+    picked = _pick_werk(tmp_path, werk_text(werk_format="v2", version="2.4.0p17", edition="cre"))
+
+    assert isinstance(picked, WerkV3ParseResult)
+    assert picked.metadata["edition"] == "community"
 
 
 def test_commit_config(tmp_path: Path) -> None:

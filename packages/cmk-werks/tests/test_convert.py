@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.werks.convert import werkv1_to_werkv2
+from cmk.werks.convert import werkv1_to_werkv2, werkv2_to_werkv3
+from cmk.werks.parse import WerkV2ParseResult, WerkV3ParseResult
 
 WERK_V1_SIMPLE = """Title: Simple Title
 Class: fix
@@ -149,3 +150,13 @@ def test_roundtrip() -> None:
     werk2, werk_id = werkv1_to_werkv2(WERK_V1_SIMPLE, 1234)
     assert werk_id == 1234
     assert werk2 == WERK_V1_SIMPLE_RESULT
+
+
+def test_werkv2_to_werkv3_maps_the_edition() -> None:
+    werk = WerkV2ParseResult({"id": "1234", "edition": "cre", "class": "fix"}, "A description.")
+
+    converted = werkv2_to_werkv3(werk)
+
+    assert converted == WerkV3ParseResult(
+        {"id": "1234", "edition": "community", "class": "fix"}, "A description."
+    )

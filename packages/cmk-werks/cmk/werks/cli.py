@@ -29,7 +29,7 @@ from .config import (
     RuntimeConfiguration,
     try_load_current_version_from_defines_make,
 )
-from .convert import werkv1_metadata_to_markdown_werk_metadata
+from .convert import werkv1_metadata_to_markdown_werk_metadata, werkv2_to_werkv3
 from .format import format_as_markdown_werk
 from .id_log import get_werk_id_logger
 from .id_pool import (
@@ -353,9 +353,13 @@ def save_werk(werk: Werk, werk_version: WerkVersion, destination: Path | None = 
     save_last_werkid(werk.id)
 
 
-def change_werk_version(werk_path: Path, new_version: str, werk_version: WerkVersion) -> None:
+def adapt_picked_werk(werk_path: Path, werk_version: WerkVersion) -> None:
     werk = load_werk(werk_path)
-    werk.content.metadata["version"] = new_version
+    content = werk.content
+    if isinstance(content, WerkV2ParseResult):
+        content = werkv2_to_werkv3(content)
+    content.metadata["version"] = get_config().current_version
+    werk = werk._replace(content=content)
     save_werk(werk, werk_version)
     git_add(werk)
 
@@ -961,20 +965,17 @@ def werk_cherry_pick(
     pick = subprocess.run(cmd, check=False)
 
     if found_werk_path is not None:
-        # Find werks that have been cherry-picked and change their version
-        # to our current checkmk version.
-
         # maybe we need to adapt the filename:
         if found_werk_path.source.suffix != found_werk_path.destination.suffix:
             # but this also means we need to change the content
             werk = load_werk(found_werk_path.source)
             git_move(found_werk_path.source, found_werk_path.destination)
             save_werk(werk, werk_version, found_werk_path.destination)
-            # git add will be executed by change_werk_version
+            # git add will be executed by adapt_picked_werk
 
-        # Change the werk's version before checking the pick return code.
+        # Adapt the werk before checking the pick return code.
         # Otherwise the dev may forget to change the version
-        change_werk_version(found_werk_path.destination, get_config().current_version, werk_version)
+        adapt_picked_werk(found_werk_path.destination, werk_version)
         log.info(
             "launcher:%(launcher)s, action:pick, werk ID:%(werk_id)s, werk file:%(werk_file)s",
             {

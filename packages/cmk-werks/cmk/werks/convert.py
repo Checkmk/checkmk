@@ -7,7 +7,8 @@ import datetime
 from collections.abc import Iterator
 
 from .markup import nowiki_to_markdown
-from .parse import parse_werk_v1, WerkMetadata
+from .models import EditionV3
+from .parse import parse_werk_v1, WerkMetadata, WerkV2ParseResult, WerkV3ParseResult
 
 
 def _table_entry(key: str, value: object) -> str:
@@ -73,3 +74,10 @@ def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
         yield nowiki_to_markdown(parsed.description)
 
     return "\n".join(generator()), werk_id
+
+
+def werkv2_to_werkv3(werk: WerkV2ParseResult) -> WerkV3ParseResult:
+    metadata = werk.metadata.copy()
+    if (edition := metadata.get("edition")) is not None:
+        metadata["edition"] = EditionV3.migrate(edition).value
+    return WerkV3ParseResult(metadata, werk.description)

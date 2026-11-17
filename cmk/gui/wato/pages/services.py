@@ -903,6 +903,7 @@ class DiscoveryPageRenderer:
                     ),
                 )
             ),
+            style="display: inline; margin-left: 10px",
         )
 
     def render_datasources(self, sources: Sequence[SourceResult]) -> str | None:
@@ -944,7 +945,6 @@ class DiscoveryPageRenderer:
             is_push_mode = (
                 self._host.effective_attributes().get("cmk_agent_connection") == "push-agent"
             )
-            tooltip_rendered = False
             html.open_table()
             for state, output in sources:
                 show_agent_tooltip = (
@@ -974,14 +974,9 @@ class DiscoveryPageRenderer:
                         must_escape=not active_config.sites[self._host.site_id()]["is_trusted"],
                     )
                 )
-                html.close_td()
-                # A column of its own starts right of the longest row, so the
-                # hint does not cover other rows. Only the first match gets one.
-                if show_agent_tooltip and not tooltip_rendered:
-                    html.open_td(class_="agent_hint")
+                if show_agent_tooltip:
                     self._render_agent_download_tooltip(output)
-                    html.close_td()
-                    tooltip_rendered = True
+                html.close_td()
                 html.close_tr()
             html.close_table()
 

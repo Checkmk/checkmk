@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import html
-import json
 import os
-import re
 import shutil
 from collections.abc import Generator, Mapping
 from functools import partial
@@ -17,7 +14,6 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.ccc.version import omd_version
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
@@ -42,7 +38,6 @@ from cmk.gui.watolib.services import (
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, Integer
-from cmk.utils.paths import omd_root
 
 
 def _noop_pending_changes() -> PendingChanges:
@@ -239,54 +234,3 @@ class TestDiscoveryPageRendererCheckParameters:
         page = self._render(host, {"levels": "42"})
 
         assert "Invalid check parameter</b>: levels:" in page
-
-
-@pytest.mark.usefixtures("request_context", "with_admin_login")
-class TestDiscoveryPageRendererDatasources:
-    @pytest.fixture
-    def site_version(self) -> Generator[None]:
-        # The agent hint offers agent commands for the running site version
-        version_link = omd_root / "version"
-        version_link.symlink_to("3.0.0-2026.10.01.ultimate")
-        omd_version.cache_clear()
-        yield
-        version_link.unlink()
-        omd_version.cache_clear()
-
-    @pytest.fixture
-    def host(self, tree: FolderTree) -> Generator[Host]:
-        root_folder = tree.root_folder()
-        root_folder.create_hosts(
-            [(HostName("agent_host"), {}, None)],
-            pprint_value=False,
-            pending_changes=_noop_pending_changes(),
-            acting_user=LoggedInSuperUser(),
-        )
-        yield root_folder.load_host(HostName("agent_host"))
-        shutil.rmtree(root_folder.filesystem_path(), ignore_errors=True)
-        os.makedirs(root_folder.filesystem_path())
-
-    @pytest.mark.usefixtures("site_version")
-    def test_shows_one_agent_hint_for_the_first_failing_agent_source(self, host: Host) -> None:
-        renderer = DiscoveryPageRenderer(host=host, options=_discovery_options(), rulespecs={})
-
-        rendered = renderer.render_datasources(
-            [
-                (2, "[agent] Communication failed: first node"),
-                (2, "[agent] Communication failed: second node"),
-            ]
-        )
-
-        assert rendered is not None
-        hints = re.findall(r'<cmk-agent-download data="([^"]*)"', rendered)
-        assert len(hints) == 1
-        assert json.loads(html.unescape(hints[0]))["output"].endswith("first node")
-
-    @pytest.mark.usefixtures("site_version")
-    def test_puts_the_agent_hint_in_a_cell_of_its_own(self, host: Host) -> None:
-        renderer = DiscoveryPageRenderer(host=host, options=_discovery_options(), rulespecs={})
-
-        rendered = renderer.render_datasources([(2, "[agent] Communication failed: node")])
-
-        assert rendered is not None
-        assert re.search(r'<td class="agent_hint">\s*<cmk-agent-download ', rendered)

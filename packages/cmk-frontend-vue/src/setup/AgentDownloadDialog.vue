@@ -14,9 +14,8 @@ import CmkTooltip, {
 } from 'cmk-ui-library/components/CmkTooltip'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
-import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { TooltipArrow } from 'reka-ui'
-import { computed, onBeforeUnmount, onMounted, ref, watchEffect } from 'vue'
+import { ref } from 'vue'
 
 import AgentSlideOutContent from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
 
@@ -42,75 +41,9 @@ const props = defineProps<Props>()
 
 const slideInOpen = ref(false)
 
-const MIN_HINT_WIDTH_PX = 300
-const MAX_TABLE_SHARE = 2 / 3
-
-const contentArea = ref(document.getElementById('content_area'))
-const messageContainer = ref(
-  document.querySelector<HTMLElement>('#datasources_container .message_container')
-)
-const triggerEl = ref<HTMLElement | null>(null)
-const hintEl = ref<HTMLElement | null>(null)
-
-const freeWidth = ref(Infinity)
-const hintBottom = ref(0)
-
-function measure() {
-  const trigger = triggerEl.value
-  const table = trigger?.closest('table')
-  if (!contentArea.value || !messageContainer.value || !trigger || !table) {
-    return
-  }
-  const containerRect = messageContainer.value.getBoundingClientRect()
-  const widestTableRight =
-    table.getBoundingClientRect().left + containerRect.width * MAX_TABLE_SHARE
-  freeWidth.value = contentArea.value.getBoundingClientRect().right - widestTableRight
-  hintBottom.value = hintEl.value
-    ? trigger.getBoundingClientRect().top -
-      containerRect.top +
-      hintEl.value.getBoundingClientRect().height
-    : 0
-}
-
-const { observe } = useResizeObserver(measure)
-observe(contentArea)
-observe(messageContainer)
-observe(hintEl)
-onMounted(measure)
-
 const localStorageKey = `service-discovery-${props.userId}-${props.agentSlideout.host_name}-hidden`
 const tooltipHidden = usePersistentRef(localStorageKey, false, (v) => v as boolean)
-
-const besideRows = computed(() => !messageContainer.value || freeWidth.value >= MIN_HINT_WIDTH_PX)
-const tooltipOpen = computed(() => !tooltipHidden.value && !slideInOpen.value && besideRows.value)
-const inlineOpen = computed(() => !tooltipHidden.value && !besideRows.value)
-
-watchEffect(() => {
-  if (messageContainer.value) {
-    messageContainer.value.style.minHeight =
-      tooltipOpen.value && hintBottom.value ? `${hintBottom.value}px` : ''
-  }
-})
-onBeforeUnmount(() => messageContainer.value?.style.removeProperty('min-height'))
-
-const alertProps = computed(() => ({
-  heading: props.dialogTitle,
-  text: props.dialogMessage,
-  variant: 'info' as const,
-  mainButton: {
-    title: props.slideInButtonTitle,
-    onclick: () => {
-      slideInOpen.value = true
-    }
-  },
-  optionalButton: {
-    title: props.hideButtonTitle,
-    icon: 'cancel' as const,
-    onclick: () => {
-      tooltipHidden.value = true
-    }
-  }
-}))
+const tooltipClosed = ref(false)
 
 // The rescan button always contains the current js call with all needed
 // params. Solution is not the best but without VUE on the setup page we have
@@ -125,38 +58,43 @@ const triggerRescan = () => {
 
 <template>
   <CmkTooltipProvider>
-    <CmkTooltip :open="tooltipOpen" class="tooltip">
-      <CmkTooltipTrigger as-child>
-        <span
-          ref="triggerEl"
-          class="setup-agent-download-dialog__trigger"
-          :data-agent-hint="tooltipOpen ? 'open' : undefined"
-        ></span>
-      </CmkTooltipTrigger>
+    <CmkTooltip :open="!tooltipHidden && !tooltipClosed" class="tooltip">
+      <CmkTooltipTrigger as="span"></CmkTooltipTrigger>
       <CmkTooltipContent
         variant="unstyled"
-        align="start"
+        align="center"
         side="right"
-        :side-offset="0"
         :avoid-collisions="false"
-        :collision-boundary="contentArea"
         :use-portal="true"
         class="setup-agent-download-dialog__tooltip-content"
       >
         <TooltipArrow
-          :style="{ fill: 'var(--cmk-alert-box-info-bg-color)' }"
-          :width="16"
-          :height="8"
+          :style="{ fill: 'var(--default-help-icon-bg-color)' }"
+          :width="6"
+          :height="6"
         />
-        <div ref="hintEl">
-          <CmkAlert v-bind="alertProps" class="setup-agent-download-dialog__alert" />
-        </div>
+        <CmkAlert
+          :heading="dialogTitle"
+          variant="info"
+          :main-button="{
+            title: slideInButtonTitle,
+            onclick: () => {
+              slideInOpen = true
+            }
+          }"
+          :optional-button="{
+            title: hideButtonTitle,
+            icon: 'cancel',
+            onclick: () => {
+              tooltipHidden = true
+            }
+          }"
+          class="setup-agent-download-dialog__dialog"
+          :text="dialogMessage"
+        />
       </CmkTooltipContent>
     </CmkTooltip>
   </CmkTooltipProvider>
-  <Teleport v-if="inlineOpen && messageContainer" :to="messageContainer">
-    <CmkAlert v-bind="alertProps" class="setup-agent-download-dialog__inline-alert" />
-  </Teleport>
   <CmkSlideInDialog
     :open="slideInOpen"
     :header="{ title: slideInTitle, closeButton: true }"
@@ -192,20 +130,9 @@ const triggerRescan = () => {
 </template>
 
 <style scoped>
-.setup-agent-download-dialog__trigger {
-  display: inline-block;
-  width: 0;
-  height: 1em;
-  vertical-align: middle;
-}
-
-.setup-agent-download-dialog__tooltip-content {
-  max-width: var(--reka-tooltip-content-available-width);
-}
-
-/* Start at the arrow, not below it */
-.setup-agent-download-dialog__tooltip-content .setup-agent-download-dialog__alert {
-  margin: 0;
+.setup-agent-download-dialog__dialog {
+  position: relative;
+  top: 25px;
 }
 </style>
 

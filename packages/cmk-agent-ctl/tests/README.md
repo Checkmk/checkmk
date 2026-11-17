@@ -30,6 +30,7 @@ at the repository root.
 | System      | The deployment of the site's agent package on a host with systemd                     | `non-free/tests/system/agent_updates/`                                                        | `non-free/tests/run_tests.sh test-system-agent-updates-docker`              |
 | System      | Privileged install step: trust anchors, unit lifetime, privileges, update permission  | `non-free/tests/system/agent_updates/install_step/`                                           | `non-free/tests/run_tests.sh test-system-agent-updates-docker`              |
 | System      | The agent MSI and the registration of the controller on a real Windows host           | `non-free/tests/system/agent_updates/windows/`                                                | `non-free/tests/run_tests.sh test-system-agent-updates-docker`              |
+| System      | The prebuilt agent package: fresh install, update from a released 2.5 package         | `non-free/tests/system/agent_updates/prebuilt/`                                               | `non-free/tests/run_tests.sh test-system-agent-updates-docker`              |
 | System      | Registration and status against real sites                                            | `tests/system/multisite/agents/`, `tests/system/multisite/controller_site_interactions/`      | `tests/run_tests.sh test-system-multisite-docker`                           |
 
 Several other system suites install the agent as a prerequisite, through the helpers in

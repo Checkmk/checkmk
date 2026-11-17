@@ -60,9 +60,15 @@ flowchart TD
   not run here.
 - **`cv/test-system-agent-updates`** runs only when someone posts
   `start: test-system-agent-updates` on a change. It runs on `ubuntu-24.04` with the Ultimate
-  edition, as the nightly run does, so it runs all cases against the baked deb.
-- **The suite tests the baked package.** The unbaked package, built from `agents/BUILD`,
-  `agents/debian/` and the `.spec` files, is not tested.
+  edition, as the nightly run does, so it runs all cases against the baked deb and the prebuilt
+  deb.
+- **The suite tests the baked package and the prebuilt package.** `agents/BUILD`,
+  `agents/debian/` and the `.spec` files build the prebuilt package, and the site of every
+  edition ships it. The cases in `non-free/tests/system/agent_updates/prebuilt/` download it
+  from the site and install it.
+- **The suite also installs the agent package of the newest released Checkmk 2.5.** The cases of
+  the update start from it. Every run downloads the Community site package of that version and
+  takes the agent package out of it, so a run needs the download server.
 
 ## Post-submit light
 
@@ -83,11 +89,12 @@ None of these jobs runs with faked artifacts. In the Pro jobs, the cases that ne
 edition skip themselves.
 
 The nightly build chain of the Ultimate edition also runs `test-system-agent-updates`, the
-suite `non-free/tests/system/agent_updates/`, twice: on `ubuntu-24.04` for the baked deb and on
-`almalinux-10` for the baked rpm. The baked package is the same in every edition that bakes, so
-one edition suffices. All cases run only in the Ultimate edition, because the registration with
-`register-new` needs the Ultimate edition. The job runs on a classic Docker node, because its test
-container boots systemd. The heavy trigger does not run it.
+suite `non-free/tests/system/agent_updates/`, twice: on `ubuntu-24.04` for the deb packages and
+on `almalinux-10` for the rpm packages. The baked package is the same in every edition that
+bakes, and the prebuilt package is the same in every edition, so one edition suffices. All cases
+run only in the Ultimate edition, because the registration with `register-new` needs the
+Ultimate edition. No job runs the suite against a Community site. The job runs on a classic
+Docker node, because its test container boots systemd. The heavy trigger does not run it.
 
 ## Package builds
 

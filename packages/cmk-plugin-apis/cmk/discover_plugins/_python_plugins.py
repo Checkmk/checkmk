@@ -240,7 +240,11 @@ class Collector[PluginType: _PluginProtocol]:
         try:
             module = importer(mod_name, raise_errors=True)
         except Exception as exc:
-            exc_sub = type(exc)(f"{mod_name}: {exc}")
+            try:
+                exc_sub = type(exc)(f"{mod_name}: {exc}")
+            except Exception:
+                # Not every exception (e.g. pydantic's ValidationError) can be built from a message
+                exc_sub = ImportError(f"{mod_name}: {exc}")
             self._handle_error(exc_sub)
             return
 

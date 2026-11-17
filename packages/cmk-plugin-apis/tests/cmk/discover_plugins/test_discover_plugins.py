@@ -121,6 +121,11 @@ class MyOtherPlugin:
 type AllMyPlugins = MyTestPlugin | MyOtherPlugin
 
 
+class _NoMessageConstructorError(Exception):
+    def __init__(self, detail: str, line_errors: list[str]) -> None:
+        super().__init__(f"{detail}: {line_errors}")
+
+
 class TestCollector:
     def _importer(self, module_name: str, raise_errors: bool) -> ModuleType | None:
         """Fake importable modules"""
@@ -139,6 +144,8 @@ class TestCollector:
                 )
             case "your_module":
                 return _make_module("your_module", [], your_plugin_1=MyOtherPlugin("herbert"))
+            case "my_broken_module":
+                raise _NoMessageConstructorError("invalid", ["missing field"])
             case _:
                 raise ValueError("this test seems broken")
 
@@ -242,3 +249,12 @@ class TestCollector:
             PluginLocation("my_module", "my_plugin_1"): MyTestPlugin("herta"),
             PluginLocation("your_module", "your_plugin_1"): MyOtherPlugin("herbert"),
         }
+
+    def test_import_error_without_message_constructor_recorded(self) -> None:
+        collector = Collector({MyTestPlugin: "my_"}, skip_wrong_types=False, raise_errors=False)
+        collector.add_from_module("my_broken_module", self._importer)
+
+        assert [str(e) for e in collector.errors] == [
+            "my_broken_module: invalid: ['missing field']"
+        ]
+        assert not collector.plugins

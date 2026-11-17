@@ -9,7 +9,6 @@
   "tests/dashboard/Wizard/DashboardSharing/composables/usePublicAccess.test.ts",
   "tests/dashboard/Wizard/components/DashboardSettings/DashboardScope.test.ts",
   "tests/dashboard/Wizard/components/DashboardSettings/GeneralProperties.test.ts",
-  "tests/dashboard/Wizard/components/DashboardSettings/useDashboardGeneralSettings.test.ts",
   "tests/dashboard/Wizard/components/WidgetVisualization/useWidgetVisualization.test.ts",
   "tests/dashboard/Wizard/components/autocompleters/AutocompleteMonitoredMetrics.test.ts",
   "tests/dashboard/Wizard/components/autocompleters/useLabelValueAutocomplete.test.ts",

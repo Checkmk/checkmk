@@ -6,21 +6,28 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 // eslint-disable-next-line no-restricted-imports -- TODO: migrate to @testing-library/vue, see https://checkmk-int.atlassian.net/wiki/x/no9lD
 import { flushPromises } from '@vue/test-utils'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { describe, expect, it, vi } from 'vitest'
-import { defineComponent, nextTick } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 
 import GeneralProperties from '@/dashboard/components/Wizard/components/DashboardSettings/GeneralProperties.vue'
-import * as utils from '@/dashboard/components/Wizard/components/DashboardSettings/utils'
+
+import { dashboardMetadata, dashboardMetadataListHandler } from '@tests/dashboard/apiHandlers'
 
 vi.mock('cmk-ui-library/lib/useDebounce', () => ({
   useDebounceFn: (fn: (...args: unknown[]) => unknown) => fn
 }))
 
-vi.mock('@/dashboard/components/Wizard/components/DashboardSettings/utils', () => ({
-  toSnakeCase: (str: string) => str.toLowerCase().replace(/\s+/g, '_'),
-  isIdInUse: vi.fn().mockResolvedValue(false),
-  generateUniqueId: vi.fn().mockResolvedValue('my_dashboard_1')
-}))
+const server = useMswServer(dashboardMetadataListHandler([], { allOwners: true }))
+
+function serveDashboardsOfAdmin(...names: string[]): void {
+  server.use(
+    dashboardMetadataListHandler(
+      names.map((name) => dashboardMetadata(name, name, 'admin')),
+      { allOwners: true }
+    )
+  )
+}
 
 vi.mock('@/dashboard/components/Wizard/components/IconSelector/IconSelector.vue', () => ({
   default: defineComponent({
@@ -67,6 +74,34 @@ const renderComponent = (
       dashboardEmblem: modelValues.dashboardEmblem ?? null
     }
   })
+}
+
+function renderWithModels(
+  props: { originalDashboardId?: string },
+  models: { name: string; createUniqueId: boolean; uniqueId: string }
+) {
+  const name = ref(models.name)
+  const createUniqueId = ref(models.createUniqueId)
+  const uniqueId = ref(models.uniqueId)
+  return render(
+    defineComponent({
+      setup: () => () =>
+        h(GeneralProperties, {
+          ...DEFAULT_PROPS,
+          ...props,
+          name: name.value,
+          'onUpdate:name': (value: string) => (name.value = value),
+          createUniqueId: createUniqueId.value,
+          'onUpdate:createUniqueId': (value: boolean) => (createUniqueId.value = value),
+          uniqueId: uniqueId.value,
+          'onUpdate:uniqueId': (value: string) => (uniqueId.value = value)
+        })
+    })
+  )
+}
+
+function findAutoIdCheckbox(uniqueId: string): Promise<HTMLElement> {
+  return screen.findByRole('checkbox', { name: `Automatically create unique ID: ${uniqueId}` })
 }
 
 describe('GeneralProperties', () => {
@@ -201,76 +236,45 @@ describe('GeneralProperties', () => {
 
   describe('Unique ID auto-generation', () => {
     it('generates unique ID from name when createUniqueId is true', async () => {
-      // Use a name that produces a different uniqueId than the default '' to ensure the emit fires
-      const { emitted } = renderComponent(
-        {},
-        { createUniqueId: true, name: 'New Dashboard', uniqueId: '' }
-      )
-      await flushPromises()
-      await nextTick()
-      const updates = emitted()['update:uniqueId']
-      expect(updates).toBeDefined()
+      renderWithModels({}, { createUniqueId: true, name: 'New Dashboard', uniqueId: '' })
+      expect(await findAutoIdCheckbox('new_dashboard')).toBeInTheDocument()
     })
 
     it('does not auto-generate unique ID when createUniqueId is false', async () => {
-      const { emitted } = renderComponent({}, { createUniqueId: false, name: 'My Dashboard' })
+      renderWithModels({}, { createUniqueId: false, name: 'New Dashboard', uniqueId: 'my_id' })
       await flushPromises()
       await nextTick()
-      expect(emitted()['update:uniqueId']).toBeUndefined()
+      expect(screen.getByRole('textbox', { name: 'Add unique ID' })).toHaveValue('my_id')
     })
 
-    it('forwards originalDashboardId to isIdInUse during auto-generation', async () => {
-      const isIdInUseMock = vi.mocked(utils.isIdInUse)
-      isIdInUseMock.mockClear()
+    it('keeps the ID of the dashboard that it edits', async () => {
+      serveDashboardsOfAdmin('my_dashboard')
 
-      renderComponent(
-        { originalDashboardId: 'original_id' },
+      renderWithModels(
+        { originalDashboardId: 'my_dashboard' },
         { createUniqueId: true, name: 'My Dashboard', uniqueId: '' }
       )
-      await flushPromises()
 
-      expect(isIdInUseMock).toHaveBeenCalledWith('admin', 'my_dashboard', 'original_id')
+      expect(await findAutoIdCheckbox('my_dashboard')).toBeInTheDocument()
     })
 
-    it('forwards originalDashboardId to generateUniqueId when the base ID is in use', async () => {
-      const isIdInUseMock = vi.mocked(utils.isIdInUse)
-      const generateUniqueIdMock = vi.mocked(utils.generateUniqueId)
-      isIdInUseMock.mockResolvedValueOnce(true)
-      generateUniqueIdMock.mockClear()
+    it('keeps the counted ID of the dashboard that it edits when the base ID is in use', async () => {
+      serveDashboardsOfAdmin('my_dashboard', 'my_dashboard_1')
 
-      renderComponent(
-        { originalDashboardId: 'original_id' },
+      renderWithModels(
+        { originalDashboardId: 'my_dashboard_1' },
         { createUniqueId: true, name: 'My Dashboard', uniqueId: '' }
       )
-      await flushPromises()
 
-      expect(generateUniqueIdMock).toHaveBeenCalledWith('admin', 'my_dashboard', 'original_id')
+      expect(await findAutoIdCheckbox('my_dashboard_1')).toBeInTheDocument()
     })
 
-    it('uses the base ID directly when it is not in use (clone scenario)', async () => {
-      const isIdInUseMock = vi.mocked(utils.isIdInUse)
-      isIdInUseMock.mockResolvedValueOnce(false)
+    it('counts the ID up when the base ID is in use', async () => {
+      serveDashboardsOfAdmin('my_dashboard')
 
-      const { emitted } = renderComponent(
-        { originalDashboardId: 'original_id' },
-        { createUniqueId: true, name: 'My Dashboard', uniqueId: '' }
-      )
-      await flushPromises()
-      await nextTick()
+      renderWithModels({}, { createUniqueId: true, name: 'My Dashboard', uniqueId: '' })
 
-      const updates = emitted()['update:uniqueId'] as string[][]
-      expect(updates).toBeDefined()
-      expect(updates[updates.length - 1]![0]).toBe('my_dashboard')
-    })
-
-    it('passes undefined to isIdInUse when originalDashboardId is not provided', async () => {
-      const isIdInUseMock = vi.mocked(utils.isIdInUse)
-      isIdInUseMock.mockClear()
-
-      renderComponent({}, { createUniqueId: true, name: 'My Dashboard', uniqueId: '' })
-      await flushPromises()
-
-      expect(isIdInUseMock).toHaveBeenCalledWith('admin', 'my_dashboard', undefined)
+      expect(await findAutoIdCheckbox('my_dashboard_1')).toBeInTheDocument()
     })
   })
 })

@@ -3,16 +3,21 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { describe, expect, it, vi } from 'vitest'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { describe, expect, it } from 'vitest'
 
 import { useDashboardGeneralSettings } from '@/dashboard/components/Wizard/components/DashboardSettings/composables/useDashboardGeneralSettings.ts'
 import type { DashboardGeneralSettings } from '@/dashboard/types/dashboard'
 
-vi.mock('@/dashboard/components/Wizard/components/DashboardSettings/utils', () => ({
-  isValidSnakeCase: (str: string) => /^[a-z0-9_]+$/.test(str),
-  isIdInUse: async (owner: string, id: string) =>
-    id === 'existing_dashboard' && owner === 'existing_user'
-}))
+import { dashboardMetadata, dashboardMetadataListHandler } from '@tests/dashboard/apiHandlers'
+
+useMswServer(
+  dashboardMetadataListHandler(
+    [dashboardMetadata('existing_dashboard', 'Existing dashboard', 'existing_user')],
+    { allOwners: true }
+  )
+)
+
 describe('useDashboardGeneralSettings Composable', () => {
   describe('Initialization', () => {
     it('should initialize with default values when no initial settings provided', async () => {

@@ -1,4 +1,4 @@
-title: Sansymphony: Pool
+title: DataCore SANsymphony: Pools
 catalog: app/sansymphony
 agents: windows
 distribution: check_mk

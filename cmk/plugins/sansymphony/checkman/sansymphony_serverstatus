@@ -1,4 +1,4 @@
-title: Sansymphony: Serverstatus
+title: DataCore SANsymphony: Server Status
 agents: windows
 catalog: app/sansymphony
 distribution: check_mk

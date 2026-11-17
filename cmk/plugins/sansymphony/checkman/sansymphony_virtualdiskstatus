@@ -1,4 +1,4 @@
-title: Sansymphony: Virtualdiskstatus
+title: DataCore SANsymphony: Virtual Disk Status
 agents: windows
 catalog: app/sansymphony
 distribution: check_mk

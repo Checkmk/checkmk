@@ -1,4 +1,4 @@
-title: Sansymphony: Ports
+title: DataCore SANsymphony: Ports
 agents: windows
 catalog: app/sansymphony
 distribution: check_mk

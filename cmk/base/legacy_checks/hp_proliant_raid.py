@@ -23,6 +23,8 @@ class HpProRaid(typing.NamedTuple):
 def parse_hp_proliant_raid(string_table):
     parsed: dict[str, HpProRaid] = {}
     for number, name, status, size_str, rebuild in string_table:
+        if not number:
+            continue
         itemname = sanitize_item(f"{name} {number}".strip())
         parsed.setdefault(
             itemname,

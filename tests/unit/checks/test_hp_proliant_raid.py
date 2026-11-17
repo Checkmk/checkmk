@@ -128,11 +128,6 @@ def test_check_hp_proliant_raid_progress_cannot_be_determined(
     ]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report eaecca2a-e262-11f1-bdd7-005056bee7db: ValueError",
-)
 def test_discover_hp_proliant_raid_skips_empty_row(
     check_plugin: CheckPlugin,
     section_plugin: SNMPSectionPlugin,

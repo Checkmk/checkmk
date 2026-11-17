@@ -1,4 +1,4 @@
-title: BEA WebLogic: JVM Sessions
+title: Oracle WebLogic: JVM Sessions
 agents: linux, windows
 catalog: app/java
 license: GPLv2

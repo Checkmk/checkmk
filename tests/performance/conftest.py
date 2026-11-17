@@ -14,27 +14,17 @@ from typing import Literal
 
 import pytest
 
-# Has to precede the imports below: a module already imported cannot be rewritten, and it is
-# the scenarios that carry the assertions now - `perftest` holds only the state they share.
-pytest.register_assert_rewrite(
-    "tests.performance.activation.scenario",
-    "tests.performance.hosts.scenario",
-    "tests.performance.nagios.scenario",
-    "tests.performance.services.scenario",
-    "tests.performance.ui_response.scenario",
-)
-
-from tests.testlib.site import (  # noqa: E402
+from tests.testlib.site import (
     connection,
     get_site_factory,
     GlobalSettingsUpdate,
     Site,
     tracing_config_from_env,
 )
-from tests.testlib.utils import is_containerized, run  # noqa: E402
+from tests.testlib.utils import is_containerized, run
 
-from tests.performance.perftest import PerformanceTest  # noqa: E402
-from tests.performance.sysmon import track_resources  # noqa: E402
+from tests.performance.perftest import PerformanceTest
+from tests.performance.sysmon import track_resources
 
 site_factory = get_site_factory(prefix="perf_")
 

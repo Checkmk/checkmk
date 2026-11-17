@@ -2,16 +2,12 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import concurrent.futures
 import io
 import json
 import tarfile
-import threading
 import uuid
-from collections.abc import Callable, Iterator
 from http import HTTPStatus
 from pathlib import Path
-from typing import override
 
 import pytest
 from fastapi import FastAPI
@@ -36,17 +32,6 @@ def crashes_dir(site_context: Config) -> Path:
     crashes = site_context.crashes_dir
     crashes.parent.mkdir(parents=True)  # var/check_mk, where the staging dirs are created
     return crashes
-
-
-@pytest.fixture
-def gate() -> Iterator[threading.Event]:
-    """Released here rather than in the test body: an assertion failing above that line
-    would otherwise park a pool worker forever, and its atexit join hangs the suite."""
-    gate = threading.Event()
-    try:
-        yield gate
-    finally:
-        gate.set()
 
 
 @pytest.fixture
@@ -194,104 +179,23 @@ def crash_archive(*extra_members: str, payload: bytes = b"some agent output") ->
     return buffer.getvalue()
 
 
-class _CountingPool(concurrent.futures.ThreadPoolExecutor):
-    def __init__(self) -> None:
-        super().__init__(max_workers=1)
-        self.submissions = 0
-
-    @override
-    def submit[T, **P](
-        self, fn: Callable[P, T], /, *args: P.args, **kwargs: P.kwargs
-    ) -> concurrent.futures.Future[T]:
-        self.submissions += 1
-        return super().submit(fn, *args, **kwargs)
-
-
-class _GatedPool(concurrent.futures.ThreadPoolExecutor):
-    """One worker, whose job blocks on `gate`. submit() returns only once the job is
-    running, the state asyncio.wait_for cannot cancel. Takes a single job: a second one
-    would queue and block submit(), which the handler calls on the event loop."""
-
-    def __init__(self, gate: threading.Event) -> None:
-        super().__init__(max_workers=1)
-        self._gate = gate
-
-    @override
-    def submit[T, **P](
-        self, fn: Callable[P, T], /, *args: P.args, **kwargs: P.kwargs
-    ) -> concurrent.futures.Future[T]:
-        running = threading.Event()
-
-        def job() -> T:
-            running.set()
-            self._gate.wait()
-            return fn(*args, **kwargs)
-
-        future = super().submit(job)
-        running.wait()
-        return future
-
-
-@pytest.mark.usefixtures("crashes_dir")
-def test_extraction_goes_through_the_injected_executor(
-    relay: RelayClient, relay_app: FastAPI
+def test_a_slow_unpack_answers_503_and_the_retry_stores_the_crash(
+    crashes_dir: Path, relay: RelayClient, relay_app: FastAPI
 ) -> None:
-    """The default executor is shared with lib.auth's credential lookup, so crash
-    unpacking must not consume it: a burst would then delay every other request."""
-    pool = _CountingPool()
-    relay_app.dependency_overrides[dependencies.get_crash_extraction_executor] = lambda: pool
-
-    response = relay.submit_crash(CRASH_TYPE, str(uuid.uuid4()), crash_archive())
-
-    assert response.status_code == HTTPStatus.NO_CONTENT, response.text
-    assert pool.submissions == 1
-
-
-def test_the_crash_extraction_pool_is_process_wide() -> None:
-    """A pool built per request would spawn threads without bound under a burst, which
-    the test above cannot see because it overrides this provider away."""
-    assert (
-        dependencies.get_crash_extraction_executor() is dependencies.get_crash_extraction_executor()
-    )
-
-
-def test_a_running_extraction_answers_503_and_still_stores_the_crash(
-    crashes_dir: Path, relay: RelayClient, relay_app: FastAPI, gate: threading.Event
-) -> None:
-    """503 is not in the relay's terminal set, so it keeps the crash and retries; the
-    retry then finds crash.info because the running thread finishes on its own."""
-    pool = _GatedPool(gate)
+    """503 is not in the relay's terminal set, so it keeps the crash and retries."""
     relay_app.dependency_overrides[dependencies.get_store_crash_report_handler] = lambda: (
-        StoreCrashReportHandler(crashes_base=crashes_dir, executor=pool, timeout=0.05)
+        StoreCrashReportHandler(crashes_base=crashes_dir, timeout=0.001)
     )
     crash_id = str(uuid.uuid4())
+    archive = crash_archive(payload=bytes(24 * 1024 * 1024))
 
-    response = relay.submit_crash(CRASH_TYPE, crash_id, crash_archive())
+    timed_out = relay.submit_crash(CRASH_TYPE, crash_id, archive)
+    relay_app.dependency_overrides.clear()
+    retried = relay.submit_crash(CRASH_TYPE, crash_id, archive)
 
-    assert response.status_code == HTTPStatus.SERVICE_UNAVAILABLE, response.text
-    gate.set()
-    pool.shutdown(wait=True)
+    assert timed_out.status_code == HTTPStatus.SERVICE_UNAVAILABLE, timed_out.text
+    assert retried.status_code == HTTPStatus.NO_CONTENT, retried.text
     assert (crashes_dir / CRASH_TYPE / crash_id / "crash.info").is_file()
-
-
-def test_an_extraction_still_queued_answers_503_and_stores_nothing(
-    crashes_dir: Path, relay: RelayClient, relay_app: FastAPI, gate: threading.Event
-) -> None:
-    """wait_for cancels a job that has not started yet, so this retry redoes the whole
-    unpack: the timeout is only cheap for the running case above."""
-    pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-    pool.submit(gate.wait)  # occupies the only worker, so the crash queues behind it
-    relay_app.dependency_overrides[dependencies.get_store_crash_report_handler] = lambda: (
-        StoreCrashReportHandler(crashes_base=crashes_dir, executor=pool, timeout=0.05)
-    )
-    crash_id = str(uuid.uuid4())
-
-    response = relay.submit_crash(CRASH_TYPE, crash_id, crash_archive())
-
-    assert response.status_code == HTTPStatus.SERVICE_UNAVAILABLE, response.text
-    gate.set()
-    pool.shutdown(wait=True)
-    assert not (crashes_dir / CRASH_TYPE / crash_id).exists()
 
 
 def test_a_site_side_failure_is_not_reported_as_a_bad_archive(

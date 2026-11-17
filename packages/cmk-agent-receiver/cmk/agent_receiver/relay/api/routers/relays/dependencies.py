@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import concurrent.futures
-from functools import cache
 from typing import Annotated
 
 import fastapi
@@ -63,21 +61,9 @@ async def get_forward_monitoring_data_handler(
     )
 
 
-@cache
-def get_crash_extraction_executor() -> concurrent.futures.ThreadPoolExecutor:
-    # Own threads, as an extraction past its timeout keeps running: only a pool caps the
-    # threads, a limiter around a shared one releases its slot on the timeout already.
-    return concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix="crash-extract")
-
-
 async def get_store_crash_report_handler(
     config: Annotated[Config, fastapi.Depends(config_dependency)],
-    executor: Annotated[
-        concurrent.futures.Executor, fastapi.Depends(get_crash_extraction_executor)
-    ],
 ) -> StoreCrashReportHandler:
     return StoreCrashReportHandler(
-        crashes_base=config.crashes_dir,
-        executor=executor,
-        timeout=config.crash_extraction_timeout,
+        crashes_base=config.crashes_dir, timeout=config.crash_extraction_timeout
     )

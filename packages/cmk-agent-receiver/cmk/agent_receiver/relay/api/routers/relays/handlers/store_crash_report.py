@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import asyncio
-import concurrent.futures
 import dataclasses
 import errno
-import functools
 import shutil
 import tarfile
 import tempfile
 from pathlib import Path
+
+from fastapi.concurrency import run_in_threadpool
 
 from cmk.ccc import tar_archive
 
@@ -33,7 +33,6 @@ class CrashExtractionTimeoutError(Exception):
 @dataclasses.dataclass(frozen=True)
 class StoreCrashReportHandler:
     crashes_base: Path
-    executor: concurrent.futures.Executor
     timeout: float
 
     async def process(self, *, crash_type: str, crash_id: str, archive: bytes) -> None:
@@ -47,20 +46,13 @@ class StoreCrashReportHandler:
         network-backed crashes_base) is reported as the timeout rather than as a
         plain site-wide one -- harmless here since both are non-terminal.
         """
-        # Off the loop: unpacking a crash stalls every other request for 5-25 ms.
-        loop = asyncio.get_running_loop()
+        # Off the loop: unpacking a crash stalls every other request for 5-25 ms. Crashes
+        # are rare, so they share the default threads instead of keeping a pool of their own.
         try:
-            await asyncio.wait_for(
-                loop.run_in_executor(
-                    self.executor,
-                    functools.partial(self._store, crash_type, crash_id, archive),
-                ),
-                timeout=self.timeout,
-            )
+            async with asyncio.timeout(self.timeout):
+                await run_in_threadpool(self._store, crash_type, crash_id, archive)
         except TimeoutError as e:
-            # A thread already extracting is not cancellable and finishes storing the crash,
-            # so the relay's retry finds it and answers 204 at once. One still queued is
-            # cancelled instead, and its retry redoes the unpack.
+            # The relay keeps the crash on a 503 and retries.
             raise CrashExtractionTimeoutError from e
 
     def _store(self, crash_type: str, crash_id: str, archive: bytes) -> None:

@@ -14,6 +14,7 @@ from typing import Literal
 
 import pytest
 
+from tests.performance import benchmark_json
 from tests.performance.sysmon import track_resources
 from tests.performance.system.perftest import PerformanceTest
 from tests.testlib.site import (
@@ -30,7 +31,9 @@ site_factory = get_site_factory(prefix="perf_")
 logger = logging.getLogger(__name__)
 
 
-def pytest_addoption(parser: pytest.Parser) -> None:
+def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
+    if not pluginmanager.is_registered(benchmark_json):
+        pluginmanager.register(benchmark_json, name=benchmark_json.__name__)
     parser.addoption(
         "--iterations",
         action="store",

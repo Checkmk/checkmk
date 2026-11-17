@@ -15,7 +15,10 @@ export const ACTION_PANE_MIN_WIDTH = '520px'
 
 /** The column of a row's action buttons and its action menu. */
 export const ACTIONS_COLUMN_ID = 'actions'
-/** The width the actions column's header needs to read in full. */
+/**
+ * The narrowest the actions column gets: the width All hosts has always given it, which fits
+ * its header in English. A longer translation of the header may not fit.
+ */
 export const ACTIONS_HEADER_WIDTH = 75
 
 /**

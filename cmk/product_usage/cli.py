@@ -216,7 +216,7 @@ def _read_cloud_license_state() -> LicenseState:
     )
 
     # Without the commercial packages the import is untyped, so pin the type here
-    state: LicenseState = get_available_licensing_handler_factory(Edition.CLOUD)().state
+    state: LicenseState = get_available_licensing_handler_factory(Edition.CLOUD)(debug=False).state
     return state
 
 

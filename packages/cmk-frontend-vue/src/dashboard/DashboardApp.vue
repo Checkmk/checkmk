@@ -730,6 +730,7 @@ const reviewFilters = () => {
           :logged-in-user="logged_in_user"
           :permissions="permissions"
           :shareable-contact-groups="shareable_contact_groups"
+          :shareable-sites="shareable_sites"
           @cancel="openDashboardSettings = false"
           @save="updateDashboardSettings"
         />

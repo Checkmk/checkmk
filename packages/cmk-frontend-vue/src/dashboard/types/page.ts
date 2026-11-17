@@ -54,6 +54,7 @@ export interface DashboardPageProperties {
   available_features: { dashboard_features: DashboardFeatures; ntop_active: boolean }
   permissions: DashboardPermissions
   shareable_contact_groups: DualListElement[]
+  shareable_sites: DualListElement[]
   logged_in_user: string
 }
 

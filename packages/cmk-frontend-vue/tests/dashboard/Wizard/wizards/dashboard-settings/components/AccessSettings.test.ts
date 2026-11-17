@@ -7,8 +7,6 @@ import { fireEvent, render, screen, within } from '@testing-library/vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
-import { CmkFetchError } from '@/lib/cmkFetch'
-
 import AccessSettings from '@/dashboard/components/Wizard/wizards/components/AccessSettings.vue'
 import type { DashboardPermissions } from '@/dashboard/types/page'
 import type { DashboardShare } from '@/dashboard/types/shared'
@@ -27,22 +25,17 @@ const shareableContactGroups = [
   { name: 'operators', title: 'Operators' }
 ]
 
-const mockGetSites = vi.hoisted(() =>
-  vi.fn().mockResolvedValue([
-    { name: 'site1', title: 'Site 1' },
-    { name: 'site2', title: 'Site 2' }
-  ])
-)
-
-vi.mock('@/dashboard/components/Wizard/wizards/dashboard-settings/api', () => ({
-  getSites: mockGetSites
-}))
+const shareableSites = [
+  { name: 'site1', title: 'Site 1' },
+  { name: 'site2', title: 'Site 2' }
+]
 
 async function renderAccessSettings(
   share: DashboardShare = 'no',
   errors: string[] = [],
   permissions: DashboardPermissions = allPermissions,
-  contactGroups = shareableContactGroups
+  contactGroups = shareableContactGroups,
+  sites = shareableSites
 ) {
   const shareRef = ref(share)
   const wrapper = defineComponent({
@@ -53,7 +46,8 @@ async function renderAccessSettings(
           'onUpdate:share': (v: DashboardShare) => (shareRef.value = v),
           errors,
           permissions,
-          shareableContactGroups: contactGroups
+          shareableContactGroups: contactGroups,
+          shareableSites: sites
         })
     }
   })
@@ -144,16 +138,6 @@ describe('AccessSettings', () => {
     it('does not render inline validation when there are no errors', async () => {
       await renderAccessSettings({ type: 'with_contact_groups', contact_groups: [] }, [])
       expect(screen.queryByText('Selection required')).not.toBeInTheDocument()
-    })
-  })
-
-  describe('API error handling', () => {
-    it('clears available elements on 403 from getSites during loadAvailableElements', async () => {
-      mockGetSites.mockRejectedValueOnce(new CmkFetchError('Forbidden', null, '', 403))
-      await renderAccessSettings({ type: 'with_sites', sites: [] })
-      const dualList = screen.getByRole('group', { name: 'Visual information' })
-      expect(within(dualList).queryByText('Site 1')).not.toBeInTheDocument()
-      expect(within(dualList).queryByText('Site 2')).not.toBeInTheDocument()
     })
   })
 

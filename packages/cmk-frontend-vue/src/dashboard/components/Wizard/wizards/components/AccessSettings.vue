@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { CmkFetchError } from '@/lib/cmkFetch'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
@@ -20,24 +19,19 @@ import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue
 import type { DashboardPermissions } from '@/dashboard/types/page'
 import { type DashboardShare } from '@/dashboard/types/shared'
 
-import { getSites } from '../dashboard-settings/api'
-
 const { _t } = usei18n()
 
 interface AccessSettingsProps {
   errors: TranslatedString[]
   permissions: DashboardPermissions
   shareableContactGroups: DualListElement[]
+  shareableSites: DualListElement[]
 }
 
 const props = defineProps<AccessSettingsProps>()
 
 const share = defineModel<DashboardShare>('share', { required: true })
 
-type ShareType = 'with_sites' | 'with_contact_groups' | 'with_all_users' | 'no'
-
-const isLoading = ref<boolean>(false)
-const availableElements = ref<DualListElement[]>([])
 const selectedContactGroups = ref<string[]>([])
 const selectedSites = ref<string[]>([])
 
@@ -78,30 +72,6 @@ const selectedElements = computed({
   }
 })
 
-const loadAvailableElements = async (shareMode: ShareType) => {
-  const fetchers: Record<string, () => Promise<DualListElement[]>> = {
-    with_contact_groups: async () => props.shareableContactGroups,
-    with_sites: getSites
-  }
-
-  const fetchData = fetchers[shareMode]
-  if (!fetchData) {
-    return
-  }
-
-  isLoading.value = true
-  try {
-    availableElements.value = await fetchData()
-  } catch (e) {
-    if (!(e instanceof CmkFetchError && (e.statusCode === 401 || e.statusCode === 403))) {
-      throw e
-    }
-    availableElements.value = []
-  } finally {
-    isLoading.value = false
-  }
-}
-
 const shareMode = computed({
   get(): string {
     if (share.value === 'no') {
@@ -115,29 +85,36 @@ const shareMode = computed({
     switch (newMode) {
       case 'with_sites':
         share.value = { type: 'with_sites', sites: selectedSites.value }
-        void loadAvailableElements('with_sites')
         break
 
       case 'with_contact_groups':
         share.value = { type: 'with_contact_groups', contact_groups: selectedContactGroups.value }
-        void loadAvailableElements('with_contact_groups')
         break
 
       case 'with_all_users':
         share.value = { type: 'with_all_users' }
-        availableElements.value = []
         break
 
       default:
         share.value = 'no'
-        availableElements.value = []
         break
     }
   }
 })
 
+const availableElements = computed((): DualListElement[] => {
+  switch (shareMode.value) {
+    case 'with_contact_groups':
+      return props.shareableContactGroups
+    case 'with_sites':
+      return props.shareableSites
+    default:
+      return []
+  }
+})
+
 const displayDualList = computed((): boolean => {
-  return !isLoading.value && ['with_contact_groups', 'with_sites'].includes(shareMode.value)
+  return ['with_contact_groups', 'with_sites'].includes(shareMode.value)
 })
 
 // Only offer share targets the user may publish to (also enforced on save).
@@ -166,10 +143,6 @@ const shareOptions = computed((): ToggleButtonOption[] => {
 
   return options
 })
-
-if (shareMode.value === 'with_contact_groups' || shareMode.value === 'with_sites') {
-  await loadAvailableElements(shareMode.value as ShareType)
-}
 </script>
 
 <template>

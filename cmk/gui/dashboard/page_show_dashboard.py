@@ -16,6 +16,8 @@ from collections.abc import Collection
 from dataclasses import asdict
 from typing import Literal
 
+from livestatus import SiteConfigurations
+
 import cmk.ccc.version as cmk_version
 from cmk.gui import hooks, userdb, visuals
 from cmk.gui.exceptions import MKAuthException
@@ -161,6 +163,10 @@ def page_dashboard_app(ctx: PageContext) -> None:
             may_share_with_own=user.may("general.publish_dashboards_to_groups"),
             may_share_with_foreign=user.may("general.publish_dashboards_to_foreign_groups"),
         ),
+        "shareable_sites": shareable_sites(
+            user.authorized_sites(ctx.config.sites),
+            may_share=user.may("general.publish_dashboards_to_sites"),
+        ),
         "logged_in_user": user.id,
     }
 
@@ -185,6 +191,12 @@ def shareable_contact_groups(
         for name, spec in contact_groups.items()
         if may_share_with_foreign or (may_share_with_own and name in own_groups)
     ]
+
+
+def shareable_sites(sites: SiteConfigurations, *, may_share: bool) -> list[dict[str, str]]:
+    if not may_share:
+        return []
+    return [{"name": site_id, "title": spec["alias"] or site_id} for site_id, spec in sites.items()]
 
 
 def _get_default_dashboard_name() -> str:

@@ -20,6 +20,7 @@ defineProps<{
   loggedInUser: string
   permissions: DashboardPermissions
   shareableContactGroups: DualListElement[]
+  shareableSites: DualListElement[]
 }>()
 
 const emit = defineEmits<{
@@ -42,6 +43,7 @@ const save = (dashboardId: string, generalSettings: DashboardGeneralSettings) =>
         :logged-in-user="loggedInUser"
         :permissions="permissions"
         :shareable-contact-groups="shareableContactGroups"
+        :shareable-sites="shareableSites"
         @cancel="() => emit('cancel')"
         @save="save"
       />

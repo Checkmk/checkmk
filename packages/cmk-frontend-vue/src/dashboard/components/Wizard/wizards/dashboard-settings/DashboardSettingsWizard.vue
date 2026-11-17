@@ -36,6 +36,7 @@ const props = defineProps<{
   loggedInUser: string
   permissions: DashboardPermissions
   shareableContactGroups: DualListElement[]
+  shareableSites: DualListElement[]
 }>()
 
 const emit = defineEmits<{
@@ -229,6 +230,7 @@ const hasVisibilityErrors = computed(() => sortIndexError.value.length > 0)
               :errors="accessErrors"
               :permissions="permissions"
               :shareable-contact-groups="shareableContactGroups"
+              :shareable-sites="shareableSites"
             />
           </CmkTabContent>
           <CmkTabContent id="visibility" class="db-settings-wizard__box">

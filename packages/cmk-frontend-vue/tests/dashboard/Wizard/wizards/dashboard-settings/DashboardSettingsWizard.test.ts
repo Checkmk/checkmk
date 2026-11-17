@@ -58,7 +58,8 @@ const defaultProps = {
     publish_to_foreign_contact_groups: true,
     publish_to_sites: true
   },
-  shareableContactGroups: []
+  shareableContactGroups: [],
+  shareableSites: []
 }
 
 async function renderWizard(

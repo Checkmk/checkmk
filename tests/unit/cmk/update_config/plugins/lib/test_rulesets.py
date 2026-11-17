@@ -18,6 +18,7 @@ from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChan
 from cmk.gui.watolib.rulesets import Rule, RuleConditions, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import Rulespec
+from cmk.gui.watolib.utils import wato_root_dir
 from cmk.update_config.plugins.lib import rulesets as rulesets_updater
 
 
@@ -244,6 +245,33 @@ def test_transform_replaced_wato_rulesets_and_params(
     rule = rules[0]
     assert len(rule) == 3
     assert rule[2].value == transformed_param_value
+
+
+def test_load_and_transform_deletes_rules_of_removed_systemd_rulesets(tree: FolderTree) -> None:
+    (wato_root_dir() / "rules.mk").write_text(
+        "checkgroup_parameters.setdefault('systemd_services', [])\n"
+        "checkgroup_parameters['systemd_services'] = [{'id': '1', 'value': {}, 'condition': {}}]\n"
+        "discovery_parameters.setdefault('discovery_systemd_units_services_rules', [])\n"
+        "discovery_parameters['discovery_systemd_units_services_rules'] ="
+        " [{'id': '2', 'value': {}, 'condition': {}}]\n"
+        "discovery_systemd_units_services_rules = [{'id': '3', 'value': {}, 'condition': {}}]\n"
+    )
+
+    all_rulesets = rulesets_updater.load_and_transform(
+        tree,
+        getLogger(),
+        pending_changes=PendingChanges(
+            activation_sites=SiteConfigurations({}),
+            local_site=omd_site(),
+            acting_user=None,
+            store=NoopPendingChangesStore(),
+            hooks=(),
+        ),
+        use_new_descriptions_for={},
+        debug=True,
+    )
+
+    assert not any(all_rulesets.get_unknown_rulesets().values())
 
 
 def test_transform_remove_null_host_tag_conditions_from_rulesets(

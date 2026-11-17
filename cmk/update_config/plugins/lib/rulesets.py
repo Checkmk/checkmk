@@ -66,8 +66,13 @@ RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}
 
 DEPRECATED_RULESET_PATTERNS: Sequence[re.Pattern] = ()
 
-# Rulesets that have been removed without previous deprecation
-REMOVED_RULESETS: Iterable[RulesetName] = ()
+# Rulesets that are no longer registered; their stored rules are deleted
+REMOVED_RULESETS: Iterable[RulesetName] = (
+    # 3.0: deprecated by werk 14781
+    RuleGroup.CheckgroupParameters("systemd_services"),
+    RuleGroup.DiscoveryParameters("discovery_systemd_units_services_rules"),
+    "discovery_systemd_units_services_rules",
+)
 
 SKIP_ACTION: Final = {
     # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can

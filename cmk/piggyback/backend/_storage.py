@@ -81,7 +81,9 @@ def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
     host_folder_mask = Masks.MOVED_TO | Masks.DELETE_SELF
 
     with INotify() as inotify:
-        watch_for_new_piggybacked_hosts = inotify.add_watch(payload_dir(omd_root), Masks.CREATE)
+        watch_for_new_piggybacked_hosts = inotify.add_watch(
+            payload_dir(omd_root), Masks.CREATE | Masks.MOVED_TO
+        )
         watch_for_deleted_status_files = inotify.add_watch(
             source_status_dir(omd_root), Masks.DELETE
         )
@@ -114,7 +116,8 @@ def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
 
             # check if a new piggybacked host folder was created
             if event.watchee == watch_for_new_piggybacked_hosts:
-                if event.type & Masks.CREATE:
+                # a host rename moves the folder in: watching it again tracks its new name
+                if event.type & (Masks.CREATE | Masks.MOVED_TO):
                     inotify.add_watch(event.watchee.path / event.name, host_folder_mask)
                     # Handle all files already in the folder (we rather have duplicates than missing files)
                     yield from get_messages_for(HostAddress(event.name), omd_root)

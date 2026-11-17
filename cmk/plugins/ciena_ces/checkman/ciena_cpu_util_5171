@@ -1,4 +1,4 @@
-title: Ciena 5171: CPU Utilization
+title: Ciena: 5171 CPU Utilization
 agents: snmp
 catalog: hw/network/ciena
 license: GPLv2

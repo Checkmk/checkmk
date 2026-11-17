@@ -1,4 +1,4 @@
-title: Ciena 5171: CFM Service Status
+title: Ciena: 5171 CFM Services
 agents: snmp
 catalog: hw/network/ciena
 license: GPLv2

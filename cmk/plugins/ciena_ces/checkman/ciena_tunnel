@@ -1,4 +1,4 @@
-title: Ciena 5171 & 5142: Tunnel Status
+title: Ciena: Tunnels
 agents: snmp
 catalog: hw/network/ciena
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Ciena 5171: PM instance Tx/Rx Bytes
+title: Ciena: 5171 PM Instance Tx/Rx Bytes
 agents: snmp
 catalog: hw/network/ciena
 license: GPLv2

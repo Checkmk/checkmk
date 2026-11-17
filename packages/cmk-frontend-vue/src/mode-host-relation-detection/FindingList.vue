@@ -344,9 +344,13 @@ function addValue(picked: string | null): void {
             ? _t(
                 'Checkmk found no host named like another plus a word - "srv-01-ilo" next to "srv-01", for example. If your hosts are named another way, enter the word below.'
               )
-            : _t(
-                'Checkmk found no label or attribute whose values each sit on a handful of hosts, the way a serial number does. Pick the one your hosts share below.'
-              )
+            : addableValues.size > 0
+              ? _t(
+                  'Checkmk found no label or attribute whose values each sit on a handful of hosts, the way a serial number does. Pick the one your hosts share below.'
+                )
+              : _t(
+                  'Checkmk found no host labels or custom host attributes that could relate these hosts. Go back and select "Host names", or add a label to the hosts that belong together.'
+                )
       }}
     </CmkParagraph>
 
@@ -699,10 +703,7 @@ function addValue(picked: string | null): void {
               {{ _t('Add word') }}
             </CmkButton>
           </div>
-          <div
-            v-if="inValues && (props.labelNames.length > 0 || props.attributeNames.length > 0)"
-            class="mode-host-relation-detection-finding-list__question"
-          >
+          <div v-if="inValues" class="mode-host-relation-detection-finding-list__question">
             <CmkLabel :for="addValueId">{{ _t('A value hosts share') }}</CmkLabel>
             <CmkDropdown
               :component-id="addValueId"
@@ -710,6 +711,7 @@ function addValue(picked: string | null): void {
               :options="sharedValueOptions"
               :label="_t('A value hosts share')"
               :input-hint="_t('Pick a label or attribute')"
+              :no-results-hint="_t('No host labels or custom host attributes available')"
               :disabled="props.busy"
               @update:model-value="addValue"
             />

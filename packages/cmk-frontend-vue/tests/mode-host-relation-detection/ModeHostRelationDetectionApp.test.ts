@@ -812,6 +812,30 @@ test('a value the user adds means nothing until the user says what it is', async
   screen.getByText('"cmdb/kind" has been looked up and is listed above.')
 })
 
+test('the value picker opens and says so when the hosts have nothing to pick', async () => {
+  server.use(
+    http.post(SUGGEST_URL, () =>
+      HttpResponse.json({
+        hosts_scanned: 4,
+        words: [],
+        values: [],
+        label_names: ['cmk/os_family'],
+        attribute_names: []
+      })
+    )
+  )
+  renderApp()
+  await userEvent.click(await screen.findByRole('checkbox', { name: 'Host names' }))
+  await lookThroughTheHosts({ values: true })
+
+  await userEvent.click(await screen.findByRole('combobox', { name: 'A value hosts share' }))
+
+  await screen.findByText('No host labels or custom host attributes available')
+  screen.getByText(
+    /Checkmk found no host labels or custom host attributes that could relate these hosts/
+  )
+})
+
 test('every relation a search matches can be taken out at once', async () => {
   const many = Array.from({ length: 8 }, (_unused, index) =>
     row(`srv-0${index}-ilo`, `srv-0${index}`)

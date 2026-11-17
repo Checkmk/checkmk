@@ -10,7 +10,6 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref } from 'vue'
 
-import type { SampleIndexRange } from '../../types'
 import MetricAttributesTable from '../MetricAttributesTable.vue'
 import type { HorizontalLine, Metric, ShadedRegion, UnitFormat } from '../TimeSeriesGraph'
 import {
@@ -47,7 +46,6 @@ const props = withDefaults(
     valueResolution?: number | null
     /** The unit the graph labels its value axis in; null leaves each metric in its own unit. */
     axisUnit?: UnitFormat | null
-    drawnSamples?: SampleIndexRange | null
   }>(),
   {
     horizontalLines: () => [],
@@ -57,8 +55,7 @@ const props = withDefaults(
     hiddenLineNames: () => [],
     fillHeight: false,
     valueResolution: null,
-    axisUnit: null,
-    drawnSamples: null
+    axisUnit: null
   }
 )
 
@@ -119,10 +116,7 @@ function toggleAll() {
 const metricStats = computed((): Map<string, MetricStats> => {
   const map = new Map<string, MetricStats>()
   for (const m of props.metrics) {
-    map.set(
-      m.metadata.name,
-      computeMetricStats(m, props.valueResolution, props.axisUnit, props.drawnSamples)
-    )
+    map.set(m.metadata.name, computeMetricStats(m, props.valueResolution, props.axisUnit))
   }
   return map
 })

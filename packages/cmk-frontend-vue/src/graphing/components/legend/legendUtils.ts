@@ -3,7 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { SampleIndexRange } from '../../types'
 import type { HorizontalLine, Metric, UnitFormat } from '../TimeSeriesGraph'
 import { valueRenderer } from '../TimeSeriesGraph/valueRenderer'
 
@@ -18,14 +17,10 @@ export interface MetricStats {
 export function metricStats(
   metric: Metric,
   valueResolution: number | null = null,
-  axisUnit: UnitFormat | null = null,
-  drawnSamples: SampleIndexRange | null = null
+  axisUnit: UnitFormat | null = null
 ): MetricStats {
   const fmt = valueRenderer(axisUnit ?? metric.metadata.unit, valueResolution)
-  const points =
-    drawnSamples === null
-      ? metric.data_points
-      : metric.data_points.slice(drawnSamples.firstIndex, drawnSamples.lastIndex + 1)
+  const points = metric.data_points
   if (points.length === 0) {
     return { min: 'n/a', avg: 'n/a', max: 'n/a', last: 'n/a' }
   }

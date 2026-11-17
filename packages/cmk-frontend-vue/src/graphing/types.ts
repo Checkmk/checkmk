@@ -38,11 +38,6 @@ export interface FetchAnswer {
   request: TimestampedRequest
 }
 
-export interface SampleIndexRange {
-  firstIndex: number
-  lastIndex: number
-}
-
 // Whether a committed range was translated (same span, shifted in time) or changed its
 // span. The brush snapshot keeps the overview strip fixed under translation and
 // re-derives it (multiplier × span) once the span changed.
@@ -156,6 +151,5 @@ export type GraphPanelEmits = {
   'update:requestedTimeRange': [value: RequestedTimeRange, kind: TimeRangeCommitKind]
   /** The smallest gap between the value-axis labels the graph currently draws. */
   'update:valueResolution': [value: number | null]
-  'update:drawnSamples': [value: SampleIndexRange | null]
   inspect: []
 }

@@ -96,8 +96,10 @@ function labelToWire(obj: MapElement): Schemas['MapObjectLabel'] | undefined {
 // Map one FLAT internal object to the nested wire ``MapElement``. Mirrors the
 // server's ``_OBJECT_GROUPS`` table in ``cmk.maps.rest_api.utils`` (rest_field ->
 // flat_key). ``position`` and ``link`` are always emitted (required on every
-// object); the rest are omitted when empty. ``site`` objects are filtered out
-// before this runs, so ``type`` never carries the runtime-only ``'site'``.
+// object); the rest are omitted when empty. ``line`` and ``graph`` go
+// only with their own type, as ``newMapElement`` gives every object their
+// defaults. ``site`` objects are filtered out before this runs, so ``type``
+// never carries the runtime-only ``'site'``.
 function objectToWire(obj: MapElement): MapElementWire {
   return {
     id: obj.id,
@@ -143,41 +145,47 @@ function objectToWire(obj: MapElement): MapElementWire {
         hosts: obj.bundle_hosts,
         precision: obj.bundle_precision
       }),
-      line: group<Schemas['MapObjectLine']>({
-        x2: obj.x2,
-        y2: obj.y2,
-        lat2: obj.lat2,
-        lng2: obj.lng2,
-        mid_x: obj.mid_x,
-        mid_y: obj.mid_y,
-        start_ref: obj.start_ref,
-        end_ref: obj.end_ref,
-        style: obj.line_style,
-        width: obj.line_width,
-        perfdata_label: obj.line_perfdata_label,
-        weather_color: obj.line_weather_color,
-        object_type: obj.line_object_type,
-        metric_in: obj.weathermap_metric,
-        metric_out: obj.weathermap_metric_out,
-        color: obj.line_color,
-        color_border: obj.line_color_border
-      }),
+      line:
+        obj.type === 'line'
+          ? group<Schemas['MapObjectLine']>({
+              x2: obj.x2,
+              y2: obj.y2,
+              lat2: obj.lat2,
+              lng2: obj.lng2,
+              mid_x: obj.mid_x,
+              mid_y: obj.mid_y,
+              start_ref: obj.start_ref,
+              end_ref: obj.end_ref,
+              style: obj.line_style,
+              width: obj.line_width,
+              perfdata_label: obj.line_perfdata_label,
+              weather_color: obj.line_weather_color,
+              object_type: obj.line_object_type,
+              metric_in: obj.weathermap_metric,
+              metric_out: obj.weathermap_metric_out,
+              color: obj.line_color,
+              color_border: obj.line_color_border
+            })
+          : undefined,
       textbox: group<Schemas['MapObjectTextbox']>({
         background: obj.textbox_background,
         border: obj.textbox_border,
         width: obj.textbox_width,
         height: obj.textbox_height
       }),
-      graph: group<Schemas['MapObjectGraph']>({
-        url: obj.graph_url,
-        embed_type: obj.graph_embed_type,
-        width: obj.graph_width,
-        height: obj.graph_height,
-        refresh_interval: obj.graph_refresh_interval,
-        metric: obj.graph_metric,
-        id: obj.graph_id,
-        time_window: obj.graph_time_window
-      }),
+      graph:
+        obj.type === 'graph'
+          ? group<Schemas['MapObjectGraph']>({
+              url: obj.graph_url,
+              embed_type: obj.graph_embed_type,
+              width: obj.graph_width,
+              height: obj.graph_height,
+              refresh_interval: obj.graph_refresh_interval,
+              metric: obj.graph_metric,
+              id: obj.graph_id,
+              time_window: obj.graph_time_window
+            })
+          : undefined,
       filter: group<Schemas['MapObjectFilter']>({
         exclude_members: obj.exclude_members,
         exclude_member_states: obj.exclude_member_states

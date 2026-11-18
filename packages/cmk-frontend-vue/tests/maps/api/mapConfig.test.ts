@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest'
 import { MapConfigApi } from '@/maps/api/mapConfig'
 import { toWireConfig } from '@/maps/api/wire'
 import type { MapConfig } from '@/maps/types/api'
+import { newMapElement } from '@/maps/utils/model'
 
 import { aMap, newMapView } from '../support/fixtures'
 import { type SeenRequest, snapshot } from '../support/http'
@@ -252,6 +253,15 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
         ]
       }
     })
+  })
+
+  it('stores the line and graph settings only with their own type', () => {
+    const host = newMapElement({ id: 'h', type: 'host', host_name: 'web01' })
+
+    const wire = toWireConfig({ ...staticMap, objects: [host] }).objects[0]!
+
+    expect(wire).not.toHaveProperty('line')
+    expect(wire).not.toHaveProperty('graph')
   })
 
   it('deletes a map with DELETE + If-Match: *', async () => {

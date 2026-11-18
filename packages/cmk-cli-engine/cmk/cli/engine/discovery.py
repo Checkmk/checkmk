@@ -10,13 +10,16 @@ from functools import partial
 from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import entry_point_prefixes as cli_entry_point_prefixes
+from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import Handler as CLIHandler
+from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
 
-from .commands import binder, DiscoveredCommand
+from .commands import Binder, BoundCommand, DiscoveredCommand
 from .options import is_required, Positional
 from .readers import record
 
@@ -66,6 +69,17 @@ def _requires_one_after_an_optional(positional: Sequence[Positional]) -> bool:
 
 def _reads_one_after_the_remaining(positional: Sequence[Positional]) -> bool:
     return any(isinstance(each, CLIArguments) for each in positional[:-1])
+
+
+type Run[R] = Callable[[CLIContext, R], CLIExitCode]
+
+
+def binder[R](command: CLICommand[R], load: Callable[[], Run[R]]) -> Binder:
+    def bind(reader: CLIReader) -> BoundCommand:
+        request = command.request(reader)
+        return BoundCommand(request=request, run=lambda context: load()(context, request))
+
+    return bind
 
 
 def make_command[R](command: CLICommand[R], load: Callable[[], CLIHandler[R]]) -> DiscoveredCommand:

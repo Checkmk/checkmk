@@ -10,7 +10,6 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Flag as CLIFlag
@@ -38,8 +37,6 @@ _SUB_OPTION_COLUMN: Final = HelpColumn(indent="    ", width=24)
 
 _ENGINE_OPTION_COLUMN: Final = HelpColumn(indent="  ", width=21)
 
-type Run[R] = Callable[[CLIContext, R], CLIExitCode]
-
 
 @dataclass(frozen=True, kw_only=True)
 class BoundCommand:
@@ -59,14 +56,6 @@ class DiscoveredCommand:
     options: Sequence[Option]
     bind: Binder
     default: bool
-
-
-def binder[R](command: CLICommand[R], load: Callable[[], Run[R]]) -> Binder:
-    def bind(reader: CLIReader) -> BoundCommand:
-        request = command.request(reader)
-        return BoundCommand(request=request, run=lambda context: load()(context, request))
-
-    return bind
 
 
 def takes_value(command: DiscoveredCommand) -> bool:

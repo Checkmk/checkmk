@@ -11,8 +11,8 @@ const EMBEDDABLE_SITE_PAGES = new Set(['graph_image.py', 'view.py', 'dashboard.p
 
 /**
  * Whether the map may load *url* by itself, with the viewer's session, as soon as
- * it is shown. A URL of this site is allowed only under the Maps image and
- * background directories, or when ``allowSitePath`` accepts its path.
+ * it is shown. A URL of this site is allowed only under the Maps image
+ * directory, or when ``allowSitePath`` accepts its path.
  */
 export function isAutoLoadable(
   url: string,
@@ -32,9 +32,8 @@ export function isAutoLoadable(
     return true
   }
   return (
-    ['images/', 'backgrounds/'].some((dir) =>
-      parsed.pathname.startsWith(new URL(assetUrl(dir)).pathname)
-    ) || allowSitePath(parsed.pathname)
+    parsed.pathname.startsWith(new URL(assetUrl('images/')).pathname) ||
+    allowSitePath(parsed.pathname)
   )
 }
 

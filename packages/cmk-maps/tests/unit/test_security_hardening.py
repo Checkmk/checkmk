@@ -67,6 +67,14 @@ def test_validate_image_url_accepts_images(value: str) -> None:
         pytest.param("../check_mk/logout.py", id="relative-page"),
         pytest.param("/logo.png?reload=1", id="query"),
         pytest.param("./logout.py#.png", id="fragment"),
+        pytest.param(
+            "https://mon.example/heute/check_mk/maps/backgrounds/0123456789abcdef__floor.png",
+            id="map-background",
+        ),
+        pytest.param(
+            "https://mon.example/heute/check_mk/maps/images/../%62ackgrounds/floor.png",
+            id="map-background-encoded",
+        ),
     ],
 )
 def test_validate_image_url_rejects_other_urls(value: str) -> None:
@@ -98,6 +106,18 @@ def test_validate_tile_url_accepts_absolute_urls(value: str) -> None:
         pytest.param("https://tiles.example/{z/{x}/{y}.png", id="unclosed-placeholder"),
         pytest.param("https://tiles.example{r}/{z}/{x}/{y}.png", id="tile-placeholder-in-host"),
         pytest.param("https://user{z}@tiles.example/{z}/{x}/{y}.png", id="placeholder-in-userinfo"),
+        pytest.param(
+            "https://mon.example/heute/check_mk/maps/backgrounds/{z}_{x}_{y}.png",
+            id="map-background",
+        ),
+        pytest.param(
+            "https://mon.example/heute/check_mk/maps/backgrounds{r}/{z}_{x}_{y}.png",
+            id="map-background-behind-placeholder",
+        ),
+        pytest.param(
+            "https://mon.example/heute/check_mk\\maps\\backgrounds\\{z}_{x}_{y}.png",
+            id="map-background-backslash",
+        ),
     ],
 )
 def test_validate_tile_url_rejects_other_urls(value: str) -> None:
@@ -127,6 +147,14 @@ def test_validate_graph_url_accepts_external_urls_and_read_only_site_pages(value
         pytest.param("/heute/check_mk/view.py/../logout.py", id="dot-segments"),
         pytest.param("view.py\\..\\logout.py", id="backslash"),
         pytest.param("mailto:ops@example.com", id="other-scheme"),
+        pytest.param(
+            "https://mon.example/heute/check_mk/maps/backgrounds/0123456789abcdef__floor.png",
+            id="map-background",
+        ),
+        pytest.param(
+            "https://mon.example/heute/check_mk\\maps\\backgrounds\\0123456789abcdef__floor.png",
+            id="map-background-backslash",
+        ),
     ],
 )
 def test_validate_graph_url_rejects_other_urls(value: str) -> None:

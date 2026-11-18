@@ -7,8 +7,9 @@
 import re
 from collections.abc import Callable
 from ipaddress import ip_address
+from posixpath import normpath
 from typing import Annotated, Final
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 from pydantic import Field
 
@@ -166,6 +167,13 @@ def _is_absolute_http(url: str) -> bool:
     return parts.scheme.lower() in ("http", "https") and bool(parts.netloc)
 
 
+def _is_map_background(url: str) -> bool:
+    # A background belongs to its map and goes with it; resolved as the browser
+    # (backslash as slash) and Apache do.
+    path = urlsplit(url.replace("\\", "/")).path
+    return "/check_mk/maps/backgrounds/" in normpath(unquote(path))
+
+
 # Leaflet fills these per tile; any other placeholder it would fill from its options.
 _TILE_PLACEHOLDER = re.compile(r"\{(?:s|z|x|y|-y|r)\}")
 
@@ -183,13 +191,19 @@ def validate_tile_url(value: str | None) -> str | None:
         )
     if "{" in urlsplit(url).netloc.replace("{s}", ""):
         raise ValueError("The host of a tile server URL may only hold the placeholder {s}")
+    if _is_map_background(_TILE_PLACEHOLDER.sub("", url)):
+        raise ValueError("A tile server URL must not point to the background of a map")
     return url
 
 
 def validate_graph_url(value: str | None) -> str | None:
     """An absolute http(s) URL, or a graph, view or dashboard page of the site."""
     url = validate_user_url(value)
-    if not url or _is_absolute_http(url):
+    if not url:
+        return url
+    if _is_map_background(url):
+        raise ValueError("A graph URL must not point to the background of a map")
+    if _is_absolute_http(url):
         return url
     parts = urlsplit(url)
     if parts.scheme or "\\" in url or parts.path.rsplit("/", 1)[-1] not in _EMBEDDABLE_SITE_PAGES:
@@ -201,14 +215,15 @@ def validate_graph_url(value: str | None) -> str | None:
 
 
 def validate_image_url(value: str | None) -> str | None:
-    """An image-library filename, or an absolute http(s) URL of an image file."""
+    """An image-library filename, or an absolute http(s) URL of an image file
+    other than the background of a map."""
     url = validate_user_url(value)
-    if (
-        url
-        and set(url) & {"/", ":", "\\", "?", "#"}
-        and not (_is_absolute_http(url) and _IMAGE_FILE_URL.fullmatch(url))
-    ):
+    if not url or not set(url) & {"/", ":", "\\", "?", "#"}:
+        return url
+    if not (_is_absolute_http(url) and _IMAGE_FILE_URL.fullmatch(url)):
         raise ValueError("An image URL must be an absolute http or https URL of an image file")
+    if _is_map_background(url):
+        raise ValueError("An image URL must not point to the background of a map")
     return url
 
 

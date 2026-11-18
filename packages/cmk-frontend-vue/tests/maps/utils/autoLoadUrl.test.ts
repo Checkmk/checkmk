@@ -33,15 +33,15 @@ describe('isAutoLoadable', () => {
     expect(isAutoLoadable('maps/images/../../logout.py')).toBe(false)
   })
 
-  it('allows the Maps image and background directories', () => {
+  it('allows the Maps image directory', () => {
     servedAt('http://mon.example/heute/check_mk/maps.py')
     expect(isAutoLoadable('http://mon.example/heute/check_mk/maps/images/rack.png')).toBe(true)
-    expect(isAutoLoadable('maps/backgrounds/floor.png')).toBe(true)
   })
 
   it('refuses the rest of the Maps path', () => {
     servedAt('http://mon.example/heute/check_mk/maps.py')
     expect(isAutoLoadable('maps/api/v1/sse/maps/floor?tab=t')).toBe(false)
+    expect(isAutoLoadable('maps/backgrounds/0123456789abcdef__floor.png')).toBe(false)
   })
 
   it('allows another server', () => {

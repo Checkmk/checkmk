@@ -396,7 +396,7 @@ class PerftestPlot:
         those from the filesystem.
 
         Returns:
-            list[str]: A sorted list of scenario names.
+            list[str]: A sorted list of scenario names, each once.
         """
         scenario_names = (
             list(
@@ -412,8 +412,8 @@ class PerftestPlot:
         )
         if self.read_from_database:
             scenario_names += self.database.get_scenario_names()
-        scenario_names.sort()
-        return scenario_names
+        # A scenario on disk is usually in the database as well.
+        return sorted(set(scenario_names))
 
     def read_performance_data(self) -> PerformanceData:
         """

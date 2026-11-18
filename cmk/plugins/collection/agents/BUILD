@@ -14,7 +14,6 @@ exports_files(
     [
         "iis_app_pool_state.ps1",
         "mcafee_av_client.bat",
-        "rds_licenses.ps1",
         "win_dmidecode.bat",
     ],
     visibility = ["//agents/windows/plugins:__pkg__"],
@@ -22,10 +21,7 @@ exports_files(
 
 filegroup(
     name = "powershell_scripts",
-    srcs = [
-        "iis_app_pool_state.ps1",
-        "rds_licenses.ps1",
-    ],
+    srcs = ["iis_app_pool_state.ps1"],
     tags = ["lint-with-psscriptanalyzer"],
 )
 

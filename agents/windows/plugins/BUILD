@@ -80,7 +80,7 @@ TO_SIGN_SCRIPTS = [
     "//cmk/plugins/msexch/agents:msexch_dag.ps1",
     "//cmk/plugins/msexch/agents:msexch_database.ps1",
     "//cmk/plugins/nvidia/agents:nvidia_smi.ps1",
-    "//cmk/plugins/collection/agents:rds_licenses.ps1",
+    "rds_licenses.ps1",
     "sansymphony.ps1",
     "//packages/cmk-plugins/cmk/plugins/veeam:agents/veeam_backup_status.ps1",
     "//cmk/plugins/printer/agents:win_printers.ps1",

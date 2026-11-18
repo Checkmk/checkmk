@@ -16,7 +16,14 @@ _MINIMAL_PARAMS: Mapping[str, object] = {
     "piggyback_naming_convention": "ip_region_instance",
 }
 
-_HOST_ARGS = ["--hostname", "testhost", "--piggyback-naming-convention", "ip_region_instance"]
+_HOST_ARGS = [
+    "--hostname",
+    "testhost",
+    "--piggyback-naming-convention",
+    "ip_region_instance",
+    "--non-ec2-piggyback-template",
+    "long",
+]
 
 
 def _arguments(**params: object) -> Sequence[str | Secret]:

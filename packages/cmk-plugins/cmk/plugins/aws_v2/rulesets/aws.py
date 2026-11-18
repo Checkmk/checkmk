@@ -797,7 +797,7 @@ def configuration_piggyback_naming() -> Mapping[str, DictElement]:
     return {
         "piggyback_naming_convention": DictElement(
             parameter_form=SingleChoice(
-                title=Title("Piggyback names"),
+                title=Title("EC2 instance piggyback names"),
                 help_text=Help(
                     "Each EC2 instance creates a piggyback host.<br><b>Note:</b> "
                     "Not every host name is pingable and changing the piggyback name "
@@ -815,6 +815,41 @@ def configuration_piggyback_naming() -> Mapping[str, DictElement]:
                     ),
                 ],
                 prefill=DefaultValue("ip_region_instance"),
+            ),
+            required=True,
+        ),
+        "non_ec2_piggyback_template": DictElement(
+            parameter_form=SingleChoice(
+                title=Title("Other (non-EC2) piggyback names"),
+                help_text=Help(
+                    "Select the piggyback host name template to use for AWS "
+                    "objects that are <i>not</i> EC2 instances. There are two "
+                    "templates to choose from:"
+                    "<ul>"
+                    "  <li>"
+                    "    <b>Short:</b> <tt>[object name from AWS]_[unique id]</tt>"
+                    "    <ul>"
+                    "      <li>example: <b><tt>my-s3-bucket_3f40ba0d</tt></b>"
+                    "    </ul>"
+                    "  </li>"
+                    "  <li>"
+                    "    <b>Long:</b> "
+                    "    <tt>aws_[object type]_[object name from AWS]_[unique id]</tt>"
+                    "    <ul>"
+                    "      <li>example: <b><tt>aws_s3_my-s3-bucket_3f40ba0d</tt></b>"
+                    "    </ul>"
+                    "  </li>"
+                    "</ul>"
+                    "The unique id is a truncated SHA256 of the object's ARN "
+                    "when an ARN is provided by AWS. In all other cases it is "
+                    "computed internally by Checkmk using the available "
+                    "(permanent) information about the object."
+                ),
+                elements=[
+                    SingleChoiceElement(name="short", title=Title("Short")),
+                    SingleChoiceElement(name="long", title=Title("Long")),
+                ],
+                prefill=DefaultValue("long"),
             ),
             required=True,
         ),

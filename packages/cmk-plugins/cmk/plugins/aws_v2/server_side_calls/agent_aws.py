@@ -105,6 +105,7 @@ class AwsParams(BaseModel):
     global_services: Mapping[str, ServiceSelection] = {}
     regional_services: Mapping[str, ServiceSelection] = {}
     piggyback_naming_convention: Literal["ip_region_instance", "private_dns_name"]
+    non_ec2_piggyback_template: Literal["short", "long"] = "long"
     connection_test: bool = False  # only used by the Quick Setup
 
 
@@ -229,6 +230,8 @@ def aws_arguments(params: AwsParams, host_config: HostConfig) -> Iterable[Specia
         host_config.name,
         "--piggyback-naming-convention",
         params.piggyback_naming_convention,
+        "--non-ec2-piggyback-template",
+        params.non_ec2_piggyback_template,
     ]
     if params.connection_test:
         args.append("--connection-test")

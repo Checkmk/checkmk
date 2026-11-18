@@ -411,6 +411,15 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         "If you choose `ip_region_instance`, then the name includes the private IP "
         "address, the region and the instance ID: {Private IPv4 address}-{region}-{Instance ID}. ",
     )
+    parser.add_argument(
+        "--non-ec2-piggyback-template",
+        type=NonEC2PiggybackTemplate,
+        default=NonEC2PiggybackTemplate.LONG,
+        help="The piggyback host name template to use for AWS objects other than EC2 instances. "
+        "Can be 'long' or 'short'. See the field help text in the special agent rule set for "
+        "details about the options. Defaults to 'long'. Changes in the piggyback name will cause "
+        "the piggyback host to be reset.",
+    )
 
     group_import_tags = parser.add_mutually_exclusive_group()
     group_import_tags.add_argument(
@@ -606,7 +615,7 @@ def _configure_aws(args: argparse.Namespace) -> AWSConfig:
         args,
         (args.overall_tag_keys, args.overall_tag_values),
         args.piggyback_naming_convention,
-        NonEC2PiggybackTemplate.LONG,  # TODO: take actual arg
+        args.non_ec2_piggyback_template,
         args.tag_key_pattern,
         cloudfront_host_assignment=args.cloudfront_host_assignment,
     )

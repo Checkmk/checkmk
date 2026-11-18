@@ -7,11 +7,33 @@ void main() {
         raise("The werk jobs are not meant to be triggered with a custom git ref to not miss any werks.");
     }
 
-    def target_path = "/home/mkde/werks/all_werks_v3.json";
-    def targets_credentials = [
-        [env.WEB_STAGING, "web-staging"],
-        ["checkmk.com", "checkmk-deploy"],
-        ["customer.checkmk.com", "customer-deploy"],
+    def mkde_target_path = "/home/mkde/werks/all_werks_v3.json";
+    def targets = [
+        [
+            host: env.WEB_STAGING,
+            port: env.WEB_STAGING_PORT,
+            credentials_id: "web-staging",
+            path: mkde_target_path,
+        ],
+        [
+            host: "checkmk.com",
+            port: env.WEB_STAGING_PORT,
+            credentials_id: "checkmk-deploy",
+            path: mkde_target_path,
+        ],
+        [
+            host: "customer.checkmk.com",
+            port: env.WEB_STAGING_PORT,
+            credentials_id: "customer-deploy",
+            path: mkde_target_path,
+        ],
+        [
+            host: "werks.checkmk.com",
+            port: "52022",
+            credentials_id: "werks-deploy",
+            path: "/var/www/werks.checkmk.com/incoming/all_werks_v3.json",
+            known_host: "[werks.checkmk.com]:52022 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJOR6bj9+Q84vW0GL/bfogPIVT8D4wEz9RY5uN/umRup",
+        ],
     ];
 
     print(
@@ -94,23 +116,27 @@ void main() {
         }
     }
 
-    targets_credentials.each { target_credential ->
-        def target = target_credential[0];
-        def credentials_id = target_credential[1];
+    targets.each { target ->
+        stage("Update werks on ${target.host}") {
+            def host_key_options = "-o StrictHostKeyChecking=no";
+            if (target.known_host) {
+                def known_hosts_file = "known_hosts_${target.host}";
+                writeFile(file: known_hosts_file, text: "${target.known_host}\n");
+                host_key_options = "-o StrictHostKeyChecking=yes -o UserKnownHostsFile=${WORKSPACE}/${known_hosts_file}";
+            }
 
-        stage("Update werks on ${target}") {
             withCredentials([
                 sshUserPrivateKey(
-                    credentialsId: credentials_id,
+                    credentialsId: target.credentials_id,
                     keyFileVariable: 'keyfile',
                     usernameVariable: 'user',
                 )
             ]) {
                 sh("""
                     rsync --verbose \
-                        -e "ssh -o StrictHostKeyChecking=no -i ${keyfile} -p ${WEB_STAGING_PORT}" \
+                        -e "ssh ${host_key_options} -i ${keyfile} -p ${target.port}" \
                         ${checkout_dir}/all_werks.json \
-                        ${user}@${target}:${target_path}
+                        ${user}@${target.host}:${target.path}
                 """);
             }
         }

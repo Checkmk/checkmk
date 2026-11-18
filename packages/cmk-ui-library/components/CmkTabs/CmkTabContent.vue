@@ -26,7 +26,7 @@ defineProps<CmkTabContentProps>()
   padding: var(--dimension-5);
   background: var(--background-subtle);
   border-top: 1px solid var(--border-color-strong);
-  border-radius: 0 var(--dimension-3) var(--dimension-3);
+  border-radius: 0 var(--border-radius) var(--border-radius);
 
   &:focus-visible {
     outline: none;

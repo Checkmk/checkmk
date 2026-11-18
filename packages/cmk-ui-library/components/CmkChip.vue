@@ -70,7 +70,7 @@ defineProps<CmkChipProps>()
 
 <style scoped>
 .cmk-chip {
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   text-align: center;
   font-weight: var(--font-weight-default);
   position: relative;

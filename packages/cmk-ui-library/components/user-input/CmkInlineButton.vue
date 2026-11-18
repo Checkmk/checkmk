@@ -56,6 +56,7 @@ defineEmits(['click'])
   letter-spacing: unset;
   background-color: var(--default-button-form-color);
   border: 1px solid var(--button-form-border-color);
+  border-radius: var(--border-radius);
   color: var(--button-form-text-color);
 
   &:focus-visible {

@@ -130,7 +130,7 @@ const subtitleClasses = computed(() => cmkLinkCardSubtitleVariants({ color: prop
   display: flex;
   align-items: center;
   text-decoration: none;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   background-color: var(--background-color);
   padding: var(--dimension-4) var(--dimension-5);
 

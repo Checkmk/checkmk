@@ -69,11 +69,11 @@ defineProps<CmkTabProps>()
   font-weight: var(--font-weight-default);
 
   &:first-of-type {
-    border-top-left-radius: var(--dimension-3);
+    border-top-left-radius: var(--border-radius);
   }
 
   &:last-of-type {
-    border-top-right-radius: var(--dimension-3);
+    border-top-right-radius: var(--border-radius);
     border-right-width: 1px;
   }
 
@@ -92,8 +92,8 @@ defineProps<CmkTabProps>()
     margin-bottom: 0;
     background: var(--background-subtle);
     border-right-width: 1px;
-    border-top-left-radius: var(--dimension-3);
-    border-top-right-radius: var(--dimension-3);
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
     font-weight: var(--font-weight-bold);
   }
 

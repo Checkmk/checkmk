@@ -104,7 +104,7 @@ const element = computed(() => {
 
 <style scoped>
 .cmk-tag {
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   text-align: center;
 }
 

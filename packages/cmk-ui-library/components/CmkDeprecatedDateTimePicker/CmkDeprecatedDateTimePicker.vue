@@ -303,7 +303,7 @@ function shiftYear(delta: number) {
   display: inline-flex;
   align-items: center;
   border: 1px solid var(--default-form-element-border-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   padding: 1px 6px;
   background: var(--default-form-element-bg-color);
   color: var(--font-color);
@@ -319,7 +319,7 @@ function shiftYear(delta: number) {
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   padding: 0 var(--dimension-2);
   margin: 0;
   height: var(--form-field-height);
@@ -363,7 +363,7 @@ function shiftYear(delta: number) {
   z-index: var(--z-index-modal-popup, 3500);
   background: var(--default-bg-color);
   border: 1px solid var(--default-border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   padding: var(--dimension-5);
   box-shadow: 0 var(--dimension-3) var(--dimension-5) rgb(0 0 0 / 15%);
   color: var(--font-color);
@@ -444,7 +444,7 @@ function shiftYear(delta: number) {
   height: var(--dimension-9);
   padding: 0;
   border: 1px solid var(--default-form-element-border-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   background: var(--default-form-element-bg-color);
   color: var(--font-color);
   cursor: pointer;
@@ -482,7 +482,7 @@ function shiftYear(delta: number) {
   width: var(--dimension-10);
   height: var(--dimension-10);
   border: none;
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color);
   cursor: pointer;

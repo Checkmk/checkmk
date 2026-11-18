@@ -189,7 +189,7 @@ watch(
   align-items: center;
   min-height: 150px;
   background-color: var(--default-form-element-bg-color);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   user-select: none;
   margin-top: 3px;
 }

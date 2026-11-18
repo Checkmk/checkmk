@@ -124,7 +124,7 @@ defineEmits(['click'])
   align-items: center;
   justify-content: center;
   letter-spacing: unset;
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   font-weight: bold;
   text-decoration: none;
   cursor: pointer;

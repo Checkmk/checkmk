@@ -89,7 +89,7 @@ function getKeyClass(): string {
 
 <style scoped>
 .cmk-keyboard-key {
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   text-align: center;
   margin: 0 4px;
   background: var(--color-midnight-grey-40, var(--font-color));

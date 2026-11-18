@@ -57,7 +57,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   box-sizing: border-box;
   border: 1px solid transparent;
   background: var(--ux-theme-3);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   overflow: hidden;
   width: 100%;
   margin-bottom: 8px;
@@ -101,7 +101,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   align-items: center;
   width: 100%;
   border-bottom: 1px transparent;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   position: relative;
   margin: 0;
 
@@ -111,7 +111,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
 
   &[data-state='open'] {
     border-bottom: 1px solid var(--success);
-    border-radius: 4px 4px 0 0;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
   }
 }
 

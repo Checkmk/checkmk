@@ -202,7 +202,7 @@ watch(modelValue, (newValue) => {
 .slider-value:focus {
   color: var(--font-color);
   border: 1px solid var(--font-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   padding: var(--dimension-2) var(--dimension-3);
 }
 </style>

@@ -359,7 +359,7 @@ onMounted(() => {
   align-items: center;
   padding: var(--dimension-3) var(--dimension-4);
   cursor: pointer;
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   gap: var(--dimension-4);
 }
 

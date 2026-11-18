@@ -109,7 +109,7 @@ defineExpose({ focusSelected, centerSelected })
   margin: 0;
   padding: var(--dimension-3) var(--dimension-4);
   border: 1px solid transparent;
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color);
   font-size: var(--font-size-normal);

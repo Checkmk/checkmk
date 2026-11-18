@@ -200,7 +200,7 @@ span {
       width: 8px;
       height: 2px;
       background: currentcolor;
-      border-radius: 1px;
+      border-radius: var(--border-radius);
     }
   }
 }

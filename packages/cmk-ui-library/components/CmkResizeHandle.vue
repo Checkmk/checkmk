@@ -42,7 +42,7 @@ const { orientation = 'vertical' } = defineProps<{
 }
 
 .cmk-resize-handle__line {
-  border-radius: var(--dimension-1);
+  border-radius: var(--border-radius);
   background-color: var(--cmk-resize-handle-line-color);
 }
 

@@ -87,7 +87,7 @@ defineExpose({ focusTriggerButton: () => triggerButtonRef.value?.focus() })
   height: var(--form-field-height);
   padding: 0 var(--dimension-3);
   border: 1px solid var(--color-mid-grey-50);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   background: var(--default-form-element-bg-color);
   cursor: text;
 }

@@ -108,12 +108,12 @@ body[data-theme='modern-dark'] .cmk-color-picker {
 
 .cmk-color-picker__input::-webkit-color-swatch {
   border: none;
-  border-radius: 1px;
+  border-radius: var(--border-radius);
 }
 
 .cmk-color-picker__input::-moz-color-swatch {
   border: none;
-  border-radius: 1px;
+  border-radius: var(--border-radius);
 }
 
 .cmk-color-picker__content {

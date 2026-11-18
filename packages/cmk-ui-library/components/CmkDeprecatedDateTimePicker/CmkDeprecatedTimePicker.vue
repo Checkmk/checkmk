@@ -368,7 +368,7 @@ function onPopupKey(e: KeyboardEvent) {
   align-items: center;
   gap: 0;
   border: 1px solid var(--default-form-element-border-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   padding: var(--dimension-1) 6px;
   background: var(--default-form-element-bg-color);
   font-size: var(--font-size-small);
@@ -433,7 +433,7 @@ function onPopupKey(e: KeyboardEvent) {
   margin-top: var(--dimension-3);
   background: var(--default-bg-color);
   border: 1px solid var(--default-border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   padding: var(--dimension-3);
   box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
 }
@@ -478,7 +478,7 @@ function onPopupKey(e: KeyboardEvent) {
   width: 100%;
   margin: 0;
   border: none;
-  border-radius: 3px;
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color);
   font-size: var(--font-size-small);

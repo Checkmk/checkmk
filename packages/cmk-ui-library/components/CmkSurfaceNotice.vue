@@ -88,7 +88,7 @@ const iconColor = computed(() => ({
   align-items: flex-start;
   gap: var(--dimension-4);
   padding: var(--dimension-4) var(--dimension-6);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   font-size: var(--font-size-normal);
   color: var(--font-color);
 }

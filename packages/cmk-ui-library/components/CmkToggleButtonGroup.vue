@@ -83,7 +83,7 @@ function setSelectedOption(value: string) {
 
 <style scoped>
 .cmk-toggle-button-group__container {
-  --toggle-button-group-radius: var(--dimension-3);
+  --toggle-button-group-radius: var(--border-radius);
 
   width: max-content;
   max-width: 100%;

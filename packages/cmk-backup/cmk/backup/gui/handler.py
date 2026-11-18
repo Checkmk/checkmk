@@ -1701,7 +1701,8 @@ def _write_access_test_file(path: Path) -> Iterator[Path]:
     try:
         yield test_file_path
     finally:
-        test_file_path.unlink(missing_ok=True)
+        with contextlib.suppress(PermissionError):
+            test_file_path.unlink(missing_ok=True)
 
 
 # .

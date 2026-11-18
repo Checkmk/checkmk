@@ -155,11 +155,6 @@ def test_add_new_job_creates_no_state_file(backup_config: BackupConfig) -> None:
     assert not job.state_file_path().exists()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=PermissionError,
-    reason="Crash report 65e57916-fab0-11f0-b436-00155d0a9937: PermissionError",
-)
 @pytest.mark.skipif(os.geteuid() == 0, reason="root ignores directory permissions")
 def test_local_target_without_search_permission_reports_write_error(tmp_path: Path) -> None:
     target_dir = tmp_path / "backup"

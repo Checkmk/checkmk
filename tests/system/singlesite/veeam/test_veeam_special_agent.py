@@ -104,20 +104,20 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
     "Veeam Backup job Failing_job": ExpectedServiceResult(
         2,  # CRIT
         [
-            r"Result: Failed\b",
             r"Status: Enabled\b",
+            r"Result: Failed\b",
             r"Objects: 1\b",
             r"Type: LinuxAgentBackupServerPolicy\b",
         ],
     ),
     "Veeam Backup job File_Backup_Job": ExpectedServiceResult(
-        0, [r"Result: Success\b", r"Objects: 4\b", r"Type: FileBackup\b"]
+        0, [r"Status: Stopped\b", r"Result: Success\b", r"Objects: 4\b", r"Type: FileBackup\b"]
     ),
     "Veeam Backup job Never_run_job": ExpectedServiceResult(
         0,
         [
-            r"No run has happened yet\b",
             r"Status: Inactive\b",
+            r"Result: Not run\b",
             r"Objects: 1\b",
             r"Type: FileBackup\b",
         ],
@@ -126,6 +126,7 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
     "Veeam Backup job Successful_job": ExpectedServiceResult(
         0,
         [
+            r"Status: Stopped\b",
             r"Result: Success\b",
             r"Target repository: Default Backup Repository\b",
             r"Objects: 1\b",

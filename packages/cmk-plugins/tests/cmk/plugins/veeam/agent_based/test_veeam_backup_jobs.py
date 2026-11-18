@@ -120,11 +120,10 @@ def test_check_veeam_backup_jobs_success() -> None:
     last_run = render.datetime(datetime.fromisoformat(LAST_RUN).timestamp())
     next_run = render.datetime(next_run_epoch)
     assert list(check_veeam_backup_jobs("VMware_Server", PARAMS, section, now=NOW)) == [
-        Result(state=State.OK, summary="Result: Success"),
+        Result(state=State.OK, summary="Status: Inactive, Result: Success"),
         Result(state=State.OK, summary="Time since last run: 1 hour 0 minutes"),
         Metric("veeam_backup_job_age", 3600.0),
         Result(state=State.OK, notice=f"Last run time: {last_run}"),
-        Result(state=State.OK, notice="Status: Inactive"),
         Result(state=State.OK, notice="Duration: 18 minutes 50 seconds"),
         Metric("backup_duration", 1130.0),
         Result(state=State.OK, notice=f"Next run: {next_run}"),
@@ -151,13 +150,13 @@ def test_check_veeam_backup_jobs_no_session_progress_omits_duration() -> None:
 def test_check_veeam_backup_jobs_warning() -> None:
     section = parse_veeam_backup_jobs(STRING_TABLE)
     results = list(check_veeam_backup_jobs("warning_backup", PARAMS, section, now=NOW))
-    assert results[0] == Result(state=State.WARN, summary="Result: Warning")
+    assert results[0] == Result(state=State.WARN, summary="Status: Inactive, Result: Warning")
 
 
 def test_check_veeam_backup_jobs_failed() -> None:
     section = parse_veeam_backup_jobs(STRING_TABLE)
     results = list(check_veeam_backup_jobs("stopped_and_failed", PARAMS, section, now=NOW))
-    assert results[0] == Result(state=State.CRIT, summary="Result: Failed")
+    assert results[0] == Result(state=State.CRIT, summary="Status: Inactive, Result: Failed")
 
 
 def test_check_veeam_backup_jobs_disabled_and_failed_is_ok() -> None:
@@ -177,14 +176,14 @@ def test_check_veeam_backup_jobs_disabled_never_run() -> None:
         ]
     )
     results = list(check_veeam_backup_jobs("disabled", PARAMS, section, now=NOW))
-    assert results[0] == Result(state=State.OK, summary="Status: Disabled, No run has happened yet")
+    assert results[0] == Result(state=State.OK, summary="Status: Disabled, Result: Not run")
 
 
 @pytest.mark.parametrize(
     "last_run, summary",
     [
         pytest.param(LAST_RUN, "Status: Disabled, Result: Failed", id="has run"),
-        pytest.param(None, "Status: Disabled, No run has happened yet", id="never run"),
+        pytest.param(None, "Status: Disabled, Result: Not run", id="never run"),
     ],
 )
 def test_check_veeam_backup_jobs_disabled_takes_the_configured_state(
@@ -253,20 +252,21 @@ def test_check_veeam_backup_jobs_disabled_job_has_no_next_run() -> None:
     assert not any(isinstance(r, Result) and r.details.startswith("Next run:") for r in results)
 
 
-def test_check_veeam_backup_jobs_disabled_job_shows_no_api_status() -> None:
+def test_check_veeam_backup_jobs_disabled_job_shows_disabled_over_api_status() -> None:
     section = parse_veeam_backup_jobs(
         [
             [_job("disabled", status="Stopped", isDisabled=True)],
         ]
     )
     results = list(check_veeam_backup_jobs("disabled", PARAMS, section, now=NOW))
-    assert Result(state=State.OK, notice="Status: Stopped") not in results
+    assert results[0] == Result(state=State.OK, summary="Status: Disabled, Result: Success")
 
 
 def test_check_veeam_backup_jobs_never_run() -> None:
     section = parse_veeam_backup_jobs(STRING_TABLE)
     results = list(check_veeam_backup_jobs("never_run", PARAMS, section, now=NOW))
-    assert results[0] == Result(state=State.OK, summary="No run has happened yet")
+    assert results[0] == Result(state=State.OK, summary="Status: Inactive, Result: Not run")
+    assert not any(isinstance(r, Result) and "Time since last run" in r.summary for r in results)
     next_run_epoch = parse_iso8601_epoch("2019-01-22T00:10:00.000+03:00")
     assert next_run_epoch is not None
     assert Result(state=State.OK, notice=f"Next run: {render.datetime(next_run_epoch)}") in results
@@ -281,7 +281,7 @@ def test_check_veeam_backup_jobs_unknown_type_still_renders() -> None:
 def test_check_veeam_backup_jobs_running_with_no_result_is_ok() -> None:
     section = parse_veeam_backup_jobs(STRING_TABLE)
     results = list(check_veeam_backup_jobs("backup_sync_job", PARAMS, section, now=NOW))
-    assert results[0] == Result(state=State.OK, summary="Status: Running, Result: None")
+    assert results[0] == Result(state=State.OK, summary="Status: Running, Result: In progress")
 
 
 @pytest.mark.parametrize(
@@ -301,6 +301,22 @@ def test_running_job_keeps_the_result_of_its_previous_run(
     assert results[0] == Result(
         state=expected, summary=f"Status: Running, Result: {previous_result}"
     )
+
+
+@pytest.mark.parametrize(
+    "api_status",
+    ["Running", "Inactive", "Disabled", "Enabled", "Stopping", "Stopped", "Starting", "Future"],
+)
+def test_check_veeam_backup_jobs_shows_the_status_as_is(api_status: str) -> None:
+    section = parse_veeam_backup_jobs([[_job("job", status=api_status)]])
+    results = list(check_veeam_backup_jobs("job", PARAMS, section, now=NOW))
+    assert results[0] == Result(state=State.OK, summary=f"Status: {api_status}, Result: Success")
+
+
+def test_check_veeam_backup_jobs_inactive_job_with_a_new_run_is_in_progress() -> None:
+    section = parse_veeam_backup_jobs([[_job("job", status="Inactive", lastResult="None")]])
+    results = list(check_veeam_backup_jobs("job", PARAMS, section, now=NOW))
+    assert results[0] == Result(state=State.OK, summary="Status: Inactive, Result: In progress")
 
 
 def test_check_veeam_backup_jobs_last_run_in_the_future() -> None:
@@ -362,5 +378,5 @@ def test_file_backup_job_from_vbr_13_is_monitored() -> None:
 
     results = list(check_veeam_backup_jobs("File_Backup_Job_1", PARAMS, section, now=NOW))
 
-    assert results[0] == Result(state=State.OK, summary="Result: Success")
+    assert results[0] == Result(state=State.OK, summary="Status: Stopped, Result: Success")
     assert Result(state=State.OK, notice="Type: FileBackup") in results

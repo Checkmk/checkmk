@@ -9,8 +9,21 @@ description:
  It reports the same information as the {VEEAM Job} service from the
  Veeam agent plug-in, and additionally reports the time since the last
  run, the next scheduled run (except for a disabled job), the target
- repository and the number of objects processed. The summary shows the result and the time since the
- last run, preceded by the status if the job is running or disabled.
+ repository and the number of objects processed.
+
+ The summary always shows three fields:
+
+ Status: the job status as Veeam reports it: Running, Inactive,
+ Disabled, Enabled, Stopping, Stopped or Starting. A disabled job always
+ shows "Disabled", also where Veeam reports it as Stopped.
+
+ Result: the result of the last run: Success, Warning or Failed. While
+ a run is in progress, Veeam reports no result, which is shown as
+ "In progress". A job that has never run shows "Not run".
+
+ Time since last run: the time since the last run started. While a run
+ is in progress, this is the time since the current run started. It is
+ left out for a job that has never run.
 
  This check is {OK} if the result of the last run is Success. It is
  {WARN} if the result is Warning. It is {CRIT} if the result is Failed.

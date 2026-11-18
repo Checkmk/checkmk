@@ -105,6 +105,14 @@ def monitoring_state(last_result: str) -> State:
             return State.UNKNOWN
 
 
+def _display_result(job: BackupJob) -> str:
+    if job.last_run is None:
+        return "Not run"
+    if job.last_result == "None":
+        return "In progress"
+    return job.last_result
+
+
 def check_veeam_backup_jobs(
     item: str,
     params: CheckParameters,
@@ -115,26 +123,19 @@ def check_veeam_backup_jobs(
     if (job := section.get(item)) is None:
         return
 
-    if job.is_disabled:
-        status = "Status: Disabled, "
-    elif job.status == "Running":
-        status = "Status: Running, "
-    else:
-        status = ""
-    if job.last_run is None:
-        yield Result(
-            state=State(params["disabled_state"]) if job.is_disabled else State.OK,
-            summary=f"{status}No run has happened yet",
-        )
-    else:
-        yield Result(
-            state=(
-                State(params["disabled_state"])
-                if job.is_disabled
-                else monitoring_state(job.last_result)
-            ),
-            summary=f"{status}Result: {job.last_result}",
-        )
+    yield Result(
+        state=(
+            State(params["disabled_state"])
+            if job.is_disabled
+            else monitoring_state(job.last_result)
+        ),
+        summary=(
+            f"Status: {'Disabled' if job.is_disabled else job.status}, "
+            f"Result: {_display_result(job)}"
+        ),
+    )
+
+    if job.last_run is not None:
         if (age := now - job.last_run) < 0:
             yield Result(state=State.OK, summary="Last run: in the future")
         else:
@@ -147,9 +148,6 @@ def check_veeam_backup_jobs(
                 label="Time since last run",
             )
         yield Result(state=State.OK, notice=f"Last run time: {render.datetime(job.last_run)}")
-
-    if not status:
-        yield Result(state=State.OK, notice=f"Status: {job.status}")
 
     if job.duration is not None:
         yield Result(state=State.OK, notice=f"Duration: {render.timespan(job.duration)}")

@@ -63,7 +63,7 @@ import json
 import logging
 from datetime import datetime as Datetime
 from datetime import timedelta
-from os import getenv
+from os import environ, getenv
 from pathlib import Path
 from sys import exit as sys_exit
 
@@ -79,6 +79,7 @@ from tests.performance.reporting.performance_db import (
     PerformanceDb,
 )
 from tests.performance.reporting.performance_graphs import PerformanceGraphs
+from tests.performance.reporting.perftest_run import run_date
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -277,12 +278,13 @@ class PerftestPlot:
         """The 4 daily jobs before today, shifted back by the baseline offset, and today's job."""
         num_old_jobs = 4
         offset = self.args.baseline_offset
+        today = run_date(environ)
         return [
-            (Datetime.today() - timedelta(days=offset + i)).strftime(
+            (today - timedelta(days=offset + i)).strftime(
                 f"{self.args.branch_version}-%Y.%m.%d.{self.args.edition}"
             )
             for i in range(num_old_jobs, 0, -1)
-        ] + [Datetime.today().strftime(f"{self.args.branch_version}-%Y.%m.%d.{self.args.edition}")]
+        ] + [today.strftime(f"{self.args.branch_version}-%Y.%m.%d.{self.args.edition}")]
 
     def _read_benchmark_data(self, job_name: str) -> Measurements:
         """
@@ -599,6 +601,7 @@ def main() -> None:
             runtime_tolerance=args.runtime_tolerance,
             baseline_offset=args.baseline_offset,
             checked_job_name=app.checked_job_name,
+            today=run_date(environ),
         )
         alerts = baselines.validate_performance_baselines()
         summary = f"Validate performance test {list(app.jobs.keys())[-1]}"

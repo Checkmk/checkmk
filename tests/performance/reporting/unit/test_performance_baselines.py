@@ -35,7 +35,10 @@ def _jobs(*runs: Mapping[str, Usage]) -> PerformanceData:
 
 
 def _baselines(
-    jobs: PerformanceData, today: date = date(2026, 11, 17), baseline_offset: int = 0
+    jobs: PerformanceData,
+    today: date = date(2026, 11, 17),
+    baseline_offset: int = 0,
+    checked_job_name: str | None = None,
 ) -> PerformanceBaselines:
     return PerformanceBaselines(
         jobs=jobs,
@@ -48,6 +51,7 @@ def _baselines(
         runtime_tolerance=10.0,
         baseline_offset=baseline_offset,
         today=today,
+        checked_job_name=checked_job_name,
     )
 
 
@@ -100,6 +104,17 @@ def test_a_baseline_of_zero_is_reported_without_failing() -> None:
     assert [
         (alert.is_failure, "CPU usage baseline weekly is 0" in alert.message) for alert in alerts
     ] == [(False, True)]
+
+
+def test_without_todays_run_the_previous_one_is_not_checked_again() -> None:
+    baselines = _baselines(
+        _jobs({"test_x": (1.0, 50.0, 40.0)}, {"test_x": (2.0, 50.0, 40.0)}),
+        checked_job_name="2.6.0-2026.11.17.pro",
+    )
+
+    alerts = baselines.validate_performance_baselines()
+
+    assert [(alert.is_failure, "not found" in alert.message) for alert in alerts] == [(False, True)]
 
 
 def test_a_scenario_missing_from_the_latest_run_is_reported_without_failing() -> None:

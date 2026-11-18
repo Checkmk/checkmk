@@ -1304,7 +1304,12 @@ class LockedByValuespec(Tuple):
                 ID(
                     title=_("Program"),
                 ),
-                ID(
+                # The connection id is free text the operator chose, and Checkmk has
+                # never constrained it. Validating it as an identifier here makes
+                # every host of such a connection unsavable, because the attribute is
+                # submitted with the form although it is read only. The REST API
+                # declares the same field as a plain string.
+                TextInput(
                     title=_("Connection ID"),
                 ),
             ],

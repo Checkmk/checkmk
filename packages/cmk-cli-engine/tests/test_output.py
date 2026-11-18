@@ -4,51 +4,111 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import signal
-import sys
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 
 import pytest
 
-from cmk.cli.engine.output import _pager_environment as _cli_pager_environment
-from cmk.cli.engine.output import write_paged as cli_write_paged
-from cmk.cli.engine.output import write_stderr as cli_write_stderr
+from cmk.cli.engine.output import Console as CLIConsole
+
+from ._console import FakeRunPager, FakeTerminal
 
 
-def test_an_error_is_written_to_stderr(capsys: pytest.CaptureFixture[str]) -> None:
-    cli_write_stderr("ERROR: it broke\n")
-
-    assert capsys.readouterr().err == "ERROR: it broke\n"
-
-
-def test_a_redirected_help_is_written_to_stdout(capsys: pytest.CaptureFixture[str]) -> None:
-    cli_write_paged("the help\n", {})
-
-    assert capsys.readouterr().out == "the help\n"
-
-
-def test_a_help_on_a_terminal_is_written_through_the_pager(
-    monkeypatch: pytest.MonkeyPatch, capfd: pytest.CaptureFixture[str]
-) -> None:
-    monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
-
-    cli_write_paged("the help\n", {"PAGER": "cat"})
-
-    assert capfd.readouterr().out == "the help\n"
+def _console(
+    stdout: FakeTerminal,
+    run_pager: FakeRunPager | None = None,
+    environ: Mapping[str, str] = {},
+) -> CLIConsole:
+    return CLIConsole(
+        stdout=stdout,
+        stderr=FakeTerminal(),
+        environ=environ,
+        run_pager=run_pager or FakeRunPager(),
+    )
 
 
-def test_a_missing_pager_falls_back_to_stdout(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+def _page_on_a_terminal(run_pager: FakeRunPager, environ: Mapping[str, str] = {}) -> FakeTerminal:
+    terminal = FakeTerminal(tty=True)
+    _console(terminal, run_pager, environ).page("the help\n")
+    return terminal
 
-    cli_write_paged("the help\n", {"PAGER": "no-such-pager-on-this-system"})
 
-    assert capsys.readouterr().out == "the help\n"
+def test_an_error_is_written_to_stderr() -> None:
+    stderr = FakeTerminal()
+
+    CLIConsole(
+        stdout=FakeTerminal(), stderr=stderr, environ={}, run_pager=FakeRunPager()
+    ).write_error("ERROR: it broke\n")
+
+    assert stderr.getvalue() == "ERROR: it broke\n"
+
+
+def test_a_redirected_help_is_written_as_it_is() -> None:
+    stdout = FakeTerminal()
+
+    _console(stdout).page("the help\n")
+
+    assert stdout.getvalue() == "the help\n"
+
+
+def test_a_help_on_a_terminal_is_shown_by_the_users_pager() -> None:
+    run_pager = FakeRunPager()
+
+    _page_on_a_terminal(run_pager, {"PAGER": "most -s"})
+
+    assert run_pager.commands == [["most", "-s"]]
+
+
+def test_without_a_pager_of_their_own_the_user_gets_less() -> None:
+    run_pager = FakeRunPager()
+
+    _page_on_a_terminal(run_pager)
+
+    assert run_pager.commands == [["less"]]
+
+
+def test_the_pager_is_handed_the_help() -> None:
+    run_pager = FakeRunPager()
+
+    _page_on_a_terminal(run_pager)
+
+    assert run_pager.texts == ["the help\n"]
+
+
+def test_a_help_on_a_terminal_is_not_written_besides_the_pager() -> None:
+    assert _page_on_a_terminal(FakeRunPager()).getvalue() == ""
+
+
+def test_a_missing_pager_falls_back_to_writing_the_help() -> None:
+    terminal = _page_on_a_terminal(FakeRunPager(FileNotFoundError("most")))
+
+    assert terminal.getvalue() == "the help\n"
+
+
+def test_a_pager_that_quits_early_is_no_error() -> None:
+    terminal = _page_on_a_terminal(FakeRunPager(BrokenPipeError()))
+
+    assert terminal.getvalue() == ""
+
+
+def test_a_users_own_less_options_are_kept_after_ours() -> None:
+    run_pager = FakeRunPager()
+
+    _page_on_a_terminal(run_pager, {"LESS": "--tabs=4"})
+
+    assert run_pager.environments[0]["LESS"].endswith("$ --tabs=4")
+
+
+def test_a_page_that_fits_the_screen_is_not_held_open() -> None:
+    run_pager = FakeRunPager()
+
+    _page_on_a_terminal(run_pager)
+
+    assert "--quit-if-one-screen" in run_pager.environments[0]["LESS"].split()
 
 
 @pytest.fixture(name="own_sigint_handler")
 def _own_sigint_handler() -> Iterator[None]:
-    previous = signal.getsignal(signal.SIGINT)
+    previous = signal.signal(signal.SIGINT, signal.default_int_handler)
     try:
         yield
     finally:
@@ -56,20 +116,16 @@ def _own_sigint_handler() -> Iterator[None]:
 
 
 @pytest.mark.usefixtures("own_sigint_handler")
-def test_an_interrupt_leaves_the_pager_to_clean_up_after_itself(
-    monkeypatch: pytest.MonkeyPatch, capfd: pytest.CaptureFixture[str]
-) -> None:
-    monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
-    signal.signal(signal.SIGINT, signal.default_int_handler)
+def test_an_interrupt_is_left_to_the_pager() -> None:
+    run_pager = FakeRunPager()
 
-    cli_write_paged("the help\n", {"PAGER": "sh -c 'kill -INT $PPID; sleep 1; cat'"})
+    _page_on_a_terminal(run_pager)
 
-    assert capfd.readouterr().out == "the help\n"
+    assert run_pager.sigint_handlers == [signal.SIG_IGN]
 
 
-def test_a_users_own_less_options_are_kept_after_ours() -> None:
-    assert _cli_pager_environment({"LESS": "--tabs=4"})["LESS"].endswith("$ --tabs=4")
+@pytest.mark.usefixtures("own_sigint_handler")
+def test_an_interrupt_is_handled_again_after_paging() -> None:
+    _page_on_a_terminal(FakeRunPager())
 
-
-def test_a_page_that_fits_the_screen_is_not_held_open() -> None:
-    assert "--quit-if-one-screen" in _cli_pager_environment({})["LESS"].split()
+    assert signal.getsignal(signal.SIGINT) is signal.default_int_handler

@@ -9,8 +9,8 @@ import signal
 import sys
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from functools import partial
 from pathlib import Path
+from typing import TextIO
 
 import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
@@ -28,7 +28,7 @@ from cmk.trace.export import exporter_from_config, init_span_processor
 
 from .arguments import RunCommand
 from .discovery import discover_commands
-from .output import write_paged, write_stderr
+from .output import Console, run_pager
 from .run import CommandTracer, run, Runtime
 
 tracer = trace.get_tracer()
@@ -39,9 +39,9 @@ def _enable_file_logging(path: Path, logger: logging.Logger) -> None:
     log_to_watched_file(logger, path)
 
 
-def _configure_logging() -> logging.Logger:
+def _configure_logging(stderr: TextIO) -> logging.Logger:
     logger = logging.getLogger("cmk")
-    handler = logging.StreamHandler(sys.stderr)
+    handler = logging.StreamHandler(stderr)
     handler.setFormatter(
         # astrein: disable=logging-formatter
         logging.Formatter("[%(levelname)s] %(message)s")
@@ -106,6 +106,9 @@ def main() -> int:
             sys.stderr.write("Checkmk can be used only as site user.\n")
             return 1
         case omd_root:
+            console = Console(
+                stdout=sys.stdout, stderr=sys.stderr, environ=os.environ, run_pager=run_pager
+            )
             return run(
                 Path(omd_root),
                 sys.argv,
@@ -118,8 +121,7 @@ def main() -> int:
                     enable_profiling=profiling.enable,
                     log_to_file=_enable_file_logging,
                     write_profile=_write_profile,
-                    page=partial(write_paged, environ=os.environ),
-                    write_error=write_stderr,
-                    logger=_configure_logging(),
+                    console=console,
+                    logger=_configure_logging(console.stderr),
                 ),
             )

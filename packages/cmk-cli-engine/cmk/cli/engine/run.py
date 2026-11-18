@@ -21,6 +21,7 @@ from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from .arguments import InvalidArguments, parse, RunCommand, ShowHelp
 from .commands import Commands, DiscoveredCommand
 from .options import GlobalOptions
+from .output import Console
 
 type CommandTracer = Callable[[CLIContext, RunCommand], AbstractContextManager[None]]
 
@@ -34,8 +35,7 @@ class Runtime:
     enable_profiling: Callable[[], None]
     log_to_file: Callable[[Path, logging.Logger], None]
     write_profile: Callable[[Path], None]
-    page: Callable[[str], None]
-    write_error: Callable[[str], None]
+    console: Console
     logger: logging.Logger
 
 
@@ -73,7 +73,7 @@ def _apply_global_options(global_options: GlobalOptions, runtime: Runtime) -> No
 
 
 def _show_help(commands: Commands, runtime: Runtime) -> CLIExitCode:
-    runtime.page(commands.help())
+    runtime.console.page(commands.help())
     return CLIExitCode.SUCCESS
 
 
@@ -100,7 +100,7 @@ def run(
 
     match parse(commands, argv):
         case InvalidArguments(message=message):
-            runtime.write_error(message)
+            runtime.console.write_error(message)
             return CLIExitCode.UNKNOWN.value
         case ShowHelp(global_options=global_options):
             command = partial(_show_help, commands, runtime)

@@ -17,6 +17,7 @@ import pytest
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
 from cmk.cli.engine.discovery import make_command as cli_make_command
+from cmk.cli.engine.output import Console as CLIConsole
 from cmk.cli.engine.run import CommandTracer as CLICommandTracer
 from cmk.cli.engine.run import run as cli_run
 from cmk.cli.engine.run import Runtime as CLIRuntime
@@ -31,6 +32,7 @@ from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 
 from ._commands import command_with, HANDED_IN
+from ._console import FakeRunPager, FakeTerminal
 from ._logger import null_logger
 
 _CRASH_MESSAGE = "Boom: it broke - please submit a crash report! (Crash-ID: 42)"
@@ -92,8 +94,8 @@ def _runtime(
     enable_profiling: Callable[[], None] = lambda: None,
     log_to_file: Callable[[Path, logging.Logger], None] = lambda _path, _logger: None,
     write_profile: Callable[[Path], None] = lambda _path: None,
-    page: Callable[[str], None] = lambda _text: None,
-    write_error: Callable[[str], None] = lambda _text: None,
+    stdout: FakeTerminal | None = None,
+    stderr: FakeTerminal | None = None,
     report_crash: Callable[[Path, Sequence[str], Mapping[str, str]], str] = (
         lambda _omd_root, _argv, _environ: _CRASH_MESSAGE
     ),
@@ -107,8 +109,12 @@ def _runtime(
         enable_profiling=enable_profiling,
         log_to_file=log_to_file,
         write_profile=write_profile,
-        page=page,
-        write_error=write_error,
+        console=CLIConsole(
+            stdout=stdout or FakeTerminal(),
+            stderr=stderr or FakeTerminal(),
+            environ={},
+            run_pager=FakeRunPager(),
+        ),
         logger=logger,
     )
 
@@ -236,14 +242,14 @@ def test_a_sub_option_argument_the_conversion_rejects_exits_three() -> None:
 
 
 def test_a_sub_option_argument_the_conversion_rejects_says_so() -> None:
-    written = Recorder()
+    stderr = FakeTerminal()
 
     _run(
         ["cmk", "--demo", "--number", "x"],
-        _runtime([_numbered(lambda *_args: CLIExitCode.SUCCESS)], write_error=written),
+        _runtime([_numbered(lambda *_args: CLIExitCode.SUCCESS)], stderr=stderr),
     )
 
-    assert "--number: Invalid argument" in str(written.calls[0])
+    assert "--number: Invalid argument" in stderr.getvalue()
 
 
 def test_a_deprecated_spelling_is_reported_in_the_log_file() -> None:
@@ -328,11 +334,11 @@ def test_an_unknown_option_exits_three() -> None:
 
 
 def test_an_unknown_option_says_what_it_did_not_recognise() -> None:
-    written = Recorder()
+    stderr = FakeTerminal()
 
-    _run(["cmk", "--nonsense"], _runtime(write_error=written))
+    _run(["cmk", "--nonsense"], _runtime(stderr=stderr))
 
-    assert "--nonsense" in str(written.calls[0])
+    assert "--nonsense" in stderr.getvalue()
 
 
 def test_the_help_exits_zero() -> None:
@@ -340,19 +346,19 @@ def test_the_help_exits_zero() -> None:
 
 
 def test_the_help_is_paged() -> None:
-    paged = Recorder()
+    stdout = FakeTerminal()
 
-    _run(["cmk", "--help"], _runtime(page=paged))
+    _run(["cmk", "--help"], _runtime(stdout=stdout))
 
-    assert "WAYS TO CALL" in str(paged.calls[0])
+    assert "WAYS TO CALL" in stdout.getvalue()
 
 
 def test_the_help_names_the_commands_there_are() -> None:
-    paged = Recorder()
+    stdout = FakeTerminal()
 
-    _run(["cmk", "--help"], _runtime([_command(lambda *_args: CLIExitCode.SUCCESS)], page=paged))
+    _run(["cmk", "--help"], _runtime([_command(lambda *_args: CLIExitCode.SUCCESS)], stdout=stdout))
 
-    assert "--demo" in str(paged.calls[0])
+    assert "--demo" in stdout.getvalue()
 
 
 @pytest.fixture(name="ignored_sigint")

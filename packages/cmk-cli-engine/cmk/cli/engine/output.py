@@ -6,9 +6,9 @@
 import shlex
 import signal
 import subprocess
-import sys
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
+from dataclasses import dataclass
 from typing import Final, TextIO
 
 
@@ -16,14 +16,6 @@ def _write(stream: TextIO, txt: str) -> None:
     with suppress(IOError):
         stream.write(txt)
         stream.flush()
-
-
-def _write_stdout(txt: str) -> None:
-    _write(sys.stdout, txt)
-
-
-def write_stderr(txt: str) -> None:
-    _write(sys.stderr, txt)
 
 
 _DEFAULT_PAGER: Final = "less"
@@ -48,19 +40,34 @@ def _sigint_ignored() -> Iterator[None]:
         signal.signal(signal.SIGINT, previous)
 
 
-def write_paged(txt: str, environ: Mapping[str, str]) -> None:
-    if not sys.stdout.isatty():
-        _write_stdout(txt)
-        return
+type RunPager = Callable[[Sequence[str], str, Mapping[str, str]], object]
 
-    try:
-        with suppress(BrokenPipeError), _sigint_ignored():
-            subprocess.run(
-                shlex.split(environ.get("PAGER") or _DEFAULT_PAGER),
-                input=txt,
-                text=True,
-                check=False,
-                env=_pager_environment(environ),
-            )
-    except OSError, ValueError:
-        _write_stdout(txt)
+
+def run_pager(command: Sequence[str], txt: str, environ: Mapping[str, str]) -> None:
+    subprocess.run(command, input=txt, text=True, check=False, env=environ)
+
+
+@dataclass(frozen=True, kw_only=True)
+class Console:
+    stdout: TextIO
+    stderr: TextIO
+    environ: Mapping[str, str]
+    run_pager: RunPager
+
+    def write_error(self, txt: str) -> None:
+        _write(self.stderr, txt)
+
+    def page(self, txt: str) -> None:
+        if not self.stdout.isatty():
+            _write(self.stdout, txt)
+            return
+
+        try:
+            with suppress(BrokenPipeError), _sigint_ignored():
+                self.run_pager(
+                    shlex.split(self.environ.get("PAGER") or _DEFAULT_PAGER),
+                    txt,
+                    _pager_environment(self.environ),
+                )
+        except OSError, ValueError:
+            _write(self.stdout, txt)

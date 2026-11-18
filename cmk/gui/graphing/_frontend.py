@@ -25,7 +25,7 @@ from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
     CmkTimeSeriesGraph,
-    ExplicitRange,
+    FixedRange,
     GraphHeader,
     GraphOptions,
     Interaction,
@@ -157,10 +157,10 @@ def _shell_y_axis(built: BuiltGraph, temperature_unit: TemperatureUnit) -> YAxis
         unit_format, conversion = user_unit_format(unit, temperature_unit)
     return YAxis(
         unit=unit_format,
-        explicit_range=(
+        vertical_range=(
             None
             if bounds is None
-            else ExplicitRange(min=conversion(bounds[0]), max=conversion(bounds[1]))
+            else FixedRange(min=conversion(bounds[0]), max=conversion(bounds[1]))
         ),
     )
 

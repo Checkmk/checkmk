@@ -35,7 +35,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       <span data-testid="pan-enabled">{{ panEnabled }}</span>
       <span data-testid="value-range">{{ valueRange === null ? 'none' : valueRange.max }}</span>
       <span data-testid="y-axis">{{ options?.y_axis === null ? 'null' : 'set' }}</span>
-      <span data-testid="y-axis-range">{{ options?.y_axis?.explicit_range?.max ?? 'none' }}</span>
+      <span data-testid="y-axis-range">{{ options?.y_axis?.vertical_range?.max ?? 'none' }}</span>
       <span data-testid="y-axis-unit">{{ options?.y_axis?.unit?.notation ?? 'none' }}</span>
       <span data-testid="pin-enabled">{{ pinEnabled }}</span>
       <span data-testid="pin-time">{{ pinTime }}</span>
@@ -751,7 +751,7 @@ describe('room for the pin marker', () => {
 
 test("merges a unit-less y-axis prop's explicit range with the metric-derived unit", async () => {
   // The prop carries only the explicit range; the unit must be filled in from the metric.
-  renderFigure({ yAxis: { explicit_range: { min: 1, max: 5 } } })
+  renderFigure({ yAxis: { vertical_range: { type: 'fixed', min: 1, max: 5 } } })
   await screen.findByTestId('time-series-graph')
 
   expect(screen.getByTestId('y-axis')).toHaveTextContent('set')
@@ -766,7 +766,7 @@ test('omits the y-axis entirely when the prop has no unit and no metric supplies
     response: new Response('{}', { status: 200 })
   } as never)
 
-  renderFigure({ yAxis: { explicit_range: { min: 1, max: 5 } } })
+  renderFigure({ yAxis: { vertical_range: { type: 'fixed', min: 1, max: 5 } } })
   await screen.findByTestId('time-series-graph')
 
   // No unit from the prop and none from a metric: the guard yields null, not a unit-less axis.

@@ -322,13 +322,14 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
 const yAxis = computed<YAxis | null>(() => {
   const unit = yAxisUnitOf(graphOptions)
   const range = graphOptions.explicit_vertical_range
-  const explicitRange = range.type === 'fixed' ? { min: range.lower, max: range.upper } : null
-  if (unit === null && explicitRange === null) {
+  const verticalRange =
+    range.type === 'fixed' ? { type: 'fixed' as const, min: range.lower, max: range.upper } : null
+  if (unit === null && verticalRange === null) {
     return null
   }
   return {
     ...(unit === null ? {} : { unit }),
-    ...(explicitRange === null ? {} : { explicit_range: explicitRange })
+    ...(verticalRange === null ? {} : { vertical_range: verticalRange })
   }
 })
 

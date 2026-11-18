@@ -323,7 +323,7 @@ function draw(): void {
     props.fitHorizontalLines ? props.horizontal_lines : []
   )
 
-  const explicitRange = props.options.y_axis?.explicit_range || null
+  const explicitRange = props.options.y_axis?.vertical_range ?? null
   const [rawYMin, rawYMax] = props.valueRange
     ? [props.valueRange.min, props.valueRange.max]
     : explicitRange

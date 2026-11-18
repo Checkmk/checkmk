@@ -216,7 +216,8 @@ class ApiHorizontalLine:
 
 
 @api_model
-class ApiExplicitRange:
+class ApiFixedRange:
+    type: Literal["fixed"] = api_field(description="Fixes the axis to its edges.")
     min: float = api_field(description="The lower edge of the axis.", example=0.0)
     max: float = api_field(description="The upper edge of the axis.", example=100.0)
 
@@ -232,10 +233,8 @@ class ApiYAxis:
         ),
         default_factory=ApiOmitted,
     )
-    explicit_range: ApiExplicitRange | ApiOmitted = api_field(
-        description=(
-            "The edges the axis is fixed to. Absent to scale it to the values that are drawn."
-        ),
+    vertical_range: ApiFixedRange | ApiOmitted = api_field(
+        description="The values the axis spans. Absent to scale it to the values that are drawn.",
         default_factory=ApiOmitted,
     )
 
@@ -251,10 +250,12 @@ class ApiYAxis:
             unit_format, conversion = user_unit_format(built.y_axis_unit, temperature_unit)
         return cls(
             unit=(ApiOmitted() if unit_format is None else ApiUnitFormat.from_shared(unit_format)),
-            explicit_range=(
+            vertical_range=(
                 ApiOmitted()
                 if bounds is None
-                else ApiExplicitRange(min=conversion(bounds[0]), max=conversion(bounds[1]))
+                else ApiFixedRange(
+                    type="fixed", min=conversion(bounds[0]), max=conversion(bounds[1])
+                )
             ),
         )
 

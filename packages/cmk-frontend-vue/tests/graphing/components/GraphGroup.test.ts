@@ -75,7 +75,7 @@ vi.mock('@/graphing/components/GraphPanel.vue', () => ({
         ? brushSnapshot.drawnDomain.start + ',' + brushSnapshot.drawnDomain.end + '|' +
           brushSnapshot.window.start + ',' + brushSnapshot.window.end
         : 'none' }}</span>
-      <span data-testid="panel-y-axis-range">{{ yAxis?.explicit_range?.max ?? 'none' }}</span>
+      <span data-testid="panel-y-axis-range">{{ yAxis?.vertical_range?.max ?? 'none' }}</span>
       <span data-testid="panel-shaded-regions">{{ shadedRegions?.length ?? 'none' }}</span>
       <span data-testid="panel-consolidation">{{ consolidationFn }}</span>
       <button @click="$emit('update:consolidationFn', 'min')">consolidate by min</button>
@@ -1173,7 +1173,7 @@ test('hands the fetched shaded regions to the panel that draws it', async () => 
 
 test("threads each definition's configured y-axis to its own panel", async () => {
   const withRange = makeGraphDefinition('CPU utilization')
-  withRange.options.y_axis = { unit: UNIT, explicit_range: { min: 1, max: 5 } }
+  withRange.options.y_axis = { unit: UNIT, vertical_range: { type: 'fixed', min: 1, max: 5 } }
   const withoutRange = makeGraphDefinition('Memory')
 
   renderGroup([withRange, withoutRange])

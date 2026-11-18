@@ -44,7 +44,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       <span data-testid="highlighted">{{ highlightedMetricNames.join(',') }}</span>
       <span data-testid="pan-enabled">{{ panEnabled }}</span>
       <span data-testid="axis-unit">{{ options.y_axis?.unit?.symbol ?? '' }}</span>
-      <span data-testid="axis-range">{{ options.y_axis?.explicit_range?.max ?? '' }}</span>
+      <span data-testid="axis-range">{{ options.y_axis?.vertical_range?.max ?? '' }}</span>
       <span data-testid="curve-units">{{
         metrics.map((m) => m.metadata.unit.symbol).join(',')
       }}</span>

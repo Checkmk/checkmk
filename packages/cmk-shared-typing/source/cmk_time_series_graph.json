@@ -44,21 +44,22 @@
       },
       "required": ["unit", "fixed_timerange"]
     },
-    "explicit_range": {
-      "title": "ExplicitRange",
+    "fixed_range": {
+      "title": "FixedRange",
       "type": "object",
       "properties": {
+        "type": { "const": "fixed", "default": "fixed" },
         "min": { "type": "number" },
         "max": { "type": "number" }
       },
-      "required": ["min", "max"]
+      "required": ["type", "min", "max"]
     },
     "y_axis": {
       "title": "YAxis",
       "type": "object",
       "properties": {
         "unit": { "$ref": "unit_format.json#" },
-        "explicit_range": { "$ref": "#/$defs/explicit_range" }
+        "vertical_range": { "$ref": "#/$defs/fixed_range" }
       }
     },
     "graph_options": {

@@ -60,7 +60,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', async () => {
       emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction', 'update:valueResolution'],
       template: `<div data-testid="time-series-graph">
       <span>{{ metrics.map((m) => m.metadata.title).join(",") }}</span>
-      <span data-testid="renderer-y-axis-range">{{ options?.y_axis?.explicit_range?.max ?? 'none' }}</span>
+      <span data-testid="renderer-y-axis-range">{{ options?.y_axis?.vertical_range?.max ?? 'none' }}</span>
       <span data-testid="renderer-y-axis-unit">{{ options?.y_axis?.unit?.notation ?? 'none' }}</span>
       <span data-testid="view-start">{{ view_time_range.start }}</span>
       <span data-testid="view-end">{{ view_time_range.end }}</span>
@@ -1437,7 +1437,7 @@ test('forwards a provided y-axis, explicit range included, into the renderer opt
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
-      yAxis: { unit: UNIT, explicit_range: { min: 1, max: 5 } }
+      yAxis: { unit: UNIT, vertical_range: { type: 'fixed', min: 1, max: 5 } }
     }
   })
 

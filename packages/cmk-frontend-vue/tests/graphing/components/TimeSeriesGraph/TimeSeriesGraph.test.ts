@@ -701,7 +701,7 @@ describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
     // A range the data (between 1 and 5) can never produce, so any tick reaching it proves the
     // axis was forced onto the explicit range rather than derived from the data. Symmetric bounds
     // so d3's ticks land on the endpoints regardless of the chosen step.
-    const EXPLICIT_RANGE = { min: -40, max: 40 }
+    const EXPLICIT_RANGE = { type: 'fixed' as const, min: -40, max: 40 }
 
     // Empty tick texts appear mid-transition; Number('') is 0, not NaN, so they must be
     // dropped before parsing or they would spuriously pull the min down to zero.
@@ -717,7 +717,7 @@ describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
         metrics: [LINE_METRIC],
         options: {
           ...DEFAULT_PROPS.options,
-          y_axis: { unit: UNIT, explicit_range: EXPLICIT_RANGE }
+          y_axis: { unit: UNIT, vertical_range: EXPLICIT_RANGE }
         },
         valueRange: null
       })
@@ -736,7 +736,7 @@ describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
         metrics: [LINE_METRIC],
         options: {
           ...DEFAULT_PROPS.options,
-          y_axis: { unit: UNIT, explicit_range: EXPLICIT_RANGE }
+          y_axis: { unit: UNIT, vertical_range: EXPLICIT_RANGE }
         },
         // A value-zoom is active: it must win, collapsing the axis back towards [1, 5] - these
         // are not necessarily the exact bounds of the axis, as they are aligned through the tick

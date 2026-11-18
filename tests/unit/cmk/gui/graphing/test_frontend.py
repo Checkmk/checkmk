@@ -62,8 +62,8 @@ from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
 from cmk.gui.utils.graph_refresh import GRAPH_REFRESH_INTERVALS_SECONDS
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import DropdownChoice
+from cmk.shared_typing.cmk_time_series_graph import FixedRange as AxisFixedRange
 from cmk.shared_typing.cmk_time_series_graph import (
-    ExplicitRange,
     GraphHeader,
     GraphOptions,
     Interaction,
@@ -424,7 +424,7 @@ def test_the_shell_axis_keeps_the_unit_the_graph_names_over_the_one_its_curves_i
             precision=Precision(type="strict", digits=0),
             convertible=False,
         ),
-        explicit_range=None,
+        vertical_range=None,
     )
 
 
@@ -439,7 +439,7 @@ def test_the_shell_axis_is_pinned_by_the_graphs_own_fixed_range() -> None:
     )
     y_axis = result.options.y_axis
     assert y_axis is not None
-    assert y_axis.explicit_range == ExplicitRange(min=0.0, max=100.0)
+    assert y_axis.vertical_range == AxisFixedRange(min=0.0, max=100.0)
     # The graph names no unit, so the axis still takes the one its curves are drawn in.
     assert y_axis.unit is not None
     assert y_axis.unit.symbol == "X"
@@ -456,7 +456,7 @@ def test_the_shell_axis_ignores_a_minimal_range_which_only_widens_the_drawn_exte
     )
     y_axis = result.options.y_axis
     assert y_axis is not None
-    assert y_axis.explicit_range is None
+    assert y_axis.vertical_range is None
 
 
 _RANGE = TimeRange(start=0, end=120, step=60)
@@ -585,4 +585,4 @@ def test_the_shell_axis_takes_the_users_temperature_unit() -> None:
     assert y_axis.unit.symbol == "°F"
     assert y_axis.unit.convertible is False
     # The bounds are in the metric's own scale, so they move with the unit.
-    assert y_axis.explicit_range == ExplicitRange(min=32.0, max=212.0)
+    assert y_axis.vertical_range == AxisFixedRange(min=32.0, max=212.0)

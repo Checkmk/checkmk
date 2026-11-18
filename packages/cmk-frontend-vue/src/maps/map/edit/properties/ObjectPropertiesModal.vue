@@ -21,7 +21,7 @@ import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, ref, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 
 import { useDraggableCard } from '@/maps/map/edit/composables/useDraggableCard'
 import { useObjectMetrics } from '@/maps/map/edit/composables/useObjectMetrics'
@@ -52,6 +52,7 @@ import TextboxSection from '@/maps/map/edit/properties/sections/TextboxSection.v
 import MapsConfirmDialog from '@/maps/shared/components/MapsConfirmDialog.vue'
 import MapsUnsavedChangesDialog from '@/maps/shared/components/MapsUnsavedChangesDialog.vue'
 import { useEscapeClose } from '@/maps/shared/composables/useEscapeClose'
+import { useFocusReturn } from '@/maps/shared/composables/useFocusReturn'
 import type { MapElement, MapViewType, ObjectState } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { objectDeleteTitle, objectTypeLabel } from '@/maps/utils/dropdownOptions'
@@ -130,6 +131,8 @@ const metrics = useObjectMetrics({
 })
 
 const frame = useTemplateRef<HTMLElement>('frame')
+useFocusReturn(() => true)
+onMounted(() => frame.value?.focus())
 const { dragOffset, dragging, onHeaderPointerDown, onHeaderPointerMove, onHeaderPointerUp } =
   useDraggableCard(
     () => props.object,
@@ -286,6 +289,7 @@ function onConfirmDelete(): void {
     class="maps-object-properties-modal"
     role="dialog"
     :aria-label="_t('Object properties')"
+    tabindex="-1"
   >
     <!-- Takes the clicks beside the card; an edited card asks before they
          discard it. Keyboard users have Escape and the close
@@ -406,6 +410,11 @@ function onConfirmDelete(): void {
   position: fixed;
   inset: 0;
   z-index: var(--z-index-modal);
+}
+
+/* Takes the focus only so the fields are next to Tab; the card is outlined anyway. */
+.maps-object-properties-modal:focus {
+  outline: none;
 }
 
 .maps-object-properties-modal__backdrop {

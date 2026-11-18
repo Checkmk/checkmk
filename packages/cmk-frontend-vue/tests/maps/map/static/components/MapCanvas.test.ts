@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
@@ -163,6 +163,25 @@ describe('MapCanvas', () => {
     await user.keyboard('{Enter}')
 
     expect(clicked.value).toMatchObject({ id: '1', type: 'host', host_name: 'localhost' })
+  })
+})
+
+describe('MapCanvas – context menu', () => {
+  it('hands the focus back to the object the menu was opened on', async () => {
+    const user = userEvent.setup()
+    render(MapCanvas, {
+      props: { ...baseProps, checkmkUrl: 'http://checkmk/site/check_mk/' },
+      global: mapsGlobal({ HoverMenu: true, teleport: true, MapElement: true, MapLine: true })
+    })
+    const object = screen.getByRole('button', { name: 'localhost, Up' })
+
+    await user.pointer({ keys: '[MouseRight]', target: object })
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'State of host' })).toHaveFocus()
+    )
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => expect(object).toHaveFocus())
   })
 })
 

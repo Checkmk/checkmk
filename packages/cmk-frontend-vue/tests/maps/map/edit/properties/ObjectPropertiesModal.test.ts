@@ -6,7 +6,7 @@
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@testing-library/vue'
 import { describe, expect, it, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 
 import ObjectPropertiesModal from '@/maps/map/edit/properties/ObjectPropertiesModal.vue'
 import type { MapElement, ObjectType } from '@/maps/types/api'
@@ -314,6 +314,30 @@ describe('ObjectPropertiesModal – close / detach / delete', () => {
     await user.keyboard('{Escape}')
 
     expect(emitted().close).toEqual([['cancel'], ['cancel'], ['cancel']])
+  })
+
+  it('takes the focus and hands it back to what opened it', async () => {
+    const open = ref(false)
+    render(
+      defineComponent({
+        components: { ObjectPropertiesModal },
+        setup: () => ({ open, object: obj({ type: 'host', host_name: 'web01' }) }),
+        template: `
+          <button type="button">Opener</button>
+          <ObjectPropertiesModal v-if="open" :object="object" connection-id="test" />`
+      }),
+      { global: mapsGlobal(stubs) }
+    )
+    const opener = screen.getByRole('button', { name: 'Opener' })
+    opener.focus()
+
+    open.value = true
+    await nextTick()
+    expect(screen.getByRole('dialog', { name: 'Object properties' })).toHaveFocus()
+    open.value = false
+    await nextTick()
+
+    expect(opener).toHaveFocus()
   })
 
   it('closes on Escape while a layer elsewhere on the page stays open', async () => {

@@ -20,6 +20,8 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { DialogTitle } from 'reka-ui'
 import { computed } from 'vue'
 
+import { useFocusReturn } from '@/maps/shared/composables/useFocusReturn'
+
 type DialogVariant = 'error' | 'warning' | 'success' | 'info'
 
 const VARIANT_ICON = {
@@ -59,6 +61,8 @@ const props = withDefaults(
 
 const emit = defineEmits<{ confirm: []; cancel: [] }>()
 const { _t } = usei18n()
+
+useFocusReturn(() => props.open)
 
 const confirmTitle = computed(() => (props.confirmLabel ? props.confirmLabel : _t('Confirm')))
 const cancelTitle = computed(() => (props.cancelLabel ? props.cancelLabel : _t('Cancel')))

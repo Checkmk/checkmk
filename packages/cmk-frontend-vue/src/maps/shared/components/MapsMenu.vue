@@ -7,13 +7,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 A menu opened by a right-click on the map: at the pointer, over the canvas, with
 the entries the caller puts in the ``default`` slot as MapsMenuItems.
 
-What is clicked is drawn on a canvas, so there is no element for the focus to
-come back to: it moves into the menu when the menu opens, and the arrow keys walk
-the entries from there. Escape or a click outside closes it.
+The focus moves into the menu when it opens, and the arrow keys walk the
+entries from there. Escape or a click outside closes it. The focus goes back
+where it was before, unless a click outside put it elsewhere: for an entry
+before its action runs, so a dialog the action opens returns it there too.
 -->
 <script setup lang="ts">
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
-import { useTemplateRef, watch } from 'vue'
+import { onUnmounted, useTemplateRef, watch } from 'vue'
 
 import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
 
@@ -36,6 +37,51 @@ const vClickOutside = useClickOutside()
 const menuEl = useTemplateRef('menuEl')
 const menuStyle = usePointerOverlayStyle(menuEl, () => ({ x: props.x, y: props.y }))
 
+let lastFocused: HTMLElement | null = null
+
+function rememberOpener(): void {
+  const active = document.activeElement
+  if (active instanceof HTMLElement && !menuEl.value?.contains(active)) {
+    lastFocused = active
+  }
+}
+rememberOpener()
+
+function focusFirstEntry(): void {
+  ;(entries()[0] ?? menuEl.value)?.focus()
+}
+
+function restoreFocus(): void {
+  if (lastFocused?.isConnected) {
+    lastFocused.focus()
+  }
+  lastFocused = null
+}
+
+function onEntryClick(event: MouseEvent): void {
+  if (event.target instanceof Element && event.target.closest('[role="menuitem"]')) {
+    restoreFocus()
+  }
+}
+
+function closeOnClickOutside(): void {
+  lastFocused = null
+  emit('close')
+}
+
+onUnmounted(restoreFocus)
+
+// A right-click elsewhere while it is open moves it rather than remounting it:
+// that is a new opening, from what was clicked now.
+watch(
+  [() => props.x, () => props.y],
+  () => {
+    rememberOpener()
+    focusFirstEntry()
+  },
+  { flush: 'post' }
+)
+
 function entries(): HTMLElement[] {
   return Array.from(menuEl.value?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])
 }
@@ -48,7 +94,7 @@ const stopFocusing = watch(
     if (style.visibility === 'hidden') {
       return
     }
-    ;(entries()[0] ?? menuEl.value)?.focus()
+    focusFirstEntry()
     stopFocusing()
   },
   { flush: 'post' }
@@ -82,13 +128,14 @@ function onKeydown(e: KeyboardEvent): void {
 <template>
   <div
     ref="menuEl"
-    v-click-outside="() => emit('close')"
+    v-click-outside="closeOnClickOutside"
     class="maps-menu"
     role="menu"
     :aria-label="label"
     tabindex="-1"
     :style="menuStyle"
     @keydown="onKeydown"
+    @click.capture="onEntryClick"
   >
     <div v-if="heading" class="maps-menu__header">
       <p class="maps-menu__name">{{ heading }}</p>

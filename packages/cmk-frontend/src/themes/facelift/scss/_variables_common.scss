@@ -110,7 +110,7 @@ $spacing-quarter: (0.25 * $spacing);
 $spacing-double: (2 * $spacing);
 $menu-item-spacing: (2.2 * $spacing);
 
-$theme-border-radius: 4px;
+$theme-border-radius: 2px;
 $border-radius-top: $theme-border-radius $theme-border-radius 0 0;
 $border-radius-left: $theme-border-radius 0 0 $theme-border-radius;
 $border-radius-right: 0 $theme-border-radius $theme-border-radius 0;
@@ -125,7 +125,7 @@ $toggle-switch-width: 15px;
 $toggle-switch-width-large: 18px;
 $tag-padding: 0.1em 0.3em;
 $page-header-height: 58px;
-$popup-filters-border-radius: 2px;
+$popup-filters-border-radius: $theme-border-radius;
 $scrollbar-width: 12px;
 $mainmenu-navbar-height: 60px;
 $mainmenu-spacing-bottom: 20px;

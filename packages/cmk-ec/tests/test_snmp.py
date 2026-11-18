@@ -191,6 +191,44 @@ def test_variables_with_string_default_values_are_translated(
     assert ("TEST-MIB::testLogName", "backup.log") in result[0]
 
 
+def test_pysnmp_debug_messages_are_logged_when_debugging(
+    parser: SNMPTrapParser, logger: logging.Logger, caplog: pytest.LogCaptureFixture
+) -> None:
+    logger.setLevel(logging.DEBUG)
+
+    parser.parse(v2c_trap([]), ("192.0.2.1", 162))
+
+    assert (
+        logger.name,
+        logging.DEBUG,
+        "receiveMessage: msgVersion 1, msg decoded",
+    ) in caplog.record_tuples
+
+
+def test_pysnmp_debugging_follows_the_log_level(
+    make_parser: MakeParser, config: Config, logger: logging.Logger
+) -> None:
+    logger.setLevel(logging.DEBUG)
+    make_parser(config)
+
+    logger.setLevel(logging.INFO)
+
+    assert not pysnmp.debug.logger
+    assert not pysnmp.debug.logger & pysnmp.debug.FLAG_ALL
+    assert not pysnmp.debug.FLAG_ALL & pysnmp.debug.logger
+
+
+def test_pysnmp_debugging_is_on_while_debugging(
+    make_parser: MakeParser, config: Config, logger: logging.Logger
+) -> None:
+    logger.setLevel(logging.INFO)
+    make_parser(config)
+
+    logger.setLevel(logging.DEBUG)
+
+    assert pysnmp.debug.logger
+
+
 # A compiled MIB whose object can't print its values
 BROKEN_MIB = """
 (MibScalar,) = mibBuilder.import_symbols("SNMPv2-SMI", "MibScalar")

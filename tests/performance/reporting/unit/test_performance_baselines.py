@@ -146,8 +146,8 @@ def test_a_changed_scenario_is_checked_only_against_baselines_after_its_change(
     """The UI response scenarios changed on 2026-02-06, so older baselines do not compare."""
     baselines = _baselines(
         _jobs(
-            {"test_performance_ui_response_login": (1.0, 50.0, 40.0)},
-            {"test_performance_ui_response_login": (2.0, 50.0, 40.0)},
+            {"test_performance_ui_response[chromium-login]": (1.0, 50.0, 40.0)},
+            {"test_performance_ui_response[chromium-login]": (2.0, 50.0, 40.0)},
         ),
         today=date(2026, 2, 10),
         baseline_offset=baseline_offset,

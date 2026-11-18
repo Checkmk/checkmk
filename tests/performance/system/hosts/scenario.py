@@ -13,10 +13,7 @@ from tests.performance.system.perftest import PerformanceTest
 logger = logging.getLogger(__name__)
 
 
-def scenario_create_and_delete_hosts(
-    perftest: PerformanceTest,
-    restart_iterations: int = 0,
-) -> None:
+def scenario_create_and_delete_hosts(perftest: PerformanceTest) -> None:
     """Scenario: Bulk host creation
 
     Create 100 hosts on each site (central site+remote sites).
@@ -26,14 +23,13 @@ def scenario_create_and_delete_hosts(
     hosts = perftest.generate_hosts(perftest.object_count, perftest.central_site, perftest.sites)
     hostnames = perftest.create_hosts(perftest.central_site, hosts)
     assert hostnames
-    try:
-        if restart_iterations:
-            with track_resources("restart_central_site_with_hosts"):
-                for _ in range(restart_iterations):
-                    perftest.central_site.stop()
-                    perftest.central_site.start()
-    finally:
-        if not perftest.central_site.is_running():
-            perftest.central_site.start()
-        perftest.central_site.ensure_running()
-        perftest.delete_hosts(perftest.central_site, hostnames)
+    perftest.delete_hosts(perftest.central_site, hostnames)
+
+
+def scenario_restart_site(perftest: PerformanceTest, task_name: str) -> None:
+    """Scenario: Site restart with bulk-created hosts
+
+    Stop and start the central site."""
+    with track_resources(task_name):
+        perftest.central_site.stop()
+        perftest.central_site.start()

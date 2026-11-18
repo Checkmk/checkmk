@@ -74,31 +74,31 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    def stages = all_editions.collect { edition ->
-        def stepName = "Trigger ${edition}";
-        def run_condition = edition in editions_to_test;
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        def stages = all_editions.collect { edition ->
+            def stepName = "Trigger ${edition}";
+            def run_condition = edition in editions_to_test;
 
-        /// this makes sure the stage is marked as skipped
-        if (! run_condition){
-            Utils.markStageSkippedForConditional(stepName);
+            /// this makes sure the stage is marked as skipped
+            if (! run_condition){
+                Utils.markStageSkippedForConditional(stepName);
+            }
+
+            smart_stage(
+                name: stepName,
+                condition: run_condition,
+                raiseOnError: false,
+            ) {
+                smart_build(
+                    use_upstream_build: true,
+                    relative_job_name: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
+                    build_params: job_parameters,
+                    build_params_no_check: job_parameters_no_check,
+                    download: false,
+                );
+            }[0]
         }
 
-        smart_stage(
-            name: stepName,
-            condition: run_condition,
-            raiseOnError: false,
-        ) {
-            smart_build(
-                use_upstream_build: true,
-                relative_job_name: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
-                build_params: job_parameters,
-                build_params_no_check: job_parameters_no_check,
-                download: false,
-            );
-        }[0]
-    }
-
-    inside_container_minimal(safe_branch_name: safe_branch_name) {
         currentBuild.result = stages.every { it } ? "SUCCESS" : "FAILURE"
     }
 }

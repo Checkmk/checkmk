@@ -314,6 +314,7 @@ allows = [
   # the unit a series is shown in, shared with the alert wizard's preview
   "cmk.telemetry.series_unit",
   # the service name a series gets, shared with the alert wizard's preview
+  "cmk.telemetry.service_name_parts",
   "cmk.telemetry.service_name_template",
 ]
 
@@ -1025,6 +1026,7 @@ allows = [
   "cmk.discover_plugins",
   "cmk.checkengine.fetchers",
   "cmk.data_backend",
+  "cmk.shared_typing.aggregation",
   "cmk.shared_typing.consolidation",
   "cmk.utils.macros",
   "cmk.utils.paths",
@@ -2276,6 +2278,7 @@ allows = [
   "cmk.telemetry.host_name_template_resolution",
   "cmk.telemetry.host_name_template_validation",
   "cmk.telemetry.series_unit",
+  "cmk.telemetry.service_name_parts",
   "cmk.telemetry.service_name_template",
   "cmk.utils.global_ident_type",
   "cmk.utils.paths",

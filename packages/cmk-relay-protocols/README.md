@@ -23,4 +23,6 @@ bazel lint //packages/cmk-relay-protocols/...
 bazel build --config=mypy //packages/cmk-relay-protocols:cmk-relay-protocols
 ```
 
+[BAZEL.md](../../BAZEL.md) describes the general Bazel workflows.
+
 Deploy to a local site: `./scripts/cmk-dev-deploy.py`

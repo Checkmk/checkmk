@@ -12,6 +12,8 @@ bazel run :vite [-- <ARGS>]
 bazel run :vitest [-- <ARGS>]
 ```
 
+[BAZEL.md](../../BAZEL.md) describes the general Bazel workflows.
+
 To reproduce an order-dependent test failure:
 
 ```sh

@@ -33,10 +33,10 @@ A Rust tool for validating `RPATH`/`RUNPATH` settings in `DEB`, `RPM`, and `CMA`
 ### Building from Source
 
 ```bash
-cargo build --release
+bazel build //tests/packaging/package_validator
 ```
 
-The binary will be available at `target/release/package_validator`.
+The binary will be available at `bazel-bin/tests/packaging/package_validator/package_validator`.
 
 ### System Dependencies
 
@@ -309,14 +309,16 @@ package_validator/
 
 ```bash
 # Run all tests
-cargo test
+bazel test //tests/packaging/package_validator:all
 
 # Run with output
-cargo test -- --nocapture
+bazel test //tests/packaging/package_validator:all --test_output=all --test_arg=--nocapture
 
 # Run specific test
-cargo test test_package_integration_report
+bazel test //tests/packaging/package_validator:integration_tests --test_arg=test_package_integration_report --test_arg=--exact
 ```
+
+[BAZEL.md](../../../BAZEL.md) describes the general Bazel workflows.
 
 ## Technical Details
 

@@ -205,18 +205,7 @@ If a check failed, please fix it and update the PR.
 PRs will be considered stale if the author didn't respond for at least 14 days.
 It will be automatically closed after 60 days, if there is still no reply.
 
-It is recommended to run all tests locally before submitting a PR.
-If you want to execute the full test suite, you can do this by executing these commands in the project base directory:
-
-```console
-$ bazel test //tests/unit/...
-$ bazel lint --fix -- //...
-$ bazel run //:format path/to/file.py
-$ bazel build --config=mypy //...
-```
-
-See [BAZEL.md](BAZEL.md) for the full command reference including edition-specific
-testing, key CLI flags, and personal configuration.
+It is recommended to run the checks locally before submitting a PR; [BAZEL.md](BAZEL.md) lists their commands.
 
 > We highly recommend integrating ruff and mypy into the editor you work with.
 > Most editors will notify you about issues the moment you edit the code.
@@ -474,32 +463,14 @@ def worst_service_state(*states: int, default: int) -> int:
 - We supply an `.editorconfig` file, which is used to automatically configure your editor to adhere to the most basic formatting style, like indents or line-lengths.
   If your editor doesn't already come with Editorconfig support, install [one of the available plugins](https://editorconfig.org/#download).
 - We use [`ruff`](https://docs.astral.sh/ruff/) for automatic formatting of the Python code.
-  Have a look [below](#automatic-formatting) for further information.
+  Have a look [below](#automatic-formatting-with-ruff) for further information.
 - We use `ruff` (via `bazel lint`) for automatic sorting of imports in Python code.
   Import sorting is a linting concern, not a formatting one.
 
 ### Automatic formatting with ruff
 
 The `ruff` configuration lives in the `pyproject.toml` at the repository root — the single Python tool configuration file for the whole repository.
-`ruff` itself lives in a virtualenv managed by bazel/uv in `check_mk/.venv`.
-To format files, use `bazel run //:format <FILES>`. To check formatting without
-modifying files, use `bazel run //:format.check <FILES>`.
-
-Formatting adjusts layout only — it does not sort Python imports. Import sorting
-is handled by linting: run `bazel lint --fix` after formatting if you need
-imports sorted.
-
-#### Manual ruff formatting invocation: Single file
-
-```console
-$ ruff format [the_file.py]
-```
-
-#### Manual ruff linting invocation (also import sorting): Single file
-
-```console
-$ ruff check --fix [the_file.py]
-```
+Run `ruff` through Bazel as described in [Formatting](BAZEL.md#formatting) and [Linting](BAZEL.md#linting).
 
 #### Integration with CI
 
@@ -513,9 +484,9 @@ from being added to the repository.
 
 ### Type checking: mypy
 
-Code can be checked manually with `bazel build --config=mypy //...`.
+Run mypy through Bazel as described in [Type checking](BAZEL.md#type-checking).
 
-The configuration file is `mypy.ini` and lives in the root directory of the Checkmk repository.
+The configuration is the `[tool.mypy]` section of the `pyproject.toml` in the root directory of the Checkmk repository.
 For info about how to type hint refer to [mypy docs - Type hints cheat sheet (Python 2)](https://mypy.readthedocs.io/en/latest/cheat_sheet.html#type-hints-cheat-sheet-python-2).
 
 #### vim
@@ -552,7 +523,7 @@ With ":ALEInfo" you get information about the error diagnosis below, if it doesn
 
 #### Editor integration: \*macs
 
-- The mypy.ini should be found by Flycheck without further configuration.
+- Flycheck finds the mypy configuration in `pyproject.toml` without further configuration.
 - To use the correct mypy executable a `.dir-locals.el` in the root directory of the Checkmk repository is used.
 - To disable the risky variable warning that is triggered by setting the mypy executable the `safe-local-variables` variable has to be extended by:
 

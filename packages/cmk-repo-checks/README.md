@@ -118,3 +118,5 @@ bazel run //:format packages/cmk-repo-checks
 bazel lint //packages/cmk-repo-checks:all
 bazel build --config=mypy //packages/cmk-repo-checks:all
 ```
+
+[BAZEL.md](../../BAZEL.md) describes the general Bazel workflows.

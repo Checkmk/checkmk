@@ -82,12 +82,13 @@ Running tests
 =============
 
 Bazel manages package and integration tests and caches their results.
+``BAZEL.md`` in the repository root lists the commands, e.g. for running a
+single test or the tests of an edition.
 
 * Always run the tests of the packages you touched:
   ``bazel test //packages/<pkg>/...`` or ``bazel test //tests/unit/<path>/...``.
 * When you touch a cross-package boundary, also run
-  ``bazel test //tests/integration/... //non-free/tests/integration/...``, or
-  the relevant subset.
+  ``bazel test //tests/integration/...``, or the relevant subset.
 * Rarely run system tests locally. They are slow and need a site, and CI runs
   them selected by Bazel tags. Run them locally when you work on a system test
   itself or debug a CI failure, and then only the tests that cover your

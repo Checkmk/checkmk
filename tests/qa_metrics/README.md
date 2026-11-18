@@ -55,6 +55,8 @@ bazel test //tests/unit/qa_metrics/change_quality:change_quality    # change-qua
 bazel test //tests/unit/qa_metrics/test_coverage:tests              # code-coverage metric tests
 ```
 
+[BAZEL.md](../../BAZEL.md) describes the general Bazel workflows.
+
 The change-quality test target opts out of the bazel sandbox (`tags =
 ["no-sandbox"]`) because `test_walk.py` and `test_components.py` shell out to
 the host `git` binary against fixture repos built in `tmp_path`.

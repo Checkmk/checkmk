@@ -25,6 +25,8 @@ bazel run //:format packages/cmk-ui-library
 bazel lint //packages/cmk-ui-library/...
 ```
 
+[BAZEL.md](../../BAZEL.md) describes the general Bazel workflows.
+
 Unit tests live in `tests/`, mirroring the source layout, and run with vitest configured by `vite.config.ts` (jsdom, `tests/setup-tests.ts`).
 To reproduce an order-dependent test failure:
 

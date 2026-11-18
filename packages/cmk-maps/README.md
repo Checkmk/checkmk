@@ -64,3 +64,5 @@ Build and test via Bazel:
 bazel build //packages/cmk-maps:wheel
 bazel test //packages/cmk-maps/tests/unit:unit
 ```
+
+[BAZEL.md](../../BAZEL.md) describes the general Bazel workflows.

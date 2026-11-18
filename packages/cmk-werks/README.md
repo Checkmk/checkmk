@@ -117,3 +117,5 @@ bazel lint //packages/cmk-werks:all
 # Type-check
 bazel build --config=mypy //packages/cmk-werks:all
 ```
+
+[BAZEL.md](../../BAZEL.md) describes the general Bazel workflows.

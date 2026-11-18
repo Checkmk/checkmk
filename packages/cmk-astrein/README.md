@@ -41,6 +41,8 @@ bazel build --aspects //bazel/tools:aspects.bzl%astrein //cmk/...
 bazel lint --machine //cmk/...
 ```
 
+[BAZEL.md](../../BAZEL.md) describes the general Bazel workflows.
+
 ## Suppressing Violations
 
 Add inline comments to suppress specific violations:

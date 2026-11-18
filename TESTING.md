@@ -11,6 +11,7 @@ guides below that apply to your change.
 | [Flaky tests](doc/documentation/dev-testing-flaky.rst)                  | write a site test or investigate an intermittent failure            |
 | [Python / pytest](doc/documentation/dev-testing-python.rst)             | write or change a Python test                                       |
 | [Vue / vitest](doc/documentation/dev-testing-vue.rst)                   | write or change a test in `packages/cmk-frontend-vue`               |
+| [BAZEL.md](BAZEL.md#running-tests)                                      | run tests: one file, one test, an edition, or what CI runs          |
 
 The core rules: test behavior through the public surface, inject dependencies
 instead of patching Checkmk code, and cover one behavior per test.

@@ -46,6 +46,8 @@ bazel test //packages/cmk-agent-ctl/...                       # Linux
 bazel test //packages/cmk-agent-ctl:cmk-agent-ctl-tests-wine   # Windows, under Wine
 ```
 
+[BAZEL.md](../../../BAZEL.md) describes the general Bazel workflows.
+
 **System, agent updates:** the cases install the agent and change its registrations on the machine
 they run on, so they run in a container:
 

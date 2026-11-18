@@ -57,6 +57,8 @@ bazel test //packages/mk-oracle:mk-oracle-bin-test           # binary CLI + migr
 bazel test //packages/mk-oracle:mk-oracle-lib-test-external   # component tests, needs a DB + OCI client
 ```
 
+[BAZEL.md](../../../BAZEL.md) describes the general Bazel workflows.
+
 The component tests need the Oracle Instant Client staged under `runtimes/`; the package's `run` script orchestrates that and constructs `CI_ORA2_DB_TEST` for `oracle-rocky-ci.lan.checkmk.net` from `CI_ORA_TEST_PASSWORD`.
 
 **Windows** — `run.ps1 --component-tests` builds the `x86_64-pc-windows-msvc` target and runs the suite.

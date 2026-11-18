@@ -74,7 +74,7 @@ TO_SIGN_SCRIPTS = [
     "//cmk/plugins/collection/agents:iis_app_pool_state.ps1",
     "kaspersky_av_client.ps1",
     "mk_inventory.ps1",
-    "mk_msoffice.ps1",
+    "//cmk/plugins/msoffice/agents:mk_msoffice.ps1",
     "mk_mysql.ps1",
     "mk_oracle.ps1",
     "//cmk/plugins/msexch/agents:msexch_dag.ps1",

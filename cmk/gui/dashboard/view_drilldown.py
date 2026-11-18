@@ -13,7 +13,6 @@ from cmk.gui.painter import CellDrilldown
 from cmk.gui.top_heading import DRILLED_FROM_VAR
 from cmk.gui.type_defs import (
     ColumnName,
-    ContextualLinkEntryConfig,
     ContextualLinkTargetType,
     FilterHTTPVariables,
     FilterName,
@@ -61,23 +60,24 @@ class _CarriedFilter:
 
 def column_drilldowns(
     view_spec: ViewSpec,
-    column_links: Mapping[int, ContextualLinkEntryConfig],
     context: VisualContext,
     user_permissions: UserPermissions,
     drilled_from: DrillUpButton | None = None,
 ) -> dict[int, CellDrilldown]:
     """The drill-downs of an embedded view's columns, by painter index."""
     if (
-        not column_links
+        not any(painter.column_link for painter in view_spec["painters"])
         or (data_source_type := data_source_registry.get(view_spec["datasource"])) is None
     ):
         return {}
     data_source = data_source_type()
     object_infos = [info for info in ("host", "service") if info in data_source.infos]
     drilldowns: dict[int, CellDrilldown] = {}
-    for index, link in column_links.items():
+    for index, painter in enumerate(view_spec["painters"]):
+        if (link := painter.column_link) is None:
+            continue
         location = location_from_internal(link["location"])
-        if index >= len(view_spec["painters"]) or resolved_copy(location, user_permissions) is None:
+        if resolved_copy(location, user_permissions) is None:
             continue
         link_context = context if link["include_context"] else {}
         if link["filters"]:
@@ -93,7 +93,7 @@ def column_drilldowns(
             # A joined service row has every host and service column.
             joined_filters = (
                 [name for name in carried if name not in row_filters]
-                if view_spec["painters"][index].column_type == "join_column"
+                if painter.column_type == "join_column"
                 else []
             )
             drilldowns[index] = CellDrilldown(

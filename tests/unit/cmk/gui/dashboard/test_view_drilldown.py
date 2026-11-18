@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 from urllib.parse import parse_qsl, urlsplit
 
 import pytest
@@ -89,6 +90,11 @@ def _view_spec(name: str) -> ViewSpec:
     return multisite_builtin_views[name].copy()
 
 
+def _linked(view_spec: ViewSpec, link: ContextualLinkEntryConfig) -> ViewSpec:
+    first, *others = view_spec["painters"]
+    return {**view_spec, "painters": [dataclasses.replace(first, column_link=link), *others]}
+
+
 def _url_of_first_column(
     view_spec: ViewSpec,
     link: ContextualLinkEntryConfig,
@@ -97,7 +103,7 @@ def _url_of_first_column(
     drilled_from: DrillUpButton | None = None,
 ) -> tuple[str, dict[str, str]]:
     drilldowns = column_drilldowns(
-        view_spec, {0: link}, _CONTEXT, user_permissions, drilled_from=drilled_from
+        _linked(view_spec, link), _CONTEXT, user_permissions, drilled_from=drilled_from
     )
     url = drilldowns[0].url(row)
     parts = urlsplit(url)
@@ -170,8 +176,7 @@ def test_column_drilldowns_clicked_host_wins_over_the_host_in_the_context(
     admin_permissions: UserPermissions,
 ) -> None:
     drilldowns = column_drilldowns(
-        _view_spec("allhosts"),
-        {0: _inherited()},
+        _linked(_view_spec("allhosts"), _inherited()),
         {"host": {"host": "morgen"}},
         admin_permissions,
     )
@@ -186,8 +191,7 @@ def test_column_drilldowns_link_keeps_its_target_over_the_context(
     admin_permissions: UserPermissions,
 ) -> None:
     drilldowns = column_drilldowns(
-        _view_spec("allhosts"),
-        {0: _inherited()},
+        _linked(_view_spec("allhosts"), _inherited()),
         {"crafted": {"view_name": "other"}},
         admin_permissions,
     )
@@ -222,7 +226,7 @@ def test_column_drilldowns_link_to_a_dashboard_opens_the_dashboard_page(
 @pytest.mark.usefixtures("load_config", "request_context")
 def test_column_drilldowns_withholds_a_target_the_viewer_may_not_open() -> None:
     drilldowns = column_drilldowns(
-        _view_spec("allhosts"), {0: _inherited()}, _CONTEXT, UserPermissions({}, {}, {}, [])
+        _linked(_view_spec("allhosts"), _inherited()), _CONTEXT, UserPermissions({}, {}, {}, [])
     )
 
     assert drilldowns == {}
@@ -235,7 +239,7 @@ def test_column_drilldowns_offers_no_inherited_link_on_a_datasource_without_host
     view_spec = _view_spec("allhosts")
     view_spec["datasource"] = "hostgroups"
 
-    drilldowns = column_drilldowns(view_spec, {0: _inherited()}, _CONTEXT, admin_permissions)
+    drilldowns = column_drilldowns(_linked(view_spec, _inherited()), _CONTEXT, admin_permissions)
 
     assert drilldowns == {}
 
@@ -247,20 +251,7 @@ def test_column_drilldowns_offers_none_on_a_datasource_that_is_not_registered(
     view_spec = _view_spec("allhosts")
     view_spec["datasource"] = "not_a_registered_datasource"
 
-    drilldowns = column_drilldowns(view_spec, {0: _inherited()}, _CONTEXT, admin_permissions)
-
-    assert drilldowns == {}
-
-
-@pytest.mark.usefixtures("request_context")
-def test_column_drilldowns_drops_a_link_whose_painter_is_gone(
-    admin_permissions: UserPermissions,
-) -> None:
-    view_spec = _view_spec("allhosts")
-
-    drilldowns = column_drilldowns(
-        view_spec, {len(view_spec["painters"]): _inherited()}, _CONTEXT, admin_permissions
-    )
+    drilldowns = column_drilldowns(_linked(view_spec, _inherited()), _CONTEXT, admin_permissions)
 
     assert drilldowns == {}
 
@@ -277,7 +268,7 @@ def test_column_drilldowns_reads_the_columns_naming_the_row(
     admin_permissions: UserPermissions, view_name: str, columns: list[str]
 ) -> None:
     drilldowns = column_drilldowns(
-        _view_spec(view_name), {0: _inherited()}, _CONTEXT, admin_permissions
+        _linked(_view_spec(view_name), _inherited()), _CONTEXT, admin_permissions
     )
 
     assert drilldowns[0].columns == columns
@@ -469,9 +460,9 @@ def test_column_drilldowns_custom_link_to_a_host_view_links_even_without_the_hos
     context: VisualContext,
     host: str | None,
 ) -> None:
-    url = column_drilldowns(_view_spec("allhosts"), {0: link}, context, admin_permissions)[0].url(
-        _CUSTOM_HOST_ROW
-    )
+    url = column_drilldowns(_linked(_view_spec("allhosts"), link), context, admin_permissions)[
+        0
+    ].url(_CUSTOM_HOST_ROW)
 
     assert dict(parse_qsl(urlsplit(url).query)).get("host") == host
 
@@ -543,7 +534,7 @@ def test_column_drilldowns_custom_link_reads_the_columns_of_the_filters_it_carri
     view_spec = _view_spec("allhosts")
     view_spec["datasource"] = datasource
 
-    drilldowns = column_drilldowns(view_spec, {0: link}, _CONTEXT, admin_permissions)
+    drilldowns = column_drilldowns(_linked(view_spec, link), _CONTEXT, admin_permissions)
 
     assert drilldowns[0].columns == columns
 
@@ -570,12 +561,12 @@ def test_column_drilldowns_custom_link_on_a_joined_service_reads_the_service_fro
     view_spec["painters"] = [ColumnSpec("service_state", join_value="CPU load")]
 
     drilldown = column_drilldowns(
-        view_spec,
-        {
-            0: _custom(
+        _linked(
+            view_spec,
+            _custom(
                 ContextFilterConfig(filter_id="host"), ContextFilterConfig(filter_id="service")
-            )
-        },
+            ),
+        ),
         _CONTEXT,
         admin_permissions,
     )[0]
@@ -658,6 +649,8 @@ def test_column_drilldowns_custom_link_names_the_dashboard_it_leaves(
 def test_column_drilldowns_link_includes_the_time_range_as_its_link_does(
     link: ContextualLinkEntryConfig, admin_permissions: UserPermissions
 ) -> None:
-    drilldowns = column_drilldowns(_view_spec("allhosts"), {0: link}, _CONTEXT, admin_permissions)
+    drilldowns = column_drilldowns(
+        _linked(_view_spec("allhosts"), link), _CONTEXT, admin_permissions
+    )
 
     assert drilldowns[0].includes_time_range is link["include_time_range"]

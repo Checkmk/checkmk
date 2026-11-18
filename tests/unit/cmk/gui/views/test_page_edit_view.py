@@ -192,7 +192,7 @@ def fixture_tagged_painter_context(admin_painter_context: PainterContext) -> Pai
 
 
 def _columns(painter: str, drilldown: ContextualLinkEntryConfig) -> dict[str, list[object]]:
-    return {"columns": [(ColumnSpec(painter), drilldown)]}
+    return {"columns": [ColumnSpec(painter, column_link=drilldown)]}
 
 
 @pytest.mark.usefixtures("request_context")
@@ -202,14 +202,12 @@ def test_view_editor_column_spec_with_drilldown_keeps_a_drilldown_apart_from_the
     vs = view_editor_column_spec("columns", "hosts", admin_painter_context, with_drilldown=True)
     value = {
         "columns": [
-            (
-                ColumnSpec(
-                    "host",
-                    parameters=PainterParameters(color_choices=[]),
-                    column_title="",
-                    _column_type="column",
-                ),
-                _link(("dashboards", "main")),
+            ColumnSpec(
+                "host",
+                parameters=PainterParameters(color_choices=[]),
+                column_title="",
+                _column_type="column",
+                column_link=_link(("dashboards", "main")),
             )
         ]
     }
@@ -224,14 +222,12 @@ def test_view_editor_column_spec_with_drilldown_keeps_a_custom_drilldown(
     vs = view_editor_column_spec("columns", "hosts", admin_painter_context, with_drilldown=True)
     value = {
         "columns": [
-            (
-                ColumnSpec(
-                    "host",
-                    parameters=PainterParameters(color_choices=[]),
-                    column_title="",
-                    _column_type="column",
-                ),
-                _link(
+            ColumnSpec(
+                "host",
+                parameters=PainterParameters(color_choices=[]),
+                column_title="",
+                _column_type="column",
+                column_link=_link(
                     ("views", "allhosts"),
                     ContextFilterConfig(filter_id="host_labels", key="cmk/os_family"),
                     ContextFilterConfig(filter_id="wato_folder"),
@@ -251,15 +247,12 @@ def test_view_editor_column_spec_with_drilldown_keeps_a_link_to_a_view(
     vs = view_editor_column_spec("columns", "hosts", admin_painter_context, with_drilldown=True)
     value = {
         "columns": [
-            (
-                ColumnSpec(
-                    "host",
-                    parameters=PainterParameters(color_choices=[]),
-                    link_spec=VisualLinkSpec("views", "host"),
-                    column_title="",
-                    _column_type="column",
-                ),
-                None,
+            ColumnSpec(
+                "host",
+                parameters=PainterParameters(color_choices=[]),
+                link_spec=VisualLinkSpec("views", "host"),
+                column_title="",
+                _column_type="column",
             )
         ]
     }

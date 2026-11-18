@@ -13,6 +13,7 @@ from cmk.gui.type_defs import (
     _RawColumnSpec,
     _RawLegacyColumnSpec,
     ColumnSpec,
+    ContextualLinkEntryConfig,
     DismissableWarning,
     PainterParameters,
     VisualLinkSpec,
@@ -308,6 +309,22 @@ def test_column_spec_to_raw(
     expected_raw_column_spec: _RawColumnSpec,
 ) -> None:
     assert column_spec.to_raw() == expected_raw_column_spec
+
+
+def test_column_spec_keeps_its_column_link_through_raw() -> None:
+    column_spec = ColumnSpec(
+        name="host",
+        column_link=ContextualLinkEntryConfig(
+            title="host",
+            location=("views", "host"),
+            filters=[],
+            include_context=True,
+            include_time_range=True,
+            show_filter_form=False,
+        ),
+    )
+
+    assert ColumnSpec.from_raw(column_spec.to_raw()).column_link == column_spec.column_link
 
 
 def test_dialog_dismissal_keys_match_dismissable_warning() -> None:

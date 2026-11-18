@@ -499,6 +499,7 @@ class _RawCommonColumnSpec(TypedDict):
     tooltip: ColumnName | None
     column_title: str | None
     column_type: ColumnTypes | None
+    column_link: NotRequired[ContextualLinkEntryConfig]
 
 
 class _RawLegacyColumnSpec(_RawCommonColumnSpec):
@@ -518,6 +519,7 @@ class ColumnSpec:
     join_value: ColumnName | None = None
     column_title: str | None = None
     _column_type: ColumnTypes | None = None
+    column_link: ContextualLinkEntryConfig | None = None
 
     @property
     def column_type(self) -> ColumnTypes:
@@ -569,6 +571,7 @@ class ColumnSpec:
                 join_value=_get_join_value(value),
                 column_title=value["column_title"],
                 _column_type=value.get("column_type"),
+                column_link=value.get("column_link"),
             )
 
         # Some legacy views have optional fields like "tooltip" set to "" instead of None
@@ -599,7 +602,7 @@ class ColumnSpec:
         return "column" if join_value is None else "join_column"
 
     def to_raw(self) -> _RawColumnSpec:
-        return {
+        raw: _RawColumnSpec = {
             "name": self.name,
             "parameters": self.parameters,
             "link_spec": None if self.link_spec is None else self.link_spec.to_raw(),
@@ -608,6 +611,9 @@ class ColumnSpec:
             "column_title": self.column_title,
             "column_type": self.column_type,
         }
+        if self.column_link is not None:
+            raw["column_link"] = self.column_link
+        return raw
 
     @override
     def __repr__(self) -> str:
@@ -718,8 +724,6 @@ class DashboardEmbeddedViewSpec(TypedDict):
     play_sounds: NotRequired[bool]
     inventory_join_macros: NotRequired[InventoryJoinMacrosSpec]
     modified_at: NotRequired[str]  # timestamp in ISO format
-    # Keyed by the index into `painters`; an entry without filters is an inherited drill-down.
-    column_links: NotRequired[dict[int, ContextualLinkEntryConfig]]
 
 
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]

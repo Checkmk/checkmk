@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
 import dataclasses
-from collections.abc import Generator, Mapping
+from collections.abc import Generator
 from typing import Annotated, cast, get_args, Literal, override, Self
 
 from pydantic import BaseModel, Json, model_validator, ValidationError
@@ -40,7 +40,6 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.type_defs import (
     AnnotatedUserId,
-    ContextualLinkEntryConfig,
     DashboardEmbeddedViewSpec,
     SingleInfos,
     ViewSpec,
@@ -169,7 +168,6 @@ class ViewWidgetIFramePageHelper:
         user_permissions: UserPermissions,
         config: Config,
         *,
-        column_links: Mapping[int, ContextualLinkEntryConfig],
         is_reload: bool,
         is_debug: bool,  # noqa: ARG003
         is_preview: bool = False,
@@ -191,8 +189,12 @@ class ViewWidgetIFramePageHelper:
                 user_permissions=user_permissions,
             ),
             request_cache=RequestCache(config),
-            column_drilldowns=column_drilldowns(
-                view_spec, column_links, context, user_permissions, drilled_from=drilled_from
+            column_drilldowns=(
+                {}
+                if is_public
+                else column_drilldowns(
+                    view_spec, context, user_permissions, drilled_from=drilled_from
+                )
             ),
         )
         view.row_limit = row_limit
@@ -362,13 +364,12 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
     def unique_widget_name(self) -> str:
         return f"{self.dashboard_owner}_{self.dashboard_name}_{self.widget_id}"
 
-    def load_view_spec(self) -> tuple[ViewSpec, Mapping[int, ContextualLinkEntryConfig]]:
-        """Load the requested view spec, either embedded in the dashboard or a normal view, with
-        its column links. Only an embedded view has any."""
+    def load_view_spec(self) -> ViewSpec:
+        """Load the requested view spec, either embedded in the dashboard or a normal view."""
         if self.embedded_id:
             return self._get_embedded_view_spec(self.embedded_id)
 
-        return self._get_linked_view_spec(), {}
+        return self._get_linked_view_spec()
 
     def _get_linked_view_spec(self) -> ViewSpec:
         if not self.view_name:
@@ -383,9 +384,7 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
 
         return view_spec
 
-    def _get_embedded_view_spec(
-        self, embedded_id: str
-    ) -> tuple[ViewSpec, Mapping[int, ContextualLinkEntryConfig]]:
+    def _get_embedded_view_spec(self, embedded_id: str) -> ViewSpec:
         if not self.dashboard_name:
             raise MKUserError("dashboard", _("No dashboard name provided."))
 
@@ -402,12 +401,11 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
                 % {"dashboard_name": self.dashboard_name},
             ) from None
 
-        view_spec = EmbeddedViewSpecManager.get_embedded_view_spec(
+        return EmbeddedViewSpecManager.get_embedded_view_spec(
             dashboard,
             embedded_id,
             f"{self.dashboard_name}_{embedded_id}",
         )
-        return view_spec, dashboard["embedded_views"][embedded_id].get("column_links", {})
 
     def get_context(self) -> VisualContext:
         return {
@@ -456,7 +454,7 @@ class ViewWidgetIFramePage(Page):
             ctx.request, parameters.unique_widget_name(), display_opts
         )
         try:
-            view_spec, column_links = parameters.load_view_spec()
+            view_spec = parameters.load_view_spec()
         except MKUserError as e:
             # a linked view used by a widget can be (intentionally) deleted,
             # so we need to handle this gracefully so that the rest of the dashboard still works
@@ -482,7 +480,6 @@ class ViewWidgetIFramePage(Page):
             parameters.get_context(),
             ctx.user_permissions,
             ctx.config,
-            column_links=column_links,
             is_reload=parameters.is_reload(),
             is_debug=parameters.is_debug(),
             is_preview=parameters.is_preview,
@@ -582,8 +579,6 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
                 context=widget.context,
                 user_permissions=ctx.user_permissions,
                 config=ctx.config,
-                # Every drill-down target sits behind a login, so a shared dashboard links nowhere.
-                column_links={},
                 is_reload=parameters.is_reload(),
                 is_debug=False,
                 is_public=True,
@@ -719,7 +714,7 @@ class ViewWidgetEditPage(Page):
                 general_properties=True,
                 allow_browser_reload=False,
                 config=ctx.config,
-                column_links=self._get_column_links(ctx.request, dashboard, mode),
+                with_drilldown=True,
             )
 
         html.close_div()
@@ -749,12 +744,10 @@ class ViewWidgetEditPage(Page):
         dashboard: DashboardConfig, embedded_id: str, view_spec: ViewSpec, config: Config
     ) -> None:
         # first arg is just used for the datasource (so it can't be overwritten)
-        view_spec, column_links = create_embedded_view_from_valuespec(
+        view_spec = create_embedded_view_from_valuespec(
             old_view=view_spec, view=view_spec, allow_browser_reload=False, config=config
         )
         embedded = EmbeddedViewSpecManager.normal_to_embedded_view_spec(view_spec)
-        if column_links:
-            embedded["column_links"] = column_links
         dashboard.setdefault("embedded_views", {})[embedded_id] = embedded
         save_all_dashboards(dashboard["owner"])
         # we don't do the remote site sync here, as this is done when the dashboard is saved
@@ -851,18 +844,6 @@ class ViewWidgetEditPage(Page):
         return self._create_new_view_spec(
             dashboard, embedded_id, view_name, datasource, single_infos
         )
-
-    @staticmethod
-    def _get_column_links(
-        request: Request, dashboard: DashboardConfig, mode: Mode
-    ) -> dict[int, ContextualLinkEntryConfig]:
-        # Only a duplicate starts from an embedded view, the one place column links live in.
-        if mode != "duplicate":
-            return {}
-        source = dashboard["embedded_views"][
-            request.get_ascii_input_mandatory("source_embedded_id")
-        ]
-        return source.get("column_links", {})
 
     @staticmethod
     def _create_new_view_spec(

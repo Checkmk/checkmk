@@ -17,7 +17,12 @@ from cmk.gui.dashboard.store import (
     migrate_dashboard_config,
 )
 from cmk.gui.dashboard.type_defs import GraphLegend, ViewDashletConfig
-from cmk.gui.type_defs import DashboardEmbeddedViewSpec, ViewSpec
+from cmk.gui.type_defs import (
+    ColumnSpec,
+    ContextualLinkEntryConfig,
+    DashboardEmbeddedViewSpec,
+    ViewSpec,
+)
 from cmk.gui.views.store import ViewStore
 
 
@@ -1041,3 +1046,41 @@ class TestMigrateInventoryLink:
         result = migrate_dashboard_config(dashboard)
 
         assert result["widgets"]["w1"]["link_spec"] == ("views", "host")  # type: ignore[typeddict-item]
+
+
+def _embedded_host_view(painters: list[ColumnSpec]) -> DashboardEmbeddedViewSpec:
+    return DashboardEmbeddedViewSpec(
+        single_infos=[],
+        datasource="hosts",
+        layout="table",
+        group_painters=[],
+        painters=painters,
+        browser_reload=0,
+        num_columns=1,
+        column_headers="off",
+        sorters=[],
+    )
+
+
+def test_a_stored_column_link_moves_onto_its_column() -> None:
+    link = ContextualLinkEntryConfig(
+        title="host",
+        location=("views", "host"),
+        filters=[],
+        include_context=True,
+        include_time_range=True,
+        show_filter_form=False,
+    )
+    stored = {
+        **_embedded_host_view([ColumnSpec("host_state"), ColumnSpec("host")]),
+        "column_links": {1: link},
+    }
+    dashboard = _make_dashboard(
+        layout={"type": "responsive_grid", "layouts": {}}, embedded_views={"ev": stored}
+    )
+
+    result = migrate_dashboard_config(dashboard)
+
+    assert result["embedded_views"]["ev"] == _embedded_host_view(
+        [ColumnSpec("host_state"), ColumnSpec("host", column_link=link)]
+    )

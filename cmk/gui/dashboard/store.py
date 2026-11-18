@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 
+import dataclasses
 import time
 import uuid
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
@@ -23,6 +24,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.permissions import all_permissions, Permission
 from cmk.gui.type_defs import (
     ColumnSpec,
+    ContextualLinkEntryConfig,
     DashboardEmbeddedViewSpec,
     SorterSpec,
     ViewName,
@@ -272,7 +274,29 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
         dashboard["widgets"] = widgets
         dashboard["embedded_views"] = embedded_views
 
+    if "embedded_views" in dashboard:
+        dashboard["embedded_views"] = {
+            embedded_id: _links_on_their_columns(embedded_view)
+            for embedded_id, embedded_view in dashboard["embedded_views"].items()
+        }
     return dashboard
+
+
+def _links_on_their_columns(embedded_view: DashboardEmbeddedViewSpec) -> DashboardEmbeddedViewSpec:
+    """Move a stored embedded view's index-keyed column links onto their columns."""
+    raw = cast(dict[str, object], embedded_view)
+    if "column_links" not in raw:
+        return embedded_view
+    links = cast(dict[int, ContextualLinkEntryConfig], raw["column_links"])
+    migrated = cast(
+        DashboardEmbeddedViewSpec,
+        {key: value for key, value in raw.items() if key != "column_links"},
+    )
+    migrated["painters"] = [
+        dataclasses.replace(painter, column_link=links[index]) if index in links else painter
+        for index, painter in enumerate(embedded_view["painters"])
+    ]
+    return migrated
 
 
 def _migrate_widget(widget: DashletConfig, owner: UserId | None) -> DashletConfig:

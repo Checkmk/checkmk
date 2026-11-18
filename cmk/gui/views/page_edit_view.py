@@ -10,6 +10,7 @@
 """Provides the view editor dialog"""
 
 import ast
+import dataclasses
 import datetime as dt
 import string
 from collections.abc import Iterator, Mapping, Sequence
@@ -321,10 +322,7 @@ def view_inventory_join_macros(
 def view_editor_column_spec(
     ident: str, ds_name: str, painter_context: PainterContext, *, with_drilldown: bool = False
 ) -> Dictionary:
-    """The columns of the view editor.
-
-    With drill-down, each column's value is a pair of its spec and its drill-down link.
-    """
+    """The columns of the view editor."""
     drilldown_choices = (
         _drilldown_link_choices(
             ds_name, painter_context.user_permissions, painter_context.config.tags
@@ -880,19 +878,17 @@ def _view_editor_spec(
     ) -> tuple[PainterName, PainterParameters]:
         return (column_spec.name, column_spec.parameters)
 
-    def _from_vs_with_drilldown(
-        value: _RawVSColumn,
-    ) -> tuple[ColumnSpec | _RawVSColumn, ContextualLinkEntryConfig | None]:
-        return _from_vs(value), _drilldown_link(value[1].get("link_spec"))
+    def _from_vs_with_drilldown(value: _RawVSColumn) -> ColumnSpec | _RawVSColumn:
+        if isinstance(column_spec := _from_vs(value), tuple):
+            return column_spec
+        return dataclasses.replace(
+            column_spec, column_link=_drilldown_link(value[1].get("link_spec"))
+        )
 
-    def _to_vs_with_drilldown(
-        value: tuple[ColumnSpec | _RawVSColumn, ContextualLinkEntryConfig | None] | None,
-    ) -> _RawVSColumn | None:
-        if value is None:
-            return None
-        column_spec, link = value
-        if (raw := _to_vs(column_spec)) is not None and link is not None:
-            raw[1]["link_spec"] = _drilldown_link_spec(link)
+    def _to_vs_with_drilldown(column_spec: ColumnSpec | _RawVSColumn | None) -> _RawVSColumn | None:
+        raw = _to_vs(column_spec)
+        if raw is not None and isinstance(column_spec, ColumnSpec) and column_spec.column_link:
+            raw[1]["link_spec"] = _drilldown_link_spec(column_spec.column_link)
         return raw
 
     vs_column = (
@@ -1216,9 +1212,9 @@ def render_view_config(
     *,
     allow_browser_reload: bool,
     config: Config,
-    column_links: Mapping[int, ContextualLinkEntryConfig] | None = None,
+    with_drilldown: bool = False,
 ) -> None:
-    """Render the view editor's fields; with column_links, a column may also drill down."""
+    """Render the view editor's fields; with_drilldown lets each column also drill down."""
     value = _transform_view_to_valuespec_value(view_spec)
 
     # TODO: This and the modification of the view_spec should not be here. Find a better place
@@ -1249,7 +1245,7 @@ def render_view_config(
         url_renderer=RenderLink(request, response, display_options),
         user_permissions=UserPermissions.from_config(config, all_permissions()),
     )
-    if column_links is None:
+    if not with_drilldown:
         vs_columns = view_editor_column_spec("columns", ds_name, painter_context)
         vs_columns.render_input("columns", value["columns"])
     else:
@@ -1261,8 +1257,11 @@ def render_view_config(
             "columns",
             {
                 "columns": [
-                    (column, _link_with_offered_filters(column_links.get(index), data_source))
-                    for index, column in enumerate(value["columns"]["columns"])
+                    dataclasses.replace(
+                        column,
+                        column_link=_link_with_offered_filters(column.column_link, data_source),
+                    )
+                    for column in value["columns"]["columns"]
                 ]
             },
         )
@@ -1351,23 +1350,19 @@ def _update_view_with_valuespec_values(
 def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
     old_view: T, view: T, *, allow_browser_reload: bool, config: Config
 ) -> T:
-    view, _column_links = _create_view_from_valuespec(
+    return _create_view_from_valuespec(
         old_view,
         view,
         allow_browser_reload=allow_browser_reload,
         config=config,
         with_drilldown=False,
     )
-    return view
 
 
 def create_embedded_view_from_valuespec(
     old_view: ViewSpec, view: ViewSpec, *, allow_browser_reload: bool, config: Config
-) -> tuple[ViewSpec, dict[int, ContextualLinkEntryConfig]]:
-    """Like create_view_from_valuespec, where a column may also drill down.
-
-    The drill-down links come by painter index, beside the view they have no place in.
-    """
+) -> ViewSpec:
+    """Like create_view_from_valuespec, where a column may also drill down."""
     return _create_view_from_valuespec(
         old_view,
         view,
@@ -1379,7 +1374,7 @@ def create_embedded_view_from_valuespec(
 
 def _create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
     old_view: T, view: T, *, allow_browser_reload: bool, config: Config, with_drilldown: bool
-) -> tuple[T, dict[int, ContextualLinkEntryConfig]]:
+) -> T:
     ds_name = old_view.get("datasource") or request.get_ascii_input_mandatory("datasource")
     view["datasource"] = ds_name
 
@@ -1405,14 +1400,6 @@ def _create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
     )
     columns = vs_columns.from_html_vars("columns")
     vs_columns.validate_value(columns, "columns")
-    column_links: dict[int, ContextualLinkEntryConfig] = {}
-    if with_drilldown:
-        column_links = {
-            index: link
-            for index, (_column, link) in enumerate(columns["columns"])
-            if link is not None
-        }
-        columns = {"columns": [column for column, _link in columns["columns"]]}
     _update_view_with_valuespec_values(view, "columns", columns)
 
     update_view("grouping", view_editor_grouping_spec("grouping", ds_name, painter_context))
@@ -1431,7 +1418,7 @@ def _create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
 
     view["modified_at"] = dt.datetime.now(dt.UTC).isoformat()
 
-    return view, column_links
+    return view
 
 
 def _painter_choices(

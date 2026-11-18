@@ -115,13 +115,12 @@ def test_widget_edit_view_duplicate_keeps_the_offered_filters_of_a_custom_column
             single_infos=[],
             datasource="hosts",
             layout="table",
-            painters=[ColumnSpec(name="host", parameters={"color_choices": []})],
+            painters=[ColumnSpec(name="host", parameters={"color_choices": []}, column_link=link)],
             group_painters=[],
             sorters=[],
             browser_reload=0,
             num_columns=1,
             column_headers="pergroup",
-            column_links={0: link},
         )
     }
     save_all_dashboards(owner)
@@ -151,7 +150,7 @@ def test_widget_edit_view_duplicate_keeps_the_offered_filters_of_a_custom_column
 
     copy = get_all_dashboards()[(owner, "board")]["embedded_views"]["copy"]
     kept = [f for f in link["filters"] if f["filter_id"] in kept_filters]
-    assert copy.get("column_links") == {0: {**link, "filters": kept}}
+    assert copy["painters"][0].column_link == {**link, "filters": kept}
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme")

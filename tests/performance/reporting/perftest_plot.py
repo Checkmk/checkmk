@@ -61,7 +61,6 @@ Example:
 
 import json
 import logging
-from collections.abc import Sequence
 from datetime import datetime as Datetime
 from datetime import timedelta
 from os import getenv
@@ -159,6 +158,8 @@ class PerftestPlot:
         ) and not self.purge_db
         self.warn_only = self.args.warn_only
         self.job_names = self._read_job_names()
+        # The job to check: today's, unless the jobs are given on the command line.
+        self.checked_job_name = None if self.args.job_names else self._baseline_job_names()[-1]
         self.scenario_names = self._read_scenario_names()
         self.jobs = self.read_performance_data()
         self.output_dir = self.args.output_dir or (
@@ -249,23 +250,8 @@ class PerftestPlot:
             list[str]: A sorted list of valid job names found on disk or in the database.
         """
 
-        def baseline_jobs(offset: int = 0) -> Sequence[str]:
-            num_old_jobs = 4
-            return [
-                (Datetime.today() - timedelta(days=offset + i)).strftime(
-                    f"{self.args.branch_version}-%Y.%m.%d.{self.args.edition}"
-                )
-                for i in range(num_old_jobs, 0, -1)
-            ] + [
-                Datetime.today().strftime(
-                    f"{self.args.branch_version}-%Y.%m.%d.{self.args.edition}"
-                )
-            ]
-
         job_names = (
-            sorted(set(self.args.job_names))
-            if self.args.job_names
-            else baseline_jobs(self.args.baseline_offset)
+            sorted(set(self.args.job_names)) if self.args.job_names else self._baseline_job_names()
         )
 
         if self.root_dir.is_dir():
@@ -286,6 +272,17 @@ class PerftestPlot:
                 or (self.read_from_database and self.database.check_job(job_name))
             ]
         )
+
+    def _baseline_job_names(self) -> list[str]:
+        """The 4 daily jobs before today, shifted back by the baseline offset, and today's job."""
+        num_old_jobs = 4
+        offset = self.args.baseline_offset
+        return [
+            (Datetime.today() - timedelta(days=offset + i)).strftime(
+                f"{self.args.branch_version}-%Y.%m.%d.{self.args.edition}"
+            )
+            for i in range(num_old_jobs, 0, -1)
+        ] + [Datetime.today().strftime(f"{self.args.branch_version}-%Y.%m.%d.{self.args.edition}")]
 
     def _read_benchmark_data(self, job_name: str) -> Measurements:
         """
@@ -601,6 +598,7 @@ def main() -> None:
             mem_tolerance=args.mem_tolerance,
             runtime_tolerance=args.runtime_tolerance,
             baseline_offset=args.baseline_offset,
+            checked_job_name=app.checked_job_name,
         )
         alerts = baselines.validate_performance_baselines()
         summary = f"Validate performance test {list(app.jobs.keys())[-1]}"

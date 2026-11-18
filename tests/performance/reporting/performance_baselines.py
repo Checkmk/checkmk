@@ -81,6 +81,7 @@ class PerformanceBaselines:
         runtime_tolerance: float,
         baseline_offset: int,
         today: date | None = None,
+        checked_job_name: str | None = None,
     ) -> None:
         self.jobs = jobs
         self.job_names = job_names
@@ -92,6 +93,8 @@ class PerformanceBaselines:
         self.runtime_tolerance = runtime_tolerance
         self.baseline_offset = baseline_offset
         self.today = today or date.today()
+        # Without it, the latest loaded job is checked, whichever it is.
+        self.checked_job_name = checked_job_name
 
     @staticmethod
     def _get_mean_value(measurements: MeasurementsList, metric_name: str) -> float:
@@ -251,6 +254,14 @@ class PerformanceBaselines:
                 condition=baseline_date < date(2026, 2, 6),
             ),
         ]
+
+        if self.checked_job_name and self.job_names[-1:] != [self.checked_job_name]:
+            # Checking the latest job instead would check an earlier run a second time.
+            return [
+                BaselineAlert(
+                    f'Job "{self.checked_job_name}" not found: no run to check.', is_failure=False
+                )
+            ]
 
         alerts: list[BaselineAlert] = []
         for scenario_name in self.scenario_names:

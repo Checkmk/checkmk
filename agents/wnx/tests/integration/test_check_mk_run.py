@@ -121,6 +121,7 @@ def config_no_wmi_fixture(default_yaml_config: YamlDict) -> YamlDict:
     return default_yaml_config
 
 
+@pytest.mark.skip(reason="CMK-42561")
 @pytest.mark.usefixtures("allow_legacy_pull")
 def test_check_mk_no_wmi(
     main_exe: Path,

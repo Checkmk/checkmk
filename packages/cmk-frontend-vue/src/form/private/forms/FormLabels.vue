@@ -169,7 +169,7 @@ const deleteItem = (index: number) => {
   background-color: var(--error-msg-bg-color);
   color: var(--font-color);
   display: block;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   box-shadow: none;
 }
 </style>

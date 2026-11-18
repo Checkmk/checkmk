@@ -62,7 +62,7 @@ defineExpose({
   font-size: var(--font-size-normal);
   background-color: var(--ux-theme-5);
   border: var(--border-width-1) solid var(--default-form-element-border-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   color: var(--font-color);
   outline: none;
 }

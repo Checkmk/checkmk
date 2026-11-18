@@ -31,7 +31,7 @@ defineProps<{
   display: flex;
   align-items: center;
   background-color: var(--inline-help-icon-bg);
-  border-radius: 4px 0 0 4px;
+  border-radius: var(--border-radius) 0 0 var(--border-radius);
   padding: 5px;
 }
 
@@ -39,7 +39,7 @@ defineProps<{
   flex-grow: 1;
   padding: 10px;
   background-color: var(--inline-help-text-bg);
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
   text-align: left;
   white-space: normal;
 }

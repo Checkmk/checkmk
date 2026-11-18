@@ -121,6 +121,6 @@ onMounted(() => {
   padding-top: 0;
   padding-bottom: 0;
   border: var(--dimension-1) solid var(--default-form-element-border-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
 }
 </style>

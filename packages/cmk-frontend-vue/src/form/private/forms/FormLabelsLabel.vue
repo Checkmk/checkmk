@@ -20,7 +20,7 @@ defineProps<{
   width: fit-content;
   margin: 0 5px 0 0;
   padding: 1px 4px;
-  border-radius: 5px;
+  border-radius: var(--border-radius);
 
   &:first-child {
     margin-left: 0;

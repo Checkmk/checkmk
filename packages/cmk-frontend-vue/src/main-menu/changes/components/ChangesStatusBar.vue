@@ -77,7 +77,7 @@ function handleClick(event: MouseEvent) {
   box-sizing: border-box;
   justify-content: space-between;
   align-items: center;
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   border: 1px solid var(--default-form-element-border-color);
   background: var(--ux-theme-0);
   cursor: pointer;

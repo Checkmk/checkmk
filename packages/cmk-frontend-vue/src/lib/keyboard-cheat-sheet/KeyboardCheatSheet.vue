@@ -528,7 +528,7 @@ onBeforeUnmount(() => {
 /* The row itself has no box: its cells take the highlight and the pointer. */
 .lib-keyboard-cheat-sheet__row--highlighted > * {
   background: var(--cheat-sheet-highlight);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
 }
 
 .lib-keyboard-cheat-sheet--pinned .lib-keyboard-cheat-sheet__row > * {

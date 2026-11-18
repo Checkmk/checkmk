@@ -244,7 +244,7 @@ const isEmpty = computed(() => !groups?.length)
   box-sizing: border-box;
   min-width: 200px;
   border: var(--dimension-1) solid var(--ux-theme-6);
-  border-radius: 0 0 var(--dimension-4) var(--dimension-4);
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
   background-color: var(--ux-theme-3);
   color: var(--font-color);
   font-size: var(--font-size-normal);
@@ -255,7 +255,7 @@ const isEmpty = computed(() => !groups?.length)
 .graphing-graph-burger-menu__dropdown_flipped {
   top: auto;
   bottom: calc(100% + var(--dimension-1));
-  border-radius: var(--dimension-4) var(--dimension-4) 0 0;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
 .graphing-graph-burger-menu__dropdown_scrollable {
@@ -307,7 +307,7 @@ const isEmpty = computed(() => !groups?.length)
 .graphing-graph-burger-menu__item-button {
   width: 100%;
   border: none;
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   margin: 0;
   background: none;
   color: inherit;

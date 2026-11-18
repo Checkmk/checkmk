@@ -598,7 +598,7 @@ onBeforeUnmount(() => {
   max-width: min(90vw, 32rem);
   background: var(--ux-theme-1);
   border: 1px solid var(--ux-theme-4);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   box-shadow: 0 4px 12px rgb(0 0 0 / 25%);
   font-weight: var(--font-weight-default);
   text-align: left;

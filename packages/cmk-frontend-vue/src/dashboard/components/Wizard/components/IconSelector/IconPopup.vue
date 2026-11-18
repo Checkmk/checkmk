@@ -150,7 +150,7 @@ const handleClickOutside = () => {
   color: var(--font-color);
   background-color: var(--ux-theme-0);
   border: var(--dimension-1) solid var(--ux-theme-8);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   box-shadow: 0 2px 10px rgb(0 0 0 / 20%);
   resize: both;
   overflow: hidden;

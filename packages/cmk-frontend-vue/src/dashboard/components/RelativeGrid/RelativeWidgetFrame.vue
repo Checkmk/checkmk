@@ -435,7 +435,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: var(--border-radius);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
@@ -462,7 +462,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   font-size: 10px;
   color: var(--font-color);
   padding: 2px 4px;
-  border-radius: 3px;
+  border-radius: var(--border-radius);
   pointer-events: none;
   z-index: 2000;
 }

@@ -317,7 +317,7 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
 /* NOTE: third party CSS selector (grid-layout-plus), we have to use :deep for this */
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention,selector-pseudo-class-no-unknown */
 :deep(.vgl-item--placeholder) {
-  border-radius: 4px;
+  border-radius: var(--border-radius);
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .vgl-item__resizer {

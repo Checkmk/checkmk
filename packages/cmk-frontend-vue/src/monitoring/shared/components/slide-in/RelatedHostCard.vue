@@ -34,7 +34,7 @@ defineProps<{
   display: flex;
   align-items: center;
   border: var(--dimension-1) solid transparent;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   background-color: var(--ux-theme-3);
   padding: var(--dimension-4) var(--dimension-5);
 }

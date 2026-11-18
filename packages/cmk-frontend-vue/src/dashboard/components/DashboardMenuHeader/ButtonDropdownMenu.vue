@@ -110,8 +110,8 @@ defineExpose({
     background-color: var(--ux-theme-3);
     border: 1px solid var(--ux-theme-6);
     box-sizing: border-box;
-    border-bottom-left-radius: var(--dimension-4);
-    border-bottom-right-radius: var(--dimension-4);
+    border-bottom-left-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
     min-width: 200px;
     margin-top: 1px;
     width: max-content;

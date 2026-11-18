@@ -438,7 +438,7 @@ const slidePresets = SLIDE_PRESETS
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  border-radius: 0 var(--dimension-3) 0 0;
+  border-radius: 0 var(--border-radius) 0 0;
 }
 
 .maps-presentation-inspector-panel__grow {

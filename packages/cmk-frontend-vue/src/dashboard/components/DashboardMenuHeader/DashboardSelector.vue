@@ -264,7 +264,7 @@ watch(
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-default);
   outline: none;
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
@@ -290,7 +290,7 @@ watch(
   left: 0;
   right: 0;
   background-color: var(--ux-theme-3);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   z-index: 1000;
   margin-top: var(--dimension-2);
 }

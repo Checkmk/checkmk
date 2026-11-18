@@ -65,7 +65,7 @@ const modifierClass = computed(() => {
   height: 100%;
   text-align: center;
   border: 1px solid var(--ux-theme-6);
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
   box-sizing: border-box;
 }
 

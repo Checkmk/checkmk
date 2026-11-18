@@ -511,7 +511,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
   gap: var(--dimension-3) var(--dimension-4);
   padding: var(--dimension-2);
   border: 1px solid var(--success);
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   position: relative;
 }
 

@@ -291,7 +291,7 @@ async function clearAndRefocus() {
   margin: -25px auto 10px;
   background-color: var(--ux-theme-3);
   padding: var(--dimension-10);
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   width: 320px;
   display: flex;
   flex-direction: column;

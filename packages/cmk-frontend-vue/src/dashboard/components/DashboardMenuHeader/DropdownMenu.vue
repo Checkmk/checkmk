@@ -134,7 +134,7 @@ const visibleOptions = computed((): DropdownMenuOption[] => {
     text-align: left;
     text-decoration: none;
     cursor: pointer;
-    border-radius: var(--dimension-3);
+    border-radius: var(--border-radius);
     transition: background-color 0.2s ease;
 
     .db-dropdown-menu__label {

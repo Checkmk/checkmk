@@ -78,7 +78,7 @@ immediateWatch(
   align-items: center;
   justify-content: center;
   letter-spacing: unset;
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   gap: var(--dimension-4);
   border: 1px solid var(--default-form-element-border-color);
   background: var(--default-nav-bg-color);

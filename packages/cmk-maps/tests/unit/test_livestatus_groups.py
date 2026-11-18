@@ -70,8 +70,10 @@ def test_hostgroup_reads_hard_states_where_asked(monkeypatch: pytest.MonkeyPatch
     assert "Columns: last_hard_state has_been_checked num_services_hard_ok" in queries[-1]
 
 
+# A dynamic group is counted by Livestatus, one row per site: pending, then each
+# state, then the summed service counts where asked.
 def test_dyngroup_reads_hard_states_where_asked(monkeypatch: pytest.MonkeyPatch) -> None:
-    conn, queries = _connection(monkeypatch, [[1, 1, 3, 0, 0, 0, 0]])
+    conn, queries = _connection(monkeypatch, [[0, 0, 1, 0, 3, 0, 0, 0, 0]])
 
     state = asyncio.run(
         conn.get_dyngroup_state(
@@ -81,11 +83,30 @@ def test_dyngroup_reads_hard_states_where_asked(monkeypatch: pytest.MonkeyPatch)
 
     assert state.state == "DOWN"
     assert state.services_summary == ServicesSummary(ok=3)
-    assert "Columns: last_hard_state has_been_checked num_services_hard_ok" in queries[-1]
+    assert "Stats: last_hard_state = 1\n" in queries[-1]
+    assert "Stats: sum num_services_hard_ok\n" in queries[-1]
+
+
+def test_dyngroup_adds_up_what_the_sites_counted(monkeypatch: pytest.MonkeyPatch) -> None:
+    conn, queries = _connection(monkeypatch, [[0, 2, 0, 0], [0, 1, 1, 0]])
+
+    state = asyncio.run(conn.get_dyngroup_state("host", "Filter: groups >= web\n"))
+
+    assert state.state == "DOWN"
+    assert state.hosts_summary == ServicesSummary(ok=3, critical=1)
+    assert "Columns:" not in queries[-1]
+
+
+def test_a_dyngroup_that_matches_nothing_is_pending(monkeypatch: pytest.MonkeyPatch) -> None:
+    conn, _queries = _connection(monkeypatch, [[0, 0, 0, 0, 0]])
+
+    state = asyncio.run(conn.get_dyngroup_state("service", "Filter: groups >= web\n"))
+
+    assert state == ObjectState(object_id="", type="dyngroup", state="PENDING")
 
 
 def test_dyngroup_leaves_out_the_services_unless_asked(monkeypatch: pytest.MonkeyPatch) -> None:
-    conn, queries = _connection(monkeypatch, [[0, 1]])
+    conn, queries = _connection(monkeypatch, [[0, 1, 0, 0]])
 
     state = asyncio.run(conn.get_dyngroup_state("host", "Filter: groups >= web\n"))
 
@@ -114,7 +135,7 @@ def test_hostgroup_counts_hosts_never_checked_as_pending(monkeypatch: pytest.Mon
 
 
 def test_a_group_of_hosts_never_checked_is_pending(monkeypatch: pytest.MonkeyPatch) -> None:
-    conn, _queries = _connection(monkeypatch, [[0, 0]])
+    conn, _queries = _connection(monkeypatch, [[1, 0, 0, 0]])
 
     assert asyncio.run(conn.get_dyngroup_state("host", "Filter: groups >= web\n")).state == (
         "PENDING"
@@ -134,7 +155,7 @@ def test_servicegroup_counts_services_never_checked_as_pending(
 def test_dyngroup_counts_services_never_checked_as_pending(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    conn, _queries = _connection(monkeypatch, [[2, 1], [0, 0]])
+    conn, _queries = _connection(monkeypatch, [[1, 0, 0, 1, 0]])
 
     state = asyncio.run(conn.get_dyngroup_state("service", "Filter: groups >= web\n"))
 

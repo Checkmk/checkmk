@@ -168,6 +168,29 @@ def _host_state_columns(*, only_hard: bool, with_services: bool) -> list[str]:
     return columns
 
 
+def _state_count_stats(state_col: str, states: int) -> str:
+    """Count the rows per state, a row never checked as pending (as ``_row_state``)."""
+    lines = ["Stats: has_been_checked = 0\n"]
+    lines += [
+        f"Stats: {state_col} = {state}\nStats: has_been_checked = 1\nStatsAnd: 2\n"
+        for state in range(states)
+    ]
+    return "".join(lines)
+
+
+def _summed(rows: list[LivestatusRow], width: int) -> list[int]:
+    """The ``Stats:`` columns added up over the sites, one row each."""
+    return [sum(row_int(row, column) for row in rows) for column in range(width)]
+
+
+def _worst_counted(pending: int, counts: Sequence[int], states: Mapping[int, str]) -> str:
+    """The worst state counted, *counts* by state. Requires a count."""
+    present = [states[state] for state, count in enumerate(counts) if count]
+    if pending:
+        present.append("PENDING")
+    return _worst_state(present)
+
+
 def _worst_state(states: list[str]) -> str:
     """Worst of *states* by the combined severity ladder. Requires non-empty input."""
     return max(states, key=lambda s: SEVERITY_RANK.get(s, 0))
@@ -935,34 +958,50 @@ class LivestatusConnection(ConnectionBase):
         only_hard: bool = False,
         with_services: bool = False,
     ) -> ObjectState:
-        # NagVis-style: feed the validated filter into GET hosts/services and
-        # aggregate worst-of. normalize_object_filter at the schema layer has
-        # already restricted this to safe Filter:/And:/Or: lines.
+        # NagVis-style: feed the validated filter into GET hosts/services.
+        # normalize_object_filter at the schema layer has already restricted
+        # this to safe Filter:/And:/Or: lines. Counted by Livestatus, as the
+        # tactical overview does: a filter may match every service there is.
         lql_filter = object_filter.replace("\\n", "\n")
         if not lql_filter.endswith("\n"):
             lql_filter += "\n"
         state_col = "last_hard_state" if only_hard else "state"
         if object_types == "service":
             rows = await self._query(
-                f"GET services\nColumns: {state_col} has_been_checked\n{lql_filter}"
+                f"GET services\n{lql_filter}{_state_count_stats(state_col, 4)}"
             )
-            if not rows:
+            pending, *counts = _summed(rows, 5)
+            if not pending and not any(counts):
                 return ObjectState(object_id="", type="dyngroup", state="PENDING")
-            states = [_row_state(r, 0, SERVICE_STATE_MAP) for r in rows]
-            worst, summary = _service_states_rollup(states)
-            return ObjectState(object_id="", type="dyngroup", state=worst, services_summary=summary)
-        columns = _host_state_columns(only_hard=only_hard, with_services=with_services)
-        rows = await self._query(f"GET hosts\nColumns: {' '.join(columns)}\n{lql_filter}")
-        if not rows:
+            ok, warning, critical, unknown = counts
+            return ObjectState(
+                object_id="",
+                type="dyngroup",
+                state=_worst_counted(pending, counts, SERVICE_STATE_MAP),
+                services_summary=ServicesSummary(
+                    ok=ok, warning=warning, critical=critical, unknown=unknown, pending=pending
+                ),
+            )
+        service_sums = ""
+        if with_services:
+            service_sums = "".join(
+                f"Stats: sum {column}\n"
+                for column in _host_state_columns(only_hard=only_hard, with_services=True)[2:]
+            )
+        rows = await self._query(
+            f"GET hosts\n{lql_filter}{_state_count_stats(state_col, 3)}{service_sums}"
+        )
+        pending, up, down, unreachable = _summed(rows, 4)
+        if not (pending or up or down or unreachable):
             return ObjectState(object_id="", type="dyngroup", state="PENDING")
-        states = [_row_state(r, 0, HOST_STATE_MAP) for r in rows]
-        worst, hosts_summary = _host_states_rollup(states)
         return ObjectState(
             object_id="",
             type="dyngroup",
-            state=worst,
-            services_summary=_services_summary_of_hosts(rows, 2) if with_services else None,
-            hosts_summary=hosts_summary,
+            state=_worst_counted(pending, [up, down, unreachable], HOST_STATE_MAP),
+            services_summary=_services_summary_of_hosts(rows, 4) if with_services else None,
+            hosts_summary=ServicesSummary(
+                ok=up, critical=down, unknown=unreachable, pending=pending
+            ),
         )
 
     @override

@@ -73,6 +73,11 @@ def _snmp_version(security_model: int) -> str:
     return "v2c" if security_model == 2 else f"v{security_model}"
 
 
+def _printable(name: object) -> str:
+    """Hex unless printable ASCII, so senders can't fake log lines"""
+    return str(pysnmp.proto.rfc1902.OctetString(name).prettyPrint())
+
+
 class SNMPTrapParser:
     # Only traps: _drop_request() drops INFORMs like the other requests.
     class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
@@ -351,26 +356,29 @@ class SNMPTrapParser:
         variables: Mapping[str, Any],
         cb_ctx: None,  # noqa: ARG002
     ) -> None:
+        # 1, 2 and 3 for SNMPv1, SNMPv2c and SNMPv3
+        version = int(variables["securityModel"])
         if (
-            variables["securityLevel"] in {1, 2}
+            version in {1, 2}
             and variables["statusInformation"]["errorIndication"]
             == pysnmp.proto.errind.unknownCommunityName
         ):
-            msg = f"Unknown community ({variables['statusInformation'].get('communityName', '')})"
+            msg = f"Unknown community ({_printable(variables['statusInformation'].get('communityName', ''))})"
         elif (
-            variables["securityLevel"] == 3
+            version == 3
             and variables["statusInformation"]["errorIndication"]
             == pysnmp.proto.errind.unknownSecurityName
         ):
-            msg = f"Unknown credentials (msgUserName: {variables['statusInformation'].get('msgUserName', '')})"
+            msg = f"Unknown credentials (msgUserName: {_printable(variables['statusInformation'].get('msgUserName', ''))})"
         else:
-            msg = f"{variables['statusInformation']}"
+            # Not the whole status: Its scoped PDU alone can take 100 KB.
+            msg = str(variables["statusInformation"]["errorIndication"])
 
         self._logger.log(
             VERBOSE,
-            "Trap (v%(security_level)d) dropped from %(transport_address)s: %(msg)s",
+            "Trap (%(version)s) dropped from %(transport_address)s: %(msg)s",
             {
-                "security_level": variables["securityLevel"],
+                "version": _snmp_version(version),
                 "transport_address": variables["transportAddress"][0],
                 "msg": msg,
             },

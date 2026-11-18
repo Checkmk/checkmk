@@ -8,6 +8,8 @@ import logging
 from collections.abc import Callable, Iterator
 
 import pysnmp.debug
+import pysnmp.entity.config
+import pysnmp.entity.engine
 import pytest
 from pyasn1.codec.ber import encoder
 from pysnmp.proto import api, rfc1155, rfc3411
@@ -77,15 +79,15 @@ def test_untranslated_snmpv1_trap_shows_its_time_stamp_as_uptime(parser: SNMPTra
     assert ("Uptime", "20 m") in result[0]
 
 
-def v2c_trap(var_binds: VarBinds) -> bytes:
-    """An SNMPv2c trap from the "public" community, which the default configuration accepts"""
+def v2c_trap(var_binds: VarBinds, *, community: str = "public") -> bytes:
+    """An SNMPv2c trap, by default from "public", which the default configuration accepts"""
     proto = api.PROTOCOL_MODULES[api.SNMP_VERSION_2C]
     pdu = proto.SNMPv2TrapPDU()
     proto.apiTrapPDU.set_defaults(pdu)
     proto.apiTrapPDU.set_varbinds(pdu, [*proto.apiTrapPDU.get_varbinds(pdu), *var_binds])
     message = proto.Message()
     proto.apiMessage.set_defaults(message)
-    proto.apiMessage.set_community(message, "public")
+    proto.apiMessage.set_community(message, community)
     proto.apiMessage.set_pdu(message, pdu)
     trap: bytes = encoder.encode(message)
     return trap
@@ -423,6 +425,128 @@ def test_data_which_is_no_snmp_message_comes_with_a_traceback_only_when_debuggin
 
     [dropped] = [r for r in caplog.records if "PySNMP failed on it" in r.getMessage()]
     assert bool(dropped.exc_info) == with_traceback
+
+
+class CapturingTransportDispatcher:
+    """Keeps what a PySNMP engine sends instead of sending it"""
+
+    def __init__(self) -> None:
+        self.messages: list[bytes] = []
+
+    def send_message(self, message: bytes, *_: object) -> None:
+        self.messages.append(bytes(message))
+
+
+SENDER_ENGINE_ID = "80001f8803525400123456"
+
+
+def v3_trap(user: str, *, auth_key: str | None = None) -> bytes:
+    """An SNMPv3 trap of the given user from SENDER_ENGINE_ID, authenticated via SHA with a key"""
+    sender = pysnmp.entity.engine.SnmpEngine(snmpEngineID=OctetString(hexValue=SENDER_ENGINE_ID))
+    if auth_key is None:
+        pysnmp.entity.config.add_v3_user(sender, user)
+    else:
+        pysnmp.entity.config.add_v3_user(
+            sender, user, pysnmp.entity.config.USM_AUTH_HMAC96_SHA, auth_key
+        )
+    transport_dispatcher = CapturingTransportDispatcher()
+    sender.transport_dispatcher = transport_dispatcher  # type: ignore[assignment]
+    proto = api.PROTOCOL_MODULES[api.SNMP_VERSION_2C]
+    pdu = proto.SNMPv2TrapPDU()
+    proto.apiTrapPDU.set_defaults(pdu)
+    sender.message_dispatcher.send_pdu(
+        snmpEngine=sender,
+        transportDomain=(1, 3, 6, 1, 6, 1, 1),
+        transportAddress=("192.0.2.1", 162),
+        messageProcessingModel=3,
+        securityModel=3,
+        securityName=OctetString(user),
+        securityLevel=1 if auth_key is None else 2,
+        contextEngineId=sender.snmpEngineID,
+        contextName=b"",
+        pduVersion=1,
+        PDU=pdu,
+        expectResponse=False,
+    )
+    [message] = transport_dispatcher.messages
+    return message
+
+
+def test_snmpv2c_trap_of_an_unknown_community_is_dropped_naming_version_and_community(
+    parser: SNMPTrapParser, logger: logging.Logger, caplog: pytest.LogCaptureFixture
+) -> None:
+    logger.setLevel(VERBOSE)
+
+    parser.parse(v2c_trap([], community="nope"), ("192.0.2.1", 162))
+
+    assert "Trap (v2c) dropped from 192.0.2.1: Unknown community (nope)" in caplog.messages
+
+
+def test_snmpv3_trap_of_an_unknown_user_is_dropped_naming_version_and_user(
+    parser: SNMPTrapParser, logger: logging.Logger, caplog: pytest.LogCaptureFixture
+) -> None:
+    logger.setLevel(VERBOSE)
+
+    parser.parse(v3_trap("sally"), ("192.0.2.1", 162))
+
+    assert (
+        "Trap (v3) dropped from 192.0.2.1: Unknown credentials (msgUserName: sally)"
+        in caplog.messages
+    )
+
+
+def test_snmpv3_trap_failing_authentication_is_dropped_naming_version_and_reason(
+    make_parser: MakeParser,
+    config: Config,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger.setLevel(VERBOSE)
+    parser = make_parser(
+        config
+        | {
+            "snmp_credentials": [
+                {
+                    "description": "",
+                    "credentials": ("authNoPriv", "sha", "harry", "right-key"),
+                    "engine_ids": [SENDER_ENGINE_ID],
+                }
+            ]
+        }
+    )
+
+    parser.parse(v3_trap("harry", auth_key="wrong-key"), ("192.0.2.1", 162))
+
+    assert "Trap (v3) dropped from 192.0.2.1: Authenticator mismatched" in caplog.messages
+
+
+@pytest.mark.parametrize(
+    "message, dropped",
+    [
+        pytest.param(
+            v2c_trap([], community="x\ny"),
+            "Trap (v2c) dropped from 192.0.2.1: Unknown community (0x780a79)",
+            id="community",
+        ),
+        pytest.param(
+            v3_message("SNMPv2TrapPDU", engine_id=bytes.fromhex(SENDER_ENGINE_ID), user=b"x\ny"),
+            "Trap (v3) dropped from 192.0.2.1: Unknown credentials (msgUserName: 0x780a79)",
+            id="user",
+        ),
+    ],
+)
+def test_dropped_traps_show_names_with_control_characters_in_hex(
+    parser: SNMPTrapParser,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+    message: bytes,
+    dropped: str,
+) -> None:
+    logger.setLevel(VERBOSE)
+
+    parser.parse(message, ("192.0.2.1", 162))
+
+    assert dropped in caplog.messages
 
 
 def request(version: int, pdu_type: str) -> bytes:

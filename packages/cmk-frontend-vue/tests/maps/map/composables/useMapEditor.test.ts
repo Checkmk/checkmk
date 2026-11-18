@@ -142,6 +142,20 @@ describe('useMapEditor placing — services resolved outside setup', () => {
     expect(map.objects[0]).toMatchObject({ recognize_services: true })
   })
 
+  it('has a new map link move on in the same tab, as a NagVis map link does', async () => {
+    const services = fakeMapsServices()
+    const map = emptyMap()
+    services.maps.currentMap.value = map
+    const editor = runWithServices(services, () => useMapEditor())
+
+    editor.draft.type = 'map'
+    editor.draft.map_name = 'floor-2'
+    editor.startPlacing()
+    await editor.placeAt(120, 80)
+
+    expect(map.objects[0]).toMatchObject({ type: 'map', url_target: '_self' })
+  })
+
   it('places a geo object from a map click after setup has finished', async () => {
     const services = fakeMapsServices()
     const map = emptyMap()

@@ -60,6 +60,7 @@ import MapSettingsModal from '@/maps/map/edit/settings/MapSettingsModal.vue'
 import type { SettingsFocus } from '@/maps/map/edit/settings/settingsForm'
 import type WorldMapViewType from '@/maps/map/worldmap/WorldMapView.vue'
 import type { WorldmapViewport } from '@/maps/map/worldmap/geo'
+import type { NavTarget } from '@/maps/services/NavigationService'
 import {
   useAuth,
   useConnections,
@@ -595,12 +596,13 @@ function onObjectClick(obj: MapElement, event?: MouseEvent) {
   }
   const bound = asBoundObject(obj)
   if (bound.type === 'map' && bound.map_name) {
-    nav.navigate({
-      view: 'map',
-      name: bound.map_name,
-      kiosk: nav.state.kiosk,
-      rotation: nav.state.rotation
-    })
+    const target: NavTarget = { view: 'map', name: bound.map_name, kiosk: nav.state.kiosk }
+    if (obj.url_target && obj.url_target !== '_self') {
+      // The rotation stays with this tab; a second one would rotate on its own.
+      openUrl(nav.href(target), obj.url_target)
+    } else {
+      nav.navigate({ ...target, rotation: nav.state.rotation })
+    }
     return
   }
   if (event && (event.ctrlKey || event.metaKey)) {
@@ -698,6 +700,8 @@ const { problemsOnly } = useMapViewState()
 
 watch(mapName, () => {
   flowProblems.value = { ...FLOW_PROBLEMS_DEFAULT }
+  closeDetail()
+  _closePropsModal()
 })
 const showSettings = ref(false)
 const settingsWorldmapView = ref<WorldmapViewport | null>(null)

@@ -643,7 +643,8 @@ export function useMapEditor() {
         image: draft.image_src || null,
         image_size: null
       },
-      url_target: s.url_target,
+      // As in NagVis, a map link moves on in the same tab unless told otherwise.
+      url_target: draft.type === 'map' ? '_self' : s.url_target,
       z: s.z
     })
   }

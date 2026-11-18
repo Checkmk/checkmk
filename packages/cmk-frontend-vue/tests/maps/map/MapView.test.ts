@@ -10,7 +10,14 @@ import { defineComponent, h } from 'vue'
 
 import type { SignedMap } from '@/maps/api/mapConfig'
 import MapViewComponent from '@/maps/map/MapView.vue'
-import type { MapAccess, MapConfig, MapRead, MapStates, MapView } from '@/maps/types/api'
+import type {
+  MapAccess,
+  MapConfig,
+  MapElement,
+  MapRead,
+  MapStates,
+  MapView
+} from '@/maps/types/api'
 
 import { aMap, aMapAccess, anObject, newMapView } from '../support/fixtures'
 import { aSession, fakeMapsServices, fullCapabilities, provideServices } from '../support/services'
@@ -418,13 +425,17 @@ describe('MapView – what the settings slide-in is handed', () => {
 })
 
 describe('MapView – following a map object', () => {
-  const clickingRenderer = defineComponent({
-    emits: ['object-click'],
-    setup(_props, { emit }) {
-      const floor = anObject({ id: 'm1', type: 'map', map_name: 'floor-2' })
-      return () => h('button', { onClick: () => emit('object-click', floor) }, 'Floor 2')
-    }
-  })
+  function clicking(object: MapElement) {
+    return defineComponent({
+      emits: ['object-click'],
+      setup(_props, { emit }) {
+        return () => h('button', { onClick: () => emit('object-click', object) }, 'Click object')
+      }
+    })
+  }
+
+  const floor = (urlTarget: string) =>
+    anObject({ id: 'm1', type: 'map', map_name: 'floor-2', url_target: urlTarget })
 
   beforeEach(() => {
     openMapPage()
@@ -437,9 +448,9 @@ describe('MapView – following a map object', () => {
     services.nav.replace({ view: 'map', name: 'map1', kiosk: true, rotation: 'noc' })
     opensMap(newMapView('radar'))
     const navigate = vi.spyOn(services.nav, 'navigate').mockImplementation(() => {})
-    renderMap({ 'radar-map-view': clickingRenderer })
+    renderMap({ 'radar-map-view': clicking(floor('_self')) })
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Floor 2' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Click object' }))
 
     expect(navigate).toHaveBeenCalledWith({
       view: 'map',
@@ -447,6 +458,38 @@ describe('MapView – following a map object', () => {
       kiosk: true,
       rotation: 'noc'
     })
+  })
+
+  it('opens the map in a new tab when the object says so', async () => {
+    opensMap(newMapView('radar'))
+    const navigate = vi.spyOn(services.nav, 'navigate').mockImplementation(() => {})
+    const opened: { href: string; target: string }[] = []
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement
+    ) {
+      opened.push({ href: this.getAttribute('href') ?? '', target: this.target })
+    })
+    renderMap({ 'radar-map-view': clicking(floor('_blank')) })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Click object' }))
+
+    expect(navigate).not.toHaveBeenCalled()
+    expect(opened).toEqual([
+      { href: services.nav.href({ view: 'map', name: 'floor-2' }), target: '_blank' }
+    ])
+  })
+
+  it('closes the slide-in of the map it leaves', async () => {
+    opensMap(newMapView('radar'))
+    renderMap({
+      'radar-map-view': clicking(anObject({ id: 'h1', type: 'host', host_name: 'web01' }))
+    })
+    await userEvent.click(await screen.findByRole('button', { name: 'Click object' }))
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Map 1' })).toBeInTheDocument())
+
+    services.nav.navigate({ view: 'map', name: 'floor-2' })
+
+    await waitFor(() => expect(screen.queryByRole('link', { name: 'Map 1' })).toBeNull())
   })
 })
 

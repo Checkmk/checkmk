@@ -311,15 +311,7 @@ def test_parse_hostname_list_repeats_hosts_matched_by_several_args(
     assert sorted(hostlist) == [HostName("lan1"), HostName("lan1"), HostName("lan2")]
 
 
-def test_parse_hostname_list_crashes_on_empty_arg(monkeypatch: MonkeyPatch) -> None:
-    # Pins current behavior: the empty string is not handled.
-    loading_result = _hostlist_scenario().apply(monkeypatch)
-
-    with pytest.raises(IndexError):
-        _parse_hostname_list(loading_result, [""])
-
-
-@pytest.mark.parametrize("arg", ["unknown-host", "@dmz"])
+@pytest.mark.parametrize("arg", ["unknown-host", "@dmz", ""])
 def test_parse_hostname_list_rejects_spec_without_match(monkeypatch: MonkeyPatch, arg: str) -> None:
     loading_result = _hostlist_scenario().apply(monkeypatch)
 

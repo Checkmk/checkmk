@@ -741,26 +741,31 @@ def parse_hostname_list(
             if config_cache.is_active(hn) and config_cache.is_online(hn)
         )
 
-    hostlist: list[HostName] = []
-    for arg in args:
-        if arg[0] != "@" and arg in valid_hosts:
-            hostlist.append(HostName(arg))
-        else:
-            if arg[0] == "@":
-                arg = arg[1:]
-            tagspec = arg.split(",")
+    return _expand_host_specs(valid_hosts, args, host_tags)
 
-            num_found = 0
-            for hostname in valid_hosts:
-                if tuple_rulesets.hosttags_match_taglist(
-                    host_tags.tag_list(hostname), (TagID(_) for _ in tagspec)
-                ):
-                    hostlist.append(hostname)
-                    num_found += 1
-            if num_found == 0:
-                raise MKBailOut(
-                    "Host name or tag specification '%s' does not match any host." % arg
-                )
+
+def _expand_host_specs(
+    valid_hosts: Collection[HostName], host_specs: Iterable[str], host_tags: HostTags
+) -> Sequence[HostName]:
+    hostlist = list[HostName]()
+    for arg in host_specs:
+        if arg in valid_hosts:
+            hostlist.append(HostName(arg))
+            continue
+
+        specs = arg.removeprefix("@")
+        tags = [TagID(t) for t in specs.split(",")]
+
+        if matched := [
+            hn
+            for hn in valid_hosts
+            if tuple_rulesets.hosttags_match_taglist(host_tags.tag_list(hn), tags)
+        ]:
+            hostlist.extend(matched)
+            continue
+
+        raise MKBailOut(f"Host name or tag specification {specs!r} does not match any host.")
+
     return hostlist
 
 

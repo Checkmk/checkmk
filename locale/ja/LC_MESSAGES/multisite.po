@@ -701,6 +701,10 @@ msgid "%(height).1f mm"
 msgstr "%(height).1f mm"
 
 #, python-format
+msgid "%(host)s (related to %(related)s)"
+msgstr ""
+
+#, python-format
 msgid "%(host_name)s is locked by Quick Setup."
 msgstr "%(host_name)s はクイックセットアップでロックされています。"
 
@@ -825,6 +829,10 @@ msgstr "%(name_singular)s はOAuth2接続経由でのみ削除可能"
 #, python-format
 msgid "%(name_singular)s can only be deleted via Quick Setup"
 msgstr "%(name_singular)s はクイックセットアップでのみ削除可能"
+
+#, fuzzy, python-format
+msgid "%(names)s and %(count)d more"
+msgstr "%(files)s および %(count)d 詳細"
 
 #, python-format
 msgid "%(nondescript_rule_count)d notification rule(s) "
@@ -3430,9 +3438,9 @@ msgid "AP name"
 msgstr "AP名"
 
 msgid ""
-"APACHE_FORWARDED_HEADERS is set to 'manual', but no matching RequestHeader "
-"configuration was found in the usual system Apache locations. Is this "
-"intentional?"
+"APACHE_FORWARDED_HEADERS is set to 'manual', but the request reached the "
+"site without an X-Forwarded-Proto header. The proxy or load balancer in "
+"front of the system Apache has to set it."
 msgstr ""
 
 msgid "APC Inrow System Events"
@@ -6026,6 +6034,10 @@ msgstr "影響を受けるサイト"
 msgid "Affected sites: %(sites)s"
 msgstr "影響を受けるサイト：%(sites)s"
 
+#, fuzzy, python-format
+msgid "Affected: %(targets)s"
+msgstr "影響を受けるサイト：%(sites)s"
+
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
 "battery is fully charged again. Here you can specify an alternative lower "
@@ -6297,6 +6309,10 @@ msgstr "最新のチェックポイントの経過時間"
 
 msgid "Age of the latest snapshot"
 msgstr "最新のスナップショットの期間"
+
+#, fuzzy
+msgid "Age of the newest recovery point of a VM"
+msgstr "最新のチェックポイントの経過時間"
 
 msgid "Age of the oldest checkpoint"
 msgstr "最も古いチェックポイントの経過期間"
@@ -10653,6 +10669,10 @@ msgstr "ベイクされたホストの特定エージェント"
 msgid "Bakery API v1"
 msgstr "ベーカリーAPI v1"
 
+#, fuzzy, python-format
+msgid "Bakery plug-in \"%(name)s\""
+msgstr "ベーカリープラグイン"
+
 msgid "Bakery rules"
 msgstr "ベーカリールール"
 
@@ -13008,6 +13028,11 @@ msgstr ""
 
 msgid "Cannot delete unknown user"
 msgstr "不明なユーザーを削除できません"
+
+msgid ""
+"Cannot determine whether the agent packages need baking. Details are in ~/"
+"var/log/web.log."
+msgstr ""
 
 msgid "Cannot display graph"
 msgstr "グラフを表示できません"
@@ -20783,6 +20808,11 @@ msgstr ""
 msgid "Delete"
 msgstr "削除"
 
+#, fuzzy, python-format
+msgid "Delete %(count)d selected host?"
+msgid_plural "Delete %(count)d selected hosts?"
+msgstr[0] "選択したホストを削除"
+
 #, python-format
 msgid "Delete %(name)s #%(nr)d"
 msgstr "%(name)s #%(nr)d 削除"
@@ -21053,9 +21083,6 @@ msgstr "選択した集計を削除"
 
 msgid "Delete selected clients"
 msgstr "選択したクライアントを削除"
-
-msgid "Delete selected hosts"
-msgstr "選択したホストを削除"
 
 msgid "Delete selected rule sets"
 msgstr "選択したルールを削除"
@@ -21360,6 +21387,17 @@ msgstr ""
 #, python-format
 msgid "Deleting %(name)s..."
 msgstr "%(name)sを削除しています..."
+
+#, fuzzy
+msgid ""
+"Deleting it removes these relations. The related hosts themselves are not "
+"deleted."
+msgid_plural ""
+"Deleting them removes these relations. The related hosts themselves are not "
+"deleted."
+msgstr[0] ""
+"%(host)sを削除すると、これらの関連付けが解除されます。関連するホスト自体は削"
+"除されません。"
 
 msgid "Delimiter for file grouping"
 msgstr "ファイルグループ化のためのデリミタ"
@@ -25571,6 +25609,12 @@ msgstr "住所を入力してください"
 msgid "Enter alias (optional)"
 msgstr "エイリアス（オプション）"
 
+msgid ""
+"Enter an absolute http or https URL, such as https://tiles.example/{z}/{x}/"
+"{y}.png. It may hold the placeholders {s}, {z}, {x}, {y}, {-y} and {r}, and "
+"in the host only {s}."
+msgstr ""
+
 msgid "Enter credentials for basic authentication."
 msgstr "基本認証の認証情報を入力してください。"
 
@@ -27165,6 +27209,10 @@ msgstr "FQDN"
 msgid "FQDN used for HELO"
 msgstr "HELOに使用されるFQDN"
 
+#, fuzzy
+msgid "FRITZ!Box devices"
+msgstr "Fritz！Boxデバイス"
+
 msgid "FROM-Address"
 msgstr "FROM-アドレス"
 
@@ -28344,6 +28392,10 @@ msgstr "フォルダ"
 msgid "Folder %(folder)r does not exist."
 msgstr "フォルダ %(folder)rは存在しません。"
 
+#, fuzzy, python-format
+msgid "Folder %(folder)s"
+msgstr "フォルダ: %(folder)s"
+
 #, python-format
 msgid "Folder %(identifier)s not found."
 msgstr "フォルダ%(identifier)sが見つかりません。"
@@ -28891,14 +28943,6 @@ msgstr ""
 "だけ選択できます。"
 
 #, python-format
-msgid ""
-"Found a RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl in %(files)s. "
-"Checkmk already sets this header itself; remove the manual entry to avoid "
-"duplicate or conflicting configuration, or set APACHE_FORWARDED_HEADERS to "
-"'manual' if this Apache needs it."
-msgstr ""
-
-#, python-format
 msgid "Found all %(num_groups)d groups."
 msgstr "すべての%(num_groups)dグループが見つかりました。"
 
@@ -29070,9 +29114,6 @@ msgstr "金曜日"
 
 msgid "Fritz"
 msgstr "Fritz"
-
-msgid "Fritz!Box devices"
-msgstr "Fritz！Boxデバイス"
 
 msgid "From"
 msgstr "From"
@@ -35850,8 +35891,7 @@ msgid ""
 "If your system Apache sits behind another proxy or load balancer that "
 "terminates TLS and forwards plain HTTP to it, that automatic value would be "
 "wrong. Run <tt>omd config set APACHE_FORWARDED_HEADERS manual</tt> for the "
-"site and set the headers yourself in the system Apache configuration "
-"instead, e.g. <tt>RequestHeader set X-Forwarded-Proto \"https\"</tt>."
+"site and have that proxy or load balancer set the headers instead."
 msgstr ""
 
 msgid ""
@@ -36472,6 +36512,10 @@ msgstr ""
 "ば、センサーが摂氏を誤解して華氏で値を送信します。この設定を使用すると、セン"
 "サーの読み取り値をカスタマイズされたものとして解釈するように強制できます。 "
 
+#, fuzzy
+msgid "In sync"
+msgstr "非同期"
+
 msgid "In termination"
 msgstr "終了"
 
@@ -36990,6 +37034,10 @@ msgstr "設定を継承する"
 
 msgid "Inherited from "
 msgstr "から継承 "
+
+#, fuzzy
+msgid "Inherited from global settings"
+msgstr "DCDグローバル設定の変更"
 
 msgid "Init duration"
 msgstr "初期所要時間"
@@ -37617,6 +37665,10 @@ msgid "Invalid catalog data"
 msgstr "無効なカタログデータ"
 
 msgid "Invalid certificate"
+msgstr "無効な証明書"
+
+#, fuzzy
+msgid "Invalid certificate choice"
 msgstr "無効な証明書"
 
 #, python-format
@@ -40342,6 +40394,14 @@ msgstr "期間ごとの温度低下のレベル"
 msgid "Levels on temperature increase per period"
 msgstr "期間ごとの温度上昇のレベル"
 
+msgid ""
+"Levels on the age of the newest recovery point of each VM the policy "
+"protects, as a multiple of the policy's recovery point objective (RPO). In "
+"normal operation the newest recovery point is up to one RPO old. For a VM "
+"without a recovery point, the age counts from when the check first saw the "
+"VM."
+msgstr ""
+
 msgid "Levels on the read latency"
 msgstr "読み取りレイテンシーのレベル"
 
@@ -41279,6 +41339,10 @@ msgstr "ローカルルート"
 
 msgid "Local server status"
 msgstr "ローカルサーバーのステータス"
+
+#, fuzzy
+msgid "Local site"
+msgstr "ローカルサイト%s"
 
 msgid "Local: Send events to local Event Console in same OMD site"
 msgstr ""
@@ -42750,6 +42814,10 @@ msgstr "管理Robot"
 
 msgid "Managed Robots"
 msgstr "管理Robot"
+
+#, fuzzy
+msgid "Managed by the relay"
+msgstr "あらゆるリレーを管理する"
 
 msgid "Managed objects"
 msgstr "管理オブジェクト"
@@ -48047,6 +48115,10 @@ msgstr ""
 "受信者ではなく、連絡先グループまたは連絡先グループのメンバーに割り当てられた"
 "ホストとサービスをフィルタリングします"
 
+#, fuzzy
+msgid "Not trusted"
+msgstr "未スタート"
+
 msgid "Not yet monitored"
 msgstr "まだ監視されていません"
 
@@ -49257,6 +49329,10 @@ msgstr "Nutanix VMの状態"
 msgid "Nutanix VM memory usage"
 msgstr "Nutanix VMのメモリ使用量"
 
+#, fuzzy
+msgid "Nutanix protection policies"
+msgstr "Nutanix：コンテナ"
+
 msgid "Nutanix single VM State"
 msgstr "Nutanix single VMの状態"
 
@@ -49389,12 +49465,6 @@ msgid ""
 msgstr ""
 "OMDは、デフォルトで6557リスナーをstunnelでラップします。リモートエンドポイン"
 "トがプレーンTCPの場合にのみ、これを無効にしてください。"
-
-msgid ""
-"OMD_SITE environment variable not set. You can only execute this in an OMD "
-"site."
-msgstr ""
-"OMD_SITE環境変数が設定されていません。これはOMDサイトでのみ実行できます。"
 
 msgid "ONLINE"
 msgstr "オンライン"
@@ -49796,6 +49866,12 @@ msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "A-Z、a-z、0-9およびマイナス(-)のみが許可されます。"
 
 msgid ""
+"Only VMs of policies that replicate to a remote location synchronously or "
+"every 1 to 15 minutes have a replication state. The v4 API reports none for "
+"hourly or longer schedules."
+msgstr ""
+
+msgid ""
 "Only accepting HTTPS connections with a server which certificate is signed "
 "with one of the CAs that are listed here. That way it is guaranteed that it "
 "is communicating only with the authentic server. If you use self signed "
@@ -49990,6 +50066,9 @@ msgstr ""
 
 msgid "Only root socket"
 msgstr "rootソケットのみ"
+
+msgid "Only schedules with synchronous replication (RPO of 0) can be paused."
+msgstr ""
 
 msgid "Only show hosts and services the user is a contact for"
 msgstr "そのユーザーが連絡をとっているホストとサービスのみを表示"
@@ -53389,13 +53468,10 @@ msgid "Piano Bar"
 msgstr "ピアノバー"
 
 msgid ""
-"Pick Unix socket when Maps runs inside the same OMD site as the monitoring "
-"core (path is at tmp/run/live). Pick TCP for remote Livestatus / xinetd "
-"setups."
+"Pick Local site for the Livestatus of the site Maps runs on, which is each "
+"remote site's own in a distributed setup. Pick Unix socket for another "
+"socket path, and TCP for remote Livestatus / xinetd setups."
 msgstr ""
-"Mapsが監視コアと同じOMDサイト内で実行される場合は、Unixソケットを選択してくだ"
-"さい（パスはtmp/run/liveです）。リモートのLivestatusやxinetdのセットアップの"
-"場合は、TCPを選択してください。"
 
 msgid ""
 "Picks host labels from the HW/SW inventory tree of a host. The <i>Check_MK "
@@ -55239,11 +55315,19 @@ msgstr "ヘルシーなホストの割合"
 msgid "Protect agent data from unauthorized access"
 msgstr "不正アクセスからエージェントのデータを保護"
 
+#, fuzzy
+msgid "Protected VMs"
+msgstr "割り当て解除済VMs"
+
 msgid "Protection Domain"
 msgstr "保護ドメイン"
 
 msgid "Protection group name"
 msgstr "保護グループ名"
+
+#, fuzzy
+msgid "Protection policy"
+msgstr "保護ドメイン"
 
 msgid "Protocol"
 msgstr "プロトコル"
@@ -64445,6 +64529,13 @@ msgstr ""
 "は、エージェントのアップデータは動作しません。Checkmk エージェントは、このカ"
 "スタムパス上で自動クリーニングを行わないことに注意してください。"
 
+msgid "Some agent packages cannot be baked with the current configuration:"
+msgstr ""
+
+#, fuzzy
+msgid "Some agent packages could not be baked."
+msgstr "グループベースDNが見つかりませんでした。"
+
 msgid ""
 "Some agents or agent plug-ins send data not only for the queried host but "
 "also for other hosts \"piggyback\" with their own data. This is the case for "
@@ -66419,6 +66510,10 @@ msgstr ""
 msgid "State if the relationship is unhealthy"
 msgstr "ステータスが\"unhealthy\"の場合の結果の状態"
 
+#, fuzzy
+msgid "State if the replication of a schedule is paused"
+msgstr "レプリケーション状態がアクティブであるときの状態"
+
 msgid "State if the version does not match"
 msgstr "バージョンが一致しない場合の状態"
 
@@ -66894,6 +66989,10 @@ msgstr "Juniper のアラームの状態"
 
 msgid "States of Nutanix host"
 msgstr "Nutanixホストの状態"
+
+#, fuzzy
+msgid "States of the replication of a VM to a remote location"
+msgstr "レプリケーション状態がアクティブであるときの状態"
 
 msgid "States other than the above"
 msgstr "上記以外の状態"
@@ -69489,6 +69588,10 @@ msgid ""
 "The Livestatus connection to this site is configured not to be encrypted."
 msgstr "このサイトへのlivestatus接続は、暗号化されないように構成されています。"
 
+#, fuzzy
+msgid "The Livestatus of the site Maps runs on"
+msgstr "このサイトのステータスはまだ決定されていません。"
+
 msgid ""
 "The Livestatus proxy daemon is available with all commercial editions and "
 "improves the management of the inter site connections using Livestatus. "
@@ -69864,6 +69967,9 @@ msgid ""
 msgstr ""
 "イベントのキャンセルを期待して、このイベントのアクションはまだ遅れています。"
 
+msgid "The active and the staged experimental flags"
+msgstr ""
+
 #, python-format
 msgid ""
 "The active check services have an average check latency of "
@@ -70168,6 +70274,11 @@ msgid ""
 "The automation helper did not answer within %(timeout)d seconds. Possibly "
 "the service <tt>automation-helper</tt> hangs, please check the state of the "
 "site services."
+msgstr ""
+
+msgid ""
+"The automation user's secret from the password store. The Maps settings are "
+"replicated to every site, so they hold only a reference to it."
 msgstr ""
 
 msgid ""
@@ -70694,6 +70805,10 @@ msgstr ""
 #, python-format
 msgid "The connection %(connection_id)r does not exist"
 msgstr "%(connection_id)r という接続は存在しません"
+
+#, fuzzy, python-format
+msgid "The connection ID \"%(id)s\" is used more than once."
+msgstr "タグID \"%(aux_tag_id)s\" は2回使用されています。"
 
 msgid "The connection ID must not be empty"
 msgstr "接続IDは空にできません"
@@ -71601,6 +71716,15 @@ msgstr ""
 "以下のセクションではこの設定を使用します：<ul><li>ワイヤレスデバイスの状態</"
 "li><li>ワイヤレスイーサネットの状態</li></ul>"
 
+#, fuzzy
+msgid ""
+"The following selected host has relations to hosts that are not deleted:"
+msgid_plural ""
+"The following selected hosts have relations to hosts that are not deleted:"
+msgstr[0] ""
+"%(host)sを削除すると、これらの関連付けが解除されます。関連するホスト自体は削"
+"除されません。"
+
 #, python-format
 msgid ""
 "The following sites could not be reached, so the shown data is incomplete "
@@ -72141,6 +72265,9 @@ msgstr "過去400日間"
 msgid "The last 8 days"
 msgstr "過去8日間"
 
+msgid "The last baking operation could not bake all agent packages:"
+msgstr ""
+
 #, python-format
 msgid "The last one was: <pre>%(command)s</pre>"
 msgstr "最後のものは:<pre>%(command)s </pre>"
@@ -72553,6 +72680,10 @@ msgstr ""
 
 msgid "The message has successfully been sent..."
 msgstr "メッセージの送信に成功しました…"
+
+#, fuzzy, python-format
+msgid "The metric backend failed: %(error)s"
+msgstr "検証失敗: %(error)s"
 
 msgid ""
 "The metric label is displayed alongside the queried value in the status "
@@ -73307,6 +73438,14 @@ msgstr ""
 "必要があるため、暗号化されていないパスワードにアクセスする必要があるために必"
 "要です。"
 
+#, fuzzy, python-format
+msgid ""
+"The password of the connection \"%(id)s\" has either been removed or you are "
+"not permitted to use it. Please choose another one."
+msgstr ""
+"構成済みの事前定義された条件が削除されたか、使用が許可されていません。別のも"
+"のを選択してください。"
+
 msgid "The password of the user."
 msgstr "ユーザーのパスワード。"
 
@@ -73763,6 +73902,10 @@ msgstr ""
 "め、複雑な操作となります。また、モニタリングコアの停止と起動を伴います。変更"
 "を保留している間は、ホストの名前を変更することはできません。"
 
+#, fuzzy
+msgid "The replication schedule is disabled and nothing replicates."
+msgstr "サイトは停止としてマークされています。レプリケートはしません。"
+
 msgid "The replication will be triggered each this number of seconds"
 msgstr "この秒数ごとにレプリケーションがトリガーされます"
 
@@ -73791,6 +73934,14 @@ msgstr "プレビューしようとしているレポートは利用できませ
 
 msgid "The request is missing the filter infos to render"
 msgstr "このリクエストには、レンダリングに必要なフィルター情報が欠けています"
+
+msgid ""
+"The request reached the site without an X-Forwarded-Proto header, so the "
+"system Apache does not set it. Run <tt>omd update-apache-config</tt> for the "
+"site as root and make sure the Apache module mod_headers is enabled. If the "
+"site is not reached through the system Apache, e.g. in a container, the "
+"proxy in front of it has to set the header."
+msgstr ""
 
 #, python-format
 msgid "The requested %(title)s does not exist"
@@ -75603,6 +75754,11 @@ msgid ""
 msgstr ""
 "これらのオプションは、Robot Frameworkの最も一般的なコマンドラインパラメータを"
 "指定します。他のパラメータを使うには、\"引数ファイル\" オプションを使います。"
+
+msgid ""
+"These passwords are missing from the password store. The agent packages "
+"contain a placeholder instead:"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -78992,8 +79148,9 @@ msgstr ""
 "fetches /xml/sensordata.xmlを取得し、このファイルから必要な監視情報を抽出しま"
 "す。"
 
+#, fuzzy
 msgid ""
-"This rule selects the Fritz!Box agent, which uses UPNP to gather information "
+"This rule selects the FRITZ!Box agent, which uses UPNP to gather information "
 "about configuration and connection status information."
 msgstr ""
 "このルールは、UPNPを使用して構成および接続ステータス情報に関する情報を収集す"
@@ -80122,6 +80279,9 @@ msgstr "リモートサイトに接続できません(%(e)s)"
 msgid "This site does not exist."
 msgstr "このサイトは存在しません。"
 
+msgid "This site has no metric backend to find the custom services in."
+msgstr ""
+
 #, python-format
 msgid "This site is %(status)s"
 msgstr "このサイトは%(status)sです"
@@ -80224,6 +80384,11 @@ msgid ""
 "This template is used for cover pages, table of contents and other elements "
 "of the front matter"
 msgstr "このテンプレートは、表紙、目次、その他の前書きの要素に使用されます"
+
+msgid ""
+"This test checks whether the request that executes it reached the site with "
+"an X-Forwarded-Proto header. It is not executed on remote sites."
+msgstr ""
 
 msgid ""
 "This text is a regular expression that is being searched in the output of "
@@ -84356,6 +84521,10 @@ msgid "Try the new \"All hosts\" view"
 msgstr "新しい「すべてのホスト」ビューをお試しください"
 
 #, fuzzy
+msgid "Try the new \"All services\" view"
+msgstr "新しい「すべてのホスト」ビューをお試しください"
+
+#, fuzzy
 msgid "Try the new \"Services of host\" view"
 msgstr "すべてのホスト"
 
@@ -87612,10 +87781,10 @@ msgstr "使用済みファイルハンドル"
 
 msgid ""
 "Used for deep links into the Checkmk GUI. Leave empty to inherit the global "
-"setting."
+"setting. With the Checkmk REST API as metric history source, the credentials "
+"are sent to this URL, so it must be a path on this site or name the host of "
+"the TCP target."
 msgstr ""
-"Checkmk GUI へのディープリンクに使用されます。空欄のままにすると、グローバル"
-"設定が継承されます。"
 
 msgid ""
 "Used for every monitored database unless the database overrides it below."
@@ -88702,6 +88871,10 @@ msgstr "すべてのデバイスからフェッチする値"
 
 msgid "Values to fetch from this device"
 msgstr "このデバイスからフェッチする値"
+
+#, fuzzy
+msgid "Vanilla (factory settings)"
+msgstr "出荷時設定"
 
 msgid "Vanished"
 msgstr "消えた"
@@ -91457,6 +91630,11 @@ msgid "Wireless device statuses"
 msgstr "ワイヤレスデバイスのステータス"
 
 msgid ""
+"With REST API credentials, the Checkmk URL must be a path on this site or "
+"name the host of the TCP target."
+msgstr ""
+
+msgid ""
 "With ServiceNow you can create different types of management issues, "
 "currently supported are indicents and cases."
 msgstr ""
@@ -92138,10 +92316,11 @@ msgstr "証明書のサブジェクトのalt名間違い"
 msgid "Wrong customer"
 msgstr "間違ったカスタマー"
 
-msgid "X-Forwarded-Proto/-Ssl are configured manually, as configured"
-msgstr ""
+#, fuzzy
+msgid "X-Forwarded-Proto is set automatically"
+msgstr "自動検出"
 
-msgid "X-Forwarded-Proto/-Ssl are set automatically"
+msgid "X-Forwarded-Proto is set by the proxy in front of the system Apache"
 msgstr ""
 
 msgid "XDA hitratio"
@@ -94028,14 +94207,6 @@ msgstr ""
 
 msgid "You need to provide a \"host\"."
 msgstr "\"ホスト\"を提供する必要があります。"
-
-msgid ""
-"You need to provide a config dictionary to merge with the read "
-"configuration. The dictionary should have all expected keys and their "
-"default values set."
-msgstr ""
-"読み込み設定とマージするために、設定辞書を提供する必要があります。この辞書に"
-"は、期待される全てのキーとそのデフォルト値が設定されている必要があります。"
 
 msgid "You need to provide a key file."
 msgstr "キーファイルを提供する必要があります。"
@@ -96535,6 +96706,10 @@ msgstr "タイムアウト/秒"
 msgid "times"
 msgstr "タイムズ"
 
+#, fuzzy
+msgid "times the RPO"
+msgstr "間隔の倍"
+
 msgid "times the interval"
 msgstr "間隔の倍"
 
@@ -98337,7 +98512,7 @@ msgid "Redirect to the default page defined by Checkmk."
 msgstr ""
 
 #, fuzzy
-msgid "Always included in the contextual link:"
+msgid "Always included in the contextual link"
 msgstr "少なくとも1つの連絡先グループを追加してください。"
 
 #, fuzzy
@@ -98372,15 +98547,17 @@ msgstr "ダッシュボードにフォルダー %{n} を準備しました"
 msgid "Include filter context of clicked element"
 msgstr "このエレメントを削除します"
 
-msgid "Select a category"
-msgstr "カテゴリを選択"
+#, fuzzy
+msgid "Search filters ..."
+msgstr "検索フィルター"
 
 #, fuzzy
 msgid "Error loading dashboards: "
 msgstr "データソースの読み込み中にエラーが発生しました: "
 
-msgid "Select a target"
-msgstr "ターゲットを選択"
+#, fuzzy
+msgid "Search target pages ..."
+msgstr "ホスト名に一致"
 
 #, fuzzy
 msgid "This action can’t be undone."
@@ -98935,8 +99112,9 @@ msgstr "可視化タイプの種類"
 msgid "Owner (private)"
 msgstr "オーナー（プライベート）"
 
-msgid "No contact groups found"
-msgstr "連絡先グループが見つかりませんでした"
+#, fuzzy
+msgid "No contact groups to share with"
+msgstr "連絡先グループは割り当てられていません。"
 
 msgid "Users of site"
 msgstr "サイトのユーザー"
@@ -99510,6 +99688,12 @@ msgstr "列で並び替え"
 #, fuzzy
 msgid "Sort direction"
 msgstr "方向を選択"
+
+msgid ""
+"A click on a host or service name, a related hosts count or a perfometer "
+"opens no details, and the rows offer no actions. The graph links next to the "
+"names still open the graphs."
+msgstr ""
 
 msgid ""
 "A preview of ntop widgets is not available due to the widget size limitation"
@@ -103672,16 +103856,20 @@ msgid "A service name is required"
 msgstr "マクロ名は必須"
 
 #, fuzzy
-msgid "This is not a valid regular expression"
-msgstr "無効な正規表現"
-
-#, fuzzy
 msgid "Failed to search for custom services."
 msgstr "カスタムサービスの作成に失敗しました。"
 
 #, fuzzy
+msgid "unit unknown"
+msgstr "不明"
+
+#, fuzzy
 msgid "no unit"
 msgstr "ユニットを選択"
+
+#, fuzzy
+msgid "unit unknown (no recent data)"
+msgstr "不明(旧エージェント)"
 
 msgid ""
 "The selected services have different units: %{units}. You must select "
@@ -103713,25 +103901,63 @@ msgstr ""
 msgid "Match service name by"
 msgstr "サービスラベルと一致する"
 
+#, fuzzy
+msgid "Enter a regular expression…"
+msgstr "無効な正規表現"
+
 msgid ""
 "This service name may also match other custom services on these hosts. "
 "Review it before you continue."
 msgstr ""
 
-#, fuzzy
-msgid "No matching services. Only discovered services can be selected."
-msgstr "検出済みのカスタムサービスのみが一致対象となります。"
+msgid ""
+"No matching services. A custom service is found once it is discovered or its "
+"series reported in the last 10 minutes."
+msgstr ""
 
 #, fuzzy
 msgid "Matching services"
 msgstr "サービスと一致する"
 
-msgid ""
-"Only the first %{count} matches are shown. Refine the service name to narrow "
-"them down."
-msgstr ""
+#, fuzzy
+msgid "not yet discovered"
+msgstr "ホスト検出なし"
+
+#, fuzzy
+msgid "%{count} more service is not listed. Refine the service name to see it."
+msgid_plural ""
+"%{count} more services are not listed. Refine the service name to see them."
+msgstr[0] ""
 "最初の %{count} 件のみが表示されます。サービス名を絞り込んで一致する件数を絞"
 "り込んでください。"
+
+msgid "%{count} more service is on a host you cannot see."
+msgid_plural "%{count} more services are on hosts you cannot see."
+msgstr[0] ""
+
+msgid ""
+"%{count} of these services is not discovered yet. The alert applies to it "
+"only after a service discovery on %{hosts}."
+msgid_plural ""
+"%{count} of these services are not discovered yet. The alert applies to them "
+"only after a service discovery on %{hosts}."
+msgstr[0] ""
+
+msgid ""
+"The custom service %{names} has more series than can be checked here. The "
+"alert also applies to its services that are not listed, but their units were "
+"not checked."
+msgid_plural ""
+"The custom services %{names} have more series than can be checked here. The "
+"alert also applies to their services that are not listed, but their units "
+"were not checked."
+msgstr[0] ""
+
+#, fuzzy
+msgid "The site %{sites} did not answer, so its services are missing."
+msgid_plural ""
+"The sites %{sites} did not answer, so their services are missing."
+msgstr[0] "ホスト%sはこのサイトでは監視されていません"
 
 msgid "Define at least one threshold: upper levels, lower levels or both."
 msgstr ""
@@ -103778,6 +104004,17 @@ msgstr "ホストに割り当てる"
 msgid "Create & add alert"
 msgstr "作成"
 
+#, fuzzy
+msgid "New host creation"
+msgstr "ホスト作成"
+
+#, fuzzy
+msgid ""
+"Some hosts could not be created. Try again, or verify your configuration."
+msgstr ""
+"ダッシュレットタイプ %s が見つかりませんでした。ダッシュボード構成から削除し"
+"てください。"
+
 msgid "No metric selected."
 msgstr "メトリックが選択されていません。"
 
@@ -103799,8 +104036,16 @@ msgstr "グループベースDNが見つかりませんでした。"
 msgid "+ all attributes"
 msgstr "役割属性"
 
-msgid "Register this metric as a service on a host."
-msgstr "このメトリックを、ホスト上のサービスとして登録します。"
+msgid ""
+"Combine free text with macros to name each service after the data it "
+"monitors: every macro is replaced by the matching value of each series, such "
+"as the metric name or an OpenTelemetry attribute, so different series can "
+"get their own services."
+msgstr ""
+
+#, fuzzy
+msgid "Available service name macros:"
+msgstr "利用可能なタイトルマクロ："
 
 msgid ""
 "The attribute values of each series are appended to this name, so that every "
@@ -103811,7 +104056,15 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Select one host to add the service to."
+msgid "Monitor this metric as a service on a host."
+msgstr "このメトリックを、ホスト上のサービスとして登録します。"
+
+#, fuzzy
+msgid "About the appended attributes"
+msgstr "スコープ属性"
+
+#, fuzzy
+msgid "Select one host to add the service(s) to."
 msgstr "サービスグループの選定"
 
 #, fuzzy
@@ -103897,7 +104150,7 @@ msgid "Looking up the matching hosts…"
 msgstr "ホスト一覧を確認中..."
 
 msgid ""
-"No configured host currently matches this template, so the service cannot be "
+"This template currently resolves to no host name, so the service cannot be "
 "saved."
 msgstr ""
 
@@ -103906,8 +104159,8 @@ msgid "Target hosts:"
 msgstr "ターゲットホスト："
 
 #, fuzzy
-msgid "Hosts that do not exist:"
-msgstr "このホストは存在しません。"
+msgid "New hosts, created in the Main folder on saving:"
+msgstr "各フォルダに作成するホスト"
 
 msgid ""
 "%{n} matching host is in a folder you may not see. Saving is refused while "
@@ -104047,6 +104300,12 @@ msgstr ""
 "つラベルや属性は見つかりませんでした。以下のリストから、お使いのホストに共通"
 "する項目を選択してください。"
 
+msgid ""
+"Checkmk found no host labels or custom host attributes that could relate "
+"these hosts. Go back and select \"Host names\", or add a label to the hosts "
+"that belong together."
+msgstr ""
+
 #, fuzzy
 msgid "In the host names"
 msgstr "新しいホスト名"
@@ -104148,6 +104407,10 @@ msgstr "サイトのすべてのホスト"
 #, fuzzy
 msgid "Pick a label or attribute"
 msgstr "アトリビュートの値"
+
+#, fuzzy
+msgid "No host labels or custom host attributes available"
+msgstr "カスタムホスト属性"
 
 msgid "Looking for \"%{name}\" in all hosts..."
 msgstr "すべてのホストで「%{name}」を検索中..."
@@ -106772,9 +107035,8 @@ msgstr "日付範囲"
 msgid "Contains ..."
 msgstr "内容..."
 
-#, fuzzy
-msgid "Filter by %{entry}"
-msgstr "サービスによるフィルタ"
+msgid "Exact match. Editing searches by substring."
+msgstr ""
 
 #, fuzzy
 msgid "Show the graphs of host %{name}"
@@ -107046,6 +107308,14 @@ msgstr ""
 "文字を入力すると、その文字を含む最初のクリック可能なテキストにフォーカスしま"
 "す。[ArrowDown]/[ArrowUp] キーで次/前の候補に移動し、[Enter] キーで選択、"
 "[Escape] キーで解除します"
+
+#, fuzzy
+msgid "Show hosts with %{entry}"
+msgstr "サービスが実行されていないホストを表示します。"
+
+#, fuzzy
+msgid "Filter by %{entry}"
+msgstr "サービスによるフィルタ"
 
 #, fuzzy
 msgid "Search this page"
@@ -107847,8 +108117,8 @@ msgstr "保留中の変更をアクティブ化する"
 msgid ""
 "License verification postponed. The site keeps full features for %{days} "
 "days from site creation. Verify your license before then — otherwise the "
-"site falls back to the limited free edition (%{services} services). We'll "
-"remind you every %{interval}."
+"site falls back to the limited free license state (%{services} services). "
+"We'll remind you every %{interval}."
 msgstr ""
 "ライセンス確認が延期されました。サイト作成から %{days} 日間はすべての機能を利"
 "用できます。それまでにライセンスを確認してください。確認しない場合、サイトは"
@@ -107882,10 +108152,11 @@ msgstr ""
 msgid "Verify later"
 msgstr "証明書の検証"
 
+#, fuzzy
 msgid ""
 "This site is now linked to %{email}. Your %{days}-day trial of %{edition} "
-"runs until %{endDate} — after that, the site reverts to the free edition "
-"unless you add a license."
+"runs until %{endDate} — after that, the site reverts to the free license "
+"state unless you add a license."
 msgstr ""
 "このサイトは現在、%{Eメール} にリンクされています。%{エディション} の %"
 "{days} 日間の試用期間は %{endDate} までです。それ以降は、ライセンスを追加しな"
@@ -107901,10 +108172,10 @@ msgstr "未検証のトライアル"
 #, fuzzy
 msgid ""
 "Trial started without verification. Full features for %{days} days from site "
-"creation, then fallback to the limited free edition (%{services} services). "
-"While the site is under %{days} days old, the dialog reappears on admin "
-"login (at most once every %{interval}) as another chance to verify or "
-"license."
+"creation, then the site falls back to the limited free license state (%"
+"{services} services). While the site is under %{days} days old, the dialog "
+"reappears on admin login (at most once every %{interval}) as another chance "
+"to verify or license."
 msgstr ""
 "認証なしに試用が開始されました。サイト作成から %{days} 日間は全機能が利用可能"
 "ですが、その後は機能制限のある無料エディション（%{services} サービス）に切り"
@@ -108843,6 +109114,58 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "取り上げるトピック"
+
+#~ msgid ""
+#~ "OMD_SITE environment variable not set. You can only execute this in an "
+#~ "OMD site."
+#~ msgstr ""
+#~ "OMD_SITE環境変数が設定されていません。これはOMDサイトでのみ実行できます。"
+
+#~ msgid ""
+#~ "Pick Unix socket when Maps runs inside the same OMD site as the "
+#~ "monitoring core (path is at tmp/run/live). Pick TCP for remote "
+#~ "Livestatus / xinetd setups."
+#~ msgstr ""
+#~ "Mapsが監視コアと同じOMDサイト内で実行される場合は、Unixソケットを選択して"
+#~ "ください（パスはtmp/run/liveです）。リモートのLivestatusやxinetdのセット"
+#~ "アップの場合は、TCPを選択してください。"
+
+#~ msgid ""
+#~ "Used for deep links into the Checkmk GUI. Leave empty to inherit the "
+#~ "global setting."
+#~ msgstr ""
+#~ "Checkmk GUI へのディープリンクに使用されます。空欄のままにすると、グローバ"
+#~ "ル設定が継承されます。"
+
+#~ msgid ""
+#~ "You need to provide a config dictionary to merge with the read "
+#~ "configuration. The dictionary should have all expected keys and their "
+#~ "default values set."
+#~ msgstr ""
+#~ "読み込み設定とマージするために、設定辞書を提供する必要があります。この辞書"
+#~ "には、期待される全てのキーとそのデフォルト値が設定されている必要がありま"
+#~ "す。"
+
+#~ msgid "Select a category"
+#~ msgstr "カテゴリを選択"
+
+#~ msgid "Select a target"
+#~ msgstr "ターゲットを選択"
+
+#~ msgid "No contact groups found"
+#~ msgstr "連絡先グループが見つかりませんでした"
+
+#, fuzzy
+#~ msgid "This is not a valid regular expression"
+#~ msgstr "無効な正規表現"
+
+#, fuzzy
+#~ msgid "No matching services. Only discovered services can be selected."
+#~ msgstr "検出済みのカスタムサービスのみが一致対象となります。"
+
+#, fuzzy
+#~ msgid "Hosts that do not exist:"
+#~ msgstr "このホストは存在しません。"
 
 #~ msgid ""
 #~ "We believe in only receiving data you explicitly choose to share. You can "
@@ -112058,9 +112381,6 @@ msgstr "取り上げるトピック"
 #~ msgid "Authorize access"
 #~ msgstr "認定サイト"
 
-#~ msgid "Bakery plug-in"
-#~ msgstr "ベーカリープラグイン"
-
 #, python-format
 #~ msgid "Cannot calculate graph recipes: %(e)s"
 #~ msgstr "グラフレシピを計算できません: %(e)s"
@@ -115021,9 +115341,6 @@ msgstr "取り上げるトピック"
 #~ msgid "The graph specification is missing"
 #~ msgstr "グラフの仕様がありません"
 
-#~ msgid "The site is marked as dead. Not trying to replicate."
-#~ msgstr "サイトは停止としてマークされています。レプリケートはしません。"
-
 #~ msgid "Waiting for replication to start"
 #~ msgstr "レプリケーションの開始を待機しています"
 
@@ -117658,13 +117975,6 @@ msgstr "取り上げるトピック"
 #~ msgstr "事前定義された条件 '%s' が存在しないか、使用が許可されていません"
 
 #~ msgid ""
-#~ "The configured predefined condition has either be removed or you are not "
-#~ "permitted to use it. Please choose another one."
-#~ msgstr ""
-#~ "構成済みの事前定義された条件が削除されたか、使用が許可されていません。別の"
-#~ "ものを選択してください。"
-
-#~ msgid ""
 #~ "This predefined condition can not be used with the current ruleset, "
 #~ "because it defines the same label conditions as set by this rule."
 #~ msgstr ""
@@ -117848,14 +118158,6 @@ msgstr "取り上げるトピック"
 
 #~ msgid "Copy of existing view"
 #~ msgstr "既存のビューのコピー"
-
-#, python-format
-#~ msgid ""
-#~ "Dashlet type %s could not be found. Please remove it from your dashboard "
-#~ "configuration."
-#~ msgstr ""
-#~ "ダッシュレットタイプ %s が見つかりませんでした。ダッシュボード構成から削除"
-#~ "してください。"
 
 #~ msgid "Enter layout mode"
 #~ msgstr "レイアウトモードに入る"
@@ -118864,10 +119166,6 @@ msgstr "取り上げるトピック"
 
 #~ msgid "Found no graph matching this definition."
 #~ msgstr "この定義に一致するグラフが見つかりませんでした。"
-
-#, python-format
-#~ msgid "Local site %s"
-#~ msgstr "ローカルサイト%s"
 
 #, fuzzy
 #~ msgid "Show HW/SW Inventory history of this host"
@@ -119946,9 +120244,6 @@ msgstr "取り上げるトピック"
 
 #~ msgid "No declined requests"
 #~ msgstr "リクエスト拒否なし"
-
-#~ msgid "No hosts discovered"
-#~ msgstr "ホスト検出なし"
 
 #~ msgid "No need for syncing sites"
 #~ msgstr "サイト同期不要"

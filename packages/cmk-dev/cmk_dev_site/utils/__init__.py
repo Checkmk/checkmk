@@ -22,7 +22,7 @@ def run_command(  # type: ignore[explicit-any]
     silent: bool = False,
     **kwargs: Any,
 ) -> subprocess.CompletedProcess[Any]:
-    result = subprocess.run(args=args, capture_output=True, text=text, **kwargs)  # noqa: PLW1510
+    result = subprocess.run(args=args, capture_output=True, text=text, check=False, **kwargs)
     msg = f"Running command {colorize(' '.join(args), 'blue')}:"
     if not silent and result.stdout:
         msg = msg + "\nSTDOUT:\n" + colorize(result.stdout.strip(), "green")

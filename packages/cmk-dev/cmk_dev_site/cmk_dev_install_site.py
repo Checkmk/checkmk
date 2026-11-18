@@ -6,9 +6,10 @@ import argparse
 import logging
 from collections.abc import Iterator
 
-from .cmk_dev_install import Edition, ExitCode  # type: ignore[attr-defined]
+from .cmk_dev_install import ExitCode
 from .cmk_dev_install import run as cmk_dev_install
 from .cmk_dev_site import main as cmk_dev_site
+from .omd import Edition
 from .utils.cli import clean_cli_exit, report_duration
 from .utils.log import get_logger
 from .utils.update_check import check_for_update
@@ -164,7 +165,6 @@ def execute(args: argparse.Namespace) -> int:
     except RuntimeError as e:
         logger.error(str(e))  # noqa: TRY400
         return 1
-    return 0  # type: ignore[unreachable]
 
 
 def create_parser() -> argparse.ArgumentParser:

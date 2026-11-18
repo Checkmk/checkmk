@@ -166,7 +166,7 @@ def check_for_update(
     command = upgrade_command(install_prefix, program or Path(sys.argv[0]).name)
 
     cached = read_cache(cache_path)
-    warned_at_start = _warn_if_outdated(cached and cached.latest, current_version, command)  # type: ignore[arg-type]
+    warned_at_start = _warn_if_outdated(cached.latest if cached else None, current_version, command)
     stale = cached is None or not 0 <= started - cached.checked_at < _CHECK_INTERVAL
     background = _BackgroundFetch(fetch_latest) if stale else None
 
@@ -174,9 +174,9 @@ def check_for_update(
         yield
     finally:
         _check_active = False
-        latest = cached and cached.latest
+        latest = cached.latest if cached else None
         if background and (fetched := background.result(_FETCH_WAIT_AT_EXIT)):
             write_cache(cache_path, CachedVersion(latest=fetched, checked_at=now()))
             latest = fetched
         if not warned_at_start or now() - started >= _MIN_RUN_FOR_SECOND_WARNING:
-            _warn_if_outdated(latest, current_version, command, prefix="\n")  # type: ignore[arg-type]
+            _warn_if_outdated(latest, current_version, command, prefix="\n")

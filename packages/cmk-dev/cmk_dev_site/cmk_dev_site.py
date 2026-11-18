@@ -82,7 +82,7 @@ def run_command(  # type: ignore[explicit-any]
     )
 
 
-def _prefix_log_api_client(self: APIClient, *_args: Any, **_kwargs: Any) -> str:  # type: ignore[explicit-any]
+def _prefix_log_api_client(self: APIClient, *_args: object, **_kwargs: object) -> str:
     return f"[{colorize(self.site_name, 'blue')}]: "
 
 
@@ -110,7 +110,7 @@ def trial_mode_selection(selected_at: datetime) -> str:
     return json.dumps(selection, indent=2) + "\n"
 
 
-def _prefix_log_site(self: Site, *args: Any, **kwargs: Any) -> str:  # type: ignore[explicit-any]  # noqa: ARG001
+def _prefix_log_site(self: Site, *_args: object, **_kwargs: object) -> str:
     return f"[{colorize(self.name, 'blue')}]: "
 
 
@@ -183,11 +183,10 @@ class Site:
         file over the active one finds no change and does not restart the site.
         """
         if not omd_init_script_exists(self.cmk_pkg.omd_version, "ai-control-plane"):
-            logger.info(  # astrein: disable=logging-named-placeholder
-                "[%s]: Checkmk %s ships no ai-control-plane service, so the exp_ai_assistant "
+            logger.info(
+                "[%(site)s]: Checkmk %(version)s ships no ai-control-plane service, so the exp_ai_assistant "
                 "flag stays off",
-                colorize(self.name, "blue"),
-                self.cmk_pkg.omd_version,
+                {"site": colorize(self.name, "blue"), "version": self.cmk_pkg.omd_version},
             )
             return
         flags_file_content = json.dumps({"exp_ai_assistant": True}, indent=2) + "\n"
@@ -197,10 +196,10 @@ class Site:
                 flags_file_content,
                 append=False,
             )
-        logger.info(  # astrein: disable=logging-named-placeholder
-            "[%s]: Turned on the exp_ai_assistant flag, so the AI assistant settings show in "
+        logger.info(
+            "[%(site)s]: Turned on the exp_ai_assistant flag, so the AI assistant settings show in "
             "Global settings",
-            colorize(self.name, "blue"),
+            {"site": colorize(self.name, "blue")},
         )
 
     @log(prefix=_prefix_log_site, max_level=logging.DEBUG)
@@ -210,14 +209,14 @@ class Site:
             trial_mode_selection(datetime.now(UTC)),
             append=False,
         )
-        logger.info(  # astrein: disable=logging-named-placeholder
-            "[%s]: Preselected trial mode, so the trial mode selection gate won't show. "
+        logger.info(
+            "[%(site)s]: Preselected trial mode, so the trial mode selection gate won't show. "
             "Show it with --show-trial-mode-selection",
-            colorize(self.name, "blue"),
+            {"site": colorize(self.name, "blue")},
         )
 
     def ensure_auth_works(self) -> None:
-        if self.cmk_pkg.edition != Edition.OLD_SAAS and self.cmk_pkg.edition != Edition.CLOUD:  # noqa: PLR1714
+        if self.cmk_pkg.edition not in (Edition.OLD_SAAS, Edition.CLOUD):
             return
         if not is_port_in_use(OIDC_PORT):
             raise RuntimeError(
@@ -253,10 +252,9 @@ class Site:
                 omd_config_set(self.name, "LIVESTATUS_TCP", "on")
 
         except RuntimeError as e:
-            logger.warning(  # astrein: disable=logging-named-placeholder
-                "[%s]: Failed to configure the site. %s",
-                colorize(self.name, "yellow"),
-                e,
+            logger.warning(
+                "[%(site)s]: Failed to configure the site. %(error)s",
+                {"site": colorize(self.name, "yellow"), "error": e},
             )
 
         mcp_defaults = [
@@ -265,22 +263,19 @@ class Site:
             if key not in explicit and omd_hook_exists(self.cmk_pkg.omd_version, key)
         ]
         if ("MCP_TRACE_FORWARD", "on") in mcp_defaults:
-            logger.info(  # astrein: disable=logging-named-placeholder
-                "[%s]: Forwarding MCP usage data to Checkmk's telemetry collector "
+            logger.info(
+                "[%(site)s]: Forwarding MCP usage data to Checkmk's telemetry collector "
                 "(mcp-analytics.checkmk.com). Disable with --omd-configs MCP_TRACE_FORWARD=off",
-                colorize(self.name, "blue"),
+                {"site": colorize(self.name, "blue")},
             )
 
         for key, value in [*mcp_defaults, *configs]:
             try:
                 omd_config_set(self.name, key, value)
             except RuntimeError as e:
-                logger.warning(  # astrein: disable=logging-named-placeholder
-                    "[%s]: Failed to set option %s=%s. %s",
-                    colorize(self.name, "yellow"),
-                    key,
-                    value,
-                    e,
+                logger.warning(
+                    "[%(site)s]: Failed to set option %(key)s=%(value)s. %(error)s",
+                    {"site": colorize(self.name, "yellow"), "key": key, "value": value, "error": e},
                 )
 
     @log(prefix=_prefix_log_site)
@@ -370,10 +365,7 @@ class Site:
         if self.cmk_pkg.base_version >= BaseVersion(3, 0):
             config["configuration_connection"]["authentication_connections"] = {"type": "disabled"}
 
-        if (
-            self.cmk_pkg.edition == Edition.OLD_MANAGED  # noqa: PLR1714
-            or self.cmk_pkg.edition == Edition.ULTIMATEMT
-        ):
+        if self.cmk_pkg.edition in (Edition.OLD_MANAGED, Edition.ULTIMATEMT):
             # required filed for managed edition
             config["basic_settings"]["customer"] = "provider"
         return config
@@ -511,10 +503,12 @@ def configure_tracing(central_site: Site, remote_sites: list[Site]) -> None:
         central_site.cmk_pkg.base_version < BaseVersion(2, 4, 0)
         or central_site.cmk_pkg.edition == Edition.OLD_SAAS
     ):
-        logger.warning(  # astrein: disable=logging-named-placeholder
-            "[%s]: Tracing is not supported for version: %s",
-            colorize(central_site.name, "yellow"),
-            colorize(str(central_site.cmk_pkg.version), "yellow"),
+        logger.warning(
+            "[%(site)s]: Tracing is not supported for version: %(version)s",
+            {
+                "site": colorize(central_site.name, "yellow"),
+                "version": colorize(str(central_site.cmk_pkg.version), "yellow"),
+            },
         )
         return
 
@@ -609,7 +603,7 @@ def interactive_select(options: list[str], default: str) -> str:
 
 def interactive_version_select(partial_version: PartialCMKPackage) -> CMKPackage:
     raw_versions = run_command(["omd", "versions", "-b"]).stdout.strip().split("\n")
-    most_similar = sorted(raw_versions, key=lambda v: partial_version.similarity(v))[-1]  # noqa: PLW0108
+    most_similar = sorted(raw_versions, key=partial_version.similarity)[-1]
     selected_version = interactive_select(raw_versions, most_similar)
     version = parse_version(selected_version)
     if isinstance(version, CMKPackage):
@@ -804,10 +798,12 @@ def handle_site_creation(
         site.configure_site(configs)
 
     else:
-        logger.warning(  # astrein: disable=logging-named-placeholder
-            "[%s]: Site already exists with version %s",
-            colorize(site.name, "blue"),
-            colorize(existing_site_version, "green"),
+        logger.warning(
+            "[%(site)s]: Site already exists with version %(version)s",
+            {
+                "site": colorize(site.name, "blue"),
+                "version": colorize(existing_site_version, "green"),
+            },
         )
         logger.warning("Use force option to delete the existing site")
 
@@ -825,16 +821,16 @@ def connect_central_to_remote(
     brokerport = parse_int(omd_config_get(remote_site.name, "RABBITMQ_PORT"))
 
     if livestatusport is None:
-        logger.error(  # astrein: disable=logging-named-placeholder
-            "[%s]: Failed to read the Livestatus port",
-            colorize(remote_site.name, "red"),
+        logger.error(
+            "[%(site)s]: Failed to read the Livestatus port",
+            {"site": colorize(remote_site.name, "red")},
         )
         return
     # Broker port is only supported in 2.4.0 and above
     if brokerport is None:
-        logger.warning(  # astrein: disable=logging-named-placeholder
-            "[%s]: Failed to read the Broker port",
-            colorize(remote_site.name, "red"),
+        logger.warning(
+            "[%(site)s]: Failed to read the Broker port",
+            {"site": colorize(remote_site.name, "red")},
         )
 
     remote_site_config = remote_site.get_site_connection_config(
@@ -843,10 +839,9 @@ def connect_central_to_remote(
 
     site_conns = central_api.list_all_site_connections()
     if site_conns and remote_site.name in site_conns:
-        logger.warning(  # astrein: disable=logging-named-placeholder
-            "[%s]: Site connection %s already exists",
-            colorize(central_site.name, "yellow"),
-            remote_site.name,
+        logger.warning(
+            "[%(site)s]: Site connection %(remote_site)s already exists",
+            {"site": colorize(central_site.name, "yellow"), "remote_site": remote_site.name},
         )
     else:
         central_api.create_site_connection(remote_site_config)
@@ -899,9 +894,9 @@ def activate_changes(api: APIClient) -> None:
     """Activate changes in the Checkmk site."""
     result = api.activate_changes()
     if not result:
-        logger.warning(  # astrein: disable=logging-named-placeholder
-            "[%s]: Nothing to activate",
-            colorize(api.site_name, "yellow"),
+        logger.warning(
+            "[%(site)s]: Nothing to activate",
+            {"site": colorize(api.site_name, "yellow")},
         )
 
 
@@ -911,10 +906,9 @@ def ensure_host_exists(
 ) -> None:
     """Ensure the host exists; create it if it does not."""
     if (hosts := api.list_all_hosts()) and host_name in hosts:
-        logger.warning(  # astrein: disable=logging-named-placeholder
-            "[%s]: Host %s already exists",
-            colorize(api.site_name, "yellow"),
-            host_name,
+        logger.warning(
+            "[%(site)s]: Host %(host)s already exists",
+            {"site": colorize(api.site_name, "yellow"), "host": host_name},
         )
     else:
         api.create_host(host_name=host_name)
@@ -964,10 +958,9 @@ def core_logic(args: argparse.Namespace) -> None:
     try:
         api.set_user_language(config.language.value)
     except CheckmkAPIException as e:
-        logger.warning(  # astrein: disable=logging-named-placeholder
-            "[%s]: %s",
-            colorize(site_name, "yellow"),
-            e,
+        logger.warning(
+            "[%(site)s]: %(error)s",
+            {"site": colorize(site_name, "yellow"), "error": e},
         )
 
     ensure_host_exists(api, site_name)
@@ -980,10 +973,9 @@ def core_logic(args: argparse.Namespace) -> None:
         try:
             remote_api.set_user_language(config.language.value)
         except CheckmkAPIException as e:
-            logger.warning(  # astrein: disable=logging-named-placeholder
-                "[%s]: %s",
-                colorize(remote_site.name, "yellow"),
-                e,
+            logger.warning(
+                "[%(site)s]: %(error)s",
+                {"site": colorize(remote_site.name, "yellow"), "error": e},
             )
         ensure_host_exists(remote_api, remote_site.name)
         remote_site.register_host_with_agent(
@@ -1007,10 +999,12 @@ def core_logic(args: argparse.Namespace) -> None:
     central_site.trigger_site_checking_cycle()
     central_site.discover_services()
 
-    logger.info(  # astrein: disable=logging-named-placeholder
-        "[%s]: Happy hacking: %s ",
-        colorize(central_site.name, "green"),
-        colorize(f"http://localhost/{central_site.name}/check_mk", "blue"),
+    logger.info(
+        "[%(site)s]: Happy hacking: %(url)s ",
+        {
+            "site": colorize(central_site.name, "green"),
+            "url": colorize(f"http://localhost/{central_site.name}/check_mk", "blue"),
+        },
     )
 
 
@@ -1019,10 +1013,12 @@ def execute(args: argparse.Namespace) -> int:
         logger.setLevel(max(logging.INFO - ((args.verbose - args.quiet) * 10), logging.DEBUG))
 
         if logger.level <= logging.DEBUG:
-            logger.debug(  # astrein: disable=logging-named-placeholder
-                "%s: %s",
-                colorize("cmk-dev-site version:", "cyan"),
-                colorize(str(__version__), "green"),
+            logger.debug(
+                "%(label)s: %(version)s",
+                {
+                    "label": colorize("cmk-dev-site version:", "cyan"),
+                    "version": colorize(str(__version__), "green"),
+                },
             )
         core_logic(args)
 

@@ -2,6 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from urllib.parse import parse_qs, urlparse
 
 import fastapi as fapi
@@ -24,7 +25,7 @@ def test_authorize_shows_plain_login_form() -> None:
     """Verify the GET /authorize endpoint returns the HTML login form."""
     response = authorize(state="abc", redirect_uri="http://example.com/callback")
 
-    assert response.status_code == 200  # astrein: disable=http-status-literal
+    assert response.status_code == HTTPStatus.OK
     body = bytes(response.body).decode()
     assert '<form method="post" action="/authorize">' in body
     assert f'name="username" value="{DEFAULT_USERNAME}"' in body
@@ -44,7 +45,7 @@ def test_authorize_login_redirects_with_generated_code() -> None:
         role="user",
     )
 
-    assert response.status_code == 303  # astrein: disable=http-status-literal
+    assert response.status_code == HTTPStatus.SEE_OTHER
     location = response.headers["location"]
     parsed = urlparse(location)
     params = parse_qs(parsed.query)
@@ -93,7 +94,7 @@ def test_token_rejects_unknown_authorization_code() -> None:
     try:
         token(client_id="client-1", code="unknown")
     except fapi.HTTPException as exc:
-        assert exc.status_code == 400  # astrein: disable=http-status-literal
+        assert exc.status_code == HTTPStatus.BAD_REQUEST
         assert exc.detail == "Invalid authorization code"
     else:
         raise AssertionError("expected invalid authorization code to be rejected")

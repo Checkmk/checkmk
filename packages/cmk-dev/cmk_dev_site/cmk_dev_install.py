@@ -34,6 +34,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import IntEnum
 from html.parser import HTMLParser
+from http import HTTPStatus
 from pathlib import Path
 from typing import Any, Literal, NamedTuple, override
 
@@ -221,10 +222,9 @@ def distro_candidates(distro: DistroVersionInfo) -> list[DistroVersionInfo]:
 
 def warn_on_distro_fallback(cmk_pkg: CMKPackage, distro: DistroVersionInfo) -> None:
     if cmk_pkg.distro_codename != distro.version_codename:
-        logger.warning(  # astrein: disable=logging-named-placeholder
-            "No %s package found, trying the %s package instead",
-            distro.version_codename,
-            cmk_pkg.distro_codename,
+        logger.warning(
+            "No %(codename)s package found, trying the %(fallback_codename)s package instead",
+            {"codename": distro.version_codename, "fallback_codename": cmk_pkg.distro_codename},
         )
 
 
@@ -416,7 +416,7 @@ class FileServer:
             url,
             timeout=self._timeout,
         )
-        return response.status_code == 200  # astrein: disable=http-status-literal
+        return response.status_code == HTTPStatus.OK
 
 
 class VersionParser(HTMLParser):
@@ -658,11 +658,12 @@ def apply_acls_to_version(version: str) -> None:
         raise RuntimeError(f"ERROR: Version {version_path.name} does not exist")
     if not shutil.which("setfacl"):
         logger.warning(
-            f"'setfacl' not found, skipping ACL setup for {version}. "  # noqa: G004
-            f"As a result, you may not be able to write files or apply changes "
-            f"in {version_path} as the current user. "
-            f"To fix this, install the 'acl' package and reinstall the version:\n"
-            f"  sudo apt-get install acl\n"
+            "'setfacl' not found, skipping ACL setup for %(version)s. "
+            "As a result, you may not be able to write files or apply changes "
+            "in %(version_path)s as the current user. "
+            "To fix this, install the 'acl' package and reinstall the version:\n"
+            "  sudo apt-get install acl\n",
+            {"version": version, "version_path": version_path},
         )
         return
     run_command(
@@ -799,9 +800,9 @@ def validate_installation(cmk_pkg: CMKPackage, force: bool, download_only: bool)
     already_installed = (INSTALLATION_PATH / Path(cmk_pkg.omd_version)).exists()
 
     if already_installed and not (force or download_only):
-        logger.warning(  # astrein: disable=logging-named-placeholder
-            "Version %s already installed.",
-            INSTALLATION_PATH / Path(cmk_pkg.omd_version),
+        logger.warning(
+            "Version %(path)s already installed.",
+            {"path": INSTALLATION_PATH / Path(cmk_pkg.omd_version)},
         )
         logger.warning("Use --force to re-download and re-install.")
 
@@ -838,11 +839,14 @@ def _fetch_and_verify(
     """Find a valid download URL, fetch the package, and verify its hash."""
     valid_url = None
     for url in urls:
-        logger.debug(f"Checking URL: {url}")  # noqa: G004
+        logger.debug("Checking URL: %(url)s", {"url": url})
         pkg_url = build_download_url(url, cmk_pkg)
 
         if not file_server.url_exists(pkg_url):
-            logger.warning(f"Version {cmk_pkg} not found in the download server {url}")  # noqa: G004
+            logger.warning(
+                "Version %(version)s not found in the download server %(url)s",
+                {"version": cmk_pkg, "url": url},
+            )
         else:
             valid_url = pkg_url
             break
@@ -874,8 +878,7 @@ def download_and_install_cmk_pkg(
     download_path = DOWNLOAD_DIR / cmk_pkg.package_name
     cached = find_cached_deb(cmk_pkg, DOWNLOAD_DIR)
     if cached is not None and not force:
-        # astrein: disable=logging-named-placeholder
-        logger.info("Found cached .deb at %s, skipping download", cached)
+        logger.info("Found cached .deb at %(path)s, skipping download", {"path": cached})
     else:
         if cached is not None and force:
             logger.info("--force specified, ignoring cached .deb")
@@ -921,10 +924,9 @@ def core_logic(
         case GitVersion(branch=branch, commit_hash=commit_hash):
             build_distro = distros[-1]
             if build_distro != distro:
-                logger.warning(  # astrein: disable=logging-named-placeholder
-                    "Building the package for Ubuntu %s, as builds for %s may not be supported",
-                    build_distro.version_id,
-                    distro.version_id,
+                logger.warning(
+                    "Building the package for Ubuntu %(build_version)s, as builds for %(version)s may not be supported",
+                    {"build_version": build_distro.version_id, "version": distro.version_id},
                 )
             pkg_path = build_install_git_version(
                 branch, commit_hash, edition, build_distro.version_id
@@ -1072,10 +1074,12 @@ def execute(args: argparse.Namespace) -> InstallResult:
         http.client.HTTPConnection.debuglevel = 1
 
     if logger.level <= logging.DEBUG:
-        logger.debug(  # astrein: disable=logging-named-placeholder
-            "%s: %s",
-            colorize("cmk-dev-site version:", "cyan"),
-            colorize(str(__version__), "green"),
+        logger.debug(
+            "%(label)s: %(version)s",
+            {
+                "label": colorize("cmk-dev-site version:", "cyan"),
+                "version": colorize(str(__version__), "green"),
+            },
         )
 
     if args.path:

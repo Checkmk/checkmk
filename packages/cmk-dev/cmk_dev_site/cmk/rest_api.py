@@ -3,6 +3,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from http import HTTPStatus
 from pathlib import Path
 from typing import (
     Any,
@@ -138,7 +139,7 @@ class APIClient:
                 "Content-Type": "application/json",
             },
         )
-        if response.status_code == 200:  # astrein: disable=http-status-literal
+        if response.status_code == HTTPStatus.OK:
             return response.json()  # type: ignore[no-any-return]
         return None
 
@@ -164,7 +165,7 @@ class APIClient:
                 },
             },
         )
-        if response.status_code != 200:  # astrein: disable=http-status-literal
+        if response.status_code != HTTPStatus.OK:
             raise build_exception(response, message="Failed to create host")
 
     def list_all_hosts(self) -> list[str]:
@@ -175,11 +176,10 @@ class APIClient:
                 "Content-Type": "application/json",
             },
         )
-        if response.status_code != 200:  # astrein: disable=http-status-literal
+        if response.status_code != HTTPStatus.OK:
             raise build_exception(response, message="Failed to list all hosts")
 
-        hosts = [host["title"] for host in response.json()["value"]]
-        return hosts  # noqa: RET504
+        return [host["title"] for host in response.json()["value"]]
 
     def _get_href_from_links(self, links: list[dict[str, str]], name: str) -> str | None:
         """Extract the href from the links."""
@@ -203,7 +203,7 @@ class APIClient:
             json={"site_config": site_config},  # type: ignore[dict-item]
         )
 
-        if response.status_code != 200:  # astrein: disable=http-status-literal
+        if response.status_code != HTTPStatus.OK:
             raise build_exception(response, "Failed to create site connection")
 
     def set_user_language(self, language: str) -> None:
@@ -217,7 +217,7 @@ class APIClient:
             },
             json={"language": language},
         )
-        if response.status_code != 200:  # astrein: disable=http-status-literal
+        if response.status_code != HTTPStatus.OK:
             raise build_exception(response, "Failed to set user language")
 
     def list_all_site_connections(self) -> list[str]:
@@ -228,11 +228,10 @@ class APIClient:
                 "Content-Type": "application/json",
             },
         )
-        if response.status_code != 200:  # astrein: disable=http-status-literal
+        if response.status_code != HTTPStatus.OK:
             raise build_exception(response, "Failed to list all site connections")
 
-        site_connections = [site["id"] for site in response.json()["value"]]
-        return site_connections  # noqa: RET504
+        return [site["id"] for site in response.json()["value"]]
 
     def activate_changes(self) -> list[str] | None:
         """Activate pending changes on the Checkmk server.
@@ -258,9 +257,9 @@ class APIClient:
             allow_redirects=True,
         )
 
-        if response.status_code == 422:  # astrein: disable=http-status-literal
+        if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
             return None
-        if response.status_code != 200:  # astrein: disable=http-status-literal
+        if response.status_code != HTTPStatus.OK:
             raise build_exception(response, "Failed to activate changes")
 
         changes: set[str] = set()
@@ -275,7 +274,7 @@ class APIClient:
         while True:
             # Fetch data
             response = self._get(link)
-            if response.status_code != 200:  # astrein: disable=http-status-literal
+            if response.status_code != HTTPStatus.OK:
                 raise build_exception(response, "Failed to fetch activation changes")
             data = response.json()
 
@@ -302,7 +301,7 @@ class APIClient:
             json={"username": user, "password": password},
         )
 
-        if response.status_code != 204:  # astrein: disable=http-status-literal
+        if response.status_code != HTTPStatus.NO_CONTENT:
             raise build_exception(response, "Failed to login to remote site")
 
     def download_agent(self, download_path: Path) -> None:
@@ -315,7 +314,7 @@ class APIClient:
                 "Content-Type": "application/json",
             },
         )
-        if response.status_code == 200:  # astrein: disable=http-status-literal
+        if response.status_code == HTTPStatus.OK:
             with open(download_path, "wb") as f:
                 f.write(response.content)
         else:

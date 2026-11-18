@@ -31,7 +31,6 @@ def colorize(text: str, color: str) -> str:
 
 P = ParamSpec("P")
 T = TypeVar("T")
-C = TypeVar("C")
 
 
 class LogDecorator(Protocol):
@@ -82,11 +81,13 @@ def generate_log_decorator(
 
                 # Log function call details
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(  # astrein: disable=logging-named-placeholder
-                        "Calling %s with args: %s, kwargs: %s",
-                        colorize(func.__name__, "cyan"),
-                        args,
-                        kwargs,
+                    logger.debug(
+                        "Calling %(function)s with args: %(args)s, kwargs: %(kwargs)s",
+                        {
+                            "function": colorize(func.__name__, "cyan"),
+                            "args": args,
+                            "kwargs": kwargs,
+                        },
                     )
                 elif max_level >= logging.INFO:
                     logger.log(PROGRESS_LEVEL, msg)
@@ -96,11 +97,14 @@ def generate_log_decorator(
 
                 except Exception:  # pylint: disable=broad-except
                     if logger.isEnabledFor(logging.DEBUG):
-                        # astrein: disable=logging-named-placeholder
-                        logger.debug("%s Trace:", func.__name__, exc_info=True)
+                        logger.debug(
+                            "%(function)s Trace:", {"function": func.__name__}, exc_info=True
+                        )
                     else:
-                        # astrein: disable=logging-named-placeholder
-                        logger.info("%s%s", msg, colorize("Failed", "red"))
+                        logger.info(
+                            "%(message)s%(status)s",
+                            {"message": msg, "status": colorize("Failed", "red")},
+                        )
                     if error_message:
                         logger.error(error_message)  # noqa: TRY400
 
@@ -109,15 +113,19 @@ def generate_log_decorator(
                 else:
                     # Log function result details
                     if logger.isEnabledFor(logging.DEBUG):
-                        # astrein: disable=logging-named-placeholder
-                        logger.debug("%s returned: %s", colorize(func.__name__, "cyan"), result)
+                        logger.debug(
+                            "%(function)s returned: %(result)s",
+                            {"function": colorize(func.__name__, "cyan"), "result": result},
+                        )
                     elif max_level >= logging.INFO:
                         if show_result:
-                            # astrein: disable=logging-named-placeholder
-                            logger.info("%s", f"{msg}{colorize(str(result), 'green')}")
+                            logger.info(
+                                "%(message)s", {"message": f"{msg}{colorize(str(result), 'green')}"}
+                            )
                         else:
-                            # astrein: disable=logging-named-placeholder
-                            logger.info("%s", f"{msg}{colorize('OK', 'green')}")
+                            logger.info(
+                                "%(message)s", {"message": f"{msg}{colorize('OK', 'green')}"}
+                            )
 
                     return result
 
@@ -197,7 +205,7 @@ def get_logger(name: str) -> CustomLogger:
     return logger
 
 
-def add_method_logging(  # noqa: UP047
+def add_method_logging[**P, T, C](
     log: Callable[[Callable[P, T]], Callable[P, T]],
     methods: list[str] | None = None,
     prefix: str = "",  # noqa: ARG001

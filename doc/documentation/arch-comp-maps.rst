@@ -982,8 +982,8 @@ Livestatus queries
   bundles are dropped if they contain a newline or backslash. The GUI builds
   its queries with Checkmk's query expression builder. Dynamic groups accept
   only ``Filter:``, ``And:``, ``Or:`` and ``Negate:`` lines without control
-  characters (tab is allowed), nesting at most six levels where the operator
-  changes. Saving a map through the REST API also checks each filter the map did
+  characters (tab is allowed), at most 64 KiB, nesting at most six levels where
+  the operator changes. Saving a map through the REST API also checks each filter the map did
   not have before: each combining line must find the lines it combines, and
   each ``Filter:`` line's column and operator must exist in the table it
   queries. A filter the map already had is not checked again, so a map saved by
@@ -1075,6 +1075,8 @@ Limits
      - 10,000
    * - Hosts per geo bundle
      - 1000, 10,000 in all bundles of a map; each a valid host name
+   * - Filter of a dynamic group
+     - 64 KiB
    * - Maps a state fetch follows through links
      - 256; further links stay pending, marked stale
    * - Metric history window

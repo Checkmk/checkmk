@@ -11,6 +11,7 @@ from cmk.maps.shared.filters import (
     ExcludedMembers,
     FILTER_NESTING_MAX,
     normalize_object_filter,
+    OBJECT_FILTER_MAX_BYTES,
     validate_member_pattern,
 )
 
@@ -116,6 +117,17 @@ def test_accepts_a_filter_livestatus_runs_quickly(value: str) -> None:
 def test_rejects_a_filter_nested_deeper_than_livestatus_runs_quickly(value: str) -> None:
     with pytest.raises(ValueError, match="deeper"):
         normalize_object_filter(value)
+
+
+def test_rejects_a_filter_past_the_length_limit() -> None:
+    line = "Filter: name = host\n"
+    with pytest.raises(ValueError, match="longer"):
+        normalize_object_filter(line * (OBJECT_FILTER_MAX_BYTES // len(line) + 1))
+
+
+def test_the_length_limit_counts_bytes() -> None:
+    with pytest.raises(ValueError, match="longer"):
+        normalize_object_filter("Filter: name = " + "ä" * (OBJECT_FILTER_MAX_BYTES // 2))
 
 
 def test_member_pattern_is_trimmed() -> None:

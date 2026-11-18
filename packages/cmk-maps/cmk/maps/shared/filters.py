@@ -34,7 +34,9 @@ _LINE_BREAKING: Final = re.compile(r"[\x00-\x1f\x7f\x85\u2028\u2029]")
 
 MEMBER_PATTERN_MAX_LENGTH: Final = 1024
 
-# Six levels stay near 0.1 s on Livestatus for any filter up to 64 KiB.
+# Each poll of a map sends the filter to every site. 64 KiB are about 2000 lines.
+OBJECT_FILTER_MAX_BYTES: Final = 64 * 1024
+# Six levels stay near 0.1 s on Livestatus for any filter up to the length limit.
 FILTER_NESTING_MAX: Final = 6
 
 ExcludedMembers = Literal["host_services", "hosts", "services"]
@@ -50,8 +52,11 @@ def normalize_object_filter(value: str) -> str:
     ``Stats:``/``Columns:``/``GET`` headers (a naive ``[^\\n]+`` regex would let
     the literal ``\\n`` through untouched).
 
-    Raises ``ValueError`` if any line is not a safe combinator header.
+    Raises ``ValueError`` if the filter is too long or any line is not a safe
+    combinator header.
     """
+    if len(value.encode("utf-8")) > OBJECT_FILTER_MAX_BYTES:
+        raise ValueError(f"object_filter is longer than {OBJECT_FILTER_MAX_BYTES} bytes")
     if _CONTROL_CHARS.search(value):
         raise ValueError("object_filter must not contain control characters")
     lines = [

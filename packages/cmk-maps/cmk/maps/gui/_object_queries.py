@@ -30,7 +30,7 @@ from cmk.livestatus_client.expressions import And
 from cmk.livestatus_client.queries import Query, ResultRow
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.livestatus_client.tables.services import Services
-from cmk.maps.shared.filters import normalize_object_filter
+from cmk.maps.shared.filters import normalize_object_filter, OBJECT_FILTER_MAX_BYTES
 from cmk.maps.shared.geo import resolve_host_coords
 from cmk.maps.shared.perfdata import parse_perf_metrics
 from cmk.maps.shared.states import HOST_STATE_MAP, SERVICE_STATE_MAP, state_token
@@ -237,7 +237,9 @@ def _checked_object_filter(value: str) -> str:
         return normalize_object_filter(value)
     except ValueError:
         raise MKUserError(
-            "object_filter", _("object_filter must be one or more 'Filter: …' lines.")
+            "object_filter",
+            _("object_filter must be one or more 'Filter: …' lines, at most %(max)d bytes.")
+            % {"max": OBJECT_FILTER_MAX_BYTES},
         )
 
 

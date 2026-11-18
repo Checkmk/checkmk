@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
+from collections.abc import Sequence
 from typing import cast, override
 
 import cmk.gui.pages
@@ -35,6 +36,7 @@ from cmk.gui.dashboard.token_util import (
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing import (
     get_temperature_unit,
+    GraphRecipe,
     GraphRenderConfig,
     host_service_graph_dashlet_cmk,
     metric_backend_registry,
@@ -64,8 +66,20 @@ def render_graph_widget_content(
     dashlet_type = cast(type[ABCGraphDashlet], dashlet_registry[dashlet_config["type"]])
 
     graph_dashlet = dashlet_type(dashlet_config, base_context)
-    graph_recipes = graph_dashlet.graph_recipes()
+    render_graph_recipes(ctx, dashlet_config, graph_dashlet.graph_recipes(), widget_id)
 
+
+def render_graph_recipes(
+    ctx: PageContext,
+    dashlet_config: GraphDashletConfig,
+    graph_recipes: Sequence[GraphRecipe],
+    widget_id: str,
+) -> None:
+    """Draw graph recipes that a caller has already computed from a graph dashlet.
+
+    A caller that inspects the recipes first passes them here, so the dashlet and its
+    livestatus queries run only once.
+    """
     try:
         html.write_html(
             host_service_graph_dashlet_cmk(

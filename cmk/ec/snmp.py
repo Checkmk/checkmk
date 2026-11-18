@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping
-from logging import Logger
+from logging import DEBUG, Logger
 from typing import Any
 
 import pysnmp.debug  # type: ignore[import-untyped]
@@ -33,6 +33,21 @@ VarBind = tuple[pysnmp.proto.rfc1902.ObjectName, SimpleAsn1Type]
 VarBinds = Iterable[VarBind]
 
 
+class _PySnmpDebug(pysnmp.debug.Debug):  # type: ignore[misc]
+    """PySNMP's debug messages, formatted only when debugging"""
+
+    def __init__(self, logger: Logger) -> None:
+        self._logger = logger
+        # The MIB view ones fail for string DEFVALs.
+        super().__init__("all", "!mibview", printer=logger.debug)
+
+    def __and__(self, flag: int) -> int:
+        return int(super().__and__(flag)) if self._logger.isEnabledFor(DEBUG) else 0
+
+    def __rand__(self, flag: int) -> int:
+        return self & flag
+
+
 class SNMPTrapParser:
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
     class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):  # type: ignore[misc]
@@ -51,8 +66,8 @@ class SNMPTrapParser:
         self._varbinds_and_ipaddress: tuple[Iterable[tuple[str, str]], str] | None = None
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
 
-        # Hand over our logger to PySNMP, without the MIB view messages failing for string DEFVALs
-        pysnmp.debug.setLogger(pysnmp.debug.Debug("all", "!mibview", printer=logger.debug))
+        # Hand over our logger to PySNMP
+        pysnmp.debug.setLogger(_PySnmpDebug(logger))
 
         self.snmp_engine.observer.registerObserver(
             self._handle_unauthenticated_snmptrap,

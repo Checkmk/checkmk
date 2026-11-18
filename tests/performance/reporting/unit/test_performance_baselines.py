@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import date
 
 import pytest
@@ -39,11 +39,16 @@ def _baselines(
     today: date = date(2026, 11, 17),
     baseline_offset: int = 0,
     checked_job_name: str | None = None,
+    scenario_names: Sequence[str] | None = None,
 ) -> PerformanceBaselines:
     return PerformanceBaselines(
         jobs=jobs,
         job_names=list(jobs),
-        scenario_names=sorted({name for _, samples in jobs.values() for name in samples}),
+        scenario_names=(
+            scenario_names
+            if scenario_names is not None
+            else sorted({name for _, samples in jobs.values() for name in samples})
+        ),
         cpu_usage_metric=CPU,
         memory_usage_metric=MEMORY,
         cpu_tolerance=15.0,
@@ -135,6 +140,17 @@ def test_a_scenario_missing_from_the_latest_run_is_reported_without_failing() ->
     alerts = baselines.validate_performance_baselines()
 
     assert [alert.is_failure for alert in alerts] == [False]
+
+
+def test_a_scenario_in_none_of_the_loaded_jobs_is_not_reported() -> None:
+    baselines = _baselines(
+        _jobs({"test_x": (1.0, 50.0, 40.0)}, {"test_x": (1.0, 50.0, 40.0)}),
+        scenario_names=["test_renamed_long_ago", "test_x"],
+    )
+
+    alerts = baselines.validate_performance_baselines()
+
+    assert alerts == []
 
 
 def test_a_scenario_that_is_no_test_is_not_checked() -> None:

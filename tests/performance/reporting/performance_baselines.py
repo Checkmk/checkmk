@@ -190,6 +190,15 @@ class PerformanceBaselines:
 
         return AverageValues(*(time_avg, cpu_avg, mem_avg))
 
+    def _scenarios_in_jobs(self) -> set[str]:
+        """The scenarios with a runtime or resource samples in any of the loaded jobs."""
+        scenario_names: set[str] = set()
+        for benchmark_data, scenario_data in self.jobs.values():
+            if isinstance(benchmarks := benchmark_data.get("benchmarks"), list):
+                scenario_names.update(str(benchmark["name"]) for benchmark in benchmarks)
+            scenario_names.update(name for name, samples in scenario_data.items() if samples)
+        return scenario_names
+
     @staticmethod
     def _skipped_scenario(
         scenario_name: str,
@@ -266,8 +275,10 @@ class PerformanceBaselines:
             ]
 
         alerts: list[BaselineAlert] = []
+        # The database knows every scenario ever stored, also renamed ones and other suites'.
+        scenarios_in_jobs = self._scenarios_in_jobs()
         for scenario_name in self.scenario_names:
-            if not scenario_name.startswith("test_"):
+            if not scenario_name.startswith("test_") or scenario_name not in scenarios_in_jobs:
                 continue
             if self._skipped_scenario(scenario_name, baseline_name, skipped_scenarios):
                 continue

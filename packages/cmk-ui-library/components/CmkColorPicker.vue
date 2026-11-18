@@ -89,7 +89,7 @@ body[data-theme='modern-dark'] .cmk-color-picker {
   padding: var(--cmk-color-picker-padding);
   margin: 0;
   border: 1px solid var(--cmk-color-picker-border);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
   background: var(--cmk-color-picker-bg);
   cursor: pointer;
 

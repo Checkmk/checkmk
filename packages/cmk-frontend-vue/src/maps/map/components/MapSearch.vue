@@ -246,7 +246,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   font-size: var(--font-size-large);
   line-height: 1;
   padding: 0 var(--dimension-3);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
 }
 
 .maps-map-search__icon-btn:hover {

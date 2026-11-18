@@ -362,7 +362,7 @@ const currentStateText = computed<TranslatedString>(() => {
   align-items: center;
   justify-content: space-between;
   padding: var(--dimension-5);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
   background: var(--ux-theme-6);
 }
 

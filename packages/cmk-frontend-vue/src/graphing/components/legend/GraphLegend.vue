@@ -463,7 +463,7 @@ function toggleLine(name: string) {
   flex: 0 0 auto;
   width: var(--swatch-width);
   height: 16px;
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
 }
 
 /* The title, not its cell, is what ellipsises, so the toggle stays visible next to it. */

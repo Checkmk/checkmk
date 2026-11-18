@@ -75,7 +75,7 @@ const value = computed(() => props.variable.current.value)
   align-items: baseline;
   gap: var(--dimension-4);
   padding: var(--dimension-3) var(--dimension-5);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
   color: var(--global-settings-variable-color);
   cursor: pointer;
 

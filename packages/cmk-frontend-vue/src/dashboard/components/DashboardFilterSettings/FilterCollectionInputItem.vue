@@ -73,7 +73,7 @@ const handleUpdateFilterValues = (filterId: string, values: ConfiguredValues) =>
 
 .db-filter-collection-input-item__label {
   padding: var(--dimension-2) var(--dimension-3);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
   background-color: var(--ux-theme-7);
   font-size: var(--font-size-small);
 }

@@ -313,7 +313,7 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
   width: 0.3em;
   min-width: 3px;
   height: 1.1em;
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
 }
 
 .db-donut-legend-table__row--hidden .db-donut-legend-table__swatch {

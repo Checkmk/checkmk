@@ -89,7 +89,7 @@ function remove(id: string) {
   align-items: center;
   gap: var(--dimension-2);
   padding: var(--dimension-2) var(--dimension-3);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
   background: var(--input-hover-bg-color);
   border: 1px solid var(--default-border-color);
   font-size: var(--font-size-small, 11.375px);

@@ -818,7 +818,7 @@ function patchCurrentSlot(patch: Record<string, unknown>): void {
   position: absolute;
   background: rgb(255 255 255);
   border: solid var(--interactive-accent);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
   box-shadow: 0 0 0 1px rgb(0 0 0 / 25%);
   pointer-events: auto;
 }

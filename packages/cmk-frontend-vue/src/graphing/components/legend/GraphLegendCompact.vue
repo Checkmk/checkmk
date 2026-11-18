@@ -285,7 +285,7 @@ function onNameClick(item: CompactLegendItem): void {
   flex: 0 0 auto;
   width: 4px;
   height: 16px;
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
 }
 
 .graphing-graph-legend-compact__name {

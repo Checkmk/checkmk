@@ -245,7 +245,7 @@ const alertIconColor = computed(() => {
   height: 20px;
   box-sizing: border-box;
   padding: var(--dimension-3);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
   margin: 0;
   gap: var(--dimension-3);
 

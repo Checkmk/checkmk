@@ -576,7 +576,7 @@ const virtualHotspots = computed(() =>
   /* Half of --spacing-half — no matching design-system token yet. */
   width: calc(var(--spacing-half) / 2);
   height: var(--spacing);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
 }
 
 .profiling-hotspots-table__rank-number {
@@ -612,7 +612,7 @@ const virtualHotspots = computed(() =>
   flex: 1;
   height: var(--spacing);
   background: var(--ux-theme-4);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
   min-width: 80px;
   overflow: hidden;
 }
@@ -620,7 +620,7 @@ const virtualHotspots = computed(() =>
 .profiling-hotspots-table__bar-fill {
   display: block;
   height: 100%;
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
   transition: width 0.2s ease;
 }
 
@@ -705,7 +705,7 @@ const virtualHotspots = computed(() =>
   flex: 1;
   height: var(--spacing-half);
   background: var(--ux-theme-5);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
   min-width: 40px;
   max-width: 120px;
   overflow: hidden;
@@ -714,7 +714,7 @@ const virtualHotspots = computed(() =>
 .profiling-hotspots-table__edge-bar-fill {
   display: block;
   height: 100%;
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
   background: var(--font-color-dimmed);
   transition: width 0.2s ease;
 }

@@ -363,7 +363,7 @@ const valArc = computed(() => {
   font-size: var(--font-size-small);
   line-height: 1.2;
   background: var(--maps-map-view-label-bg);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
 }
 
 /* A gadget is narrower than its caption ("RAM usage 48.91 %"); on lines of

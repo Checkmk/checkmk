@@ -134,7 +134,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
   box-sizing: border-box;
   background-color: var(--ux-theme-5);
   border: 1px solid var(--border-color-subtle);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
   color: var(--font-color);
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-default);

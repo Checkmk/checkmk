@@ -36,6 +36,6 @@ const chipStyle = computed(() =>
   box-sizing: border-box;
   padding: var(--dimension-2);
   min-width: var(--dimension-6);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
 }
 </style>

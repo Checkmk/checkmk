@@ -265,7 +265,7 @@ onUnmounted(() => {
   height: var(--dimension-7);
   width: var(--dimension-7);
   border: 1px solid transparent;
-  border-radius: var(--border-radius-half) var(--border-radius-half) 0 0;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
   padding: 0 0 1px;
   margin: 0;
   background: none;

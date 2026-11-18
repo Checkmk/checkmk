@@ -59,7 +59,7 @@ const overflow = computed(() => Math.max(0, props.names.length - MAX_VISIBLE))
   max-height: 240px;
   overflow-y: auto;
   border: 1px solid var(--default-border-color);
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
   font-family: var(--font-family-monospace, monospace);
   font-size: var(--font-size-normal);
   text-align: left;

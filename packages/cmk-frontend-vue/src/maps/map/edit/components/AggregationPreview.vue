@@ -121,7 +121,7 @@ const unreachable = computed(() => !props.connectionOk && !!props.aggregationId 
   display: inline-block;
   width: 6px;
   height: 6px;
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
 }
 
 .maps-aggregation-preview__leaf-name {

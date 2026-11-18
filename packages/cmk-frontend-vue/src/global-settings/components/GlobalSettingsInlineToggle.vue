@@ -68,7 +68,7 @@ async function toggle(): Promise<void> {
 <style scoped>
 .global-settings-inline-toggle {
   display: inline-flex;
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
 
   &:focus-visible {
     outline: var(--border-width-1) solid var(--success);

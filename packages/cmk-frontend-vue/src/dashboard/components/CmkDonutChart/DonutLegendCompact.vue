@@ -141,7 +141,7 @@ defineEmits<{
   width: 0.3em;
   min-width: 3px;
   height: 1.1em;
-  border-radius: var(--border-radius-half);
+  border-radius: var(--border-radius);
 }
 
 .db-donut-legend-compact__chip--hidden .db-donut-legend-compact__swatch {

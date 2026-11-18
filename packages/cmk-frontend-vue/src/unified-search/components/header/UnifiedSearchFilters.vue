@@ -173,8 +173,8 @@ function getFilterOptions(): FilterOption[] {
   padding: 0;
   background: var(--default-form-element-bg-color);
   height: auto;
-  border-bottom-left-radius: var(--border-radius-half);
-  border-bottom-right-radius: var(--border-radius-half);
+  border-bottom-left-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
   z-index: +2;
 }
 

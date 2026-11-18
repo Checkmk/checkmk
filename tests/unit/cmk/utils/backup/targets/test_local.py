@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
+import os
 from pathlib import Path
 
 import pytest
@@ -59,6 +60,28 @@ class TestLocalTarget:
                     "is_mountpoint": False,
                 },
             ).check_ready()
+
+    @pytest.mark.xfail(
+        strict=True,
+        raises=PermissionError,
+        reason="Crash report 89ac8afa-e264-11f1-8000-38f7cdcbaa1a: PermissionError",
+    )
+    @pytest.mark.skipif(os.geteuid() == 0, reason="root ignores directory permissions")
+    def test_check_ready_inaccessible_path(self, tmp_path: Path) -> None:
+        home = tmp_path / "home"
+        (home / "backup").mkdir(parents=True)
+        home.chmod(0o000)
+        try:
+            with pytest.raises(MKGeneralException, match="not accessible"):
+                LocalTarget(
+                    TargetId(""),
+                    {
+                        "path": str(home / "backup"),
+                        "is_mountpoint": False,
+                    },
+                ).check_ready()
+        finally:
+            home.chmod(0o700)
 
     def test_list_backups_skips_unreadable_backup_info(self, tmp_path: Path) -> None:
         # Crash group 3971: an interrupted backup left an empty mkbackup.info behind

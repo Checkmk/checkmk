@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 import subprocess
 from collections.abc import Sequence
 from datetime import datetime
@@ -12,7 +13,7 @@ import pytest
 import time_machine
 
 import cmk.utils.paths
-from cmk.backup.gui.handler import BackupConfig, Job, ModeEditBackupJob
+from cmk.backup.gui.handler import BackupConfig, BackupTargetLocal, Job, ModeEditBackupJob
 from cmk.backup.gui.pages import ModeBackupEditKey
 from cmk.backup.utils.config import CMASystemConfig, Config, SiteConfig
 from cmk.backup.utils.job import JobConfig, JobState
@@ -22,6 +23,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.crypto.password import Password
 from cmk.gui.config import Config as GUIConfig
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
@@ -151,3 +153,20 @@ def test_add_new_job_creates_no_state_file(backup_config: BackupConfig) -> None:
     backup_config.add_job(job)
 
     assert not job.state_file_path().exists()
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=PermissionError,
+    reason="Crash report 65e57916-fab0-11f0-b436-00155d0a9937: PermissionError",
+)
+@pytest.mark.skipif(os.geteuid() == 0, reason="root ignores directory permissions")
+def test_local_target_without_search_permission_reports_write_error(tmp_path: Path) -> None:
+    target_dir = tmp_path / "backup"
+    target_dir.mkdir()
+    target_dir.chmod(0o600)
+    try:
+        with pytest.raises(MKUserError, match="Failed to write to the configured directory"):
+            BackupTargetLocal({"path": str(target_dir), "is_mountpoint": False}).validate()
+    finally:
+        target_dir.chmod(0o700)

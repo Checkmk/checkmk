@@ -146,7 +146,7 @@ Once done, you are ready for the next chapter.
    **Important**: Do one thing in one commit, e.g. don't mix code reorganization and changes of the moved lines.
    Separate this in two commits.
 
-   Make sure that you commit in logical blocks and write [good commit messages](#style-guide-commit-messages).
+   Make sure that you commit in logical blocks and write [good commit messages](#commit-messages).
 
    If you have finished your work, it's a good time to [execute the tests locally](#how-to-execute-tests) to ensure you did not break anything.
 

@@ -92,7 +92,7 @@ from .rule_matcher import (
 )
 from .rule_packs import load_active_config
 from .settings import create_settings, FileDescriptor, PortNumber, Settings
-from .snmp import SNMPTrapParser
+from .snmp import SNMPTrapParser, trap_error_text
 from .syslog import SyslogFacility, SyslogPriority
 from .timeperiod import TimePeriods
 
@@ -780,10 +780,15 @@ class EventServer(ECServerThread):
             if varbinds_and_ipaddress := snmp_trap_parser.parse(data, address):
                 yield create_event_from_trap(varbinds_and_ipaddress[0], varbinds_and_ipaddress[1])
         except Exception as e:
-            # NOTE: SNMPTrapParser._handle_unauthenticated_snmptrap() logs more details about what
-            # went wrong on "verbose" logging level, anyway. We do not log on "info" here to avoid
-            # possible log spam from a misconfigured/buggy device.
-            self._logger.debug("skipping unparsable SNMP trap, reason: %s", e)
+            # Senders can trigger it per trap: a traceback only when debugging
+            snmp_logger = self._logger.getChild("snmp")
+            snmp_logger.error(
+                "Trap dropped from %s, cannot process it: %s: %s (enable debug logging for details)",
+                address[0],
+                type(e).__name__,
+                trap_error_text(e),
+                exc_info=snmp_logger.isEnabledFor(DEBUG),
+            )
 
     def process_potential_event_instrumented(self, events: Iterable[Event]) -> None:
         """

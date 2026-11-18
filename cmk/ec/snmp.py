@@ -53,16 +53,26 @@ class SNMPTrapParser:
     class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):  # type: ignore[misc]
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
+        error: Exception | None = None
+
+        def processPdu(self, *args: Any, **kwargs: Any) -> None:
+            """Keeps failures, PySNMP would skip its cleanup for them"""
+            try:
+                super().processPdu(*args, **kwargs)
+            except Exception as e:
+                self.error = e
+
     def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
         self._logger = logger
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
         self._initialize_snmp_credentials(config)
         # NOTE: pysnmp has a really strange notification receiver API: The constructor call below
-        # effectively registers the callback (2nd argument) at the SNMP engine. The resulting
-        # receiver instance is kept alive by the registration itself, so there is no need to store
-        # it anywhere here. The callback stores the parsed trap in _varbinds_and_ipaddress when
-        # parse() is called.
-        SNMPTrapParser._ECNotificationReceiver(self.snmp_engine, self._handle_snmptrap)
+        # effectively registers the callback (2nd argument) at the SNMP engine. The callback stores
+        # the parsed trap in _varbinds_and_ipaddress when parse() is called.
+        self._receiver = SNMPTrapParser._ECNotificationReceiver(
+            self.snmp_engine,
+            self._handle_snmptrap,
+        )
         self._varbinds_and_ipaddress: tuple[Iterable[tuple[str, str]], str] | None = None
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
 
@@ -165,7 +175,10 @@ class SNMPTrapParser:
     def parse(
         self, data: bytes, sender_address: tuple[str, int]
     ) -> tuple[Iterable[tuple[str, str]], str] | None:
-        """Let PySNMP parse the given trap data. The _handle_snmptrap() callback below collects the result."""
+        """Let PySNMP parse the given trap data. The _handle_snmptrap() callback below collects the result.
+
+        Drops what PySNMP doesn't accept, raises failures of accepted traps.
+        """
         self._logger.log(
             VERBOSE,
             "Trap received from %s:%d. Checking for acceptance now.",
@@ -173,13 +186,28 @@ class SNMPTrapParser:
             sender_address[1],
         )
         self._varbinds_and_ipaddress = None
+        self._receiver.error = None
         self.snmp_engine.setUserContext(sender_address=sender_address)
-        self.snmp_engine.msgAndPduDsp.receiveMessage(
-            snmpEngine=self.snmp_engine,
-            transportDomain=(),
-            transportAddress=sender_address,
-            wholeMsg=data,
-        )
+        try:
+            self.snmp_engine.msgAndPduDsp.receiveMessage(
+                snmpEngine=self.snmp_engine,
+                transportDomain=(),
+                transportAddress=sender_address,
+                wholeMsg=data,
+            )
+        except Exception as e:
+            # Senders trigger these, e.g. with b"hello world".
+            self._logger.log(
+                VERBOSE,
+                "Message dropped from %s, PySNMP failed on it: %s: %s",
+                sender_address[0],
+                type(e).__name__,
+                e,
+                exc_info=self._logger.isEnabledFor(DEBUG),
+            )
+            return None
+        if (error := self._receiver.error) is not None:
+            raise error
         return self._varbinds_and_ipaddress
 
     def _handle_snmptrap(
@@ -382,3 +410,14 @@ class SNMPTrapTranslator:
             if all(c >= " " or c == "\r" for c in scrub_string(text)):
                 return str(oid), text
         return str(oid), value.prettyPrint()
+
+
+def trap_error_text(error: Exception) -> str:
+    """For log messages, as a KeyError shows its key's repr, for pyasn1 values all of its type"""
+    if (
+        isinstance(error, KeyError)
+        and len(error.args) == 1
+        and isinstance(key := error.args[0], SimpleAsn1Type)
+    ):
+        return str(key.prettyPrint())
+    return str(error)

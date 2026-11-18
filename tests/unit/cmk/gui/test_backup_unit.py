@@ -5,6 +5,7 @@
 
 # pylint: disable=protected-access
 
+import os
 import subprocess
 from collections.abc import Sequence
 from datetime import datetime
@@ -19,9 +20,10 @@ from cmk.utils.backup.job import JobConfig, JobState
 from cmk.utils.backup.targets import TargetId
 from cmk.utils.user import UserId
 
+from cmk.gui.backup.handler import BackupTargetLocal, Job
 from cmk.gui.backup.handler import Config as BackupConfig
-from cmk.gui.backup.handler import Job
 from cmk.gui.backup.pages import ModeBackupEditKey
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user
 
 from cmk.crypto.password import Password
@@ -99,3 +101,22 @@ def test_add_new_job_creates_no_state_file(backup_config: BackupConfig) -> None:
     backup_config.add_job(job)
 
     assert not job.state_file_path().exists()
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=PermissionError,
+    reason="Crash report 65e57916-fab0-11f0-b436-00155d0a9937: PermissionError",
+)
+@pytest.mark.skipif(os.geteuid() == 0, reason="root ignores directory permissions")
+def test_local_target_without_search_permission_reports_write_error(tmp_path: Path) -> None:
+    target_dir = tmp_path / "backup"
+    target_dir.mkdir()
+    target_dir.chmod(0o600)
+    try:
+        with pytest.raises(MKUserError, match="Failed to write to the configured directory"):
+            BackupTargetLocal({"path": str(target_dir), "is_mountpoint": False}).validate(
+                "edit_target"
+            )
+    finally:
+        target_dir.chmod(0o700)

@@ -316,14 +316,16 @@ function draw(): void {
     measureLabel
   )
 
+  const verticalRange = props.options.y_axis?.vertical_range
   const [autoYMin, autoYMax] = composedValueDomain(
     props.metrics,
     composed,
     props.shaded_regions,
-    props.fitHorizontalLines ? props.horizontal_lines : []
+    props.fitHorizontalLines ? props.horizontal_lines : [],
+    verticalRange?.type === 'minimal' ? verticalRange : undefined
   )
 
-  const explicitRange = props.options.y_axis?.vertical_range ?? null
+  const explicitRange = verticalRange?.type === 'fixed' ? verticalRange : null
   const [rawYMin, rawYMax] = props.valueRange
     ? [props.valueRange.min, props.valueRange.max]
     : explicitRange

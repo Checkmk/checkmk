@@ -7,9 +7,32 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from cmk.graphing_engine import drawn_curves, FixedRange, Graph, NonConvertibleUnit, Unit
+from cmk.graphing_engine import (
+    drawn_curves,
+    FixedRange,
+    Graph,
+    MinimalRange,
+    NonConvertibleUnit,
+    Unit,
+)
 
 from ._graph_specification import GraphSpecification
+
+
+def _numeric_bound(bound: object) -> float | None:
+    return float(bound) if isinstance(bound, int | float) else None
+
+
+@dataclass(frozen=True)
+class FixedAxisRange:
+    lower: float
+    upper: float
+
+
+@dataclass(frozen=True)
+class MinimalAxisRange:
+    lower: float | None
+    upper: float | None
 
 
 @dataclass(frozen=True)
@@ -33,14 +56,15 @@ class BuiltGraph:
             None,
         )
 
-    def y_axis_bounds(self) -> tuple[float, float] | None:
-        """The edges the value axis is pinned to; None to scale it to the values that are drawn."""
+    def y_axis_range(self) -> FixedAxisRange | MinimalAxisRange | None:
+        """The values the value axis spans; None to scale it to the values that are drawn."""
         match self.graph.vertical_range:
             case FixedRange(lower=int() | float() as lower, upper=int() | float() as upper):
-                return lower, upper
+                return FixedAxisRange(lower=lower, upper=upper)
+            case MinimalRange(lower=lower, upper=upper):
+                minimal = MinimalAxisRange(lower=_numeric_bound(lower), upper=_numeric_bound(upper))
+                return None if minimal == MinimalAxisRange(lower=None, upper=None) else minimal
             case _:
-                # A minimal range only widens the drawn extent, and a bound the engine resolves
-                # while evaluating is no edge a data-less shell can name.
                 return None
 
 

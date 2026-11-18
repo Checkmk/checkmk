@@ -11,7 +11,7 @@
 import { type DomainBucket, computeYDomain } from '../axes/valueAxis'
 import { downsampleToColumns, edgeNeighbours, edgeSample, m4 } from '../decimation/decimate'
 import type { M4Bucket, M4Cache } from '../decimation/types'
-import type { HorizontalLine, Metric, ShadedRegion, TimeRange } from '../types'
+import type { HorizontalLine, Metric, MinimalRange, ShadedRegion, TimeRange } from '../types'
 import { type BarSeries, composeBars } from './bars'
 import { invertBucket, keptSamples } from './bucket'
 import { connectorPolylines } from './line'
@@ -159,7 +159,8 @@ export function composedValueDomain(
   metrics: Metric[],
   composed: ComposedSeries,
   regions: ShadedRegion[] = [],
-  lines: HorizontalLine[] = []
+  lines: HorizontalLine[] = [],
+  minimalRange?: MinimalRange
 ): [number, number] {
   const domainBuckets = metrics.flatMap((metric, i) => {
     if (metric.render.hidden) {
@@ -168,9 +169,11 @@ export function composedValueDomain(
     return [composed.valuesDrawnOnPlot[i]!.map(asDomainBucket)]
   })
   const lineBuckets = lines.map((line) => asDomainBucket(line.value))
-  return computeYDomain([...domainBuckets, ...regionBoundBuckets(regions), lineBuckets], {
-    symmetric: mixesMirroredAndUnmirrored(metrics)
-  })
+  return computeYDomain(
+    [...domainBuckets, ...regionBoundBuckets(regions), lineBuckets],
+    { symmetric: mixesMirroredAndUnmirrored(metrics) },
+    minimalRange
+  )
 }
 
 export interface M4CacheStore {

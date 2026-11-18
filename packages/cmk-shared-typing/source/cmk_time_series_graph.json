@@ -54,12 +54,24 @@
       },
       "required": ["type", "min", "max"]
     },
+    "minimal_range": {
+      "title": "MinimalRange",
+      "type": "object",
+      "properties": {
+        "type": { "const": "minimal", "default": "minimal" },
+        "min": { "type": "number" },
+        "max": { "type": "number" }
+      },
+      "required": ["type"]
+    },
     "y_axis": {
       "title": "YAxis",
       "type": "object",
       "properties": {
         "unit": { "$ref": "unit_format.json#" },
-        "vertical_range": { "$ref": "#/$defs/fixed_range" }
+        "vertical_range": {
+          "oneOf": [{ "$ref": "#/$defs/fixed_range" }, { "$ref": "#/$defs/minimal_range" }]
+        }
       }
     },
     "graph_options": {

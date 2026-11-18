@@ -5,6 +5,7 @@
  */
 // Value-axis (y) domain computation: the value extent the y-axis must cover, derived from the
 // buckets that will be drawn.
+import type { MinimalRange } from '../types'
 
 export interface DomainFlags {
   symmetric?: boolean
@@ -27,7 +28,8 @@ function isFlat(yMin: number, yMax: number): boolean {
 
 export function computeYDomain(
   metricsBuckets: DomainBucket[][],
-  flags: DomainFlags = {}
+  flags: DomainFlags = {},
+  minimalRange?: MinimalRange
 ): [number, number] {
   let yMin = Infinity
   let yMax = -Infinity
@@ -44,6 +46,8 @@ export function computeYDomain(
       }
     }
   }
+  yMin = Math.min(yMin, minimalRange?.min ?? Infinity)
+  yMax = Math.max(yMax, minimalRange?.max ?? -Infinity)
   if (!Number.isFinite(yMin) || !Number.isFinite(yMax)) {
     return [0, 1]
   }

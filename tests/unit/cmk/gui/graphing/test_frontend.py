@@ -72,6 +72,7 @@ from cmk.shared_typing.cmk_time_series_graph import (
     UnitFormat,
     YAxis,
 )
+from cmk.shared_typing.cmk_time_series_graph import MinimalRange as AxisMinimalRange
 from cmk.shared_typing.global_time_picker import (
     CustomGraphTimeRange,
     FirstDayOfWeek,
@@ -445,10 +446,38 @@ def test_the_shell_axis_is_pinned_by_the_graphs_own_fixed_range() -> None:
     assert y_axis.unit.symbol == "X"
 
 
-def test_the_shell_axis_ignores_a_minimal_range_which_only_widens_the_drawn_extent() -> None:
+def test_the_shell_axis_carries_a_minimal_range_to_widen_the_drawn_extent() -> None:
     result = to_cmk_time_series_graph(
         BuiltGraph(
             graph=_one_curve_graph(vertical_range=MinimalRange(lower=0.0, upper=100.0)),
+            specification=None,
+        ),
+        size=_SIZE,
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
+    y_axis = result.options.y_axis
+    assert y_axis is not None
+    assert y_axis.vertical_range == AxisMinimalRange(min=0.0, max=100.0)
+
+
+def test_the_shell_axis_leaves_out_a_minimal_bound_only_the_data_resolves() -> None:
+    result = to_cmk_time_series_graph(
+        BuiltGraph(
+            graph=_one_curve_graph(vertical_range=MinimalRange(lower=0.0, upper=_RRD)),
+            specification=None,
+        ),
+        size=_SIZE,
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
+    y_axis = result.options.y_axis
+    assert y_axis is not None
+    assert y_axis.vertical_range == AxisMinimalRange(min=0.0, max=None)
+
+
+def test_the_shell_axis_names_no_range_whose_bounds_only_the_data_resolves() -> None:
+    result = to_cmk_time_series_graph(
+        BuiltGraph(
+            graph=_one_curve_graph(vertical_range=MinimalRange(lower=_RRD, upper=_RRD)),
             specification=None,
         ),
         size=_SIZE,

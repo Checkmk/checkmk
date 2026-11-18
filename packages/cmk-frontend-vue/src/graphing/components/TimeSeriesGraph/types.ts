@@ -12,6 +12,7 @@ import type { ZoomMode } from './interaction/selection'
 
 export type {
   GraphOptions,
+  MinimalRange,
   Size,
   UnitFormat,
   XAxis,

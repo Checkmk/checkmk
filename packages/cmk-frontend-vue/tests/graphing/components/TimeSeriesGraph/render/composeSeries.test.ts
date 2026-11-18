@@ -255,6 +255,18 @@ describe('composedValueDomain', () => {
     expect(yMin).toBe(-yMax)
     expect(yMax).toBeGreaterThanOrEqual(mirroredPeak)
   })
+
+  test('mixing mirrored and unmirrored metrics centres the minimal range on zero', () => {
+    const metrics = [makeMetric([10], { inverse: true }), makeMetric([10])]
+
+    const domain = composedValueDomain(metrics, compose(metrics), [], [], {
+      type: 'minimal',
+      min: 0,
+      max: 100
+    })
+
+    expect(domain).toEqual([-100, 100])
+  })
 })
 
 describe('createM4CacheStore', () => {

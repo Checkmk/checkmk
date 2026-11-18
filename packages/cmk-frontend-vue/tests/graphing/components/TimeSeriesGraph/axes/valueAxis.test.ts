@@ -102,4 +102,20 @@ describe('computeYDomain', () => {
 
     expect(domain).toEqual([-1, 1])
   })
+
+  test('widens the domain to the minimal range', () => {
+    expect(computeYDomain([[bucket(20, 90)]], {}, { type: 'minimal', min: 0, max: 500 })).toEqual([
+      0, 500
+    ])
+  })
+
+  test('keeps a domain that already exceeds the minimal range', () => {
+    expect(computeYDomain([[bucket(-10, 600)]], {}, { type: 'minimal', min: 0, max: 500 })).toEqual(
+      [-10, 600]
+    )
+  })
+
+  test('widens only the side the minimal range names', () => {
+    expect(computeYDomain([[bucket(20, 90)]], {}, { type: 'minimal', max: 500 })).toEqual([20, 500])
+  })
 })

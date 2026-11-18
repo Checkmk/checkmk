@@ -29,6 +29,7 @@ from cmk.shared_typing.cmk_time_series_graph import (
     GraphHeader,
     GraphOptions,
     Interaction,
+    MinimalRange,
     Size,
     UnitFormat,
     YAxis,
@@ -42,7 +43,7 @@ from cmk.shared_typing.global_time_picker import (
 from cmk.web.utils.html import HTML
 
 from . import _plugins as engine_plugins
-from ._built_graphs import BuiltGraph
+from ._built_graphs import BuiltGraph, FixedAxisRange, MinimalAxisRange
 from ._graph_dispatch import serialize_graphs
 from ._graph_display_config import HTML_SIZE_PER_EX
 from ._graph_specification import GraphSpecification
@@ -145,24 +146,35 @@ def _add_to(specification: GraphSpecification | None, internal: str) -> AddTo | 
     )
 
 
+def _converted_bound(bound: float | None, conversion: Callable[[float], float]) -> float | None:
+    return None if bound is None else conversion(bound)
+
+
+def _shell_vertical_range(
+    axis_range: FixedAxisRange | MinimalAxisRange | None, conversion: Callable[[float], float]
+) -> FixedRange | MinimalRange | None:
+    match axis_range:
+        case FixedAxisRange(lower=lower, upper=upper):
+            return FixedRange(min=conversion(lower), max=conversion(upper))
+        case MinimalAxisRange(lower=lower, upper=upper):
+            return MinimalRange(
+                min=_converted_bound(lower, conversion), max=_converted_bound(upper, conversion)
+            )
+        case None:
+            return None
+
+
 def _shell_y_axis(built: BuiltGraph, temperature_unit: TemperatureUnit) -> YAxis | None:
     """The axis the shell draws with: what the graph names for itself, else what its curves imply."""
     unit = built.resolved_y_axis_unit()
-    bounds = built.y_axis_bounds()
-    if unit is None and bounds is None:
+    axis_range = built.y_axis_range()
+    if unit is None and axis_range is None:
         return None
     unit_format: UnitFormat | None = None
     conversion: Callable[[float], float] = lambda value: value
     if unit is not None:
         unit_format, conversion = user_unit_format(unit, temperature_unit)
-    return YAxis(
-        unit=unit_format,
-        vertical_range=(
-            None
-            if bounds is None
-            else FixedRange(min=conversion(bounds[0]), max=conversion(bounds[1]))
-        ),
-    )
+    return YAxis(unit=unit_format, vertical_range=_shell_vertical_range(axis_range, conversion))
 
 
 def to_cmk_time_series_graph(

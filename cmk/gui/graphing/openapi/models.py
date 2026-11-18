@@ -16,7 +16,7 @@ from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 from cmk.web.utils.icons import IconNames
 
-from .._built_graphs import BuiltGraph, DiscoveredGraphs
+from .._built_graphs import BuiltGraph, DiscoveredGraphs, FixedAxisRange, MinimalAxisRange
 from .._graph_dispatch import serialize_graphs
 from .._graph_specification import TimeZoneName
 from .._user_specific_unit import user_unit_format
@@ -223,6 +223,46 @@ class ApiFixedRange:
 
 
 @api_model
+class ApiMinimalRange:
+    type: Literal["minimal"] = api_field(
+        description="Widens the axis to its bounds and further to the values that are drawn."
+    )
+    min: float | ApiOmitted = api_field(
+        description="The value the axis covers at least at its lower end.",
+        example=0.0,
+        default_factory=ApiOmitted,
+    )
+    max: float | ApiOmitted = api_field(
+        description="The value the axis covers at least at its upper end.",
+        example=100.0,
+        default_factory=ApiOmitted,
+    )
+
+
+type ApiVerticalRange = Annotated[ApiFixedRange | ApiMinimalRange, Discriminator("type")]
+
+
+def _api_bound(bound: float | None, conversion: Callable[[float], float]) -> float | ApiOmitted:
+    return ApiOmitted() if bound is None else conversion(bound)
+
+
+def _api_vertical_range(
+    axis_range: FixedAxisRange | MinimalAxisRange | None, conversion: Callable[[float], float]
+) -> ApiFixedRange | ApiMinimalRange | ApiOmitted:
+    match axis_range:
+        case FixedAxisRange(lower=lower, upper=upper):
+            return ApiFixedRange(type="fixed", min=conversion(lower), max=conversion(upper))
+        case MinimalAxisRange(lower=lower, upper=upper):
+            return ApiMinimalRange(
+                type="minimal",
+                min=_api_bound(lower, conversion),
+                max=_api_bound(upper, conversion),
+            )
+        case None:
+            return ApiOmitted()
+
+
+@api_model
 class ApiYAxis:
     """The axis a graph names for itself."""
 
@@ -233,7 +273,7 @@ class ApiYAxis:
         ),
         default_factory=ApiOmitted,
     )
-    vertical_range: ApiFixedRange | ApiOmitted = api_field(
+    vertical_range: ApiVerticalRange | ApiOmitted = api_field(
         description="The values the axis spans. Absent to scale it to the values that are drawn.",
         default_factory=ApiOmitted,
     )
@@ -241,8 +281,8 @@ class ApiYAxis:
     @classmethod
     def from_built(cls, built: BuiltGraph, temperature_unit: TemperatureUnit) -> Self | None:
         """The axis the graph names, or None when it names none at all."""
-        bounds = built.y_axis_bounds()
-        if built.y_axis_unit is None and bounds is None:
+        axis_range = built.y_axis_range()
+        if built.y_axis_unit is None and axis_range is None:
             return None
         unit_format: UnitFormat | None = None
         conversion: Callable[[float], float] = lambda value: value
@@ -250,13 +290,7 @@ class ApiYAxis:
             unit_format, conversion = user_unit_format(built.y_axis_unit, temperature_unit)
         return cls(
             unit=(ApiOmitted() if unit_format is None else ApiUnitFormat.from_shared(unit_format)),
-            vertical_range=(
-                ApiOmitted()
-                if bounds is None
-                else ApiFixedRange(
-                    type="fixed", min=conversion(bounds[0]), max=conversion(bounds[1])
-                )
-            ),
+            vertical_range=_api_vertical_range(axis_range, conversion),
         )
 
 

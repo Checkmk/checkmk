@@ -365,7 +365,7 @@ class _DumpHostsCommand:
     def run(self, context: CLIContext, request: DumpHostsRequest) -> CLIExitCode:
         try:
             self.dump_hosts(request, debug=context.global_options.debug)
-        except (MKBailOut, MKGeneralException) as e:
+        except MKGeneralException as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

@@ -15,7 +15,7 @@ from cmk import trace
 from cmk.automations.engine import AutomationError, Automations, discover_automations
 from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.base import config
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.store import lock_checkmk_configuration
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
@@ -107,7 +107,7 @@ class _AutomationCommand:
             )
             write_stdout(result.serialize(for_cmk_version) + "\n")
             return CLIExitCode.SUCCESS
-        except (MKBailOut, MKGeneralException) as e:
+        except MKGeneralException as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

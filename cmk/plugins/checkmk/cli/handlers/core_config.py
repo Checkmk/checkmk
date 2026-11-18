@@ -241,7 +241,7 @@ class _UpdateCommand:
             updated = self.update(
                 fake_dns, omd_root=context.omd_root, debug=context.global_options.debug
             )
-        except (MKBailOut, MKGeneralException) as e:
+        except MKGeneralException as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

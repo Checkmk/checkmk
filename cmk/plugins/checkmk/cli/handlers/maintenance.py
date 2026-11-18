@@ -15,7 +15,7 @@ import cmk.utils.paths
 from cmk.base import config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.discovery import remove_autochecks_of_host
 from cmk.cli.internal import Context as CLIContext
@@ -62,7 +62,7 @@ class _UpdateDNSCacheCommand:
     def run(self, context: CLIContext, fake_dns: HostAddress | None) -> CLIExitCode:
         try:
             self.update_dns_cache(fake_dns, debug=context.global_options.debug)
-        except (MKBailOut, MKGeneralException) as e:
+        except MKGeneralException as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise
@@ -212,7 +212,7 @@ class _FlushCommand:
     def run(self, context: CLIContext, hosts: Sequence[HostAddress]) -> CLIExitCode:
         try:
             self.flush(hosts, debug=context.global_options.debug)
-        except (MKBailOut, MKGeneralException) as e:
+        except MKGeneralException as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

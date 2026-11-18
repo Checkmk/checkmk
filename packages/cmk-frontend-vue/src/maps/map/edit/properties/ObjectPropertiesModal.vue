@@ -73,8 +73,11 @@ const props = defineProps<{
   saveError?: TranslatedString | null
 }>()
 
+/** ``beside``: a click on the map next to the card rather than a cancel. */
+export type CloseHow = 'beside' | 'cancel'
+
 const emit = defineEmits<{
-  close: []
+  close: [how: CloseHow]
   save: [updates: Record<string, unknown>]
   delete: []
   detach: []
@@ -164,20 +167,22 @@ const cardStyle = computed(() => {
   }
 })
 
-const confirmDiscard = ref(false)
+/** A way out of an edited card, waiting for the discard to be confirmed. */
+const pendingClose = ref<CloseHow | null>(null)
 
 /** Every way out of the card: an edited one asks before it discards. */
-function requestClose(): void {
+function requestClose(how: CloseHow): void {
   if (dirty.value) {
-    confirmDiscard.value = true
+    pendingClose.value = how
   } else {
-    emit('close')
+    emit('close', how)
   }
 }
 
 function discard(): void {
-  confirmDiscard.value = false
-  emit('close')
+  const how = pendingClose.value ?? 'cancel'
+  pendingClose.value = null
+  emit('close', how)
 }
 
 const displayName = computed(() => getMapElementName(props.object) ?? '')
@@ -254,8 +259,8 @@ const confirmDelete = ref(false)
 
 // Escape on one of the card's own questions answers that question.
 useEscapeClose(() => {
-  if (!confirmDiscard.value && !confirmDelete.value) {
-    requestClose()
+  if (pendingClose.value === null && !confirmDelete.value) {
+    requestClose('cancel')
   }
 })
 
@@ -285,7 +290,11 @@ function onConfirmDelete(): void {
     <!-- Takes the clicks beside the card; an edited card asks before they
          discard it. Keyboard users have Escape and the close
          button, so this is hidden from the a11y tree. -->
-    <div class="maps-object-properties-modal__backdrop" aria-hidden="true" @click="requestClose" />
+    <div
+      class="maps-object-properties-modal__backdrop"
+      aria-hidden="true"
+      @click="requestClose('beside')"
+    />
     <div
       class="maps-object-properties-modal__card"
       :class="`maps-object-properties-modal__card--${side}`"
@@ -307,7 +316,7 @@ function onConfirmDelete(): void {
           size="xsmall"
           :title="_t('Close')"
           :aria-label="_t('Close')"
-          @click="requestClose"
+          @click="requestClose('cancel')"
         />
       </div>
 
@@ -372,12 +381,14 @@ function onConfirmDelete(): void {
           @cancel="confirmDelete = false"
         />
         <MapsUnsavedChangesDialog
-          :open="confirmDiscard"
+          :open="pendingClose !== null"
           @confirm="discard"
-          @cancel="confirmDiscard = false"
+          @cancel="pendingClose = null"
         />
         <div class="maps-object-properties-modal__actions">
-          <CmkButton variant="secondary" @click="requestClose">{{ _t('Cancel') }}</CmkButton>
+          <CmkButton variant="secondary" @click="requestClose('cancel')">
+            {{ _t('Cancel') }}
+          </CmkButton>
           <CmkButton variant="primary" :disabled="saving" @click="save">
             {{ saving ? _t('Saving…') : _t('Save') }}
           </CmkButton>

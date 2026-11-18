@@ -305,7 +305,7 @@ describe('ObjectPropertiesModal – save payload', () => {
 })
 
 describe('ObjectPropertiesModal – close / detach / delete', () => {
-  it('emits close from the Cancel button, the close icon, and the Escape key', async () => {
+  it('cancels from the Cancel button, the close icon, and the Escape key', async () => {
     const user = userEvent.setup()
     const { emitted } = renderModal(obj({ type: 'host', host_name: 'web01' }))
 
@@ -313,7 +313,7 @@ describe('ObjectPropertiesModal – close / detach / delete', () => {
     await user.click(screen.getByRole('button', { name: 'Close' }))
     await user.keyboard('{Escape}')
 
-    expect(emitted().close).toHaveLength(3)
+    expect(emitted().close).toEqual([['cancel'], ['cancel'], ['cancel']])
   })
 
   it('closes on Escape while a layer elsewhere on the page stays open', async () => {
@@ -359,53 +359,64 @@ describe('ObjectPropertiesModal – a click on the map', () => {
     )
   }
 
-  function renderClosable(object: MapElement): { container: Element; closes: () => number } {
-    let closes = 0
+  function renderClosable(object: MapElement): { container: Element; closedHow: string[] } {
+    const closedHow: string[] = []
     const { container } = renderModal(object, {
-      onClose: () => {
-        closes += 1
+      onClose: (how: string) => {
+        closedHow.push(how)
       }
     })
-    return { container, closes: () => closes }
+    return { container, closedHow }
   }
 
-  it('closes an untouched card', async () => {
-    const { container, closes } = renderClosable(obj({ type: 'textbox' }))
+  it('closes an untouched card as left beside, not cancelled', async () => {
+    const { container, closedHow } = renderClosable(obj({ type: 'textbox' }))
 
     await clickMap(container)
 
-    expect(closes()).toBe(1)
+    expect(closedHow).toEqual(['beside'])
     expect(screen.queryByRole('button', { name: 'Discard changes' })).toBeNull()
   })
 
   it('asks before it throws away an edit, and closes once that is confirmed', async () => {
     const user = userEvent.setup()
-    const { container, closes } = renderClosable(obj({ type: 'textbox' }))
+    const { container, closedHow } = renderClosable(obj({ type: 'textbox' }))
     await user.type(screen.getByPlaceholderText(/Text content/), 'Rack A')
 
     await clickMap(container)
-    expect(closes()).toBe(0)
+    expect(closedHow).toHaveLength(0)
 
     await user.click(await screen.findByRole('button', { name: 'Discard changes' }))
-    expect(closes()).toBe(1)
+    expect(closedHow).toHaveLength(1)
+  })
+
+  it('reports a cancel confirmed after an edit as a cancel', async () => {
+    const user = userEvent.setup()
+    const { closedHow } = renderClosable(obj({ type: 'textbox' }))
+    await user.type(screen.getByPlaceholderText(/Text content/), 'Rack A')
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    await user.click(await screen.findByRole('button', { name: 'Discard changes' }))
+
+    expect(closedHow).toEqual(['cancel'])
   })
 
   it('takes a field typed into and cleared again as untouched', async () => {
     const user = userEvent.setup()
-    const { container, closes } = renderClosable(obj({ type: 'line' }))
+    const { container, closedHow } = renderClosable(obj({ type: 'line' }))
     const width = screen.getByLabelText('Line width')
     await user.type(width, '4')
     await user.clear(width)
 
     await clickMap(container)
 
-    expect(closes()).toBe(1)
+    expect(closedHow).toHaveLength(1)
     expect(screen.queryByRole('button', { name: 'Discard changes' })).toBeNull()
   })
 
   it('asks the same before Escape, the close button or Cancel discard an edit', async () => {
     const user = userEvent.setup()
-    const { closes } = renderClosable(obj({ type: 'textbox' }))
+    const { closedHow } = renderClosable(obj({ type: 'textbox' }))
     await user.type(screen.getByPlaceholderText(/Text content/), 'Rack A')
 
     for (const leave of [
@@ -418,20 +429,20 @@ describe('ObjectPropertiesModal – a click on the map', () => {
       await waitFor(() => expect(screen.queryByRole('button', { name: 'Keep editing' })).toBeNull())
     }
 
-    expect(closes()).toBe(0)
+    expect(closedHow).toHaveLength(0)
     expect(screen.getByPlaceholderText(/Text content/)).toHaveValue('Rack A')
   })
 
   it('keeps editing when the question is dismissed with Escape', async () => {
     const user = userEvent.setup()
-    const { container, closes } = renderClosable(obj({ type: 'textbox' }))
+    const { container, closedHow } = renderClosable(obj({ type: 'textbox' }))
     await user.type(screen.getByPlaceholderText(/Text content/), 'Rack A')
     await clickMap(container)
     await screen.findByRole('button', { name: 'Discard changes' })
 
     await user.keyboard('{Escape}')
 
-    expect(closes()).toBe(0)
+    expect(closedHow).toHaveLength(0)
     expect(screen.getByPlaceholderText(/Text content/)).toHaveValue('Rack A')
   })
 })

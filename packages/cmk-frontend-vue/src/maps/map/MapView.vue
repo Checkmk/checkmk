@@ -53,7 +53,9 @@ import MapObjectActionBar, {
   type MapObjectAction
 } from '@/maps/map/edit/components/MapObjectActionBar.vue'
 import { useElementRect } from '@/maps/map/edit/composables/useElementRect'
-import ObjectPropertiesModal from '@/maps/map/edit/properties/ObjectPropertiesModal.vue'
+import ObjectPropertiesModal, {
+  type CloseHow
+} from '@/maps/map/edit/properties/ObjectPropertiesModal.vue'
 import MapSettingsModal from '@/maps/map/edit/settings/MapSettingsModal.vue'
 import type { SettingsFocus } from '@/maps/map/edit/settings/settingsForm'
 import type WorldMapViewType from '@/maps/map/worldmap/WorldMapView.vue'
@@ -356,9 +358,12 @@ function _closePropsModal() {
   propsSaveError.value = null
 }
 
-/** Dismissing the modal: an object that only exists because of it goes with it. */
-async function onPropsModalClose() {
-  const placed = justPlacedId.value === null ? null : propsModalObject.value
+/**
+ * Cancelling the modal takes back an object that only exists because of it. A
+ * click on the map beside the card keeps it where it was placed.
+ */
+async function onPropsModalClose(how: CloseHow) {
+  const placed = how === 'cancel' && justPlacedId.value !== null ? propsModalObject.value : null
   _closePropsModal()
   if (placed) {
     await deleteObject(placed)

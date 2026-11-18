@@ -25,6 +25,7 @@ from cmk.plugins.checkmk.cli.options import (
     CACHE_FLAG,
     CHECK_PLUGINS_VALUE,
     FAKE_DNS_VALUE,
+    FetchRequest,
     FileCacheRequest,
     NO_TCP_FLAG,
     PluginSelectionRequest,
@@ -43,10 +44,12 @@ def test_the_check_discovery_request_is_read_from_the_command_line() -> None:
     assert _check_discovery_request(
         CLIReader(lambda declaration: given.get(declaration, ()))
     ) == CheckDiscoveryRequest(
-        file_cache=FileCacheRequest(cache=True, no_cache=False, no_tcp=False),
-        usewalk=False,
-        snmp_backend=SNMPBackendEnum.INLINE,
-        fake_dns=HostAddress("1.2.3.4"),
+        fetch=FetchRequest(
+            file_cache=FileCacheRequest(cache=True, no_cache=False, no_tcp=False),
+            usewalk=False,
+            snmp_backend=SNMPBackendEnum.INLINE,
+            fake_dns=HostAddress("1.2.3.4"),
+        ),
         host=HostAddress("myhost"),
     )
 
@@ -63,9 +66,12 @@ def test_the_discover_request_counts_the_commands_own_option() -> None:
     assert _discover_request(
         CLIReader(lambda declaration: given.get(declaration, ()))
     ) == DiscoverRequest(
-        file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=True),
-        usewalk=False,
-        snmp_backend=None,
+        fetch=FetchRequest(
+            file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=True),
+            usewalk=False,
+            snmp_backend=None,
+            fake_dns=None,
+        ),
         discover=2,
         plugin_selection=PluginSelectionRequest(
             detect_sections=None,
@@ -73,6 +79,5 @@ def test_the_discover_request_counts_the_commands_own_option() -> None:
             detect_plugins=None,
         ),
         only_host_labels=True,
-        fake_dns=None,
         hosts=("myhost", "@mytag"),
     )

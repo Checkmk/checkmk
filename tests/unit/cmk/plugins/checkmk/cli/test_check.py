@@ -23,6 +23,7 @@ from cmk.plugins.checkmk.cli.options import (
     DETECT_PLUGINS_VALUE,
     DETECT_SECTIONS_VALUE,
     FAKE_DNS_VALUE,
+    FetchRequest,
     FileCacheRequest,
     NO_CACHE_FLAG,
     PluginSelectionRequest,
@@ -49,9 +50,12 @@ def test_the_checking_request_is_read_from_the_command_line() -> None:
     assert _checking_request(
         CLIReader(lambda declaration: given.get(declaration, ()))
     ) == CheckingRequest(
-        file_cache=FileCacheRequest(cache=False, no_cache=True, no_tcp=False),
-        usewalk=True,
-        snmp_backend=SNMPBackendEnum.CLASSIC,
+        fetch=FetchRequest(
+            file_cache=FileCacheRequest(cache=False, no_cache=True, no_tcp=False),
+            usewalk=True,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
+            fake_dns=HostAddress("1.2.3.4"),
+        ),
         no_submit=True,
         perfdata=True,
         plugin_selection=PluginSelectionRequest(
@@ -59,7 +63,6 @@ def test_the_checking_request_is_read_from_the_command_line() -> None:
             plugins=frozenset({CheckPluginName("df")}),
             detect_plugins=frozenset({"cpu_loads"}),
         ),
-        fake_dns=HostAddress("1.2.3.4"),
         host=HostName("myhost"),
         address=HostAddress("10.0.0.1"),
     )

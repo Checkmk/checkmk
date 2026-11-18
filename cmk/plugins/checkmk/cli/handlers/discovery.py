@@ -93,7 +93,7 @@ def _check_discovery(
     hostname: HostAddress, request: CheckDiscoveryRequest, *, omd_root: Path, debug: bool
 ) -> ActiveCheckResult:
     app = make_app(omd_root)
-    file_cache_options = make_file_cache_options(request.file_cache)
+    file_cache_options = make_file_cache_options(request.fetch.file_cache)
 
     # We do not resolve the `latest` link here, as any given serial might be removed by the core.
     latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
@@ -143,7 +143,7 @@ def _check_discovery(
             label_manager.labels_of_host,
             loaded_config.discovery_parameters,
         )
-        ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fake_dns)
+        ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fetch.fake_dns)
         ip_address_of = ip_lookup.ConfiguredIPLookup(
             ip_lookup.make_lookup_ip_address(ip_lookup_config),
             allow_empty=hosts_config.clusters,
@@ -169,7 +169,7 @@ def _check_discovery(
                     on_error=OnError.RAISE,
                     missing_sys_description=config_cache.missing_sys_description,
                     selected_sections=NoSelectedSNMPSections(),
-                    backend_override=request.snmp_backend,
+                    backend_override=request.fetch.snmp_backend,
                     base_path=cmk.utils.paths.omd_root,
                     relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
                     relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
@@ -177,7 +177,7 @@ def _check_discovery(
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
-                    force_stored_walks=request.usewalk,
+                    force_stored_walks=request.fetch.usewalk,
                     debug=debug,
                 ),
             ),
@@ -381,7 +381,7 @@ def _discover(request: DiscoverRequest, *, omd_root: Path, debug: bool) -> bool:
         plugins.check_plugins,
         label_manager.labels_of_service,
     )
-    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fake_dns)
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fetch.fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
@@ -404,7 +404,7 @@ def _discover(request: DiscoverRequest, *, omd_root: Path, debug: bool) -> bool:
         else contextlib.nullcontext()
     ):
         file_cache_options = make_file_cache_options(
-            request.file_cache, defaults=file_cache_options
+            request.fetch.file_cache, defaults=file_cache_options
         )
 
         on_error = OnError.RAISE if debug else OnError.WARN
@@ -453,7 +453,7 @@ def _discover(request: DiscoverRequest, *, omd_root: Path, debug: bool) -> bool:
                             if n in plugins.snmp_sections
                         )
                     ),
-                    backend_override=request.snmp_backend,
+                    backend_override=request.fetch.snmp_backend,
                     base_path=cmk.utils.paths.omd_root,
                     relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
                     relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
@@ -461,7 +461,7 @@ def _discover(request: DiscoverRequest, *, omd_root: Path, debug: bool) -> bool:
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
-                    force_stored_walks=request.usewalk,
+                    force_stored_walks=request.fetch.usewalk,
                     debug=debug,
                 ),
             ),

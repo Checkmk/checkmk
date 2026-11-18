@@ -11,7 +11,7 @@ from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.plugins.checkmk.cli.check import CheckingRequest
 from cmk.plugins.checkmk.cli.handlers.check import _CheckCommand
-from cmk.plugins.checkmk.cli.options import FileCacheRequest, PluginSelectionRequest
+from cmk.plugins.checkmk.cli.options import FetchRequest, FileCacheRequest, PluginSelectionRequest
 
 from ._context import context, OMD_ROOT
 
@@ -33,15 +33,17 @@ class _FakeCheckHost:
 
 def _request() -> CheckingRequest:
     return CheckingRequest(
-        file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=False),
-        usewalk=False,
-        snmp_backend=None,
+        fetch=FetchRequest(
+            file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=False),
+            usewalk=False,
+            snmp_backend=None,
+            fake_dns=None,
+        ),
         no_submit=False,
         perfdata=False,
         plugin_selection=PluginSelectionRequest(
             detect_sections=None, plugins=None, detect_plugins=None
         ),
-        fake_dns=None,
         host=HostName("myhost"),
         address=None,
     )

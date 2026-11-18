@@ -75,9 +75,9 @@ def _check_host(
             debug=debug,
         ),
         [host] if request.address is None else [host, request.address],
-        file_cache_options=make_file_cache_options(request.file_cache),
-        snmp_backend=request.snmp_backend,
-        usewalk=request.usewalk,
+        file_cache_options=make_file_cache_options(request.fetch.file_cache),
+        snmp_backend=request.fetch.snmp_backend,
+        usewalk=request.fetch.usewalk,
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
         dry_run=request.no_submit,
@@ -92,7 +92,7 @@ def _check_host(
             path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
         ),
         trusted_ca_file=cmk.utils.paths.trusted_ca_file,
-        fake_dns=request.fake_dns,
+        fake_dns=request.fetch.fake_dns,
         debug=debug,
     )
 

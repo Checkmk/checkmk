@@ -50,9 +50,9 @@ from cmk.inventory.store import InventoryStore
 from cmk.plugins.checkmk.cli.inventory import (
     cli_command_inventorize_marked_hosts,
     cli_command_inventory,
-    InventorizeMarkedHostsRequest,
     InventoryRequest,
 )
+from cmk.plugins.checkmk.cli.options import FetchRequest
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
@@ -69,7 +69,7 @@ class _Inventorize(Protocol):
 
 def _inventorize(request: InventoryRequest, *, omd_root: Path, debug: bool) -> None:
     app = make_app(omd_root)
-    file_cache_options = make_file_cache_options(request.file_cache)
+    file_cache_options = make_file_cache_options(request.fetch.file_cache)
 
     plugins = load_checks(debug=debug)
     loading_result = config.load(validate_hosts=True, debug=debug)
@@ -93,7 +93,7 @@ def _inventorize(request: InventoryRequest, *, omd_root: Path, debug: bool) -> N
         plugins.check_plugins,
         label_manager.labels_of_service,
     )
-    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fake_dns)
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fetch.fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
@@ -158,7 +158,7 @@ def _inventorize(request: InventoryRequest, *, omd_root: Path, debug: bool) -> N
                             if n in plugins.snmp_sections
                         )
                     ),
-                    backend_override=request.snmp_backend,
+                    backend_override=request.fetch.snmp_backend,
                     base_path=cmk.utils.paths.omd_root,
                     relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
                     relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
@@ -166,7 +166,7 @@ def _inventorize(request: InventoryRequest, *, omd_root: Path, debug: bool) -> N
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
-                    force_stored_walks=request.usewalk,
+                    force_stored_walks=request.fetch.usewalk,
                     debug=debug,
                 ),
             ),
@@ -178,7 +178,7 @@ def _inventorize(request: InventoryRequest, *, omd_root: Path, debug: bool) -> N
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
             ip_address_of_mandatory=mandatory_ip_lookup(
-                usewalk=request.usewalk, ip_lookup_config=ip_lookup_config
+                usewalk=request.fetch.usewalk, ip_lookup_config=ip_lookup_config
             ),
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
@@ -301,14 +301,10 @@ class _InventoryCommand:
 
 
 class _InventorizeMarkedHosts(Protocol):
-    def __call__(
-        self, request: InventorizeMarkedHostsRequest, *, omd_root: Path, debug: bool
-    ) -> None: ...
+    def __call__(self, request: FetchRequest, *, omd_root: Path, debug: bool) -> None: ...
 
 
-def _inventorize_marked_hosts(
-    request: InventorizeMarkedHostsRequest, *, omd_root: Path, debug: bool
-) -> None:
+def _inventorize_marked_hosts(request: FetchRequest, *, omd_root: Path, debug: bool) -> None:
     app = make_app(omd_root)
     file_cache_options = make_file_cache_options(request.file_cache)
 
@@ -492,7 +488,7 @@ def _inventorize_marked_hosts(
 class _InventorizeMarkedHostsCommand:
     inventorize_marked_hosts: _InventorizeMarkedHosts
 
-    def run(self, context: CLIContext, request: InventorizeMarkedHostsRequest) -> CLIExitCode:
+    def run(self, context: CLIContext, request: FetchRequest) -> CLIExitCode:
         try:
             self.inventorize_marked_hosts(
                 request, omd_root=context.omd_root, debug=context.global_options.debug

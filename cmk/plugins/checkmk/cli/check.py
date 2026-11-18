@@ -9,7 +9,6 @@ from typing import Final
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import CheckPluginName
-from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Flag as CLIFlag
@@ -18,13 +17,10 @@ from cmk.cli.internal import Reader as CLIReader
 
 from .options import (
     CHECK_PLUGINS_VALUE,
-    FAKE_DNS_VALUE,
-    file_cache_request,
-    FileCacheRequest,
+    fetch_request,
+    FetchRequest,
     plugin_selection_request,
     PluginSelectionRequest,
-    SNMP_BACKEND_VALUE,
-    USEWALK_FLAG,
 )
 
 _NO_SUBMIT_FLAG: Final = CLIFlag(
@@ -43,26 +39,20 @@ _PERFDATA_FLAG: Final = CLIFlag(
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class CheckingRequest:
-    file_cache: FileCacheRequest
-    usewalk: bool
-    snmp_backend: SNMPBackendEnum | None
+    fetch: FetchRequest
     no_submit: bool
     perfdata: bool
     plugin_selection: PluginSelectionRequest[CheckPluginName]
-    fake_dns: HostAddress | None
     host: HostName | None
     address: HostAddress | None
 
 
 def _checking_request(options: CLIReader) -> CheckingRequest:
     return CheckingRequest(
-        file_cache=file_cache_request(options),
-        usewalk=options.flag(USEWALK_FLAG),
-        snmp_backend=options.value(SNMP_BACKEND_VALUE),
+        fetch=fetch_request(options),
         no_submit=options.flag(_NO_SUBMIT_FLAG),
         perfdata=options.flag(_PERFDATA_FLAG),
         plugin_selection=plugin_selection_request(options, CHECK_PLUGINS_VALUE),
-        fake_dns=options.value(FAKE_DNS_VALUE),
         host=options.argument(CLIArgument(placeholder="HOST", parse=HostName)),
         address=options.argument(CLIOptionalArgument(placeholder="IPADDRESS", parse=HostAddress)),
     )

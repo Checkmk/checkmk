@@ -17,6 +17,7 @@ from cmk.plugins.checkmk.cli.inventory import (
 )
 from cmk.plugins.checkmk.cli.options import (
     DETECT_SECTIONS_VALUE,
+    FetchRequest,
     FileCacheRequest,
     INVENTORY_PLUGINS_VALUE,
     PluginSelectionRequest,
@@ -36,15 +37,17 @@ def test_the_inventory_request_is_read_from_the_command_line() -> None:
     assert _inventory_request(
         CLIReader(lambda declaration: given.get(declaration, ()))
     ) == InventoryRequest(
-        file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=False),
-        usewalk=True,
-        snmp_backend=None,
+        fetch=FetchRequest(
+            file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=False),
+            usewalk=True,
+            snmp_backend=None,
+            fake_dns=None,
+        ),
         force=True,
         plugin_selection=PluginSelectionRequest(
             detect_sections=frozenset({SectionName("lnx_if")}),
             plugins=frozenset({InventoryPluginName("lnx_if")}),
             detect_plugins=None,
         ),
-        fake_dns=None,
         hosts=("myhost",),
     )

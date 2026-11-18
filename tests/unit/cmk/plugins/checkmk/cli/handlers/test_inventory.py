@@ -11,22 +11,19 @@ from cmk.plugins.checkmk.cli.handlers.inventory import (
     _InventorizeMarkedHostsCommand,
     _InventoryCommand,
 )
-from cmk.plugins.checkmk.cli.inventory import InventorizeMarkedHostsRequest, InventoryRequest
-from cmk.plugins.checkmk.cli.options import FileCacheRequest, PluginSelectionRequest
+from cmk.plugins.checkmk.cli.inventory import InventoryRequest
+from cmk.plugins.checkmk.cli.options import FetchRequest, FileCacheRequest, PluginSelectionRequest
 
 from ._context import context, OMD_ROOT
 
 _FILE_CACHE = FileCacheRequest(cache=False, no_cache=False, no_tcp=False)
 
 _REQUEST = InventoryRequest(
-    file_cache=_FILE_CACHE,
-    usewalk=False,
-    snmp_backend=None,
+    fetch=FetchRequest(file_cache=_FILE_CACHE, usewalk=False, snmp_backend=None, fake_dns=None),
     force=False,
     plugin_selection=PluginSelectionRequest(
         detect_sections=None, plugins=None, detect_plugins=None
     ),
-    fake_dns=None,
     hosts=("myhost",),
 )
 
@@ -60,19 +57,15 @@ def test_a_failed_inventory_exits_three() -> None:
 
 class _FakeInventorizeMarkedHosts:
     def __init__(self) -> None:
-        self.asked: list[tuple[InventorizeMarkedHostsRequest, Path, bool]] = []
+        self.asked: list[tuple[FetchRequest, Path, bool]] = []
 
-    def __call__(
-        self, request: InventorizeMarkedHostsRequest, *, omd_root: Path, debug: bool
-    ) -> None:
+    def __call__(self, request: FetchRequest, *, omd_root: Path, debug: bool) -> None:
         self.asked.append((request, omd_root, debug))
 
 
 def test_the_marked_hosts_are_inventorized() -> None:
     inventorize = _FakeInventorizeMarkedHosts()
-    request = InventorizeMarkedHostsRequest(
-        file_cache=_FILE_CACHE, usewalk=False, snmp_backend=None, fake_dns=None
-    )
+    request = FetchRequest(file_cache=_FILE_CACHE, usewalk=False, snmp_backend=None, fake_dns=None)
 
     _InventorizeMarkedHostsCommand(inventorize_marked_hosts=inventorize).run(context(), request)
 

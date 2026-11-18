@@ -87,6 +87,23 @@ FAKE_DNS_VALUE: Final = CLIValue(
 )
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class FetchRequest:
+    file_cache: FileCacheRequest
+    usewalk: bool
+    snmp_backend: SNMPBackendEnum | None
+    fake_dns: HostAddress | None
+
+
+def fetch_request(options: CLIReader) -> FetchRequest:
+    return FetchRequest(
+        file_cache=file_cache_request(options),
+        usewalk=options.flag(USEWALK_FLAG),
+        snmp_backend=options.value(SNMP_BACKEND_VALUE),
+        fake_dns=options.value(FAKE_DNS_VALUE),
+    )
+
+
 def fake_dns_request(options: CLIReader) -> HostAddress | None:
     return options.value(FAKE_DNS_VALUE)
 

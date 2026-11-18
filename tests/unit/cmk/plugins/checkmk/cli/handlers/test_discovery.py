@@ -12,7 +12,7 @@ from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.plugins.checkmk.cli.discovery import CheckDiscoveryRequest, DiscoverRequest
 from cmk.plugins.checkmk.cli.handlers.discovery import _CheckDiscoveryCommand, _DiscoverCommand
-from cmk.plugins.checkmk.cli.options import FileCacheRequest, PluginSelectionRequest
+from cmk.plugins.checkmk.cli.options import FetchRequest, FileCacheRequest, PluginSelectionRequest
 
 from ._context import context, OMD_ROOT
 
@@ -21,7 +21,8 @@ _FILE_CACHE = FileCacheRequest(cache=False, no_cache=False, no_tcp=False)
 
 def _check_discovery_request(host: HostAddress) -> CheckDiscoveryRequest:
     return CheckDiscoveryRequest(
-        file_cache=_FILE_CACHE, usewalk=False, snmp_backend=None, fake_dns=None, host=host
+        fetch=FetchRequest(file_cache=_FILE_CACHE, usewalk=False, snmp_backend=None, fake_dns=None),
+        host=host,
     )
 
 
@@ -76,15 +77,12 @@ def test_the_discovery_check_exits_with_its_state() -> None:
 
 
 _DISCOVER_REQUEST = DiscoverRequest(
-    file_cache=_FILE_CACHE,
-    usewalk=False,
-    snmp_backend=None,
+    fetch=FetchRequest(file_cache=_FILE_CACHE, usewalk=False, snmp_backend=None, fake_dns=None),
     discover=1,
     plugin_selection=PluginSelectionRequest(
         detect_sections=None, plugins=None, detect_plugins=None
     ),
     only_host_labels=False,
-    fake_dns=None,
     hosts=("myhost",),
 )
 

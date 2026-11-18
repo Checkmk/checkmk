@@ -10,7 +10,6 @@ from typing import Final
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.plugins import CheckPluginName
-from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
@@ -20,31 +19,22 @@ from cmk.cli.internal import Reader as CLIReader
 
 from .options import (
     CHECK_PLUGINS_VALUE,
-    FAKE_DNS_VALUE,
-    file_cache_request,
-    FileCacheRequest,
+    fetch_request,
+    FetchRequest,
     plugin_selection_request,
     PluginSelectionRequest,
-    SNMP_BACKEND_VALUE,
-    USEWALK_FLAG,
 )
 
 
 @dataclass(frozen=True, kw_only=True)
 class CheckDiscoveryRequest:
-    file_cache: FileCacheRequest
-    usewalk: bool
-    snmp_backend: SNMPBackendEnum | None
-    fake_dns: HostAddress | None
+    fetch: FetchRequest
     host: HostAddress | None
 
 
 def _check_discovery_request(options: CLIReader) -> CheckDiscoveryRequest:
     return CheckDiscoveryRequest(
-        file_cache=file_cache_request(options),
-        usewalk=options.flag(USEWALK_FLAG),
-        snmp_backend=options.value(SNMP_BACKEND_VALUE),
-        fake_dns=options.value(FAKE_DNS_VALUE),
+        fetch=fetch_request(options),
         host=options.argument(CLIArgument(placeholder="HOSTNAME", parse=HostAddress)),
     )
 
@@ -82,25 +72,19 @@ _ONLY_HOST_LABELS_FLAG: Final = CLIFlag(
 
 @dataclass(frozen=True, kw_only=True)
 class DiscoverRequest:
-    file_cache: FileCacheRequest
-    usewalk: bool
-    snmp_backend: SNMPBackendEnum | None
+    fetch: FetchRequest
     discover: int
     plugin_selection: PluginSelectionRequest[CheckPluginName]
     only_host_labels: bool
-    fake_dns: HostAddress | None
     hosts: Sequence[str]
 
 
 def _discover_request(options: CLIReader) -> DiscoverRequest:
     return DiscoverRequest(
-        file_cache=file_cache_request(options),
-        usewalk=options.flag(USEWALK_FLAG),
-        snmp_backend=options.value(SNMP_BACKEND_VALUE),
+        fetch=fetch_request(options),
         discover=options.count(_DISCOVER_COUNT),
         plugin_selection=plugin_selection_request(options, CHECK_PLUGINS_VALUE),
         only_host_labels=options.flag(_ONLY_HOST_LABELS_FLAG),
-        fake_dns=options.value(FAKE_DNS_VALUE),
         hosts=options.arguments(CLIArguments(placeholder="HOST1 HOST2...", parse=str)),
     )
 

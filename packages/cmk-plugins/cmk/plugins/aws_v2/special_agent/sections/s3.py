@@ -389,12 +389,13 @@ def _rows_by_bucket(
 def _bucket_results(
     to_host: Callable[[hosts.S3Bucket], hosts.TargetHost],
     region: str,
+    partition: str,
     rows_by_bucket: Mapping[str, Sequence[Mapping[str, Any]]],
 ) -> list[AWSSectionResult]:
     """One result per bucket host. A section only sees the buckets of its own region."""
     results = []
     for bucket_name, bucket_rows in rows_by_bucket.items():
-        host = to_host(hosts.S3Bucket(bucket_name))
+        host = to_host(hosts.S3Bucket(bucket_name, f"arn:{partition}:s3:::{bucket_name}"))
         # The rows carry the data of the S3 summary, if it still has the bucket.
         tags = bucket_rows[0].get("TagsForCmkLabels", {})
         results.append(
@@ -445,7 +446,10 @@ class S3Bucket(AWSSection):
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return _bucket_results(
-            self._target_host, self._region, _rows_by_bucket(computed_content.content)
+            self._target_host,
+            self._region,
+            self._client.meta.partition,
+            _rows_by_bucket(computed_content.content),
         )
 
 
@@ -530,5 +534,8 @@ class S3Requests(AWSSectionCloudwatch):
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return _bucket_results(
-            self._target_host, self._region, _rows_by_bucket(computed_content.content)
+            self._target_host,
+            self._region,
+            self._client.meta.partition,
+            _rows_by_bucket(computed_content.content),
         )

@@ -109,6 +109,7 @@ class GlacierVault:
 @dataclass(frozen=True)
 class S3Bucket:
     name: str
+    arn: str
 
 
 @dataclass(frozen=True)
@@ -181,7 +182,7 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost:
         case GlacierVault():
             return _glacier_vault_host(resource, naming.non_ec2)
         case S3Bucket():
-            return _s3_bucket_host(resource)
+            return _s3_bucket_host(resource, naming.non_ec2)
         case ElastiCacheNode():
             return _elasticache_node_host(resource)
         case RDSInstance():
@@ -278,8 +279,8 @@ def _glacier_vault_host(vault: GlacierVault, template: NonEC2PiggybackTemplate) 
     return _hostname_with_hashed_arn("glacier_vault", vault.name, vault.arn, template)
 
 
-def _s3_bucket_host(bucket: S3Bucket) -> TargetHost:
-    return TargetHost(bucket.name)
+def _s3_bucket_host(bucket: S3Bucket, template: NonEC2PiggybackTemplate) -> TargetHost:
+    return _hostname_with_hashed_arn("s3_bucket", bucket.name, bucket.arn, template)
 
 
 def _elasticache_node_host(node: ElastiCacheNode) -> TargetHost:

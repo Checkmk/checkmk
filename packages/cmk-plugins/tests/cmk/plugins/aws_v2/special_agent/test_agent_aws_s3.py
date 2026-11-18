@@ -37,6 +37,11 @@ from cmk.plugins.aws_v2.special_agent.sections.s3 import (
 from .agent_aws_fake_clients import FakeCloudwatchClient, S3BucketTaggingIB, S3ListBucketsIB
 
 ACCOUNT_HOST = TargetHost("123456789012")
+BUCKET_HOSTS = {
+    "Name-0": TargetHost("aws_s3_bucket_Name-0_38ec975c"),
+    "Name-1": TargetHost("aws_s3_bucket_Name-1_b382224c"),
+    "Name-2": TargetHost("aws_s3_bucket_Name-2_89ce0a4c"),
+}
 
 
 class FakeS3Client:
@@ -77,6 +82,7 @@ class CreateS3Sections(Protocol):
         names: object | None = None,
         tags: OverallTags = (None, None),
         tag_import: TagsOption = TagsImportPatternOption.import_all,
+        partition: str = "aws",
     ) -> S3Sections: ...
 
 
@@ -121,6 +127,7 @@ def get_s3_sections(monkeypatch: pytest.MonkeyPatch) -> CreateS3Sections:
         names: object | None = None,
         tags: OverallTags = (None, None),
         tag_import: TagsOption = TagsImportPatternOption.import_all,
+        partition: str = "aws",
     ) -> S3Sections:
         # on_time is somehow not feeded from here to S3Limits, so use monkey patch...
         monkeypatch.setattr(
@@ -141,6 +148,7 @@ def get_s3_sections(monkeypatch: pytest.MonkeyPatch) -> CreateS3Sections:
 
         fake_s3_client = FakeS3Client()
         fake_cloudwatch_client = FakeCloudwatchClient()
+        fake_cloudwatch_client.meta = SimpleNamespace(partition=partition)
 
         distributor = ResultDistributor()
 
@@ -274,7 +282,7 @@ def test_agent_aws_s3_requests(
         # 16 metrics per bucket
         assert len(s3_requests_result.content) == 16
         for row in s3_requests_result.content:
-            assert s3_requests_result.piggyback_hostname == row["Label"]
+            assert s3_requests_result.piggyback_hostname == BUCKET_HOSTS[row["Label"]]
             if row.get("Name") in ["Name-0", "Name-1", "Name-2"]:
                 assert row.get("LocationConstraint") == "region"
             assert "Tagging" in row
@@ -351,7 +359,7 @@ def test_agent_aws_s3_requests_without_limits(
         # 16 metrics per bucket
         assert len(s3_requests_result.content) == 16
         for row in s3_requests_result.content:
-            assert s3_requests_result.piggyback_hostname == row["Label"]
+            assert s3_requests_result.piggyback_hostname == BUCKET_HOSTS[row["Label"]]
             if row.get("Name") in ["Name-0", "Name-1", "Name-2"]:
                 assert row.get("LocationConstraint") == "region"
             assert "Tagging" in row
@@ -395,7 +403,23 @@ def test_agent_aws_s3_puts_each_bucket_on_its_own_host(
     assert {
         result.piggyback_hostname: {row["Label"] for row in result.content}
         for result in s3_bucket_results
-    } == {f"Name-{i}": {f"Name-{i}"} for i in range(3)}
+    } == {BUCKET_HOSTS[f"Name-{i}"]: {f"Name-{i}"} for i in range(3)}
+
+
+def test_agent_aws_s3_bucket_hosts_follow_the_partition_of_the_client(
+    get_s3_sections: CreateS3Sections,
+) -> None:
+    _s3_limits, s3_summary, s3, s3_bucket, _s3_requests = get_s3_sections(partition="aws-cn")
+    s3_summary.run()
+    s3.run()
+
+    s3_bucket_results = s3_bucket.run().results
+
+    assert {result.piggyback_hostname for result in s3_bucket_results} == {
+        "aws_s3_bucket_Name-0_1a0b8c7d",
+        "aws_s3_bucket_Name-1_27803d02",
+        "aws_s3_bucket_Name-2_eb85b5a2",
+    }
 
 
 def test_agent_aws_s3_bucket_hosts_get_the_resource_labels(
@@ -414,7 +438,7 @@ def test_agent_aws_s3_bucket_hosts_get_the_resource_labels(
         {},
     ]
     assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
-        f"Name-{i}": {
+        BUCKET_HOSTS[f"Name-{i}"]: {
             "cmk/aws/service": "s3",
             "cmk/aws/name": f"Name-{i}",
             "cmk/aws/resource_id": f"Name-{i}",

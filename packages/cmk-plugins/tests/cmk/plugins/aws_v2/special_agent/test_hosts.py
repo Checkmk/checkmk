@@ -129,7 +129,11 @@ def test_ec2_instance_without_a_name_has_no_host(
             "aws_glacier_vault_my-vault_a87a2b00",
             id="glacier vault",
         ),
-        pytest.param(S3Bucket("bucket"), "bucket", id="s3 bucket"),
+        pytest.param(
+            S3Bucket("bucket", "arn:aws:s3:::bucket"),
+            "aws_s3_bucket_bucket_5c001db1",
+            id="s3 bucket",
+        ),
         pytest.param(SNSTopic("topic", "eu-central-1"), "topic_eu-central-1", id="sns topic"),
         pytest.param(
             LambdaFunction(

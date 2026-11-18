@@ -9,6 +9,7 @@
 import abc
 import random
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
+from types import SimpleNamespace
 from typing import Any, override, TypedDict
 
 from cmk.plugins.aws_v2.constants import AWS_EC2_INST_TYPES
@@ -3015,6 +3016,8 @@ class FakeCloudwatchClientDescribeAlarmsPaginator:
 
 
 class FakeCloudwatchClient:
+    meta = SimpleNamespace(partition="aws")
+
     def get_paginator(self, api_call: str) -> FakeCloudwatchClientDescribeAlarmsPaginator:
         if api_call == "describe_alarms":
             return FakeCloudwatchClientDescribeAlarmsPaginator()

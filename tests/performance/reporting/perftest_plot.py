@@ -61,6 +61,7 @@ Example:
 
 import json
 import logging
+import re
 from datetime import datetime as Datetime
 from datetime import timedelta
 from os import environ, getenv
@@ -238,6 +239,21 @@ class PerftestPlot:
         """
         return self.root_dir / f"{job_name}/{scenario_name}.resources.json"
 
+    def scenario_file_paths(self, job_name: str, scenario_name: str) -> list[Path]:
+        """A scenario's resource file, followed by its numbered ones.
+
+        A scenario tracked more than once, e.g. once per round, writes
+        <scenario>.resources.json, then <scenario>.1.resources.json and so on.
+        """
+        first = self.scenario_file_path(job_name, scenario_name)
+        pattern = re.compile(rf"{re.escape(scenario_name)}\.(\d+)\.resources\.json")
+        further = sorted(
+            (int(match.group(1)), path)
+            for path in first.parent.glob("*.resources.json")
+            if (match := pattern.fullmatch(path.name))
+        )
+        return [first, *(path for _, path in further)]
+
     def _read_job_names(self) -> list[str]:
         """
         Retrieves and returns a sorted list of job names that are either present on disk or exist
@@ -316,6 +332,10 @@ class PerftestPlot:
             logger.info('Reading data for job "%s" from the filesystem...', job_name)
             data = self._read_json(job_file_path)
             if isinstance(data, dict):
+                # sysmon writes a dot in a name as a hyphen, so it matches the resource file.
+                for benchmark in data.get("benchmarks") or []:
+                    if isinstance(benchmark, dict):
+                        benchmark["name"] = str(benchmark["name"]).replace(".", "-")
                 return data
 
         benchmarks: list[dict[str, str | Measurements]] = []
@@ -375,12 +395,14 @@ class PerftestPlot:
         """
         scenario_data: dict[str, MeasurementsList] = {}
         for scenario_name in self.scenario_names:
-            scenario_file_path = self.scenario_file_path(job_name, scenario_name)
             if self._scenario_on_disk(job_name, scenario_name):
-                # read measurements from file
-                scenario_data[scenario_name] = (
-                    data if isinstance(data := self._read_json(scenario_file_path), list) else []
-                )
+                # read the measurements of all its files
+                scenario_data[scenario_name] = [
+                    measurement
+                    for path in self.scenario_file_paths(job_name, scenario_name)
+                    if isinstance(data := self._read_json(path), list)
+                    for measurement in data
+                ]
             elif self.read_from_database and self.database.check_job(job_name=job_name):
                 scenario_data[scenario_name] = self.database.read_scenario_data(
                     job_name=job_name, scenario_name=scenario_name
@@ -394,7 +416,7 @@ class PerftestPlot:
 
         Scenarios are identified by files matching the pattern '*.resources.json' in the job
         directories. The scenario name is derived from the file stem, with the '.resources' suffix
-        removed. If enabled, scenario names are also retrieved from the database and combined with
+        and the number of a further file removed. If enabled, scenario names are also retrieved from the database and combined with
         those from the filesystem.
 
         Returns:
@@ -403,7 +425,7 @@ class PerftestPlot:
         scenario_names = (
             list(
                 {
-                    _.stem.removesuffix(".resources")
+                    re.sub(r"\.\d+$", "", _.stem.removesuffix(".resources"))
                     for job_name in self.job_names
                     if (job_file_path := self._job_file_path(job_name)).exists()
                     for _ in list(job_file_path.parent.glob("*.resources.json"))
@@ -468,10 +490,12 @@ class PerftestPlot:
                 with job_file_path.open("w", encoding="utf-8") as json_file:
                     json.dump(benchmark_data, json_file, indent=4, default=str)
                 for scenario_name, performance_data in scenario_data.items():
-                    with self.scenario_file_path(job_name, scenario_name).open(
-                        "w", encoding="utf-8"
-                    ) as json_file:
+                    first, *further = self.scenario_file_paths(job_name, scenario_name)
+                    with first.open("w", encoding="utf-8") as json_file:
                         json.dump(performance_data, json_file, indent=4, default=str)
+                    # The first file holds the samples of all now.
+                    for path in further:
+                        path.unlink()
 
                     if not len(performance_data) > 0:
                         continue

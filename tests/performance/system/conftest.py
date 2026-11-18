@@ -9,7 +9,7 @@ import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from shutil import which
+from shutil import rmtree, which
 from typing import Literal
 
 import pytest
@@ -45,6 +45,9 @@ def pytest_configure(config: pytest.Config) -> None:
     edition = os.environ.get("EDITION") or "pro"
     name = perftest_run.job_name(the_version, edition, os.environ)
     run_dir = perftest_run.result_root(os.environ) / "performance" / name
+    if not config.option.collectonly:
+        # An earlier run's resource files would be numbered on instead of replaced.
+        rmtree(run_dir, ignore_errors=True)
     run_dir.mkdir(parents=True, exist_ok=True)
     if config.option.benchmark_json is None:
         config.option.benchmark_json = run_dir / "benchmark.json"

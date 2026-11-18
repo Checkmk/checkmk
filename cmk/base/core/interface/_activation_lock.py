@@ -8,7 +8,6 @@ from contextlib import contextmanager
 from typing import assert_never, Literal
 
 import cmk.utils.paths
-from cmk.ccc.exceptions import MKBailOut
 from cmk.ccc.store import locked, try_locked
 from cmk.config.paths import BaseConfigurationMKFiles
 
@@ -17,13 +16,17 @@ from cmk.config.paths import BaseConfigurationMKFiles
 type LockingMode = Literal["abort", "wait"] | None
 
 
+class ActivationLockedError(Exception):
+    """The activation lock is held by another process"""
+
+
 # TODO: lock_checkmk_configuration is doing something similar. It looks like we
 # should unify these both locks. But: The lock_checkmk_configuration is currently acquired by the
 # GUI process. In case the GUI calls an automation process, we would have a dead lock of these two
 # processes. We'll have to check whether or not we can move the locking.
 @contextmanager
 def activation_lock(mode: LockingMode) -> Iterator[None]:
-    """Try to acquire the activation lock and raise exception in case it was not possible
+    """Hold the activation lock, raise ActivationLockedError if mode is "abort" and it is taken
 
     The lock guards the creation and activation of the monitoring configuration.
     """
@@ -36,7 +39,7 @@ def activation_lock(mode: LockingMode) -> Iterator[None]:
         case "abort":
             with try_locked(main_mk_file) as result:
                 if result is False:
-                    raise MKBailOut("Other restart currently in progress. Aborting.")
+                    raise ActivationLockedError("Other restart currently in progress. Aborting.")
                 yield None
             return
 

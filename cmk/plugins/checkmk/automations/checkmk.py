@@ -109,7 +109,11 @@ from cmk.base.configlib.servicename import (
     PassiveServiceNameConfig,
 )
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
-from cmk.base.core.interface import build_and_activate_monitoring_config, config_builders
+from cmk.base.core.interface import (
+    ActivationLockedError,
+    build_and_activate_monitoring_config,
+    config_builders,
+)
 from cmk.base.core.shared import autodetect_plugin, get_service_attributes
 from cmk.base.errorhandling import create_section_crash_dump, RecordingFetcher
 from cmk.base.parent_scan import ScanConfig
@@ -2645,7 +2649,7 @@ def _execute_silently(
             make_fetcher_trigger=env.app.make_fetcher_trigger,
             debug=rctx.env.debug,
         )
-    except (MKBailOut, MKGeneralException) as e:
+    except (ActivationLockedError, MKBailOut, MKGeneralException) as e:
         raise MKAutomationError(str(e))
     except Exception as e:
         if rctx.env.debug:

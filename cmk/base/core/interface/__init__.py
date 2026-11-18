@@ -7,6 +7,7 @@
 from cmk.core_client import CoreAction as CoreAction
 
 from ._activation_lock import activation_lock as activation_lock
+from ._activation_lock import ActivationLockedError as ActivationLockedError
 from ._control import (
     build_and_activate_monitoring_config as build_and_activate_monitoring_config,
 )

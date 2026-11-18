@@ -95,7 +95,7 @@ function moveFocus(step: 1 | -1) {
   background-color: var(--default-form-element-bg-color);
   padding: 0 35px 0 0;
   width: 100%;
-  border-radius: 2px;
+  border-radius: var(--border-radius);
   border: 1px solid var(--default-form-element-border-color);
   height: 24px;
   display: flex;

@@ -141,7 +141,7 @@ document.addEventListener('cmk-ai-explain-button', (event: Event) => {
     padding: 3px;
     border: solid var(--white);
     border-width: 0 3px 3px 0;
-    border-radius: 0 0 2px;
+    border-radius: 0 0 var(--border-radius);
     transform: rotate(135deg);
     content: '';
   }

@@ -360,7 +360,7 @@ body[data-theme='modern-dark'] .cmk-calendar-grid {
   margin: 0;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--cmk-calendar-fg);
   font-size: var(--font-size-normal);

@@ -57,7 +57,7 @@ div.tile {
       display: flex;
       align-items: center;
       height: calc(100% - 3px);
-      border-radius: 2px;
+      border-radius: $theme-border-radius;
     }
   }
 }
@@ -280,7 +280,7 @@ b.stmark {
   font-size: $font-size-small;
   text-align: center;
   cursor: pointer;
-  border-radius: 2px;
+  border-radius: $theme-border-radius;
 }
 
 .statebullet {

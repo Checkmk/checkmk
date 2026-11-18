@@ -151,7 +151,7 @@ div#snapin_master_control div.foldable:not(:last-child) {
  */
 table.mkeventd_performance {
   @extend %performance-table-shared;
-  border-radius: 2px;
+  border-radius: $theme-border-radius;
 
   td {
     padding: 0;
@@ -171,7 +171,7 @@ table.mkeventd_performance {
  */
 table.performance {
   @extend %performance-table-shared;
-  border-radius: 2px;
+  border-radius: $theme-border-radius;
 
   td {
     padding: 0;

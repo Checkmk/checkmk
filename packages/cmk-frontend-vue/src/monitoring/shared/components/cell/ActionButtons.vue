@@ -249,7 +249,7 @@ function select(action: CellAction): void {
   align-items: center;
   gap: var(--dimension-3);
   padding: var(--dimension-3) var(--dimension-4);
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   color: inherit;
   text-decoration: none;
   cursor: pointer;

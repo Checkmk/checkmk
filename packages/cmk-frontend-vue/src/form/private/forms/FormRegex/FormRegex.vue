@@ -168,7 +168,7 @@ function onKeyEnter(e: KeyboardEvent) {
   padding: 0 12px 0 3px;
   height: 20px;
   border-left: 0;
-  border-radius: 0 2px 2px 0;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
   font-size: var(--font-size-normal);
   background-color: var(--ux-theme-5);
   position: relative;

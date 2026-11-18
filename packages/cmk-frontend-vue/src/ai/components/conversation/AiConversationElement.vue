@@ -712,7 +712,7 @@ watch(
         white-space: nowrap;
         text-align: center;
         border: 1px solid var(--default-border-color);
-        border-radius: var(--dimension-2);
+        border-radius: var(--border-radius);
         text-transform: uppercase;
         padding: var(--dimension-1) var(--dimension-2);
       }

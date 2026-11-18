@@ -21,7 +21,7 @@
     form {
       display: flex;
       background-color: $bg-color;
-      border-radius: 2px;
+      border-radius: $theme-border-radius;
     }
 
     form:focus-within {

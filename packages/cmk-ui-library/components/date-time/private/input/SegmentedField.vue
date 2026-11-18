@@ -112,7 +112,7 @@ function segmentLabelId(key: string): string {
   margin: 0;
   padding: 0;
   border: none;
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color);
   font-size: var(--font-size-normal);

@@ -68,7 +68,7 @@ watch(
   font-weight: 400;
   color: var(--font-color-dimmed);
   border: 1px solid var(--default-form-element-bg-color);
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   padding: 0 var(--dimension-6) var(--dimension-2) var(--dimension-6);
 }
 
@@ -189,7 +189,7 @@ watch(
 .ai-markdown-content :deep(.ai-markdown-content__badge) {
   display: inline-block;
   padding: 0 var(--dimension-3);
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   letter-spacing: 0.05em;

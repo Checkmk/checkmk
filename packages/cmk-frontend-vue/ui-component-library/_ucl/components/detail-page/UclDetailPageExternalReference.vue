@@ -153,7 +153,7 @@ function githubUrl(file: string): string {
   align-items: center;
   padding: var(--dimension-2);
   border: 1px solid transparent;
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--ucl-body-text-color);
   cursor: pointer;

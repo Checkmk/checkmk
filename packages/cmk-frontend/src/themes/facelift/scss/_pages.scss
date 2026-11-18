@@ -852,7 +852,7 @@ span.checkbox {
 
 .checkbox label::before {
   border: 1px solid $color-table-border-dark;
-  border-radius: 2px;
+  border-radius: $theme-border-radius;
   box-shadow: none;
 }
 

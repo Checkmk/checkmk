@@ -59,7 +59,7 @@ function drillUp(): void {
   justify-content: center;
   padding: var(--dimension-2);
   border: none;
-  border-radius: 2px;
+  border-radius: var(--border-radius);
   background: none;
   cursor: pointer;
 

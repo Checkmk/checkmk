@@ -59,7 +59,7 @@ defineExpose({
   align-items: center;
   justify-content: center;
   padding: var(--dimension-2);
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   color: inherit;
   text-decoration: none;
 }

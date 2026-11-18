@@ -18,7 +18,7 @@
   span.state {
     padding: 2px 6px 0;
     margin-right: 4px;
-    border-radius: 2px;
+    border-radius: $theme-border-radius;
     font-weight: $font-weight-bold;
   }
 
@@ -132,7 +132,7 @@ td.aggrtree {
   cursor: pointer;
   /* stylelint-disable-next-line declaration-property-value-no-unknown */
   border: 1px solid $bi-box-border-color;
-  border-radius: 2px;
+  border-radius: $theme-border-radius;
 
   &.noleaf {
     &:hover {

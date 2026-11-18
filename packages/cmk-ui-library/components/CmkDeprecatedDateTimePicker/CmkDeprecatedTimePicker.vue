@@ -388,7 +388,7 @@ function onPopupKey(e: KeyboardEvent) {
   text-align: center;
   padding: 0;
   margin: 0;
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   outline: none;
   height: auto;
   box-shadow: none;

@@ -420,7 +420,7 @@ const externalReferences: ExternalReferenceItem[] = [
   width: 32px;
   height: 32px;
   border: 1px dashed var(--default-border-color);
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
 }
 
 .ucl-icons__grid {
@@ -483,7 +483,7 @@ const externalReferences: ExternalReferenceItem[] = [
   font-size: 10px;
   font-weight: var(--font-weight-bold);
   padding: 1px var(--dimension-2);
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   border: 1px solid var(--default-border-color);
   color: var(--font-color-dimmed);
 }

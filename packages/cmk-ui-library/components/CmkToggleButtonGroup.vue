@@ -93,7 +93,7 @@ function setSelectedOption(value: string) {
 }
 
 .cmk-toggle-button-group__container--size-small {
-  --toggle-button-group-radius: var(--dimension-2);
+  --toggle-button-group-radius: var(--border-radius);
 }
 
 .cmk-toggle-button-group__container--spacing-default {

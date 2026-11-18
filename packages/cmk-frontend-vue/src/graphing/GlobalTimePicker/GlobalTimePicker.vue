@@ -207,7 +207,7 @@ function onApplyPreset(preset: CustomPreset): void {
   width: var(--dimension-7);
   height: var(--dimension-7);
   border: 1px solid var(--button-optional-border-color);
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   background-color: var(--default-button-optional-color);
   color: var(--button-optional-text-color);
 }

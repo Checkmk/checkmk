@@ -454,7 +454,7 @@ div#top_heading {
         padding: 0;
         margin: 0;
         background-color: $input-background-color;
-        border-radius: 2px;
+        border-radius: $theme-border-radius;
       }
 
       input,

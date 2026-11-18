@@ -441,7 +441,7 @@ function onItemFocus(key: number, event: FocusEvent): void {
   overflow: hidden;
   background: var(--ux-theme-5);
   border: 1px solid var(--border-color-subtle);
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   color: var(--font-color);
 }
 

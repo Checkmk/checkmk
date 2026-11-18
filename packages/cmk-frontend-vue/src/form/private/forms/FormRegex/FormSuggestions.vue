@@ -153,7 +153,7 @@ defineExpose({
   background-color: var(--ux-theme-3);
   border: 2px solid var(--ux-theme-5);
   border-top: 4px solid var(--ux-theme-5);
-  border-radius: 2px;
+  border-radius: var(--border-radius);
   border-top-left-radius: 0;
   margin: 0;
   padding: 0;
@@ -168,7 +168,7 @@ defineExpose({
   background-color: var(--ux-theme-3);
   border: 2px solid var(--ux-theme-5);
   border-top: 4px solid var(--ux-theme-5);
-  border-radius: 2px;
+  border-radius: var(--border-radius);
   border-top-left-radius: 0;
   margin: 0;
   padding: 0;

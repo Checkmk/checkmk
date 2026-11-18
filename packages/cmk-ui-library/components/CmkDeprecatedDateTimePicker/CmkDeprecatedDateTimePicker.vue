@@ -341,7 +341,7 @@ function shiftYear(delta: number) {
 .cmk-deprecated-date-time-picker__segment {
   padding: 1px var(--dimension-2);
   border: none;
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   outline: none;
   background: transparent;
   color: var(--font-color);

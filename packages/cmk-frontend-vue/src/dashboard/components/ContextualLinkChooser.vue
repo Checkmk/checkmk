@@ -73,7 +73,7 @@ const open = defineModel<boolean>('open', { default: false })
   color: inherit;
   text-decoration: none;
   white-space: nowrap;
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   outline: none;
   cursor: pointer;
 

@@ -209,7 +209,7 @@ span {
 :deep(.cmk-checkbox__button) {
   background-color: var(--default-form-element-bg-color);
   border: 1px solid var(--default-form-element-bg-color);
-  border-radius: 2px;
+  border-radius: var(--border-radius);
   height: 15px;
   width: 15px;
   min-width: 15px;

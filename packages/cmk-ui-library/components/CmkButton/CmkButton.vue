@@ -161,7 +161,7 @@ defineEmits(['click'])
 .cmk-button--size-icon-only {
   height: var(--dimension-7);
   padding: 0;
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius);
   aspect-ratio: 1;
 }
 

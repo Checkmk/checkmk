@@ -7,18 +7,20 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 
-from cmk.gui.data_source import data_source_registry
+from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.http import request
 from cmk.gui.painter import CellDrilldown
 from cmk.gui.top_heading import DRILLED_FROM_VAR
 from cmk.gui.type_defs import (
     ColumnName,
+    ContextualLinkEntryConfig,
     ContextualLinkTargetType,
     FilterHTTPVariables,
     FilterName,
     InfoName,
     Row,
     ViewSpec,
+    Visual,
     VisualContext,
 )
 from cmk.gui.utils.roles import UserPermissions
@@ -31,7 +33,10 @@ from cmk.gui.views.drilldown_filters import (
     row_drilldown,
     row_has_columns,
 )
+from cmk.gui.visual_link import may_add_site_hint
+from cmk.gui.visuals import get_single_info_keys
 from cmk.gui.visuals.filter.drilldowns import Drilldown
+from cmk.gui.visuals.info import visual_info_registry
 from cmk.shared_typing.drill_up_button import DrillUpButton
 from cmk.web.utils.urls import makeuri_contextless
 
@@ -77,53 +82,156 @@ def column_drilldowns(
         if (link := painter.column_link) is None:
             continue
         location = location_from_internal(link["location"])
-        if resolved_copy(location, user_permissions) is None:
+        if (target := resolved_copy(location, user_permissions)) is None:
             continue
         link_context = context if link["include_context"] else {}
+        joined = painter.column_type == "join_column"
         if link["filters"]:
-            carriable = set(drilldown_filters(data_source, location.type))
-            configured = filter_keys(link["filters"])
-            carried = {
-                filter_name: _CarriedFilter(drilldown, keys)
-                for filter_name, keys in configured.items()
-                if filter_name in carriable
-                and (drilldown := row_drilldown(data_source, filter_name)) is not None
-            }
-            row_filters = [name for name in carried if row_has_columns(data_source, name)]
-            # A joined service row has every host and service column.
-            joined_filters = (
-                [name for name in carried if name not in row_filters]
-                if painter.column_type == "join_column"
-                else []
+            drilldowns[index] = _filter_drilldown(
+                data_source,
+                location,
+                link,
+                link_context,
+                filter_keys(link["filters"]),
+                joined=joined,
+                drilled_from=drilled_from,
+                carries_site=False,
             )
-            drilldowns[index] = CellDrilldown(
-                columns=_columns(carried, row_filters),
-                joined_columns=_columns(carried, joined_filters),
-                url=partial(
-                    _custom_url,
-                    location,
-                    link_context,
-                    configured,
-                    carried,
-                    show_filter_form=link["show_filter_form"],
-                    drilled_from=drilled_from,
-                ),
-                includes_time_range=link["include_time_range"],
+        elif object_infos and not _takes_another_object(data_source, target):
+            drilldowns[index] = _inherited_drilldown(
+                location,
+                target,
+                link,
+                link_context,
+                object_infos,
+                joined=joined,
+                drilled_from=drilled_from,
             )
-        elif object_infos:
-            drilldowns[index] = CellDrilldown(
-                columns=_object_columns(object_infos),
-                url=partial(
-                    _inherited_url,
-                    location,
-                    link_context,
-                    object_infos,
-                    show_filter_form=link["show_filter_form"],
-                    drilled_from=drilled_from,
-                ),
-                includes_time_range=link["include_time_range"],
+        else:
+            # A row of another object, such as a host group, carries that object.
+            row_filters = _row_object_filters(data_source, location.type, target["single_infos"])
+            drilldowns[index] = _filter_drilldown(
+                data_source,
+                location,
+                link,
+                link_context,
+                {name: [] for name in row_filters},
+                joined=joined,
+                drilled_from=drilled_from,
+                carries_site=_carries_site(target, row_filters),
             )
     return drilldowns
+
+
+def _filter_drilldown(
+    data_source: ABCDataSource,
+    location: VisualLocation,
+    link: ContextualLinkEntryConfig,
+    context: VisualContext,
+    configured: Mapping[FilterName, Sequence[str]],
+    *,
+    joined: bool,
+    drilled_from: DrillUpButton | None,
+    carries_site: bool,
+) -> CellDrilldown:
+    carriable = set(drilldown_filters(data_source, location.type))
+    carried = {
+        filter_name: _CarriedFilter(drilldown, keys)
+        for filter_name, keys in configured.items()
+        if filter_name in carriable
+        and (drilldown := row_drilldown(data_source, filter_name)) is not None
+    }
+    row_filters = [name for name in carried if row_has_columns(data_source, name)]
+    # A joined service row has every host and service column.
+    joined_filters = [name for name in carried if name not in row_filters] if joined else []
+    return CellDrilldown(
+        columns=_columns(carried, row_filters),
+        joined_columns=_columns(carried, joined_filters),
+        url=partial(
+            _filter_url,
+            location,
+            context,
+            configured,
+            carried,
+            show_filter_form=link["show_filter_form"],
+            drilled_from=drilled_from,
+            carries_site=carries_site,
+        ),
+        includes_time_range=link["include_time_range"],
+    )
+
+
+def _inherited_drilldown(
+    location: VisualLocation,
+    target: Visual,
+    link: ContextualLinkEntryConfig,
+    context: VisualContext,
+    object_infos: Sequence[InfoName],
+    *,
+    joined: bool,
+    drilled_from: DrillUpButton | None,
+) -> CellDrilldown:
+    # A joined column's object is its joined service.
+    carried_infos = _taken_infos(target, ("host", "service") if joined else object_infos)
+    return CellDrilldown(
+        columns=["host_name"] if joined else _object_columns(object_infos),
+        joined_columns=["service_description"] if joined else [],
+        url=partial(
+            _inherited_url,
+            location,
+            context,
+            carried_infos,
+            carries_site=_carries_site(target, get_single_info_keys(carried_infos)),
+            show_filter_form=link["show_filter_form"],
+            drilled_from=drilled_from,
+        ),
+        includes_time_range=link["include_time_range"],
+    )
+
+
+def _taken_infos(target: Visual, object_infos: Sequence[InfoName]) -> list[InfoName]:
+    """The parts of the clicked object that a target of single objects takes, as "Link to" carried
+    them: a service would narrow a host's view to that service."""
+    if not (single_infos := target["single_infos"]):
+        return list(object_infos)
+    return [info for info in object_infos if info in single_infos]
+
+
+def _takes_another_object(data_source: ABCDataSource, target: Visual) -> bool:
+    """Whether the target takes an object of the row besides its host and service, such as the
+    host group of a row of hosts by group."""
+    return any(
+        info in data_source.infos
+        for info in target["single_infos"]
+        if info not in ("host", "service")
+    )
+
+
+def _row_object_filters(
+    data_source: ABCDataSource,
+    target_type: ContextualLinkTargetType,
+    target_infos: Sequence[InfoName],
+) -> list[FilterName]:
+    """The filters naming the row's own object, such as its host group, that the target takes. A
+    target of single objects takes only those."""
+    carriable = set(drilldown_filters(data_source, target_type))
+    infos = [info for info in data_source.infos if not target_infos or info in target_infos]
+    return [
+        filter_name
+        for filter_name in get_single_info_keys(infos)
+        if filter_name in carriable and row_has_columns(data_source, filter_name)
+    ]
+
+
+def _carries_site(target: Visual, filter_names: Sequence[FilterName]) -> bool:
+    """Whether the row's site goes along, as "Link to" sent it: a customer row's site names the
+    customer."""
+    return may_add_site_hint(
+        target["name"],
+        info_keys=tuple(visual_info_registry.keys()),
+        single_info_keys=tuple(target["single_infos"]),
+        filter_names=tuple(filter_names),
+    )
 
 
 def _columns(
@@ -137,14 +245,16 @@ def _object_columns(object_infos: Sequence[InfoName]) -> list[ColumnName]:
 
 
 def _object_filters(
-    row: Row, object_infos: Sequence[InfoName]
+    row: Row, object_infos: Sequence[InfoName], *, carries_site: bool
 ) -> dict[FilterName, FilterHTTPVariables]:
     """The filters naming the row's object, as the Vue object widgets carry them.
 
     A row of a data source of hosts and services may be about a host alone, with an empty service.
     """
-    filters: dict[FilterName, FilterHTTPVariables] = {"siteopt": {"site": str(row["site"])}}
-    if host_name := row["host_name"]:
+    filters: dict[FilterName, FilterHTTPVariables] = {}
+    if carries_site:
+        filters["siteopt"] = {"site": str(row["site"])}
+    if "host" in object_infos and (host_name := row["host_name"]):
         filters["host"] = {"host": str(host_name)}
     if "service" in object_infos and (service_description := row["service_description"]):
         filters["service"] = {"service": str(service_description)}
@@ -157,10 +267,11 @@ def _inherited_url(
     object_infos: Sequence[InfoName],
     row: Row,
     *,
+    carries_site: bool,
     show_filter_form: bool,
     drilled_from: DrillUpButton | None,
 ) -> str:
-    object_filters = _object_filters(row, object_infos)
+    object_filters = _object_filters(row, object_infos, carries_site=carries_site)
     # The clicked object goes last, so it wins over the same filter in the context.
     return target_url(
         location,
@@ -171,7 +282,7 @@ def _inherited_url(
     )
 
 
-def _custom_url(
+def _filter_url(
     location: VisualLocation,
     context: VisualContext,
     configured: Mapping[FilterName, Sequence[str]],
@@ -180,6 +291,7 @@ def _custom_url(
     *,
     show_filter_form: bool,
     drilled_from: DrillUpButton | None,
+    carries_site: bool,
 ) -> str:
     valued: dict[FilterName, FilterHTTPVariables] = {}
     dropped: list[Dropped] = []
@@ -194,6 +306,8 @@ def _custom_url(
             dropped.extend(Dropped(filter_name, "no_such_key", key) for key in missing)
         elif variables is None:
             dropped.append(Dropped(filter_name, "no_value"))
+    if carries_site and (site := row.get("site")):
+        valued["siteopt"] = {"site": str(site)}
     filters = {**context, **valued}
     return target_url(
         location,

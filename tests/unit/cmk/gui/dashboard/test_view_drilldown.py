@@ -136,10 +136,35 @@ def test_column_drilldowns_link_carries_the_service_of_a_service_row(
     admin_permissions: UserPermissions,
 ) -> None:
     _path, variables = _url_of_first_column(
-        _view_spec("allservices"), _inherited(), _SERVICE_ROW, admin_permissions
+        _view_spec("allservices"), _inherited(("views", "service")), _SERVICE_ROW, admin_permissions
     )
 
     assert variables["service"] == "CPU load"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_column_drilldowns_link_of_a_service_row_to_a_host_view_carries_no_service(
+    admin_permissions: UserPermissions,
+) -> None:
+    _path, variables = _url_of_first_column(
+        _view_spec("allservices"), _inherited(("views", "host")), _SERVICE_ROW, admin_permissions
+    )
+
+    assert (variables["host"], "service" in variables) == ("heute", False)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_column_drilldowns_link_to_the_services_of_all_sites_carries_no_site(
+    admin_permissions: UserPermissions,
+) -> None:
+    _path, variables = _url_of_first_column(
+        _view_spec("allservices"),
+        _inherited(("views", "servicedesc")),
+        _SERVICE_ROW,
+        admin_permissions,
+    )
+
+    assert (variables["service"], "site" in variables) == ("CPU load", False)
 
 
 @pytest.mark.usefixtures("request_context")
@@ -233,15 +258,99 @@ def test_column_drilldowns_withholds_a_target_the_viewer_may_not_open() -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_column_drilldowns_offers_no_inherited_link_on_a_datasource_without_hosts_or_services(
+def test_column_drilldowns_inherited_link_from_a_host_group_carries_the_host_group(
+    admin_permissions: UserPermissions,
+) -> None:
+    _path, variables = _url_of_first_column(
+        _view_spec("hostgroups"),
+        _inherited(("views", "hostgroup")),
+        {"site": "heute_site", "hostgroup_name": "linux"},
+        admin_permissions,
+    )
+
+    assert variables["hostgroup"] == "linux"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_column_drilldowns_inherited_link_from_a_host_by_group_to_a_host_group_view_carries_the_group(
+    admin_permissions: UserPermissions,
+) -> None:
+    _path, variables = _url_of_first_column(
+        {**_view_spec("allhosts"), "datasource": "hostsbygroup"},
+        _inherited(("views", "hostgroup")),
+        {"site": "heute_site", "host_name": "heute", "hostgroup_name": "linux"},
+        admin_permissions,
+    )
+
+    assert (variables.get("hostgroup"), "host" in variables) == ("linux", False)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_column_drilldowns_inherited_link_from_a_host_group_carries_no_site(
+    admin_permissions: UserPermissions,
+) -> None:
+    _path, variables = _url_of_first_column(
+        _view_spec("hostgroups"),
+        _inherited(("views", "hostgroup")),
+        {"site": "heute_site", "hostgroup_name": "linux"},
+        admin_permissions,
+    )
+
+    assert "site" not in variables
+
+
+@pytest.mark.usefixtures("request_context")
+def test_column_drilldowns_inherited_link_from_a_host_group_to_a_dashboard_carries_context_and_site(
+    admin_permissions: UserPermissions,
+) -> None:
+    path, variables = _url_of_first_column(
+        _view_spec("hostgroups"),
+        _inherited(("dashboards", "main")),
+        {"site": "heute_site", "hostgroup_name": "windows"},
+        admin_permissions,
+    )
+
+    assert (path, variables) == (
+        "dashboard.py",
+        {
+            "opthost_group": "linux",
+            "site": "heute_site",
+            "name": "main",
+            "filled_in": "filter",
+            "_show_filter_form": "0",
+        },
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_column_drilldowns_inherited_link_on_a_joined_service_reads_the_joined_service(
     admin_permissions: UserPermissions,
 ) -> None:
     view_spec = _view_spec("allhosts")
-    view_spec["datasource"] = "hostgroups"
+    view_spec["painters"] = [ColumnSpec("service_state", join_value="CPU load")]
 
-    drilldowns = column_drilldowns(_linked(view_spec, _inherited()), _CONTEXT, admin_permissions)
+    drilldown = column_drilldowns(
+        _linked(view_spec, _inherited(("views", "service"))), _CONTEXT, admin_permissions
+    )[0]
 
-    assert drilldowns == {}
+    assert (drilldown.columns, drilldown.joined_columns) == (
+        ["host_name"],
+        ["service_description"],
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_column_drilldowns_inherited_link_on_a_joined_service_carries_it(
+    admin_permissions: UserPermissions,
+) -> None:
+    view_spec = _view_spec("allhosts")
+    view_spec["painters"] = [ColumnSpec("service_state", join_value="CPU load")]
+
+    _path, variables = _url_of_first_column(
+        view_spec, _inherited(("views", "service")), _SERVICE_ROW, admin_permissions
+    )
+
+    assert (variables["host"], variables["service"]) == ("heute", "CPU load")
 
 
 @pytest.mark.usefixtures("request_context")

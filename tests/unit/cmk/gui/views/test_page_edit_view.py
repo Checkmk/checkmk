@@ -304,6 +304,9 @@ def test_view_editor_column_spec_with_drilldown_keeps_a_link_to_a_view(
             "hosts", "alias", _link(("views", "service")), id="single-service view from host rows"
         ),
         pytest.param(
+            "hostgroups", "hg_name", _link(("views", "hostgroup")), id="inherited from host groups"
+        ),
+        pytest.param(
             "hosts",
             "alias",
             _link(
@@ -341,14 +344,6 @@ def test_view_editor_column_spec_with_drilldown_labels_a_dashboard_with_its_id(
 @pytest.mark.parametrize(
     "datasource, painter, drilldown, field, message",
     [
-        pytest.param(
-            "hostgroups",
-            "hg_name",
-            _link(("views", "allhosts")),
-            "link_spec",
-            "is not allowed here",
-            id="inherited without hosts",
-        ),
         pytest.param(
             "mkeventd_events",
             "event_id",

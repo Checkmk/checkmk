@@ -949,21 +949,16 @@ def _column_link_choices(user_permissions: UserPermissions) -> list[CascadingDro
 def _drilldown_link_choices(
     ds_name: str, user_permissions: UserPermissions, tags: TagConfig
 ) -> list[CascadingDropdownChoice]:
-    """Inherited drill-downs need host or service rows, custom ones a filter the row can value."""
+    """Custom drill-downs need a filter the row can value."""
     data_source = data_source_registry[ds_name]()
-    object_infos = {info for info in ("host", "service") if info in data_source.infos}
-    choices: list[CascadingDropdownChoice] = []
-    if object_infos:
-        choices += [
-            (
-                choice,
-                f"{_DRILLDOWN_TITLES[choice]}:",
-                DropdownChoice(
-                    choices=_drilldown_targets(target_type, user_permissions), sorted=True
-                ),
-            )
-            for choice, target_type in _INHERITED_DRILLDOWN_TARGETS.items()
-        ]
+    choices: list[CascadingDropdownChoice] = [
+        (
+            choice,
+            f"{_DRILLDOWN_TITLES[choice]}:",
+            DropdownChoice(choices=_drilldown_targets(target_type, user_permissions), sorted=True),
+        )
+        for choice, target_type in _INHERITED_DRILLDOWN_TARGETS.items()
+    ]
     choices += [
         (
             choice,

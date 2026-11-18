@@ -26,9 +26,10 @@ perftest_plot() {
 
 # upload <root_dir> <database> [plot options]
 # In CI, write a suite's results to its database, generate the report and check the weekly,
-# monthly and yearly baselines. The plot options go to all three calls.
+# monthly and yearly baselines. The plot options go to all three calls. Returns 200 if any of
+# them failed, after running all three.
 upload() {
-    local root_dir="$1" database="$2"
+    local root_dir="$1" database="$2" rc=0
     shift 2
     [ -n "${CI}" ] || return 0
     local plot_args=(
@@ -37,13 +38,14 @@ upload() {
         --log-level=INFO --validate-baselines "$@"
     )
     # write to the database; generate report and check weekly baseline
-    perftest_plot "${plot_args[@]}" || exit 200
+    perftest_plot "${plot_args[@]}" || rc=200
     # check monthly baseline
     perftest_plot "${plot_args[@]}" \
-        --skip-filesystem-writes --skip-database-writes --baseline-offset=30 || exit 200
+        --skip-filesystem-writes --skip-database-writes --baseline-offset=30 || rc=200
     # check yearly baseline
     perftest_plot "${plot_args[@]}" \
-        --skip-filesystem-writes --skip-database-writes --baseline-offset=365 || exit 200
+        --skip-filesystem-writes --skip-database-writes --baseline-offset=365 || rc=200
+    return "${rc}"
 }
 
 BRANCH="$(make --no-print-directory --file="${REPO_PATH}/defines.make" print-BRANCH_VERSION)"
@@ -55,9 +57,13 @@ RELEASE="${RELEASE:-${VERSION}.${EDITION}}"
 if [ "$1" == "--site" ]; then
     ROOT_DIR="${RESULT_PATH:-${REPO_PATH}/results}/performance"
     upload "${ROOT_DIR}" performance --warn-only
+    RC=$?
     echo "ROOT_DIR=${ROOT_DIR}"
-    exit 0
+    exit "${RC}"
 fi
+
+# A suite's failed upload or baseline check fails the job, but only after every suite is uploaded.
+RC=0
 
 TESTLOGS="$(bazel info bazel-testlogs)"
 for target in $(bazel query --output=label "tests(//tests/performance:bazel_performance)"); do
@@ -80,6 +86,7 @@ for target in $(bazel query --output=label "tests(//tests/performance:bazel_perf
     cp "${testlog_dir}/test.outputs/"* "${BENCHMARK_DIR}/"
     cp "${testlog_dir}/test.xml" "${BENCHMARK_DIR}/junit.xml"
     # add this suite to the release's job
-    upload "${ROOT_DIR}" "${database}" --append-db
+    upload "${ROOT_DIR}" "${database}" --append-db || RC=200
     echo "ROOT_DIR=${ROOT_DIR}"
 done
+exit "${RC}"

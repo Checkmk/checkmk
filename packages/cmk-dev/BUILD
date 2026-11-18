@@ -46,6 +46,12 @@ py_cmk_test(
     name = "unit",
     size = "small",
     srcs = glob(["tests/**/*.py"]),
+    data = [
+        "//scripts:cmk-dev-install.py",
+        "//scripts:cmk-dev-install-site.py",
+        "//scripts:cmk-dev-site.py",
+        "//scripts:cmk-dev-site-mock-auth.py",
+    ],
     deps = [
         ":cmk-dev-site",
         requirement("fastapi"),

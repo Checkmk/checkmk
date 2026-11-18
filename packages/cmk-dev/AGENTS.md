@@ -12,6 +12,9 @@ recorded as ADRs (Architecture Decision Records) in `docs/adr/`; see
   `cmk_dev_site.cmk_dev_install_site:main`,
   `cmk_dev_site.saas.oidc_service:run`.
 - `tests/`: its unit tests, run by Bazel.
+- `scripts/cmk-dev-site.py` (repo root) and its symlinks
+  `cmk-dev-install.py`, `cmk-dev-install-site.py`, `cmk-dev-site-mock-auth.py`:
+  run each command from the checkout on the repo `.venv`.
 - `docs/adr/`: the ADRs.
 
 The standalone cmk-dev-site repo still publishes the PyPI package and only

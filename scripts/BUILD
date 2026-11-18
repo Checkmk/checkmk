@@ -5,6 +5,10 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "cmk-dev-deploy.py",
+    "cmk-dev-install.py",
+    "cmk-dev-install-site.py",
+    "cmk-dev-site.py",
+    "cmk-dev-site-mock-auth.py",
     "requirements.in",
 ])
 

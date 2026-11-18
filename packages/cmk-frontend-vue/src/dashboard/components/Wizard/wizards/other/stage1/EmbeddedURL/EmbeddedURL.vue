@@ -53,7 +53,7 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
       :tick="tick"
       :range="range"
       :general_settings="handler.widgetProps.value.general_settings!"
-      :content="handler.widgetProps.value.content!"
+      :content="handler.previewContent.value"
       :effective-title="handler.widgetProps.value!.effectiveTitle"
       :effective_filter_context="handler.widgetProps.value.effective_filter_context!"
     />

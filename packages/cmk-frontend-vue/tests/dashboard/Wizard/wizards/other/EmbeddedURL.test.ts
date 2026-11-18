@@ -105,6 +105,19 @@ describe('EmbeddedURL', () => {
     expect(await screen.findByText('Value must be a valid URL')).toBeInTheDocument()
   })
 
+  it('submits the URL right after it is entered', async () => {
+    const { wizard } = openEmbeddedURL(null)
+
+    await fireEvent.update(
+      screen.getByRole('textbox', { name: 'Enter URL to embed' }),
+      'https://example.com'
+    )
+
+    expect(wizard.value!.getValidWidgetProps()?.content).toMatchObject({
+      url: 'https://example.com'
+    })
+  })
+
   it('includes the dashboard filters once checked', async () => {
     const { wizard } = openEmbeddedURL(null)
 
@@ -114,11 +127,9 @@ describe('EmbeddedURL', () => {
     )
     await fireEvent.click(screen.getByRole('checkbox', { name: 'Dashboard filters' }))
 
-    await waitFor(() =>
-      expect(wizard.value!.getValidWidgetProps()?.content).toMatchObject({
-        include_context: true
-      })
-    )
+    expect(wizard.value!.getValidWidgetProps()?.content).toMatchObject({
+      include_context: true
+    })
   })
 
   it('shows the dashboard filters in the preview once checked', async () => {
@@ -145,11 +156,9 @@ describe('EmbeddedURL', () => {
     )
     await fireEvent.click(screen.getByRole('checkbox', { name: 'Time range' }))
 
-    await waitFor(() =>
-      expect(wizard.value!.getValidWidgetProps()?.content).toMatchObject({
-        include_time_range: true
-      })
-    )
+    expect(wizard.value!.getValidWidgetProps()?.content).toMatchObject({
+      include_time_range: true
+    })
   })
 
   it('keeps the stored choices of an edited widget', () => {

@@ -27,6 +27,7 @@ export interface UseEmbeddedURL extends UseWidgetHandler, UseWidgetVisualization
   urlValidationErrors: Ref<string[]>
   includeContext: Ref<boolean>
   includeTimeRange: Ref<boolean>
+  previewContent: Ref<URLContent>
 }
 
 export function useEmbeddedURL(
@@ -63,7 +64,7 @@ export function useEmbeddedURL(
       include_time_range: includeTimeRange.value
     }
   })
-  const debouncedContent = useDebounceRef(content, 300)
+  const previewContent = useDebounceRef(content, 300)
 
   function validateUrl(): boolean {
     urlValidationErrors.value = isUrl(url.value) ? [] : [_t('Value must be a valid URL')]
@@ -93,7 +94,7 @@ export function useEmbeddedURL(
   const widgetProps = computed<WidgetProps>(() => {
     return {
       general_settings: widgetGeneralSettings.value,
-      content: debouncedContent.value,
+      content: content.value,
       effectiveTitle: effectiveTitle.value,
       effective_filter_context: buildWidgetEffectiveFilterContext(
         content.value,
@@ -119,6 +120,7 @@ export function useEmbeddedURL(
     urlValidationErrors,
     includeContext,
     includeTimeRange,
+    previewContent,
 
     widgetProps,
     getSubmitProps: async () => widgetProps.value

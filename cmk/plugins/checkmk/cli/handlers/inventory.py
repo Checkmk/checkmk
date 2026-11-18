@@ -372,7 +372,7 @@ def _inventorize_marked_hosts(request: FetchRequest, *, omd_root: Path, debug: b
                 missing_sys_description=config_cache.missing_sys_description,
                 selected_sections=(NoSelectedSNMPSections()),
                 backend_override=request.snmp_backend,
-                base_path=cmk.utils.paths.var_dir,
+                base_path=cmk.utils.paths.omd_root,
                 relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
                 relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
                 relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,

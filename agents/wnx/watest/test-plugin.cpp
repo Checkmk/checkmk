@@ -668,6 +668,15 @@ TEST(PluginTest, FilesAndFoldersComponent) {
         files = files_base;
         RemoveDuplicatedNames(files);
         EXPECT_EQ(files.size(), 7);
+
+        // the extensions the configuration executes: exe, bat, vbs, cmd, ps1
+        files = files_base;
+        FilterPathByExtension(
+            files,
+            cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kExecute));
+        EXPECT_EQ(files.size(), 15);
+        RemoveDuplicatedNames(files);
+        EXPECT_EQ(files.size(), 5);
     }
 }
 

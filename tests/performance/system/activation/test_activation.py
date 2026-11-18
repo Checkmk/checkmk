@@ -33,7 +33,6 @@ def test_performance_bulk_change_activation(
         # night to night as 16.
         rounds=perftest_dist.rounds_or(8),
         warmup_rounds=max(1, perftest_dist.warmup_rounds),
-        iterations=perftest_dist.iterations,
     )
 
 

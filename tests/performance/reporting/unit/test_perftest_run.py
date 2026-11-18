@@ -25,6 +25,22 @@ TODAY = date(2026, 11, 18)
         pytest.param("daily", {}, "2.6.0-2026.11.18.pro", id="daily"),
         pytest.param("2.5.0p3", {}, "2.5.0p3.pro", id="version"),
         pytest.param("2.5.0p3", {"RELEASE": "2.5.0p3.custom"}, "2.5.0p3.custom", id="release"),
+        pytest.param("2.5.0_x", {}, "2.5.0-x.pro", id="underscore"),
+        pytest.param(
+            "2.5.0_x",
+            {"CUSTOM_GIT_REF": "refs/changes/05/166605/8"},
+            "2.5.0-x.pro_166605-8",
+            id="gerrit",
+        ),
+        pytest.param(
+            "2.5.0", {"CUSTOM_GIT_REF": "refs/heads/feat/x_y"}, "2.5.0.pro_feat-x-y", id="branch"
+        ),
+        pytest.param(
+            "2.5.0",
+            {"CUSTOM_GIT_REF": "a34da07c041c5b1e9f0d2c3b4a5f6e7d8c9b0a1f"},
+            "2.5.0.pro_a34da07c041c",
+            id="commit",
+        ),
     ],
 )
 def test_a_job_is_named_after_its_version_and_edition_or_release(

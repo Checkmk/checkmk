@@ -1,23 +1,23 @@
 -- Runtime drilldown graph: for the selected {{product_release}} and single
 -- {{scenario_name}}, plots average runtime (the per-test 'mean' benchmark, in
 -- seconds) per job and overlays fixed reference baselines for releases
--- 3.0.0/2.5.0/2.4.0 as extra columns. Each baseline averages that release's 100
--- most recent jobs, skipping the most recent one (recency 1) to avoid an in-
--- progress or outlier build. Each job's values are averaged first, so every
--- build counts the same, however long it ran. Only the first run of a day
--- counts for the baselines, not its reruns (_2, _3, ...).
+-- 3.0.0/2.5.0/2.4.0 as extra columns. Each baseline averages that release's
+-- jobs of its 100 most recent days with a run, skipping the latest day to avoid
+-- an in-progress or outlier build. Days, not runs, so that several jobs of a
+-- day do not shorten the window. Each job's values are averaged first, so every
+-- build counts the same, however long it ran. Only default runs count for the
+-- baselines: no reruns (_2, _3, ...), no runs of a custom git ref (_<ref>).
 WITH
   job_values AS (
     SELECT
       SPLIT_PART(j.job_name, '-', 1) AS release,
       AVG(bm.measured_value) AS job_runtime,
-      ROW_NUMBER() OVER (
+      DENSE_RANK() OVER (
         PARTITION BY
           SPLIT_PART(j.job_name, '-', 1)
         ORDER BY
-          j.start_timestamp DESC,
-          j.job_id DESC
-      ) AS recency
+          j.start_timestamp::date DESC
+      ) AS day_recency
     FROM
       jobs j
       JOIN tests t ON j.job_id = t.job_id
@@ -27,7 +27,7 @@ WITH
       bm.metric_name = 'mean'
       AND {{scenario_name}}
       AND SPLIT_PART(j.job_name, '-', 1) IN ('3.0.0', '2.5.0', '2.4.0')
-      AND j.job_name !~ '_[0-9]+$'
+      AND j.job_name NOT LIKE '%\_%'
     GROUP BY
       j.job_id
   ),
@@ -39,7 +39,7 @@ WITH
     FROM
       job_values
     WHERE
-      recency BETWEEN 2 AND 101
+      day_recency BETWEEN 2 AND 101
   )
 SELECT
   j.job_name AS "Job Name",

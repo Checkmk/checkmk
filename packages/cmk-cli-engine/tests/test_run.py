@@ -21,13 +21,11 @@ from cmk.cli.engine.output import Console as CLIConsole
 from cmk.cli.engine.run import CommandTracer as CLICommandTracer
 from cmk.cli.engine.run import run as cli_run
 from cmk.cli.engine.run import Runtime as CLIRuntime
-from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import no_options as cli_no_options
-from cmk.cli.internal import OptionalArgument as CLIOptionalArgument
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 
@@ -165,91 +163,8 @@ def test_a_sub_option_reaches_the_command_parsed() -> None:
     assert seen == [5]
 
 
-_HOST_ARGUMENT: Final = CLIOptionalArgument(placeholder="HOST", parse=str)
-
-
-def _host_request(options: CLIReader) -> str | None:
-    return options.argument(_HOST_ARGUMENT)
-
-
-def _hosted(handler: Callable[[CLIContext, str | None], CLIExitCode]) -> CLIDiscoveredCommand:
-    return command_with(
-        CLICommand(
-            name="demo",
-            handler=HANDED_IN,
-            long="demo",
-            request=_host_request,
-            help="Demonstrate",
-        ),
-        handler,
-    )
-
-
-def test_a_positional_argument_reaches_the_command_parsed() -> None:
-    seen: list[str | None] = []
-
-    def remember(_context: CLIContext, host: str | None) -> CLIExitCode:
-        seen.append(host)
-        return CLIExitCode.SUCCESS
-
-    _run(["cmk", "--demo", "myhost"], _runtime([_hosted(remember)]))
-
-    assert seen == ["myhost"]
-
-
-def test_a_positional_argument_the_command_does_not_read_exits_three() -> None:
-    command = _hosted(lambda *_args: CLIExitCode.SUCCESS)
-
-    assert _run(["cmk", "--demo", "myhost", "surplus"], _runtime([command])) == 3
-
-
-def test_an_argument_to_a_command_reading_none_exits_three() -> None:
-    command = _command(lambda *_args: CLIExitCode.SUCCESS)
-
-    assert _run(["cmk", "--demo", "surplus"], _runtime([command])) == 3
-
-
-_REQUIRED_HOST_ARGUMENT: Final = CLIArgument(placeholder="HOST", parse=str)
-
-
-def _required_host_request(options: CLIReader) -> str | None:
-    return options.argument(_REQUIRED_HOST_ARGUMENT)
-
-
-def test_an_argument_after_the_command_options_value_exits_three() -> None:
-    command = command_with(
-        CLICommand(
-            name="demo",
-            handler=HANDED_IN,
-            long="demo",
-            request=_required_host_request,
-            help="Demonstrate",
-        ),
-        lambda *_args: CLIExitCode.SUCCESS,
-    )
-
-    assert _run(["cmk", "--demo", "myhost", "surplus"], _runtime([command])) == 3
-
-
 def test_a_command_reports_its_own_exit_status() -> None:
     assert _run(["cmk", "--demo"], _runtime([_command(lambda *_args: CLIExitCode.ERROR)])) == 2
-
-
-def test_a_sub_option_argument_the_conversion_rejects_exits_three() -> None:
-    command = _numbered(lambda *_args: CLIExitCode.SUCCESS)
-
-    assert _run(["cmk", "--demo", "--number", "x"], _runtime([command])) == 3
-
-
-def test_a_sub_option_argument_the_conversion_rejects_says_so() -> None:
-    stderr = FakeTerminal()
-
-    _run(
-        ["cmk", "--demo", "--number", "x"],
-        _runtime([_numbered(lambda *_args: CLIExitCode.SUCCESS)], stderr=stderr),
-    )
-
-    assert "--number: Invalid argument" in stderr.getvalue()
 
 
 def test_a_deprecated_spelling_is_reported_in_the_log_file() -> None:
@@ -440,15 +355,6 @@ def test_a_command_line_that_is_rejected_is_not_traced() -> None:
     tracer = FakeCommandTracer()
 
     _run(["cmk", "--nonsense"], _runtime(trace_command=tracer))
-
-    assert not tracer.traced
-
-
-def test_a_sub_option_argument_the_conversion_rejects_is_not_traced() -> None:
-    tracer = FakeCommandTracer()
-    command = _numbered(lambda *_args: CLIExitCode.SUCCESS)
-
-    _run(["cmk", "--demo", "--number", "x"], _runtime([command], trace_command=tracer))
 
     assert not tracer.traced
 

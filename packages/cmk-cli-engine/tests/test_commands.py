@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import NoReturn
 
 import pytest
 
+from cmk.cli.engine.arguments import parse as cli_parse
+from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
 from cmk.cli.internal import Argument as CLIArgument
@@ -55,9 +57,16 @@ def test_two_commands_cannot_claim_the_same_short_option() -> None:
         CLICommands(commands=[_command("one", "x"), _command("other", "x")])
 
 
+def _selected(commands: CLICommands, argv: Sequence[str]) -> CLIDiscoveredCommand:
+    parsed = cli_parse(commands, argv)
+    assert isinstance(parsed, CLIRunCommand)
+    return parsed.command
+
+
 def test_a_short_and_a_long_option_of_the_same_letter_do_not_collide() -> None:
-    commands = CLICommands(commands=[_command("x"), _command("other", "x")])
-    assert commands.find("--x") is not commands.find("-x")
+    other = _command("other", "x")
+
+    assert _selected(CLICommands(commands=[_command("x"), other]), ["cmk", "-x"]) is other
 
 
 def test_a_command_cannot_claim_the_built_in_help_option() -> None:

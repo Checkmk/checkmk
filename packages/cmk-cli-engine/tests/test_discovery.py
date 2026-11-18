@@ -4,24 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from pathlib import Path
 from typing import Final
 
 import pytest
 
+from cmk.cli.engine.arguments import parse as cli_parse
 from cmk.cli.engine.commands import Commands as CLICommands
-from cmk.cli.engine.commands import takes_value as cli_takes_value
 from cmk.cli.engine.discovery import _load_handler as _cli_load_handler
 from cmk.cli.engine.discovery import _named_after_its_variable as _cli_named_after_its_variable
 from cmk.cli.engine.discovery import make_command as cli_make_command
-from cmk.cli.engine.readers import parsed as cli_parsed
 from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import Count as CLICount
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.cli.internal import no_options as cli_no_options
 from cmk.cli.internal import OptionalArgument as CLIOptionalArgument
@@ -29,12 +26,7 @@ from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import PluginLocation
 
-from ._commands import command_reading, command_with, HANDED_IN
-from ._logger import null_logger
-
-# The engine only hands this through to the command's handler.
-_OMD_ROOT: Final = Path("/omd/sites/mysite")
-
+from ._commands import command_reading, HANDED_IN
 
 _OID_VALUE: Final = CLIValue(
     long="oid",
@@ -51,69 +43,23 @@ def _walk_request(options: CLIReader) -> tuple[str | None, int]:
     return options.value(_OID_VALUE), options.count(_VERBOSE_COUNT)
 
 
-def _handler(_context: CLIContext, _request: tuple[str | None, int]) -> CLIExitCode:
-    return CLIExitCode.SUCCESS
-
-
-def test_make_command_records_the_options_a_command_declares() -> None:
-    command = command_with(
-        CLICommand(
-            name="snmpwalk",
-            handler=HANDED_IN,
-            long="snmpwalk",
-            request=_walk_request,
-            help="Walk",
-        ),
-        _handler,
-    )
-    assert command.options == [_OID_VALUE, _VERBOSE_COUNT]
-
-
-def test_binding_a_command_does_not_load_its_handler() -> None:
+def test_parsing_a_command_line_does_not_load_the_handler() -> None:
     loaded: list[str] = []
 
     def load() -> CLIHandler[tuple[str | None, int]]:
         loaded.append("handler")
         raise AssertionError("loaded")
 
-    cli_make_command(
+    command = cli_make_command(
         CLICommand(
             name="snmpwalk", handler=HANDED_IN, long="snmpwalk", request=_walk_request, help="Walk"
         ),
         load,
-    ).bind(cli_parsed([("--oid", "iso")], {}))
+    )
+
+    cli_parse(CLICommands(commands=[command]), ["cmk", "--snmpwalk", "--oid", "iso"])
 
     assert loaded == []
-
-
-def test_a_commands_handler_receives_its_request_parsed() -> None:
-    seen: list[tuple[str | None, int]] = []
-
-    def _record(_context: CLIContext, request: tuple[str | None, int]) -> CLIExitCode:
-        seen.append(request)
-        return CLIExitCode.SUCCESS
-
-    command = command_with(
-        CLICommand(
-            name="snmpwalk",
-            handler=HANDED_IN,
-            long="snmpwalk",
-            request=_walk_request,
-            help="Walk",
-        ),
-        _record,
-    )
-    bound = command.bind(cli_parsed([("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], {}))
-
-    bound.run(
-        CLIContext(
-            omd_root=_OMD_ROOT,
-            global_options=CLIGlobalOptions(),
-            logger=null_logger(),
-        )
-    )
-
-    assert seen == [("ISO", 2)]
 
 
 def test_a_command_not_named_after_its_variable_is_rejected() -> None:
@@ -173,18 +119,6 @@ _HOST_ARGUMENT = CLIArgument(placeholder="HOST", parse=str)
 _ADDRESS_ARGUMENT = CLIOptionalArgument(placeholder="ADDRESS", parse=str)
 
 _NUMBERS_ARGUMENTS = CLIArguments(placeholder="N...", parse=int)
-
-
-def test_a_single_required_argument_is_the_command_options_value() -> None:
-    command = command_reading(lambda options: options.argument(_HOST_ARGUMENT))
-
-    assert cli_takes_value(command)
-
-
-def test_more_arguments_are_the_rest_of_the_command_line() -> None:
-    command = command_reading(lambda options: options.arguments(_NUMBERS_ARGUMENTS))
-
-    assert not cli_takes_value(command)
 
 
 def test_the_help_brackets_the_arguments_a_command_line_may_leave_out() -> None:

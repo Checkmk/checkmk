@@ -1243,7 +1243,7 @@ table.nform.rulesettings td.legend {
     text-overflow: ellipsis;
     background: $bg-color-secondary;
     border: 1px solid $color-table-border;
-    border-radius: 6px;
+    border-radius: $theme-border-radius;
     box-shadow: none;
 
     div,

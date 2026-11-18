@@ -867,7 +867,7 @@ div.avlegend {
   margin-top: 10px;
   text-align: right;
   background-color: $headline-color;
-  border-radius: 5px;
+  border-radius: $theme-border-radius;
 
   h3 {
     margin-top: 0;

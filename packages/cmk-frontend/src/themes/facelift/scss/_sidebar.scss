@@ -267,7 +267,7 @@ body.main .popup_menu #side_header > span {
     color: $font-color;
     cursor: pointer;
     background-color: $danger;
-    border-radius: 6px;
+    border-radius: $theme-border-radius;
   }
 }
 
@@ -278,7 +278,7 @@ div.add_snapin div.snapin {
   padding: (0.75 * $spacing) (2 * $spacing);
   overflow: hidden;
   background: $navigation-bg-color;
-  border-radius: 4px;
+  border-radius: $theme-border-radius;
   box-shadow: none;
   box-sizing: border-box;
 }
@@ -434,7 +434,7 @@ div.sidebar-snapin__container {
     width: 220px;
     padding: $spacing-half;
     background-color: $color-state-2-background;
-    border-radius: 4px;
+    border-radius: $theme-border-radius;
 
     h2 {
       margin-top: 0;
@@ -534,7 +534,7 @@ div#snapinDragIndicator {
   font-size: 1px;
   line-height: 1px;
   background-color: $white;
-  border-radius: 3px;
+  border-radius: $theme-border-radius;
   box-shadow: 0 0 3px $white;
 }
 
@@ -560,7 +560,7 @@ div.add_snapin {
       margin: 0 16px 16px 0;
       background-color: $snapin-bg-color;
       border: 1px solid $snapin-bg-color;
-      border-radius: 5px;
+      border-radius: $theme-border-radius;
     }
 
     *,

@@ -263,7 +263,7 @@ div.dashlet.edit {
       cursor: pointer;
       background-repeat: no-repeat;
       background-size: $dashlet-editor-icon-size;
-      border-radius: 5px;
+      border-radius: $theme-border-radius;
 
       &:hover {
         opacity: 0.7;

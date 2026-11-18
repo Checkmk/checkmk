@@ -21,7 +21,7 @@
     width: 22px;
     height: 100%;
     background-color: $color;
-    border-radius: 4px 0 0 4px;
+    border-radius: $theme-border-radius 0 0 $theme-border-radius;
 
     /* stylelint-disable-next-line declaration-empty-line-before */
     background-image: $icon;

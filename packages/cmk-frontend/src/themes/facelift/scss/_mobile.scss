@@ -17,7 +17,7 @@ body.mobile {
     text-align: center;
     border-style: solid;
     border-width: 2px;
-    border-radius: 0.5ex;
+    border-radius: $theme-border-radius;
   }
 
   div.error {
@@ -53,7 +53,7 @@ body.mobile {
       font-size: 13px;
       /* stylelint-disable-next-line declaration-property-value-no-unknown */
       border: 1px solid $color-table-border;
-      border-radius: 5px;
+      border-radius: $theme-border-radius;
     }
   }
 

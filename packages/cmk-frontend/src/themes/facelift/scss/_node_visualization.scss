@@ -318,7 +318,7 @@ div.node_vis {
   div.box,
   img.box {
     background-color: $node-vis-menu-bg-color;
-    border-radius: 4px;
+    border-radius: $theme-border-radius;
   }
 
   /* infobox */
@@ -450,7 +450,7 @@ div.node_vis {
     img {
       width: 16px;
       height: 20px;
-      border-radius: 4px;
+      border-radius: $theme-border-radius;
       margin-right: 2px;
       background-color: $node-vis-history-bg-color;
       border-color: $node-vis-history-border-color;

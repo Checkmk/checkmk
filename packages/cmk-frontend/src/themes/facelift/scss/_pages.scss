@@ -1153,7 +1153,7 @@ body.main .popup_menu {
   white-space: normal;
   background-color: $bg-color-secondary;
   border: 1px solid $color-table-border;
-  border-radius: 5px;
+  border-radius: $theme-border-radius;
   box-shadow: 0 0 20px rgba($black, 0.1);
 
   div.wrapper {
@@ -1591,7 +1591,7 @@ table.data.job_table td {
       }
       ::before {
         display: inline-block;
-        border-radius: 4px 0 0 4px;
+        border-radius: $theme-border-radius 0 0 $theme-border-radius;
         padding: 5px 5px 1.5px 5px;
         margin-right: 4px;
       }
@@ -1630,7 +1630,7 @@ table.data.job_table td {
     &__wrapper {
       background: $input-background-color;
       border: 1px solid $input-dropdown-border-color;
-      border-radius: 4px;
+      border-radius: $theme-border-radius;
     }
 
     &__item {
@@ -1668,7 +1668,7 @@ div#saas_error_page {
     height: auto;
     margin: -30px auto 10px;
     background: $navigation-bg-color;
-    border-radius: 8px;
+    border-radius: $theme-border-radius;
     padding: 2.5 * $spacing 4 * $spacing;
     box-sizing: border-box;
 

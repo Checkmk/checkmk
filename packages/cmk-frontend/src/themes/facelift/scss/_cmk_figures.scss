@@ -50,7 +50,7 @@ div.cmk_tab {
     padding: 0.4rem 0.3rem;
     margin: 0;
     border: 1px solid $color-table-border;
-    border-radius: 5;
+    border-radius: $theme-border-radius;
 
     .cmk_tab_element {
       display: none;
@@ -108,7 +108,7 @@ div.cmk_figure {
     background-color: $graph-hover-popup-bg-color;
     border: $graph-hover-popup-border;
     box-shadow: $graph-hover-popup-box-shadow;
-    border-radius: 5px;
+    border-radius: $theme-border-radius;
 
     div.loading_img {
       left: 0;
@@ -123,7 +123,7 @@ div.cmk_figure {
     right: 6px;
     padding: 5px;
     background-color: rgba($bg-color-secondary, 0.87);
-    border-radius: 5px;
+    border-radius: $theme-border-radius;
 
     div.legend_item {
       display: flex;

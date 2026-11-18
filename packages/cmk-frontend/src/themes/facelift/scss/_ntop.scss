@@ -10,13 +10,13 @@ div.ntop_interface_quickstats {
   td {
     &.ifid_chooser {
       background: $color-table-border;
-      border-radius: 0.25rem;
+      border-radius: $theme-border-radius;
     }
 
     a {
       padding: 6px;
       text-decoration: none;
-      border-radius: 0.25rem;
+      border-radius: $theme-border-radius;
 
       &.engaged_alerts,
       &.alerted_flows {
@@ -121,13 +121,13 @@ div.ntop {
     text-align: center;
 
     div:first-child {
-      border-bottom-left-radius: 3px;
-      border-top-left-radius: 3px;
+      border-bottom-left-radius: $theme-border-radius;
+      border-top-left-radius: $theme-border-radius;
     }
 
     div:last-child {
-      border-top-right-radius: 3px;
-      border-bottom-right-radius: 3px;
+      border-top-right-radius: $theme-border-radius;
+      border-bottom-right-radius: $theme-border-radius;
     }
 
     .bytes_sent {
@@ -371,7 +371,7 @@ div.ntop {
     text-align: center;
     white-space: nowrap;
     vertical-align: baseline;
-    border-radius: 0.25rem;
+    border-radius: $theme-border-radius;
     width: 70px;
   }
 

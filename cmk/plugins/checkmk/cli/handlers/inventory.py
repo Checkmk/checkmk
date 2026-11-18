@@ -20,7 +20,6 @@ from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.checkers import CMKFetcher, CMKParser, CMKSummarizer, SectionPluginMapper
 from cmk.base.checking import mandatory_ip_lookup
-from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core.active_config_layout import (
     RELATIVE_PATH_SECRETS,
@@ -37,10 +36,9 @@ from cmk.checkengine.auto_queue import AutoQueue
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.checkengine.fetcher_abc import Mode as FetchMode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
-from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcherConfig
+from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import InventoryPluginName, SectionName
-from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
@@ -60,6 +58,7 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.log import console, section
 
 from ._file_cache import make_file_cache_options
+from ._snmp_fetcher import snmp_fetcher_config, snmp_section_selection
 from .agent_based import extract_plugin_selection, load_checks
 
 
@@ -146,26 +145,11 @@ def _inventorize(request: InventoryRequest, *, omd_root: Path, debug: bool) -> N
                 ip_address_of,
                 service_name_config,
                 enforced_service_table,
-                SNMPFetcherConfig(
+                snmp_fetcher_config(
+                    loading_result,
+                    snmp_section_selection(selected_sections, plugins.snmp_sections),
                     on_error=OnError.RAISE,
-                    missing_sys_description=config_cache.missing_sys_description,
-                    selected_sections=(
-                        NoSelectedSNMPSections()
-                        if selected_sections is NO_SELECTION
-                        else frozenset(
-                            SNMPSectionName(n)
-                            for n in selected_sections
-                            if n in plugins.snmp_sections
-                        )
-                    ),
                     backend_override=request.fetch.snmp_backend,
-                    base_path=cmk.utils.paths.omd_root,
-                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                    caching_config=make_parsed_snmp_fetch_intervals_config(
-                        loaded_config, ruleset_matcher, label_manager.labels_of_host
-                    ),
                     force_stored_walks=request.fetch.usewalk,
                     debug=debug,
                 ),
@@ -367,18 +351,11 @@ def _inventorize_marked_hosts(request: FetchRequest, *, omd_root: Path, debug: b
             ip_address_of,
             service_name_config,
             enforced_service_table,
-            SNMPFetcherConfig(
+            snmp_fetcher_config(
+                loading_result,
+                NoSelectedSNMPSections(),
                 on_error=OnError.RAISE,
-                missing_sys_description=config_cache.missing_sys_description,
-                selected_sections=(NoSelectedSNMPSections()),
                 backend_override=request.snmp_backend,
-                base_path=cmk.utils.paths.omd_root,
-                relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                caching_config=make_parsed_snmp_fetch_intervals_config(
-                    loaded_config, ruleset_matcher, label_manager.labels_of_host
-                ),
                 force_stored_walks=request.usewalk,
                 debug=debug,
             ),

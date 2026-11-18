@@ -26,7 +26,6 @@ from cmk.base.checkers import (
 )
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.checkengine import DiscoveryConfig
-from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.logwatch import set_global_logwatch_config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core.active_config_layout import (
@@ -51,11 +50,10 @@ from cmk.checkengine.discovery import (
 )
 from cmk.checkengine.fetcher_abc import Mode as FetchMode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
-from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcherConfig
+from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections
 from cmk.checkengine.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import CheckPluginName, SectionName
-from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
@@ -73,6 +71,7 @@ from cmk.utils.log import console
 
 from ._exit_code import state_exit_code
 from ._file_cache import make_file_cache_options
+from ._snmp_fetcher import snmp_fetcher_config, snmp_section_selection
 from .agent_based import extract_plugin_selection, load_checks
 
 
@@ -165,18 +164,11 @@ def _check_discovery(
                 ip_address_of,
                 service_name_config,
                 enforced_services_table,
-                SNMPFetcherConfig(
+                snmp_fetcher_config(
+                    loading_result,
+                    NoSelectedSNMPSections(),
                     on_error=OnError.RAISE,
-                    missing_sys_description=config_cache.missing_sys_description,
-                    selected_sections=NoSelectedSNMPSections(),
                     backend_override=request.fetch.snmp_backend,
-                    base_path=cmk.utils.paths.omd_root,
-                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                    caching_config=make_parsed_snmp_fetch_intervals_config(
-                        loaded_config, ruleset_matcher, label_manager.labels_of_host
-                    ),
                     force_stored_walks=request.fetch.usewalk,
                     debug=debug,
                 ),
@@ -441,26 +433,11 @@ def _discover(request: DiscoverRequest, *, omd_root: Path, debug: bool) -> bool:
                 ip_address_of,
                 service_name_config,
                 enforced_services_table,
-                SNMPFetcherConfig(
+                snmp_fetcher_config(
+                    loading_result,
+                    snmp_section_selection(selected_sections, plugins.snmp_sections),
                     on_error=on_error,
-                    missing_sys_description=config_cache.missing_sys_description,
-                    selected_sections=(
-                        NoSelectedSNMPSections()
-                        if selected_sections is NO_SELECTION
-                        else frozenset(
-                            SNMPSectionName(n)
-                            for n in selected_sections
-                            if n in plugins.snmp_sections
-                        )
-                    ),
                     backend_override=request.fetch.snmp_backend,
-                    base_path=cmk.utils.paths.omd_root,
-                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                    caching_config=make_parsed_snmp_fetch_intervals_config(
-                        loaded_config, ruleset_matcher, label_manager.labels_of_host
-                    ),
                     force_stored_walks=request.fetch.usewalk,
                     debug=debug,
                 ),

@@ -18,13 +18,12 @@ import cmk.utils.paths
 from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.config import handle_ip_lookup_failure
-from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.fetcher_abc import Mode as FetchMode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
-from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcherConfig
+from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections
 from cmk.checkengine.fetchers.tcp import TLSConfig
 from cmk.checkengine.filecache import MaxAge
 from cmk.checkengine.helper_interface import FetcherType
@@ -49,6 +48,7 @@ from cmk.utils.ip_lookup import ConfiguredIPLookup
 from cmk.utils.log import console
 
 from ._file_cache import make_file_cache_options
+from ._snmp_fetcher import snmp_fetcher_config
 from .agent_based import load_checks
 
 
@@ -160,20 +160,11 @@ def _dump_agent(
                 ip_address_of,
                 service_name_config,
                 enforced_services_table,
-                SNMPFetcherConfig(
+                snmp_fetcher_config(
+                    loading_result,
+                    NoSelectedSNMPSections(),
                     on_error=OnError.RAISE,
-                    missing_sys_description=config_cache.missing_sys_description,
-                    selected_sections=NoSelectedSNMPSections(),
                     backend_override=request.snmp_backend,
-                    base_path=cmk.utils.paths.omd_root,
-                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                    caching_config=make_parsed_snmp_fetch_intervals_config(
-                        loading_result.loaded_config,
-                        config_cache.ruleset_matcher,
-                        config_cache.label_manager.labels_of_host,
-                    ),
                     force_stored_walks=False,
                     debug=debug,
                 ),

@@ -5,6 +5,8 @@
 
 import logging
 import os
+import struct
+import zlib
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
@@ -21,12 +23,28 @@ from cmk.gui.watolib.groups_io import load_group_information, save_group_informa
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_own_map, user_maps_path
 from cmk.maps.migration.nagvis_maps import migrate_nagvis_maps
+from cmk.maps.shared.map_payload import IMAGE_SIZE_MAX
 from cmk.utils import paths
 from tests.testlib.unit.gui.users import create_and_destroy_user
 
 _LOGGER = logging.getLogger("test-nagvis-maps-migration")
 
 _PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 16
+
+
+def _png(width: int, height: int) -> bytes:
+    def chunk(kind: bytes, data: bytes) -> bytes:
+        return (
+            struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+        )
+
+    pixels = zlib.compress(b"\x00" * (width + 1) * height)
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 0, 0, 0, 0))
+        + chunk(b"IDAT", pixels)
+        + chunk(b"IEND", b"")
+    )
 
 
 def _record_path() -> Path:
@@ -157,6 +175,24 @@ def test_a_shape_is_copied_into_the_image_library(admin: UserId) -> None:
     (shape,) = _objects(page)
     assert isinstance(stored := shape["image_src"], str)
     assert (paths.omd_root / "var" / "maps" / "images" / stored).read_bytes() == _PNG
+
+
+def test_a_shape_keeps_the_size_nagvis_shows_it_at(admin: UserId) -> None:
+    _write_nagvis_image("shapes", "cloud.png", _png(200, 83))
+
+    page = _migrated(admin, "office", "define shape {\nicon=cloud.png\nx=1\ny=1\n}")
+
+    (shape,) = _objects(page)
+    assert shape["display"] == {"mode": "icon", "image_size": 200}
+
+
+def test_a_shape_larger_than_maps_shows_one_keeps_the_largest_size(admin: UserId) -> None:
+    _write_nagvis_image("shapes", "plan.png", _png(IMAGE_SIZE_MAX + 1, 83))
+
+    page = _migrated(admin, "office", "define shape {\nicon=plan.png\nx=1\ny=1\n}")
+
+    (shape,) = _objects(page)
+    assert shape["display"] == {"mode": "icon", "image_size": IMAGE_SIZE_MAX}
 
 
 def test_a_missing_shape_is_named(admin: UserId, caplog: pytest.LogCaptureFixture) -> None:

@@ -85,7 +85,7 @@ const sizeInherited = computed(
         v-model="form.display.image_size"
         type="number"
         min="1"
-        max="512"
+        max="4096"
         unit="px"
         :placeholder="sizePlaceholder"
       />

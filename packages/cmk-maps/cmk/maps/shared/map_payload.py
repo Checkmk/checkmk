@@ -135,6 +135,8 @@ SLIDE_SIZE_MAX: Final = 8192
 STROKE_WIDTH_MAX: Final = 64
 FONT_SIZE_MIN: Final = 4
 FONT_SIZE_MAX: Final = 512
+# A NagVis shape shows at the size of its file, a floor plan's included.
+IMAGE_SIZE_MAX: Final = 4096
 LINE_HEIGHT_MIN: Final = 0.5
 LINE_HEIGHT_MAX: Final = 4
 # Every page that lists the maps loads each stored one, and the daemon takes its

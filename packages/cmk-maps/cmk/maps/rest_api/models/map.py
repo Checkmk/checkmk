@@ -56,6 +56,7 @@ from cmk.maps.shared.map_payload import (
     FOLDER_EXPAND_DEPTH_MAX,
     FONT_SIZE_MAX,
     FONT_SIZE_MIN,
+    IMAGE_SIZE_MAX,
     LINE_HEIGHT_MAX,
     LINE_HEIGHT_MIN,
     LINE_WIDTH_MAX,
@@ -168,7 +169,7 @@ class MapElementDisplay:
         example="icon_server",
         default_factory=ApiOmitted,
     )
-    image_size: int | None | ApiOmitted = api_field(
+    image_size: Annotated[int, Field(le=IMAGE_SIZE_MAX)] | None | ApiOmitted = api_field(
         description="Icon size in pixels.", example=32, default_factory=ApiOmitted
     )
     gadget_type: Literal["gauge", "bar", "trafficlight", "value"] | None | ApiOmitted = api_field(
@@ -918,7 +919,7 @@ class MapObjectDisplay:
     image: _AssetRef | ApiOmitted = api_field(
         description="Custom icon image name.", example="icon_server", default_factory=ApiOmitted
     )
-    image_size: int | None | ApiOmitted = api_field(
+    image_size: Annotated[int, Field(le=IMAGE_SIZE_MAX)] | None | ApiOmitted = api_field(
         description="Icon size in pixels.", example=32, default_factory=ApiOmitted
     )
     gadget_type: Literal["gauge", "bar", "trafficlight", "value"] | None | ApiOmitted = api_field(

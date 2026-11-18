@@ -20,6 +20,7 @@ import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.utils.images import CMKImage, ImageType
 from cmk.maps.gui._cfg_import import decode_cfg, parse_cfg_upload
 from cmk.maps.gui._image_security import (
     ICON_SUFFIXES,
@@ -35,7 +36,7 @@ from cmk.maps.gui._images import (
     import_background,
     store_icon,
 )
-from cmk.maps.shared.map_payload import MapPayload
+from cmk.maps.shared.map_payload import IMAGE_SIZE_MAX, MapPayload
 from cmk.maps.shared.validators import is_valid_map_name
 
 # How long Maps shows a map of a pool that has no interval of its own
@@ -209,6 +210,8 @@ class ShapeCopies:
     names: dict[str, str | None] = field(default_factory=dict)
     # The contents to add, by name.
     contents: dict[str, bytes] = field(default_factory=dict)
+    # The longer side of each shape whose size is known, by name.
+    sizes: dict[str, int] = field(default_factory=dict)
     # The names of the shapes the migrated maps show.
     used: set[str] = field(default_factory=set)
     # The names ``store`` added files under, not there before.
@@ -227,6 +230,10 @@ class ShapeCopies:
             if (name := self.names[ref]) is not None:
                 obj["image_src"] = name
                 used.add(name)
+                # NagVis shows a shape at the size of its file, Maps an image at
+                # the map's icon size unless it has its own.
+                if (size := self.sizes.get(name)) is not None:
+                    obj["display"] = {"mode": "icon", "image_size": size}
             elif Path(ref).suffix.lower() == ".gif":
                 gifs.add(ref)
             else:
@@ -255,6 +262,10 @@ class ShapeCopies:
             return None
         name = icon_name_for(safe_image_stem(ref) + suffix, contents, self.contents)
         self.contents[name] = contents
+        # One Pillow cannot read, or one of too many pixels, keeps the icon size.
+        with suppress(ValueError, OSError):
+            width, height = CMKImage(contents, (ImageType.PNG, ImageType.JPG)).image_size()
+            self.sizes[name] = min(max(width, height), IMAGE_SIZE_MAX)
         return name
 
     def store(self) -> list[str]:

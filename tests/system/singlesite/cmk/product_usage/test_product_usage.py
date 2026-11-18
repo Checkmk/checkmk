@@ -325,3 +325,17 @@ def test_cloud_trial_payload_counts_hosts_with_default_services_only(site: Site)
         "Each test host has only the default services. A null count means that the collection"
         " failed, see var/log/product_usage_analytics.log"
     )
+
+
+@pytest.mark.skip_if_not_edition("cloud")
+@pytest.mark.usefixtures("default_cfg")
+def test_cloud_trial_payload_carries_the_site_creation_time(site: Site) -> None:
+    """The Cloud edition config of a test site has no creation time from the platform, so the
+    site sends the time when OMD wrote its instance ID."""
+    run_product_usage_collection(site)
+
+    data = json.loads(get_product_usage_json_content(site))["data"]
+
+    assert data["site_created_at"] == site.file_timestamp_ms("etc/omd/instance_id") // 1000, (
+        "A null time means that the collection failed, see var/log/product_usage_analytics.log"
+    )

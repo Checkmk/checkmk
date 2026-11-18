@@ -237,6 +237,9 @@ Risks and technical debts
    The statistics do not tell these from interactive logins.
    The GUI takes both timestamps of a session from the wall clock, so a clock that steps back during a session makes its duration negative.
    If that turns the average or the median negative, the endpoint rejects the upload with a successful response, and the site deletes it.
+10. For a site that the platform has not created or updated since it started to pass the creation time, the time is the modification time of ``etc/omd/instance_id``, not a stored value.
+    Touching that file, or copying the site without its file times, changes it.
+    The platform writes the field in another repository (cloudmk); in Checkmk, only a contract test with ``load_cloud_edition_config()`` keeps the collector on the same file.
 
 See Also
 ========

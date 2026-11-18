@@ -150,3 +150,11 @@ def test_cloud_trial_payload_carries_session_statistics() -> None:
     json_payload = CloudTrialPayload.model_validate(payload).model_dump_with_metadata_json()
 
     assert json.loads(json_payload)["data"]["sessions"] == sessions
+
+
+def test_cloud_trial_payload_carries_the_site_creation_time() -> None:
+    payload = {**_product_usage_data(), "site_created_at": 1767700800}
+
+    json_payload = CloudTrialPayload.model_validate(payload).model_dump_with_metadata_json()
+
+    assert json.loads(json_payload)["data"]["site_created_at"] == 1767700800

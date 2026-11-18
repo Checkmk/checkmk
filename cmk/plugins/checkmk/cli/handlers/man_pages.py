@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
@@ -57,7 +57,10 @@ class _ManCommand:
                 return CLIExitCode.SUCCESS
 
             if (man_page_path := man_page_path_map.get(request.check_type)) is None:
-                raise MKBailOut(f"No manpage for {request.check_type}. Sorry.")
+                context.logger.error(
+                    "No manpage for %(check_type)s. Sorry.", {"check_type": request.check_type}
+                )
+                return CLIExitCode.UNKNOWN
 
             man_page = self.parse(
                 request.check_type, man_page_path, debug=context.global_options.debug
@@ -77,7 +80,7 @@ class _ManCommand:
 
             man_pages.write_output(rendered)
             return CLIExitCode.SUCCESS
-        except (MKBailOut, MKGeneralException) as e:
+        except MKGeneralException as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

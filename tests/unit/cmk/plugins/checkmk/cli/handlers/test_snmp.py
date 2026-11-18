@@ -140,13 +140,6 @@ def test_oids_and_extra_oids_together_exit_three() -> None:
     )
 
 
-def test_oids_and_extra_oids_together_are_raised_through_under_debug() -> None:
-    with pytest.raises(MKGeneralException, match="--oid and --extraoid"):
-        _SNMPWalkCommand(walk_hosts=_FakeWalkHosts()).run(
-            context(debug=True), _walk_request(oids=(".1.3",), extra_oids=(".1.4",))
-        )
-
-
 def test_a_walk_without_hosts_exits_three() -> None:
     request = _walk_request(hosts=())
 

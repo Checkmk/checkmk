@@ -15,7 +15,7 @@ import cmk.ccc.cleanup
 import cmk.utils.paths
 from cmk.base import config
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.snmp_backend_builder import BackendError, make_backend
@@ -223,15 +223,17 @@ class _SNMPWalkCommand:
     walk_hosts: _WalkHosts
 
     def run(self, context: CLIContext, request: WalkRequest) -> CLIExitCode:
+        if request.oids and request.extra_oids:
+            context.logger.error("You cannot specify --oid and --extraoid at the same time.")
+            return CLIExitCode.UNKNOWN
+
+        if not request.hosts:
+            context.logger.error("Please specify host names to walk on.")
+            return CLIExitCode.UNKNOWN
+
         try:
-            if request.oids and request.extra_oids:
-                raise MKGeneralException(
-                    "You cannot specify --oid and --extraoid at the same time."
-                )
-            if not request.hosts:
-                raise MKBailOut("Please specify host names to walk on.")
             self.walk_hosts(request, debug=context.global_options.debug)
-        except (MKBailOut, MKGeneralException) as e:
+        except MKGeneralException as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise
@@ -288,7 +290,7 @@ class _SNMPGetCommand:
                 request.oid, request, debug=context.global_options.debug
             ):
                 sys.stdout.write(f"{got.host} ({got.address}): {got.value!r}\n")
-        except (MKBailOut, MKGeneralException) as e:
+        except MKGeneralException as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

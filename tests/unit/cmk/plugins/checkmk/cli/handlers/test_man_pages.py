@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from cmk.ccc.exceptions import MKBailOut
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.plugins.checkmk.cli.handlers.man_pages import _BrowseManCommand, _ManCommand
 from cmk.plugins.checkmk.cli.man_pages import ManRequest
@@ -99,11 +98,6 @@ def test_the_rendered_man_page_is_written(capsys: pytest.CaptureFixture[str]) ->
 
 def test_an_unknown_check_type_exits_three() -> None:
     assert _man_command().run(context(), _request("nope")) == CLIExitCode.UNKNOWN
-
-
-def test_an_unknown_check_type_is_raised_through_under_debug() -> None:
-    with pytest.raises(MKBailOut, match="No manpage for nope"):
-        _man_command().run(context(debug=True), _request("nope"))
 
 
 class _FakeBrowseManPages:

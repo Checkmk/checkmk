@@ -85,10 +85,11 @@ class _AutomationCommand:
     execute: _ExecuteAutomation
 
     def run(self, context: CLIContext, request: AutomationRequest) -> CLIExitCode:
-        try:
-            if not request.arguments:
-                raise MKBailOut("You need to provide arguments")
+        if not request.arguments:
+            context.logger.error("You need to provide arguments")
+            return CLIExitCode.UNKNOWN
 
+        try:
             name, *args = request.arguments
             result = self.execute(
                 AutomationID(name),

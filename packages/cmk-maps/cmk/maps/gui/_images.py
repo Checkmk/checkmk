@@ -176,12 +176,11 @@ def _image_refs(payload: Mapping[str, object], name: str) -> tuple[list[str], bo
     view = view if isinstance(view, dict) else {}
     elements = view.get("elements")
     for element in elements if isinstance(elements, list) else ():
-        if (
-            isinstance(element, dict)
-            and element.get("kind") == "image"
-            and element.get("src") == name
-            and isinstance(eid := element.get("id"), str)
-        ):
+        if not isinstance(element, dict) or not isinstance(eid := element.get("id"), str):
+            continue
+        display = element.get("display")
+        icon = display.get("image") if isinstance(display, dict) else None
+        if name == icon or (element.get("kind") == "image" and element.get("src") == name):
             object_ids.append(eid)
     is_background = name in (payload.get("background_image"), view.get("background_image"))
     return object_ids, is_background

@@ -10,6 +10,7 @@ each test here also pins its endpoint's declaration.
 """
 
 import copy
+from collections.abc import Mapping
 from http import HTTPStatus
 
 import pytest
@@ -397,27 +398,33 @@ def test_a_background_is_removed(clients: ClientRegistry) -> None:
     clients.Maps.delete_background("floor").assert_status_code(HTTPStatus.NO_CONTENT)
 
 
-def _presentation_showing(image: str) -> dict[str, object]:
-    transform = {
-        "x": 0,
-        "y": 0,
-        "w": 10,
-        "h": 10,
-        "rotation": 0,
-        "z": 0,
-        "opacity": 1,
-        "locked": False,
-        "hidden": False,
-    }
-    element = {"kind": "image", "id": "e1", "transform": transform, "fit": "contain", "src": image}
+_TRANSFORM = {
+    "x": 0,
+    "y": 0,
+    "w": 10,
+    "h": 10,
+    "rotation": 0,
+    "z": 0,
+    "opacity": 1,
+    "locked": False,
+    "hidden": False,
+}
+
+
+def _slide(*elements: Mapping[str, object], background: str | None = None) -> dict[str, object]:
     return {
         "type": "presentation",
         "width": 1920,
         "height": 1080,
         "theme": "midnight",
-        "elements": [element],
-        "background_image": image,
+        "elements": list(elements),
+        "background_image": background,
     }
+
+
+def _presentation_showing(image: str) -> dict[str, object]:
+    element = {"kind": "image", "id": "e1", "transform": _TRANSFORM, "fit": "contain", "src": image}
+    return _slide(element, background=image)
 
 
 def test_an_image_on_a_slide_is_in_use(clients: ClientRegistry) -> None:
@@ -430,6 +437,23 @@ def test_an_image_on_a_slide_is_in_use(clients: ClientRegistry) -> None:
     assert resp.json["ext"]["usage"] == [
         {"map": "slides", "alias": "Slides", "object_ids": ["e1"], "is_background": True}
     ]
+
+
+def test_the_icon_of_a_live_status_element_is_in_use(clients: ClientRegistry) -> None:
+    clients.Maps.upload_image("rack.png", "image/png", _PNG)
+    element = {
+        "kind": "data",
+        "id": "d1",
+        "transform": _TRANSFORM,
+        "only_hard_states": False,
+        "display": {"mode": "icon", "image": "rack.png"},
+    }
+    clients.Maps.create(config=_map("slides", view=_slide(element)))
+
+    resp = clients.Maps.delete_image("rack.png", expect_ok=False)
+
+    resp.assert_status_code(HTTPStatus.CONFLICT)
+    assert resp.json["ext"]["usage"][0]["object_ids"] == ["d1"]
 
 
 def test_an_image_in_a_map_the_user_does_not_see_is_counted(

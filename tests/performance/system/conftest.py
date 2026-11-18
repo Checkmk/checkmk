@@ -16,7 +16,8 @@ from typing import Literal
 
 import pytest
 
-from tests.performance import benchmark_json
+from tests.performance import benchmark_json, sysmon
+from tests.performance.reporting import perftest_run
 from tests.performance.sysmon import track_resources
 from tests.performance.system.perftest import PerformanceTest
 from tests.testlib.common.utils2 import is_containerized, run
@@ -36,6 +37,26 @@ from tests.testlib.system.site import (
 site_factory = get_site_factory(prefix="perf_")
 
 logger = logging.getLogger(__name__)
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_configure(config: pytest.Config) -> None:
+    """Write the benchmarks, the resources and the report into the run's results folder,
+    where `perftest_upload.sh --site` takes them from, unless their paths are given."""
+    the_version = perftest_run.version(
+        config.getoption(cmk_package.ARG_VERSION_CMK),
+        perftest_run.branch_version(),
+        perftest_run.run_date(os.environ),
+    )
+    edition = config.getoption(cmk_package.ARG_EDITION_CMK)
+    name = perftest_run.job_name(the_version, edition, os.environ)
+    run_dir = perftest_run.result_root(os.environ) / "performance" / name
+    run_dir.mkdir(parents=True, exist_ok=True)
+    if config.option.benchmark_json is None:
+        config.option.benchmark_json = run_dir / "benchmark.json"
+    if config.option.htmlpath is None:
+        config.option.htmlpath = str(run_dir / "report.htm")
+    sysmon.set_results_dir(Path(config.option.benchmark_json).parent)
 
 
 def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:

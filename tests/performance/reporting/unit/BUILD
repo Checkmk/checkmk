@@ -15,6 +15,7 @@ py_cmk_test(
     srcs = [
         "test_benchmark_json.py",
         "test_performance_baselines.py",
+        "test_perftest_run.py",
     ],
     imports = ["../../../.."],
     use_project_pytest_config = True,

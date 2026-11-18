@@ -44,6 +44,7 @@ py_library(
     deps = [
         ":benchmark_json",
         ":pkg",
+        ":reporting",
         ":sysmon",
         "//tests/performance/testlib:livestatus_fake",
         requirement("pytest"),
@@ -70,7 +71,6 @@ py_library(
     ],
     deps = [
         ":pkg",
-        "//tests/testlib/common",
         requirement("psutil"),
     ],
 )

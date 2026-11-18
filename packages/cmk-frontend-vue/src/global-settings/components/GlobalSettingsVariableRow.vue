@@ -5,8 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { GlobalSettingsVariable } from 'cmk-shared-typing/typescript/global_settings'
-import CmkChip from 'cmk-ui-library/components/CmkChip.vue'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
+import CmkTag from 'cmk-ui-library/components/CmkTag.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
@@ -53,16 +53,7 @@ const value = computed(() => props.variable.current.value)
         <GlobalSettingsHighlightedText :text="variable.spec.title" :query="query" />
       </template>
       <template v-if="badges.length > 0" #label-end>
-        <CmkChip
-          v-for="badge in badges"
-          :key="badge"
-          as-div
-          size="small"
-          color="others"
-          variant="outline"
-        >
-          {{ badge }}
-        </CmkChip>
+        <CmkTag v-for="badge in badges" :key="badge" :content="badge" size="small" spacing="none" />
       </template>
       <template #default>
         <GlobalSettingsInlineToggle v-if="isBooleanChoice" :variable="variable" />

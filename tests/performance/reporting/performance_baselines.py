@@ -246,7 +246,7 @@ class PerformanceBaselines:
         skipped_scenarios = [
             SkippedScenario(pattern="test_performance_piggyback", reason="CMK-27171"),
             SkippedScenario(
-                pattern="test_performance_ui_response_.*",
+                pattern=r"test_performance_ui_response\[.*\]",
                 reason="scenario changes on 2026-02-06",
                 condition=baseline_date < date(2026, 2, 6),
             ),

@@ -93,19 +93,19 @@ const normalizedData = computed(() =>
   }
 
   tr:first-child th:first-child {
-    border-top-left-radius: 8px;
+    border-top-left-radius: var(--border-radius);
   }
 
   tr:first-child th:last-child {
-    border-top-right-radius: 8px;
+    border-top-right-radius: var(--border-radius);
   }
 
   tr:last-child td:first-child {
-    border-bottom-left-radius: 8px;
+    border-bottom-left-radius: var(--border-radius);
   }
 
   tr:last-child td:last-child {
-    border-bottom-right-radius: 8px;
+    border-bottom-right-radius: var(--border-radius);
   }
 }
 
@@ -116,7 +116,7 @@ const normalizedData = computed(() =>
 
 .ucl-accessibility-table__key-pill {
   background: var(--ucl-detail-table-pill-bg-color);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   margin: 2px 0;
   padding: 4px 8px;
   color: var(--ucl-cta-banner-title-color);

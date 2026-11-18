@@ -145,7 +145,7 @@ const items = computed<BreadcrumbItem[]>(
   max-width: 100%;
   padding: var(--dimension-4);
   border: 1px dashed var(--default-border-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   background: var(--ux-theme-2);
 }
 </style>

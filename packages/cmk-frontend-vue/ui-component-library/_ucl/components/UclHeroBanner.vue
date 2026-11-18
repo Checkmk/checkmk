@@ -32,7 +32,7 @@ defineProps<{
     var(--color-corporate-green-60),
     var(--color-corporate-green-50)
   );
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   padding: 64px 32px;
   text-align: center;
 }
@@ -54,7 +54,7 @@ defineProps<{
 }
 
 .ucl-hero-banner__logo-box {
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   display: flex;
   align-items: center;
   justify-content: center;

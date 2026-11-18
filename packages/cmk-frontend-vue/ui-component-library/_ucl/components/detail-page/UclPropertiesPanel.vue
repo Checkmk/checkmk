@@ -189,7 +189,7 @@ onMounted(() => {
 <style scoped>
 .ucl-properties-panel__properties-panel {
   border: 1px solid var(--ucl-elements-border-color);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   padding: 16px;
   position: relative;
 }

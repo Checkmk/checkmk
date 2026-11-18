@@ -198,7 +198,7 @@ const visibleColumns = computed(() =>
   justify-content: flex-end;
   padding: var(--dimension-4);
   background: var(--ux-theme-2);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
 }
 
 .ucl-column-picker__readout,

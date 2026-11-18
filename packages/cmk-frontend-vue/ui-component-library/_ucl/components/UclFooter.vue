@@ -35,7 +35,7 @@ const handleButtonClick = () => {
 .ucl-footer {
   background-repeat: no-repeat;
   background-color: var(--ucl-elements-background-color);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   padding: 40px 40px 40px 200px;
   display: flex;
   align-items: center;

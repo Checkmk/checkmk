@@ -34,6 +34,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 .widget__card {
   padding: var(--dimension-6);
   background: var(--ux-theme-4);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
 }
 </style>

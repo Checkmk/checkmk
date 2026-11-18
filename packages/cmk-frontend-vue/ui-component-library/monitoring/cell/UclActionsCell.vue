@@ -178,7 +178,7 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
   width: fit-content;
   max-width: 100%;
   border: 1px dashed var(--ux-theme-6);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   padding: var(--dimension-4);
   box-sizing: border-box;
   overflow: visible;

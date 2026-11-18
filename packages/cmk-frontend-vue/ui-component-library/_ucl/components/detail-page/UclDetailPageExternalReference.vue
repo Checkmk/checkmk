@@ -126,19 +126,19 @@ function githubUrl(file: string): string {
   }
 
   tr:first-child th:first-child {
-    border-top-left-radius: 8px;
+    border-top-left-radius: var(--border-radius);
   }
 
   tr:first-child th:last-child {
-    border-top-right-radius: 8px;
+    border-top-right-radius: var(--border-radius);
   }
 
   tr:last-child td:first-child {
-    border-bottom-left-radius: 8px;
+    border-bottom-left-radius: var(--border-radius);
   }
 
   tr:last-child td:last-child {
-    border-bottom-right-radius: 8px;
+    border-bottom-right-radius: var(--border-radius);
   }
 }
 

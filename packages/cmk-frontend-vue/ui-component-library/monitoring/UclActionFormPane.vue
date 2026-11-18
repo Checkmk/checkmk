@@ -150,7 +150,7 @@ function onCancel(): void {
   max-width: 100%;
   height: 360px;
   border: 1px dashed var(--ux-theme-6);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   box-sizing: border-box;
 }
 

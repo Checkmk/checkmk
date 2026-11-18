@@ -137,7 +137,7 @@ const sliderTrackBackground = computed(
   margin: var(--dimension-4) 0 0;
   padding: 0;
   background: var(--ux-theme-6);
-  border-radius: 3px;
+  border-radius: var(--border-radius);
   cursor: pointer;
 }
 
@@ -165,7 +165,7 @@ const sliderTrackBackground = computed(
   max-width: 100%;
   padding: var(--dimension-4);
   border: 1px dashed var(--ux-theme-6);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
 }
 
 .ucl-global-time-picker__hint {

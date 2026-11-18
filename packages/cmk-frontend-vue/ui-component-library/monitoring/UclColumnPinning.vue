@@ -317,7 +317,7 @@ const pinningActive = computed(
   margin: var(--dimension-4) 0 0;
   padding: 0;
   background: var(--ux-theme-6);
-  border-radius: 3px;
+  border-radius: var(--border-radius);
   cursor: pointer;
 }
 
@@ -344,7 +344,7 @@ const pinningActive = computed(
   box-sizing: content-box;
   max-width: 100%;
   border: 1px dashed var(--ux-theme-6);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
 }
 
 .ucl-column-pinning__hint {

@@ -26,7 +26,7 @@ import UclLegacyCssSwitch from './UclLegacyCssSwitch.vue'
   gap: var(--dimension-10);
   padding: var(--dimension-10);
   border: 1px solid var(--ucl-elements-border-color);
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
   margin-top: var(--dimension-8);
 }
 

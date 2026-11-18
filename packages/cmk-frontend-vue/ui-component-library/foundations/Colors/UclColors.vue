@@ -269,7 +269,7 @@ const filtered = computed(() => {
   aspect-ratio: 4 / 5;
   width: 100%;
   border: 1px solid var(--default-border-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   padding: 0;
   position: relative;
   cursor: pointer;
@@ -330,7 +330,7 @@ const filtered = computed(() => {
   padding: var(--dimension-3);
   background: var(--default-bg-color);
   border: 1px solid var(--default-border-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   box-shadow: var(--dropdown-list-box-shadow);
   z-index: var(--z-index-tooltip-offset);
 }
@@ -350,7 +350,7 @@ const filtered = computed(() => {
   width: 100%;
   padding: var(--dimension-3) var(--dimension-4);
   border: 1px solid transparent;
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color);
   font-family: var(--font-family-monospace);

@@ -235,7 +235,7 @@ const containerWidth = computed(() => `${effectiveWidth.value + 2 * TABLE_BORDER
   margin: var(--dimension-6) 0 var(--dimension-4) 0;
   padding: 0;
   background: var(--ux-theme-6);
-  border-radius: 3px;
+  border-radius: var(--border-radius);
   cursor: pointer;
 }
 
@@ -264,7 +264,7 @@ const containerWidth = computed(() => `${effectiveWidth.value + 2 * TABLE_BORDER
   width: v-bind(containerWidth);
   max-width: 100%;
   border: 1px dashed var(--ux-theme-6);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   padding: var(--dimension-4);
   box-sizing: content-box;
   margin-left: calc(-1 * var(--dimension-4));

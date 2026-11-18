@@ -138,7 +138,7 @@ const activeContainerBreakpoint = computed<BreakpointName | null>(() => {
   container-type: inline-size;
   box-sizing: border-box;
   border: 1px dashed var(--default-border-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   background: var(--ux-theme-2);
   min-width: 240px;
 }
@@ -179,7 +179,7 @@ const activeContainerBreakpoint = computed<BreakpointName | null>(() => {
 .ucl-breakpoints__card {
   padding: var(--dimension-6);
   background: var(--ux-theme-4);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   text-align: center;
 }
 </style>

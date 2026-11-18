@@ -45,7 +45,7 @@ const { iconName, title, subtitle, bulletPoints = [] } = defineProps<UclInfoCard
 .ucl-info-card {
   display: flex;
   flex-direction: column;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   padding: var(--dimension-6);
   gap: var(--dimension-5);
   background-color: var(--ucl-elements-background-color);

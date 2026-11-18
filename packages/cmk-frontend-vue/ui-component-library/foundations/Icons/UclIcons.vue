@@ -377,7 +377,7 @@ const externalReferences: ExternalReferenceItem[] = [
   gap: var(--dimension-4);
   padding: var(--dimension-5);
   border: 1px solid var(--default-border-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
 }
 
 .ucl-icons__emblems-title {
@@ -397,7 +397,7 @@ const externalReferences: ExternalReferenceItem[] = [
   gap: var(--dimension-4);
   padding: var(--dimension-4) var(--dimension-3) var(--dimension-6);
   border: 1px solid var(--default-border-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   background: var(--default-form-element-bg-color);
   color: var(--font-color);
   cursor: pointer;
@@ -439,7 +439,7 @@ const externalReferences: ExternalReferenceItem[] = [
   gap: var(--dimension-3);
   padding: var(--dimension-4) var(--dimension-3);
   border: 1px solid var(--default-border-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   background: var(--default-form-element-bg-color);
   color: var(--font-color);
   cursor: pointer;
@@ -516,7 +516,7 @@ const externalReferences: ExternalReferenceItem[] = [
   padding: var(--dimension-3);
   background: var(--default-bg-color);
   border: 1px solid var(--default-border-color);
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   box-shadow: var(--dropdown-list-box-shadow);
   z-index: var(--z-index-tooltip-offset);
 }
@@ -542,7 +542,7 @@ const externalReferences: ExternalReferenceItem[] = [
   width: 100%;
   padding: var(--dimension-3) var(--dimension-4);
   border: 1px solid transparent;
-  border-radius: var(--dimension-3);
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color);
   font-family: var(--font-family-monospace);

@@ -460,10 +460,10 @@ class CloudTrialPayload(ProductUsagePayload):
         "name": "cloud_trial_analytics",
     }
 
-    site_created_at: None = pydantic.Field(
+    site_created_at: int | None = pydantic.Field(
         default=None,
         description="Unix timestamp in seconds of when the site was created.",
-        examples=[None],
+        examples=[1767700800],
     )
     count_users: UserCount | None = pydantic.Field(
         default=None,

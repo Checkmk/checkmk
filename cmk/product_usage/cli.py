@@ -144,6 +144,8 @@ def main(
                     data,
                     var_dir=paths.var_dir,
                     default_config_dir=paths.default_config_dir,
+                    omd_root=paths.omd_root,
+                    cloud_config_dir=paths.cse_config_dir,
                     logger=logger,
                 )
             if request.write_to_stdout:

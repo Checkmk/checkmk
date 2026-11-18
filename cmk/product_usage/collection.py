@@ -15,6 +15,7 @@ import cmk.product_usage.collectors.grafana as grafana_collector
 import cmk.product_usage.collectors.host_services as host_services_collector
 import cmk.product_usage.collectors.inventory as inventory_collector
 import cmk.product_usage.collectors.languages as languages_collector
+import cmk.product_usage.collectors.site_creation as site_creation_collector
 import cmk.product_usage.collectors.site_info as site_info_collector
 import cmk.product_usage.collectors.user_stats as user_stats_collector
 import cmk.product_usage.collectors.users as users_collector
@@ -143,6 +144,8 @@ def collect_cloud_trial_data(
     *,
     var_dir: Path,
     default_config_dir: Path,
+    omd_root: Path,
+    cloud_config_dir: Path,
     logger: logging.Logger,
     read_services_per_host: host_services_collector.ServicesPerHostReader = (
         host_services_collector.read_services_per_host
@@ -150,6 +153,7 @@ def collect_cloud_trial_data(
 ) -> CloudTrialPayload:
     return CloudTrialPayload(
         **dict(product_usage),
+        site_created_at=_collect_site_created_at(cloud_config_dir, omd_root, logger),
         count_users=_collect_count_users(default_config_dir, logger),
         audit_log=_collect_audit_log(var_dir, default_config_dir, logger),
         count_hosts_default_services_only=_count_hosts_with_only_default_services(
@@ -185,4 +189,21 @@ def _count_hosts_with_only_default_services(
         return host_services_collector.collect(read_services_per_host())
     except Exception:
         logger.exception("Could not count the hosts with default services only, sending no count")
+        return None
+
+
+def _collect_site_created_at(
+    cloud_config_dir: Path, omd_root: Path, logger: logging.Logger
+) -> int | None:
+    try:
+        created_at = site_creation_collector.platform_creation_time(cloud_config_dir)
+        if created_at is not None:
+            return created_at
+        logger.info(
+            "No site creation time from the Cloud platform,"
+            " sending the modification time of etc/omd/instance_id"
+        )
+        return site_creation_collector.instance_id_creation_time(omd_root)
+    except Exception:
+        logger.exception("Could not read the site creation time, sending no creation time")
         return None

@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import logging
+import os
 import uuid
 from pathlib import Path
 
@@ -24,6 +26,16 @@ from cmk.product_usage.schema import (
 from tests.unit.cmk.product_usage.user_store import write_user_store
 
 NO_ENTRIES = AuditLogActorClass(entries=0, last_entry_at=None)
+
+
+@pytest.fixture
+def created_site(tmp_path: Path) -> None:
+    """Every test site has the instance ID from OMD and the creation time from the platform"""
+    _write_instance_id(tmp_path, mtime=1767690000)
+    _write_site_created_at(tmp_path, 1767700800)
+
+
+pytestmark = pytest.mark.usefixtures("created_site")
 
 
 def test_cloud_trial_payload_carries_the_audit_log_of_the_site(tmp_path: Path) -> None:
@@ -269,6 +281,67 @@ def _collect_product_usage(
     )
 
 
+def test_cloud_trial_payload_prefers_the_platform_time_over_the_instance_id_time(
+    tmp_path: Path,
+) -> None:
+    # The created_site fixture writes the instance ID with another time
+    _write_site_created_at(tmp_path, 1767600000)
+
+    payload = _collect_from_site(tmp_path)
+
+    assert payload.site_created_at == 1767600000
+
+
+def test_cloud_trial_payload_carries_the_instance_id_time_without_a_creation_time_from_the_platform(
+    tmp_path: Path,
+) -> None:
+    _write_site_created_at(tmp_path, None)
+
+    payload = _collect_from_site(tmp_path)
+
+    assert payload.site_created_at == 1767690000
+
+
+def test_cloud_trial_payload_has_no_site_creation_time_when_its_collection_fails(
+    tmp_path: Path,
+) -> None:
+    complete_payload = _collect_from_site(tmp_path)
+    _write_site_created_at(tmp_path, "not a number")
+
+    payload = _collect_from_site(tmp_path)
+
+    assert payload == complete_payload.model_copy(update={"site_created_at": None})
+
+
+def test_failed_site_creation_time_collection_logs_the_error(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    _write_site_created_at(tmp_path, "not a number")
+
+    _collect_from_site(tmp_path)
+
+    assert [record.levelname for record in caplog.records] == ["ERROR"]
+
+
+def test_site_without_a_creation_time_from_the_platform_logs_that_it_sends_the_instance_id_time(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO)
+    _write_site_created_at(tmp_path, None)
+
+    _collect_from_site(tmp_path)
+
+    assert [(record.levelname, record.getMessage()) for record in caplog.records] == [
+        (
+            "INFO",
+            (
+                "No site creation time from the Cloud platform,"
+                " sending the modification time of etc/omd/instance_id"
+            ),
+        )
+    ]
+
+
 def _collect_from_site(
     site_dir: Path,
     *,
@@ -279,6 +352,8 @@ def _collect_from_site(
         _product_usage_payload(),
         var_dir=site_dir,
         default_config_dir=site_dir,
+        omd_root=site_dir,
+        cloud_config_dir=site_dir,
         read_services_per_host=read_services_per_host,
         logger=logging.getLogger(__name__),
     )
@@ -329,3 +404,17 @@ def _write_corrupt_user_store(default_config_dir: Path) -> None:
 
 def _raise_livestatus_error() -> list[list[str]]:
     raise MKLivestatusSocketError("connection refused")
+
+
+def _write_instance_id(omd_root: Path, *, mtime: int) -> None:
+    path = omd_root / "etc/omd/instance_id"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("0f8fad5b-d9cb-469f-a165-70867728950e")
+    os.utime(path, (mtime, mtime))
+
+
+def _write_site_created_at(cloud_config_dir: Path, site_created_at: object) -> None:
+    """Write a shortened Cloud edition config: the collector reads only the creation time"""
+    (cloud_config_dir / "edition_config.json").write_text(
+        json.dumps({"site_created_at": site_created_at})
+    )

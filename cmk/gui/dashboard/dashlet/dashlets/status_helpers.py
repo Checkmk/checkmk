@@ -132,6 +132,14 @@ def _transform_user_specific_unit_for_js(
     }
 
 
+class MKGraphRecipeCalculationError(MKMissingDataError):
+    """A graph widget hit an unexpected failure while it computed its graph recipes.
+
+    It stays a missing-data error for the dashboard pages, so pages that must tell a crash from
+    plain missing data catch this type.
+    """
+
+
 def make_mk_missing_data_error(reason: str | None = None) -> MKMissingDataError:
     """Standardized missing data error for the dashboard."""
     message = _("No data was found with the current parameters of this widget.")

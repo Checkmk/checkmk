@@ -64,7 +64,7 @@ from cmk.gui.visuals import (
 from cmk.utils.servicename import ServiceName
 
 from ..base import Dashlet, RelativeLayoutConstraints, ResponsiveLayoutConstraints, WidgetSize
-from .status_helpers import make_mk_missing_data_error
+from .status_helpers import make_mk_missing_data_error, MKGraphRecipeCalculationError
 
 GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID = "available_graph_templates"
 
@@ -209,7 +209,7 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
         except MKCombinedGraphLimitExceededError as limit_exceeded_error:
             raise make_mk_missing_data_error(reason=str(limit_exceeded_error))
         except Exception as e:
-            raise make_mk_missing_data_error(reason=_("Failed to calculate a graph recipe.")) from e
+            raise MKGraphRecipeCalculationError(_("Failed to calculate a graph recipe.")) from e
 
     def graph_recipes(self) -> Sequence[GraphRecipe]:
         if self._cached_recipes is None:

@@ -231,7 +231,7 @@ class Glacier(AWSSection):
         return [self._vault_result(vault) for vault in computed_content.content]
 
     def _vault_result(self, vault: Mapping[str, Any]) -> AWSSectionResult:
-        host = self._target_host(hosts.GlacierVault(vault["VaultName"]))
+        host = self._target_host(hosts.GlacierVault(vault["VaultName"], vault["VaultARN"]))
         return AWSSectionResult(
             host,
             [vault],

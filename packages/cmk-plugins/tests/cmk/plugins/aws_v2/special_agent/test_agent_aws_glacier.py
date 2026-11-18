@@ -29,6 +29,12 @@ from cmk.plugins.aws_v2.special_agent.sections.glacier import (
 from .agent_aws_fake_clients import GlacierListTagsInstancesIB, GlacierListVaultsIB
 
 ACCOUNT_HOST = TargetHost("123456789012")
+VAULT_HOSTS = [
+    TargetHost("aws_glacier_vault_VaultName-0_3ab60b8f"),
+    TargetHost("aws_glacier_vault_VaultName-1_d9bec7ab"),
+    TargetHost("aws_glacier_vault_VaultName-2_00264a11"),
+    TargetHost("aws_glacier_vault_VaultName-3_2538f091"),
+]
 
 
 class FakeGlacierClient:
@@ -246,7 +252,7 @@ def test_agent_aws_glacier_puts_each_vault_on_its_own_host(
     assert {
         result.piggyback_hostname: [vault["VaultName"] for vault in result.content]
         for result in glacier_results
-    } == {f"VaultName-{i}": [f"VaultName-{i}"] for i in range(4)}
+    } == {VAULT_HOSTS[i]: [f"VaultName-{i}"] for i in range(4)}
 
 
 def test_agent_aws_glacier_vault_hosts_get_the_resource_labels(
@@ -267,7 +273,7 @@ def test_agent_aws_glacier_vault_hosts_get_the_resource_labels(
     assert {
         result.piggyback_hostname: result.piggyback_host_labels for result in glacier_results
     } == {
-        f"VaultName-{i}": {
+        VAULT_HOSTS[i]: {
             "cmk/aws/service": "glacier",
             "cmk/aws/name": f"VaultName-{i}",
             "cmk/aws/resource_id": f"VaultName-{i}",

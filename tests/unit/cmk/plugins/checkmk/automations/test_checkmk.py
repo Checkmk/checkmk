@@ -1005,9 +1005,7 @@ def test_matching_hosts_include_the_subfolders_of_the_folder(monkeypatch: Monkey
         ["in-folder", "in-subfolder", "elsewhere"],
     )
 
-    assert result == AnalyzeHostRuleMatchingHostsResult(
-        [HostName("in-folder"), HostName("in-subfolder")]
-    )
+    assert set(result.hosts) == {HostName("in-folder"), HostName("in-subfolder")}
 
 
 def test_matching_hosts_omit_hosts_that_are_not_configured(monkeypatch: MonkeyPatch) -> None:

@@ -171,7 +171,7 @@ def test_a_sub_option_reaches_its_command() -> None:
     parsed = _parse(["cmk", "--default", "--flag"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert ("--flag", "") in parsed.options
+    assert parsed.bound.request == (True, 0, (), None, None, ())
 
 
 def test_a_bare_command_shows_the_help() -> None:
@@ -202,35 +202,38 @@ def test_a_required_command_argument_comes_off_the_option() -> None:
     parsed = _parse(["cmk", f"--with-argument={_COMMAND_ARGUMENT}"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert parsed.args == [_COMMAND_ARGUMENT]
+    assert parsed.bound.request == _COMMAND_ARGUMENT
 
 
 def test_an_optional_command_argument_takes_all_positional_arguments() -> None:
     parsed = _parse(["cmk", "--default", "host1", "host2"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert parsed.args == ["host1", "host2"]
+    assert parsed.bound.request == (False, 0, (), None, None, ("host1", "host2"))
 
 
 def test_a_repeated_short_spelling_selects_the_command_and_stays_an_option() -> None:
     parsed = _parse(["cmk", "-cc", "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert (parsed.command, parsed.options) == (_DEFAULT, [("-c", ""), ("-c", "")])
+    assert (parsed.command, parsed.bound.request) == (
+        _DEFAULT,
+        (False, 2, (), None, None, ("myhost",)),
+    )
 
 
 def test_a_repeated_sub_option_argument_is_kept_every_time() -> None:
     parsed = _parse(["cmk", "--default", "--collected=.1.1", "--collected=.1.2", "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert parsed.options == [("--default", ""), ("--collected", ".1.1"), ("--collected", ".1.2")]
+    assert parsed.bound.request == (False, 0, (".1.1", ".1.2"), None, None, ("myhost",))
 
 
-def test_a_deprecated_sub_option_is_kept_under_its_own_spelling() -> None:
+def test_a_deprecated_sub_option_reaches_its_command() -> None:
     parsed = _parse(["cmk", "--default", "--legacy-name=value", "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert parsed.options == [("--default", ""), ("--legacy-name", "value")]
+    assert parsed.bound.request == (False, 0, (), None, "value", ("myhost",))
 
 
 def test_a_deprecated_spelling_is_noted_with_its_replacement() -> None:
@@ -244,14 +247,17 @@ def test_a_short_option_takes_the_next_argument_as_its_value() -> None:
     parsed = _parse(["cmk", "--default", "-n", "5", "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert parsed.args == ["myhost"]
+    assert parsed.bound.request == (False, 0, (), "5", None, ("myhost",))
 
 
 def test_positional_arguments_alone_run_the_default_command() -> None:
     parsed = _parse(["cmk", "myhost", "1.2.3.4"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert (parsed.command, parsed.args) == (_DEFAULT, ["myhost", "1.2.3.4"])
+    assert (parsed.command, parsed.bound.request) == (
+        _DEFAULT,
+        (False, 0, (), None, None, ("myhost", "1.2.3.4")),
+    )
 
 
 def test_without_a_default_command_positional_arguments_show_the_help() -> None:
@@ -292,8 +298,8 @@ def test_a_general_option_does_not_select_a_command(option: CLIOption) -> None:
 
 
 @pytest.mark.parametrize("option", _GENERAL_OPTIONS, ids=lambda option: option.long)
-def test_a_general_option_is_handed_back_for_processing(option: CLIOption) -> None:
+def test_a_general_option_is_read_into_the_global_options(option: CLIOption) -> None:
     parsed = _parse(["cmk", *_general_option_argv(option), "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert f"--{option.long}" in [name for name, _argument in parsed.options]
+    assert parsed.global_options != CLIEngineGlobalOptions()

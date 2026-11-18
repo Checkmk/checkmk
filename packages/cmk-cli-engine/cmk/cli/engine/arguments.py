@@ -24,8 +24,6 @@ class Deprecation:
 class RunCommand:
     command: DiscoveredCommand
     global_options: GlobalOptions
-    options: GetoptOptions
-    args: Sequence[str]
     bound: BoundCommand
     deprecations: Sequence[Deprecation]
 
@@ -80,8 +78,6 @@ def _parse(commands: Commands, argv: Sequence[str]) -> RunCommand | ShowHelp:
             return RunCommand(
                 command,
                 global_options,
-                options,
-                args,
                 command.bind(parsed(options, assign(command.positional, args))),
                 _deprecations(options, command),
             )

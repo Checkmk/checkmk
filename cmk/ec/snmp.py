@@ -64,6 +64,17 @@ def _snmp_version(security_model: int) -> str:
     return "v2c" if security_model == 2 else f"v{security_model}"
 
 
+# SNMPv3 user names have at most 32 bytes, but a community can fill a whole message.
+_MAX_NAME_BYTES = 64
+
+
+def _printable(name: object) -> str:
+    """Hex unless printable ASCII, so senders can't fake log lines, and at most _MAX_NAME_BYTES"""
+    octets = bytes(pysnmp.proto.rfc1902.OctetString(name))
+    shown = str(pysnmp.proto.rfc1902.OctetString(octets[:_MAX_NAME_BYTES]).prettyPrint())
+    return shown if len(octets) <= _MAX_NAME_BYTES else f"{shown}..."
+
+
 class SNMPTrapParser:
     # Only traps: _drop_request() drops INFORMs like the other requests.
     class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):  # type: ignore[misc]
@@ -321,25 +332,28 @@ class SNMPTrapParser:
         variables: Mapping[str, Any],
         cb_ctx: None,
     ) -> None:
+        # 1, 2 and 3 for SNMPv1, SNMPv2c and SNMPv3
+        version = int(variables["securityModel"])
         if (
-            variables["securityLevel"] in {1, 2}
+            version in {1, 2}
             and variables["statusInformation"]["errorIndication"]
             == pysnmp.proto.errind.unknownCommunityName
         ):
-            msg = f"Unknown community ({variables['statusInformation'].get('communityName', '')})"
+            msg = f"Unknown community ({_printable(variables['statusInformation'].get('communityName', ''))})"
         elif (
-            variables["securityLevel"] == 3
+            version == 3
             and variables["statusInformation"]["errorIndication"]
             == pysnmp.proto.errind.unknownSecurityName
         ):
-            msg = f"Unknown credentials (msgUserName: {variables['statusInformation'].get('msgUserName', '')})"
+            msg = f"Unknown credentials (msgUserName: {_printable(variables['statusInformation'].get('msgUserName', ''))})"
         else:
-            msg = f"{variables['statusInformation']}"
+            # Not the whole status: Its scoped PDU alone can take 100 KB.
+            msg = str(variables["statusInformation"]["errorIndication"])
 
         self._logger.log(
             VERBOSE,
-            "Trap (v%d) dropped from %s: %s",
-            variables["securityLevel"],
+            "Trap (%s) dropped from %s: %s",
+            _snmp_version(version),
             variables["transportAddress"][0],
             msg,
         )

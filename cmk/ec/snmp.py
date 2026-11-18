@@ -7,7 +7,6 @@ from collections.abc import Iterable, Mapping
 from logging import Logger
 from typing import Any
 
-import pyasn1.error
 import pysnmp.debug  # type: ignore[import-untyped]
 import pysnmp.entity.config  # type: ignore[import-untyped]
 import pysnmp.entity.engine  # type: ignore[import-untyped]
@@ -52,8 +51,8 @@ class SNMPTrapParser:
         self._varbinds_and_ipaddress: tuple[Iterable[tuple[str, str]], str] | None = None
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
 
-        # Hand over our logger to PySNMP
-        pysnmp.debug.setLogger(pysnmp.debug.Debug("all", printer=logger.debug))
+        # Hand over our logger to PySNMP, without the MIB view messages failing for string DEFVALs
+        pysnmp.debug.setLogger(pysnmp.debug.Debug("all", "!mibview", printer=logger.debug))
 
         self.snmp_engine.observer.registerObserver(
             self._handle_unauthenticated_snmptrap,
@@ -323,11 +322,15 @@ class SNMPTrapTranslator:
         for oid, value in var_bind_list:
             try:
                 translated_oid, translated_value = self._translate_binding_via_mibs(oid, value)
-            except (pysnmp.smi.error.SmiError, pyasn1.error.ValueConstraintError):
+            # PySNMP and compiled MIBs fail in many ways, so keep the trap.
+            except Exception as e:
                 self._logger.warning(
-                    "Failed to translate OID %s (in trap from %s): (enable debug logging for details)",
+                    "Failed to translate OID %s in trap from %s, keeping it untranslated: %s: %s "
+                    "(enable debug logging for details)",
                     oid.prettyPrint(),
                     ipaddress,
+                    type(e).__name__,
+                    e,
                 )
                 self._logger.debug("Failed to translate OID %s", oid.prettyPrint(), exc_info=True)
                 translated_oid, translated_value = self._translate_binding_raw(oid, value)

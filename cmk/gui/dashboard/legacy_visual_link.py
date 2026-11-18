@@ -11,16 +11,11 @@ from cmk.gui.type_defs import (
     ColumnSpec,
     ContextualLinkEntryConfig,
     DashboardEmbeddedViewSpec,
-    ViewSpec,
     VisualLinkSpec,
     VisualName,
 )
-from cmk.gui.visual_link import may_add_site_hint
-from cmk.gui.visuals.info import visual_info_registry
 
 from .type_defs import (
-    ContextFilterConfig,
-    ContextualLinkCustomConfig,
     ContextualLinkInheritedConfig,
     ContextualLinkTargetType,
 )
@@ -79,45 +74,13 @@ def _drilldown(column: str, link_spec: VisualLinkSpec) -> ContextualLinkEntryCon
 def contextual_link_from_legacy_target(
     target: tuple[ContextualLinkTargetType, VisualName],
 ) -> ContextualLinkInheritedConfig:
-    """The stored link that replaces a widget's legacy link to a view or a dashboard whose single
-    objects are not known, carrying the clicked host's site and name."""
+    """The stored link that replaces a widget's legacy link to a view or a dashboard. It carries
+    the clicked host and the time range and, like "Link to", leaves out the dashboard and widget
+    filters."""
     return ContextualLinkInheritedConfig(
         type="inherited",
         location=target,
         include_context=False,
-        include_time_range=False,
+        include_time_range=True,
         show_filter_form=False,
-    )
-
-
-def contextual_link_from_legacy_view(view: ViewSpec) -> ContextualLinkCustomConfig:
-    """The stored link that replaces a widget's legacy link to a view, carrying from the clicked
-    host what the legacy link carried: its name only for a view of single hosts, and its site
-    where that link added it as a hint."""
-    host_filters = ["host"] if "host" in view["single_infos"] else []
-    site_filters = (
-        ["siteopt"]
-        if may_add_site_hint(
-            view["name"],
-            info_keys=tuple(visual_info_registry.keys()),
-            single_info_keys=tuple(view["single_infos"]),
-            filter_names=tuple(host_filters),
-        )
-        else []
-    )
-    return ContextualLinkCustomConfig(
-        type="custom",
-        links=[
-            ContextualLinkEntryConfig(
-                title=str(view["title"]),
-                location=("views", view["name"]),
-                filters=[
-                    ContextFilterConfig(filter_id=filter_id)
-                    for filter_id in site_filters + host_filters
-                ],
-                include_context=False,
-                include_time_range=False,
-                show_filter_form=False,
-            )
-        ],
     )

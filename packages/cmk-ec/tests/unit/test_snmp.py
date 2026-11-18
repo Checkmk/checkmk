@@ -14,7 +14,6 @@ from pysnmp.proto.rfc1902 import IpAddress, ObjectName, OctetString, TimeTicks
 import cmk.ec.export as ec
 from cmk.ccc.log import VERBOSE
 from cmk.ec.config import Config
-from cmk.ec.settings import PortNumber
 from cmk.ec.snmp import SNMPTrapParser, SNMPTrapTranslator, VarBinds
 
 # sysORDescr.1.2, but sysORTable has only one index.
@@ -33,8 +32,7 @@ def fixture_translator(
 
 @pytest.fixture(name="parser")
 def fixture_parser(settings: ec.Settings, config: Config, logger: logging.Logger) -> SNMPTrapParser:
-    options = settings.options._replace(snmptrap_udp=PortNumber(162))
-    return SNMPTrapParser(settings._replace(options=options), config, logger)
+    return SNMPTrapParser(settings, config, logger)
 
 
 def v1_trap(time_stamp: int) -> bytes:

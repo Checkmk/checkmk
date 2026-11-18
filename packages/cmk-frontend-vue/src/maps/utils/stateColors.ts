@@ -29,6 +29,9 @@ const STATE_PROPERTY: Record<string, string> = {
   NOT_FOUND: '--color-state-pending'
 }
 
+/** Every custom property a state's colour is carried in. */
+export const STATE_COLOR_PROPERTIES = [...new Set(Object.values(STATE_PROPERTY))]
+
 /** Name of the custom property carrying a state's colour. */
 export function stateColorProperty(state: string | undefined): string {
   return STATE_PROPERTY[state ?? 'PENDING'] ?? '--color-state-pending'

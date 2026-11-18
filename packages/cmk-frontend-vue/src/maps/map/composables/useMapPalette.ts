@@ -28,7 +28,7 @@ import {
   watch
 } from 'vue'
 
-import { stateColorProperty } from '@/maps/utils/stateColors'
+import { STATE_COLOR_PROPERTIES, stateColorProperty } from '@/maps/utils/stateColors'
 
 /** How many ``--series-color-N`` tokens the map cycles through as fallback series colours. */
 const SERIES_SLOTS = 8
@@ -59,11 +59,14 @@ function readPalette(element: HTMLElement | null): MapPalette {
   }
   const style = getComputedStyle(element)
   const read = (property: string): string => style.getPropertyValue(property).trim()
+  // Read up front: a read of the live style after a DOM change recalculates it,
+  // once per object of a map mounting many at once.
+  const stateColors = new Map(STATE_COLOR_PROPERTIES.map((property) => [property, read(property)]))
   return {
     series: Array.from({ length: SERIES_SLOTS }, (_unused, slot) =>
       read(`--series-color-${slot + 1}`)
     ).filter((color) => color !== ''),
-    state: (state) => read(stateColorProperty(state)) || INHERIT,
+    state: (state) => stateColors.get(stateColorProperty(state)) || INHERIT,
     gaugeTrack: read('--maps-map-view-gauge-track') || INHERIT
   }
 }

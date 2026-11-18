@@ -123,7 +123,23 @@ _migrate_home() {
     }
 
     printf "Changing home directory of %s to %s\n" "${AGENT_USER}" "${new_homedir}"
-    usermod -d "${new_homedir}" "${AGENT_USER}"
+    # usermod refuses to change a user that has a process. Two kinds of them
+    # belong to no unit that the package stops: the timer job of the Python
+    # updater, which waits for the lock of the updater that installs this
+    # package, and a "cmk-agent-ctl update" started by hand, which waits for the
+    # installer.
+    usermod -d "${new_homedir}" "${AGENT_USER}" 2>/dev/null || {
+        printf "Could not change it, ending the processes of %s and trying again.\n" "${AGENT_USER}"
+        pkill -TERM -u "${AGENT_USER}" 2>/dev/null
+        seconds_waited=0
+        while pgrep -u "${AGENT_USER}" >/dev/null 2>&1 && [ "${seconds_waited}" -lt 5 ]; do
+            sleep 1
+            seconds_waited=$((seconds_waited + 1))
+        done
+
+        usermod -d "${new_homedir}" "${AGENT_USER}" ||
+            printf "Could not change the home directory of %s, it still points to %s. The next installation of an agent package tries again.\n" "${AGENT_USER}" "${old_homedir}"
+    }
 
     [ "${restart_agent_controller_daemon}" = "yes" ] && {
         # This is probably not necessary because upcoming scripts will replace the service anyways,

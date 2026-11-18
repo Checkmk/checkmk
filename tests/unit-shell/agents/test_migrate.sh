@@ -52,7 +52,27 @@ EOF
     cat >"${STUBS}/usermod" <<EOF
 #!/bin/sh
 echo "usermod \$*" >>'${CALLS}'
+[ -e '${STUBS}/agent_user_busy' ] && {
+    echo "usermod: user cmk-agent is currently used by process 4711" >&2
+    exit 8
+}
 echo "\$2" >'${STUBS}/home'
+EOF
+    # The agent user has a process only once a test creates
+    # ${STUBS}/agent_user_busy. pkill ends it, unless the test also creates
+    # ${STUBS}/ignores_term. sleep returns at once.
+    cat >"${STUBS}/pgrep" <<EOF
+#!/bin/sh
+[ -e '${STUBS}/agent_user_busy' ]
+EOF
+    cat >"${STUBS}/pkill" <<EOF
+#!/bin/sh
+echo "pkill \$*" >>'${CALLS}'
+[ -e '${STUBS}/ignores_term' ] || rm -f '${STUBS}/agent_user_busy'
+EOF
+    cat >"${STUBS}/sleep" <<EOF
+#!/bin/sh
+echo "sleep \$*" >>'${CALLS}'
 EOF
     # The controller daemon runs only once a test creates ${STUBS}/daemon_running.
     cat >"${STUBS}/systemctl" <<EOF
@@ -61,7 +81,8 @@ echo "systemctl \$*" >>'${CALLS}'
 [ "\$1" = status ] && [ ! -e '${STUBS}/daemon_running' ] && exit 3
 exit 0
 EOF
-    chmod +x "${STUBS}/getent" "${STUBS}/usermod" "${STUBS}/systemctl"
+    chmod +x "${STUBS}/getent" "${STUBS}/usermod" "${STUBS}/systemctl" \
+        "${STUBS}/pgrep" "${STUBS}/pkill" "${STUBS}/sleep"
 }
 
 tearDown() {
@@ -161,6 +182,76 @@ systemctl stop cmk-agent-ctl-daemon
 usermod -d ${CONTROLLER} cmk-agent
 systemctl start cmk-agent-ctl-daemon" \
         "$(cat "${CALLS}")"
+}
+
+test_processes_of_the_agent_user_are_left_alone_when_the_home_directory_changes() {
+    # CMK-42019
+    printf '%s\n' "${LEGACY_HOME}" >"${STUBS}/home"
+
+    _migrate >/dev/null
+
+    assertEquals "pkill calls" "0" "$(grep -c '^pkill' "${CALLS}")"
+}
+
+test_home_directory_changes_although_the_agent_user_has_a_process() {
+    # CMK-42019
+    # usermod refuses to change a user that has a process. The timer job of the
+    # Python updater and a "cmk-agent-ctl update" started by hand are such
+    # processes, and neither belongs to a unit that the package stops.
+    printf '%s\n' "${LEGACY_HOME}" >"${STUBS}/home"
+    printf '' >"${STUBS}/agent_user_busy"
+
+    _migrate >/dev/null 2>&1
+
+    assertEquals "home of the agent user" "${CONTROLLER}" "$(cat "${STUBS}/home")"
+}
+
+test_home_directory_that_cannot_be_changed_is_reported() {
+    # CMK-42019
+    printf '%s\n' "${LEGACY_HOME}" >"${STUBS}/home"
+    printf '' >"${STUBS}/agent_user_busy"
+    printf '' >"${STUBS}/ignores_term"
+
+    output="$(_migrate 2>/dev/null)"
+
+    assertContains "output" "${output}" \
+        "Could not change the home directory of cmk-agent, it still points to ${LEGACY_HOME}."
+}
+
+test_exit_code_is_zero_when_the_home_directory_cannot_be_changed() {
+    # CMK-42019
+    printf '%s\n' "${LEGACY_HOME}" >"${STUBS}/home"
+    printf '' >"${STUBS}/agent_user_busy"
+    printf '' >"${STUBS}/ignores_term"
+
+    _migrate >/dev/null 2>&1
+
+    assertEquals "exit code" "0" "$?"
+}
+
+test_waiting_for_the_processes_of_the_agent_user_is_limited() {
+    # CMK-42019
+    # The script runs inside a package transaction, which must not hang on a
+    # process that ignores the signal.
+    printf '%s\n' "${LEGACY_HOME}" >"${STUBS}/home"
+    printf '' >"${STUBS}/agent_user_busy"
+    printf '' >"${STUBS}/ignores_term"
+
+    _migrate >/dev/null 2>&1
+
+    assertEquals "seconds waited" "5" "$(grep -c '^sleep 1$' "${CALLS}")"
+}
+
+test_controller_daemon_is_started_again_when_the_home_directory_cannot_be_changed() {
+    # CMK-42019
+    printf '%s\n' "${LEGACY_HOME}" >"${STUBS}/home"
+    printf '' >"${STUBS}/daemon_running"
+    printf '' >"${STUBS}/agent_user_busy"
+    printf '' >"${STUBS}/ignores_term"
+
+    _migrate >/dev/null 2>&1
+
+    assertEquals "last call" "systemctl start cmk-agent-ctl-daemon" "$(tail -n 1 "${CALLS}")"
 }
 
 test_second_run_changes_nothing() {

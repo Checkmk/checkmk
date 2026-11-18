@@ -19,7 +19,7 @@ from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.config import handle_ip_lookup_failure
 from cmk.base.configlib.servicename import make_final_service_name_config
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, OnError
+from cmk.ccc.exceptions import MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.fetcher_abc import Mode as FetchMode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
@@ -68,6 +68,10 @@ def _source_dump(ident: str, output: bytes, results: Sequence[ActiveCheckResult]
     return _AgentDump(output, (), ())
 
 
+class _ClusterHostError(Exception):
+    """The agent output of a cluster cannot be dumped"""
+
+
 class _DumpAgent(Protocol):
     def __call__(
         self, host: HostAddress, /, request: DumpAgentRequest, *, omd_root: Path, debug: bool
@@ -88,7 +92,7 @@ def _dump_agent(
     hosts_config = loading_result.hosts_config
 
     if hostname in hosts_config.clusters:
-        raise MKBailOut("Can not be used with cluster hosts")
+        raise _ClusterHostError("Can not be used with cluster hosts")
 
     config_cache = loading_result.config_cache
     service_name_config = config_cache.make_passive_service_name_config(
@@ -275,7 +279,7 @@ class _DumpAgentCommand:
             dump = self.dump_agent(
                 request.host, request, omd_root=context.omd_root, debug=context.global_options.debug
             )
-        except (MKBailOut, MKGeneralException) as e:
+        except (_ClusterHostError, MKGeneralException) as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

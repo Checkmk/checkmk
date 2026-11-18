@@ -8,8 +8,8 @@
 # mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Iterable, Mapping, Sequence
-from logging import Logger
-from typing import Any
+from logging import DEBUG, Logger
+from typing import Any, override
 
 import pysnmp.debug
 import pysnmp.entity.config
@@ -35,6 +35,27 @@ VarBind = tuple[pysnmp.proto.rfc1902.ObjectName, SimpleAsn1Type]
 VarBinds = Sequence[VarBind]
 
 
+class _PySnmpDebug(pysnmp.debug.Debug):
+    """PySNMP's debug messages, formatted only when debugging"""
+
+    def __init__(self, logger: Logger) -> None:
+        self._logger = logger
+        # The MIB view ones fail for string DEFVALs.
+        super().__init__("all", "!mibview", printer=logger.debug)
+
+    @override
+    def __and__(self, flag: int) -> int:
+        return int(super().__and__(flag)) if self._logger.isEnabledFor(DEBUG) else 0
+
+    @override
+    def __rand__(self, flag: int) -> int:
+        return self & flag
+
+    def __bool__(self) -> bool:
+        """For PySNMP's MIB instrumentation, which tests the logger, not a flag"""
+        return self._logger.isEnabledFor(DEBUG)
+
+
 class SNMPTrapParser:
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
     class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
@@ -46,8 +67,8 @@ class SNMPTrapParser:
     def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
         self._logger = logger
 
-        # Hand over our logger to PySNMP, without the MIB view messages failing for string DEFVALs
-        pysnmp.debug.set_logger(pysnmp.debug.Debug("all", "!mibview", printer=logger.debug))
+        # Hand over our logger to PySNMP
+        pysnmp.debug.set_logger(_PySnmpDebug(logger))
 
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
         self._initialize_snmp_credentials(config)

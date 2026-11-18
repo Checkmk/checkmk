@@ -74,7 +74,7 @@ const _uniqueIdValidation = async (): Promise<[boolean, TranslatedString[]]> => 
     return [false, [_t('Use only lowercase letters (a-z), numbers (0-9), and underscores (_).')]]
   }
 
-  if (await isIdInUse(uniqueId.value.trim(), originalId)) {
+  if (await isIdInUse(props.loggedInUser, uniqueId.value.trim(), originalId)) {
     return [false, [_t('This Unique ID is already in use. Please choose another one.')]]
   }
 

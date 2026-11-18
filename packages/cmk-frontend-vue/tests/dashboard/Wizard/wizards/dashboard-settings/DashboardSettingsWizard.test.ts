@@ -3,8 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { defineComponent } from 'vue'
 
 import DashboardSettingsWizard from '@/dashboard/components/Wizard/wizards/dashboard-settings/DashboardSettingsWizard.vue'
 import type { DashboardGeneralSettings } from '@/dashboard/types/dashboard'
@@ -19,12 +20,16 @@ vi.mock('@/dashboard/utils', () => ({
   }
 }))
 
-// Stub GeneralProperties to avoid IconSelector's REST API dependency
-vi.mock('@/dashboard/components/Wizard/components/DashboardSettings/GeneralProperties.vue', () => ({
-  default: {
-    name: 'GeneralProperties',
-    template: '<div data-testid="general-properties-stub" />'
-  }
+vi.mock('@/dashboard/components/Wizard/components/IconSelector/IconSelector.vue', () => ({
+  default: defineComponent({
+    name: 'IconSelector',
+    props: {
+      selectedIcon: { type: String as () => string | null, default: null },
+      selectEmblems: { type: Boolean, default: false }
+    },
+    emits: ['update:selectedIcon'],
+    template: '<div data-testid="icon-selector" />'
+  })
 }))
 
 function makeGeneralSettings(
@@ -83,6 +88,7 @@ describe('DashboardSettingsWizard (inner)', () => {
   beforeEach(() => {
     // Vue emits a console.info for <Suspense> being experimental; silence it for fail-on-console.
     vi.spyOn(console, 'info').mockImplementation(() => {})
+    mockListDashboardMetadata.mockResolvedValue([])
   })
 
   describe('Rendering', () => {
@@ -158,15 +164,30 @@ describe('DashboardSettingsWizard (inner)', () => {
       expect(onSave).not.toHaveBeenCalled()
     })
 
-    it('does not emit "save" when the unique ID is already in use', async () => {
-      mockListDashboardMetadata.mockResolvedValueOnce([
-        { name: 'my_dashboard', owner: 'my_dashboard' }
+    it('does not emit "save" when another dashboard of the user has the unique ID', async () => {
+      mockListDashboardMetadata.mockResolvedValue([
+        { name: 'my_dashboard', owner: 'admin' },
+        { name: 'other_dashboard', owner: 'admin' }
       ])
       const onSave = vi.fn()
       await renderWizard({}, { onSave })
+      await fireEvent.update(
+        screen.getByRole('textbox', { name: 'Add unique ID' }),
+        'other_dashboard'
+      )
       await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
-      await flushPromises()
+      expect(
+        await screen.findByText('This Unique ID is already in use. Please choose another one.')
+      ).toBeInTheDocument()
       expect(onSave).not.toHaveBeenCalled()
+    })
+
+    it('emits "save" when the dashboard keeps its own unique ID', async () => {
+      mockListDashboardMetadata.mockResolvedValue([{ name: 'my_dashboard', owner: 'admin' }])
+      const onSave = vi.fn()
+      await renderWizard({}, { onSave })
+      await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+      await waitFor(() => expect(onSave).toHaveBeenCalledWith('my_dashboard', expect.anything()))
     })
 
     it('does not emit "save" when the sort index is negative', async () => {

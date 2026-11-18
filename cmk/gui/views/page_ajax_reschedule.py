@@ -121,7 +121,8 @@ class PageRescheduleCheck(AjaxPage):
 
         self._ensure_visible(site, what, host, service)
 
-        if service in ("Check_MK Discovery", "Check_MK Inventory"):
+        # "Check_MK inventory" is the old name of the discovery service.
+        if service in ("Check_MK Discovery", "Check_MK inventory"):
             # During discovery, the allowed cache age is (by default) 120 seconds, such that the
             # discovery service won't steal data in the TCP case.
             # But we do want to see new services, so for SNMP we set the cache age to zero.

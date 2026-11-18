@@ -864,8 +864,11 @@ Map configs in the daemon
 
 The daemon stores no maps. Before opening a stream, the SPA registers the map's
 config with ``POST v1/maps/{name}/register``. The daemon keeps registered configs in
-memory (LRU, at most 1024 entries and 64 MiB of config JSON), keyed by the
-map's owner and name. A map with an open stream is not evicted.
+memory (LRU, at most 1024 entries and about 256 MiB), keyed by the map's
+owner and name. The memory of a map is estimated from its config JSON and the
+number of objects, slide elements and flow positions in it. Unsaved previews and
+link targets are held in two more caches with the same bounds. A map with an
+open stream is not evicted.
 
 * **Signed config** (the normal case): the GUI signs a domain prefix
   (``maps-map-config:v3:``), the owner and the canonical config JSON (which
@@ -1067,7 +1070,7 @@ Limits
    * - Connection list, health
      - Not rate-limited
    * - Registered map configs
-     - 1024 and 64 MiB of config JSON (LRU); a map with an open stream is kept
+     - 1024 and about 256 MiB (LRU); a map with an open stream is kept
    * - Stored map
      - 4 MiB as JSON
    * - Objects per map, elements per presentation slide

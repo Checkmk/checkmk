@@ -20,18 +20,30 @@ from typing import NamedTuple, Protocol
 
 from cmk.maps.backend.core.auth import LinkTarget
 from cmk.maps.backend.core.ttl_cache import TtlCache
-from cmk.maps.backend.schemas.map import MapConfig
+from cmk.maps.backend.schemas.map import FlowView, MapConfig, view_element_count
 
 type MapKey = tuple[str, str]
 
+# A parsed object, slide element or flow position holds about this much besides
+# its JSON (measured: 5000 objects, 0.4 MB sent, 18 MB held).
+_BYTES_PER_MODEL = 4 * 1024
 
-class _Sized(NamedTuple):
+
+class _Held(NamedTuple):
     config: MapConfig
-    size: int
+    weight: int
 
 
-def _bytes_sent(entry: _Sized) -> int:
-    return entry.size
+def _held(cfg: MapConfig, size: int) -> _Held:
+    """*cfg* with what it takes in memory, *size* being the bytes it took to send."""
+    models = len(cfg.objects) + view_element_count(cfg.view)
+    if isinstance(cfg.view, FlowView):
+        models += len(cfg.view.positions)
+    return _Held(cfg, size + _BYTES_PER_MODEL * models)
+
+
+def _weight(entry: _Held) -> int:
+    return entry.weight
 
 
 # Nothing in these caches goes stale by age alone.
@@ -50,9 +62,9 @@ _KEPT = math.inf
 # entry was evicted re-registers on its next request.
 _CACHE_MAX_ENTRIES = 1024
 # A map may take up to MAP_CONFIG_MAX_BYTES, so the count alone would allow gigabytes.
-CACHE_MAX_BYTES = 64 * 1024 * 1024
-_CACHE: TtlCache[MapKey, _Sized] = TtlCache(
-    maxsize=_CACHE_MAX_ENTRIES, weigh=_bytes_sent, maxweight=CACHE_MAX_BYTES
+CACHE_MAX_WEIGHT = 256 * 1024 * 1024
+_CACHE: TtlCache[MapKey, _Held] = TtlCache(
+    maxsize=_CACHE_MAX_ENTRIES, weigh=_weight, maxweight=CACHE_MAX_WEIGHT
 )
 _CACHE_GUARD = threading.Lock()
 
@@ -63,8 +75,8 @@ _SIGNED_VERSIONS: TtlCache[MapKey, int] = TtlCache(maxsize=10 * _CACHE_MAX_ENTRI
 
 
 # The unsaved edits of a map, which only its owner sees.
-_PREVIEWS: TtlCache[MapKey, _Sized] = TtlCache(
-    maxsize=_CACHE_MAX_ENTRIES, weigh=_bytes_sent, maxweight=CACHE_MAX_BYTES
+_PREVIEWS: TtlCache[MapKey, _Held] = TtlCache(
+    maxsize=_CACHE_MAX_ENTRIES, weigh=_weight, maxweight=CACHE_MAX_WEIGHT
 )
 
 
@@ -80,7 +92,7 @@ def register_map(
     ``pinned`` holds is not evicted for it.
     """
     with _CACHE_GUARD:
-        _CACHE.set((owner, cfg.name), _Sized(cfg, size), pinned=pinned)
+        _CACHE.set((owner, cfg.name), _held(cfg, size), pinned=pinned)
 
 
 def register_preview(
@@ -88,7 +100,7 @@ def register_preview(
 ) -> None:
     """Keep the owner's unsaved edits of a map apart from the map its viewers see."""
     with _CACHE_GUARD:
-        _PREVIEWS.set((owner, cfg.name), _Sized(cfg, size), pinned=pinned)
+        _PREVIEWS.set((owner, cfg.name), _held(cfg, size), pinned=pinned)
 
 
 def register_signed_map(
@@ -108,7 +120,7 @@ def register_signed_map(
         if registered is not None and cfg.version < registered:
             return False
         _SIGNED_VERSIONS.set(key, cfg.version)
-        _CACHE.set(key, _Sized(cfg, size), pinned=pinned)
+        _CACHE.set(key, _held(cfg, size), pinned=pinned)
         if ends_preview:
             _PREVIEWS.pop(key)
     return True
@@ -146,8 +158,8 @@ def forget_map(owner: str, name: str) -> None:
 # map someone has open out of the cache, and fetched again after a while, so a
 # change that reached no open view reaches the links too.
 _LINKED_FOR = 300.0
-_LINKED: TtlCache[MapKey, _Sized] = TtlCache(
-    maxsize=_CACHE_MAX_ENTRIES, weigh=_bytes_sent, maxweight=CACHE_MAX_BYTES
+_LINKED: TtlCache[MapKey, _Held] = TtlCache(
+    maxsize=_CACHE_MAX_ENTRIES, weigh=_weight, maxweight=CACHE_MAX_WEIGHT
 )
 
 
@@ -188,7 +200,7 @@ async def find_link_targets(
         key = (target.owner, name)
         with _CACHE_GUARD:
             if target.config is not None:
-                _LINKED.set(key, _Sized(target.config, target.size), now=now)
+                _LINKED.set(key, _held(target.config, target.size), now=now)
             entry = _CACHE.get(key, ttl=_KEPT) or _LINKED.get(key, ttl=_LINKED_FOR, now=now)
             cfg = None if entry is None else entry.config
         if cfg is not None:

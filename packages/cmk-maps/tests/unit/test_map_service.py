@@ -65,8 +65,8 @@ def test_a_streamed_map_stays_cached_however_many_maps_are_registered() -> None:
     assert map_service.get_map("bob", "m1999") is not None
 
 
-def test_maps_past_the_byte_bound_push_out_the_oldest_unstreamed_one() -> None:
-    half = map_service.CACHE_MAX_BYTES // 2 + 1
+def test_maps_past_the_weight_bound_push_out_the_oldest_unstreamed_one() -> None:
+    half = map_service.CACHE_MAX_WEIGHT // 2 + 1
     streamed = ("alice", "streamed")
     map_service.register_map("alice", MapConfig(name="streamed"), size=half)
     map_service.register_map("alice", MapConfig(name="old"), size=half, pinned=streamed.__eq__)
@@ -79,7 +79,7 @@ def test_maps_past_the_byte_bound_push_out_the_oldest_unstreamed_one() -> None:
 
 
 def test_a_map_registered_again_counts_its_bytes_once() -> None:
-    almost_all = map_service.CACHE_MAX_BYTES - 1
+    almost_all = map_service.CACHE_MAX_WEIGHT - 1
     map_service.register_map("alice", MapConfig(name="kept"), size=1)
     for _ in range(3):
         map_service.register_map("alice", MapConfig(name="big"), size=almost_all)
@@ -92,6 +92,21 @@ def test_a_map_read_since_is_pushed_out_after_one_that_was_not() -> None:
     map_service.register_map("alice", MapConfig(name="unread"), size=1)
     map_service.get_map("alice", "read")
 
-    map_service.register_map("alice", MapConfig(name="new"), size=map_service.CACHE_MAX_BYTES - 1)
+    map_service.register_map("alice", MapConfig(name="new"), size=map_service.CACHE_MAX_WEIGHT - 1)
 
     assert map_service.get_map("alice", "read") is not None
+
+
+def _with_hosts(name: str, count: int) -> MapConfig:
+    objects = [{"id": f"h{i}", "type": "host", "host_name": f"h{i}"} for i in range(count)]
+    return MapConfig.model_validate({"name": name, "objects": objects})
+
+
+def test_the_objects_of_a_map_count_beyond_its_bytes() -> None:
+    half = map_service.CACHE_MAX_WEIGHT // 2
+    map_service.register_map("alice", MapConfig(name="old"), size=1)
+
+    map_service.register_map("alice", _with_hosts("first", 5000), size=half)
+    map_service.register_map("alice", _with_hosts("second", 5000), size=half - 1)
+
+    assert map_service.get_map("alice", "old") is None

@@ -52,10 +52,10 @@ Why a shared exception module is a problem
 
 5. Some of these are control flow, not errors.
 
-   `MKTerminate` and `MKBailOut` mean "leave the program with exit code N".
-   They are jumps to a handler that is assumed to exist at the top of the
-   program. Both derive from `Exception`, so every `except Exception` on the
-   way up changes how the program terminates.
+   `MKTerminate` means "stop the program". It is a jump to a handler that is
+   assumed to exist at the top of the program. It derives from `Exception`,
+   so every `except Exception` on the way up changes how the program
+   terminates.
 
    `MKTerminate` and `MKTimeout` are also raised from signal handlers. Such an
    exception can surface between any two bytecode instructions: inside a
@@ -122,7 +122,6 @@ import signal
 from typing import NoReturn
 
 __all__ = [
-    "MKBailOut",
     "MKIPAddressLookupError",
     "MKException",
     "MKGeneralException",
@@ -175,18 +174,6 @@ class MKTerminate(MKException):
 
 def raise_mkterminate_on_sigint() -> None:
     signal.signal(signal.SIGINT, MKTerminate.raise_from_signal)
-
-
-class MKBailOut(MKException):
-    """Raised to print an error message and then end the program.
-
-    The program should catch this at top level and exit with exit code 3, in
-    order to be compatible with the monitoring plug-in API.
-
-    Legacy, see the module docstring. Do not add new uses. This is control
-    flow by exception and any `except Exception` on the way up swallows it.
-    Report the failure to the caller and let `main()` return the exit code.
-    """
 
 
 class MKTimeout(MKException):

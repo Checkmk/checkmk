@@ -32,9 +32,9 @@ See [BAZEL.md](BAZEL.md) for the full developer command reference.
   Raising handlers like `cmk.ccc.timeout.Timeout` exist; don't copy them.
 - Don't add to `cmk.ccc.exceptions`, don't derive from its classes, and avoid
   new `raise`/`except` sites for them (`MKGeneralException`, `MKException`,
-  `MKBailOut`, `MKTerminate`, `MKTimeout`). Their widespread use is legacy, not
-  a pattern to follow. Define specific exceptions in the package that raises
-  them, or return the failure. The module docstring explains why.
+  `MKTerminate`, `MKTimeout`). Their widespread use is legacy, not a pattern to
+  follow. Define specific exceptions in the package that raises them, or return
+  the failure. The module docstring explains why.
 
 ## Testing
 

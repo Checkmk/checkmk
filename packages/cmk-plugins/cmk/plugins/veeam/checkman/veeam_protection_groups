@@ -5,11 +5,24 @@ license: GPLv2
 distribution: check_mk
 description:
  This check monitors an agent protection group of a Veeam Backup & Replication
- server, collected via the Veeam special agent. It reports the protection
- group type, the number of configured computers (for group types that list
- them), the description and whether the group is disabled. Reading
- protection groups requires the Veeam Backup Administrator, Restore Operator
- or Tape Operator role.
+ server, collected via the Veeam special agent. Reading protection groups
+ requires the Veeam Backup Administrator, Restore Operator or Tape Operator
+ role.
+
+ The summary shows the following values:
+
+ Type: how the group selects its computers: "Individual computers",
+ "Manually added", "Unmanaged", "Active Directory objects", "CSV file",
+ "Pre-installed agents", "Cloud machines" or "MongoDB".
+
+ Configured computers: the number of computers listed in the group's
+ configuration, not the number discovered or backed up. Only groups of type
+ "Individual computers" and "Manually added" list their computers; for all
+ other types the count is left out of the summary, and the details say so.
+
+ State: whether the group is "Enabled" or "Disabled".
+
+ The details show the group's description.
 
  This check is {OK} by default if the protection group is disabled; the
  state is configurable, since a deliberately disabled protection group is

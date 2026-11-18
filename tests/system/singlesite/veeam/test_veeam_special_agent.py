@@ -173,13 +173,15 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
     ),
     "Veeam Protection group Manually Added": ExpectedServiceResult(
         0,  # A disabled protection group is OK by default.
-        [r"\bManually added\b", r"\b1 configured computer\b", r"\bDisabled\b"],
+        [r"Type: Manually added\b", r"Configured computers: 1\b", r"State: Disabled\b"],
     ),
     "Veeam Protection group PG-Linux-Test": ExpectedServiceResult(
-        0, [r"\bIndividual computers\b", r"\b1 configured computer\b"]
+        0,
+        [r"Type: Individual computers\b", r"Configured computers: 1\b", r"State: Enabled\b"],
     ),
     "Veeam Protection group PG-Windows-Test": ExpectedServiceResult(
-        0, [r"\bIndividual computers\b", r"\b1 configured computer\b"]
+        0,
+        [r"Type: Individual computers\b", r"Configured computers: 1\b", r"State: Enabled\b"],
     ),
     "Veeam Managed server 172.31.26.65": ExpectedServiceResult(
         0, [r"Type: Linux\b", r"Status in Veeam: Available\b", r"Roles: none\b"]

@@ -110,13 +110,17 @@ def check_veeam_protection_groups(
     if (group := section.get(item)) is None:
         return
 
-    summary = _type_display_name(group.type)
-    if (count := group.computer_count) is not None:
-        summary += f", {count} configured computer{'' if count == 1 else 's'}"
-    if group.is_disabled:
-        yield Result(state=State(params["disabled_state"]), summary=f"{summary}, Disabled")
-    else:
-        yield Result(state=State.OK, summary=summary)
+    fields = [f"Type: {_type_display_name(group.type)}"]
+    if group.computer_count is not None:
+        fields.append(f"Configured computers: {group.computer_count}")
+    fields.append(f"State: {'Disabled' if group.is_disabled else 'Enabled'}")
+    yield Result(
+        state=State(params["disabled_state"]) if group.is_disabled else State.OK,
+        summary=", ".join(fields),
+    )
+
+    if group.computer_count is None:
+        yield Result(state=State.OK, notice="Configured computers: not listed for this group type")
 
     yield Result(
         state=State.OK,

@@ -42,22 +42,18 @@ def test_check_veeam_protection_groups_enabled_is_ok() -> None:
     section = parse_veeam_protection_groups([[_group()]])
     results = list(check_veeam_protection_groups("group-1", PARAMS, section))
     assert results[0] == Result(
-        state=State.OK, summary="Individual computers, 2 configured computers"
-    )
-
-
-def test_check_veeam_protection_groups_single_computer_is_singular() -> None:
-    section = parse_veeam_protection_groups([[_group(computers=[{"hostName": "pc-1"}])]])
-    results = list(check_veeam_protection_groups("group-1", PARAMS, section))
-    assert results[0] == Result(
-        state=State.OK, summary="Individual computers, 1 configured computer"
+        state=State.OK,
+        summary="Type: Individual computers, Configured computers: 2, State: Enabled",
     )
 
 
 def test_check_veeam_protection_groups_empty_computers_counts_zero() -> None:
     section = parse_veeam_protection_groups([[_group(type="ManuallyAdded", computers=[])]])
     results = list(check_veeam_protection_groups("group-1", PARAMS, section))
-    assert results[0] == Result(state=State.OK, summary="Manually added, 0 configured computers")
+    assert results[0] == Result(
+        state=State.OK,
+        summary="Type: Manually added, Configured computers: 0, State: Enabled",
+    )
 
 
 def test_check_veeam_protection_groups_type_without_computers_omits_count() -> None:
@@ -65,20 +61,33 @@ def test_check_veeam_protection_groups_type_without_computers_omits_count() -> N
     del group["computers"]
     section = parse_veeam_protection_groups([[json.dumps(group)]])
     results = list(check_veeam_protection_groups("group-1", PARAMS, section))
-    assert results[0] == Result(state=State.OK, summary="Active Directory objects")
+    assert results[0] == Result(
+        state=State.OK, summary="Type: Active Directory objects, State: Enabled"
+    )
+    assert (
+        Result(
+            state=State.OK,
+            notice="Configured computers: not listed for this group type",
+        )
+        in results
+    )
 
 
 def test_check_veeam_protection_groups_unknown_type_shows_raw_value() -> None:
     section = parse_veeam_protection_groups([[_group(type="SomeFutureType")]])
     results = list(check_veeam_protection_groups("group-1", PARAMS, section))
-    assert results[0] == Result(state=State.OK, summary="SomeFutureType, 2 configured computers")
+    assert results[0] == Result(
+        state=State.OK,
+        summary="Type: SomeFutureType, Configured computers: 2, State: Enabled",
+    )
 
 
 def test_check_veeam_protection_groups_disabled_is_ok_by_default() -> None:
     section = parse_veeam_protection_groups([[_group(isDisabled=True)]])
     results = list(check_veeam_protection_groups("group-1", PARAMS, section))
     assert results[0] == Result(
-        state=State.OK, summary="Individual computers, 2 configured computers, Disabled"
+        state=State.OK,
+        summary="Type: Individual computers, Configured computers: 2, State: Disabled",
     )
 
 
@@ -87,7 +96,8 @@ def test_check_veeam_protection_groups_disabled_state_is_configurable() -> None:
     section = parse_veeam_protection_groups([[_group(isDisabled=True)]])
     results = list(check_veeam_protection_groups("group-1", params, section))
     assert results[0] == Result(
-        state=State.CRIT, summary="Individual computers, 2 configured computers, Disabled"
+        state=State.CRIT,
+        summary="Type: Individual computers, Configured computers: 2, State: Disabled",
     )
 
 

@@ -29,7 +29,6 @@ def test_performance_bulk_change_activation(
         # A round costs about a minute of untimed setup and teardown, and 8 rounds keep the
         # mean as steady from night to night as 16 did.
         rounds=perftest_dist.rounds_or(8),
-        iterations=perftest_dist.iterations,
     )
 
 

@@ -17,10 +17,6 @@ adding one does not mean growing a class that every other scenario also imports.
 """
 
 import logging
-import os
-import re
-from collections.abc import Callable
-from pathlib import Path
 from time import time
 from urllib.parse import urljoin
 
@@ -147,22 +143,6 @@ class PerformanceTest:
             context.add_cookies([auth_cookie])
 
         return context.new_page()
-
-    @staticmethod
-    def auto_increment_filename(
-        path: Path, listdir: Callable[[str | Path | None], list[str]] = os.listdir
-    ) -> Path:
-        """
-        Returns the next available filename like file.1.txt, file.2.txt, etc.
-        Scans the target directory and increments based on existing files.
-        """
-        directory = path.parent
-        pattern = re.compile(rf"{re.escape(path.stem)}\.(\d+){re.escape(path.suffix)}$")
-        numbers = [
-            int(match.group(1)) for fname in listdir(directory) if (match := pattern.match(fname))
-        ]
-        next_num = max(numbers) + 1 if numbers else 1
-        return directory / f"{path.stem}.{next_num}{path.suffix}"
 
     @staticmethod
     def generate_ips(offset: int, max_count: int) -> list[str]:

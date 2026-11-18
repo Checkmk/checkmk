@@ -10,6 +10,7 @@
 import datetime
 import json
 import os
+import re
 import threading
 import time
 from collections.abc import Iterator
@@ -22,6 +23,29 @@ import psutil
 
 perf_dict = dict[str, int | float | str | None]
 nested_perf_dict = dict[str, perf_dict]
+
+
+def auto_increment_filename(path: Path, suffix: str | None = None, start: int = 0) -> Path:
+    """Return a path with an auto-incremented numeric suffix.
+
+    Scans the target directory for files matching "{stem}.{n}{suffix}", picks the
+    next available integer, and returns the corresponding Path.
+
+    Args:
+        path: The path to add the auto-incremented number to.
+        suffix: The suffix to append after the number (defaults to the suffix of the path).
+        start: The index to start counting at. 0 is not added.
+    """
+    directory = path.parent
+    suffix = suffix or path.suffix
+    stem = path.name.removesuffix(suffix)
+    pattern = re.compile(rf"{re.escape(stem)}\.(\d+){re.escape(suffix)}$")
+    numbers = [
+        int(match.group(1)) for fname in os.listdir(directory) if (match := pattern.match(fname))
+    ]
+    num = max(numbers) + 1 if numbers else (1 if path.exists() else start)
+    new_suffix = f".{num}{suffix}" if num else suffix
+    return directory / f"{stem}{new_suffix}"
 
 
 def _named_section(name: str, data: perf_dict) -> perf_dict:
@@ -239,9 +263,10 @@ def _init_resources_file(task_name: str) -> Path:
         results_dir = Path(os.getenv("RESULT_PATH") or Path(__file__).parents[2] / "results")
         results_dir /= "performance"
         results_dir.mkdir(parents=True, exist_ok=True)
-    resource_statistics_json = results_dir / f"{task_name}.resources.json"
-    resource_statistics_json.unlink(missing_ok=True)
-    return resource_statistics_json
+    # A further run under the same name gets a file of its own instead of replacing it. A dot in
+    # the name would read as such a file's number, so it becomes a hyphen, as in the upload.
+    name = task_name.replace(".", "-")
+    return auto_increment_filename(results_dir / f"{name}.resources.json", ".resources.json")
 
 
 def _log_resources(

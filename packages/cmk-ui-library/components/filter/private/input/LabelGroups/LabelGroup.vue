@@ -4,34 +4,25 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
-import FormAutocompleter from 'cmk-ui-library/components/FormAutocompleter/FormAutocompleter.vue'
+import {
+  ErrorResponse,
+  Response,
+  WarningResponse,
+  flattenSuggestions
+} from 'cmk-ui-library/components/CmkSuggestions'
+import type {
+  QuerySuggestionsFn,
+  Suggestions
+} from 'cmk-ui-library/components/CmkSuggestions/types'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed } from 'vue'
 
 import type { LabelGroupItem } from './types'
 
 const { _t } = usei18n()
 
-const autocompleter = computed(
-  () =>
-    ({
-      fetch_method: 'rest_autocomplete',
-      data: {
-        ident: 'label',
-        params: {
-          world: 'core',
-          context: {
-            group_labels: model.value.map((item) => item.label).filter((label) => label !== null)
-          },
-          strict: true,
-          escape_regex: false
-        }
-      }
-    }) as Autocompleter
-)
+const props = defineProps<{ suggestLabels: QuerySuggestionsFn }>()
 
 const model = defineModel<LabelGroupItem[]>({
   default: () => [{ operator: 'and', label: null }]
@@ -67,6 +58,32 @@ function tryDelete(index: number) {
 
   model.value = newValue
   return true
+}
+
+function labelOptions(index: number): Suggestions {
+  return {
+    type: 'callback-filtered',
+    querySuggestions: (query) => suggestUnusedLabels(index, query)
+  }
+}
+
+async function suggestUnusedLabels(
+  index: number,
+  query: string
+): Promise<ErrorResponse | WarningResponse | Response> {
+  const response = await props.suggestLabels(query)
+  if (response instanceof ErrorResponse) {
+    return response
+  }
+  const otherLabels = model.value.flatMap((item, itemIndex) =>
+    itemIndex === index || item.label === null ? [] : [item.label]
+  )
+  const choices = flattenSuggestions(response.choices).filter(
+    (suggestion) => suggestion.name === null || !otherLabels.includes(suggestion.name)
+  )
+  return response instanceof WarningResponse
+    ? new WarningResponse(response.warning, choices)
+    : new Response(choices)
 }
 
 function updateOperator(index: number, operator: string | null) {
@@ -125,11 +142,12 @@ if (model.value.length === 0) {
               />
             </div>
             <div class="cmk-label-group__item-label">
-              <FormAutocompleter
+              <CmkDropdown
                 :model-value="getCurrentLabelValue(index)"
-                :autocompleter="autocompleter"
-                :placeholder="_t('Select label...')"
-                :size="20"
+                :options="labelOptions(index)"
+                :input-hint="_t('Select label...')"
+                :no-results-hint="_t('No results found')"
+                :label="_t('Label')"
                 width="fill"
                 @update:model-value="(value: string | null) => updateLabel(index, value)"
               />

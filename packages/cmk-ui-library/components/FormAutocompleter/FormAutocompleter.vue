@@ -9,12 +9,11 @@ import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import type { ButtonVariants } from 'cmk-ui-library/components/CmkDropdown/CmkDropdownButton.vue'
 import {
   ErrorResponse,
-  Response,
+  type Response,
   type Suggestion,
-  WarningResponse,
-  flattenSuggestions
+  type WarningResponse
 } from 'cmk-ui-library/components/CmkSuggestions'
-import { fetchSuggestions } from 'cmk-ui-library/components/FormAutocompleter/autocompleter'
+import { suggestFromAutocompleter } from 'cmk-ui-library/components/FormAutocompleter/suggestFromAutocompleter'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useSlots } from 'vue'
@@ -45,21 +44,7 @@ async function suggestionCallback(
   if (props.autocompleter === undefined) {
     return new ErrorResponse('internal: props.autocompleter undefined')
   }
-  const newValue = await fetchSuggestions(props.autocompleter, query)
-  if (newValue instanceof ErrorResponse || newValue instanceof WarningResponse) {
-    return newValue
-  }
-
-  let result: Array<Suggestion> = flattenSuggestions(newValue.choices).filter(
-    (element: Suggestion) =>
-      element.name === null || (element.name.length > 0 && element.title.length > 0)
-  )
-
-  if (props.filter !== undefined) {
-    result = result.filter(props.filter)
-  }
-
-  return new Response(result)
+  return suggestFromAutocompleter(props.autocompleter, query, props.filter)
 }
 
 const slots = useSlots()

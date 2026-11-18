@@ -7,18 +7,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkList from 'cmk-ui-library/components/CmkList'
+import type { QuerySuggestionsFn } from 'cmk-ui-library/components/CmkSuggestions/types'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
-import type { LabelQueryBuilderConfig } from '../../../types.ts'
 import LabelGroup from './LabelGroup.vue'
 import type { LabelGroupItem, QueryItem } from './types.ts'
 
-interface Props {
-  component: LabelQueryBuilderConfig
-}
-
-defineProps<Props>()
+defineProps<{ suggestLabels: QuerySuggestionsFn }>()
 
 const { _t } = usei18n()
 
@@ -104,6 +100,7 @@ if (model.value.length === 0) {
           <div class="query-group__content">
             <LabelGroup
               :model-value="labelGroups"
+              :suggest-labels="suggestLabels"
               @update:model-value="(value: LabelGroupItem[]) => updateLabelGroup(index, value)"
             />
           </div>

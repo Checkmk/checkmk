@@ -15,6 +15,7 @@ import DualListComponent from './DualListComponent.vue'
 import DynamicDropdownComponent from './DynamicDropdownComponent.vue'
 import HiddenComponent from './HiddenComponent.vue'
 import LabelQueryBuilder from './LabelGroups/LabelQueryBuilder.vue'
+import { suggestCoreLabels } from './LabelGroups/coreLabelSuggestions.ts'
 import type { QueryItem } from './LabelGroups/types.ts'
 import { convertFromFilterStructure, convertToFilterStructure } from './LabelGroups/utils.ts'
 import MultiselectWithFreeTextComponent from './MultiselectWithFreeTextComponent.vue'
@@ -156,7 +157,7 @@ const onTagComponentUpdate = (values: TagMatchItem[]): void => {
     <!-- Label Query Builder Component -->
     <LabelQueryBuilder
       v-else-if="component.component_type === 'label_group'"
-      :component="component"
+      :suggest-labels="suggestCoreLabels(component.object_type)"
       :model-value="convertFromFilterStructure(configuredFilterValues || {}, component.id)"
       @update:model-value="onLabelComponentUpdate"
     />

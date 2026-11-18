@@ -284,7 +284,10 @@ class PerftestPlot:
                 f"{self.args.branch_version}-%Y.%m.%d.{self.args.edition}"
             )
             for i in range(num_old_jobs, 0, -1)
-        ] + [today.strftime(f"{self.args.branch_version}-%Y.%m.%d.{self.args.edition}")]
+        ] + [
+            today.strftime(f"{self.args.branch_version}-%Y.%m.%d.{self.args.edition}")
+            + self.args.job_suffix
+        ]
 
     def _read_benchmark_data(self, job_name: str) -> Measurements:
         """
@@ -522,6 +525,8 @@ class PerftestPlot:
                         ),
                         benchmark_data=benchmark_data,
                         performance_data=performance_data,
+                        # Earlier jobs still on disk are written again as they were.
+                        extend_job=self.append_db and job_name == self.job_names[-1],
                     )
 
     def create_ticket(self, summary: str, description: str) -> None:

@@ -52,6 +52,7 @@ class PerftestPlotArgs(argparse.Namespace):
         jira_token_path (Path): The path of file that holds the Jira token.
         branch_version (str): The default branch version.
         edition (str): The default edition.
+        job_suffix (str): The suffix of today's job, e.g. for a run of a custom git ref.
         update_db (bool): If True, update existing job data in the database.
         purge_db (bool): If True, delete existing job data from the database.
         append_db (bool): If True, replace only the uploaded scenarios of existing jobs.
@@ -90,6 +91,7 @@ class PerftestPlotArgs(argparse.Namespace):
     jira_token_path: Path
     branch_version: str
     edition: str
+    job_suffix: str
     update_db: bool
     purge_db: bool
     append_db: bool
@@ -344,6 +346,18 @@ def parse_args() -> PerftestPlotArgs:
         type=str,
         default="cee",
         help="The default edition for jobs (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--job-suffix",
+        dest="job_suffix",
+        type=str,
+        default="",
+        help=(
+            "The suffix of today's job, in its folder and its name in the database, e.g."
+            ' "_<git ref>" for a run of a custom git ref. Earlier jobs never carry one, so such a'
+            " job is checked against the default runs, but never part of their baselines"
+            ' (default: "%(default)s").'
+        ),
     )
     db_writes = parser.add_mutually_exclusive_group()
     db_writes.add_argument(

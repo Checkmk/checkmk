@@ -177,45 +177,84 @@ class PerformanceDb:
         system_release: str,
         system_machine: str,
         host_name: str,
+        extend: bool = False,
     ) -> int:
         """Add job details to the database if they do not exist already.
+
+        With extend, an existing job is widened to the given start and end, and takes the given
+        product release, if there is one.
 
         Returns the ID of the new or existing job entry.
         """
         try:
-            return self.get_job(job_name=job_name)[0]
+            job_id = self.get_job(job_name=job_name)[0]
         except ValueError:
+            return self._insert_job(
+                job_name=job_name,
+                start_timestamp=start_timestamp,
+                end_timestamp=end_timestamp,
+                product_release=product_release,
+                system_name=system_name,
+                system_release=system_release,
+                system_machine=system_machine,
+                host_name=host_name,
+            )
+        if extend:
             with self._cursor() as cursor:
                 cursor.execute(
                     """
-                    INSERT INTO jobs(
-                        job_name,
-                        start_timestamp,
-                        end_timestamp,
-                        product_release,
-                        system_name,
-                        system_release,
-                        system_machine,
-                        host_name
-                    )
-                    VALUES(%s,%s,%s,%s,%s,%s,%s,%s)
-                    RETURNING job_id
+                    UPDATE jobs SET
+                        start_timestamp = LEAST(start_timestamp, %s),
+                        end_timestamp = GREATEST(end_timestamp, %s),
+                        product_release = COALESCE(NULLIF(%s, ''), product_release)
+                    WHERE job_id = %s
                     """,
-                    (
-                        job_name,
-                        start_timestamp,
-                        end_timestamp,
-                        product_release,
-                        system_name,
-                        system_release,
-                        system_machine,
-                        host_name,
-                    ),
+                    (start_timestamp, end_timestamp, product_release, job_id),
                 )
-                job_id = result_record[0] if (result_record := cursor.fetchone()) else None
-            if job_id is None:
-                raise ValueError(f'Error adding job "{job_name}"!')
-            return job_id
+        return job_id
+
+    def _insert_job(
+        self,
+        job_name: str,
+        start_timestamp: Datetime,
+        end_timestamp: Datetime,
+        product_release: str,
+        system_name: str,
+        system_release: str,
+        system_machine: str,
+        host_name: str,
+    ) -> int:
+        with self._cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO jobs(
+                    job_name,
+                    start_timestamp,
+                    end_timestamp,
+                    product_release,
+                    system_name,
+                    system_release,
+                    system_machine,
+                    host_name
+                )
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s)
+                RETURNING job_id
+                """,
+                (
+                    job_name,
+                    start_timestamp,
+                    end_timestamp,
+                    product_release,
+                    system_name,
+                    system_release,
+                    system_machine,
+                    host_name,
+                ),
+            )
+            job_id = result_record[0] if (result_record := cursor.fetchone()) else None
+        if job_id is None:
+            raise ValueError(f'Error adding job "{job_name}"!')
+        return job_id
 
     def get_job(self, job_name: str) -> JobDetails:
         """
@@ -627,6 +666,7 @@ class PerformanceDb:
         test_endtime: Datetime,
         benchmark_data: Measurements,
         performance_data: MeasurementsList,
+        extend_job: bool = False,
     ) -> None:
         """
         Writes performance data and related metadata to the database.
@@ -644,6 +684,7 @@ class PerformanceDb:
             test_endtime (Datetime): Timestamp when the test ended.
             benchmark_data (Measurements): Dictionary containing benchmark metadata and results.
             performance_data (MeasurementsList): List of measurement dictionaries for the test.
+            extend_job (bool): Widen an existing job to this upload's start and end.
 
         Returns:
             None
@@ -662,6 +703,7 @@ class PerformanceDb:
             system_release=str(machine_info.get("release", "")),
             system_machine=str(machine_info.get("machine", "")),
             host_name=str(machine_info.get("node", "")),
+            extend=extend_job,
         )
         assert isinstance(benchmarks := benchmark_data["benchmarks"], list)
         benchmark = next((_ for _ in benchmarks if _["name"] == scenario_name), None)

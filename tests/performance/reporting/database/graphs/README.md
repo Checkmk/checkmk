@@ -44,7 +44,9 @@ split into backend and UI (`test_performance_ui_*`) variants:
 - `runtime_history.sql` / `runtime_history_ui.sql` — average test runtime.
 
 **Drilldown graphs** — a single release and scenario, overlaid with fixed
-reference baselines for releases `3.0.0` / `2.5.0` / `2.4.0`:
+reference baselines for releases `3.0.0` / `2.5.0` / `2.4.0`. Each baseline
+averages the release's jobs of its 100 most recent days with a run, without the
+latest day:
 
 - `cpu_history_drilldown.sql`, `memory_history_drilldown.sql`,
   `runtime_history_drilldown.sql`.
@@ -62,9 +64,11 @@ which draws the quartiles and range itself:
   the selected release, its round times (runtime) or its resource samples (CPU,
   memory).
 - `scenario_{runtime,cpu,memory}_spread_monthly.sql`: over a month, one value
-  per job of the release's 30 newest jobs.
+  per job of the release's 30 most recent days with a run.
 
-Both, like the drilldown baselines, take only the first run of a day, not its
-reruns (`_2`, `_3`, ...).
+Both leave out reruns (`_2`, `_3`, ...). Runs of a custom git ref (`_<ref>`)
+show up like the nightly runs. The windows count days, not runs, so these extra
+runs do not shorten them. The drilldown baselines leave out both: only default
+runs make up a reference line.
 
 Each file also carries a short header comment describing what it produces.

@@ -12,6 +12,7 @@ In CI, it uploads each suite and checks it against the weekly, monthly and yearl
 """
 
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -45,9 +46,30 @@ def version(given: str, branch: str, today: date) -> str:
     return given if given and given != "daily" else f"{branch}-{today:%Y.%m.%d}"
 
 
+def job_suffix(custom_git_ref: str) -> str:
+    """Keep a run of a custom git ref (the Jenkins parameter CUSTOM_GIT_REF) apart.
+
+    Its job gets the ref as suffix, e.g. "_a34da07c041c" for a commit or "_166605-8" for a
+    Gerrit patch set. So it neither replaces nor joins the day's default job.
+    """
+    if not custom_git_ref:
+        return ""
+    if custom_git_ref.startswith("refs/changes/"):
+        # refs/changes/<last two digits>/<change>/<patch set>
+        ref = custom_git_ref.removeprefix("refs/changes/").partition("/")[2]
+    else:
+        ref = custom_git_ref.removeprefix("refs/heads/")
+    ref = re.sub("[^A-Za-z0-9]", "-", ref)
+    return f"_{ref[:12] if re.fullmatch('[0-9a-f]{13,40}', ref) else ref}"
+
+
 def job_name(the_version: str, edition: str, env: Mapping[str, str]) -> str:
-    """A run's job in the database, and its results folder."""
-    return env.get("RELEASE") or f"{the_version}.{edition}"
+    """A run's job in the database, and its results folder.
+
+    An underscore in it starts the suffix, so the release part gets none.
+    """
+    release = env.get("RELEASE") or f"{the_version}.{edition}"
+    return release.replace("_", "-") + job_suffix(env.get("CUSTOM_GIT_REF", ""))
 
 
 def result_root(env: Mapping[str, str]) -> Path:
@@ -122,7 +144,7 @@ def main(argv: Sequence[str]) -> int:
         extra_args = ["--warn-only"]
     else:
         suites = _collect_bazel_suites(results, job_name(the_version, edition, env))
-        extra_args = ["--append-db"]
+        extra_args = []
     # A suite's failed upload or check fails the job, but only after every suite is uploaded.
     rc = 0
     for root_dir, db in suites:
@@ -137,6 +159,8 @@ def main(argv: Sequence[str]) -> int:
                 "--require-database",
                 "--log-level=INFO",
                 "--validate-baselines",
+                "--append-db",
+                f"--job-suffix={job_suffix(env.get('CUSTOM_GIT_REF', ''))}",
                 *extra_args,
             ]
         ):

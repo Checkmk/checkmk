@@ -425,17 +425,14 @@ class EventServer(ECServerThread):
 
         # HACK for testing: The real fix would involve breaking up these huge
         # class monsters.
-        if not create_pipes_and_sockets:
-            return
-
-        self.create_pipe()
-        self.open_eventsocket()
-        self.open_syslog_udp()
-        self.open_syslog_tcp()
-        self.open_snmptrap()
-        self._snmp_trap_parser = SNMPTrapParser(
-            self.settings, self._config, self._logger.getChild("snmp")
-        ).parse
+        if create_pipes_and_sockets:
+            self.create_pipe()
+            self.open_eventsocket()
+            self.open_syslog_udp()
+            self.open_syslog_tcp()
+            self.open_snmptrap()
+        # After the pipe and the sockets, loading MIBs can take a while.
+        self._snmp_trap_parser = self._make_snmp_trap_parser(config)
 
     @classmethod
     def status_columns(cls) -> Columns:
@@ -610,6 +607,12 @@ class EventServer(ECServerThread):
         except Exception as e:
             raise Exception("Cannot start builtin syslog-tcp server") from e
 
+    def _make_snmp_trap_parser(self, config: Config) -> SNMPTrapParser | None:
+        """Without receiving traps, we neither set up PySNMP nor load MIBs."""
+        if self.settings.options.snmptrap_udp is None:
+            return None
+        return SNMPTrapParser(self.settings, config, self._logger.getChild("snmp"))
+
     def open_snmptrap(self) -> None:
         endpoint = self.settings.options.snmptrap_udp
         try:
@@ -777,8 +780,10 @@ class EventServer(ECServerThread):
                 select_timeout = 1  # restore default select timeout
 
     def create_events_from_trap(self, data: bytes, address: tuple[str, int]) -> Iterator[Event]:
+        if (snmp_trap_parser := self._snmp_trap_parser) is None:  # no trap socket either
+            return
         try:
-            if varbinds_and_ipaddress := self._snmp_trap_parser(data, address):
+            if varbinds_and_ipaddress := snmp_trap_parser.parse(data, address):
                 yield create_event_from_trap(varbinds_and_ipaddress[0], varbinds_and_ipaddress[1])
         except Exception as e:
             # NOTE: SNMPTrapParser._handle_unauthenticated_snmptrap() logs more details about what
@@ -1137,9 +1142,7 @@ class EventServer(ECServerThread):
     def reload_configuration(self, config: Config, history: History) -> None:
         self._config = config
         self._history = history
-        self._snmp_trap_parser = SNMPTrapParser(
-            self.settings, self._config, self._logger.getChild("snmp")
-        ).parse
+        self._snmp_trap_parser = self._make_snmp_trap_parser(self._config)
         self.compile_rules(self._config["rule_packs"])
         self.host_config = HostConfig(self._logger, self._connection)
         self._rule_matcher = RuleMatcher(

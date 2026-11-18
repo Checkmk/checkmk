@@ -94,6 +94,8 @@ py_test(
     deps = [
         ":__test__",
         ":cmk-ec",
+        requirement("pyasn1"),
+        requirement("pysnmp"),
         requirement("pytest"),
         requirement("time-machine"),
     ],

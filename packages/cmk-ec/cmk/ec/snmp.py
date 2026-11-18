@@ -54,8 +54,6 @@ class SNMPTrapParser:
 
     def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
         self._logger = logger
-        if settings.options.snmptrap_udp is None:
-            return
 
         # Hand over our logger to PySNMP
         pysnmp.debug.set_logger(pysnmp.debug.Debug("all", printer=logger.debug))

@@ -9,10 +9,11 @@ import pytest
 
 import cmk.gui.watolib.host_attributes as attrs
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.site import omd_site
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.type_defs import CustomHostAttrSpec
-from cmk.gui.watolib.builtin_attributes import HostAttributeLabels
+from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeLockedBy
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.rulesets.v1 import Help, Title
 from tests.unit.cmk.gui.helpers.host_attributes_test_helper import BASE_EXPECTED_ATTRIBUTES
@@ -441,3 +442,18 @@ def test_deprecated_attributes_set_anew(
     stored: Mapping[str, object], attributes: Mapping[str, object], expected: list[str]
 ) -> None:
     assert attrs.deprecated_attributes_set_anew(stored, attributes) == expected
+
+
+@pytest.mark.usefixtures("request_context")
+def test_locked_by_accepts_connection_id_with_dot() -> None:
+    """A dynamic host management connection id is free text.
+
+    Every host the connection creates carries that id in its "Locked by"
+    attribute, and the attribute is validated when the host form is saved,
+    although it is read only. See SUP-30636.
+    """
+    valuespec = HostAttributeLockedBy().valuespec()
+    value = [str(omd_site()), "dcd", "esxi.example.com"]
+
+    valuespec.validate_datatype(value, "locked_by")
+    valuespec.validate_value(value, "locked_by")

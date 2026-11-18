@@ -371,7 +371,7 @@ private:
     friend class PlayerTest;
     FRIEND_TEST(PlayerTest, All);
     FRIEND_TEST(PlayerTest, Extensions);
-    FRIEND_TEST(PlayerTest, RealLifeInventory_Simulation);
+    FRIEND_TEST(PlayerTest, PowerShellPlugin_Simulation);
     FRIEND_TEST(v, StartStop);
 #endif
 };

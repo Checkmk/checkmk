@@ -141,24 +141,29 @@ TEST(PlayerTest, All) {
     EXPECT_TRUE(box.processes_.size() == 3);
 }
 
-TEST(PlayerTest, RealLifeInventory_Simulation) {
+TEST(PlayerTest, PowerShellPlugin_Simulation) {
     using namespace std::chrono;
     using namespace std;
     using namespace cma::cfg;
     namespace fs = std::filesystem;
 
-    const wstring plugin = L"mk_inventory.ps1";
-    const wstring plugin_state_file = L"mk_inventory.local";
+    const wstring plugin = L"player_test.ps1";
+    const wstring plugin_state_file = L"player_test.local";
 
-    error_code ec;
+    // A plug-in of our own: production plug-ins may be missing.
+    // It writes a section of some size and a file into MK_STATEDIR.
+    tst::TempDirPair dirs{test_info_->name()};
+    const auto plugin_path = dirs.in() / plugin;
+    tst::CreateTextFile(plugin_path,
+                        "Write-Output '<<<player_test>>>'\n"
+                        "foreach ($i in 1..100) {\n"
+                        "    Write-Output ('{0:D4} {1}' -f $i, ('x' * 45))\n"
+                        "}\n"
+                        "Set-Content -Path (Join-Path $env:MK_STATEDIR "
+                        "'player_test.local') -Value 'done'\n");
+
     vector<wstring> exe;
-    auto plugin_path = GetCfg().getSystemPluginsDir();
-    ASSERT_TRUE(fs::exists(plugin_path, ec));
-
-    auto data_path = GetCfg().getDataDir();
-    ASSERT_TRUE(fs::exists(data_path, ec));
-
-    exe.push_back((plugin_path.lexically_normal() / plugin).wstring());
+    exe.push_back(plugin_path.lexically_normal().wstring());
     {
         TheBox box;
         EXPECT_TRUE(box.exec_array_.empty());
@@ -167,16 +172,9 @@ TEST(PlayerTest, RealLifeInventory_Simulation) {
         EXPECT_TRUE(box.exec_array_[0].find(plugin) != wstring::npos);
     }
 
-    // folder prepare
-    auto fs_state_path = GetCfg().getStateDir();
-    auto state_path = wtools::ToStr(fs_state_path);
-    ASSERT_TRUE(!state_path.empty());
-
-    // delete all file in folder
-    std::filesystem::remove_all(state_path, ec);  // no exception here
-    std::filesystem::create_directory(state_path, ec);
-
-    auto _ = tools::win::SetEnv(std::string{envs::kMkStateDirName}, state_path);
+    const auto fs_state_path = dirs.out();
+    auto _ = tools::win::SetEnv(std::string{envs::kMkStateDirName},
+                                wtools::ToStr(fs_state_path));
     TheBox box;
     box.start(L"id", exe);
     box.waitForAllProcesses(20000ms, true);

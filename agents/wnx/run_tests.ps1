@@ -135,7 +135,6 @@ function Create_UnitTestDir([String]$prefix) {
     New-Item -ItemType Directory -Path "$root\plugins" -ErrorAction Stop > nul
     New-Item -ItemType Directory -Path "$user_dir\bin" -ErrorAction Stop > nul
 
-    & xcopy "..\windows\plugins\*.*"           "$root\plugins" "/D" "/Y" > nul
     & xcopy ".\tests\files\ohm\cli\*.*"        "$user_dir\bin" "/D" "/Y" > nul
     & xcopy ".\install\resources\check_mk.yml" "$root" "/D" "/Y" > nul
 

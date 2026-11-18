@@ -374,10 +374,10 @@ pkg_files(
     prefix = "test/root",
 )
 
-pkg_files(
+# Empty: no test may rely on the agent plug-ins, which may be missing.
+pkg_mkdirs(
     name = "watest_qemu_test_root_plugins",
-    srcs = ["//agents/windows/plugins:top_level_plugins"],
-    prefix = "test/root/plugins",
+    dirs = ["test/root/plugins"],
 )
 
 pkg_files(
@@ -401,10 +401,7 @@ pkg_mkdirs(
 
 # What watest-qemu needs in the guest: the checkout paths the suite reads,
 # and the WNX_TEST_ROOT tree, mirroring run_tests.ps1's Create_UnitTestDir:
-# without it watest falls back to SOLUTION_DIR resolution, and the tests
-# reading the staged root (PluginTest.FilesAndFoldersComponent,
-# PlayerTest.RealLifeInventory_Simulation) skip or fail on the empty
-# plugins dir.
+# without it watest falls back to SOLUTION_DIR resolution.
 pkg_tar(
     name = "watest_qemu_stage",
     testonly = True,

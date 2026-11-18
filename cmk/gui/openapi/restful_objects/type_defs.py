@@ -218,6 +218,7 @@ CmkEndpointName = Literal[
     "cmk/fetch_phase_one",
     "cmk/list",
     "cmk/list_buckets",
+    "cmk/list_labels",
     "cmk/list_widget_inventory",
     "cmk/list_icon_categories",
     "cmk/list_icon_emblems",

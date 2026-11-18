@@ -3,6 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { ObjectType } from '@/maps/types/api'
+
+/** Where the daemon leaves out members as NagVis does. */
+export function leavesOutMembers(type: ObjectType): boolean {
+  return type === 'host' || type === 'hostgroup' || type === 'servicegroup'
+}
 
 export interface MembersQuery {
   objectTypes: 'host' | 'service'

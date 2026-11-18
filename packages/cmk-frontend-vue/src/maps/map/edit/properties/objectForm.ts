@@ -10,6 +10,7 @@ import type {
   MonitoredObjectType,
   ObjectType
 } from '@/maps/types/api'
+import { leavesOutMembers } from '@/maps/utils/memberFilter'
 
 /**
  * How a label is aligned. The wire model also knows 'justify', which the card
@@ -135,11 +136,6 @@ export function choosesServiceCounting(bound: ObjectType, form: ObjectForm): boo
 /** What the object stands for: a line, the object type it shows the state of. */
 export function boundTypeOf(form: ObjectForm, object: MapElement): ObjectType {
   return object.type === 'line' ? form.line_object_type : object.type
-}
-
-/** Where the daemon leaves out members as NagVis does. */
-export function leavesOutMembers(type: ObjectType): boolean {
-  return type === 'host' || type === 'hostgroup' || type === 'servicegroup'
 }
 
 /** The object as the form sees it. */

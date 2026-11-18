@@ -35,7 +35,6 @@ import {
   type ObjectForm,
   boundTypeOf,
   formFromObject,
-  leavesOutMembers,
   updatesFromForm,
   weatherColorNeedsMetric
 } from '@/maps/map/edit/properties/objectForm'
@@ -57,6 +56,7 @@ import type { MapElement, MapViewType, ObjectState } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { objectDeleteTitle, objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkViewUrl } from '@/maps/utils/mapNavigation'
+import { leavesOutMembers } from '@/maps/utils/memberFilter'
 import { VISUAL_ONLY_TYPES, getMapElementName } from '@/maps/utils/naming'
 
 const props = defineProps<{

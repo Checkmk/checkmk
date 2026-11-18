@@ -88,6 +88,36 @@ async function renderDrawer(
   return { ...utils, commands: services.apis.commands, toasts: services.toasts }
 }
 
+describe('DetailDrawer – members left out', () => {
+  function host(extra: Partial<MapElement> = {}): MapElement {
+    return anObject({ id: 'h1', type: 'host', host_name: 'web01', ...extra })
+  }
+
+  const hostState = (): ObjectState =>
+    criticalState({
+      object_id: 'h1',
+      type: 'host',
+      state: 'UP',
+      services_summary: { ok: 0, warning: 0, critical: 0, unknown: 0, pending: 0 }
+    })
+
+  it('says which members its service counts leave out', async () => {
+    await renderDrawer({
+      object: host({ exclude_member_states: '.*' }),
+      state: hostState(),
+      connectionId: 'test'
+    })
+
+    expect(screen.getByText('Members matching ".*" are not counted.')).toBeInTheDocument()
+  })
+
+  it('says nothing about members when nothing is left out', async () => {
+    await renderDrawer({ object: host(), state: hostState(), connectionId: 'test' })
+
+    expect(screen.queryByText(/are not counted/)).toBeNull()
+  })
+})
+
 describe('DetailDrawer – header rendering', () => {
   it('renders the object name, type pill, state pill and check output', async () => {
     await renderDrawer({

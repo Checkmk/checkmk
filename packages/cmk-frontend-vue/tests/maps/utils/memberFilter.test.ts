@@ -5,7 +5,32 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { groupMembersQuery } from '@/maps/utils/memberFilter'
+import { groupMembersQuery, stateExclusion } from '@/maps/utils/memberFilter'
+
+import { anObject } from '../support/fixtures'
+
+describe('stateExclusion', () => {
+  it('takes the pattern for the state over the one for the members', () => {
+    const host = anObject({
+      id: 'h',
+      type: 'host',
+      exclude_members: 'Disk',
+      exclude_member_states: 'CPU'
+    })
+
+    expect(stateExclusion(host)).toBe('CPU')
+  })
+
+  it('falls back to the pattern for the members', () => {
+    expect(stateExclusion(anObject({ id: 'g', type: 'hostgroup', exclude_members: 'web' }))).toBe(
+      'web'
+    )
+  })
+
+  it('has none for an object the daemon leaves no members out of', () => {
+    expect(stateExclusion(anObject({ id: 's', type: 'service', exclude_members: 'x' }))).toBeNull()
+  })
+})
 
 describe('groupMembersQuery', () => {
   it('leaves out the hosts of a host group that match', () => {

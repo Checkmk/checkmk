@@ -3,11 +3,22 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ObjectType } from '@/maps/types/api'
+import type { MapElement, ObjectType } from '@/maps/types/api'
 
 /** Where the daemon leaves out members as NagVis does. */
 export function leavesOutMembers(type: ObjectType): boolean {
   return type === 'host' || type === 'hostgroup' || type === 'servicegroup'
+}
+
+/**
+ * The pattern whose members the object's state and counts leave out, as the
+ * daemon's ``_state_exclusion`` picks it: the one for the state wins.
+ */
+export function stateExclusion(object: MapElement): string | null {
+  if (!leavesOutMembers(object.type)) {
+    return null
+  }
+  return object.exclude_member_states || object.exclude_members || null
 }
 
 export interface MembersQuery {

@@ -16,6 +16,7 @@ import { computed } from 'vue'
 
 import MapStateCounts, { type MapStateCount } from '@/maps/map/components/MapStateCounts.vue'
 import type { MapElement, ObjectDetails, ObjectState } from '@/maps/types/api'
+import { stateExclusion } from '@/maps/utils/memberFilter'
 
 import { checkInfoRows, identityRows, stateModifiers } from '../statusFacts'
 import DetailMetaList from './DetailMetaList.vue'
@@ -39,6 +40,10 @@ const { _t } = usei18n()
 
 const modifiers = computed(() => stateModifiers(props.state, props.details))
 
+const uncounted = computed(() =>
+  props.hostChips.length || props.serviceChips.length ? stateExclusion(props.object) : null
+)
+
 const facts = computed(() => [
   ...identityRows(props.object, props.state, props.displayName, props.checkmkUrl, _t),
   ...checkInfoRows(props.object, props.state, props.details, props.nowMs, _t)
@@ -53,6 +58,9 @@ const facts = computed(() => [
 
     <MapStateCounts v-if="hostChips.length" :counts="hostChips" :label="_t('Hosts')" />
     <MapStateCounts v-if="serviceChips.length" :counts="serviceChips" :label="_t('Services')" />
+    <p v-if="uncounted" class="maps-detail-status-tab__uncounted">
+      {{ _t('Members matching "%{pattern}" are not counted.', { pattern: uncounted }) }}
+    </p>
 
     <DetailMetaList :rows="facts" />
 
@@ -80,5 +88,12 @@ const facts = computed(() => [
   overflow: auto;
   white-space: pre-wrap;
   max-height: 180px;
+}
+
+.maps-detail-status-tab__uncounted {
+  margin: 0;
+  color: var(--font-color-dimmed);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
 }
 </style>

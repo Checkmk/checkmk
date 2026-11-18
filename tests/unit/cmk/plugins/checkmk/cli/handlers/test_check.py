@@ -5,6 +5,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.specs.checkresults import ServiceState
@@ -57,11 +59,24 @@ def test_the_requested_host_is_checked() -> None:
     assert check_host.checked == [(HostName("myhost"), _request(), OMD_ROOT, False)]
 
 
-def test_the_check_exits_with_the_hosts_state() -> None:
-    assert (
-        _CheckCommand(check_host=_FakeCheckHost(state=2)).run(context(), _request())
-        == CLIExitCode.ERROR
-    )
+@pytest.mark.parametrize(
+    ["state", "expected"],
+    [
+        (0, CLIExitCode.SUCCESS),
+        (1, CLIExitCode.FAILURE),
+        (2, CLIExitCode.ERROR),
+        (3, CLIExitCode.UNKNOWN),
+        (4, CLIExitCode.UNKNOWN),
+        (-1, CLIExitCode.UNKNOWN),
+        (127, CLIExitCode.UNKNOWN),
+    ],
+)
+def test_the_check_exits_with_the_monitoring_meaning_of_the_hosts_state(
+    state: int, expected: CLIExitCode
+) -> None:
+    check_host = _FakeCheckHost(state=state)
+
+    assert _CheckCommand(check_host=check_host).run(context(), _request()) == expected
 
 
 def test_a_failed_check_exits_three() -> None:

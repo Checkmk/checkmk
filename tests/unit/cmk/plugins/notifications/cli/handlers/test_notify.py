@@ -16,27 +16,9 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.notifications.cli.handlers.notify import (
-    _notification_exit_code,
     _NotifyCommand,
 )
 from cmk.plugins.notifications.cli.notify import NotifyRequest
-
-
-@pytest.mark.parametrize(
-    ["returncode", "expected"],
-    [
-        pytest.param(None, CLIExitCode.SUCCESS, id="no result"),
-        pytest.param(0, CLIExitCode.SUCCESS, id="success"),
-        pytest.param(1, CLIExitCode.FAILURE, id="temporary failure"),
-        pytest.param(2, CLIExitCode.ERROR, id="permanent failure"),
-        pytest.param(127, CLIExitCode.ERROR, id="missing interpreter"),
-        pytest.param(-9, CLIExitCode.ERROR, id="killed script"),
-    ],
-)
-def test_a_notification_script_result_keeps_its_retry_meaning(
-    returncode: int | None, expected: CLIExitCode
-) -> None:
-    assert _notification_exit_code(returncode) == expected
 
 
 class _FakeEditionOf:
@@ -108,6 +90,25 @@ def _context(*, debug: bool = False) -> CLIContext:
 
 def _request(*arguments: str, log_to_stdout: bool = False) -> NotifyRequest:
     return NotifyRequest(log_to_stdout=log_to_stdout, keepalive=False, arguments=arguments)
+
+
+@pytest.mark.parametrize(
+    ["returncode", "expected"],
+    [
+        pytest.param(None, CLIExitCode.SUCCESS, id="no result"),
+        pytest.param(0, CLIExitCode.SUCCESS, id="success"),
+        pytest.param(1, CLIExitCode.FAILURE, id="temporary failure"),
+        pytest.param(2, CLIExitCode.ERROR, id="permanent failure"),
+        pytest.param(127, CLIExitCode.ERROR, id="missing interpreter"),
+        pytest.param(-9, CLIExitCode.ERROR, id="killed script"),
+    ],
+)
+def test_a_notification_script_result_keeps_its_retry_meaning(
+    returncode: int | None, expected: CLIExitCode
+) -> None:
+    notify = _FakeNotify(result=returncode)
+
+    assert _notify_command(notify=notify).run(_context(), _request("fake-service")) == expected
 
 
 _SPOOLFILE = ("spoolfile", "/spool/1")

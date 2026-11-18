@@ -16,10 +16,7 @@ from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.diagnostics.engine import DumpSelection
 from cmk.diagnostics.internal import DiagnosticsPlugin, Help, Sensitivity, Topic
 from cmk.plugins.diagnostics.cli.create_dump import CliSelection
-from cmk.plugins.diagnostics.cli.handlers.create_dump import (
-    _CreateDiagnosticsDumpCommand,
-    _resolve_cli_selection,
-)
+from cmk.plugins.diagnostics.cli.handlers.create_dump import _CreateDiagnosticsDumpCommand
 
 
 def _make_cli_plugin(
@@ -47,41 +44,6 @@ _CLI_CATALOGUE = {
         _make_cli_plugin("b_high", _CLI_TOPIC_B, Sensitivity.HIGH),
     )
 }
-
-
-def test_without_a_selection_only_always_plugins_run() -> None:
-    selection = CliSelection(
-        list_plugins=False, all_topics=None, plugins=(), checkmk_server_host=None
-    )
-
-    assert _resolve_cli_selection(_CLI_CATALOGUE, selection).plugins == []
-
-
-def test_resolve_cli_selection() -> None:
-    selection = _resolve_cli_selection(
-        _CLI_CATALOGUE,
-        CliSelection(
-            list_plugins=False,
-            all_topics=Sensitivity.LOW,
-            plugins=("b_high",),
-            checkmk_server_host="my_server",
-        ),
-    )
-    assert selection.checkmk_server_host == "my_server"
-    assert "a_low" in selection.plugins  # low via --all-topics
-    assert "a_medium" not in selection.plugins  # medium exceeds the threshold
-    assert "b_high" in selection.plugins  # explicitly selected
-    assert "always_one" not in selection.plugins  # runs anyway, needs no selection
-
-
-def test_resolve_cli_selection_rejects_unknown() -> None:
-    with pytest.raises(Exception, match="Unknown plugin"):
-        _resolve_cli_selection(
-            _CLI_CATALOGUE,
-            CliSelection(
-                list_plugins=False, all_topics=None, plugins=("nope",), checkmk_server_host=None
-            ),
-        )
 
 
 _OMD_ROOT = Path("/omd/sites/mysite")
@@ -133,6 +95,36 @@ def test_the_dump_is_created_with_the_selected_plugins() -> None:
 
     assert create_dump.asked == [
         (_OMD_ROOT, DumpSelection(plugins=["b_high"], checkmk_server_host=""), False)
+    ]
+
+
+def test_without_a_selection_only_the_plugins_that_always_run_are_left() -> None:
+    create_dump = _FakeCreateDump()
+
+    _dump_command(create_dump).run(_context(), _selection())
+
+    assert create_dump.asked == [
+        (_OMD_ROOT, DumpSelection(plugins=[], checkmk_server_host=""), False)
+    ]
+
+
+def test_all_topics_select_the_plugins_up_to_their_sensitivity() -> None:
+    create_dump = _FakeCreateDump()
+    selection = CliSelection(
+        list_plugins=False,
+        all_topics=Sensitivity.LOW,
+        plugins=("b_high",),
+        checkmk_server_host="my_server",
+    )
+
+    _dump_command(create_dump).run(_context(), selection)
+
+    assert create_dump.asked == [
+        (
+            _OMD_ROOT,
+            DumpSelection(plugins=["a_low", "b_high"], checkmk_server_host="my_server"),
+            False,
+        )
     ]
 
 

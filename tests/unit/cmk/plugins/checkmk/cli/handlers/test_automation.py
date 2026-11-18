@@ -13,10 +13,7 @@ from cmk.automations.engine import AutomationError
 from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.plugins.checkmk.cli.automation import AutomationRequest
-from cmk.plugins.checkmk.cli.handlers.automation import (
-    _automation_error_exit_code,
-    _AutomationCommand,
-)
+from cmk.plugins.checkmk.cli.handlers.automation import _AutomationCommand
 
 from ._context import context, OMD_ROOT
 
@@ -54,10 +51,12 @@ def _request(*arguments: str) -> AutomationRequest:
         (AutomationError.UNKNOWN_ERROR, CLIExitCode.ERROR),
     ],
 )
-def test_an_automation_error_exits_with_its_value(
+def test_a_failed_automation_exits_with_its_error(
     error: AutomationError, expected: CLIExitCode
 ) -> None:
-    assert _automation_error_exit_code(error) == expected
+    execute = _FakeExecuteAutomation(error)
+
+    assert _AutomationCommand(execute=execute).run(context(), _request("test")) == expected
 
 
 def test_the_named_automation_runs_with_its_arguments() -> None:
@@ -83,9 +82,3 @@ def test_the_result_is_written_serialized(capsys: pytest.CaptureFixture[str]) ->
     _AutomationCommand(execute=_FakeExecuteAutomation()).run(context(), _request("test"))
 
     assert capsys.readouterr().out == "('done',)\n"
-
-
-def test_a_failed_automation_exits_with_its_error() -> None:
-    execute = _FakeExecuteAutomation(AutomationError.UNKNOWN_ERROR)
-
-    assert _AutomationCommand(execute=execute).run(context(), _request("test")) == CLIExitCode.ERROR

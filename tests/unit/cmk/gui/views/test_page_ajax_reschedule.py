@@ -27,3 +27,82 @@ def test_reschedule_rejects_a_host_not_visible_to_the_user(
 
     with mock_livestatus, pytest.raises(MKGeneralException, match="not found"):
         PageRescheduleCheck().page()
+
+
+def _set_request_vars(**request_vars: str) -> None:
+    for name, value in request_vars.items():
+        request.set_var(name, value)
+    request.set_var("_csrf_token", str(session.session_info.csrf_token))
+
+
+def _add_services(mock_livestatus: MockLiveStatusConnection, *names: str) -> None:
+    mock_livestatus.add_table(
+        "services",
+        [
+            {
+                "host_name": "heute",
+                "description": name,
+                "service_description": name,
+                "last_check": 0,
+                "state": 0,
+                "plugin_output": "OK",
+            }
+            for name in names
+        ],
+        site="NO_SITE",
+    )
+
+
+def _wait_query(service: str, wait_timeout: str) -> str:
+    return (
+        f"GET services\nWaitObject: heute;{service}\nWaitCondition: last_check >= ...\n"
+        f"WaitTimeout: {wait_timeout}\nWaitTrigger: check\n"
+        "Columns: last_check state plugin_output\nFilter: host_name = heute\n"
+        f"Filter: service_description = {service}\nColumnHeaders: off"
+    )
+
+
+def _expect_visibility_check(mock_livestatus: MockLiveStatusConnection, service: str) -> None:
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name\nFilter: host_name = heute\n"
+        f"Filter: service_description = {service}",
+        sites=["NO_SITE"],
+    )
+
+
+def _expect_check_mk_then_discovery(
+    mock_livestatus: MockLiveStatusConnection, discovery: str
+) -> None:
+    _add_services(mock_livestatus, "Check_MK", discovery)
+    _expect_visibility_check(mock_livestatus, discovery)
+    mock_livestatus.expect_query(
+        "COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;heute;Check_MK;...", match_type="ellipsis"
+    )
+    mock_livestatus.expect_query(
+        _wait_query("Check_MK", "..."), match_type="ellipsis", sites=["NO_SITE"]
+    )
+    mock_livestatus.expect_query(
+        f"COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;heute;{discovery};...",
+        match_type="ellipsis",
+    )
+
+
+@pytest.mark.parametrize(
+    "discovery",
+    [
+        pytest.param("Check_MK Discovery", id="current-name"),
+        pytest.param("Check_MK inventory", id="old-name"),
+    ],
+)
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_rescheduling_discovery_reschedules_check_mk_first(
+    mock_livestatus: MockLiveStatusConnection, discovery: str
+) -> None:
+    _set_request_vars(site="NO_SITE", host="heute", service=discovery)
+    _expect_check_mk_then_discovery(mock_livestatus, discovery)
+    mock_livestatus.expect_query(
+        _wait_query(discovery, "..."), match_type="ellipsis", sites=["NO_SITE"]
+    )
+
+    with mock_livestatus:
+        PageRescheduleCheck().page()

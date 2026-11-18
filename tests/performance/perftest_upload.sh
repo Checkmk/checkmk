@@ -33,7 +33,8 @@ upload() {
     shift 2
     [ -n "${CI}" ] || return 0
     local plot_args=(
-        --branch-version="${BRANCH}" --product-release="${VERSION}" --root-dir="${root_dir}"
+        --branch-version="${BRANCH}" --product-release="${VERSION}" --edition="${EDITION}"
+        --root-dir="${root_dir}"
         --dbname="${database}" --dbhost=qa.lan.checkmk.net --require-database
         --log-level=INFO --validate-baselines "$@"
     )
@@ -65,8 +66,9 @@ fi
 # A suite's failed upload or baseline check fails the job, but only after every suite is uploaded.
 RC=0
 
-TESTLOGS="$(bazel info bazel-testlogs)"
-for target in $(bazel query --output=label "tests(//tests/performance:bazel_performance)"); do
+TESTLOGS="$(bazel info bazel-testlogs)" || exit 1
+TARGETS="$(bazel query --output=label "tests(//tests/performance:bazel_performance)")" || exit 1
+for target in ${TARGETS}; do
     package="${target%:*}"
     suite="$(basename "${package}")"
     suite="${suite#cmk-}"

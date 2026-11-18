@@ -117,6 +117,18 @@ def test_without_todays_run_the_previous_one_is_not_checked_again() -> None:
     assert [(alert.is_failure, "not found" in alert.message) for alert in alerts] == [(False, True)]
 
 
+def test_a_run_without_resource_samples_is_checked_for_its_runtime() -> None:
+    jobs = _jobs({"test_x": (1.0, 50.0, 40.0)}, {"test_x": (2.0, 50.0, 40.0)})
+    del jobs[list(jobs)[-1]][1]["test_x"]
+    baselines = _baselines(jobs)
+
+    alerts = baselines.validate_performance_baselines()
+
+    assert [("Execution time" in alert.message, alert.is_failure) for alert in alerts] == [
+        (True, True)
+    ]
+
+
 def test_a_scenario_missing_from_the_latest_run_is_reported_without_failing() -> None:
     baselines = _baselines(_jobs({"test_x": (1.0, 50.0, 40.0)}, {}))
 

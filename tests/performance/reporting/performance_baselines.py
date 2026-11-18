@@ -183,8 +183,10 @@ class PerformanceBaselines:
         if not benchmark:
             return None
         time_avg = benchmark["stats"]["mean"]
-        cpu_avg = self._get_mean_value(job[1][scenario_name], self.cpu_usage_metric)
-        mem_avg = self._get_mean_value(job[1][scenario_name], self.memory_usage_metric)
+        # Without resource samples, CPU and memory average 0, which never exceeds a baseline.
+        samples = job[1].get(scenario_name, [])
+        cpu_avg = self._get_mean_value(samples, self.cpu_usage_metric)
+        mem_avg = self._get_mean_value(samples, self.memory_usage_metric)
 
         return AverageValues(*(time_avg, cpu_avg, mem_avg))
 

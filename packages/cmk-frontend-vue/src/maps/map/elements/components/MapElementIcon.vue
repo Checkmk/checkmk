@@ -83,7 +83,7 @@ const imageStyle = computed(() => ({
 </script>
 
 <template>
-  <div class="maps-map-element-icon">
+  <div class="maps-map-element-icon" data-object-icon>
     <!-- draggable="false": an HTML5 drag would swallow every following
          mousemove and break the canvas's own drag. -->
     <img

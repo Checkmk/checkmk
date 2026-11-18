@@ -56,6 +56,11 @@ export function edgePoint(
   return { x: box.x + dx * t, y: box.y + dy * t }
 }
 
+/** The icon an object is drawn with, which a caption may move off the object's position. */
+export function objectIcon(root: ParentNode, id: string): HTMLElement | null {
+  return root.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"] [data-object-icon]`)
+}
+
 export function useCanvasLineAnchors(source: {
   canvas: Readonly<ShallowRef<HTMLElement | null>>
   config: () => MapConfig
@@ -89,8 +94,8 @@ export function useCanvasLineAnchors(source: {
     if (!canvas) {
       return null
     }
-    const wrapper = canvas.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"]`)
-    const icon = wrapper?.querySelector<HTMLElement>('[data-object-icon]')
+    const icon = objectIcon(canvas, id)
+    const wrapper = icon?.closest<HTMLElement>('[data-object-id]')
     if (!wrapper || !icon) {
       return null
     }
@@ -144,6 +149,10 @@ export function useCanvasLineAnchors(source: {
     }
     const size = objectIconSize(object, source.iconSizes())
     const { sx, sy } = source.scale()
+    // A canvas not yet laid out has no size to aim at.
+    if (sx === 0 || sy === 0) {
+      return null
+    }
     return { x: position.x, y: position.y, halfX: size / 2 / sx, halfY: size / 2 / sy }
   }
 

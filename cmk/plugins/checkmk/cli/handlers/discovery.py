@@ -40,7 +40,7 @@ from cmk.base.errorhandling import (
 )
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.cpu_tracking import CPUTracker
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, OnError
+from cmk.ccc.exceptions import MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checking import make_timing_results
 from cmk.checkengine.discovery import (
@@ -547,7 +547,7 @@ class _DiscoverCommand:
             succeeded = self.discover(
                 request, omd_root=context.omd_root, debug=context.global_options.debug
             )
-        except (MKBailOut, MKGeneralException, PluginSelectionError) as e:
+        except (config.HostSelectionError, MKGeneralException, PluginSelectionError) as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

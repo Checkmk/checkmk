@@ -48,7 +48,7 @@ from cmk.base.configlib.servicelevel import make_service_level_config
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.regex import regex
 from cmk.ccc.site import omd_site, SiteId
@@ -716,6 +716,10 @@ def make_loading_result(
     )
 
 
+class HostSelectionError(Exception):
+    """A host name or tag specification does not match any host"""
+
+
 def parse_hostname_list(
     config_cache: ConfigCache,
     hosts_config: Hosts,
@@ -764,7 +768,9 @@ def _expand_host_specs(
             hostlist.extend(matched)
             continue
 
-        raise MKBailOut(f"Host name or tag specification {specs!r} does not match any host.")
+        raise HostSelectionError(
+            f"Host name or tag specification {specs!r} does not match any host."
+        )
 
     return hostlist
 

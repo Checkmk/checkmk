@@ -16,6 +16,7 @@ from ._impl import handle_ip_lookup_failure as handle_ip_lookup_failure
 from ._impl import HOST_CHECK_INTERVAL as HOST_CHECK_INTERVAL
 from ._impl import HostCheckTable as HostCheckTable
 from ._impl import HostgroupName as HostgroupName
+from ._impl import HostSelectionError as HostSelectionError
 from ._impl import IgnoredActiveServices as IgnoredActiveServices
 from ._impl import iter_skipped_services_warnings as iter_skipped_services_warnings
 from ._impl import load as load

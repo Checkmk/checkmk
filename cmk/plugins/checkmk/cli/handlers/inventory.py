@@ -28,7 +28,7 @@ from cmk.base.core.active_config_layout import (
 from cmk.base.errorhandling import create_section_crash_dump, RecordingFetcher
 from cmk.base.inventory import execute_active_check_inventory
 from cmk.ccc.config_path import VersionedConfigPath
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine import inventory
@@ -276,7 +276,7 @@ class _InventoryCommand:
     def run(self, context: CLIContext, request: InventoryRequest) -> CLIExitCode:
         try:
             self.inventorize(request, omd_root=context.omd_root, debug=context.global_options.debug)
-        except (MKBailOut, MKGeneralException, PluginSelectionError) as e:
+        except (config.HostSelectionError, MKGeneralException, PluginSelectionError) as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise
@@ -470,7 +470,7 @@ class _InventorizeMarkedHostsCommand:
             self.inventorize_marked_hosts(
                 request, omd_root=context.omd_root, debug=context.global_options.debug
             )
-        except (MKBailOut, MKGeneralException) as e:
+        except MKGeneralException as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cmk.base.config import HostSelectionError
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
@@ -121,6 +122,7 @@ def test_a_failed_discovery_exits_one() -> None:
     "error",
     [
         MKGeneralException("Cannot load the configuration"),
+        HostSelectionError("No such host"),
         PluginSelectionError("Unknown plug-in"),
     ],
     ids=lambda e: type(e).__name__,

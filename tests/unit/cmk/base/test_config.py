@@ -36,7 +36,7 @@ from cmk.base.configlib.servicename import (
 from cmk.base.notify import make_notification_parameters_config
 from cmk.ccc import store
 from cmk.ccc.config_path import VersionedConfigPath
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.version import Edition
 from cmk.checkengine import agent_protocol
@@ -315,7 +315,7 @@ def test_parse_hostname_list_repeats_hosts_matched_by_several_args(
 def test_parse_hostname_list_rejects_spec_without_match(monkeypatch: MonkeyPatch, arg: str) -> None:
     loading_result = _hostlist_scenario().apply(monkeypatch)
 
-    with pytest.raises(MKBailOut, match="does not match any host"):
+    with pytest.raises(config.HostSelectionError, match="does not match any host"):
         _parse_hostname_list(loading_result, [arg])
 
 

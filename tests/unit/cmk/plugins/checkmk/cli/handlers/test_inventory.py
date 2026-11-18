@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cmk.base.config import HostSelectionError
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.plugins.checkmk.cli.handlers.agent_based import PluginSelectionError
@@ -54,6 +55,7 @@ def test_the_requested_hosts_are_inventorized() -> None:
     "error",
     [
         MKGeneralException("Cannot load the configuration"),
+        HostSelectionError("No such host"),
         PluginSelectionError("Unknown plug-in"),
     ],
     ids=lambda e: type(e).__name__,

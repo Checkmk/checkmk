@@ -429,3 +429,15 @@ def test_list_marks_the_werks_staged_in_the_checkout(tmp_path: Path) -> None:
         "Committed": False,
         "Staged": True,
     }
+
+
+def test_list_rejects_a_werk_with_an_unknown_edition(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
+    (repo_path / ".werks/11111.md").write_text(werk_text(edition="unknown"), encoding="utf-8")
+
+    returncode, _output = call_output("list", "community", home=home, cwd=repo_path)
+
+    assert returncode == 1

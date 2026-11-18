@@ -55,9 +55,7 @@ def write_precompiled_werks(path: Path, werks: dict[int, WerkV3]) -> None:
 def _get_filter(filter_by_edition: str | None) -> EditionV3 | None:
     if filter_by_edition is None:
         return None
-    if filter_by_edition in {edition.value for edition in EditionV2}:
-        return EditionV3.from_v2(EditionV2(filter_by_edition))
-    return EditionV3(filter_by_edition)
+    return EditionV3.migrate(filter_by_edition)
 
 
 def precompile(werk_dir: Path, destination: Path, filter_by_edition: str | None) -> None:

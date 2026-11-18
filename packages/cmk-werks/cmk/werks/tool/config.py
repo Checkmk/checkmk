@@ -33,8 +33,8 @@ class BaseConfig(BaseModel):
     def components_of(self, edition: str | None) -> list[tuple[str, str]]:  # noqa: ARG002
         return self.components
 
-    def canonical_edition(self, edition: str) -> str:
-        """The edition as listed in the edition choices"""
+    def migrate_edition(self, edition: str) -> str:
+        """The name in edition_choices() that an edition of a werk stands for"""
         return edition
 
     @model_validator(mode="before")

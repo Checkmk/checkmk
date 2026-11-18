@@ -67,8 +67,15 @@ def test_all_components_include_the_edition_specific_ones(tmp_path: Path) -> Non
     assert config.all_components() == [("core", "Core"), ("cmc", "CMC")]
 
 
-def test_a_legacy_edition_is_listed_as_its_current_name(tmp_path: Path) -> None:
+def test_a_legacy_edition_migrates_to_its_current_name(tmp_path: Path) -> None:
     _write_defines_make(tmp_path)
     config = load_config(_write_config(tmp_path), tmp_path)
 
-    assert config.canonical_edition("cee") == "pro"
+    assert config.migrate_edition("cee") == "pro"
+
+
+def test_a_current_edition_stays_as_it_is(tmp_path: Path) -> None:
+    _write_defines_make(tmp_path)
+    config = load_config(_write_config(tmp_path), tmp_path)
+
+    assert config.migrate_edition("pro") == "pro"

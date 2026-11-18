@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from contextlib import suppress
 from typing import override
 
 from cmk.werks.tool.config import BaseConfig
 
-from .models import EditionV2, EditionV3
+from .models import EditionV3
 
 
 class CmkConfig(BaseConfig):
@@ -30,7 +29,5 @@ class CmkConfig(BaseConfig):
         return self.components + self.edition_components.get(edition, [])
 
     @override
-    def canonical_edition(self, edition: str) -> str:
-        with suppress(ValueError):
-            return EditionV3.from_v2(EditionV2(edition)).value
-        return edition
+    def migrate_edition(self, edition: str) -> str:
+        return EditionV3.migrate(edition).value

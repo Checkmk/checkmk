@@ -550,7 +550,10 @@ def main_list(ctx: Context, args: argparse.Namespace, fmt: str) -> None:
         for tp, entries in filters.items():
             value = werk.content.metadata[tp]
             if tp == "edition" and value is not None:
-                value = ctx.config.canonical_edition(value)
+                try:
+                    value = ctx.config.migrate_edition(value)
+                except ValueError as e:
+                    bail_out(f"Werk {werk.id}: {e}")
             if value not in entries:
                 skip = True
                 break

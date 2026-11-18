@@ -41,6 +41,13 @@ class EditionV3(Enum):
             EditionV2.CSE: EditionV3.CLOUD,
         }[edition]
 
+    @classmethod
+    def migrate(cls, edition: str) -> Self:
+        """The edition given by its name or its legacy code"""
+        if edition in {e.value for e in EditionV2}:
+            return cls.from_v2(EditionV2(edition))
+        return cls(edition)
+
 
 class Class(Enum):
     FEATURE = "feature"

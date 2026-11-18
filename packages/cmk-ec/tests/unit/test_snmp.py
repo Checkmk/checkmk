@@ -47,14 +47,14 @@ def fixture_parser(make_parser: MakeParser, config: Config) -> SNMPTrapParser:
     return make_parser(config)
 
 
-def v1_trap(time_stamp: int) -> bytes:
+def v1_trap(*, time_stamp: int = 0, generic_trap: int = 0) -> bytes:
     """An SNMPv1 trap from the "public" community, which the default configuration accepts"""
     proto = api.PROTOCOL_MODULES[api.SNMP_VERSION_1]
     pdu = proto.TrapPDU()
     # Not set_defaults(), which looks up the address of the local host as the agent address.
     proto.apiTrapPDU.set_enterprise(pdu, (1, 3, 6, 1, 4, 1, 32473))
     proto.apiTrapPDU.set_agent_address(pdu, "192.0.2.1")
-    proto.apiTrapPDU.set_generic_trap(pdu, "coldStart")
+    proto.apiTrapPDU.set_generic_trap(pdu, generic_trap)
     proto.apiTrapPDU.set_specific_trap(pdu, 0)
     proto.apiTrapPDU.set_timestamp(pdu, time_stamp)
     proto.apiTrapPDU.set_varbinds(pdu, [])
@@ -282,3 +282,35 @@ def test_failed_translation_keeps_the_variable_for_any_error(
     )
 
     assert var_binds == [("1.3.6.1.4.1.99999.2", "backup.log")]
+
+
+def test_trap_failing_after_acceptance_leaves_no_pysnmp_state_behind(
+    parser: SNMPTrapParser,
+) -> None:
+    with pytest.raises(KeyError):  # PySNMP fails on unknown generic traps.
+        parser.parse(v1_trap(generic_trap=7), ("192.0.2.1", 162))
+
+    # PySNMP keeps the transport of each message until it has processed it.
+    assert vars(parser.snmp_engine.message_dispatcher)["_MsgAndPduDispatcher__transportInfo"] == {}
+
+
+@pytest.mark.parametrize(
+    "level, with_traceback",
+    [
+        pytest.param(VERBOSE, False, id="verbose"),
+        pytest.param(logging.DEBUG, True, id="debugging"),
+    ],
+)
+def test_data_which_is_no_snmp_message_comes_with_a_traceback_only_when_debugging(
+    parser: SNMPTrapParser,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+    level: int,
+    with_traceback: bool,
+) -> None:
+    logger.setLevel(level)
+
+    parser.parse(b"hello world", ("192.0.2.1", 162))
+
+    [dropped] = [r for r in caplog.records if "PySNMP failed on it" in r.getMessage()]
+    assert bool(dropped.exc_info) == with_traceback

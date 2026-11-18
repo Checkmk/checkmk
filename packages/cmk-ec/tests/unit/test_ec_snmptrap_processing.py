@@ -31,6 +31,79 @@ def _snmpv1_trap(generic_trap: int) -> bytes:
     return bytes(encoder.encode(message))
 
 
+def test_data_which_is_no_snmp_message_is_dropped_without_an_error(
+    snmp_trap_receiving_event_server: EventServer, caplog: pytest.LogCaptureFixture
+) -> None:
+    events = list(
+        snmp_trap_receiving_event_server.create_events_from_trap(b"hello world", ("192.0.2.1", 162))
+    )
+
+    assert (events, [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]) == (
+        [],
+        [],
+    )
+
+
+def test_trap_which_cannot_be_processed_is_logged_as_an_error(
+    snmp_trap_receiving_event_server: EventServer, caplog: pytest.LogCaptureFixture
+) -> None:
+    list(
+        snmp_trap_receiving_event_server.create_events_from_trap(
+            _snmpv1_trap(generic_trap=7), ("192.0.2.1", 162)
+        )
+    )
+
+    [error] = [r.getMessage() for r in caplog.records if r.levelno == logging.ERROR]
+    assert error == (
+        "Trap dropped from 192.0.2.1, cannot process it: KeyError: 7 "
+        "(enable debug logging for details)"
+    )
+
+
+def test_trap_after_one_which_cannot_be_processed_creates_an_event(
+    snmp_trap_receiving_event_server: EventServer,
+) -> None:
+    list(
+        snmp_trap_receiving_event_server.create_events_from_trap(
+            _snmpv1_trap(generic_trap=7), ("192.0.2.1", 162)
+        )
+    )
+
+    events = list(
+        snmp_trap_receiving_event_server.create_events_from_trap(
+            _snmpv1_trap(generic_trap=0), ("192.0.2.1", 162)
+        )
+    )
+
+    assert len(events) == 1
+
+
+@pytest.mark.parametrize(
+    "level, with_traceback",
+    [
+        pytest.param(logging.INFO, False, id="informational"),
+        pytest.param(logging.DEBUG, True, id="debugging"),
+    ],
+)
+def test_dropped_trap_comes_with_a_traceback_only_when_debugging(
+    snmp_trap_receiving_event_server: EventServer,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+    level: int,
+    with_traceback: bool,
+) -> None:
+    logger.getChild("snmp").setLevel(level)
+
+    list(
+        snmp_trap_receiving_event_server.create_events_from_trap(
+            _snmpv1_trap(generic_trap=7), ("192.0.2.1", 162)
+        )
+    )
+
+    [error] = [r for r in caplog.records if r.levelno == logging.ERROR]
+    assert bool(error.exc_info) == with_traceback
+
+
 def test_traps_are_ignored_without_a_trap_endpoint(
     event_server: EventServer, caplog: pytest.LogCaptureFixture
 ) -> None:

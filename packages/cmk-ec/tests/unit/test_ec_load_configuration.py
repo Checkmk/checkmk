@@ -16,12 +16,10 @@ from pathlib import Path
 from typing import override, Protocol
 from unittest.mock import Mock
 
-import pysnmp.debug
 import pytest
 
 import cmk.ec.export as ec
 from cmk.ccc.log import VERBOSE
-from cmk.ccc.site import SiteId
 from cmk.ec.actions import ActionRunner
 from cmk.ec.config import Config, EMailAction, EMailActionConfig, ScriptAction, ScriptActionConfig
 from cmk.ec.helpers import ECLock
@@ -45,11 +43,10 @@ from cmk.ec.main import (
     update_slave_status,
 )
 from cmk.ec.perfcounters import Perfcounters
-from cmk.ec.settings import create_settings, PortNumber
+from cmk.ec.settings import create_settings
 
 from .helpers import (
     activate_config,
-    FakeConnection,
     new_event,
     new_rule,
     process_message,
@@ -512,40 +509,6 @@ def test_failed_reload_keeps_the_log_levels(
         reload(history)
 
     assert logger.level == logging.WARNING
-
-
-@pytest.fixture(name="snmp_trap_receiving_event_server")
-def fixture_snmp_trap_receiving_event_server(
-    settings: ec.Settings,
-    config: Config,
-    slave_status: SlaveStatus,
-    perfcounters: Perfcounters,
-    lock_configuration: ECLock,
-    history: History,
-    event_status: EventStatus,
-    core_connection: FakeConnection,
-    action_runner: ActionRunner,
-) -> Iterator[EventServer]:
-    """An event server receiving SNMP traps, without opening the socket for them"""
-    previous_pysnmp_logger = pysnmp.debug.logger
-    event_server = EventServer(
-        logging.getLogger("cmk.mkeventd.EventServer"),
-        settings._replace(options=settings.options._replace(snmptrap_udp=PortNumber(162))),
-        config,
-        slave_status,
-        perfcounters,
-        lock_configuration,
-        history,
-        event_status,
-        StatusTableEvents.columns,
-        core_connection,
-        SiteId("hurz"),
-        action_runner,
-        create_pipes_and_sockets=False,
-    )
-    yield event_server
-    # The trap parser hands its logger to PySNMP.
-    pysnmp.debug.set_logger(previous_pysnmp_logger)  # type: ignore[no-untyped-call]
 
 
 def test_failed_reload_keeps_the_previous_configuration(

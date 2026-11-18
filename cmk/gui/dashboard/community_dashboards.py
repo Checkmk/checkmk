@@ -6,12 +6,13 @@
 import cmk.ccc.version as cmk_version
 from cmk.ccc.user import UserId
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
+from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec
 from cmk.utils import paths
 from cmk.web.utils.icons import DynamicIconName
 
 from .builtin_dashboards import GROW, MAX
 from .dashlet import StatsDashletConfig
+from .legacy_visual_link import inherited_column_link
 from .type_defs import (
     DashboardConfig,
     DashboardName,
@@ -165,7 +166,7 @@ ProblemsDashboard = DashboardConfig(
                         ColumnSpec(name="host_state"),
                         ColumnSpec(
                             name="host",
-                            link_spec=VisualLinkSpec(type_name="views", name="host"),
+                            column_link=inherited_column_link(type_name="views", name="host"),
                         ),
                         ColumnSpec(name="host_icons"),
                         ColumnSpec(name="host_state_age"),
@@ -192,11 +193,11 @@ ProblemsDashboard = DashboardConfig(
                         ColumnSpec(name="service_state"),
                         ColumnSpec(
                             name="host",
-                            link_spec=VisualLinkSpec(type_name="views", name="host"),
+                            column_link=inherited_column_link(type_name="views", name="host"),
                         ),
                         ColumnSpec(
                             name="service_description",
-                            link_spec=VisualLinkSpec(type_name="views", name="service"),
+                            column_link=inherited_column_link(type_name="views", name="service"),
                         ),
                         ColumnSpec(name="service_icons"),
                         ColumnSpec(name="svc_plugin_output"),
@@ -229,11 +230,13 @@ ProblemsDashboard = DashboardConfig(
                         ColumnSpec(name="log_time"),
                         ColumnSpec(
                             name="host",
-                            link_spec=VisualLinkSpec(type_name="views", name="hostsvcevents"),
+                            column_link=inherited_column_link(
+                                type_name="views", name="hostsvcevents"
+                            ),
                         ),
                         ColumnSpec(
                             name="service_description",
-                            link_spec=VisualLinkSpec(type_name="views", name="svcevents"),
+                            column_link=inherited_column_link(type_name="views", name="svcevents"),
                         ),
                         ColumnSpec(name="log_plugin_output"),
                     ],
@@ -332,7 +335,7 @@ SimpleProblemsDashboard = DashboardConfig(
                         ColumnSpec(name="host_state"),
                         ColumnSpec(
                             name="host",
-                            link_spec=VisualLinkSpec(type_name="views", name="host"),
+                            column_link=inherited_column_link(type_name="views", name="host"),
                         ),
                         ColumnSpec(name="host_icons"),
                         ColumnSpec(name="host_state_age"),
@@ -359,11 +362,11 @@ SimpleProblemsDashboard = DashboardConfig(
                         ColumnSpec(name="service_state"),
                         ColumnSpec(
                             name="host",
-                            link_spec=VisualLinkSpec(type_name="views", name="host"),
+                            column_link=inherited_column_link(type_name="views", name="host"),
                         ),
                         ColumnSpec(
                             name="service_description",
-                            link_spec=VisualLinkSpec(type_name="views", name="service"),
+                            column_link=inherited_column_link(type_name="views", name="service"),
                         ),
                         ColumnSpec(name="service_icons"),
                         ColumnSpec(name="svc_plugin_output"),

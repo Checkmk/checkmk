@@ -41,8 +41,6 @@ class SNMPTrapParser:
 
     def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
         self._logger = logger
-        if settings.options.snmptrap_udp is None:
-            return
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
         self._initialize_snmp_credentials(config)
         # NOTE: pysnmp has a really strange notification receiver API: The constructor call below

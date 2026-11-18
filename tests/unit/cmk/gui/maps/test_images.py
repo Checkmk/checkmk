@@ -6,14 +6,22 @@
 
 import re
 import threading
+from pathlib import Path
 
 import pytest
 
+import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKUserError
 from cmk.maps.gui import _images
 from cmk.maps.gui.store import save_map, user_maps_path
+
+_PNG = b"\x89PNG\r\n\x1a\n"
+
+
+def _backgrounds() -> Path:
+    return cmk.utils.paths.omd_root / "var/maps/backgrounds"
 
 
 def test_bg_stem_is_owner_scoped_and_path_safe() -> None:
@@ -104,3 +112,38 @@ def test_a_background_is_stored_only_once_the_owners_maps_are_unlocked() -> None
 
     assert held_up
     assert stored
+
+
+def test_the_backgrounds_of_a_user_without_profile_are_removed(tmp_path: Path) -> None:
+    kept = _images.store_background("alice", "floor", ".png", _PNG, saved=None)
+    removed = _images.store_background("bob", "floor", ".png", _PNG, saved=None)
+    (tmp_path / "alice").mkdir()
+
+    _images.remove_backgrounds_of_removed_users(tmp_path, _backgrounds())
+
+    assert (_backgrounds() / kept).exists()
+    assert not (_backgrounds() / removed).exists()
+
+
+def test_no_background_is_removed_while_no_profile_is_found(tmp_path: Path) -> None:
+    stored = _images.store_background("bob", "floor", ".png", _PNG, saved=None)
+
+    _images.remove_backgrounds_of_removed_users(tmp_path, _backgrounds())
+
+    assert (_backgrounds() / stored).exists()
+
+
+def test_the_background_cleanup_passes_a_site_without_backgrounds(tmp_path: Path) -> None:
+    (tmp_path / "alice").mkdir()
+
+    _images.remove_backgrounds_of_removed_users(tmp_path, tmp_path / "backgrounds")
+
+
+def test_a_file_stored_for_no_map_is_left_by_the_background_cleanup(tmp_path: Path) -> None:
+    (tmp_path / "alice").mkdir()
+    _backgrounds().mkdir(parents=True, exist_ok=True)
+    (_backgrounds() / "plan.png").write_bytes(_PNG)
+
+    _images.remove_backgrounds_of_removed_users(tmp_path, _backgrounds())
+
+    assert (_backgrounds() / "plan.png").exists()

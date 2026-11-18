@@ -9,6 +9,7 @@ from typing import assert_never
 from cmk.ccc.version import Edition
 from cmk.discover_plugins import discover_plugins_from_modules
 from cmk.gui.autocompleters import autocompleter_registry
+from cmk.gui.cron import cron_job_registry
 from cmk.gui.dashboard import (
     builtin_dashboards,
     dashlet_registry,
@@ -56,6 +57,7 @@ def _build_context(
         config_domain_registry=config_domain_registry,
         config_variable_group_registry=config_variable_group_registry,
         config_variable_registry=config_variable_registry,
+        cron_job_registry=cron_job_registry,
         dashlet_registry=dashlet_registry,
         endpoint_family_registry=endpoint_family_registry,
         filter_registry=filter_registry,

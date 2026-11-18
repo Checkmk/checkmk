@@ -1118,6 +1118,7 @@ allows = [
 allows = [
   "@ccc",
   "cmk.gui.autocompleters",
+  "cmk.gui.cron",
   "cmk.gui.dashboard",
   "cmk.gui.graphing",
   "cmk.gui.main_menu_pages",

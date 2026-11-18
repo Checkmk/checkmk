@@ -22,6 +22,7 @@ def test_registered_jobs() -> None:
         "execute_housekeeping_job",
         "execute_inventory_cleanup_job",
         "execute_ldap_quarantine_cleanup_job",
+        "execute_maps_background_cleanup_job",
         "execute_network_scan_job",
         "execute_sync_remote_sites",
         "execute_user_messages_spool_job",

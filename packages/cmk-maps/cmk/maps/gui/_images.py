@@ -15,8 +15,9 @@ the old daemon endpoint they never disclose maps outside the caller's scope.
 """
 
 import hashlib
+import re
 import secrets
-from collections.abc import Container, Iterator, Mapping
+from collections.abc import Container, Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import lru_cache
@@ -25,6 +26,7 @@ from pathlib import Path
 import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.maps.gui._image_security import (
@@ -389,8 +391,47 @@ def _bg_stem(owner: str, name: str) -> str:
     ``.`` nor a glob metacharacter the ``{stem}.*`` glob could reach across). The
     served filename adds an unguessable token so the URL is a capability (see
     :func:`upload_background`)."""
-    owner_key = hashlib.sha256(owner.encode("utf-8")).hexdigest()[:16]
-    return f"{owner_key}__{name}"
+    return f"{_owner_key(owner)}__{name}"
+
+
+def _owner_key(owner: str) -> str:
+    return hashlib.sha256(owner.encode("utf-8")).hexdigest()[:16]
+
+
+_OWNER_KEY_OF_BACKGROUND = re.compile(r"([0-9a-f]{16})__")
+
+
+def _backgrounds_without_owner(backgrounds: Iterable[str], owners: Iterable[str]) -> list[str]:
+    """The background files of maps whose owner is none of ``owners``."""
+    kept = {_owner_key(owner) for owner in owners}
+    return [
+        name
+        for name in backgrounds
+        if (match := _OWNER_KEY_OF_BACKGROUND.match(name)) and match.group(1) not in kept
+    ]
+
+
+def remove_backgrounds_of_removed_users(profile_dir: Path, backgrounds_dir: Path) -> None:
+    """Remove the background files of the maps of users whose profile is gone.
+
+    Checkmk keeps the profile of a deleted user, and the maps in it, until it
+    removes the profile 30 days later (``cmk.gui.userdb._user_profile_cleanup``),
+    so the backgrounds of those maps stay as long."""
+    try:
+        # Listed before the owners: the profile of a user exists before any upload.
+        backgrounds = [entry.name for entry in backgrounds_dir.iterdir()]
+        owners = [entry.name for entry in profile_dir.iterdir() if entry.is_dir()]
+    except FileNotFoundError:
+        return
+    if not owners:
+        # As the profile cleanup: no profile at all is no reason to remove everything.
+        return
+    for name in _backgrounds_without_owner(backgrounds, owners):
+        (backgrounds_dir / name).unlink(missing_ok=True)
+
+
+def execute_background_cleanup_job(config: Config) -> None:  # noqa: ARG001
+    remove_backgrounds_of_removed_users(cmk.utils.paths.profile_dir, _backgrounds_dir())
 
 
 def _editable_map(name: str) -> MapPage:

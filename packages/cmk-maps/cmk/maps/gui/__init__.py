@@ -9,8 +9,12 @@ registry-based GUI module: it declares the Maps permissions and the
 session-authenticated endpoints backing the SPA.
 """
 
+from datetime import timedelta
+
 import cmk.utils.paths
 from cmk.gui import pagetypes
+from cmk.gui.config import Config
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import (
     PermissionRegistry,
@@ -36,6 +40,7 @@ from cmk.maps.gui import (
     _sites,
 )
 from cmk.maps.gui._config_domain import ConfigDomainMaps
+from cmk.maps.gui._images import execute_background_cleanup_job
 from cmk.maps.gui._pages import ShowMapsPage
 from cmk.maps.gui.pagetype import MapPage
 
@@ -51,6 +56,7 @@ def register(
     config_variable_registry: ConfigVariableRegistry,
     replication_path_registry: ReplicationPathRegistry,
     snapshot_artifact_registry: SnapshotArtifactRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
     _permissions.register(permission_section_registry, permission_registry)
     # No page_handlers on MapPage, so declare() registers no generic pagetype
@@ -81,3 +87,11 @@ def register(
     # Contributes the viewable maps to the Monitor menu through a registry, so
     # cmk.gui's menu builders need no Maps import.
     _main_menu.register()
+    cron_job_registry.register(
+        CronJob[Config](
+            name="execute_maps_background_cleanup_job",
+            callable=execute_background_cleanup_job,
+            interval=timedelta(hours=1),
+            run_in_thread=True,
+        )
+    )

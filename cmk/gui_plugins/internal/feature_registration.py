@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 from cmk.ccc.version import Edition
 from cmk.gui.autocompleters import AutocompleterRegistry
+from cmk.gui.cron import CronJobRegistry
 from cmk.gui.dashboard import DashboardConfig, DashboardName, DashletRegistry
 from cmk.gui.main_menu_pages import MainMenuPageRegistry
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
@@ -39,6 +40,7 @@ class RegistrationContext:
     config_domain_registry: ConfigDomainRegistry
     config_variable_group_registry: ConfigVariableGroupRegistry
     config_variable_registry: ConfigVariableRegistry
+    cron_job_registry: CronJobRegistry
     dashlet_registry: DashletRegistry
     endpoint_family_registry: EndpointFamilyRegistry
     filter_registry: FilterRegistry

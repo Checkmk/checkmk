@@ -495,7 +495,9 @@ Static files
   (``secrets.token_urlsafe(16)``) makes the URL unguessable, so the URL itself
   is the permission to fetch it. A map saved with the background of another
   map the user sees, as a clone is, gets a copy of its own; a map takes no
-  other background file than its own.
+  other background file than its own. The backgrounds of a deleted user's maps
+  stay as long as Checkmk keeps the user's profile with the maps in it (30
+  days); an hourly GUI job then removes them.
 
 Monitoring commands
 -------------------
@@ -1152,7 +1154,8 @@ and leaves authentication to the application. For Maps this means:
   listing). Library file names are guessable.
 * ``check_mk/maps/backgrounds/<file>`` is readable without login by anyone who
   knows the URL. The URL stays valid until the background is replaced or
-  removed, the map is deleted or shown to fewer users. Browsers cache a
+  removed, the map is deleted or shown to fewer users, or the owner's profile
+  is removed 30 days after the owner was deleted. Browsers cache a
   background for about a month (``Cache-Control: private``); shared caches
   keep none.
 

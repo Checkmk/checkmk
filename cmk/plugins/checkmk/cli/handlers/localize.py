@@ -24,10 +24,10 @@ from cmk.utils.log import VERBOSE
 logger = logging.getLogger("cmk.base.localize")
 
 
-LanguageName = str
+_LanguageName = str
 
 
-class LocalizeException(MKException):
+class _LocalizeException(MKException):
     pass
 
 
@@ -85,7 +85,7 @@ Available commands are:
     )
 
 
-def do_localize(args: Sequence[str]) -> CLIExitCode:
+def _do_localize(args: Sequence[str]) -> CLIExitCode:
     if len(args) == 0:
         _write_usage_to_stderr()
         return CLIExitCode.FAILURE
@@ -93,12 +93,12 @@ def do_localize(args: Sequence[str]) -> CLIExitCode:
     command = args[0]
 
     try:
-        lang: LanguageName = args[1]
+        lang: _LanguageName = args[1]
     except IndexError:
-        raise LocalizeException("No language given")
+        raise _LocalizeException("No language given")
 
     if not lang:
-        raise LocalizeException("No language given")
+        raise _LocalizeException("No language given")
 
     alias: str | None = None
     if len(args) > 2:
@@ -116,7 +116,7 @@ def do_localize(args: Sequence[str]) -> CLIExitCode:
         try:
             f(lang)
             _write_alias(lang, alias)
-        except LocalizeException as e:
+        except _LocalizeException as e:
             # Expected CLI error, the traceback adds no value here.
             logger.error("%(error)s", {"error": e})  # noqa: TRY400
             return CLIExitCode.FAILURE
@@ -131,7 +131,7 @@ def do_localize(args: Sequence[str]) -> CLIExitCode:
     return CLIExitCode.SUCCESS
 
 
-def _write_alias(lang: LanguageName, alias: str | None) -> None:
+def _write_alias(lang: _LanguageName, alias: str | None) -> None:
     if not alias:
         return
 
@@ -154,14 +154,14 @@ def _check_binaries() -> None:
             )
             != 0
         ):
-            raise LocalizeException("%s binary not found in PATH\n" % b)
+            raise _LocalizeException("%s binary not found in PATH\n" % b)
 
 
-def _get_languages() -> list[LanguageName]:
+def _get_languages() -> list[_LanguageName]:
     return [l.name for l in _locale_base().iterdir() if l.is_dir()]
 
 
-def _localize_update_po(lang: LanguageName) -> None:
+def _localize_update_po(lang: _LanguageName) -> None:
     """Merge the current .pot file with a given .po file"""
     logger.log(VERBOSE, "Merging translations...")
     if (
@@ -176,7 +176,7 @@ def _localize_update_po(lang: LanguageName) -> None:
         logger.info("Success! Output: %(output)s", {"output": _po_file(lang)})
 
 
-def _localize_init_po(lang: LanguageName) -> None:
+def _localize_init_po(lang: _LanguageName) -> None:
     if (
         subprocess.call(
             ["msginit", "-i", _pot_file(), "--no-translator", "-l", lang, "-o", _po_file(lang)],
@@ -249,7 +249,7 @@ msgstr ""
         logger.info("Success! Output: %(output)s", {"output": _pot_file()})
 
 
-def _localize_edit(lang: LanguageName) -> None:
+def _localize_edit(lang: _LanguageName) -> None:
     _localize_update(lang)
 
     editor = os.getenv("VISUAL", os.getenv("EDITOR", "/usr/bin/vi"))
@@ -262,7 +262,7 @@ def _localize_edit(lang: LanguageName) -> None:
         logger.error("Aborted.")
 
 
-def _localize_update(lang: LanguageName) -> None:
+def _localize_update(lang: _LanguageName) -> None:
     """Start translating in a new language"""
     _initialize_local_po_file(lang)
     _localize_sniff()
@@ -275,10 +275,10 @@ def _localize_update(lang: LanguageName) -> None:
         _localize_update_po(lang)
 
 
-def _localize_compile(lang: LanguageName) -> None:
+def _localize_compile(lang: _LanguageName) -> None:
     """Create a .mo file from the given .po file"""
     if lang not in _get_languages():
-        raise LocalizeException(
+        raise _LocalizeException(
             "Invalid language given. Available: %s" % " ".join(_get_languages())
         )
 
@@ -286,7 +286,7 @@ def _localize_compile(lang: LanguageName) -> None:
     _initialize_local_po_file(lang)
 
     if not po_file.exists():
-        raise LocalizeException("The .po file %s does not exist." % po_file)
+        raise _LocalizeException("The .po file %s does not exist." % po_file)
 
     if subprocess.call(["msgfmt", po_file, "-o", _mo_file(lang)]) != 0:
         logger.error("Failed!")
@@ -294,7 +294,7 @@ def _localize_compile(lang: LanguageName) -> None:
         logger.info("Success! Output: %(output)s", {"output": _mo_file(lang)})
 
 
-def _initialize_local_po_file(lang: LanguageName) -> None:
+def _initialize_local_po_file(lang: _LanguageName) -> None:
     """Initialize the file in the local hierarchy with the file in the default hierarchy if needed"""
     po_file = _po_file(lang)
     po_file.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
@@ -310,7 +310,7 @@ def _initialize_local_po_file(lang: LanguageName) -> None:
 
 
 def _run_localize(_context: CLIContext, arguments: Sequence[str]) -> CLIExitCode:
-    return do_localize(arguments)
+    return _do_localize(arguments)
 
 
 cli_handler_localize = CLIHandler(command=cli_command_localize, run=_run_localize)

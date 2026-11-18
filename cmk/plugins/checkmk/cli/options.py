@@ -5,6 +5,7 @@
 
 
 import dataclasses
+from collections.abc import Callable
 from typing import Final
 
 from cmk.ccc.hostaddress import HostAddress
@@ -22,7 +23,7 @@ from cmk.cli.internal import Value as CLIValue
 from cmk.utils.check_utils import maincheckify
 
 
-def parse_snmp_backend(backend: str) -> SNMPBackendEnum:
+def _parse_snmp_backend(backend: str) -> SNMPBackendEnum:
     match backend:
         case "inline":
             return SNMPBackendEnum.INLINE
@@ -76,7 +77,7 @@ SNMP_BACKEND_VALUE: Final = CLIValue(
     long="snmp-backend",
     help="Override default SNMP backend",
     placeholder="inline|classic|stored-walk",
-    parse=parse_snmp_backend,
+    parse=_parse_snmp_backend,
 )
 
 FAKE_DNS_VALUE: Final = CLIValue(
@@ -108,8 +109,11 @@ def fake_dns_request(options: CLIReader) -> HostAddress | None:
     return options.value(FAKE_DNS_VALUE)
 
 
-def _parse_sections(argument: str) -> frozenset[SectionName]:
-    return frozenset(SectionName(n) for n in argument.split(",") if n)
+def _comma_separated[T](parse: Callable[[str], T]) -> Callable[[str], frozenset[T]]:
+    def parse_each(argument: str) -> frozenset[T]:
+        return frozenset(parse(name) for name in argument.split(",") if name)
+
+    return parse_each
 
 
 DETECT_SECTIONS_VALUE: Final = CLIValue(
@@ -119,21 +123,18 @@ DETECT_SECTIONS_VALUE: Final = CLIValue(
         " available (skipping SNMP detection)"
     ),
     placeholder="S",
-    parse=_parse_sections,
+    parse=_comma_separated(SectionName),
 )
 
 
-def _plugins_value[TName: (str, CheckPluginName, InventoryPluginName, SectionName)](
-    type_: type[TName],
-) -> CLIValue[frozenset[TName]]:
-    def _parse_plugins(argument: str) -> frozenset[TName]:
-        return frozenset(type_(n) for n in argument.split(",") if n)
-
+def _plugins_value[PluginName: (CheckPluginName, InventoryPluginName)](
+    plugin_name: type[PluginName],
+) -> CLIValue[frozenset[PluginName]]:
     return CLIValue(
         long="plugins",
         help="Restrict discovery, checking or inventory to these plugins",
         placeholder="P",
-        parse=_parse_plugins,
+        parse=_comma_separated(plugin_name),
     )
 
 
@@ -142,16 +143,12 @@ CHECK_PLUGINS_VALUE: Final = _plugins_value(CheckPluginName)
 INVENTORY_PLUGINS_VALUE: Final = _plugins_value(InventoryPluginName)
 
 
-def _parse_detect_plugins(argument: str) -> frozenset[str]:
-    return frozenset(maincheckify(n) for n in argument.split(",") if n)
-
-
 DETECT_PLUGINS_VALUE: Final = CLIValue(
     long="detect-plugins",
     deprecated_names=frozenset({"checks"}),
     help="Same as '--plugins', but implies a best efford guess for --detect-sections",
     placeholder="P",
-    parse=_parse_detect_plugins,
+    parse=_comma_separated(maincheckify),
 )
 
 

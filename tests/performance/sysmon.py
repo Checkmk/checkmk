@@ -16,12 +16,9 @@ from collections.abc import Iterator
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from pathlib import Path
-from sys import argv
 from typing import IO
 
 import psutil
-
-from tests.testlib.version import CMKPackageInfo, edition_from_env, version_from_env
 
 perf_dict = dict[str, int | float | str | None]
 nested_perf_dict = dict[str, perf_dict]
@@ -135,14 +132,12 @@ def get_net_io_counters() -> perf_dict:
 def get_process_info() -> perf_dict:
     processes: nested_perf_dict = {}
     for process in psutil.process_iter(["pid", "name", "memory_percent", "cpu_percent"]):
-        try:
+        with suppress(psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             processes[process.info["pid"]] = {
                 "name": process.info["name"],
                 "cpu_percent": process.info["cpu_percent"],
                 "memory_percent": process.info["memory_percent"],
             }
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            pass
     data = {}
     for pid, proc in processes.items():
         if type(proc) is perf_dict:
@@ -222,19 +217,30 @@ def write_statistics(file: IO, all_stats: bool = False, close: bool = False) -> 
     json.dump(statistics, file, separators=(",", ":"))
 
 
-def _init_resources_file(task_name: str) -> Path:
-    version_directory = CMKPackageInfo(version_from_env(), edition_from_env()).version_directory()
-    result_dir = Path(os.getenv("RESULT_PATH", Path(__file__).parent.parent.parent / "results"))
-    report_dir = result_dir / "performance" / version_directory
-    report_dir.mkdir(parents=True, exist_ok=True)
-    benchmark_json_name = next(
-        (_.split("=", 1)[-1] for _ in argv if _.startswith("--benchmark-json=")),
-        "cmk.benchmark.json",
-    )
-    benchmark_json_path = report_dir / benchmark_json_name
-    resource_statistics_json = benchmark_json_path.parent / f"{task_name}.resources.json"
-    resource_statistics_json.unlink(missing_ok=True)
+_results_dir: Path | None = None
 
+
+def set_results_dir(results_dir: Path) -> None:
+    """Write the resource files into results_dir, next to the suite's benchmark.json.
+
+    The site suite sets it; a Bazel suite writes into its test outputs instead.
+    """
+    global _results_dir
+    _results_dir = results_dir
+
+
+def _init_resources_file(task_name: str) -> Path:
+    if bazel_outputs_dir := os.environ.get("TEST_UNDECLARED_OUTPUTS_DIR"):
+        results_dir = Path(bazel_outputs_dir)
+    elif _results_dir is not None:
+        results_dir = _results_dir
+    else:
+        # e.g. a component suite run with plain pytest instead of Bazel
+        results_dir = Path(os.getenv("RESULT_PATH") or Path(__file__).parents[2] / "results")
+        results_dir /= "performance"
+        results_dir.mkdir(parents=True, exist_ok=True)
+    resource_statistics_json = results_dir / f"{task_name}.resources.json"
+    resource_statistics_json.unlink(missing_ok=True)
     return resource_statistics_json
 
 

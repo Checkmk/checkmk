@@ -18,7 +18,7 @@ from cmk.gui.painter.base import (
     JoinCell,
     PainterContext,
 )
-from cmk.gui.type_defs import ColumnSpec, Row, VisualLinkSpec
+from cmk.gui.type_defs import ColumnSpec, ContextualLinkEntryConfig, Row, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.web.utils.html import HTML
 from cmk.web.utils.request_cache import RequestCache
@@ -117,6 +117,34 @@ def test_cell_render_leaves_a_painter_without_links_unlinked() -> None:
     _tdclass, content = cell.render(_ROW, _link_to_view, Mock(spec=LoggedInUser))
 
     assert content == "heute"
+
+
+def test_cell_whose_drilldown_is_withheld_still_has_a_configured_link() -> None:
+    link = ContextualLinkEntryConfig(
+        title="main",
+        location=("dashboards", "main"),
+        filters=[],
+        include_context=True,
+        include_time_range=True,
+        show_filter_form=False,
+    )
+    cell = Cell(
+        ColumnSpec("alias", column_link=link),
+        None,
+        {"alias": _painter()},
+        _painter_context(),
+        _request_cache(),
+    )
+
+    assert cell.has_configured_link()
+
+
+def test_cell_without_a_link_or_a_drilldown_has_no_configured_link() -> None:
+    cell = Cell(
+        ColumnSpec("alias"), None, {"alias": _painter()}, _painter_context(), _request_cache()
+    )
+
+    assert not cell.has_configured_link()
 
 
 def test_cell_needed_columns_include_the_columns_of_its_drilldown() -> None:

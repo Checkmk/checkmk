@@ -391,6 +391,7 @@ class Cell:
                 column_spec.parameters.get("column_title") or column_spec.column_title
             )
             self._link_spec = column_spec.link_spec
+            self._column_link = column_spec.column_link
             assert registered_painters is not None
             self._tooltip_painter_name = (
                 column_spec.tooltip if column_spec.tooltip in registered_painters else None
@@ -400,6 +401,7 @@ class Cell:
             self._painter_params = None
             self._custom_title = None
             self._link_spec = None
+            self._column_link = None
             self._tooltip_painter_name = None
 
         self._sort_url_parameter = sort_url_parameter
@@ -445,9 +447,11 @@ class Cell:
         )
         return [painter.row_extender for painter in painters if painter.row_extender is not None]
 
-    def has_link_spec(self) -> bool:
-        """Whether the column has a user-configured "Link to view / dashboard"."""
-        return self._link_spec is not None
+    def has_configured_link(self) -> bool:
+        """Whether the column links its cells, by a "Link to view / dashboard" or a drill-down. A
+        painter then adds no link of its own, which would nest inside the column's, or stand in for
+        a drill-down withheld from the viewer."""
+        return self._link_spec is not None or self._column_link is not None
 
     def _link_view(self, permitted_views: Mapping[ViewName, ViewSpec]) -> ViewSpec | None:
         if self._link_spec is None:

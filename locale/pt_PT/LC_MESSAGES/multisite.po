@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-11-14 19:32+0000\n"
+"PO-Revision-Date: 2026-11-17 18:32+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -13890,6 +13890,13 @@ msgstr "Ficheiros principais Checkmk"
 
 msgid "Checkmk dashboard"
 msgstr "Painel de controlo Checkmk"
+
+msgid ""
+"Checkmk does not check limits on EC2 instance types that it does not know "
+"about. By default in this case, it will emit a warning so that you are aware "
+"that the limits of these instances are unmonitored. You can select a "
+"different service state for this scenario here."
+msgstr ""
 
 #, fuzzy
 msgid "Checkmk does not load plug-ins from this folder."
@@ -38033,6 +38040,10 @@ msgstr ""
 "Nome de pasta inválido. Apenas os caracteres a-z, A-Z, 0-9, _ e - são "
 "permitidos."
 
+#, fuzzy
+msgid "Invalid graph ID"
+msgstr "Tipo de gráfico inválido: %s"
+
 #, python-format
 msgid "Invalid graph type '%s'"
 msgstr "Tipo de gráfico inválido '%s'"
@@ -38169,6 +38180,10 @@ msgstr "Pedido inválido: %r"
 #, fuzzy
 msgid "Invalid request parameters."
 msgstr "Parâmetro de verificação inválido"
+
+#, fuzzy
+msgid "Invalid request."
+msgstr "Pedido inválido: %r"
 
 #, python-format
 msgid "Invalid request: %r"
@@ -42942,6 +42957,10 @@ msgstr "Objetos Gerenciados"
 #, fuzzy
 msgid "Managed Robots"
 msgstr "Objetos Gerenciados"
+
+#, fuzzy
+msgid "Managed by the relay"
+msgstr "Nome do Proxy"
 
 #, fuzzy
 msgid "Managed objects"
@@ -66976,6 +66995,10 @@ msgid "State if remaining API reads are unknown"
 msgstr "Indique se as restantes leituras da API são desconhecidas"
 
 #, fuzzy
+msgid "State if running instance types are unknown to Checkmk"
+msgstr "Indique se as restantes leituras da API são desconhecidas"
+
+#, fuzzy
 msgid "State if specific check plug-ins receive no monitoring data."
 msgstr ""
 "Indique se os plugins de verificação específicos não recebem dados de "
@@ -74684,6 +74707,10 @@ msgstr "A regra do nível superior não existe."
 msgid "The total number of hosts and service with and without problems"
 msgstr "O número total de hospedeiros e serviços com e sem problemas"
 
+#, fuzzy
+msgid "The trial mode selection is not active."
+msgstr "O ícone selecionado não existe."
+
 #, python-format
 msgid "The tuple must contain two elements, but you have %d"
 msgstr "O tuple deve conter dois elementos, mas você tem %d"
@@ -74929,6 +74956,11 @@ msgstr "Os valores da etiqueta '%s' não coincidem: %r!~ %r."
 msgid "The verification cannot be started due to missing CA certificate"
 msgstr ""
 "A verificação não pode ser iniciada devido à falta de um certificado CA"
+
+msgid ""
+"The verification code is incorrect. Please check if you used the most recent "
+"verification code you have received from us."
+msgstr ""
 
 #, python-format
 msgid "The version of this site is not a %s"
@@ -81337,6 +81369,11 @@ msgstr "Período de tolerância para 'desactivar' o estado"
 msgid "Tolerance period for 'reloading' state"
 msgstr "Período de tolerância para 'recarregar' estado"
 
+msgid ""
+"Too many verification codes have been requested. Please try again later or "
+"continue without verification."
+msgstr ""
+
 msgid "Tools install state"
 msgstr "Estado de instalação das ferramentas"
 
@@ -85127,6 +85164,11 @@ msgstr "Impossível carregar o ícone: %s"
 #, python-format
 msgid "Unable to upload image: %s"
 msgstr "Impossível carregar imagem: %s"
+
+msgid ""
+"Unable to verify trial. Please try again later or use a different email "
+"address."
+msgstr ""
 
 msgid "Unaccounted turbo cycles"
 msgstr "Ciclos turbo não contabilizados"
@@ -89050,6 +89092,10 @@ msgstr "A verificação falhou: %s"
 msgid "Verification of the server certificate"
 msgstr "Verificar o certificado do servidor"
 
+msgid ""
+"Verification service is temporarily unavailable. Please try again later."
+msgstr ""
+
 msgid "Verify Certificates"
 msgstr "Verificar certificados"
 
@@ -90082,6 +90128,10 @@ msgid "Welcome to Checkmk"
 msgstr "Bem-vindo à Checkmk Mobile."
 
 msgid "Welcome to Checkmk Mobile."
+msgstr "Bem-vindo à Checkmk Mobile."
+
+#, fuzzy
+msgid "Welcome to your new Checkmk site"
 msgstr "Bem-vindo à Checkmk Mobile."
 
 msgid "Werk"
@@ -92342,6 +92392,10 @@ msgstr "Você não está autorizado a usar a configuração."
 msgid "You are not allowed to use passwords from the password store here."
 msgstr "Você não está autorizado a usar senhas da loja de senhas aqui."
 
+#, fuzzy
+msgid "You are not allowed to use the AI assistant."
+msgstr "Você não está autorizado a usar a configuração."
+
 msgid "You are not allowed to use the message module."
 msgstr "Não é permitido utilizar o módulo de mensagens."
 
@@ -93663,6 +93717,11 @@ msgstr ""
 "poder receber as notificações de fallback."
 
 msgid ""
+"You have exceeded the maximum number of attempts to enter the verification "
+"code. Please request a new one."
+msgstr ""
+
+msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
 "missing. Please install Postfix, Qmail, Nullmailer or Sendmail."
 msgstr ""
@@ -94441,6 +94500,10 @@ msgstr ""
 "automaticamente convertido para \"Gratuito\". Neste estado de licença, o "
 "limite máximo total de serviços é %s, que é excedido com %s serviços. Até "
 "reduzir o número de serviços, a opção \"Ativar alterações\" está bloqueada."
+
+msgid ""
+"Your verification code has expired. Please request a new verification code."
+msgstr ""
 
 msgid "ZFS file system usage"
 msgstr "Utilização do sistema de ficheiros ZFS"
@@ -101102,6 +101165,14 @@ msgid "This chat and all its messages will be deleted and can’t be recovered."
 msgstr ""
 
 #, fuzzy
+msgid "No graph of %{label} is available."
+msgstr "Não está disponível nenhum instantâneo para restauro."
+
+#, fuzzy
+msgid "Open in monitoring"
+msgstr "Pesquisa em Monitorização"
+
+#, fuzzy
 msgid "Select an AI provider and a model in the global settings."
 msgstr "Esta opção foi modificada em configurações globais."
 
@@ -101119,6 +101190,9 @@ msgstr ""
 msgid ""
 "Can’t delete chat “%{title}” while it’s answering. Wait until it finishes or "
 "stop it, then try again."
+msgstr ""
+
+msgid "Digit %{count} of %{total}"
 msgstr ""
 
 #, fuzzy
@@ -101226,6 +101300,250 @@ msgstr "Guardar & executar a descoberta de serviços"
 msgid "Add \"${props.title}\" to sidebar"
 msgstr ""
 
+msgid "Step %{step} of %{total}"
+msgstr ""
+
+#, fuzzy
+msgid "Full features · %{days} day left"
+msgid_plural "Full features · %{days} days left"
+msgstr[0] " em %d dias"
+msgstr[1] " em %d dias"
+
+#, fuzzy
+msgid "Start monitoring"
+msgstr "Pesquisa em Monitorização"
+
+msgid "Resend code (%{countdown})"
+msgstr ""
+
+#, fuzzy
+msgid "Resend code"
+msgstr "Regenerar códigos de backup"
+
+#, fuzzy
+msgid "Internal error. Please try again."
+msgstr ""
+"Nome de utilizador ou palavra-passe incorrectos. Por favor, tente novamente."
+
+msgid "Checkmk could not process the request. Reload the page and try again."
+msgstr ""
+
+msgid "Unable to reach Checkmk site. Please check that it is started."
+msgstr ""
+
+#, fuzzy
+msgid "Code"
+msgstr "Código Tamanho"
+
+#, fuzzy
+msgid "Enter your verification code"
+msgstr "Iniciar verificação"
+
+msgid "We sent a 6-digit code to %{email}."
+msgstr ""
+
+#, fuzzy
+msgid "Verification code"
+msgstr "Verificação"
+
+#, fuzzy
+msgid "Didn't receive it?"
+msgstr "Dados recebidos"
+
+#, fuzzy
+msgid "Continue without verification"
+msgstr "Verificação em linha"
+
+#, fuzzy
+msgid "Verify"
+msgstr "Aguardando"
+
+#, fuzzy
+msgid "Terms & Conditions"
+msgstr "Condições"
+
+msgid "EULA"
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk group companies"
+msgstr "Ficheiros de registo Checkmk"
+
+#, fuzzy
+msgid "email"
+msgstr "Email"
+
+#, fuzzy
+msgid "Email %{address} to unsubscribe"
+msgstr "Atributo do endereço de correio electrónico"
+
+#, fuzzy
+msgid "Privacy Notice"
+msgstr "Protocolo de privacidade"
+
+msgid ""
+"By starting the trial, I agree to the %{terms} and the %{eula}. I have\n"
+"      noted the %{privacy_policy}."
+msgstr ""
+
+msgid ""
+"In exchange for this free trial, I agree to receive information about\n"
+"      Checkmk products and services (incl. newsletter, events and customer\n"
+"      surveys) from the %{checkmk_group} by email and telephone, and that\n"
+"      Checkmk may analyse my interaction with these emails (opens and "
+"clicks)\n"
+"      to improve its marketing. I understand that this consent is the\n"
+"      condition for receiving the trial free of charge. I can unsubscribe "
+"at\n"
+"      any time via %{email}."
+msgstr ""
+
+msgid ""
+"We check the email address you provide against external sources to\n"
+"      confirm that it belongs to a business contact and to complete the\n"
+"      details of your organisation and role. Further information and your\n"
+"      right to object: %{privacy_notice}."
+msgstr ""
+
+#, fuzzy
+msgid "Enter a valid email address."
+msgstr "Endereço IPv4 inválido: %s"
+
+#, fuzzy
+msgid "Verify your email address"
+msgstr "De: endereço de e-mail"
+
+msgid ""
+"We'll email you a one-time code to activate your verified %{days}-day trial."
+msgstr ""
+
+msgid ""
+"Use an address you can access now. Verification links this site to your "
+"trial registration."
+msgstr ""
+
+#, fuzzy
+msgid "Send code"
+msgstr "Dados cartografados"
+
+#, fuzzy
+msgid "Connection blocked"
+msgstr "Tempo de ligação"
+
+#, fuzzy
+msgid "This site can't reach %{domain}"
+msgstr "Este site não está a responder."
+
+msgid ""
+"Email verification needs an outbound HTTPS connection to that domain. A "
+"firewall or proxy rule is the most common cause — if this site has no "
+"internet access at all, continue as an offline trial instead."
+msgstr ""
+
+#, fuzzy
+msgid "Allow outbound access to"
+msgstr "Token de Acesso API"
+
+msgid "TCP 443 (HTTPS)"
+msgstr ""
+
+msgid ""
+"Add the domain to your firewall or proxy allowlist, then retry. The same "
+"endpoint is used for product analytics, so allowlisting it once covers both."
+msgstr ""
+
+#, fuzzy
+msgid "Continue as offline trial"
+msgstr "Contagem de anfitriões offline"
+
+msgid "Tell us how you're using this site so we can set it up correctly."
+msgstr ""
+
+#, fuzzy
+msgid "Start a trial"
+msgstr "Tipo de partida"
+
+msgid "Try all features of Checkmk free for %{days} days."
+msgstr ""
+
+#, fuzzy
+msgid "I'm an existing customer"
+msgstr "Contador crescente"
+
+#, fuzzy
+msgid "Verify your license to activate this site."
+msgstr "não active esta %s"
+
+#, fuzzy
+msgid "License activation pending"
+msgstr "Ativar mudanças pendentes"
+
+msgid ""
+"License verification postponed. The site keeps full features for %{days} "
+"days from site creation. Verify your license before then — otherwise the "
+"site falls back to the limited free license state (%{services} services). "
+"We'll remind you every %{interval}."
+msgstr ""
+
+#, fuzzy
+msgid "Verify your license"
+msgstr "Verificar a resposta"
+
+msgid "Choose how to validate the license for this site."
+msgstr ""
+
+#, fuzzy
+msgid "Verify online"
+msgstr "Verificar a resposta"
+
+#, fuzzy
+msgid "Validate automatically against the Checkmk license server."
+msgstr "Informações de hardware do servidor Checkmk"
+
+#, fuzzy
+msgid "Verify offline"
+msgstr "Dispositivo offline"
+
+#, fuzzy
+msgid "Upload a verification file exported from the customer portal."
+msgstr "Carregar relatório no portal do cliente"
+
+#, fuzzy
+msgid "Verify later"
+msgstr "Verificar certificados"
+
+msgid ""
+"This site is now linked to %{email}. Your %{days}-day trial of %{edition} "
+"runs until %{endDate} — after that, the site reverts to the free license "
+"state unless you add a license."
+msgstr ""
+
+msgid "Done"
+msgstr ""
+
+#, fuzzy
+msgid "Trial verified"
+msgstr "O julgamento expirou"
+
+msgid "Unverified trial"
+msgstr ""
+
+msgid ""
+"Trial started without verification. Full features for %{days} days from site "
+"creation, then the site falls back to the limited free license state (%"
+"{services} services). While the site is under %{days} days old, the dialog "
+"reappears on admin login (at most once every %{interval}) as another chance "
+"to verify or license."
+msgstr ""
+
+#, fuzzy
+msgid "Saving your selection failed. Please try again."
+msgstr ""
+"Nome de utilizador ou palavra-passe incorrectos. Por favor, tente novamente."
+
+msgid "Signed in as %{user}."
+msgstr ""
+
 #, fuzzy
 msgid "Backup code:"
 msgstr "Código de segurança"
@@ -101270,9 +101588,6 @@ msgstr "Tokens de segurança"
 #, fuzzy
 msgid "Use security token"
 msgstr "Tokens de segurança"
-
-msgid "OTP Digit %{count}"
-msgstr ""
 
 #, fuzzy
 msgid "Authenticate using authenticator app"
@@ -102022,9 +102337,6 @@ msgstr ""
 msgid "To explore"
 msgstr "O julgamento expirou"
 
-msgid "Done"
-msgstr ""
-
 #, fuzzy
 #~ msgid "Activate Changes"
 #~ msgstr "Activou as alterações"
@@ -102084,10 +102396,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Issued"
 #~ msgstr "Emissor"
-
-#, fuzzy
-#~ msgid "OAuth access tokens"
-#~ msgstr "Token de Acesso API"
 
 #, fuzzy
 #~ msgid "On selected tokens"
@@ -103759,10 +104067,6 @@ msgstr ""
 #~ msgid "Interface id"
 #~ msgstr "Identificação da interface"
 
-#, fuzzy
-#~ msgid "Invalid email address."
-#~ msgstr "Endereço IPv4 inválido: %s"
-
 #~ msgid "Invalid filename"
 #~ msgstr "Nome de arquivo inválido"
 
@@ -105067,10 +105371,6 @@ msgstr ""
 
 #~ msgid "RAM installed"
 #~ msgstr "RAM instalado"
-
-#, python-format
-#~ msgid "do not activate this %s"
-#~ msgstr "não active esta %s"
 
 #, fuzzy
 #~ msgid "Return WARNING if found, OK if not"

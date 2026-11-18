@@ -13883,6 +13883,13 @@ msgstr "Checkmk Kernbestanden"
 msgid "Checkmk dashboard"
 msgstr "Checkmk dashboard"
 
+msgid ""
+"Checkmk does not check limits on EC2 instance types that it does not know "
+"about. By default in this case, it will emit a warning so that you are aware "
+"that the limits of these instances are unmonitored. You can select a "
+"different service state for this scenario here."
+msgstr ""
+
 #, fuzzy
 msgid "Checkmk does not load plug-ins from this folder."
 msgstr "Checkmk Agent Plugins-Directory"
@@ -38015,6 +38022,10 @@ msgid ""
 msgstr ""
 "Ongeldige mapnaam. Alleen de tekens a-z, A-Z, 0-9, _ en - zijn toegestaan."
 
+#, fuzzy
+msgid "Invalid graph ID"
+msgstr "Ongeldig grafiektype: %s"
+
 #, python-format
 msgid "Invalid graph type '%s'"
 msgstr "Ongeldig grafiektype '%s'"
@@ -38150,6 +38161,10 @@ msgstr "Ongeldig verzoek: %r"
 #, fuzzy
 msgid "Invalid request parameters."
 msgstr "Ongeldige controleparameter"
+
+#, fuzzy
+msgid "Invalid request."
+msgstr "Ongeldig verzoek: %r"
 
 #, python-format
 msgid "Invalid request: %r"
@@ -42922,6 +42937,10 @@ msgstr "Beheerde objecten"
 #, fuzzy
 msgid "Managed Robots"
 msgstr "Beheerde objecten"
+
+#, fuzzy
+msgid "Managed by the relay"
+msgstr "Naam van de gevolmachtigde"
 
 #, fuzzy
 msgid "Managed objects"
@@ -66942,6 +66961,10 @@ msgid "State if remaining API reads are unknown"
 msgstr "Staat als resterende API-lezingen onbekend zijn"
 
 #, fuzzy
+msgid "State if running instance types are unknown to Checkmk"
+msgstr "Staat als resterende API-lezingen onbekend zijn"
+
+#, fuzzy
 msgid "State if specific check plug-ins receive no monitoring data."
 msgstr ""
 "Staat als specifieke controle plugins geen controle gegevens ontvangen."
@@ -74684,6 +74707,10 @@ msgstr "De regel van het hoogste niveau bestaat niet."
 msgid "The total number of hosts and service with and without problems"
 msgstr "Het totale aantal hosts en diensten met en zonder problemen"
 
+#, fuzzy
+msgid "The trial mode selection is not active."
+msgstr "Het geselecteerde pictogram bestaat niet."
+
 #, python-format
 msgid "The tuple must contain two elements, but you have %d"
 msgstr "De tuple moet twee elementen bevatten, maar je hebt %d"
@@ -74937,6 +74964,11 @@ msgid "The verification cannot be started due to missing CA certificate"
 msgstr ""
 "De verificatie kan niet worden gestart wegens het ontbreken van een CA-"
 "certificaat"
+
+msgid ""
+"The verification code is incorrect. Please check if you used the most recent "
+"verification code you have received from us."
+msgstr ""
 
 #, python-format
 msgid "The version of this site is not a %s"
@@ -81342,6 +81374,11 @@ msgstr "Tolerantieperiode voor 'deactivering' toestand"
 msgid "Tolerance period for 'reloading' state"
 msgstr "Tolerantieperiode voor 'herladen' staat"
 
+msgid ""
+"Too many verification codes have been requested. Please try again later or "
+"continue without verification."
+msgstr ""
+
 #, fuzzy
 msgid "Tools install state"
 msgstr "Map instance state"
@@ -85135,6 +85172,11 @@ msgstr "Kan pictogram niet uploaden: %s"
 #, python-format
 msgid "Unable to upload image: %s"
 msgstr "Kan afbeelding niet uploaden: %s"
+
+msgid ""
+"Unable to verify trial. Please try again later or use a different email "
+"address."
+msgstr ""
 
 msgid "Unaccounted turbo cycles"
 msgstr "Ongeregistreerde turbo cycli"
@@ -89070,6 +89112,10 @@ msgstr "Verificatie is mislukt: %s"
 msgid "Verification of the server certificate"
 msgstr "Verifieer server certificaat"
 
+msgid ""
+"Verification service is temporarily unavailable. Please try again later."
+msgstr ""
+
 msgid "Verify Certificates"
 msgstr "Certificaten verifiëren"
 
@@ -90108,6 +90154,10 @@ msgid "Welcome to Checkmk"
 msgstr "Welkom bij Checkmk Mobile."
 
 msgid "Welcome to Checkmk Mobile."
+msgstr "Welkom bij Checkmk Mobile."
+
+#, fuzzy
+msgid "Welcome to your new Checkmk site"
 msgstr "Welkom bij Checkmk Mobile."
 
 msgid "Werk"
@@ -92390,6 +92440,10 @@ msgstr "Je mag de opstelling niet gebruiken."
 msgid "You are not allowed to use passwords from the password store here."
 msgstr "U mag hier geen wachtwoorden uit de wachtwoordwinkel gebruiken."
 
+#, fuzzy
+msgid "You are not allowed to use the AI assistant."
+msgstr "Je mag de opstelling niet gebruiken."
+
 msgid "You are not allowed to use the message module."
 msgstr "U mag de berichtenmodule niet gebruiken."
 
@@ -93723,6 +93777,11 @@ msgstr ""
 "terugvalmeldingen te kunnen ontvangen."
 
 msgid ""
+"You have exceeded the maximum number of attempts to enter the verification "
+"code. Please request a new one."
+msgstr ""
+
+msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
 "missing. Please install Postfix, Qmail, Nullmailer or Sendmail."
 msgstr ""
@@ -94488,6 +94547,10 @@ msgid ""
 "converted to 'Free'. In this license state, your maximum total service limit "
 "is %s which you exceed with %s services. Until you reduce the number of "
 "services, 'Activate changes' is blocked."
+msgstr ""
+
+msgid ""
+"Your verification code has expired. Please request a new verification code."
 msgstr ""
 
 msgid "ZFS file system usage"
@@ -101160,6 +101223,14 @@ msgid "This chat and all its messages will be deleted and can’t be recovered."
 msgstr ""
 
 #, fuzzy
+msgid "No graph of %{label} is available."
+msgstr "Geen informatie beschikbaar"
+
+#, fuzzy
+msgid "Open in monitoring"
+msgstr "Zoeken in Toezicht"
+
+#, fuzzy
 msgid "Select an AI provider and a model in the global settings."
 msgstr "Deze optie is gewijzigd in de globale instellingen."
 
@@ -101177,6 +101248,9 @@ msgstr ""
 msgid ""
 "Can’t delete chat “%{title}” while it’s answering. Wait until it finishes or "
 "stop it, then try again."
+msgstr ""
+
+msgid "Digit %{count} of %{total}"
 msgstr ""
 
 #, fuzzy
@@ -101284,6 +101358,250 @@ msgstr "Save & run service discovery"
 msgid "Add \"${props.title}\" to sidebar"
 msgstr ""
 
+msgid "Step %{step} of %{total}"
+msgstr ""
+
+#, fuzzy
+msgid "Full features · %{days} day left"
+msgid_plural "Full features · %{days} days left"
+msgstr[0] " in %d dagen"
+msgstr[1] " in %d dagen"
+
+#, fuzzy
+msgid "Start monitoring"
+msgstr "Zoeken in Toezicht"
+
+msgid "Resend code (%{countdown})"
+msgstr ""
+
+#, fuzzy
+msgid "Resend code"
+msgstr "Back-upcodes opnieuw genereren"
+
+#, fuzzy
+msgid "Internal error. Please try again."
+msgstr "Er is een uitzondering opgetreden: %s"
+
+msgid "Checkmk could not process the request. Reload the page and try again."
+msgstr ""
+
+msgid "Unable to reach Checkmk site. Please check that it is started."
+msgstr ""
+
+#, fuzzy
+msgid "Code"
+msgstr "Code Grootte"
+
+#, fuzzy
+msgid "Enter your verification code"
+msgstr "Begin verificatie"
+
+msgid "We sent a 6-digit code to %{email}."
+msgstr ""
+
+#, fuzzy
+msgid "Verification code"
+msgstr "Verificatie"
+
+#, fuzzy
+msgid "Didn't receive it?"
+msgstr "Ontvangen gegevens"
+
+#, fuzzy
+msgid "Continue without verification"
+msgstr "Online verificatie"
+
+#, fuzzy
+msgid "Verify"
+msgstr "Waiting"
+
+#, fuzzy
+msgid "Terms & Conditions"
+msgstr "Voorwaarden"
+
+msgid "EULA"
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk group companies"
+msgstr "Checkmk logbestanden"
+
+#, fuzzy
+msgid "email"
+msgstr "E-mail"
+
+#, fuzzy
+msgid "Email %{address} to unsubscribe"
+msgstr "Kenmerk e-mailadres"
+
+#, fuzzy
+msgid "Privacy Notice"
+msgstr "Privacy-protocol"
+
+msgid ""
+"By starting the trial, I agree to the %{terms} and the %{eula}. I have\n"
+"      noted the %{privacy_policy}."
+msgstr ""
+
+msgid ""
+"In exchange for this free trial, I agree to receive information about\n"
+"      Checkmk products and services (incl. newsletter, events and customer\n"
+"      surveys) from the %{checkmk_group} by email and telephone, and that\n"
+"      Checkmk may analyse my interaction with these emails (opens and "
+"clicks)\n"
+"      to improve its marketing. I understand that this consent is the\n"
+"      condition for receiving the trial free of charge. I can unsubscribe "
+"at\n"
+"      any time via %{email}."
+msgstr ""
+
+msgid ""
+"We check the email address you provide against external sources to\n"
+"      confirm that it belongs to a business contact and to complete the\n"
+"      details of your organisation and role. Further information and your\n"
+"      right to object: %{privacy_notice}."
+msgstr ""
+
+#, fuzzy
+msgid "Enter a valid email address."
+msgstr "Ongeldig IPv4 adres: %s"
+
+#, fuzzy
+msgid "Verify your email address"
+msgstr "Van: e-mail adres"
+
+msgid ""
+"We'll email you a one-time code to activate your verified %{days}-day trial."
+msgstr ""
+
+msgid ""
+"Use an address you can access now. Verification links this site to your "
+"trial registration."
+msgstr ""
+
+#, fuzzy
+msgid "Send code"
+msgstr "In kaart gebrachte gegevens"
+
+#, fuzzy
+msgid "Connection blocked"
+msgstr "Verbindingstijd"
+
+#, fuzzy
+msgid "This site can't reach %{domain}"
+msgstr "Deze site reageert niet."
+
+msgid ""
+"Email verification needs an outbound HTTPS connection to that domain. A "
+"firewall or proxy rule is the most common cause — if this site has no "
+"internet access at all, continue as an offline trial instead."
+msgstr ""
+
+#, fuzzy
+msgid "Allow outbound access to"
+msgstr "API Toegangstoken"
+
+msgid "TCP 443 (HTTPS)"
+msgstr ""
+
+msgid ""
+"Add the domain to your firewall or proxy allowlist, then retry. The same "
+"endpoint is used for product analytics, so allowlisting it once covers both."
+msgstr ""
+
+#, fuzzy
+msgid "Continue as offline trial"
+msgstr "Aantal offline hosts"
+
+msgid "Tell us how you're using this site so we can set it up correctly."
+msgstr ""
+
+#, fuzzy
+msgid "Start a trial"
+msgstr "Start type"
+
+msgid "Try all features of Checkmk free for %{days} days."
+msgstr ""
+
+#, fuzzy
+msgid "I'm an existing customer"
+msgstr "Toenemende teller"
+
+#, fuzzy
+msgid "Verify your license to activate this site."
+msgstr "activeer deze %s niet"
+
+#, fuzzy
+msgid "License activation pending"
+msgstr "In behandeling zijnde wijzigingen activeren"
+
+msgid ""
+"License verification postponed. The site keeps full features for %{days} "
+"days from site creation. Verify your license before then — otherwise the "
+"site falls back to the limited free license state (%{services} services). "
+"We'll remind you every %{interval}."
+msgstr ""
+
+#, fuzzy
+msgid "Verify your license"
+msgstr "Antwoord verifiëren"
+
+msgid "Choose how to validate the license for this site."
+msgstr ""
+
+#, fuzzy
+msgid "Verify online"
+msgstr "Antwoord verifiëren"
+
+#, fuzzy
+msgid "Validate automatically against the Checkmk license server."
+msgstr "Hardware-informatie van de Checkmk Server"
+
+#, fuzzy
+msgid "Verify offline"
+msgstr "Apparaat offline"
+
+#, fuzzy
+msgid "Upload a verification file exported from the customer portal."
+msgstr "Upload aangepast logo"
+
+#, fuzzy
+msgid "Verify later"
+msgstr "Certificaten verifiëren"
+
+msgid ""
+"This site is now linked to %{email}. Your %{days}-day trial of %{edition} "
+"runs until %{endDate} — after that, the site reverts to the free license "
+"state unless you add a license."
+msgstr ""
+
+msgid "Done"
+msgstr ""
+
+#, fuzzy
+msgid "Trial verified"
+msgstr "Proef vervallen"
+
+msgid "Unverified trial"
+msgstr ""
+
+msgid ""
+"Trial started without verification. Full features for %{days} days from site "
+"creation, then the site falls back to the limited free license state (%"
+"{services} services). While the site is under %{days} days old, the dialog "
+"reappears on admin login (at most once every %{interval}) as another chance "
+"to verify or license."
+msgstr ""
+
+#, fuzzy
+msgid "Saving your selection failed. Please try again."
+msgstr ""
+"Het eerder geüploade CSV-bestand kon niet worden gelezen. Gelieve het "
+"opnieuw te uploaden."
+
+msgid "Signed in as %{user}."
+msgstr ""
+
 #, fuzzy
 msgid "Backup code:"
 msgstr "Back-up code"
@@ -101328,9 +101646,6 @@ msgstr "Veiligheidsnaam"
 #, fuzzy
 msgid "Use security token"
 msgstr "Veiligheidsnaam"
-
-msgid "OTP Digit %{count}"
-msgstr ""
 
 #, fuzzy
 msgid "Authenticate using authenticator app"
@@ -102078,9 +102393,6 @@ msgstr ""
 msgid "To explore"
 msgstr "Proef vervallen"
 
-msgid "Done"
-msgstr ""
-
 #, fuzzy
 #~ msgid "Activate Changes"
 #~ msgstr "Activeerde de veranderingen"
@@ -102140,10 +102452,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Issued"
 #~ msgstr "Emittent"
-
-#, fuzzy
-#~ msgid "OAuth access tokens"
-#~ msgstr "API Toegangstoken"
 
 #, fuzzy
 #~ msgid "On selected tokens"
@@ -103812,10 +104120,6 @@ msgstr ""
 #~ msgid "Interface id"
 #~ msgstr "Interface-id"
 
-#, fuzzy
-#~ msgid "Invalid email address."
-#~ msgstr "Ongeldig IPv4 adres: %s"
-
 #~ msgid "Invalid filename"
 #~ msgstr "Ongeldige bestandsnaam"
 
@@ -105091,10 +105395,6 @@ msgstr ""
 
 #~ msgid "RAM installed"
 #~ msgstr "RAM geïnstalleerd"
-
-#, python-format
-#~ msgid "do not activate this %s"
-#~ msgstr "activeer deze %s niet"
 
 #, fuzzy
 #~ msgid "Return WARNING if found, OK if not"

@@ -13069,6 +13069,13 @@ msgstr "Checkmkコアファイル"
 msgid "Checkmk dashboard"
 msgstr "Checkmk ダッシュボード"
 
+msgid ""
+"Checkmk does not check limits on EC2 instance types that it does not know "
+"about. By default in this case, it will emit a warning so that you are aware "
+"that the limits of these instances are unmonitored. You can select a "
+"different service state for this scenario here."
+msgstr ""
+
 #, fuzzy
 msgid "Checkmk does not load plug-ins from this folder."
 msgstr "Checkmkエージェントプラグイン-ディレクトリ"
@@ -35940,6 +35947,10 @@ msgid ""
 msgstr ""
 "フォルダー名が無効です。文字 a-z, A-Z, 0-9, _ および - のみが許可されます。"
 
+#, fuzzy
+msgid "Invalid graph ID"
+msgstr "無効なグラフタイプ: %s"
+
 #, python-format
 msgid "Invalid graph type '%s'"
 msgstr "無効なグラフタイプ '%s'"
@@ -36074,6 +36085,10 @@ msgstr "無効なリクエスト: %r"
 
 msgid "Invalid request parameters."
 msgstr "チェックパラメータが無効です。"
+
+#, fuzzy
+msgid "Invalid request."
+msgstr "無効なリクエスト: %r"
 
 #, python-format
 msgid "Invalid request: %r"
@@ -40593,6 +40608,10 @@ msgstr "管理Robot"
 
 msgid "Managed Robots"
 msgstr "管理Robot"
+
+#, fuzzy
+msgid "Managed by the relay"
+msgstr "リレー管理"
 
 msgid "Managed objects"
 msgstr "管理オブジェクト"
@@ -63356,6 +63375,10 @@ msgstr "プローブ状態がOKでない場合の状態"
 msgid "State if remaining API reads are unknown"
 msgstr "残りのAPI読み取りが不明であるかどうかの状態"
 
+#, fuzzy
+msgid "State if running instance types are unknown to Checkmk"
+msgstr "残りのAPI読み取りが不明であるかどうかの状態"
+
 msgid "State if specific check plug-ins receive no monitoring data."
 msgstr "特定のチェックプラグインが監視データを受け取らない場合。"
 
@@ -70932,6 +70955,10 @@ msgstr "トップレベルのルールは存在しません。"
 msgid "The total number of hosts and service with and without problems"
 msgstr "問題のある場合とない場合のホストとサービスの総数"
 
+#, fuzzy
+msgid "The trial mode selection is not active."
+msgstr "選択したアイコンは存在しません。"
+
 #, python-format
 msgid "The tuple must contain two elements, but you have %d"
 msgstr ""
@@ -71169,6 +71196,11 @@ msgstr "このラベルの値'%s'は一致しません: %r !~ %r。"
 
 msgid "The verification cannot be started due to missing CA certificate"
 msgstr "CA証明書が見つからないため、検証を開始できません"
+
+msgid ""
+"The verification code is incorrect. Please check if you used the most recent "
+"verification code you have received from us."
+msgstr ""
 
 #, python-format
 msgid "The version of this site is not a %s"
@@ -77467,6 +77499,11 @@ msgstr "\"停止\"状態の許容期間"
 msgid "Tolerance period for 'reloading' state"
 msgstr "「リロード」状態の許容期間"
 
+msgid ""
+"Too many verification codes have been requested. Please try again later or "
+"continue without verification."
+msgstr ""
+
 msgid "Tools install state"
 msgstr "ツールのインストール状態"
 
@@ -80641,6 +80678,11 @@ msgstr "アイコンをアップロードできません:%s"
 #, python-format
 msgid "Unable to upload image: %s"
 msgstr "画像をアップロードできません: %s"
+
+msgid ""
+"Unable to verify trial. Please try again later or use a different email "
+"address."
+msgstr ""
 
 msgid "Unaccounted turbo cycles"
 msgstr "考慮されていないターボサイクル"
@@ -84281,6 +84323,11 @@ msgstr "検証失敗: %s"
 msgid "Verification of the server certificate"
 msgstr "サーバー証明書を確認する"
 
+#, fuzzy
+msgid ""
+"Verification service is temporarily unavailable. Please try again later."
+msgstr "利用可能なAIアクションの取得に失敗しました。後ほど再度お試しください。"
+
 msgid "Verify Certificates"
 msgstr "証明書の検証"
 
@@ -85278,6 +85325,10 @@ msgid "Welcome to Checkmk"
 msgstr "Checkmk へようこそ"
 
 msgid "Welcome to Checkmk Mobile."
+msgstr "Checkmk Mobileへようこそ。"
+
+#, fuzzy
+msgid "Welcome to your new Checkmk site"
 msgstr "Checkmk Mobileへようこそ。"
 
 msgid "Werk"
@@ -87494,6 +87545,10 @@ msgid "You are not allowed to use passwords from the password store here."
 msgstr ""
 "ここのパスワードストアからパスワードを使用することは許可されていません。"
 
+#, fuzzy
+msgid "You are not allowed to use the AI assistant."
+msgstr "セットアップの使用は許可されていません。"
+
 msgid "You are not allowed to use the message module."
 msgstr "メッセージモジュールの使用は許可されていません。"
 
@@ -88756,6 +88811,11 @@ msgstr ""
 "要があります。"
 
 msgid ""
+"You have exceeded the maximum number of attempts to enter the verification "
+"code. Please request a new one."
+msgstr ""
+
+msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
 "missing. Please install Postfix, Qmail, Nullmailer or Sendmail."
 msgstr ""
@@ -89534,6 +89594,10 @@ msgstr ""
 "試用期間が終了し、ライセンス状態が自動的に「無料」に変換されました。このライ"
 "センス状態では、最大合計サービス数は %s であり、現在%s サービスを超えていま"
 "す。サービス数を減らすまで、[変更を有効にする] はブロックされます。"
+
+msgid ""
+"Your verification code has expired. Please request a new verification code."
+msgstr ""
 
 msgid "ZFS file system usage"
 msgstr "ZFSファイルシステムの使用量"
@@ -96223,6 +96287,14 @@ msgid "This chat and all its messages will be deleted and can’t be recovered."
 msgstr ""
 
 #, fuzzy
+msgid "No graph of %{label} is available."
+msgstr "復元可能なスナップショットはありません。"
+
+#, fuzzy
+msgid "Open in monitoring"
+msgstr "監視アイコン"
+
+#, fuzzy
 msgid "Select an AI provider and a model in the global settings."
 msgstr "このオプションは、グローバル設定で変更されています。"
 
@@ -96241,6 +96313,10 @@ msgid ""
 "Can’t delete chat “%{title}” while it’s answering. Wait until it finishes or "
 "stop it, then try again."
 msgstr ""
+
+#, fuzzy
+msgid "Digit %{count} of %{total}"
+msgstr "%{count} %{ラベル}"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"
@@ -96367,6 +96443,248 @@ msgstr "サービスディスカバリの実行と保存"
 msgid "Add \"${props.title}\" to sidebar"
 msgstr "サイドバーに${props.title}を追加する"
 
+#, fuzzy
+msgid "Step %{step} of %{total}"
+msgstr "%{selected} 件中 %{total} 件を選択しました"
+
+#, fuzzy
+msgid "Full features · %{days} day left"
+msgid_plural "Full features · %{days} days left"
+msgstr[0] "有効期限まであと %{days} 日"
+
+#, fuzzy
+msgid "Start monitoring"
+msgstr "外形監視"
+
+msgid "Resend code (%{countdown})"
+msgstr ""
+
+#, fuzzy
+msgid "Resend code"
+msgstr "コードの再生成"
+
+#, fuzzy
+msgid "Internal error. Please try again."
+msgstr "ユーザー名またはパスワードが間違っています。もう一度お試しください。"
+
+msgid "Checkmk could not process the request. Reload the page and try again."
+msgstr ""
+
+msgid "Unable to reach Checkmk site. Please check that it is started."
+msgstr ""
+
+#, fuzzy
+msgid "Code"
+msgstr "コード 2xx"
+
+#, fuzzy
+msgid "Enter your verification code"
+msgstr "検証の実行"
+
+msgid "We sent a 6-digit code to %{email}."
+msgstr ""
+
+#, fuzzy
+msgid "Verification code"
+msgstr "検証"
+
+#, fuzzy
+msgid "Didn't receive it?"
+msgstr "受信データ"
+
+#, fuzzy
+msgid "Continue without verification"
+msgstr "オンライン検証"
+
+#, fuzzy
+msgid "Verify"
+msgstr "待機..."
+
+#, fuzzy
+msgid "Terms & Conditions"
+msgstr "条件"
+
+msgid "EULA"
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk group companies"
+msgstr "Checkmkログファイル"
+
+#, fuzzy
+msgid "email"
+msgstr "Eメール"
+
+#, fuzzy
+msgid "Email %{address} to unsubscribe"
+msgstr "Eメールアドレス属性"
+
+#, fuzzy
+msgid "Privacy Notice"
+msgstr "プライバシープロトコル"
+
+msgid ""
+"By starting the trial, I agree to the %{terms} and the %{eula}. I have\n"
+"      noted the %{privacy_policy}."
+msgstr ""
+
+msgid ""
+"In exchange for this free trial, I agree to receive information about\n"
+"      Checkmk products and services (incl. newsletter, events and customer\n"
+"      surveys) from the %{checkmk_group} by email and telephone, and that\n"
+"      Checkmk may analyse my interaction with these emails (opens and "
+"clicks)\n"
+"      to improve its marketing. I understand that this consent is the\n"
+"      condition for receiving the trial free of charge. I can unsubscribe "
+"at\n"
+"      any time via %{email}."
+msgstr ""
+
+msgid ""
+"We check the email address you provide against external sources to\n"
+"      confirm that it belongs to a business contact and to complete the\n"
+"      details of your organisation and role. Further information and your\n"
+"      right to object: %{privacy_notice}."
+msgstr ""
+
+#, fuzzy
+msgid "Enter a valid email address."
+msgstr "無効なメールアドレスです。"
+
+#, fuzzy
+msgid "Verify your email address"
+msgstr "差出人:メールアドレス"
+
+msgid ""
+"We'll email you a one-time code to activate your verified %{days}-day trial."
+msgstr ""
+
+msgid ""
+"Use an address you can access now. Verification links this site to your "
+"trial registration."
+msgstr ""
+
+#, fuzzy
+msgid "Send code"
+msgstr "データ送信"
+
+#, fuzzy
+msgid "Connection blocked"
+msgstr "コネクションの構築"
+
+#, fuzzy
+msgid "This site can't reach %{domain}"
+msgstr "このサイトは応答していません。"
+
+msgid ""
+"Email verification needs an outbound HTTPS connection to that domain. A "
+"firewall or proxy rule is the most common cause — if this site has no "
+"internet access at all, continue as an offline trial instead."
+msgstr ""
+
+#, fuzzy
+msgid "Allow outbound access to"
+msgstr "NAT Gatewayの送信パケット"
+
+msgid "TCP 443 (HTTPS)"
+msgstr ""
+
+msgid ""
+"Add the domain to your firewall or proxy allowlist, then retry. The same "
+"endpoint is used for product analytics, so allowlisting it once covers both."
+msgstr ""
+
+#, fuzzy
+msgid "Continue as offline trial"
+msgstr "オフラインホストの数"
+
+msgid "Tell us how you're using this site so we can set it up correctly."
+msgstr ""
+
+#, fuzzy
+msgid "Start a trial"
+msgstr "スタート時間"
+
+msgid "Try all features of Checkmk free for %{days} days."
+msgstr ""
+
+#, fuzzy
+msgid "I'm an existing customer"
+msgstr "増加するカウンター"
+
+#, fuzzy
+msgid "Verify your license to activate this site."
+msgstr "この%sをアクティブにしないでください"
+
+#, fuzzy
+msgid "License activation pending"
+msgstr "保留中の変更をアクティブ化する"
+
+msgid ""
+"License verification postponed. The site keeps full features for %{days} "
+"days from site creation. Verify your license before then — otherwise the "
+"site falls back to the limited free license state (%{services} services). "
+"We'll remind you every %{interval}."
+msgstr ""
+
+#, fuzzy
+msgid "Verify your license"
+msgstr "応答を確認する"
+
+msgid "Choose how to validate the license for this site."
+msgstr ""
+
+#, fuzzy
+msgid "Verify online"
+msgstr "応答を確認する"
+
+#, fuzzy
+msgid "Validate automatically against the Checkmk license server."
+msgstr "Checkmkサーバーのハードウェア情報"
+
+#, fuzzy
+msgid "Verify offline"
+msgstr "デバイスがオフライン"
+
+#, fuzzy
+msgid "Upload a verification file exported from the customer portal."
+msgstr "カスタマーポータルでレポートをアップロード"
+
+#, fuzzy
+msgid "Verify later"
+msgstr "証明書の検証"
+
+msgid ""
+"This site is now linked to %{email}. Your %{days}-day trial of %{edition} "
+"runs until %{endDate} — after that, the site reverts to the free license "
+"state unless you add a license."
+msgstr ""
+
+msgid "Done"
+msgstr ""
+
+#, fuzzy
+msgid "Trial verified"
+msgstr "試用期間満了"
+
+msgid "Unverified trial"
+msgstr ""
+
+msgid ""
+"Trial started without verification. Full features for %{days} days from site "
+"creation, then the site falls back to the limited free license state (%"
+"{services} services). While the site is under %{days} days old, the dialog "
+"reappears on admin login (at most once every %{interval}) as another chance "
+"to verify or license."
+msgstr ""
+
+#, fuzzy
+msgid "Saving your selection failed. Please try again."
+msgstr "ユーザー名またはパスワードが間違っています。もう一度お試しください。"
+
+msgid "Signed in as %{user}."
+msgstr ""
+
 msgid "Backup code:"
 msgstr "バックアップコード："
 
@@ -96410,9 +96728,6 @@ msgstr "セキュリティトークン"
 #, fuzzy
 msgid "Use security token"
 msgstr "セキュリティトークン"
-
-msgid "OTP Digit %{count}"
-msgstr "OTPの桁数：%{count}"
 
 #, fuzzy
 msgid "Authenticate using authenticator app"
@@ -97268,8 +97583,8 @@ msgstr ""
 msgid "To explore"
 msgstr "試用期間満了"
 
-msgid "Done"
-msgstr ""
+#~ msgid "OTP Digit %{count}"
+#~ msgstr "OTPの桁数：%{count}"
 
 #~ msgid "Activate Changes"
 #~ msgstr "変更をアクティブにする"
@@ -99212,9 +99527,6 @@ msgstr ""
 #~ msgid "Interface id"
 #~ msgstr "インターフェイス id"
 
-#~ msgid "Invalid email address."
-#~ msgstr "無効なメールアドレスです。"
-
 #~ msgid "Invalid filename"
 #~ msgstr "無効なファイル名"
 
@@ -100603,10 +100915,6 @@ msgstr ""
 
 #~ msgid "RAM installed"
 #~ msgstr "インストールされたRAM"
-
-#, python-format
-#~ msgid "do not activate this %s"
-#~ msgstr "この%sをアクティブにしないでください"
 
 #~ msgid "Return WARNING if found, OK if not"
 #~ msgstr "見つかった場合はWARNING を返し、見つからなかった場合はOKを返します"

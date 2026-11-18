@@ -6,17 +6,23 @@ A "Werk" (German for work) is a changelog element. Normally it is added with the
 commit that implements the feature or fix. It holds a title, a description and
 some metadata.
 
-Currently the metadata also contains the Checkmk version when the change
+The metadata may also contain the Checkmk version when the change
 connected to the Werk will be released. This is why a special tool is needed to
-pick changes from one branch to another, so the version can be adapted.
+pick changes from one branch to another, so the version can be removed. [#]_
+
+.. [#] The 2.4.0 branch still uses v2 Werks, which require a version. There,
+   ``werk pick`` sets the version to the current version of the branch.
 
 Versions
 ========
 
-There are two different versions of Werk files (not to be confused with the
+There are three different versions of Werk files (not to be confused with the
 version field inside the Werk that specifies in which Checkmk version the Werk
 was introduced!)
 
+* markdown v3 (2.5 and higher)
+    * uses the new edition names, e.g. "community" instead of "cre"
+    * the version is optional
 * markdown (2.3 and higher)
     * also called "v2" or "md"
     * Werk files end with ".md"
@@ -43,11 +49,13 @@ Rewrite Versions of Werks
 
 During the release process, a new release candidate may need to be created.
 In this case, dedicated commits will be picked onto the corresponding release
-branch ``release/A.B.CpX``. Potentially picked werks therefore may need a fix-up
-of their version field. In case the ``werk`` script is used, the version field
-will be automatically rewritten. However in the upstream branch ``A.B.C`` the
-version of the corresponding werk would also need to be updated.
-This is a current design flaw and should be fixed in the future.
+branch ``release/A.B.CpX``. [#]_ After the final release, the ``burn`` sub-command of
+``bazel run //packages/cmk-werks:utils-bin`` writes the released version into all
+Werks without a version (Jenkins job ``buildscripts/scripts/burn-werks.groovy``).
+
+.. [#] In the past, every Werk had a version. Werks picked onto the release
+   branch needed a fix-up of their version field, and the version of the
+   corresponding Werk in the upstream branch ``A.B.C`` had to be updated as well.
 
 Precompiled Werks
 ~~~~~~~~~~~~~~~~~
@@ -74,7 +82,7 @@ while building Checkmk: Bazel rules in ``omd/packages/changelog/BUILD`` execute
 Website
 -------
 
-You can search and filter Werks on the official Checkmk website: https://Checkmk.com/werks
+You can search and filter Werks on the official Checkmk website: https://checkmk.com/werks
 
 To compile a list of all Werks, you have to look for Werks in all branches of
 Checkmk. This is done via ``bazel run //packages/cmk-werks:utils-bin -- collect``.
@@ -89,7 +97,7 @@ As all of them have different configuration and version numbers you have to
 specify the flavor for collecting Werks from there. In the jenkins job those
 json dumps are joined to one big json dump.
 
-One Werk can be specified in multiple branches potential with different content.
+One Werk can be specified in multiple branches potentially with different content.
 Higher versions and finally the master branch will always overwrite others.
 
 
@@ -135,10 +143,10 @@ unacknowledged Werks from the previous version: Those can not be displayed in
 the updated Checkmk, as it only ships with Werks from the current major version.
 This is also why Checkmk 2.3.0 still needs code to read v1 Werks from the
 precompiled Werks file: The code warning about the unacknowledged Werks is
-execute from 2.3.0, but reads the Werks and unacknowledged Werks from a 2.2.0
+executed from 2.3.0, but reads the Werks and unacknowledged Werks from a 2.2.0
 site.
 
-With 2.5.0 the unacknowledged Werks will be migrate to the updated site, see
+Since 2.5.0 the unacknowledged Werks are migrated to the updated site, see
 `Werk #15365`_
 
 .. _Werk #15365: https://checkmk.com/werk/15365
@@ -150,7 +158,7 @@ Werk-tool
 The source of all Werks are files. You can create, grep and edit them via normal
 tools, but there is also a specialized helper called ``werk``. It lives in
 ``/packages/cmk-werks/``. It is used to pick Werks between version branches, and
-can pick from branches using v1 Werks and automatically transform them to v2
+can pick from branches using v1 Werks and automatically transform them to v3
 Werks if the destination branch has markdown Werks enabled.
 
 There are also some convenience functions to grep, list or edit Werks from the
@@ -166,7 +174,7 @@ and then it is loaded (meta-data is validated and markdown/nowiki is transformed
 to html).
 This has the benefit that parsing a Werk is quite fast, but loading it can be
 slow. For listing or grepping Werks it does not have to be validated and also
-the description has not be interpreted, so parsing is enough in those instances.
+the description does not have to be interpreted, so parsing is enough in those instances.
 
 
 There is no loading function for Werk v1 files: Those files are parsed, then

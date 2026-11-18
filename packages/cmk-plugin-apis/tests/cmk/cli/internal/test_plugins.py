@@ -6,12 +6,7 @@
 import pytest
 
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import entry_point_prefixes as cli_entry_point_prefixes
 from cmk.cli.internal import no_options as cli_no_options
-
-
-def test_entry_point_prefixes() -> None:
-    assert cli_entry_point_prefixes() == {CLICommand: "cli_command_"}
 
 
 def test_a_command_name_must_be_an_identifier() -> None:

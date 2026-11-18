@@ -42,8 +42,8 @@ const toggleOptions = [
   border: 1px solid var(--default-form-element-border-color);
   gap: 2px;
   padding: 0 3px;
-  border-top-left-radius: 12px;
-  border-bottom-left-radius: 12px;
+  border-top-left-radius: var(--border-radius);
+  border-bottom-left-radius: var(--border-radius);
   height: 20px;
   z-index: +1;
 }
@@ -54,7 +54,7 @@ const toggleOptions = [
   background-color: var(--ux-theme-0);
   font-weight: var(--font-weight-default);
   transition: all 0.2s ease-in-out;
-  border-radius: 12px;
+  border-radius: var(--border-radius);
   padding: 1px 3px;
   margin: 0;
   font-size: var(--font-size-normal);

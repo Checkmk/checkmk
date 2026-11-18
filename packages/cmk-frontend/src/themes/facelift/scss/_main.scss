@@ -1317,7 +1317,7 @@ tr.hidden {
 
 ::-webkit-scrollbar-thumb {
   background-color: $scrollbar-color;
-  border-radius: 16px;
+  border-radius: $theme-border-radius;
   border: 2px solid transparent;
   background-clip: content-box;
 }

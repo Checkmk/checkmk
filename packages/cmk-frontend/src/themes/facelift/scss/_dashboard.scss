@@ -301,7 +301,7 @@ div.dashlet.edit {
       color: $font-color-light-bg;
       text-align: center;
       background-color: $success;
-      border-radius: 12px;
+      border-radius: $theme-border-radius;
 
       &.anchor_image {
         width: 15px;
@@ -461,7 +461,7 @@ div#dashboard.grid {
   margin: 4px auto;
   text-align: center;
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: $theme-border-radius;
   box-sizing: border-box;
 
   &.max {
@@ -516,7 +516,7 @@ div#dashboard.grid {
     &.circle_handle {
       width: $dashlet-resize-handle-height;
       height: $dashlet-resize-handle-width;
-      border-radius: 0 $dashlet-resize-handle-width $dashlet-resize-handle-width 0;
+      border-radius: 0 $theme-border-radius $theme-border-radius 0;
 
       .resize_image {
         transform: rotate(90deg);
@@ -536,7 +536,7 @@ div#dashboard.grid {
     &.circle_handle {
       width: $dashlet-resize-handle-height;
       height: $dashlet-resize-handle-width;
-      border-radius: $dashlet-resize-handle-width 0 0 $dashlet-resize-handle-width;
+      border-radius: $theme-border-radius 0 0 $theme-border-radius;
 
       .resize_image {
         transform: rotate(-90deg);
@@ -567,7 +567,7 @@ div#dashboard.grid {
     &.circle_handle {
       width: $dashlet-resize-handle-width;
       height: $dashlet-resize-handle-height;
-      border-radius: 0 0 $dashlet-resize-handle-width $dashlet-resize-handle-width;
+      border-radius: 0 0 $theme-border-radius $theme-border-radius;
 
       .resize_image {
         transform: rotate(180deg);
@@ -587,7 +587,7 @@ div#dashboard.grid {
     &.circle_handle {
       width: $dashlet-resize-handle-width;
       height: $dashlet-resize-handle-height;
-      border-radius: $dashlet-resize-handle-width $dashlet-resize-handle-width 0 0;
+      border-radius: $theme-border-radius $theme-border-radius 0 0;
 
       div.slim_controls & {
         width: $dashlet-resize-handle-width-slim;

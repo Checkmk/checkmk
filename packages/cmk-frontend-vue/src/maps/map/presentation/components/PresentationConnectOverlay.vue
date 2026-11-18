@@ -35,7 +35,7 @@ function slotStyle(box: ConnectSlotBox): Record<string, string> {
     width: `${box.w}px`,
     height: `${box.h}px`,
     borderWidth: `${2 / props.scale}px`,
-    borderRadius: `${10 / props.scale}px`
+    borderRadius: `calc(var(--border-radius) / ${props.scale})`
   }
 }
 

@@ -504,7 +504,7 @@ h1 {
   vertical-align: center;
   background-color: lightgrey;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: var(--border-radius);
   border: 1px solid #222;
   margin-left: 1em;
 }

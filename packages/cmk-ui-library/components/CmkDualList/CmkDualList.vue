@@ -186,7 +186,7 @@ const elementCounter = computed(() => props.elements.length)
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border-radius: 10px;
+  border-radius: var(--border-radius);
   width: 100%;
   max-width: 51px;
 }

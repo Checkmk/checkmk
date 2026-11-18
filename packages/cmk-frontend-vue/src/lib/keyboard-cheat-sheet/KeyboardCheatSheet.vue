@@ -365,7 +365,7 @@ onBeforeUnmount(() => {
   pointer-events: none;
   background: rgb(0 0 0);
   border: 15px solid rgb(0 0 0);
-  border-radius: 30px;
+  border-radius: var(--border-radius);
   box-shadow: 0 6px 24px rgb(0 0 0 / 35%);
   visibility: hidden;
   opacity: 0;
@@ -382,7 +382,7 @@ onBeforeUnmount(() => {
   z-index: -1;
   content: '';
   background: var(--cheat-sheet-paper);
-  border-radius: 19px;
+  border-radius: var(--border-radius);
 }
 
 .lib-keyboard-cheat-sheet--visible {

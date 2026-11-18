@@ -7,10 +7,12 @@ from pathlib import Path
 
 import pytest
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.plugins.checkmk.cli.discovery import CheckDiscoveryRequest, DiscoverRequest
+from cmk.plugins.checkmk.cli.handlers.agent_based import PluginSelectionError
 from cmk.plugins.checkmk.cli.handlers.discovery import _CheckDiscoveryCommand, _DiscoverCommand
 from cmk.plugins.checkmk.cli.options import FetchRequest, FileCacheRequest, PluginSelectionRequest
 
@@ -88,12 +90,15 @@ _DISCOVER_REQUEST = DiscoverRequest(
 
 
 class _FakeDiscover:
-    def __init__(self, *, succeeded: bool) -> None:
+    def __init__(self, *, succeeded: bool, error: Exception | None = None) -> None:
         self.asked: list[tuple[DiscoverRequest, Path, bool]] = []
         self._succeeded = succeeded
+        self._error = error
 
     def __call__(self, request: DiscoverRequest, *, omd_root: Path, debug: bool) -> bool:
         self.asked.append((request, omd_root, debug))
+        if self._error is not None:
+            raise self._error
         return self._succeeded
 
 
@@ -109,4 +114,21 @@ def test_a_failed_discovery_exits_one() -> None:
     assert (
         _DiscoverCommand(discover=_FakeDiscover(succeeded=False)).run(context(), _DISCOVER_REQUEST)
         == CLIExitCode.FAILURE
+    )
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        MKGeneralException("Cannot load the configuration"),
+        PluginSelectionError("Unknown plug-in"),
+    ],
+    ids=lambda e: type(e).__name__,
+)
+def test_an_aborted_discovery_exits_three(error: Exception) -> None:
+    assert (
+        _DiscoverCommand(discover=_FakeDiscover(succeeded=True, error=error)).run(
+            context(), _DISCOVER_REQUEST
+        )
+        == CLIExitCode.UNKNOWN
     )

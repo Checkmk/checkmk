@@ -7,7 +7,6 @@
 import sys
 from collections.abc import Container, Iterable, Mapping
 
-from cmk.ccc.exceptions import MKBailOut
 from cmk.checkengine.parser import (
     NO_SELECTION,
     SectionNameCollection,
@@ -30,6 +29,10 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.log import console
 
 
+class PluginSelectionError(Exception):
+    """The plug-ins selected on the command line are unknown or the selection is contradictory"""
+
+
 def load_checks(*, debug: bool) -> AgentBasedPlugins:
     plugins = load_all_plugins(raise_errors=debug)
     if sys.stderr.isatty():
@@ -44,7 +47,7 @@ def _lookup_plugin[PluginName: (CheckPluginName, InventoryPluginName)](
     try:
         return plugins[plugin_name]
     except KeyError as exc:
-        raise MKBailOut(f"Unknown check plugin '{plugin_name}'") from exc
+        raise PluginSelectionError(f"Unknown check plugin '{plugin_name}'") from exc
 
 
 def extract_plugin_selection[PluginName: (CheckPluginName, InventoryPluginName)](
@@ -63,7 +66,7 @@ def extract_plugin_selection[PluginName: (CheckPluginName, InventoryPluginName)]
         )
 
     if detect_sections is not None or selected_plugins is not None:
-        raise MKBailOut(
+        raise PluginSelectionError(
             "Option '--detect-plugins' must not be combined with --detect-sections/--plugins"
         )
 

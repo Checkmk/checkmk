@@ -5,8 +5,11 @@
 
 from pathlib import Path
 
+import pytest
+
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.plugins.checkmk.cli.handlers.agent_based import PluginSelectionError
 from cmk.plugins.checkmk.cli.handlers.inventory import (
     _InventorizeMarkedHostsCommand,
     _InventoryCommand,
@@ -29,7 +32,7 @@ _REQUEST = InventoryRequest(
 
 
 class _FakeInventorize:
-    def __init__(self, error: MKGeneralException | None = None) -> None:
+    def __init__(self, error: Exception | None = None) -> None:
         self.asked: list[tuple[InventoryRequest, Path, bool]] = []
         self._error = error
 
@@ -47,8 +50,16 @@ def test_the_requested_hosts_are_inventorized() -> None:
     assert inventorize.asked == [(_REQUEST, OMD_ROOT, False)]
 
 
-def test_a_failed_inventory_exits_three() -> None:
-    inventorize = _FakeInventorize(error=MKGeneralException("Cannot load the configuration"))
+@pytest.mark.parametrize(
+    "error",
+    [
+        MKGeneralException("Cannot load the configuration"),
+        PluginSelectionError("Unknown plug-in"),
+    ],
+    ids=lambda e: type(e).__name__,
+)
+def test_a_failed_inventory_exits_three(error: Exception) -> None:
+    inventorize = _FakeInventorize(error=error)
 
     assert (
         _InventoryCommand(inventorize=inventorize).run(context(), _REQUEST) == CLIExitCode.UNKNOWN

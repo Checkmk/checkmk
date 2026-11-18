@@ -12,6 +12,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.plugins.checkmk.cli.check import CheckingRequest
+from cmk.plugins.checkmk.cli.handlers.agent_based import PluginSelectionError
 from cmk.plugins.checkmk.cli.handlers.check import _CheckCommand
 from cmk.plugins.checkmk.cli.options import FetchRequest, FileCacheRequest, PluginSelectionRequest
 
@@ -19,7 +20,7 @@ from ._context import context, OMD_ROOT
 
 
 class _FakeCheckHost:
-    def __init__(self, state: ServiceState = 0, error: MKGeneralException | None = None) -> None:
+    def __init__(self, state: ServiceState = 0, error: Exception | None = None) -> None:
         self.checked: list[tuple[HostName, CheckingRequest, Path, bool]] = []
         self._state = state
         self._error = error
@@ -79,7 +80,12 @@ def test_the_check_exits_with_the_monitoring_meaning_of_the_hosts_state(
     assert _CheckCommand(check_host=check_host).run(context(), _request()) == expected
 
 
-def test_a_failed_check_exits_three() -> None:
-    check_host = _FakeCheckHost(error=MKGeneralException("Unknown host"))
+@pytest.mark.parametrize(
+    "error",
+    [MKGeneralException("Unknown host"), PluginSelectionError("Unknown plug-in")],
+    ids=lambda e: type(e).__name__,
+)
+def test_a_failed_check_exits_three(error: Exception) -> None:
+    check_host = _FakeCheckHost(error=error)
 
     assert _CheckCommand(check_host=check_host).run(context(), _request()) == CLIExitCode.UNKNOWN

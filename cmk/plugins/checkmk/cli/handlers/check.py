@@ -13,7 +13,7 @@ import cmk.utils.paths
 from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.checking import run_checking
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.plugins import CheckPluginName
@@ -29,7 +29,7 @@ from cmk.server_side_calls_backend import load_secrets_file
 
 from ._exit_code import state_exit_code
 from ._file_cache import make_file_cache_options
-from .agent_based import extract_plugin_selection, load_checks
+from .agent_based import extract_plugin_selection, load_checks, PluginSelectionError
 
 
 class _CheckHost(Protocol):
@@ -112,7 +112,7 @@ class _CheckCommand:
                     debug=context.global_options.debug,
                 )
             )
-        except (MKBailOut, MKGeneralException) as e:
+        except (PluginSelectionError, MKGeneralException) as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

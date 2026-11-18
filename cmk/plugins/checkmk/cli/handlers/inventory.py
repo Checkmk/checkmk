@@ -59,7 +59,7 @@ from cmk.utils.log import console, section
 
 from ._file_cache import make_file_cache_options
 from ._snmp_fetcher import snmp_fetcher_config, snmp_section_selection
-from .agent_based import extract_plugin_selection, load_checks
+from .agent_based import extract_plugin_selection, load_checks, PluginSelectionError
 
 
 class _Inventorize(Protocol):
@@ -276,7 +276,7 @@ class _InventoryCommand:
     def run(self, context: CLIContext, request: InventoryRequest) -> CLIExitCode:
         try:
             self.inventorize(request, omd_root=context.omd_root, debug=context.global_options.debug)
-        except (MKBailOut, MKGeneralException) as e:
+        except (MKBailOut, MKGeneralException, PluginSelectionError) as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

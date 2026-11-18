@@ -5,16 +5,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { Regex } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
-import { computed, nextTick, ref } from 'vue'
+import { nextTick, ref } from 'vue'
 
 import type { ValidationMessages } from '@/form/private/validation'
 
 import FormSuggestions from './FormSuggestions.vue'
 import FormToggleButton from './FormToggleButton.vue'
+import RegexInput, { type RegexMode } from './RegexInput.vue'
 
 const { _t } = usei18n()
 useWidgetKeys(_t('Regex input'), [
@@ -29,22 +29,13 @@ const { spec } = defineProps<{
 }>()
 
 const data = defineModel<string>('data', { required: true, default: '' })
-const inputType = ref('regex')
+const inputType = ref<RegexMode>('regex')
 
 const vClickOutside = useClickOutside()
 
-const placeholder = computed(() => {
-  if (inputType.value === 'regex') {
-    return _t('Enter regex (pattern match)')
-  } else if (inputType.value === 'text') {
-    return _t('Enter plain text (single match)')
-  }
-  return ''
-})
-
 const suggestionsShown = ref(false)
 const suggestionsRef = ref<InstanceType<typeof FormSuggestions> | null>(null)
-const inputRef = ref<HTMLInputElement | null>(null)
+const regexInput = ref<InstanceType<typeof RegexInput> | null>(null)
 const isFocused = ref(false)
 
 function showSuggestions(): void {
@@ -69,14 +60,12 @@ function showSuggestions(): void {
 }
 
 async function focus(): Promise<void> {
-  inputRef.value?.focus()
+  regexInput.value?.focus()
 }
 function hideSuggestions(): void {
   suggestionsShown.value = false
-  inputRef.value?.focus()
+  regexInput.value?.focus()
 }
-
-const maxLabelLength = 60
 
 function onKeyDown(e: KeyboardEvent) {
   e.stopPropagation()
@@ -109,25 +98,18 @@ function onKeyEnter(e: KeyboardEvent) {
         }
       }"
     >
-      <div class="form-regex__input-button-wrap">
-        <input
-          ref="inputRef"
-          v-model="data"
-          class="form-regex__input"
-          :aria-label="spec.label"
-          :aria-expanded="suggestionsShown"
-          :title="data.length > maxLabelLength ? data : ''"
-          :placeholder="placeholder"
-          maxlength="20"
-          @click="showSuggestions"
-          @keydown.down.prevent="onKeyDown"
-          @keydown.up.prevent="onKeyUp"
-          @keydown.enter.prevent="onKeyEnter"
-        />
-        <button v-if="data" type="button" class="form-regex__clear-btn" @click="data = ''">
-          <CmkIcon name="close" size="small" />
-        </button>
-      </div>
+      <RegexInput
+        ref="regexInput"
+        v-model="data"
+        :mode="inputType"
+        :label="spec.label"
+        :maxlength="20"
+        :aria-expanded="suggestionsShown"
+        @click="showSuggestions"
+        @keydown.down.prevent="onKeyDown"
+        @keydown.up.prevent="onKeyUp"
+        @keydown.enter.prevent="onKeyEnter"
+      />
       <FormSuggestions
         v-if="suggestionsShown"
         ref="suggestionsRef"
@@ -148,12 +130,6 @@ function onKeyEnter(e: KeyboardEvent) {
   position: relative;
 }
 
-.form-regex__input-button-wrap {
-  position: relative;
-  width: 196px;
-  display: inline-block;
-}
-
 .form-regex__bottom-fill {
   position: absolute;
   left: 0;
@@ -162,40 +138,5 @@ function onKeyEnter(e: KeyboardEvent) {
   background: var(--ux-theme-5);
   transform: translate(1px, 2px);
   width: 85px;
-}
-
-.form-regex__input {
-  border: 1px solid var(--default-form-element-border-color);
-  padding: 0 12px 0 3px;
-  height: 20px;
-  border-left: 0;
-  border-radius: 0 var(--border-radius) var(--border-radius) 0;
-  font-size: var(--font-size-normal);
-  background-color: var(--ux-theme-5);
-  position: relative;
-  color: var(--font-color);
-  width: 175px;
-}
-
-.form-regex__input:focus {
-  border-color: var(--default-form-element-border-color);
-  background-color: var(--ux-theme-5);
-}
-
-.form-regex__clear-btn {
-  position: absolute;
-  right: 1.2em;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  height: 1.5em;
-  width: 1.5em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 </style>

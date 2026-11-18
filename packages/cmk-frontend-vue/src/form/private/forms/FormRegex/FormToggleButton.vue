@@ -4,17 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { ToggleButtonGroupProps } from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
+import type { RegexMode } from './RegexInput.vue'
+
 const { _t } = usei18n()
-defineProps<{
-  modelValue?: ToggleButtonGroupProps['modelValue']
-}>()
 
-const emit = defineEmits(['update:modelValue'])
+const mode = defineModel<RegexMode>({ required: true })
 
-const toggleOptions = [
+const toggleOptions: { label: string; value: RegexMode }[] = [
   { label: _t('Regex'), value: 'regex' },
   { label: _t('Text'), value: 'text' }
 ]
@@ -23,11 +21,11 @@ const toggleOptions = [
 <template>
   <div class="form-toggle-button">
     <button
-      v-for="option in toggleOptions ?? []"
+      v-for="option in toggleOptions"
       :key="option.value"
-      :class="{ 'form-toggle-button--active': modelValue === option.value }"
-      :aria-pressed="modelValue === option.value"
-      @click.prevent="emit('update:modelValue', option.value)"
+      :class="{ 'form-toggle-button--active': mode === option.value }"
+      :aria-pressed="mode === option.value"
+      @click.prevent="mode = option.value"
     >
       {{ option.label }}
     </button>

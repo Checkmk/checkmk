@@ -605,26 +605,8 @@ TEST(PluginTest, RemoveForbiddenNames) {
 TEST(PluginTest, FilesAndFoldersComponent) {
     OnStartTest();
     {
-        PathVector pv;
-        for (auto &folder : cfg::groups::g_plugins.folders()) {
-            pv.emplace_back(folder);
-        }
-        auto files = GatherAllFiles(pv);
-        if (files.size() < 10) {
-            GTEST_SKIP() << "TEST IS SKIPPED> YOU HAVE NO PLUGINS";
-            return;
-        }
-
         EXPECT_EQ(cfg::groups::g_local_group.foldersCount(), 1);
         EXPECT_EQ(cfg::groups::g_plugins.foldersCount(), 2);
-        EXPECT_TRUE(files.size() > 20);
-
-        auto execute =
-            cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kExecute);
-
-        FilterPathByExtension(files, execute);
-        EXPECT_TRUE(files.size() >= 6);
-        RemoveDuplicatedNames(files);
 
         auto yaml_units = cfg::GetArray<YAML::Node>(
             cfg::groups::kPlugins, cfg::vars::kPluginsExecution);

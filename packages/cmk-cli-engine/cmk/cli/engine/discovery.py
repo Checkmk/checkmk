@@ -47,7 +47,7 @@ def _split_reference(reference: str) -> tuple[str, str]:
     return module_name, object_name
 
 
-def load_handler[R](command: CLICommand[R]) -> CLIHandler[R]:
+def _load_handler[R](command: CLICommand[R]) -> CLIHandler[R]:
     module_name, object_name = _split_reference(command.handler)
     match getattr(importlib.import_module(module_name), object_name, None):
         case None:
@@ -74,7 +74,7 @@ def _reads_one_after_the_remaining(positional: Sequence[Positional]) -> bool:
 type Run[R] = Callable[[CLIContext, R], CLIExitCode]
 
 
-def binder[R](command: CLICommand[R], load: Callable[[], Run[R]]) -> Binder:
+def _binder[R](command: CLICommand[R], load: Callable[[], Run[R]]) -> Binder:
     def bind(reader: CLIReader) -> BoundCommand:
         request = command.request(reader)
         return BoundCommand(request=request, run=lambda context: load()(context, request))
@@ -96,7 +96,7 @@ def make_command[R](command: CLICommand[R], load: Callable[[], CLIHandler[R]]) -
         positional=recorded.positional,
         description=command.description,
         options=recorded.options,
-        bind=binder(command, lambda: load().run),
+        bind=_binder(command, lambda: load().run),
         default=command.default,
     )
 
@@ -120,7 +120,7 @@ def discover_commands() -> Sequence[DiscoveredCommand]:
     return tuple(
         make_command(
             _named_after_its_variable(prefixes[CLICommand], location, command),
-            partial(load_handler, command),
+            partial(_load_handler, command),
         )
         for location, command in discovered.plugins.items()
     )

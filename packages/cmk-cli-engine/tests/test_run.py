@@ -6,7 +6,7 @@
 import errno
 import logging
 import signal
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from types import FrameType
@@ -18,7 +18,6 @@ from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.run import CommandTracer as CLICommandTracer
-from cmk.cli.engine.run import dispatch as cli_dispatch
 from cmk.cli.engine.run import run as cli_run
 from cmk.cli.engine.run import Runtime as CLIRuntime
 from cmk.cli.internal import Argument as CLIArgument
@@ -39,17 +38,6 @@ _CRASH_MESSAGE = "Boom: it broke - please submit a crash report! (Crash-ID: 42)"
 _SITE = Path("/omd/sites/mysite")
 
 
-class FakeCrashReporter:
-    """Stands in for the reporter that saves a crash report and renders its message"""
-
-    def __init__(self) -> None:
-        self.reports = 0
-
-    def __call__(self) -> str:
-        self.reports += 1
-        return _CRASH_MESSAGE
-
-
 class Recorder:
     """Stands in for a collaborator the command line only calls for its effect"""
 
@@ -58,93 +46,6 @@ class Recorder:
 
     def __call__(self, *args: object) -> None:
         self.calls.append(args[0] if len(args) == 1 else args)
-
-
-def _raising(exception: BaseException) -> Callable[[], CLIExitCode]:
-    def command() -> CLIExitCode:
-        raise exception
-
-    return command
-
-
-def _dispatch(
-    command: Callable[[], CLIExitCode], reporter: FakeCrashReporter | None = None
-) -> CLIExitCode:
-    return cli_dispatch(command, null_logger(), reporter or FakeCrashReporter(), debug=False)
-
-
-def test_the_exit_status_of_a_command_that_succeeds_is_its_own() -> None:
-    assert _dispatch(lambda: CLIExitCode.ERROR) == CLIExitCode.ERROR
-
-
-def test_an_interrupted_command_exits_as_interrupted() -> None:
-    assert _dispatch(_raising(KeyboardInterrupt())) == CLIExitCode.INTERRUPTED
-
-
-def test_a_broken_pipe_exits_as_broken_pipe() -> None:
-    assert _dispatch(_raising(OSError(errno.EPIPE, "broken pipe"))) == CLIExitCode.BROKEN_PIPE
-
-
-def test_a_broken_pipe_is_no_crash() -> None:
-    reporter = FakeCrashReporter()
-
-    _dispatch(_raising(OSError(errno.EPIPE, "broken pipe")), reporter)
-
-    assert reporter.reports == 0
-
-
-def test_any_other_os_error_exits_one() -> None:
-    assert _dispatch(_raising(OSError(errno.EACCES, "denied"))) == CLIExitCode.FAILURE
-
-
-def test_an_os_error_that_is_no_broken_pipe_is_reported() -> None:
-    reporter = FakeCrashReporter()
-
-    _dispatch(_raising(OSError(errno.EACCES, "denied")), reporter)
-
-    assert reporter.reports == 1
-
-
-def test_an_unexpected_exception_exits_one() -> None:
-    assert _dispatch(_raising(ValueError("unexpected"))) == CLIExitCode.FAILURE
-
-
-def test_an_unexpected_exception_is_reported() -> None:
-    reporter = FakeCrashReporter()
-
-    _dispatch(_raising(ValueError("unexpected")), reporter)
-
-    assert reporter.reports == 1
-
-
-def test_a_debugged_exception_is_raised_through() -> None:
-    with pytest.raises(ValueError):
-        cli_dispatch(
-            _raising(ValueError("unexpected")), null_logger(), FakeCrashReporter(), debug=True
-        )
-
-
-def test_a_debugged_exception_is_not_reported() -> None:
-    reporter = FakeCrashReporter()
-
-    with pytest.raises(ValueError):
-        cli_dispatch(_raising(ValueError("unexpected")), null_logger(), reporter, debug=True)
-
-    assert reporter.reports == 0
-
-
-def test_the_crash_message_reaches_the_log(caplog: pytest.LogCaptureFixture) -> None:
-    with caplog.at_level(logging.ERROR):
-        _dispatch(_raising(ValueError("unexpected")))
-
-    assert _CRASH_MESSAGE in caplog.text
-
-
-def test_an_interruption_says_so_in_the_log(caplog: pytest.LogCaptureFixture) -> None:
-    with caplog.at_level(logging.ERROR):
-        _dispatch(_raising(KeyboardInterrupt()))
-
-    assert "<Interrupted>" in caplog.text
 
 
 def _command(handler: Callable[[CLIContext, None], CLIExitCode]) -> CLIDiscoveredCommand:
@@ -193,13 +94,16 @@ def _runtime(
     write_profile: Callable[[Path], None] = lambda _path: None,
     page: Callable[[str], None] = lambda _text: None,
     write_error: Callable[[str], None] = lambda _text: None,
+    report_crash: Callable[[Path, Sequence[str], Mapping[str, str]], str] = (
+        lambda _omd_root, _argv, _environ: _CRASH_MESSAGE
+    ),
     logger: logging.Logger = null_logger(),
 ) -> CLIRuntime:
     return CLIRuntime(
         discover=lambda: commands,
         trace_command=trace_command,
         on_sigint=on_sigint,
-        report_crash=lambda _omd_root, _argv, _environ: _CRASH_MESSAGE,
+        report_crash=report_crash,
         enable_profiling=enable_profiling,
         log_to_file=log_to_file,
         write_profile=write_profile,
@@ -590,3 +494,102 @@ def test_the_profile_is_written_even_when_the_command_raises() -> None:
 
 def _failing(_context: CLIContext, _request: None) -> CLIExitCode:
     raise ValueError("no such host")
+
+
+class FakeCrashReporter:
+    """Stands in for the reporter that saves a crash report and renders its message"""
+
+    def __init__(self) -> None:
+        self.reports = 0
+
+    def __call__(self, _omd_root: Path, _argv: Sequence[str], _environ: Mapping[str, str]) -> str:
+        self.reports += 1
+        return _CRASH_MESSAGE
+
+
+def _raising(exception: BaseException) -> Callable[[CLIContext, None], CLIExitCode]:
+    def handler(_context: CLIContext, _request: None) -> CLIExitCode:
+        raise exception
+
+    return handler
+
+
+def _run_demo(
+    handler: Callable[[CLIContext, None], CLIExitCode],
+    reporter: FakeCrashReporter | None = None,
+) -> int:
+    runtime = _runtime([_command(handler)], report_crash=reporter or FakeCrashReporter())
+    return _run(["cmk", "--demo"], runtime)
+
+
+def test_an_interrupted_command_exits_as_interrupted() -> None:
+    assert _run_demo(_raising(KeyboardInterrupt())) == CLIExitCode.INTERRUPTED.value
+
+
+def test_a_broken_pipe_exits_as_broken_pipe() -> None:
+    broken_pipe = OSError(errno.EPIPE, "broken pipe")
+
+    assert _run_demo(_raising(broken_pipe)) == CLIExitCode.BROKEN_PIPE.value
+
+
+def test_a_broken_pipe_is_no_crash() -> None:
+    reporter = FakeCrashReporter()
+
+    _run_demo(_raising(OSError(errno.EPIPE, "broken pipe")), reporter)
+
+    assert reporter.reports == 0
+
+
+def test_any_other_os_error_exits_one() -> None:
+    assert _run_demo(_raising(OSError(errno.EACCES, "denied"))) == CLIExitCode.FAILURE.value
+
+
+def test_an_os_error_that_is_no_broken_pipe_is_reported() -> None:
+    reporter = FakeCrashReporter()
+
+    _run_demo(_raising(OSError(errno.EACCES, "denied")), reporter)
+
+    assert reporter.reports == 1
+
+
+def test_an_unexpected_exception_exits_one() -> None:
+    assert _run_demo(_raising(ValueError("unexpected"))) == CLIExitCode.FAILURE.value
+
+
+def test_an_unexpected_exception_is_reported() -> None:
+    reporter = FakeCrashReporter()
+
+    _run_demo(_raising(ValueError("unexpected")), reporter)
+
+    assert reporter.reports == 1
+
+
+def test_a_debugged_exception_is_raised_through() -> None:
+    runtime = _runtime([_command(_raising(ValueError("unexpected")))])
+
+    with pytest.raises(ValueError):
+        _run(["cmk", "--debug", "--demo"], runtime)
+
+
+def test_a_debugged_exception_is_not_reported() -> None:
+    reporter = FakeCrashReporter()
+    runtime = _runtime([_command(_raising(ValueError("unexpected")))], report_crash=reporter)
+
+    with pytest.raises(ValueError):
+        _run(["cmk", "--debug", "--demo"], runtime)
+
+    assert reporter.reports == 0
+
+
+def test_the_crash_message_reaches_the_log(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.ERROR):
+        _run_demo(_raising(ValueError("unexpected")))
+
+    assert _CRASH_MESSAGE in caplog.text
+
+
+def test_an_interruption_says_so_in_the_log(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.ERROR):
+        _run_demo(_raising(KeyboardInterrupt()))
+
+    assert "<Interrupted>" in caplog.text

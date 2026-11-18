@@ -18,7 +18,7 @@ def _write(stream: TextIO, txt: str) -> None:
         stream.flush()
 
 
-def write_stdout(txt: str) -> None:
+def _write_stdout(txt: str) -> None:
     _write(sys.stdout, txt)
 
 
@@ -50,7 +50,7 @@ def _sigint_ignored() -> Iterator[None]:
 
 def write_paged(txt: str, environ: Mapping[str, str]) -> None:
     if not sys.stdout.isatty():
-        write_stdout(txt)
+        _write_stdout(txt)
         return
 
     try:
@@ -63,4 +63,4 @@ def write_paged(txt: str, environ: Mapping[str, str]) -> None:
                 env=_pager_environment(environ),
             )
     except OSError, ValueError:
-        write_stdout(txt)
+        _write_stdout(txt)

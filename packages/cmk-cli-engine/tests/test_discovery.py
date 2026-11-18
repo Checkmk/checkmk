@@ -11,8 +11,8 @@ import pytest
 
 from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.commands import takes_value as cli_takes_value
+from cmk.cli.engine.discovery import _load_handler as _cli_load_handler
 from cmk.cli.engine.discovery import _named_after_its_variable as _cli_named_after_its_variable
-from cmk.cli.engine.discovery import load_handler as cli_load_handler
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.readers import parsed as cli_parsed
 from cmk.cli.internal import Argument as CLIArgument
@@ -145,27 +145,27 @@ cli_handler_greet = CLIHandler(command=_GREET, run=_greet)
 
 
 def test_a_command_loads_the_handler_it_refers_to() -> None:
-    assert cli_load_handler(_GREET) is cli_handler_greet
+    assert _cli_load_handler(_GREET) is cli_handler_greet
 
 
 def test_a_reference_without_an_object_is_rejected() -> None:
     with pytest.raises(ValueError, match="'family.cli.handlers' does not refer to a handler"):
-        cli_load_handler(_greeting("greet", "family.cli.handlers"))
+        _cli_load_handler(_greeting("greet", "family.cli.handlers"))
 
 
 def test_a_reference_to_a_missing_object_is_reported() -> None:
     with pytest.raises(LookupError, match=re.escape(f"{__name__} has no cli_handler_missing")):
-        cli_load_handler(_greeting("greet", f"{__name__}:cli_handler_missing"))
+        _cli_load_handler(_greeting("greet", f"{__name__}:cli_handler_missing"))
 
 
 def test_a_reference_to_something_else_is_reported() -> None:
     with pytest.raises(TypeError, match="is a function, not a Handler"):
-        cli_load_handler(_greeting("greet", f"{__name__}:_greet"))
+        _cli_load_handler(_greeting("greet", f"{__name__}:_greet"))
 
 
 def test_the_handler_of_another_command_is_rejected() -> None:
     with pytest.raises(ValueError, match="handles 'greet', not 'farewell'"):
-        cli_load_handler(_greeting("farewell", f"{__name__}:cli_handler_greet"))
+        _cli_load_handler(_greeting("farewell", f"{__name__}:cli_handler_greet"))
 
 
 _HOST_ARGUMENT = CLIArgument(placeholder="HOST", parse=str)

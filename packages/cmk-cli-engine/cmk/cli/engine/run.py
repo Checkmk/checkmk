@@ -25,9 +25,6 @@ from .options import GlobalOptions
 type CommandTracer = Callable[[CLIContext, RunCommand], AbstractContextManager[None]]
 
 
-type _CrashReporter = Callable[[], str]
-
-
 @dataclass(frozen=True, kw_only=True)
 class Runtime:
     discover: Callable[[], Sequence[DiscoveredCommand]]
@@ -42,10 +39,10 @@ class Runtime:
     logger: logging.Logger
 
 
-def dispatch(
+def _dispatch(
     command: Callable[[], CLIExitCode],
     logger: logging.Logger,
-    crash_reporter: _CrashReporter,
+    crash_reporter: Callable[[], str],
     *,
     debug: bool,
 ) -> CLIExitCode:
@@ -119,7 +116,7 @@ def run(
 
     _apply_global_options(global_options, runtime)
     try:
-        return dispatch(
+        return _dispatch(
             command,
             logger,
             partial(runtime.report_crash, omd_root, argv, environ),

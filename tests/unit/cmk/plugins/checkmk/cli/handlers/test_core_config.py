@@ -5,6 +5,9 @@
 
 from pathlib import Path
 
+import pytest
+
+from cmk.base.core.interface import CoreActivationError
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
 from cmk.cli.internal import ExitCode as CLIExitCode
@@ -19,7 +22,7 @@ _FAILURE = MKGeneralException("Cannot load the configuration")
 
 
 class _FakeConfigureCore:
-    def __init__(self, error: MKGeneralException | None = None) -> None:
+    def __init__(self, error: Exception | None = None) -> None:
         self.asked: list[tuple[CoreConfigRequest, Path, bool]] = []
         self._error = error
 
@@ -37,9 +40,14 @@ def test_the_core_is_configured_for_the_requested_hosts() -> None:
     assert configure_core.asked == [(_REQUEST, OMD_ROOT, False)]
 
 
-def test_a_failed_core_configuration_exits_three() -> None:
+@pytest.mark.parametrize(
+    "error",
+    [_FAILURE, CoreActivationError("Cannot restart the core")],
+    ids=lambda e: type(e).__name__,
+)
+def test_a_failed_core_configuration_exits_three(error: Exception) -> None:
     assert (
-        _ConfigureCoreCommand(configure_core=_FakeConfigureCore(error=_FAILURE)).run(
+        _ConfigureCoreCommand(configure_core=_FakeConfigureCore(error=error)).run(
             context(), _REQUEST
         )
         == CLIExitCode.UNKNOWN

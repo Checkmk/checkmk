@@ -20,7 +20,7 @@ from cmk.base.config import ConfigCache, CoreObjectsConfig
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
 from cmk.ccc import config_path
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.version import Edition
 from cmk.checkengine.checker_helper_config import make_packed_config_writer
@@ -42,6 +42,10 @@ from ._snapshot_local_dir import snapshot_local_dir
 from ._snapshot_trusted_cas import snapshot_trusted_cas
 
 tracer = trace.get_tracer()
+
+
+class CoreActivationError(Exception):
+    """The monitoring configuration could not be created or activated"""
 
 
 def build_and_activate_monitoring_config(
@@ -110,7 +114,7 @@ def build_and_activate_monitoring_config(
     except Exception as e:
         if debug:
             raise
-        raise MKBailOut("An error occurred: %s" % e)
+        raise CoreActivationError("An error occurred: %s" % e)
 
 
 def do_create_config(

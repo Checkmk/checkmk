@@ -19,7 +19,7 @@ from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
 from cmk.base.core.nagios import create_config, NagiosCoreConfig
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
@@ -340,7 +340,7 @@ class _ConfigureCoreCommand:
             self.configure_core(
                 request, omd_root=context.omd_root, debug=context.global_options.debug
             )
-        except (MKBailOut, MKGeneralException) as e:
+        except (core_interface.CoreActivationError, MKGeneralException) as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

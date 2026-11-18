@@ -12,4 +12,5 @@ from ._control import (
     build_and_activate_monitoring_config as build_and_activate_monitoring_config,
 )
 from ._control import config_builders as config_builders
+from ._control import CoreActivationError as CoreActivationError
 from ._control import do_create_config as do_create_config

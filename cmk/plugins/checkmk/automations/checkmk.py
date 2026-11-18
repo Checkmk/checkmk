@@ -113,13 +113,13 @@ from cmk.base.core.interface import (
     ActivationLockedError,
     build_and_activate_monitoring_config,
     config_builders,
+    CoreActivationError,
 )
 from cmk.base.core.shared import autodetect_plugin, get_service_attributes
 from cmk.base.errorhandling import create_section_crash_dump, RecordingFetcher
 from cmk.base.parent_scan import ScanConfig
 from cmk.ccc import version
 from cmk.ccc.exceptions import (
-    MKBailOut,
     MKGeneralException,
     MKTimeout,
     OnError,
@@ -2649,7 +2649,7 @@ def _execute_silently(
             make_fetcher_trigger=env.app.make_fetcher_trigger,
             debug=rctx.env.debug,
         )
-    except (ActivationLockedError, MKBailOut, MKGeneralException) as e:
+    except (ActivationLockedError, CoreActivationError, MKGeneralException) as e:
         raise MKAutomationError(str(e))
     except Exception as e:
         if rctx.env.debug:

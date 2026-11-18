@@ -71,6 +71,27 @@ def test_received_trap_is_logged_with_its_sender(
     assert "Trap received from 192.0.2.1:162. Checking for acceptance now." in caplog.messages
 
 
+def test_failed_translation_warns_about_the_oid_the_sender_and_the_error(
+    translator: SNMPTrapTranslator, logger: logging.Logger, caplog: pytest.LogCaptureFixture
+) -> None:
+    var_binds = [(UNTRANSLATABLE_OID, OctetString("hurz"))]
+    caplog.set_level(logging.WARNING, logger=logger.name)
+
+    translator.translate("192.0.2.1", var_binds)
+
+    prefix = (
+        f"Failed to translate OID {UNTRANSLATABLE_OID} in trap from 192.0.2.1, "
+        "keeping it untranslated: SmiError: "
+    )
+    suffix = " (enable debug logging for details)"
+    [error] = [
+        message.removeprefix(prefix).removesuffix(suffix)
+        for message in caplog.messages
+        if message.startswith(prefix) and message.endswith(suffix)
+    ]
+    assert error  # PySNMP's message
+
+
 @pytest.mark.parametrize(
     "value, rendered",
     [
@@ -120,3 +141,81 @@ def test_failed_translation_logs_the_traceback_with_the_oid(
         f"Failed to translate OID {UNTRANSLATABLE_OID}\nTraceback (most recent call last):"
         in caplog.text
     )
+
+
+# What pysmi compiles for an OCTET STRING object with DEFVAL { "None" }, trimmed
+STRING_DEFVAL_MIB = """
+(MibScalar,) = mibBuilder.import_symbols("SNMPv2-SMI", "MibScalar")
+(OctetString,) = mibBuilder.import_symbols("ASN1", "OctetString")
+
+
+class _TestLogName_Type(OctetString):
+    defaultValue = OctetString("None")
+
+
+mibBuilder.export_symbols(
+    "TEST-MIB", testLogName=MibScalar((1, 3, 6, 1, 4, 1, 99999, 1), _TestLogName_Type())
+)
+"""
+
+
+def add_compiled_mib(settings: ec.Settings, name: str, code: str) -> None:
+    settings.paths.compiled_mibs_dir.value.mkdir(parents=True, exist_ok=True)
+    (settings.paths.compiled_mibs_dir.value / f"{name}.py").write_text(code)
+
+
+@pytest.mark.parametrize(
+    "level",
+    [
+        pytest.param(logging.INFO, id="informational"),
+        pytest.param(logging.DEBUG, id="debugging"),
+    ],
+)
+def test_variables_with_string_default_values_are_translated(
+    make_parser: MakeParser,
+    settings: ec.Settings,
+    config: Config,
+    logger: logging.Logger,
+    level: int,
+) -> None:
+    add_compiled_mib(settings, "TEST-MIB", STRING_DEFVAL_MIB)
+    logger.setLevel(level)
+    parser = make_parser(config | {"translate_snmptraps": (True, {})})
+
+    result = parser.parse(
+        v2c_trap([(ObjectName("1.3.6.1.4.1.99999.1"), OctetString("backup.log"))]),
+        ("192.0.2.1", 162),
+    )
+
+    assert result is not None
+    assert ("TEST-MIB::testLogName", "backup.log") in result[0]
+
+
+# A compiled MIB whose object can't print its values
+BROKEN_MIB = """
+(MibScalar,) = mibBuilder.import_symbols("SNMPv2-SMI", "MibScalar")
+(OctetString,) = mibBuilder.import_symbols("ASN1", "OctetString")
+
+
+class BrokenSyntax(OctetString):
+    def prettyPrint(self, scope=0):
+        raise RuntimeError("broken syntax")
+
+
+mibBuilder.export_symbols(
+    "BROKEN-MIB", brokenObject=MibScalar((1, 3, 6, 1, 4, 1, 99999, 2), BrokenSyntax())
+)
+"""
+
+
+def test_failed_translation_keeps_the_variable_for_any_error(
+    settings: ec.Settings, config: Config, logger: logging.Logger
+) -> None:
+    add_compiled_mib(settings, "BROKEN-MIB", BROKEN_MIB)
+    translator = SNMPTrapTranslator(settings, config | {"translate_snmptraps": (True, {})}, logger)
+
+    var_binds = translator.translate(
+        "192.0.2.1", [(ObjectName("1.3.6.1.4.1.99999.2"), OctetString("backup.log"))]
+    )
+
+    assert var_binds == [("1.3.6.1.4.1.99999.2", "backup.log")]

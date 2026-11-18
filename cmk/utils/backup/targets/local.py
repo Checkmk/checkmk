@@ -52,7 +52,13 @@ class LocalTarget:
     def check_ready(self) -> None:
         if not _is_canonical_directory(str(self.path)):
             raise MKGeneralException(f"You have to provide a canonical path: {self.path}")
-        if not self.path.is_dir():
+        try:
+            is_dir = self.path.is_dir()
+        except PermissionError:
+            raise MKGeneralException(
+                f"Local target path is not accessible for the site user: {self.path}"
+            )
+        if not is_dir:
             raise MKGeneralException(
                 f"Local target path does not exist or is not a directory: {self.path}"
             )

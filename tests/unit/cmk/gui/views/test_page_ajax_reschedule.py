@@ -9,7 +9,7 @@ import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.config import Config
-from cmk.gui.http import Request
+from cmk.gui.http import Request, request
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
@@ -54,4 +54,90 @@ def test_reschedule_rejects_a_host_not_visible_to_the_user(
     )
 
     with mock_livestatus, pytest.raises(MKGeneralException, match="not found"):
+        PageRescheduleCheck().page(ctx)
+
+
+def _page_context(config: Config, **request_vars: str) -> PageContext:
+    for name, value in request_vars.items():
+        request.set_var(name, value)
+    request.set_var("_csrf_token", session.session_info.csrf_token)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
+
+
+def _add_services(mock_livestatus: MockLiveStatusConnection, *names: str) -> None:
+    mock_livestatus.add_table(
+        "services",
+        [
+            {
+                "host_name": "heute",
+                "description": name,
+                "service_description": name,
+                "last_check": 0,
+                "state": 0,
+                "plugin_output": "OK",
+            }
+            for name in names
+        ],
+        site="NO_SITE",
+    )
+
+
+def _wait_query(service: str, wait_timeout: str) -> str:
+    return (
+        f"GET services\nWaitObject: heute;{service}\nWaitCondition: last_check >= ...\n"
+        f"WaitTimeout: {wait_timeout}\nWaitTrigger: check\n"
+        "Columns: last_check state plugin_output\nFilter: host_name = heute\n"
+        f"Filter: service_description = {service}\nColumnHeaders: off"
+    )
+
+
+def _expect_visibility_check(mock_livestatus: MockLiveStatusConnection, service: str) -> None:
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name\nFilter: host_name = heute\n"
+        f"Filter: service_description = {service}",
+        sites=["NO_SITE"],
+    )
+
+
+def _expect_check_mk_then_discovery(
+    mock_livestatus: MockLiveStatusConnection, discovery: str
+) -> None:
+    _add_services(mock_livestatus, "Check_MK", discovery)
+    _expect_visibility_check(mock_livestatus, discovery)
+    mock_livestatus.expect_query(
+        "COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;heute;Check_MK;...", match_type="ellipsis"
+    )
+    mock_livestatus.expect_query(
+        _wait_query("Check_MK", "..."), match_type="ellipsis", sites=["NO_SITE"]
+    )
+    mock_livestatus.expect_query(
+        f"COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;heute;{discovery};...",
+        match_type="ellipsis",
+    )
+
+
+@pytest.mark.parametrize(
+    "discovery",
+    [
+        pytest.param("Check_MK Discovery", id="current-name"),
+        pytest.param("Check_MK inventory", id="old-name"),
+    ],
+)
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_rescheduling_discovery_reschedules_check_mk_first(
+    load_config: Config, mock_livestatus: MockLiveStatusConnection, discovery: str
+) -> None:
+    ctx = _page_context(load_config, site="NO_SITE", host="heute", service=discovery)
+    _expect_check_mk_then_discovery(mock_livestatus, discovery)
+    mock_livestatus.expect_query(
+        _wait_query(discovery, "..."), match_type="ellipsis", sites=["NO_SITE"]
+    )
+
+    with mock_livestatus:
         PageRescheduleCheck().page(ctx)

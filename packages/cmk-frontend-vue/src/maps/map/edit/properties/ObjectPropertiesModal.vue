@@ -26,6 +26,7 @@ import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useDraggableCard } from '@/maps/map/edit/composables/useDraggableCard'
 import { useObjectMetrics } from '@/maps/map/edit/composables/useObjectMetrics'
 import { useObjectSuggestions } from '@/maps/map/edit/composables/useObjectSuggestions'
+import { isFilterWellFormed } from '@/maps/map/edit/filterText'
 import {
   type GraphSource,
   applyGraphSource,
@@ -269,6 +270,10 @@ useEscapeClose(() => {
 
 function save(): void {
   formError.value = ''
+  // Said at the filter already, which only a dynamic group shows.
+  if (boundType.value === 'dyngroup' && !isFilterWellFormed(form.value.object_filter)) {
+    return
+  }
   if (weatherColorNeedsMetric(form.value, props.object)) {
     formError.value = _t('Pick a metric — weather coloring needs one to colorize the line.')
     return

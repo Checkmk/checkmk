@@ -54,6 +54,31 @@ describe('isDraftPlaceable', () => {
     ).toBe(true)
   })
 
+  it('holds back a filter with a line Livestatus does not take', () => {
+    expect(isDraftPlaceable(aDraft({ type: 'dyngroup', object_filter: 'foo bar' }))).toBe(false)
+  })
+
+  it('splits a filter where the server does, a carriage return included', () => {
+    expect(
+      isDraftPlaceable(aDraft({ type: 'dyngroup', object_filter: 'Filter: name ~ ^web\rStats: x' }))
+    ).toBe(false)
+  })
+
+  it('needs a line for a dynamic group, not just a NagVis line break', () => {
+    expect(isDraftPlaceable(aDraft({ type: 'dyngroup', object_filter: '\\n' }))).toBe(false)
+  })
+
+  it('places a filter written the way NagVis stores it', () => {
+    expect(
+      isDraftPlaceable(
+        aDraft({
+          type: 'dyngroup',
+          object_filter: 'Filter: name ~ ^web\\nFilter: state = 1\\nOr: 2'
+        })
+      )
+    ).toBe(true)
+  })
+
   it('places the types that carry geometry only', () => {
     for (const type of ['line', 'textbox', 'graph'] as const) {
       expect(isDraftPlaceable(aDraft({ type }))).toBe(true)

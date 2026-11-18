@@ -11,12 +11,14 @@ of object it shows the state of.
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
+import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import { useConnectionOverride } from '@/maps/map/edit/composables/useConnectionOverride'
 import type { ObjectSuggestions } from '@/maps/map/edit/composables/useObjectSuggestions'
+import { filterProblems } from '@/maps/map/edit/filterText'
 import { rebindHost } from '@/maps/map/edit/hostBinding'
 import PropertyRow from '@/maps/map/edit/properties/PropertyRow.vue'
 import PropertySection from '@/maps/map/edit/properties/PropertySection.vue'
@@ -134,13 +136,16 @@ const showsRecognizeServices = computed(() => choosesServiceCounting(type.value,
         />
       </PropertyRow>
       <PropertyRow v-slot="{ id }" labels-control :label="_t('Livestatus filter')" tall>
-        <MapsTextArea
-          :id="id"
-          v-model="form.object_filter"
-          :rows="4"
-          monospace
-          :placeholder="untranslated('Filter: host_name ~ ^web')"
-        />
+        <div class="maps-identity-section__filter">
+          <CmkInlineValidation :validation="filterProblems(_t, form.object_filter)" />
+          <MapsTextArea
+            :id="id"
+            v-model="form.object_filter"
+            :rows="4"
+            monospace
+            :placeholder="untranslated('Filter: host_name ~ ^web')"
+          />
+        </div>
       </PropertyRow>
       <!-- One sentence, not five fragments: a translator needs the whole
            thing to put the words in their language's order. -->
@@ -233,6 +238,14 @@ const showsRecognizeServices = computed(() => choosesServiceCounting(type.value,
   display: flex;
   flex-wrap: wrap;
   gap: var(--dimension-5);
+}
+
+.maps-identity-section__filter {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--dimension-3);
+  min-width: 0;
 }
 
 .maps-identity-section__note {

@@ -7,11 +7,13 @@ import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { NewObjectDraft } from '@/maps/map/composables/useMapEditor'
+import { hasFilterLines, isFilterWellFormed } from '@/maps/map/edit/filterText'
 import type { TranslateFn } from '@/maps/utils/dropdownOptions'
 
 /**
  * Whether the draft object names something the map can show yet: a host needs a
- * hostname, a service needs both, a line or a textbox needs nothing at all.
+ * hostname, a service needs both, a line or a textbox needs nothing at all,
+ * and a filter has to be one the server takes.
  * Objects that carry only geometry are placeable the moment their type is
  * picked.
  */
@@ -25,7 +27,7 @@ export function isDraftPlaceable(draft: NewObjectDraft): boolean {
     case 'servicegroup':
       return !!draft.group_name
     case 'dyngroup':
-      return !!draft.object_filter.trim()
+      return hasFilterLines(draft.object_filter) && isFilterWellFormed(draft.object_filter)
     case 'map':
       return !!draft.map_name
     case 'aggregation':

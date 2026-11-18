@@ -257,6 +257,27 @@ describe('ObjectPropertiesModal – save payload', () => {
     expect(payload).not.toHaveProperty('service_description')
   })
 
+  it('holds back a filter Livestatus would not take, said at the field', async () => {
+    const user = userEvent.setup()
+    const { emitted } = renderModal(obj({ type: 'dyngroup', object_filter: 'name ~ ^web' }))
+
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(emitted().save).toBeUndefined()
+    expect(screen.getByText(/Start each line with/)).toBeInTheDocument()
+  })
+
+  it('saves a line whose filter from an earlier type no longer shows', async () => {
+    const user = userEvent.setup()
+    const { emitted } = renderModal(
+      obj({ type: 'line', line_object_type: 'host', host_name: 'web01', object_filter: 'x' })
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(emitted().save).toHaveLength(1)
+  })
+
   it('emits a service payload carrying the service description', async () => {
     const user = userEvent.setup()
     const { emitted } = renderModal(

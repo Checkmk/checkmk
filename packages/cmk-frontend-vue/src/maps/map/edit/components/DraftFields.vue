@@ -13,6 +13,7 @@ the control: a placeholder disappears the moment something is typed, and
 -->
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
+import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
@@ -22,6 +23,7 @@ import type { NewObjectDraft } from '@/maps/map/composables/useMapEditor'
 import DraftAggregationFields from '@/maps/map/edit/components/DraftAggregationFields.vue'
 import EditField from '@/maps/map/edit/components/EditField.vue'
 import type { ObjectSuggestions } from '@/maps/map/edit/composables/useObjectSuggestions'
+import { filterProblems } from '@/maps/map/edit/filterText'
 import { rebindHost } from '@/maps/map/edit/hostBinding'
 import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
@@ -133,6 +135,7 @@ const dyngroupTypeSuggestions = computed(() => ({
       :help="_t('One or more Filter: lines, forwarded verbatim to Livestatus.')"
       required
     >
+      <CmkInlineValidation :validation="filterProblems(_t, draft.object_filter)" />
       <MapsTextArea
         v-model="draft.object_filter"
         monospace

@@ -59,6 +59,15 @@ function select(name: string, checked: boolean): void {
     .map((item) => item.name)
     .filter((itemName) => (itemName === name ? checked : selected.value.includes(itemName)))
 }
+
+/** The box and its label toggle their item themselves; this covers the rest of its row. */
+function toggleFromRow(name: string): void {
+  // A drag that selects a title, e.g. to copy it, ends in a click on its row.
+  if (window.getSelection()?.isCollapsed === false) {
+    return
+  }
+  select(name, !selected.value.includes(name))
+}
 </script>
 
 <template>
@@ -72,7 +81,13 @@ function select(name: string, checked: boolean): void {
       />
     </div>
     <ul class="cmk-multiselect-list__items" :style="{ '--cmk-multiselect-list-rows': visibleRows }">
-      <li v-for="item in shownItems" :key="item.name" class="cmk-multiselect-list__item">
+      <!-- A mouse shortcut only: keyboard users reach every item through its checkbox. -->
+      <li
+        v-for="item in shownItems"
+        :key="item.name"
+        class="cmk-multiselect-list__item"
+        @click.self="toggleFromRow(item.name)"
+      >
         <CmkCheckbox
           :model-value="selected.includes(item.name)"
           :label="item.title"
@@ -121,6 +136,7 @@ function select(name: string, checked: boolean): void {
   height: var(--cmk-multiselect-list-row-height);
   padding: 0 var(--dimension-4);
   box-sizing: border-box;
+  cursor: pointer;
 
   &:hover {
     background-color: var(--cmk-multiselect-list-hover-bg-color);

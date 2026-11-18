@@ -328,7 +328,7 @@ def view_editor_column_spec(
             ds_name, painter_context.user_permissions, painter_context.config.tags
         )
         if with_drilldown
-        else []
+        else None
     )
     choices = [
         _get_common_vs_column_choice(
@@ -369,7 +369,10 @@ def view_editor_grouping_spec(
         vs_column=CascadingDropdown(
             choices=[
                 _get_common_vs_column_choice(
-                    ds_name, painter_context, add_custom_column_title=False
+                    ds_name,
+                    painter_context,
+                    add_custom_column_title=False,
+                    drilldown_choices=None,
                 )
             ]
         ),
@@ -388,7 +391,7 @@ def _get_common_vs_column_choice(
     ds_name: str,
     painter_context: PainterContext,
     add_custom_column_title: bool,
-    drilldown_choices: Sequence[CascadingDropdownChoice] = (),
+    drilldown_choices: Sequence[CascadingDropdownChoice] | None,
 ) -> _VSColumnChoice:
     painters = painters_of_datasource(ds_name)
 
@@ -414,7 +417,7 @@ def _get_vs_column_title() -> tuple[str, TextInput]:
 def _get_join_vs_column_choice(
     ds_name: str,
     painter_context: PainterContext,
-    drilldown_choices: Sequence[CascadingDropdownChoice] = (),
+    drilldown_choices: Sequence[CascadingDropdownChoice] | None,
 ) -> None | _VSColumnChoice:
     if not (join_painters := join_painters_of_datasource(ds_name)):
         return None
@@ -458,7 +461,7 @@ def _get_join_vs_column_choice(
 def _get_join_inv_vs_column_choice(
     ds_name: str,
     painter_context: PainterContext,
-    drilldown_choices: Sequence[CascadingDropdownChoice] = (),
+    drilldown_choices: Sequence[CascadingDropdownChoice] | None,
 ) -> _VSColumnChoice | None:
     if not _is_inventory_datasource(ds_name):
         return None
@@ -605,17 +608,19 @@ def _get_vs_column_dropdown(
 def _get_vs_link_or_tooltip_elements(
     painters: Mapping[str, InternalPainter],
     painter_context: PainterContext,
-    drilldown_choices: Sequence[CascadingDropdownChoice] = (),
+    drilldown_choices: Sequence[CascadingDropdownChoice] | None,
 ) -> list[tuple[str, ValueSpec]]:
+    """Without drill-down choices, the column offers the legacy links."""
     return [
         (
             "link_spec",
             CascadingDropdown(
                 title=_("Link"),
-                choices=[
-                    *_column_link_choices(painter_context.user_permissions),
-                    *drilldown_choices,
-                ],
+                choices=(
+                    _column_link_choices(painter_context.user_permissions)
+                    if drilldown_choices is None
+                    else drilldown_choices
+                ),
                 orientation="horizontal",
             ),
         ),

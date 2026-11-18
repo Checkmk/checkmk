@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 from collections.abc import Iterator
+from typing import Literal
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -22,6 +24,7 @@ from cmk.gui.type_defs import (
     ContextualLinkEntryConfig,
     DashboardEmbeddedViewSpec,
     ViewSpec,
+    VisualLinkSpec,
 )
 from cmk.gui.views.store import ViewStore
 
@@ -1048,12 +1051,14 @@ class TestMigrateInventoryLink:
         assert result["widgets"]["w1"]["link_spec"] == ("views", "host")  # type: ignore[typeddict-item]
 
 
-def _embedded_host_view(painters: list[ColumnSpec]) -> DashboardEmbeddedViewSpec:
+def _embedded_view(
+    datasource: str, painters: list[ColumnSpec], *, group_painters: list[ColumnSpec] | None = None
+) -> DashboardEmbeddedViewSpec:
     return DashboardEmbeddedViewSpec(
         single_infos=[],
-        datasource="hosts",
+        datasource=datasource,
         layout="table",
-        group_painters=[],
+        group_painters=group_painters or [],
         painters=painters,
         browser_reload=0,
         num_columns=1,
@@ -1072,7 +1077,7 @@ def test_a_stored_column_link_moves_onto_its_column() -> None:
         show_filter_form=False,
     )
     stored = {
-        **_embedded_host_view([ColumnSpec("host_state"), ColumnSpec("host")]),
+        **_embedded_view("hosts", [ColumnSpec("host_state"), ColumnSpec("host")]),
         "column_links": {1: link},
     }
     dashboard = _make_dashboard(
@@ -1081,6 +1086,109 @@ def test_a_stored_column_link_moves_onto_its_column() -> None:
 
     result = migrate_dashboard_config(dashboard)
 
-    assert result["embedded_views"]["ev"] == _embedded_host_view(
-        [ColumnSpec("host_state"), ColumnSpec("host", column_link=link)]
+    assert result["embedded_views"]["ev"] == _embedded_view(
+        "hosts", [ColumnSpec("host_state"), ColumnSpec("host", column_link=link)]
     )
+
+
+def _migrated_embedded_view(embedded_view: DashboardEmbeddedViewSpec) -> DashboardEmbeddedViewSpec:
+    dashboard = _make_dashboard(
+        layout={"type": "responsive_grid", "layouts": {}}, embedded_views={"ev": embedded_view}
+    )
+    return migrate_dashboard_config(dashboard)["embedded_views"]["ev"]
+
+
+def _inherited(target_type: Literal["views", "dashboards"], name: str) -> ContextualLinkEntryConfig:
+    return ContextualLinkEntryConfig(
+        title=name,
+        location=(target_type, name),
+        filters=[],
+        include_context=False,
+        include_time_range=True,
+        show_filter_form=False,
+    )
+
+
+class TestMigrateColumnLinks:
+    @pytest.mark.parametrize(
+        "column",
+        [
+            pytest.param(ColumnSpec("host"), id="column"),
+            pytest.param(
+                ColumnSpec("svc_plugin_output", join_value="CPU load", _column_type="join_column"),
+                id="joined service",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "target_type, name",
+        [
+            pytest.param("views", "hoststatus", id="view"),
+            pytest.param("dashboards", "main", id="dashboard"),
+        ],
+    )
+    def test_a_legacy_link_becomes_an_inherited_drilldown_on_its_column(
+        self,
+        column: ColumnSpec,
+        target_type: Literal["views", "dashboards"],
+        name: str,
+    ) -> None:
+        embedded_view = _embedded_view(
+            "hosts",
+            [
+                ColumnSpec("host_state"),
+                dataclasses.replace(column, link_spec=VisualLinkSpec(target_type, name)),
+            ],
+        )
+
+        result = _migrated_embedded_view(embedded_view)
+
+        assert result["painters"] == [
+            ColumnSpec("host_state"),
+            dataclasses.replace(column, column_link=_inherited(target_type, name)),
+        ]
+
+    def test_a_legacy_link_of_an_older_view_widget_becomes_a_drilldown(self) -> None:
+        dashboard = _make_dashboard(
+            widgets={
+                "w1": _make_view_widget(
+                    painters=[ColumnSpec("host", link_spec=VisualLinkSpec("views", "hoststatus"))]
+                )
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["embedded_views"]["test_view"]["painters"] == [
+            ColumnSpec("host", column_link=_inherited("views", "hoststatus"))
+        ]
+
+    def test_a_legacy_link_to_a_report_is_dropped(self) -> None:
+        embedded_view = _embedded_view(
+            "hosts", [ColumnSpec("host", link_spec=VisualLinkSpec("reports", "default"))]
+        )
+
+        result = _migrated_embedded_view(embedded_view)
+
+        assert result["painters"] == [ColumnSpec("host")]
+
+    def test_a_grouping_column_keeps_its_link(self) -> None:
+        group_painter = ColumnSpec("sitealias", link_spec=VisualLinkSpec("views", "sitehosts"))
+        embedded_view = _embedded_view(
+            "hosts", [ColumnSpec("host")], group_painters=[group_painter]
+        )
+
+        result = _migrated_embedded_view(embedded_view)
+
+        assert result["group_painters"] == [group_painter]
+
+    def test_a_migrated_view_stays_unchanged(self) -> None:
+        migrated = _migrated_embedded_view(
+            _embedded_view(
+                "hosts", [ColumnSpec("host", link_spec=VisualLinkSpec("views", "hoststatus"))]
+            )
+        )
+
+        result = _migrated_embedded_view(migrated)
+
+        assert result == migrated

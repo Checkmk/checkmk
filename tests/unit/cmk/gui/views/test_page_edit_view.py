@@ -260,24 +260,51 @@ def test_view_editor_column_spec_with_drilldown_keeps_a_custom_drilldown(
     assert vs.transform_value(value) == value
 
 
+def _column_linked_to(target: VisualLinkSpec) -> ColumnSpec:
+    return ColumnSpec(
+        "host",
+        parameters=PainterParameters(color_choices=[]),
+        link_spec=target,
+        column_title="",
+        _column_type="column",
+    )
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        pytest.param(VisualLinkSpec("views", "host"), id="a view"),
+        pytest.param(VisualLinkSpec("dashboards", "main"), id="a dashboard"),
+    ],
+)
 @pytest.mark.usefixtures("request_context")
-def test_view_editor_column_spec_with_drilldown_keeps_a_link_to_a_view(
-    admin_painter_context: PainterContext,
+def test_view_editor_column_spec_keeps_a_link_to(
+    admin_painter_context: PainterContext, target: VisualLinkSpec
 ) -> None:
-    vs = view_editor_column_spec("columns", "hosts", admin_painter_context, with_drilldown=True)
-    value = {
-        "columns": [
-            ColumnSpec(
-                "host",
-                parameters=PainterParameters(color_choices=[]),
-                link_spec=VisualLinkSpec("views", "host"),
-                column_title="",
-                _column_type="column",
-            )
-        ]
-    }
+    vs = view_editor_column_spec("columns", "hosts", admin_painter_context)
+    value = {"columns": [_column_linked_to(target)]}
 
     assert vs.transform_value(value) == value
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        pytest.param(VisualLinkSpec("views", "host"), id="a view"),
+        pytest.param(VisualLinkSpec("dashboards", "main"), id="a dashboard"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_view_editor_column_spec_with_drilldown_rejects_a_link_to(
+    admin_painter_context: PainterContext, target: VisualLinkSpec
+) -> None:
+    vs = view_editor_column_spec("columns", "hosts", admin_painter_context, with_drilldown=True)
+
+    with pytest.raises(MKUserError) as excinfo:
+        vs.validate_value({"columns": [_column_linked_to(target)]}, "columns")
+
+    assert "link_spec" in (excinfo.value.varname or "")
+    assert "is not allowed here" in str(excinfo.value)
 
 
 @pytest.mark.parametrize(

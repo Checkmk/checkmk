@@ -42,7 +42,11 @@ from .builtin_dashboards import (
 )
 from .dashlet.registry import dashlet_registry
 from .event_bar_chart_window import clamp_event_bar_chart_window, EVENT_BAR_CHART_TYPES
-from .legacy_visual_link import contextual_link_from_legacy_target, contextual_link_from_legacy_view
+from .legacy_visual_link import (
+    contextual_link_from_legacy_target,
+    contextual_link_from_legacy_view,
+    embedded_view_with_column_links,
+)
 from .metadata import dashboard_uses_relative_grid
 from .type_defs import (
     ContextualLinkConfig,
@@ -276,7 +280,7 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
 
     if "embedded_views" in dashboard:
         dashboard["embedded_views"] = {
-            embedded_id: _links_on_their_columns(embedded_view)
+            embedded_id: embedded_view_with_column_links(_links_on_their_columns(embedded_view))
             for embedded_id, embedded_view in dashboard["embedded_views"].items()
         }
     return dashboard

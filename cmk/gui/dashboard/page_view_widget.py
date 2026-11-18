@@ -13,6 +13,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.dashboard import DashboardConfig, dashlet_registry, get_all_dashboards
 from cmk.gui.dashboard.dashlet.dashlets.view import EmbeddedViewDashlet, LinkedViewDashlet
+from cmk.gui.dashboard.legacy_visual_link import painters_with_column_links
 from cmk.gui.dashboard.page_show_shared_dashboard import SharedDashboardPageComponents
 from cmk.gui.dashboard.store import get_permitted_dashboards_by_owners, save_all_dashboards
 from cmk.gui.dashboard.token_util import (
@@ -710,7 +711,8 @@ class ViewWidgetEditPage(Page):
             html.hidden_field("owner", str(owner))
 
             render_view_config(
-                view_spec,
+                # A copied view still has its legacy links, which the editor offers as drill-downs.
+                {**view_spec, "painters": painters_with_column_links(view_spec["painters"])},
                 general_properties=True,
                 allow_browser_reload=False,
                 config=ctx.config,

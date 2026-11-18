@@ -153,6 +153,52 @@ def test_widget_edit_view_duplicate_keeps_the_offered_filters_of_a_custom_column
     assert copy["painters"][0].column_link == {**link, "filters": kept}
 
 
+def _save_editor_form(app: WebTestAppForCMK, query: str) -> str:
+    editor = app.get(f"/NO_SITE/check_mk/widget_edit_view.py?{query}", status=HTTPStatus.OK)
+    fields = form_values(editor.text, "widget_view")
+    # The page's script numbers the entries of each list.
+    for name in fields:
+        if index := re.search(r"_indexof_(\d+)$", name):
+            fields[name] = fields[name] or index.group(1)
+    return app.post(
+        "/NO_SITE/check_mk/widget_edit_view.py", data={**fields, "_save": "1"}, status=HTTPStatus.OK
+    ).text
+
+
+@pytest.mark.usefixtures("patch_theme")
+def test_widget_edit_view_copy_turns_the_links_of_the_view_into_inherited_column_links(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
+) -> None:
+    owner = with_automation_user[0]
+    clients.DashboardClient.create_relative_grid_dashboard(create_dashboard_payload("board", {}))
+
+    saved = _save_editor_form(
+        logged_in_admin_wsgi_app,
+        f"dashboard=board&owner={owner}&embedded_id=copy&mode=copy&view_name=allhosts",
+    )
+
+    assert "cmk:view:save-completed" in saved, re.findall(
+        r"class=\"error\"[^>]*>(.*?)</div>", saved
+    )
+    DashboardStore.get_instance.cache_clear()  # type: ignore[attr-defined]
+    copy = get_all_dashboards()[(owner, "board")]["embedded_views"]["copy"]
+    assert [
+        (painter.link_spec, painter.column_link and painter.column_link["location"])
+        for painter in copy["painters"]
+    ] == [
+        (None, None),
+        (None, ("views", "host")),
+        (None, None),
+        (None, ("views", "host_ok")),
+        (None, ("views", "host_warn")),
+        (None, ("views", "host_unknown")),
+        (None, ("views", "host_crit")),
+        (None, ("views", "host_pending")),
+    ]
+
+
 @pytest.mark.usefixtures("request_context", "patch_theme")
 def test_widget_iframe_token_redirects_to_shared_dashboard() -> None:
     ctx = PageContext(

@@ -10,7 +10,9 @@ import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { DialogTitle } from 'reka-ui'
-import { onUnmounted, useTemplateRef, watch } from 'vue'
+import { useTemplateRef, watch } from 'vue'
+
+import { useFocusReturn } from '@/maps/shared/composables/useFocusReturn'
 
 const props = withDefaults(
   defineProps<{
@@ -31,35 +33,14 @@ defineEmits<{ close: [] }>()
 
 const { _t } = usei18n()
 
+useFocusReturn(() => props.open)
+
 // CmkPopup only moves focus in when ``open`` flips, and these modals are
 // mounted already open -- so focus would stay on whatever opened them, and
-// Escape would reach that surface too.
+// Escape would reach that surface too. The dialog's content is portalled in
+// after this component mounts.
 const shell = useTemplateRef<HTMLElement>('shell')
-let lastFocused: HTMLElement | null = null
-
-function restoreFocus(): void {
-  if (lastFocused?.isConnected) {
-    lastFocused.focus()
-  }
-  lastFocused = null
-}
-
-watch(
-  () => props.open,
-  (isOpen) => {
-    if (isOpen) {
-      lastFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    } else {
-      restoreFocus()
-    }
-  },
-  { immediate: true, flush: 'post' }
-)
-// The dialog's content is portalled in after this component mounts.
 watch(shell, (el) => el?.closest<HTMLElement>('[role="dialog"]')?.focus())
-
-// Only once the dialog is gone: while it stands, its focus trap pulls focus back.
-onUnmounted(restoreFocus)
 </script>
 
 <template>

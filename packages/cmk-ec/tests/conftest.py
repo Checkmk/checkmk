@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 from unittest import mock
 
+import pysnmp.debug
 import pytest
 
 import cmk.ec.export as ec
@@ -32,7 +33,7 @@ from cmk.ec.main import (
     StatusTableHistory,
 )
 from cmk.ec.perfcounters import Perfcounters
-from cmk.ec.settings import create_settings
+from cmk.ec.settings import create_settings, PortNumber
 
 
 @pytest.fixture(name="settings")
@@ -165,6 +166,38 @@ def fixture_event_server(
         SiteId("hurz"),
         create_pipes_and_sockets=False,
     )
+
+
+@pytest.fixture(name="snmp_trap_receiving_event_server")
+def fixture_snmp_trap_receiving_event_server(
+    logger: logging.Logger,
+    settings: ec.Settings,
+    config: Config,
+    slave_status: SlaveStatus,
+    perfcounters: Perfcounters,
+    lock_configuration: ECLock,
+    history: FileHistory,
+    event_status: EventStatus,
+) -> Iterator[EventServer]:
+    """An event server receiving SNMP traps, without opening the socket for them"""
+    previous_pysnmp_logger = pysnmp.debug.logger
+    event_server = EventServer(
+        logger,
+        settings._replace(options=settings.options._replace(snmptrap_udp=PortNumber(162))),
+        config,
+        slave_status,
+        perfcounters,
+        lock_configuration,
+        history,
+        event_status,
+        StatusTableEvents.columns,
+        RaisingConnection(),
+        SiteId("hurz"),
+        create_pipes_and_sockets=False,
+    )
+    yield event_server
+    # The trap parser hands its logger to PySNMP.
+    pysnmp.debug.set_logger(previous_pysnmp_logger)  # type: ignore[no-untyped-call]
 
 
 @pytest.fixture(name="status_server")

@@ -72,6 +72,16 @@ class SNMPTrapParser:
             pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet,
         )  # type: ignore[assignment]
 
+        error: Exception | None = None
+
+        @override
+        def process_pdu(self, *args: Any, **kwargs: Any) -> None:
+            """Keeps failures, PySNMP would skip its cleanup for them"""
+            try:
+                super().process_pdu(*args, **kwargs)
+            except Exception as e:
+                self.error = e
+
     def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
         self._logger = logger
 
@@ -81,11 +91,9 @@ class SNMPTrapParser:
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
         self._initialize_snmp_credentials(config)
         # NOTE: pysnmp has a really strange notification receiver API: The constructor call below
-        # effectively registers the callback (2nd argument) at the SNMP engine. The resulting
-        # receiver instance is kept alive by the registration itself, so there is no need to store
-        # it anywhere here. The callback stores the parsed trap in _varbinds_and_ipaddress when
-        # parse() is called.
-        SNMPTrapParser._ECNotificationReceiver(
+        # effectively registers the callback (2nd argument) at the SNMP engine. The callback stores
+        # the parsed trap in _varbinds_and_ipaddress when parse() is called.
+        self._receiver = SNMPTrapParser._ECNotificationReceiver(
             self.snmp_engine,
             self._handle_snmptrap,
         )
@@ -188,7 +196,10 @@ class SNMPTrapParser:
     def parse(
         self, data: bytes, sender_address: tuple[str, int]
     ) -> tuple[Iterable[tuple[str, str]], str] | None:
-        """Let PySNMP parse the given trap data. The _handle_snmptrap() callback below collects the result."""
+        """Let PySNMP parse the given trap data. The _handle_snmptrap() callback below collects the result.
+
+        Drops what PySNMP doesn't accept, raises failures of accepted traps.
+        """
         self._logger.log(
             VERBOSE,
             "Trap received from %s:%d. Checking for acceptance now.",
@@ -196,13 +207,28 @@ class SNMPTrapParser:
             sender_address[1],
         )
         self._varbinds_and_ipaddress = None
+        self._receiver.error = None
         self.snmp_engine.set_user_context(sender_address=sender_address)
-        self.snmp_engine.message_dispatcher.receive_message(
-            snmpEngine=self.snmp_engine,
-            transportDomain=(),
-            transportAddress=sender_address,
-            wholeMsg=data,
-        )
+        try:
+            self.snmp_engine.message_dispatcher.receive_message(
+                snmpEngine=self.snmp_engine,
+                transportDomain=(),
+                transportAddress=sender_address,
+                wholeMsg=data,
+            )
+        except Exception as e:
+            # Senders trigger these, e.g. with b"hello world".
+            self._logger.log(
+                VERBOSE,
+                "Message dropped from %s, PySNMP failed on it: %s: %s",
+                sender_address[0],
+                type(e).__name__,
+                e,
+                exc_info=self._logger.isEnabledFor(DEBUG),
+            )
+            return None
+        if (error := self._receiver.error) is not None:
+            raise error
         return self._varbinds_and_ipaddress
 
     def _handle_snmptrap(
@@ -440,6 +466,17 @@ def compile_mib(
             StubSearcher(*PySnmpCodeGen.baseMibs),
         )
     ).compile(mibname, ignoreErrors=True, genTexts=True)
+
+
+def trap_error_text(error: Exception) -> str:
+    """For log messages, as a KeyError shows its key's repr, for pyasn1 values all of its type"""
+    if (
+        isinstance(error, KeyError)
+        and len(error.args) == 1
+        and isinstance(key := error.args[0], SimpleAsn1Type)
+    ):
+        return str(key.prettyPrint())
+    return str(error)
 
 
 # Note: This is a local copy of the same function from cmk.utils.render, but for decoupling reasons

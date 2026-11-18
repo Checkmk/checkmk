@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
+import struct
+import zlib
 from pathlib import Path
 
 import pytest
@@ -108,6 +110,24 @@ def test_image_loading_jpg_and_png() -> None:
     assert CMKImage(TEST_PNG, [ImageType.JPG, ImageType.PNG]).image_size() == ImageSize(1, 1)
     with pytest.raises(ValueError):
         CMKImage(TEST_ICO, [ImageType.PNG, ImageType.JPG])
+
+
+def _png_chunk(kind: bytes, data: bytes) -> bytes:
+    return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+
+
+def _png_header(width: int, height: int) -> bytes:
+    """A PNG that names its size but holds no pixels, which is all opening it reads."""
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + _png_chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0))
+        + _png_chunk(b"IDAT", b"")
+    )
+
+
+def test_image_of_too_many_pixels_is_refused_as_unsupported() -> None:
+    with pytest.raises(ValueError, match="too many pixels"):
+        CMKImage(_png_header(30000, 30000), ImageType.PNG)
 
 
 def test_metadata(tmp_path: Path) -> None:

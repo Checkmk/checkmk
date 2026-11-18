@@ -54,6 +54,8 @@ class CMKImage:
             )
         except UnidentifiedImageError as exception:
             raise ValueError("Image type not supported") from exception
+        except Image.DecompressionBombError as exception:
+            raise ValueError("Image has too many pixels") from exception
 
         self._metadata: dict[str, str] | None = None
 

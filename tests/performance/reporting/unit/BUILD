@@ -12,8 +12,14 @@ py_library(
 py_cmk_test(
     name = "unit",
     size = "small",
-    srcs = ["test_performance_baselines.py"],
+    srcs = [
+        "test_benchmark_json.py",
+        "test_performance_baselines.py",
+    ],
     imports = ["../../../.."],
     use_project_pytest_config = True,
-    deps = ["//tests/performance:reporting"],
+    deps = [
+        "//tests/performance:benchmark_json",
+        "//tests/performance:reporting",
+    ],
 )

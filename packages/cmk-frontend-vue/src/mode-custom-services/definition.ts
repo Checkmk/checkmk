@@ -77,7 +77,8 @@ const SERIES_ATTRIBUTES_MACRO = '$SERIES_ATTRIBUTES$'
 
 const SERIES_ATTRIBUTES_SUFFIX = ` ${SERIES_ATTRIBUTES_MACRO}`
 
-const ATTRIBUTE_KIND_ORDER = ['resource', 'scope', 'data_point'] as const
+// The order the check plugin appends the values of the kinds in
+const ATTRIBUTE_KIND_ORDER = ['data_point', 'resource', 'scope'] as const
 
 type AttributeKey = Aggregator['stages'][number]['aggregate_by'][number]
 
@@ -92,11 +93,12 @@ function preservedKeys(consolidation: WireConsolidationFunction): AttributeKey[]
   }
 }
 
-// Mirrors template_attribute_scope: only the keys every grouping step groups by survive
-export function appendedAttributeNames(
+// Mirrors grouped_attributes: only the keys every grouping step groups by survive, in the order
+// the check plugin appends their values in. Null if the series are not grouped.
+export function appendedAttributesOfGrouping(
   consolidation: WireConsolidationFunction,
   aggregator: Aggregator | undefined
-): string[] | null {
+): TemplateAttributes['attributes'] | null {
   let keys = preservedKeys(consolidation)
   for (const stage of aggregator?.stages ?? []) {
     const kept = keys
@@ -115,7 +117,7 @@ export function appendedAttributeNames(
         // By code unit like the check plugin, not locale-aware like localeCompare
         (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
     )
-    .map((key) => key.name)
+    .map(({ kind, name }) => ({ kind, key: name }))
 }
 
 function serviceNameTemplate(model: ServiceModel): string {

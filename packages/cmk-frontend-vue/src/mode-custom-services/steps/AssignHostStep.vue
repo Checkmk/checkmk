@@ -17,11 +17,17 @@ import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref, watch } from 'vue'
 
 import { fetchTemplateAttributes } from '../api'
-import { type TemplateAttributes, appendedAttributeNames, templateMacro } from '../definition'
+import {
+  type ServicesToCreate,
+  type TemplateAttributes,
+  appendedAttributesOfGrouping,
+  templateMacro
+} from '../definition'
 import { useOpenTelemetryData } from '../openTelemetryData'
 import type { ServicesPreview } from '../servicesPreview'
 import type { TemplatePreview } from '../templatePreview'
@@ -107,12 +113,82 @@ function insertMacro(macro: string): void {
   hostNameTemplate.value = `${hostNameTemplate.value ?? ''}${macro}`
 }
 
-const appendedAttributes = computed<string>(() => {
+type AppendedAttributes = ServicesToCreate['appended_attributes']
+
+// What the names append is known once the services resolve. Kept while the next lookup runs, so
+// that the indicator does not flicker while typing.
+const appended = ref<AppendedAttributes | null>(null)
+watch(
+  () => servicesPreview,
+  (preview) => {
+    if (preview.status === 'resolved') {
+      appended.value = preview.services.appended_attributes
+    } else if (preview.status !== 'loading') {
+      appended.value = null
+    }
+  },
+  { immediate: true }
+)
+
+// Until the services resolve, guessed from the grouping alone: the host name template, the filter
+// and the service name may leave out more.
+const guessed = computed<AppendedAttributes>(() => {
   if (!appendSeriesAttributes) {
-    return ''
+    return { all_attributes: false, attributes: [] }
   }
-  const names = appendedAttributeNames(consolidation, aggregator)
-  return names === null ? _t('+ all attributes') : names.map((name) => `+ ${name}`).join(' ')
+  const attributes = appendedAttributesOfGrouping(consolidation, aggregator)
+  return attributes === null
+    ? { all_attributes: true, attributes: [] }
+    : { all_attributes: false, attributes }
+})
+
+const shown = computed<AppendedAttributes>(() => appended.value ?? guessed.value)
+
+const appendedAttributes = computed<string>(() => {
+  const { all_attributes: allAttributes, attributes } = shown.value
+  if (allAttributes) {
+    return _t('+ all attributes')
+  }
+  if (attributes.length === 1) {
+    return `+ ${attributes[0]!.key}`
+  }
+  return attributes.length > 1 ? _t('+ grouped attributes') : ''
+})
+
+// By its key, as the indicator shows it. Only two appended attributes of different kinds sharing a
+// key are told apart by their macros.
+function attributeLabel(
+  attribute: AppendedAttributes['attributes'][number],
+  attributes: AppendedAttributes['attributes']
+): string {
+  const shared = attributes.filter((other) => other.key === attribute.key).length > 1
+  return shared ? templateMacro(attribute) : attribute.key
+}
+
+const appendedAttributesHelp = computed<TranslatedString>(() => {
+  const { all_attributes: allAttributes, attributes } = shown.value
+  if (allAttributes) {
+    return _t(
+      'The attribute values of each series are appended to this name so that every series gets its own service, for example "http.server.duration GET - 200". Values that are part of the host name, fixed by the filter or already shown in the name are left out. Names that are too long are shortened and end in a short hash. Each new attribute value creates a new service, for example a new pod after a deployment. To keep names short and services stable, group the series by the attributes you need. Only their values are then appended.'
+    )
+  }
+  if (attributes.length === 1) {
+    return _t(
+      'The value of the grouped attribute %{attribute} is appended to this name so that every group gets its own service, for example "http.server.duration /cart". Names that are too long are shortened and end in a short hash.',
+      { attribute: attributeLabel(attributes[0]!, attributes) }
+    )
+  }
+  if (attributes.length > 1) {
+    return _t(
+      'The values of the grouped attributes (%{attributes}) are appended to this name so that every group gets its own service, for example "http.server.duration GET - 200". Names that are too long are shortened and end in a short hash.',
+      {
+        attributes: attributes.map((attribute) => attributeLabel(attribute, attributes)).join(', ')
+      }
+    )
+  }
+  return _t(
+    'Nothing is appended to this name, so the service is named as entered, with its macros filled in.'
+  )
 })
 
 // Dedicated custom-service host autocompleter: searches configured hosts by
@@ -149,10 +225,6 @@ const serviceNameMacroHelp = untranslated(
   ].join('<br>')
 )
 
-const appendedAttributesHelp = _t(
-  'The attribute values of each series are appended to this name, so that every series gets its own service, e.g. "http.server.duration GET - 200". Very long names are shortened and end in a short hash. Use "Group by" to append only the grouped attributes: this keeps the names short and stable, as every new attribute value creates a new service.'
-)
-
 const serviceNameFieldId = useId()
 const hostFieldId = useId()
 const assignmentLabelId = useId()
@@ -176,7 +248,6 @@ const templateFieldId = useId()
           :unit="appendedAttributes"
         />
         <CmkHelpText
-          v-if="appendSeriesAttributes"
           :aria-label="_t('About the appended attributes')"
           :help="appendedAttributesHelp"
         />

@@ -11,7 +11,7 @@ import { useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterEach, expect, test } from 'vitest'
-import { defineComponent, ref } from 'vue'
+import { defineComponent, nextTick, ref } from 'vue'
 
 import type { ServicesPreview } from '@/mode-custom-services/servicesPreview'
 import AssignHostStep from '@/mode-custom-services/steps/AssignHostStep.vue'
@@ -97,6 +97,7 @@ function renderStep(
   const service = ref(serviceName)
   const host = ref<string | null>(hostName)
   const template = ref<string | null>(hostNameTemplate)
+  const preview = ref<ServicesPreview>(servicesPreview)
   const wrapper = defineComponent({
     components: { AssignHostStep },
     setup() {
@@ -110,7 +111,7 @@ function renderStep(
         appendSeriesAttributes,
         templateErrors,
         templatePreview,
-        servicesPreview
+        preview
       }
     },
     template: `<AssignHostStep
@@ -124,11 +125,11 @@ function renderStep(
       :append-series-attributes="appendSeriesAttributes"
       :template-errors="templateErrors"
       :template-preview="templatePreview"
-      :services-preview="servicesPreview"
+      :services-preview="preview"
     />`
   })
   render(wrapper)
-  return { service, host, template }
+  return { service, host, template, preview }
 }
 
 test('edits the service name', async () => {
@@ -171,38 +172,171 @@ test('lists the services to be created below the tabs', () => {
   expect(screen.getByRole('tabpanel').contains(service)).toBe(false)
 })
 
+function appending(allAttributes: boolean, dataPointKeys: string[] = []): ServicesPreview {
+  return {
+    status: 'resolved',
+    services: {
+      services: [],
+      total: 0,
+      clashes: [],
+      appended_attributes: {
+        all_attributes: allAttributes,
+        attributes: dataPointKeys.map((key) => ({ kind: 'data_point', key }))
+      },
+      complete: true
+    }
+  }
+}
+
+async function appendedAttributesHelp(): Promise<HTMLElement> {
+  await userEvent.click(screen.getByRole('button', { name: 'About the appended attributes' }))
+  return screen.findByRole('tooltip')
+}
+
 test('tells that all attribute values are appended to the service name', () => {
-  renderStep('HTTP duration')
+  renderStep('HTTP duration', null, { servicesPreview: appending(true) })
+
   expect(screen.getByText('+ all attributes')).toBeTruthy()
 })
 
-test('tells which group-by attribute values are appended to the service name', () => {
+test('explains which values of ungrouped series are left out', async () => {
+  renderStep('HTTP duration', null, { servicesPreview: appending(true) })
+
+  expect(await appendedAttributesHelp()).toHaveTextContent(
+    /part of the host name, fixed by the filter or already shown in the name are left out/
+  )
+})
+
+test('names the one grouped attribute whose value is appended', () => {
+  renderStep('HTTP duration', null, { servicesPreview: appending(false, ['http.route']) })
+
+  expect(screen.getByText('+ http.route')).toBeTruthy()
+})
+
+test('explains which grouped attribute value is appended', async () => {
+  renderStep('HTTP duration', null, { servicesPreview: appending(false, ['http.route']) })
+
+  expect(await appendedAttributesHelp()).toHaveTextContent(
+    /value of the grouped attribute http\.route is appended/
+  )
+})
+
+test('sums up several grouped attributes whose values are appended', () => {
+  renderStep('HTTP duration', null, {
+    servicesPreview: appending(false, ['http.method', 'http.route'])
+  })
+
+  expect(screen.getByText('+ grouped attributes')).toBeTruthy()
+})
+
+test('lists the grouped attributes whose values are appended', async () => {
+  renderStep('HTTP duration', null, {
+    servicesPreview: appending(false, ['http.method', 'http.route'])
+  })
+
+  expect(await appendedAttributesHelp()).toHaveTextContent('(http.method, http.route)')
+})
+
+test('tells apart grouped attributes of different kinds sharing a key', async () => {
+  renderStep('HTTP duration', null, {
+    servicesPreview: {
+      status: 'resolved',
+      services: {
+        services: [],
+        total: 0,
+        clashes: [],
+        appended_attributes: {
+          all_attributes: false,
+          attributes: [
+            { kind: 'data_point', key: 'service.name' },
+            { kind: 'resource', key: 'service.name' }
+          ]
+        },
+        complete: true
+      }
+    }
+  })
+
+  expect(await appendedAttributesHelp()).toHaveTextContent(
+    '($DATA_POINT_ATTR.service.name$, $RESOURCE_ATTR.service.name$)'
+  )
+})
+
+test('explains that very long service names are shortened', async () => {
+  renderStep('HTTP duration', null, { servicesPreview: appending(false, ['http.route']) })
+
+  expect(await appendedAttributesHelp()).toHaveTextContent(/shortened and end in a short hash/)
+})
+
+test('explains that nothing is appended when no attribute is left to append', async () => {
+  renderStep('Pod CPU usage', null, { servicesPreview: appending(false) })
+
+  expect(screen.queryByText(/^\+ /)).toBeNull()
+  expect(await appendedAttributesHelp()).toHaveTextContent(/Nothing is appended to this name/)
+})
+
+test('guesses from the grouping what is appended until the services resolve', () => {
   renderStep('HTTP duration', null, {
     aggregator: {
       stages: [
         {
-          aggregate_by: [
-            { kind: 'data_point', name: 'http.status_code' },
-            { kind: 'data_point', name: 'http.method' }
-          ],
+          aggregate_by: [{ kind: 'data_point', name: 'http.route' }],
           aggregation_fn: { type: 'scalar', name: 'avg' }
         }
       ]
     }
   })
-  expect(screen.getByText('+ http.method + http.status_code')).toBeTruthy()
+
+  expect(screen.getByText('+ http.route')).toBeTruthy()
 })
 
-test('explains that very long service names are shortened', async () => {
+test('guesses that ungrouped series append all attributes until the services resolve', () => {
   renderStep('HTTP duration')
-  await userEvent.click(screen.getByRole('button', { name: 'About the appended attributes' }))
-  expect(await screen.findByRole('tooltip')).toHaveTextContent(/shortened and end in a short hash/)
+
+  expect(screen.getByText('+ all attributes')).toBeTruthy()
 })
 
-test('a service name without appended attributes shows neither indicator nor explanation', () => {
-  renderStep('Pod CPU usage', null, { appendSeriesAttributes: false })
-  expect(screen.queryByText('+ all attributes')).toBeNull()
-  expect(screen.queryByRole('button', { name: 'About the appended attributes' })).toBeNull()
+test('guesses that a name without series attributes appends nothing', async () => {
+  renderStep('HTTP duration', null, { appendSeriesAttributes: false })
+
+  expect(screen.queryByText(/^\+ /)).toBeNull()
+  expect(await appendedAttributesHelp()).toHaveTextContent(/Nothing is appended to this name/)
+})
+
+test('keeps telling what is appended while the services are looked up again', async () => {
+  const { preview } = renderStep('HTTP duration', null, {
+    servicesPreview: appending(false, ['http.route'])
+  })
+
+  preview.value = { status: 'loading' }
+  await nextTick()
+
+  expect(screen.getByText('+ http.route')).toBeTruthy()
+})
+
+test('tells what the next answer appends once the services are looked up again', async () => {
+  const { preview } = renderStep('HTTP duration', null, {
+    servicesPreview: appending(false, ['http.route'])
+  })
+
+  preview.value = { status: 'loading' }
+  await nextTick()
+  preview.value = appending(false, ['http.method'])
+  await nextTick()
+
+  expect(screen.getByText('+ http.method')).toBeTruthy()
+  expect(screen.queryByText('+ http.route')).toBeNull()
+})
+
+test('guesses from the grouping again when the services cannot be looked up', async () => {
+  const { preview } = renderStep('HTTP duration', null, {
+    servicesPreview: appending(false, ['http.route'])
+  })
+
+  preview.value = { status: 'failed', error: 'down' }
+  await nextTick()
+
+  expect(screen.getByText('+ all attributes')).toBeTruthy()
 })
 
 test('choosing automatic assignment asks for a host name template instead of a host', async () => {

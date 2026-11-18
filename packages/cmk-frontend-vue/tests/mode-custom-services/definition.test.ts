@@ -10,7 +10,7 @@ import { describe, expect, test } from 'vitest'
 import {
   type CompleteModel,
   aggregationProblem,
-  appendedAttributeNames,
+  appendedAttributesOfGrouping,
   buildCustomServiceDefinition,
   buildCustomServiceUpdate,
   serviceModelFrom
@@ -341,7 +341,7 @@ describe('serviceModelFrom', () => {
   })
 })
 
-describe('appendedAttributeNames', () => {
+describe('appendedAttributesOfGrouping', () => {
   const avg = { type: 'scalar' as const, name: 'avg' as const }
   const gauge: ConsolidationFunction = {
     type: 'gauge',
@@ -350,12 +350,12 @@ describe('appendedAttributeNames', () => {
   }
 
   test('appends all attributes without any grouping', () => {
-    expect(appendedAttributeNames(gauge, undefined)).toBeNull()
+    expect(appendedAttributesOfGrouping(gauge, undefined)).toBeNull()
   })
 
-  test('appends the group-by keys in the order the check plugin renders them', () => {
+  test('appends the group-by keys in the order the check plugin appends them', () => {
     expect(
-      appendedAttributeNames(gauge, {
+      appendedAttributesOfGrouping(gauge, {
         stages: [
           {
             aggregate_by: [
@@ -367,12 +367,16 @@ describe('appendedAttributeNames', () => {
           }
         ]
       })
-    ).toEqual(['k8s.pod.name', 'service.name', 'http.method'])
+    ).toEqual([
+      { kind: 'data_point', key: 'http.method' },
+      { kind: 'resource', key: 'k8s.pod.name' },
+      { kind: 'resource', key: 'service.name' }
+    ])
   })
 
   test('orders the group-by keys case-sensitively, like the check plugin', () => {
     expect(
-      appendedAttributeNames(gauge, {
+      appendedAttributesOfGrouping(gauge, {
         stages: [
           {
             aggregate_by: [
@@ -383,12 +387,15 @@ describe('appendedAttributeNames', () => {
           }
         ]
       })
-    ).toEqual(['Zone', 'app'])
+    ).toEqual([
+      { kind: 'resource', key: 'Zone' },
+      { kind: 'resource', key: 'app' }
+    ])
   })
 
   test('appends only the keys every stage groups by', () => {
     expect(
-      appendedAttributeNames(gauge, {
+      appendedAttributesOfGrouping(gauge, {
         stages: [
           {
             aggregate_by: [
@@ -400,12 +407,12 @@ describe('appendedAttributeNames', () => {
           { aggregate_by: [{ kind: 'resource', name: 'service.name' }], aggregation_fn: avg }
         ]
       })
-    ).toEqual(['service.name'])
+    ).toEqual([{ kind: 'resource', key: 'service.name' }])
   })
 
   test('appends the keys a preserving consolidation keeps', () => {
     expect(
-      appendedAttributeNames(
+      appendedAttributesOfGrouping(
         {
           type: 'histogram',
           function: 'histogram_preserve_quantile',
@@ -415,12 +422,12 @@ describe('appendedAttributeNames', () => {
         },
         undefined
       )
-    ).toEqual(['k8s.pod.name'])
+    ).toEqual([{ kind: 'resource', key: 'k8s.pod.name' }])
   })
 
   test('appends nothing when all series are merged', () => {
     expect(
-      appendedAttributeNames(gauge, { stages: [{ aggregate_by: [], aggregation_fn: avg }] })
+      appendedAttributesOfGrouping(gauge, { stages: [{ aggregate_by: [], aggregation_fn: avg }] })
     ).toEqual([])
   })
 })

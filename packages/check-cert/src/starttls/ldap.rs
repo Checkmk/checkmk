@@ -183,7 +183,7 @@ mod tests {
         let oid = b"1.3.6.1.4.1.1466.20037";
         let oid_len = oid.len() as u8;
         let ext_inner_len = 3 + 2 + 2 + oid_len;
-        let msg_inner_len = 3 + 2 + ext_inner_len as u8;
+        let msg_inner_len = 3 + 2 + ext_inner_len;
 
         let mut response = vec![
             0x30,

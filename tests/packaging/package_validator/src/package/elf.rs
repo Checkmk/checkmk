@@ -440,11 +440,11 @@ mod tests {
     #[test]
     fn test_is_invalid_extension() {
         let temp_file = Path::new("not_elf.txt");
-        let result = Elf::is_invalid_extension(&temp_file);
+        let result = Elf::is_invalid_extension(temp_file);
         assert!(result);
 
         let temp_file = Path::new("is_elf.so");
-        let result = Elf::is_invalid_extension(&temp_file);
+        let result = Elf::is_invalid_extension(temp_file);
         assert!(!result);
     }
 
@@ -475,25 +475,13 @@ mod tests {
         let origin = path.parent().unwrap_or_else(|| Path::new("/"));
 
         // Paths with $ORIGIN not at the start should return None (invalid)
-        assert_eq!(
-            Elf::normalize_path(origin, &"../$ORIGIN/lib".to_string()),
-            None
-        );
-        assert_eq!(
-            Elf::normalize_path(origin, &"./$ORIGIN/lib".to_string()),
-            None
-        );
-        assert_eq!(
-            Elf::normalize_path(origin, &"../${ORIGIN}/lib".to_string()),
-            None
-        );
-        assert_eq!(
-            Elf::normalize_path(origin, &"prefix/$ORIGIN/lib".to_string()),
-            None
-        );
+        assert_eq!(Elf::normalize_path(origin, "../$ORIGIN/lib"), None);
+        assert_eq!(Elf::normalize_path(origin, "./$ORIGIN/lib"), None);
+        assert_eq!(Elf::normalize_path(origin, "../${ORIGIN}/lib"), None);
+        assert_eq!(Elf::normalize_path(origin, "prefix/$ORIGIN/lib"), None);
 
         // But $ORIGIN at the start should work
-        let result = Elf::normalize_path(origin, &"$ORIGIN/../lib".to_string());
+        let result = Elf::normalize_path(origin, "$ORIGIN/../lib");
         assert!(result.is_some());
         let resolved = result.unwrap();
         assert_eq!(resolved.to_string_lossy(), "/usr/lib");

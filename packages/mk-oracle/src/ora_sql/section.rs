@@ -340,7 +340,7 @@ impl Section {
                     "Resolved `path:` {:?} for section '{}' to SQL file {:?}",
                     path,
                     self.query_name(),
-                    &sql_file
+                    sql_file
                 );
                 Some(contents)
             }
@@ -459,12 +459,12 @@ fn read_versioned_query(
                 options.permissions_check(),
                 options.permissions_safe_entries(),
             ) {
-                log::warn!("SQL file {:?} rejected: {reason}", &sql_file);
+                log::warn!("SQL file {:?} rejected: {reason}", sql_file);
                 return None;
             }
             read_to_string(&sql_file)
                 .inspect_err(|e| {
-                    log::error!("Can't read file {:?} {}", &sql_file, &e);
+                    log::error!("Can't read file {:?} {}", sql_file, e);
                 })
                 .ok()
                 .map(|contents| (sql_file, contents))

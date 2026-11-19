@@ -279,8 +279,8 @@ authentication:
                     .make_connection_string(None, ConnectionStringType::Tns)
             );
             assert!(!rows.is_empty());
-            assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &instance_name)));
-            assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &instance_name)));
+            assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", instance_name)));
+            assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", instance_name)));
             assert_eq!(rows.len(), 2);
         }
     }
@@ -300,12 +300,12 @@ authentication:
         assert!(!rows.is_empty());
         let sid_name = &endpoint.sid.clone().unwrap();
         assert!(
-            rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &sid_name)),
+            rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", sid_name)),
             "Actual: {}",
             rows[0]
         );
         assert!(
-            rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &sid_name)),
+            rows[1].starts_with(&format!("{}|sys_time_model|DB time|", sid_name)),
             "Actual: {}",
             rows[1]
         );
@@ -570,7 +570,7 @@ SELECT
         for endpoint in WORKING_ENDPOINTS.iter() {
             let rows = connect_and_query(endpoint, sqls::Id::IoStats, None, Tenant::Cdb);
             assert!(rows.len() > 10);
-            let name_dot = format!("{}.", &endpoint.sid.clone().unwrap());
+            let name_dot = format!("{}.", endpoint.sid.clone().unwrap());
             for r in &rows {
                 let values: Vec<String> = r.split('|').map(|s| s.to_string()).collect();
                 assert_eq!(
@@ -617,7 +617,7 @@ SELECT
     fn test_ts_quotas() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::TsQuotas, None, Tenant::Cdb);
             assert!(!rows.is_empty());
             let expected = format!("{}||||", get_service_name(endpoint));
@@ -629,7 +629,7 @@ SELECT
     fn test_jobs() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::Jobs, None, Tenant::Cdb);
             assert!(rows.len() > 10);
             rows.iter().for_each(|r| {
@@ -656,7 +656,7 @@ SELECT
     fn test_resumable() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::Resumable, None, Tenant::Cdb);
             rows.iter().for_each(|r| {
                 let line: Vec<&str> = r.split("|").collect();
@@ -676,7 +676,7 @@ SELECT
     fn test_undo_stats() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             for version in [None, Some(InstanceNumVersion::from(11_00_00_00))] {
                 println!("Testing version: {:?}", version);
                 let rows = connect_and_query(endpoint, sqls::Id::UndoStat, version, Tenant::Cdb);
@@ -705,7 +705,7 @@ SELECT
     fn test_log_switches() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::LogSwitches, None, Tenant::Cdb);
             rows.iter().for_each(|r| {
                 let line: Vec<&str> = r.split("|").collect();
@@ -729,7 +729,7 @@ SELECT
     fn test_processes() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::Processes, None, Tenant::Cdb);
             assert!(!rows.is_empty());
             let array = rows[0].split('|').collect::<Vec<&str>>();
@@ -749,7 +749,7 @@ SELECT
     fn test_recovery_status_last() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::RecoveryStatus, None, Tenant::Cdb);
             for r in rows {
                 let array = r.split('|').collect::<Vec<&str>>();
@@ -779,7 +779,7 @@ SELECT
     fn test_rman() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::Rman, None, Tenant::Cdb);
             assert!(rows.is_empty());
         }
@@ -789,7 +789,7 @@ SELECT
     fn test_system_parameter() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::SystemParameter, None, Tenant::Cdb);
             assert!(rows.len() > 100);
             rows.iter().for_each(|r| {
@@ -816,7 +816,7 @@ SELECT
     fn test_table_spaces() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::TableSpaces, None, Tenant::Cdb);
             assert!(rows.len() > 2);
             rows.iter().for_each(|r| {
@@ -868,7 +868,7 @@ SELECT
     fn test_data_guard_stats() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::DataGuardStats, None, Tenant::Cdb);
             assert!(rows.is_empty());
         }
@@ -879,7 +879,7 @@ SELECT
         use crate::system::convert_to_num_version;
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::Instance, None, Tenant::Cdb);
             assert!(rows.len() > 2);
             rows.iter().for_each(|r| {
@@ -916,7 +916,7 @@ SELECT
         use crate::system::convert_to_num_version;
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(
                 endpoint,
                 sqls::Id::Instance,
@@ -955,7 +955,7 @@ SELECT
     fn test_asm_instance_new() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::AsmInstance, None, Tenant::Cdb);
             assert_eq!(rows.len(), 1);
             let r = rows[0].clone();
@@ -1011,7 +1011,7 @@ mod non_cdb_simulated {
     fn test_jobs_non_cdb() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::Jobs, None, Tenant::NoCdb);
             assert!(rows.len() > 10);
             rows.iter().for_each(|r| {
@@ -1036,7 +1036,7 @@ mod cdb {
     fn test_locks_last() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::Locks, None, Tenant::Cdb);
             assert!(rows.len() >= 3);
             rows.iter().for_each(|r| {
@@ -1084,7 +1084,7 @@ mod cdb {
     fn test_long_active_sessions_last() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::LongActiveSessions, None, Tenant::Cdb);
             assert!(rows.len() >= 3);
             rows.iter().for_each(|r| {
@@ -1121,7 +1121,7 @@ mod cdb {
     fn test_sessions_last() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::Sessions, None, Tenant::Cdb);
             assert_eq!(rows.len(), 3);
             let start = get_sid(endpoint) + ".";
@@ -1168,7 +1168,7 @@ mod cdb {
     fn test_performance_new() {
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let rows = connect_and_query(endpoint, sqls::Id::Performance, None, Tenant::Cdb);
             assert!(rows.len() > 30);
             rows.iter().for_each(|r| {
@@ -1276,7 +1276,7 @@ mod cdb {
         use mk_oracle::ora_sql::pdbs::Pdbs;
         add_runtime_to_path();
         for endpoint in WORKING_ENDPOINTS.iter() {
-            println!("endpoint.host = {}", &endpoint.host);
+            println!("endpoint.host = {}", endpoint.host);
             let config = make_mini_config(endpoint);
 
             let spot = backend::make_spot(&config.endpoint()).unwrap();

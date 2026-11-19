@@ -168,9 +168,8 @@ impl<'a> ClientBuilder<'a> {
     ) -> Self {
         log::info!(
             "Logon at port `{}:{}`",
-            &host,
-            &port
-                .clone()
+            host,
+            port.as_ref()
                 .map(|p| p.value().to_string())
                 .unwrap_or_default()
         );
@@ -193,8 +192,10 @@ impl<'a> ClientBuilder<'a> {
         let p = browser_port.map(|p| p.into());
         log::info!(
             "Browse connection at port `{}:{}`",
-            &host,
-            &p.clone().map(|p| p.value().to_string()).unwrap_or_default()
+            host,
+            p.as_ref()
+                .map(|p| p.value().to_string())
+                .unwrap_or_default()
         );
         let i = NamedConnection {
             host: host.to_owned(),
@@ -213,8 +214,8 @@ impl<'a> ClientBuilder<'a> {
         };
         log::info!(
             "Local connection by port `{}:{:?}`",
-            &local_connection.host,
-            &local_connection
+            local_connection.host,
+            local_connection
                 .port
                 .as_ref()
                 .map(|p| p.value().to_string())

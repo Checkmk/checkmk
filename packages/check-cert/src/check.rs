@@ -2,7 +2,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use std::convert::identity;
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::mem;
 use std::ops::Deref;
@@ -244,7 +243,7 @@ where
             "{}={}{};{};{};{};{}",
             self.label,
             self.value,
-            self.uom.as_ref().map_or(&Default::default(), identity),
+            self.uom.as_ref().unwrap_or(&Default::default()),
             self.levels
                 .as_ref()
                 .map_or(Default::default(), |v| v.warn.to_string()),

@@ -357,7 +357,7 @@ fn custom_format(
         now.format("%Y-%m-%d %H:%M:%S%.3f %:z"),
         record.level(),
         record.module_path().unwrap_or("<unnamed>"),
-        &record.args()
+        record.args()
     )
 }
 
@@ -439,7 +439,7 @@ pub fn contains_oracle_client_lib(dir: &Path) -> bool {
 pub fn detect_host_runtime() -> Option<ClientRuntime> {
     match get_local_instances() {
         Err(e) => {
-            log::info!("Local Oracle instances detection failed with {} - can't use them to detect runtime path", &e.to_string());
+            log::info!("Local Oracle instances detection failed with {} - can't use them to detect runtime path", e);
             find_std_env_var_runtime()
         }
         Ok(instances) if instances.is_empty() => {
@@ -1089,7 +1089,7 @@ fn add_yml_config_async_entry(lib_dir: &Path, name: &str, cache_age: u32) -> boo
     }
     let bakery_dir = lib_dir.join("bakery");
     if !bakery_dir.is_dir() {
-        log::error!("Bakery dir absent/inaccessible {:?}", &bakery_dir);
+        log::error!("Bakery dir absent/inaccessible {:?}", bakery_dir);
         return false;
     }
     let bakery_file = bakery_dir.join("check_mk.bakery.yml");
@@ -1103,7 +1103,7 @@ fn add_yml_config_async_entry(lib_dir: &Path, name: &str, cache_age: u32) -> boo
         fs::write(&bakery_file, content)
             .map(|_| true)
             .unwrap_or_else(|e| {
-                log::error!("Failed to create config file {:?}: {}", &bakery_file, &e);
+                log::error!("Failed to create config file {:?}: {}", bakery_file, e);
                 false
             })
     } else {

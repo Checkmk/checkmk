@@ -676,7 +676,7 @@ fn connect_spots(
             let name = t.target().display_name();
             match t.connect(instance_name) {
                 Ok(opened) => {
-                    log::info!("Connected to {}", &opened.target().display_name());
+                    log::info!("Connected to {}", opened.target().display_name());
                     Ok(opened)
                 }
                 Err(e) => {

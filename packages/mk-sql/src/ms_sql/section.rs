@@ -153,7 +153,7 @@ impl Section {
                     if instance_version >= min_version {
                         return read_to_string(&sql_file)
                             .inspect_err(|e| {
-                                log::error!("Can't read file {:?} {}", &sql_file, &e);
+                                log::error!("Can't read file {:?} {}", sql_file, e);
                             })
                             .ok();
                     }

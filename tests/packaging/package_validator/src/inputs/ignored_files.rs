@@ -119,7 +119,7 @@ mod tests {
     fn test_ignore_comments_and_empty_lines() {
         let mut file = NamedTempFile::new().unwrap();
         writeln!(file, "# This is a comment").unwrap();
-        writeln!(file, "").unwrap();
+        writeln!(file).unwrap();
         writeln!(
             file,
             "lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle"

@@ -1227,11 +1227,11 @@ fn test_run_as_plugin_with_config() {
             .timeout(std::time::Duration::from_secs(20))
             .unwrap();
         let (stdout, code) = tools::get_good_results(&exec).unwrap();
-        assert_eq!(code, 0, "For label: {}", &label);
+        assert_eq!(code, 0, "For label: {}", label);
         assert!(
             stdout.starts_with(EXPECTED_START),
             "For label: {} \n{}\n",
-            &label,
+            label,
             &stdout[..EXPECTED_START.len()]
         );
         validate_stdout(&stdout, &label);
@@ -1261,23 +1261,23 @@ fn validate_stdout(stdout: &str, label: &str) {
 
     let lines: Vec<&str> = stdout.lines().collect();
     // - config entries: one per engine
-    assert_eq!(contains(&lines, "|config|"), 3, "{}\n{}", &label, stdout);
+    assert_eq!(contains(&lines, "|config|"), 3, "{}\n{}", label, stdout);
     // - state entries: one per engine
-    assert_eq!(contains(&lines, "|state|1"), 3, "{}\n{}", &label, stdout);
+    assert_eq!(contains(&lines, "|state|1"), 3, "{}\n{}", label, stdout);
     // - details entries: one per engine
-    assert_eq!(contains(&lines, "|details|"), 3, "{}\n{}", &label, stdout);
+    assert_eq!(contains(&lines, "|details|"), 3, "{}\n{}", label, stdout);
 
     // - each expected instance names its edition in its details entry
     for name in expected_instances() {
         let prefix = format!("MSSQL_{name}|details|");
         let details: Vec<&&str> = lines.iter().filter(|s| s.starts_with(&prefix)).collect();
-        assert_eq!(details.len(), 1, "{}: {}\n{}", &label, &name, stdout);
+        assert_eq!(details.len(), 1, "{}: {}\n{}", label, name, stdout);
         let edition = details[0].rsplit('|').next().unwrap_or_default();
         assert!(
             edition.contains("Edition"),
             "{}: {}\n{}",
-            &label,
-            &name,
+            label,
+            name,
             stdout
         );
     }

@@ -361,7 +361,7 @@ impl SqlInstance {
                 .map(|p| p.value().to_string())
                 .unwrap_or("None".to_string()),
             self.alias.clone().unwrap_or("N/A".to_string().into()),
-            &self.id,
+            self.id,
             if self.tcp { "TCP" } else { "N/A" },
             self.version_table
                 .iter()
@@ -785,7 +785,7 @@ impl SqlInstance {
                     log::info!("Cache file {path:?} is new enough for {cache_age} cache_age",);
                     std::fs::read_to_string(&path)
                         .map_err(|e| {
-                            log::error!("{e} reading cache file {:?}", &path);
+                            log::error!("{e} reading cache file {:?}", path);
                             e
                         })
                         .ok()
@@ -2753,7 +2753,7 @@ fn determine_reconnect(
                 _ => {
                     log::info!(
                         "Add detected instance {} reconnect not required",
-                        &instance_builder.get_name()
+                        instance_builder.get_name()
                     );
                     (instance_builder, None)
                 }
@@ -3235,11 +3235,11 @@ mssql:
 
         assert_eq!(
             i.generate_bad_state_entry('.', "bad"),
-            format!("MSSQL_TEST_NAME.state.0.bad\n")
+            "MSSQL_TEST_NAME.state.0.bad\n"
         );
         assert_eq!(
             i.generate_good_state_entry('.'),
-            format!("MSSQL_TEST_NAME.state.1.\n")
+            "MSSQL_TEST_NAME.state.1.\n"
         );
     }
 

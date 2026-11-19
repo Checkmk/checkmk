@@ -59,13 +59,13 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
     let mut registry = config::Registry::from_file(&paths.registry_path).with_context(|| {
         format!(
             "Error while loading registered connections from {:?}.",
-            &paths.registry_path
+            paths.registry_path
         )
     })?;
     log::info!(
         "Loaded config from '{:?}', connection registry from '{:?}'",
-        &paths.config_path,
-        &paths.registry_path
+        paths.config_path,
+        paths.registry_path
     );
     // Loaded for every mode: the updater is an integral part of the controller,
     // not a subsystem the individual modes opt into. It may be adjusted later, but

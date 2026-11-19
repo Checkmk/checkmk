@@ -213,15 +213,10 @@ def _show_results(
             sys.stdout.write("- %r\n" % unknown_file_path)
 
 
-def _compute_bundle(
-    bundle_length: int, host_tree_paths: Sequence[_HostTreePath], transformed_count: int
-) -> Sequence[_HostTreePath]:
-    if not host_tree_paths:
-        return []
+def _compute_bundle_size(bundle_length: int, pending_count: int, transformed_count: int) -> int:
     if bundle_length > 0:
-        return host_tree_paths[:bundle_length]
-    total_count = len(host_tree_paths) + transformed_count
-    return host_tree_paths[: math.ceil(total_count / _NUMBER_OF_BUNDLES)]
+        return bundle_length
+    return math.ceil((pending_count + transformed_count) / _NUMBER_OF_BUNDLES)
 
 
 def _transform_host_tree_path(
@@ -235,6 +230,25 @@ def _transform_host_tree_path(
         duration=clock() - start,
         size=host_tree_path.stat.st_size,
     )
+
+
+def _transform_bundle(
+    logger: logging.Logger,
+    host_tree_paths: Sequence[_HostTreePath],
+    bundle_size: int,
+    clock: Callable[[], float],
+) -> Sequence[TransformationResult]:
+    transformation_results: list[TransformationResult] = []
+    for host_tree_path in host_tree_paths:
+        if len(transformation_results) >= bundle_size:
+            break
+        try:
+            transformation_results.append(_transform_host_tree_path(host_tree_path, clock))
+        except Exception:
+            logger.exception(
+                "Failed to transform %(path)s", {"path": host_tree_path.tree_path.legacy}
+            )
+    return transformation_results
 
 
 def _collect_selected_host_tree_paths_or_unknown_file_paths(
@@ -277,19 +291,15 @@ def transform_inventory_trees(
     transformation_results_store = TransformationResultsStore(omd_root)
     transformation_results = transformation_results_store.load()
 
-    if filter_host_names:
-        to_be_transformed = host_tree_paths
-    else:
-        to_be_transformed = _compute_bundle(
-            bundle_length, host_tree_paths, len(transformation_results)
-        )
-
-    new_transformation_results = []
-    for host_tree_path in to_be_transformed:
-        new_transformation_results.append(_transform_host_tree_path(host_tree_path, clock))
+    bundle_size = (
+        len(host_tree_paths)
+        if filter_host_names
+        else _compute_bundle_size(bundle_length, len(host_tree_paths), len(transformation_results))
+    )
+    new_transformation_results = _transform_bundle(logger, host_tree_paths, bundle_size, clock)
 
     if len_results := len(new_transformation_results):
         logger.info("Transformed %(tree_count)s inventory trees", {"tree_count": len_results})
-    transformation_results_store.save(list(transformation_results) + new_transformation_results)
+    transformation_results_store.save([*transformation_results, *new_transformation_results])
 
     return 0

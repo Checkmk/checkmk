@@ -4,17 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import os
 from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 
 import cmk.ccc.store
-from cmk.inventory.paths import TreePath
 from cmk.inventory.transformation.tree_files import (
-    _compute_bundle,
-    _HostTreePath,
+    _compute_bundle_size,
     show_transformation_results,
     transform_inventory_trees,
     TransformationResult,
@@ -189,19 +186,26 @@ def test_without_a_bundle_length_at_least_one_tree_is_transformed(tmp_path: Path
 
 
 def test_the_bundle_spreads_all_trees_including_the_transformed_ones() -> None:
-    pending = [
-        _HostTreePath(
-            host_name=f"host{index}",
-            tree_path=TreePath(
-                path=Path(f"host{index}.json"),
-                legacy=Path(f"host{index}"),
-            ),
-            stat=os.stat_result((0,) * 10),
-        )
-        for index in range(400)
-    ]
+    assert _compute_bundle_size(0, 400, 600) == 5
 
-    assert len(_compute_bundle(0, pending, 600)) == 5
+
+def test_a_tree_failing_to_transform_leaves_its_slot_to_the_next_tree(tmp_path: Path) -> None:
+    cmk.ccc.store.save_object_to_file(
+        tmp_path / "var/check_mk/inventory/broken",
+        {"not", "a", "tree"},
+    )
+    _save_legacy_inventory_trees(tmp_path, ["hostname"])
+
+    transform_inventory_trees(
+        logger=null_logger(),
+        omd_root=tmp_path,
+        bundle_length=1,
+        filter_host_names=[],
+        all_host_names=["broken", "hostname"],
+        clock=FakeClock(0.0),
+    )
+
+    assert (tmp_path / "var/check_mk/inventory/hostname.json").exists()
 
 
 def test_a_transformed_tree_is_not_overwritten_by_its_legacy_tree(tmp_path: Path) -> None:

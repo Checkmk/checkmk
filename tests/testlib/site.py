@@ -1396,7 +1396,7 @@ class Site:
                 try:
                     # Be generous: failing here ends the whole session, while waiting on a
                     # merely slow site costs seconds. The latch below caps this at one wait.
-                    self.wait_for_status_update(0, timeout=120)
+                    self._wait_until_running(timeout=120, stopped_timeout=10)
                     return
                 except TimeoutError:
                     self._failed_to_settle = True
@@ -1440,6 +1440,38 @@ class Site:
             interval=interval,
             condition_name=f"Site {self.id} reaching omd status {expected_status}",
         )
+
+    def _wait_until_running(
+        self, timeout: float, stopped_timeout: float, interval: float = 2
+    ) -> None:
+        """Wait until "omd status" reports the site as fully running (status 0).
+
+        A partially running site (status 2) is still starting or stopping and gets the full
+        `timeout`. A fully stopped site (status 1) only gets `stopped_timeout`: a restart
+        passes through that state briefly, but a site which stays stopped is not being
+        started by anyone and can never reach status 0. Leaving status 1 restarts that budget.
+        """
+        deadline = time.monotonic() + timeout
+        stopped_since: float | None = None
+        while True:
+            status = self.omd("status").returncode
+            if status == 0:
+                return
+            now = time.monotonic()
+            if status != 1:
+                stopped_since = None
+            elif stopped_since is None:
+                stopped_since = now
+            elif now - stopped_since > stopped_timeout:
+                raise TimeoutError(
+                    f"Site {self.id} stayed stopped (omd status 1) for {stopped_timeout} s"
+                )
+            if now > deadline:
+                raise TimeoutError(
+                    f"Site {self.id} did not reach omd status 0 within {timeout} s"
+                    f" (last status: {status})"
+                )
+            time.sleep(interval)
 
     def activate_changes_and_wait_for_site_restart(
         self,

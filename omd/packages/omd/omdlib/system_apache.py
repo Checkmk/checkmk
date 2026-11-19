@@ -4,10 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import enum
+import json
 import os
 import shlex
 import subprocess
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import NamedTuple
 
@@ -19,7 +22,10 @@ from omdlib.utils import is_containerized
 from omdlib.version_info import VersionInfo
 
 __all__ = [
+    "ApacheHookState",
+    "ApacheHookStatus",
     "ApacheSettings",
+    "apache_hook_status",
     "apache_settings",
     "register_with_system_apache",
     "unregister_from_system_apache",
@@ -38,6 +44,10 @@ _HOOK_HEADER = (
     "# This file is managed by 'omd' and will automatically be overwritten. "
     "Better do not edit manually\n"
 )
+
+# Records the settings the hook was written with, so 'omd_site_user check-apache-config' can tell
+# when the site's settings changed without root rewriting it
+_HOOK_SETTINGS_PREFIX = "# settings: "
 
 
 class ApacheSettings(NamedTuple):
@@ -272,10 +282,22 @@ def _forwarded_headers_directives(forwarded_headers: str) -> str:
     )
 
 
+def _hook_settings(settings: ApacheSettings) -> dict[str, str]:
+    hook_settings = {"APACHE_MODE": settings.mode}
+    if settings.proxies_site:
+        hook_settings |= {
+            "APACHE_TCP_ADDR": settings.tcp_addr,
+            "APACHE_TCP_PORT": settings.tcp_port,
+            "APACHE_FORWARDED_HEADERS": settings.forwarded_headers,
+        }
+    return hook_settings
+
+
 def _render_apache_hook(site_name: str, settings: ApacheSettings) -> str:
+    header = f"{_HOOK_SETTINGS_PREFIX}{json.dumps(_hook_settings(settings))}\n" + _HOOK_HEADER
     if not settings.proxies_site:
-        return _HOOK_HEADER
-    return _HOOK_HEADER + _render_proxy_config(
+        return header
+    return header + _render_proxy_config(
         site_name, settings.tcp_addr, settings.tcp_port, settings.forwarded_headers
     )
 
@@ -391,6 +413,60 @@ def create_apache_hook(apache_config: Path, site_name: str, settings: ApacheSett
     with open(apache_config, "w") as f:
         f.write(_render_apache_hook(site_name, settings))
     os.chmod(apache_config, 0o644)  # Ensure the site user can read the files created by root
+
+
+class ApacheHookState(enum.StrEnum):
+    UP_TO_DATE = "up-to-date"
+    CHANGED = "changed"
+    # Written without settings, like by earlier releases: nothing tells what changed
+    LEGACY = "legacy"
+    UNREADABLE = "unreadable"
+    # A site disabled with 'omd disable' has no hook on purpose, and 'omd update-apache-config'
+    # would enable it again
+    MISSING = "missing"
+    # Root wrote it by hand, and 'omd update-apache-config' would overwrite it
+    UNMANAGED = "unmanaged"
+
+
+@dataclass(frozen=True)
+class ApacheHookStatus:
+    state: ApacheHookState
+    # The settings the hook would be written with now, as far as they differ
+    changed: dict[str, str] = field(default_factory=dict)
+
+
+def _recorded_settings(hook: str) -> dict[str, object]:
+    for line in hook.splitlines():
+        if line.startswith(_HOOK_SETTINGS_PREFIX):
+            try:
+                recorded = json.loads(line.removeprefix(_HOOK_SETTINGS_PREFIX))
+            except ValueError:
+                return {}
+            return recorded if isinstance(recorded, dict) else {}
+    return {}
+
+
+def apache_hook_status(apache_config: Path, settings: ApacheSettings) -> ApacheHookStatus:
+    """Whether the hook still matches the settings of the site"""
+    try:
+        hook = apache_config.read_text()
+    except FileNotFoundError:
+        return ApacheHookStatus(ApacheHookState.MISSING)
+    except OSError:
+        return ApacheHookStatus(ApacheHookState.UNREADABLE)
+
+    if _HOOK_HEADER not in hook:
+        return ApacheHookStatus(ApacheHookState.UNMANAGED)
+    if not (recorded := _recorded_settings(hook)):
+        return ApacheHookStatus(ApacheHookState.LEGACY)
+
+    expected = _hook_settings(settings)
+    # The other settings only count in the mode the hook was written for
+    if recorded.get("APACHE_MODE") != settings.mode:
+        return ApacheHookStatus(ApacheHookState.CHANGED, {"APACHE_MODE": settings.mode})
+    if changed := {name: value for name, value in expected.items() if recorded.get(name) != value}:
+        return ApacheHookStatus(ApacheHookState.CHANGED, changed)
+    return ApacheHookStatus(ApacheHookState.UP_TO_DATE)
 
 
 def delete_apache_hook(apache_config: Path) -> None:

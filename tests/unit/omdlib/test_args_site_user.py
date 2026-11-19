@@ -7,6 +7,7 @@ import pytest
 
 from omdlib.args_site_user import (
     args_to_command_line,
+    CheckApacheConfig,
     Copy,
     Create,
     Move,
@@ -133,6 +134,7 @@ from omdlib.type_defs import Skeleton
             verbose=False,
             skeleton=Skeleton.ASK,
         ),
+        CheckApacheConfig(site="a", verbose=False),
     ],
 )
 def test_args_roundtrip(finalize: SiteArgs) -> None:

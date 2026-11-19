@@ -7,10 +7,14 @@
 import stat
 from pathlib import Path
 
+import pytest
 from pytest_mock import MockerFixture
 
 from omdlib.sites import is_disabled
 from omdlib.system_apache import (
+    apache_hook_status,
+    ApacheHookState,
+    ApacheHookStatus,
     ApacheSettings,
     create_apache_hook,
     delete_apache_hook,
@@ -250,3 +254,86 @@ def test_write_apache_listen_conf_ipv6(tmp_path: Path) -> None:
     content = (tmp_path / "etc/apache/listen-port.conf").read_text()
     assert "Listen [::1]:5000" in content
     assert "ServerName" not in content
+
+
+_MANAGED = "# This file is managed by 'omd' and will automatically be overwritten. Better do not edit manually\n"
+
+
+def test_hook_written_with_the_settings_is_up_to_date(tmp_path: Path) -> None:
+    apache_config = tmp_path / "unit.conf"
+    create_apache_hook(apache_config, "unit", _settings())
+
+    assert apache_hook_status(apache_config, _settings()) == ApacheHookStatus(
+        ApacheHookState.UP_TO_DATE
+    )
+
+
+@pytest.mark.parametrize(
+    "changed",
+    [
+        {"APACHE_TCP_ADDR": "127.0.0.2"},
+        {"APACHE_TCP_PORT": "5001"},
+        {"APACHE_FORWARDED_HEADERS": "manual"},
+        {"APACHE_TCP_ADDR": "127.0.0.2", "APACHE_TCP_PORT": "5001"},
+    ],
+)
+def test_hook_written_with_other_settings_has_changed(
+    tmp_path: Path, changed: dict[str, str]
+) -> None:
+    apache_config = tmp_path / "unit.conf"
+    create_apache_hook(apache_config, "unit", _settings())
+    site_settings = _settings(
+        addr=changed.get("APACHE_TCP_ADDR", "127.0.0.1"),
+        port=changed.get("APACHE_TCP_PORT", "5000"),
+        forwarded_headers=changed.get("APACHE_FORWARDED_HEADERS", "auto"),
+    )
+
+    assert apache_hook_status(apache_config, site_settings) == ApacheHookStatus(
+        ApacheHookState.CHANGED, changed
+    )
+
+
+@pytest.mark.parametrize("hook_mode, site_mode", [("own", "none"), ("none", "own")])
+def test_changed_mode_hides_the_other_settings(
+    tmp_path: Path, hook_mode: str, site_mode: str
+) -> None:
+    apache_config = tmp_path / "unit.conf"
+    create_apache_hook(apache_config, "unit", _settings(mode=hook_mode))
+
+    assert apache_hook_status(
+        apache_config, _settings(mode=site_mode, port="5001")
+    ) == ApacheHookStatus(ApacheHookState.CHANGED, {"APACHE_MODE": site_mode})
+
+
+@pytest.mark.parametrize(
+    "settings_line",
+    [
+        pytest.param("", id="no settings line"),
+        pytest.param("# settings: APACHE_MODE=own\n", id="no json"),
+        pytest.param("# settings: [1, 2]\n", id="no json object"),
+    ],
+)
+def test_managed_hook_without_settings_is_legacy(tmp_path: Path, settings_line: str) -> None:
+    apache_config = tmp_path / "unit.conf"
+    apache_config.write_text(f"{settings_line}{_MANAGED}")
+
+    assert apache_hook_status(apache_config, _settings()).state is ApacheHookState.LEGACY
+
+
+def test_missing_hook_is_reported_as_missing(tmp_path: Path) -> None:
+    assert apache_hook_status(tmp_path / "unit.conf", _settings()).state is ApacheHookState.MISSING
+
+
+def test_unreadable_hook_is_reported_as_unreadable(tmp_path: Path) -> None:
+    (tmp_path / "unit.conf").mkdir()
+
+    assert (
+        apache_hook_status(tmp_path / "unit.conf", _settings()).state is ApacheHookState.UNREADABLE
+    )
+
+
+def test_hook_not_written_by_omd_is_unmanaged(tmp_path: Path) -> None:
+    apache_config = tmp_path / "unit.conf"
+    apache_config.write_text("Include /omd/sites/unit/etc/apache/mode.conf\n")
+
+    assert apache_hook_status(apache_config, _settings()).state is ApacheHookState.UNMANAGED

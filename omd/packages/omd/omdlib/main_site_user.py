@@ -5,9 +5,18 @@
 
 from typing import assert_never
 
-from omdlib.args_site_user import Backup, Copy, Create, Move, parse_arguments, Restore
+from omdlib.args_site_user import (
+    Backup,
+    CheckApacheConfig,
+    Copy,
+    Create,
+    Move,
+    parse_arguments,
+    Restore,
+)
 from omdlib.backup import main_site_backup
 from omdlib.main import (
+    main_check_apache_config,
     main_finalize_copy,
     main_finalize_create,
     main_finalize_move,
@@ -31,6 +40,8 @@ def main() -> int:
             return main_finalize_copy(args)
         case Backup():
             return main_site_backup(args)
+        case CheckApacheConfig():
+            return main_check_apache_config(args)
         case _args:
             assert_never(_args)
 

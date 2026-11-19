@@ -9,6 +9,7 @@ import contextlib
 import errno
 import fcntl
 import io
+import json
 import os
 import pwd
 import re
@@ -33,7 +34,14 @@ from typing import (
 
 import omdlib
 import omdlib.backup
-from omdlib.args_site_user import args_to_command_line, Copy, Create, Move, Restore
+from omdlib.args_site_user import (
+    args_to_command_line,
+    CheckApacheConfig,
+    Copy,
+    Create,
+    Move,
+    Restore,
+)
 from omdlib.buffer import BufferWithCopy
 from omdlib.config_api import Config, ConfigHookChoices, Error, join_errors, PortHook
 from omdlib.config_hooks import (
@@ -92,6 +100,7 @@ from omdlib.skel_permissions import (
     skel_permissions_file_path,
 )
 from omdlib.system_apache import (
+    apache_hook_status,
     apache_settings,
     delete_apache_hook,
     register_with_system_apache,
@@ -2169,6 +2178,15 @@ def main_update_apache_config(
         True,
         verbose=global_opts.verbose,
     )
+
+
+def main_check_apache_config(args: CheckApacheConfig) -> int:
+    site_paths = SitePaths.from_site_name(args.site)
+    status = apache_hook_status(
+        site_paths.apache_conf, apache_settings(read_site_config(site_paths.home))
+    )
+    sys.stdout.write(json.dumps({"state": status.state, "changed": status.changed}) + "\n")
+    return 0
 
 
 def _get_conflict_mode(options: CommandOptions) -> Skeleton:

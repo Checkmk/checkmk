@@ -53,7 +53,13 @@ class Backup(_Shared):
     logs: bool
 
 
-type SiteArgs = Annotated[Create | Restore | Move | Copy | Backup, Field(discriminator="command")]
+class CheckApacheConfig(_Shared):
+    command: Literal["check-apache-config"] = "check-apache-config"
+
+
+type SiteArgs = Annotated[
+    Create | Restore | Move | Copy | Backup | CheckApacheConfig, Field(discriminator="command")
+]
 
 
 def args_to_command_line(args: SiteArgs, version: str = omdlib.__version__) -> list[str]:
@@ -88,6 +94,8 @@ def args_to_command_line(args: SiteArgs, version: str = omdlib.__version__) -> l
                 cmd_line.append("--agents")
             if args.logs:
                 cmd_line.append("--logs")
+        case CheckApacheConfig():
+            pass
     return cmd_line
 
 
@@ -100,7 +108,7 @@ def parse_arguments(sysv: Sequence[str] | None = None) -> SiteArgs:
     subparser = parser.add_subparsers(
         dest="command",
         required=True,
-        help="Internal tool used by `omd`. The command-line API is subject to change.",
+        help="Internal tool used by `omd` and the GUI. The command-line API is subject to change.",
     )
 
     shared_parser = argparse.ArgumentParser(add_help=False)
@@ -226,6 +234,12 @@ def parse_arguments(sysv: Sequence[str] | None = None) -> SiteArgs:
         default=False,
         action="store_true",
         help="Whether to backup logs",
+    )
+
+    subparser.add_parser(
+        "check-apache-config",
+        parents=[shared_parser],
+        help="Tell as JSON whether the system Apache hook matches the site settings.",
     )
 
     args = parser.parse_args(sysv)

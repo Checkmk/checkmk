@@ -29,7 +29,14 @@ function renderList(preview: ServicesPreview) {
 function resolved(services: Service[], extra: Partial<ServicesToCreate> = {}): ServicesPreview {
   return {
     status: 'resolved',
-    services: { services, total: services.length, clashes: [], complete: true, ...extra }
+    services: {
+      services,
+      total: services.length,
+      clashes: [],
+      appended_attributes: { all_attributes: true, attributes: [] },
+      complete: true,
+      ...extra
+    }
   }
 }
 

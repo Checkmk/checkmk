@@ -24,6 +24,7 @@ const SERVICES = {
   services: [{ host_name: 'web01', service_name: 'Latency GET', new_host: false, clash: null }],
   total: 1,
   clashes: [],
+  appended_attributes: { all_attributes: true, attributes: [] },
   complete: true
 }
 

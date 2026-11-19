@@ -54,7 +54,13 @@ const server = useMswServer(
     })
   ),
   http.post(RESOLVE_SERVICES_URL, () =>
-    HttpResponse.json({ services: [], total: 0, clashes: [], complete: true })
+    HttpResponse.json({
+      services: [],
+      total: 0,
+      clashes: [],
+      appended_attributes: { all_attributes: true, attributes: [] },
+      complete: true
+    })
   ),
   http.post(OPENTELEMETRY_DATA_URL, () => HttpResponse.json({ hosts: [] }))
 )
@@ -305,6 +311,7 @@ function serveClash(): void {
             message: 'A service named "Latency" already exists on host "pod-cart".'
           }
         ],
+        appended_attributes: { all_attributes: false, attributes: [] },
         complete: true
       })
     )

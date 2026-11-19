@@ -158,6 +158,7 @@ const WEB01_SERVICE: ServicesPreview = {
     ],
     total: 1,
     clashes: [],
+    appended_attributes: { all_attributes: true, attributes: [] },
     complete: true
   }
 }

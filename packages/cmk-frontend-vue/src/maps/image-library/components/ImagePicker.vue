@@ -143,10 +143,6 @@ function select(name: string) {
 </template>
 
 <style scoped>
-.maps-image-picker > * + * {
-  margin-top: var(--dimension-4);
-}
-
 .maps-image-picker__selected {
   display: flex;
   align-items: center;
@@ -204,6 +200,7 @@ function select(name: string) {
 
 .maps-image-picker__panel {
   overflow: hidden;
+  margin-top: var(--dimension-4);
   background: var(--ux-theme-3);
   border-radius: var(--border-radius);
   box-shadow: 0 0 0 1px var(--default-border-color);

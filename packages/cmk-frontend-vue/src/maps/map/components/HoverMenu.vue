@@ -631,12 +631,7 @@ function fmtMetricValue(m: PerfMetric): string {
   margin-top: var(--dimension-5);
 }
 
-.maps-hover-menu__perfometer > * + * {
-  margin-top: var(--dimension-3);
-}
-
 .maps-hover-menu__perfometer-label {
-  margin-bottom: var(--dimension-3);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
   color: var(--font-color);
@@ -644,6 +639,7 @@ function fmtMetricValue(m: PerfMetric): string {
 
 .maps-hover-menu__perfometer-row {
   display: flex;
+  margin-top: var(--dimension-3);
   overflow: hidden;
   height: 12px;
   border-radius: var(--border-radius);
@@ -659,16 +655,18 @@ function fmtMetricValue(m: PerfMetric): string {
   margin-top: var(--dimension-5);
 }
 
-.maps-hover-menu__metrics > * + * {
-  margin-top: var(--dimension-4);
-}
-
 .maps-hover-menu__metric-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--dimension-3);
   font-size: var(--font-size-small);
+}
+
+/* A class, not "> * + *": a universal sibling rule makes the browser restyle
+   the whole map whenever an object leaves it. */
+.maps-hover-menu__metric-head:not(:first-child) {
+  margin-top: var(--dimension-4);
 }
 
 .maps-hover-menu__metric-label {

@@ -127,10 +127,6 @@ function removeOrCancel() {
 </template>
 
 <style scoped>
-.maps-background-image-upload > * + * {
-  margin-top: var(--dimension-4);
-}
-
 .maps-background-image-upload__preview {
   display: flex;
   align-items: center;

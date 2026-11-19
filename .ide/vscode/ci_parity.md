@@ -142,6 +142,4 @@ Achieve the same outcome locally in the IDE as with Bazel in CI.
 ## Recommended Workflow
 
 1. Use VSCode formatting/linting on save for fast feedback.
-2. Before committing, run `bazel run //:format <changed-paths>` to ensure CI-identical formatting.
-3. Run `bazel lint --fix` to catch lint issues that VSCode extensions might miss.
-4. For Python type checking, run `bazel build --config=mypy //path:target` for CI-identical results.
+2. Before pushing, run the checks in `BAZEL.md`: they are CI-identical.

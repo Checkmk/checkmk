@@ -12,6 +12,7 @@ from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
+    MultiSiteCollectionExtensions,
     TitledDomainObjectModel,
 )
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
@@ -96,4 +97,7 @@ class DowntimeCollectionModel(DomainObjectCollectionModel):
     value: list[DowntimeObjectModel] = api_field(
         description="A list of downtime objects.",
         example=[],
+    )
+    extensions: MultiSiteCollectionExtensions = api_field(  # type: ignore[assignment]
+        description="Additional attributes alongside the collection."
     )

@@ -390,6 +390,15 @@ _REDOC_API_DESCRIPTION = """
     You can find an introduction to basic monitoring principles including host and service status in the
     [Checkmk guide](https://docs.checkmk.com/latest/en/monitoring_basics.html).
 
+    ## Unreachable sites
+
+    In a distributed setup, the objects of a site that was asked and could not be reached are
+    missing from a list of status data. In that case the lists of comments, downtimes and current
+    Event Console events, and in the unstable version the lists of historical Event Console events
+    and of availability, set `extensions.incomplete` to `true` and name these sites under
+    `extensions.unreachable_sites`. The lists of hosts and services name the sites, without
+    `incomplete`. No other endpoint has `extensions.incomplete` or `extensions.unreachable_sites`.
+
     ## Filter expressions
 
     A *filter expression* is a recursively defined structure containing *binary expression nodes*,

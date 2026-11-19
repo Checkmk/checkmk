@@ -25,6 +25,7 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.endpoint_link import link_to_endpoint
+from cmk.gui.openapi.framework.model.base_models import MultiSiteCollectionExtensions
 from cmk.gui.openapi.framework.model.common_fields import (
     AnnotatedHostName,
     query_expression_validator,
@@ -97,6 +98,8 @@ def show_comments_v1(
             detail="You set collection_name to host but the provided filtering parameters will return only service comments.",
         )
 
+    unreachable_sites = sites.unreachable_sites([site_id] if site_id is not None else None)
+
     return CommentCollectionModel(
         id="comment",
         domainType="comment",
@@ -111,7 +114,7 @@ def show_comments_v1(
             )
         ],
         value=[serialize_comment(comment) for _, comment in sorted(comments_dict.items())],
-        extensions={},
+        extensions=MultiSiteCollectionExtensions.create(unreachable_sites),
     )
 
 

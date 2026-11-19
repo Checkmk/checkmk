@@ -6,6 +6,7 @@
 import datetime as dt
 from collections.abc import Iterable
 
+from cmk.ccc.site import SiteId
 from cmk.gui.openapi.api_endpoints.downtime.models.response_models import (
     DowntimeCollectionModel,
     DowntimeExtensionsModel,
@@ -17,7 +18,7 @@ from cmk.gui.openapi.api_endpoints.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.endpoint_link import link_to_endpoint
 from cmk.gui.openapi.framework.model import ApiOmitted
-from cmk.gui.openapi.framework.model.base_models import LinkModel
+from cmk.gui.openapi.framework.model.base_models import LinkModel, MultiSiteCollectionExtensions
 from cmk.livestatus_client.queries import ResultRow
 from cmk.web.utils import permission_verification as permissions
 
@@ -112,7 +113,11 @@ def serialize_single_downtime(
 
 
 def serialize_downtimes(
-    downtimes: Iterable[ResultRow], *, host_url: str, version: APIVersion
+    downtimes: Iterable[ResultRow],
+    *,
+    host_url: str,
+    version: APIVersion,
+    unreachable_sites: list[SiteId],
 ) -> DowntimeCollectionModel:
     return DowntimeCollectionModel(
         id="downtime",
@@ -130,5 +135,5 @@ def serialize_downtimes(
             serialize_single_downtime(downtime, host_url=host_url, version=version)
             for downtime in downtimes
         ],
-        extensions={},
+        extensions=MultiSiteCollectionExtensions.create(unreachable_sites),
     )

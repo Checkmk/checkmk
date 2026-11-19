@@ -109,10 +109,14 @@ def show_downtimes_v1(
     if service_description is not None:
         q = q.filter(Downtimes.service_description.contains(service_description))
 
+    only_sites = [site_id] if site_id is not None else None
+    downtimes = q.fetchall(sites.live(), include_site_ids=True, only_sites=only_sites)
+
     return serialize_downtimes(
-        q.fetchall(sites.live(), True, [site_id] if site_id is not None else None),
+        downtimes,
         host_url=api_context.host_url,
         version=api_context.version,
+        unreachable_sites=sites.unreachable_sites(only_sites),
     )
 
 

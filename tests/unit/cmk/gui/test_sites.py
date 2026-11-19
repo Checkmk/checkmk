@@ -53,6 +53,28 @@ def test_only_sites_restores_the_enclosing_restriction(
         assert sites.live().only_sites == [SiteId("local")]
 
 
+@pytest.mark.usefixtures("load_config")
+@pytest.mark.parametrize(
+    "only_sites, expected",
+    [
+        pytest.param(None, [SiteId("local"), SiteId("remote")], id="no filter"),
+        pytest.param([], [SiteId("local"), SiteId("remote")], id="empty filter"),
+        pytest.param([SiteId("remote")], [SiteId("remote")], id="dead site requested"),
+        pytest.param([SiteId("NO_SITE")], [], id="dead site not requested"),
+    ],
+)
+def test_unreachable_sites_names_dead_sites_among_the_requested_ones(
+    mock_livestatus: MockLiveStatusConnection,
+    only_sites: list[SiteId] | None,
+    expected: list[SiteId],
+) -> None:
+    mock_livestatus.make_site_unreachable("remote")
+    mock_livestatus.make_site_unreachable("local")
+
+    with mock_livestatus():
+        assert sites.unreachable_sites(only_sites) == expected
+
+
 def _site_config(site_id: SiteId, alias: str) -> SiteConfiguration:
     return SiteConfiguration(
         id=site_id,

@@ -8,6 +8,7 @@ from typing import Literal
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
+    MultiSiteCollectionExtensions,
     TitledDomainObjectModel,
 )
 
@@ -48,4 +49,7 @@ class CommentCollectionModel(DomainObjectCollectionModel):
     )
     value: list[CommentObjectModel] = api_field(
         description="A list of comment objects.", example=[]
+    )
+    extensions: MultiSiteCollectionExtensions = api_field(  # type: ignore[assignment]
+        description="Additional attributes alongside the collection."
     )

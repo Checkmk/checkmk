@@ -35,6 +35,7 @@ from cmk.livestatus_client import (
     lqencode,
     MKLivestatusQueryError,
     MultiSiteConnection,
+    OnlySites,
     sanitize_site_configuration,
     site_config_for_livestatus,
     SiteConfigurations,
@@ -480,6 +481,15 @@ def only_sites(sites: None | list[SiteId] | SiteId) -> Iterator[None]:
 
     with site_restricted_connection(live(), sites):
         yield
+
+
+def unreachable_sites(only_sites: OnlySites) -> list[SiteId]:
+    """The dead sites among the queried ones. Call it after the query was consumed."""
+    return [
+        site_id
+        for site_id in sorted(live().dead_sites())
+        if not only_sites or site_id in only_sites
+    ]
 
 
 @contextmanager

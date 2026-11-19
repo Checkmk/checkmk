@@ -8,6 +8,7 @@
 from collections.abc import Mapping
 from typing import Literal
 
+from cmk.ccc.site import SiteId
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.restful_objects.constructors import link_rel
 from cmk.gui.openapi.restful_objects.type_defs import LinkRelation
@@ -164,6 +165,22 @@ class DomainObjectCollectionModel(LinkableModel):
         description="Additional attributes alongside the collection.",
         default_factory=ApiOmitted,
     )
+
+
+@api_model
+class MultiSiteCollectionExtensions:
+    unreachable_sites: list[SiteId] = api_field(
+        description="The IDs of the sites that could not be reached. Their objects are missing from the collection.",
+        example=["remote_1"],
+    )
+    incomplete: bool = api_field(
+        description="Whether objects are missing from the collection. True when a site could not be reached.",
+        example=True,
+    )
+
+    @classmethod
+    def create(cls, unreachable_sites: list[SiteId]) -> MultiSiteCollectionExtensions:
+        return cls(unreachable_sites=unreachable_sites, incomplete=bool(unreachable_sites))
 
 
 @api_model

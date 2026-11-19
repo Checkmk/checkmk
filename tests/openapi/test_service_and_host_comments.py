@@ -93,7 +93,20 @@ def test_get_comments_that_dont_exist(
             expect_ok=False,
         )
     assert resp.json["domainType"] == DOMAIN_TYPE
-    assert resp.json["extensions"] == {}
+    assert resp.json["extensions"] == {"unreachable_sites": [], "incomplete": False}
+
+
+def test_get_comments_names_a_site_that_does_not_answer(
+    mock_livestatus: MockLiveStatusConnection, clients: ClientRegistry
+) -> None:
+    mock_livestatus.add_table("comments", [])
+    mock_livestatus.make_site_unreachable("remote")
+    mock_livestatus.expect_query(["GET comments"], match_type="loose")
+
+    with mock_livestatus:
+        resp = clients.Comment.get_all()
+
+    assert resp.json["extensions"] == {"unreachable_sites": ["remote"], "incomplete": True}
 
 
 def test_comment_params_execption(

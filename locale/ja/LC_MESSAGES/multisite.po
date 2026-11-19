@@ -6456,6 +6456,10 @@ msgstr "エージェントタイプ"
 msgid "Agent update status"
 msgstr "エージェントの更新ステータス"
 
+#, fuzzy
+msgid "Agent updater"
+msgstr "エージェントの更新"
+
 msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr "エージェントアップデーター(Linux、Windows、Solaris)"
 
@@ -6481,6 +6485,15 @@ msgstr "ホスト名 %(host_name)s のエージェント更新が無効："
 
 msgid "Agent updates are enabled"
 msgstr "エージェントの更新が有効になっている"
+
+#, fuzzy
+msgid "Agent updates are not enabled."
+msgstr "エージェントの更新が有効になっている"
+
+#, fuzzy
+msgid "Agent updates use the Agent Controller only."
+msgstr ""
+"ローカルエージェントのデータアクセスをエージェントコントローラに制限する"
 
 msgid "Agent user"
 msgstr "エージェントユーザー"
@@ -6809,6 +6822,15 @@ msgstr "アラートマネージャーのルール状態（サマリー）"
 
 msgid "Alerts"
 msgstr "アラート"
+
+msgid ""
+"Alerts are sent again on every execution of the plug-in until this period "
+"has passed since they were first sent, so that none are lost if the agent is "
+"called more often than the SAP system host is checked. The monitoring site "
+"processes every alert only once. Set it to at least the check interval of "
+"the SAP system hosts. Longer periods increase the amount of transmitted "
+"data. If not set, one hour is used."
+msgstr ""
 
 msgid "Alerts for items scheduled for deletion"
 msgstr "削除予定の項目に対するアラート"
@@ -11213,9 +11235,6 @@ msgid "Built-in icon visibility"
 msgstr "ビルトインアイコンの可視性"
 
 msgid "Built-in images cannot be deleted."
-msgstr "ビルトインの画像は削除できません。"
-
-msgid "Built-in images cannot be overwritten."
 msgstr "ビルトインの画像は削除できません。"
 
 msgid "Built-in time periods cannot be modified"
@@ -57697,6 +57716,10 @@ msgstr ""
 "サイト %(site_id)s について、サイト固有の設定変数 `%(varname)s` を変更しまし"
 "た。"
 
+#, fuzzy, python-format
+msgid "Removed some files of extension package %(name)s %(version)s"
+msgstr "削除された拡張パッケージ %(name)s %(version)s"
+
 #, python-format
 msgid "Removed tag group %(message)s (%(del_id)s)"
 msgstr "タググループ %(message)s (%(del_id)s)を削除しました"
@@ -58804,6 +58827,10 @@ msgid "Retention intervals for HW/SW inventory entities"
 msgstr "HW/SWインベントリーエンティティの保持期間"
 
 msgid "Retention period"
+msgstr "保存期間"
+
+#, fuzzy
+msgid "Retention period of alerts"
 msgstr "保存期間"
 
 msgid "Retention period:"
@@ -64595,6 +64622,13 @@ msgstr ""
 "は常に UTF-8 エンコーディングを想定しています。他のエンコーディングはここで宣"
 "言できます"
 
+#, python-format
+msgid ""
+"Some files of the package could not be removed: %(e)s. All other files of "
+"the package are removed, but the package is still enabled. Fix the cause and "
+"disable the package again."
+msgstr ""
+
 msgid ""
 "Some firewalls are not capable of dealing with a few thousand ping packets "
 "in one millisecond. With this setting, you can force a small wait time "
@@ -70122,6 +70156,10 @@ msgstr ""
 "スを「<i>OK</i>」に設定してください。これにより、不一致はサービスの詳細画面で"
 "のみ表示されるようになります。"
 
+#, python-format
+msgid "The agent updater rule set still deploys the legacy updater: %(modes)s."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "The agent will automatically discover Podman sockets on the system. This "
@@ -72285,6 +72323,17 @@ msgstr "var/checkmk/crashes にある各タイプの最新のクラッシュダ�
 #, fuzzy
 msgid "The latest licensed active time series count of the data backend"
 msgstr "メトリックバックエンドの、認可済みアクティブな時系列データ数"
+
+#, python-format
+msgid ""
+"The legacy agent updater is deprecated. The Agent Controller updates the "
+"agents itself, so the activation mode <i>Enable agent updates using the "
+"Agent Controller</i> is the only one that does without the legacy updater. "
+"The two other enabling modes still deploy it, either beside the Agent "
+"Controller or on its own. Move the rules of the rule set <a "
+"href=\"%(url)s\">Agent updater (Linux, Windows, Solaris)</a> to the Agent "
+"Controller before the legacy updater is removed."
+msgstr ""
 
 msgid ""
 "The levels are not applied to jobs that have never run, or to disabled jobs, "
@@ -96140,7 +96189,9 @@ msgstr "データを取得用のntopngユーザー名"
 msgid "number of processes"
 msgstr "プロセス数"
 
-msgid "object_filter must be one or more 'Filter: …' lines."
+#, fuzzy, python-format
+msgid ""
+"object_filter must be one or more 'Filter: …' lines, at most %(max)d bytes."
 msgstr "object_filter には、1行以上の「Filter: …」行を指定する必要があります。"
 
 msgid "of Service"
@@ -97978,6 +98029,10 @@ msgid "No data in this timeframe."
 msgstr "このグラフにはまだ指標がありません。"
 
 #, fuzzy
+msgid "Embedded page"
+msgstr "埋め込み画像"
+
+#, fuzzy
 msgid "Invalid URL"
 msgstr "無効なURLが指定されました"
 
@@ -99180,6 +99235,14 @@ msgid "Search custom graphs ..."
 msgstr "新しいカスタムグラフ..."
 
 #, fuzzy
+msgid "No sites available."
+msgstr "利用可能なユーザーはいません"
+
+#, fuzzy
+msgid "No contact groups available."
+msgstr "利用可能なオプションはありません"
+
+#, fuzzy
 msgid "Enter a title."
 msgstr "有限の数値を入力してください。"
 
@@ -99205,22 +99268,6 @@ msgstr "少なくとも1つのサイトを選択してください。"
 #, fuzzy
 msgid "Select at least one contact group."
 msgstr "少なくとも1つの連絡先グループを追加してください。"
-
-#, fuzzy
-msgid "No sites available."
-msgstr "利用可能なユーザーはいません"
-
-#, fuzzy
-msgid "No contact groups available."
-msgstr "利用可能なオプションはありません"
-
-#, fuzzy
-msgid "Could not load the sites."
-msgstr "結果を読み込めませんでした"
-
-#, fuzzy
-msgid "Could not load the contact groups."
-msgstr "この接続を削除することはできません。"
 
 #, fuzzy
 msgid "The graph could not be saved."
@@ -100078,13 +100125,6 @@ msgstr "ホスト設定"
 msgid "Toggle %{title}"
 msgstr "%{ title } を切り替える"
 
-msgid ""
-"Show only settings configured for this site whether globally or as a site "
-"override"
-msgstr ""
-"グローバル設定かサイトオーバーライドかを問わず、このサイト用に設定された設定"
-"のみを表示する"
-
 msgid "Show only settings modified globally for all sites"
 msgstr "すべてのサイトに対してグローバルに変更された設定のみを表示する"
 
@@ -100103,16 +100143,32 @@ msgid "Show all settings"
 msgstr "全てのトピックを表示"
 
 #, fuzzy
-msgid "Modified only"
+msgid "Modified globally"
 msgstr "読み取り専用モード"
 
 #, fuzzy
-msgid "Site overrides only"
-msgstr "サイトの概要"
+msgid "Overridden by site"
+msgstr "ユーザーによるオーバーライド"
+
+#, fuzzy
+msgid "Overridden by sites"
+msgstr "ユーザーによるオーバーライド"
+
+#, fuzzy
+msgid "%{count} modified globally"
+msgstr "カウント"
 
 #, fuzzy
 msgid "%{count} modified"
 msgstr "カウント"
+
+#, fuzzy
+msgid "Show only the settings modified globally"
+msgstr "すべてのサイトに対してグローバルに変更された設定のみを表示する"
+
+#, fuzzy
+msgid "Show only the modified settings"
+msgstr "変更した設定のみを表示する"
 
 msgid "%{count} overridden on this site"
 msgstr "このサイトでは%{count}が上書きされています"
@@ -100128,16 +100184,16 @@ msgid "Show only the settings the sites override"
 msgstr "このサイトが上書きする設定のみを表示"
 
 #, fuzzy
-msgid "Show only the modified settings"
-msgstr "変更した設定のみを表示する"
+msgid "modified"
+msgstr "ファイルが変更されました"
+
+#, fuzzy
+msgid "overridden"
+msgstr "上書き"
 
 #, fuzzy
 msgid "Edit %{title}"
 msgstr "%(title)sを編集する"
-
-#, fuzzy
-msgid "modified"
-msgstr "ファイルが変更されました"
 
 #, fuzzy
 msgid "Could not reach the server."
@@ -101463,6 +101519,11 @@ msgstr "アップロードされたファイル"
 msgid "Import failed"
 msgstr "iCalendarをインポートする"
 
+msgid ""
+"The background image %{image} is not part of the map file. Upload it in the "
+"map's settings under Background image."
+msgstr ""
+
 #, fuzzy
 msgid "Yours"
 msgstr "時間"
@@ -101553,6 +101614,10 @@ msgid ""
 msgstr ""
 "画像「%{name}」は、%{count}個のマップで参照されています。これを削除すると、そ"
 "れらのマップから画像が削除されます。続行しますか？"
+
+msgid "%{n} of them is a map you cannot see."
+msgid_plural "%{n} of them are maps you cannot see."
+msgstr[0] ""
 
 #, fuzzy
 msgid "Delete failed"
@@ -109114,6 +109179,28 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "取り上げるトピック"
+
+#~ msgid "Built-in images cannot be overwritten."
+#~ msgstr "ビルトインの画像は削除できません。"
+
+#, fuzzy
+#~ msgid "Could not load the sites."
+#~ msgstr "結果を読み込めませんでした"
+
+#, fuzzy
+#~ msgid "Could not load the contact groups."
+#~ msgstr "この接続を削除することはできません。"
+
+#~ msgid ""
+#~ "Show only settings configured for this site whether globally or as a site "
+#~ "override"
+#~ msgstr ""
+#~ "グローバル設定かサイトオーバーライドかを問わず、このサイト用に設定された設"
+#~ "定のみを表示する"
+
+#, fuzzy
+#~ msgid "Site overrides only"
+#~ msgstr "サイトの概要"
 
 #~ msgid ""
 #~ "OMD_SITE environment variable not set. You can only execute this in an "

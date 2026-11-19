@@ -6667,6 +6667,10 @@ msgstr "Tipo di agente"
 msgid "Agent update status"
 msgstr "Stato di aggiornamento dell'agente"
 
+#, fuzzy
+msgid "Agent updater"
+msgstr "Aggiornamenti dell'agente"
+
 msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr "Agente di aggiornamento (Linux, Windows, Solaris)"
 
@@ -6693,6 +6697,15 @@ msgstr ""
 
 msgid "Agent updates are enabled"
 msgstr "Gli aggiornamenti dell'agente sono abilitati"
+
+#, fuzzy
+msgid "Agent updates are not enabled."
+msgstr "Gli aggiornamenti dell'agente sono abilitati"
+
+#, fuzzy
+msgid "Agent updates use the Agent Controller only."
+msgstr ""
+"Limitare l'accesso ai dati dell'agente locale al controllore dell'agente"
 
 msgid "Agent user"
 msgstr "Utente dell'agente"
@@ -7028,6 +7041,15 @@ msgstr "Stati delle regole di Alertmanager (Sintesi)"
 
 msgid "Alerts"
 msgstr "Avvisi"
+
+msgid ""
+"Alerts are sent again on every execution of the plug-in until this period "
+"has passed since they were first sent, so that none are lost if the agent is "
+"called more often than the SAP system host is checked. The monitoring site "
+"processes every alert only once. Set it to at least the check interval of "
+"the SAP system hosts. Longer periods increase the amount of transmitted "
+"data. If not set, one hour is used."
+msgstr ""
 
 #, fuzzy
 msgid "Alerts for items scheduled for deletion"
@@ -11839,10 +11861,6 @@ msgstr "Visibilità delle icone integrata"
 
 #, fuzzy
 msgid "Built-in images cannot be deleted."
-msgstr "I periodi di tempo incorporati non possono essere modificati"
-
-#, fuzzy
-msgid "Built-in images cannot be overwritten."
 msgstr "I periodi di tempo incorporati non possono essere modificati"
 
 msgid "Built-in time periods cannot be modified"
@@ -61393,6 +61411,10 @@ msgid ""
 "%(site_id)s."
 msgstr "Cambiata la variabile di configurazione specifica del sito %s in %s."
 
+#, fuzzy, python-format
+msgid "Removed some files of extension package %(name)s %(version)s"
+msgstr "Rimosso il pacchetto di estensioni %(name)s %(version)s"
+
 #, python-format
 msgid "Removed tag group %(message)s (%(del_id)s)"
 msgstr "Rimosso il gruppo di tag %(message)s (%(del_id)s)"
@@ -62558,6 +62580,10 @@ msgid "Retention intervals for HW/SW inventory entities"
 msgstr "Intervalli di conservazione per le entità dell'inventario HW/SW"
 
 msgid "Retention period"
+msgstr "Periodo di conservazione"
+
+#, fuzzy
+msgid "Retention period of alerts"
 msgstr "Periodo di conservazione"
 
 #, fuzzy
@@ -68645,6 +68671,13 @@ msgstr ""
 "Alcuni dispositivi inviano testi in caratteri non ASCII. Checkmk assume "
 "sempre la codifica UTF-8. È possibile dichiarare altre codifiche qui"
 
+#, python-format
+msgid ""
+"Some files of the package could not be removed: %(e)s. All other files of "
+"the package are removed, but the package is still enabled. Fix the cause and "
+"disable the package again."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Some firewalls are not capable of dealing with a few thousand ping packets "
@@ -74437,6 +74470,10 @@ msgid ""
 "service details."
 msgstr ""
 
+#, python-format
+msgid "The agent updater rule set still deploys the legacy updater: %(modes)s."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "The agent will automatically discover Podman sockets on the system. This "
@@ -76547,6 +76584,17 @@ msgstr ""
 "crashes"
 
 msgid "The latest licensed active time series count of the data backend"
+msgstr ""
+
+#, python-format
+msgid ""
+"The legacy agent updater is deprecated. The Agent Controller updates the "
+"agents itself, so the activation mode <i>Enable agent updates using the "
+"Agent Controller</i> is the only one that does without the legacy updater. "
+"The two other enabling modes still deploy it, either beside the Agent "
+"Controller or on its own. Move the rules of the rule set <a "
+"href=\"%(url)s\">Agent updater (Linux, Windows, Solaris)</a> to the Agent "
+"Controller before the legacy updater is removed."
 msgstr ""
 
 msgid ""
@@ -101678,7 +101726,9 @@ msgstr "nome utente ntopng per acquisire i dati per"
 msgid "number of processes"
 msgstr "numero di processi"
 
-msgid "object_filter must be one or more 'Filter: …' lines."
+#, python-format
+msgid ""
+"object_filter must be one or more 'Filter: …' lines, at most %(max)d bytes."
 msgstr ""
 
 msgid "of Service"
@@ -103587,6 +103637,10 @@ msgid "No data in this timeframe."
 msgstr "Nessuna metrica in questo grafico ancora."
 
 #, fuzzy
+msgid "Embedded page"
+msgstr "Immagine incorporata"
+
+#, fuzzy
 msgid "Invalid URL"
 msgstr "URL dato non valido"
 
@@ -104893,6 +104947,14 @@ msgid "Search custom graphs ..."
 msgstr "Nuovo grafico personalizzato..."
 
 #, fuzzy
+msgid "No sites available."
+msgstr "Porte disponibili"
+
+#, fuzzy
+msgid "No contact groups available."
+msgstr "Nessuna informazione disponibile"
+
+#, fuzzy
 msgid "Enter a title."
 msgstr "Nome del file non valido"
 
@@ -104917,22 +104979,6 @@ msgstr "Seleziona almeno un elemento"
 #, fuzzy
 msgid "Select at least one contact group."
 msgstr "Si prega di aggiungere almeno un nodo figlio."
-
-#, fuzzy
-msgid "No sites available."
-msgstr "Porte disponibili"
-
-#, fuzzy
-msgid "No contact groups available."
-msgstr "Nessuna informazione disponibile"
-
-#, fuzzy
-msgid "Could not load the sites."
-msgstr "Non è possibile eliminare questa connessione."
-
-#, fuzzy
-msgid "Could not load the contact groups."
-msgstr "Non è possibile eliminare questa connessione."
 
 #, fuzzy
 msgid "The graph could not be saved."
@@ -105833,11 +105879,6 @@ msgstr "Impostazioni dell'host"
 msgid "Toggle %{title}"
 msgstr "Allineare le voci del registro"
 
-msgid ""
-"Show only settings configured for this site whether globally or as a site "
-"override"
-msgstr ""
-
 #, fuzzy
 msgid "Show only settings modified globally for all sites"
 msgstr "Assegnare i servizi al seguente cluster:"
@@ -105859,16 +105900,32 @@ msgid "Show all settings"
 msgstr "Mostra tutti gli argomenti"
 
 #, fuzzy
-msgid "Modified only"
+msgid "Modified globally"
 msgstr "Modalità di sola lettura"
 
 #, fuzzy
-msgid "Site overrides only"
-msgstr "Panoramica del sito"
+msgid "Overridden by site"
+msgstr "Sovrascrittura da parte degli utenti"
+
+#, fuzzy
+msgid "Overridden by sites"
+msgstr "Sovrascrittura da parte degli utenti"
+
+#, fuzzy
+msgid "%{count} modified globally"
+msgstr "contando"
 
 #, fuzzy
 msgid "%{count} modified"
 msgstr "contando"
+
+#, fuzzy
+msgid "Show only the settings modified globally"
+msgstr "Assegnare i servizi al seguente cluster:"
+
+#, fuzzy
+msgid "Show only the modified settings"
+msgstr "Mostra solo le impostazioni modificate"
 
 #, fuzzy
 msgid "%{count} overridden on this site"
@@ -105887,16 +105944,16 @@ msgid "Show only the settings the sites override"
 msgstr "Assegnare i servizi al seguente cluster:"
 
 #, fuzzy
-msgid "Show only the modified settings"
-msgstr "Mostra solo le impostazioni modificate"
+msgid "modified"
+msgstr "File modificato"
+
+#, fuzzy
+msgid "overridden"
+msgstr "Panoramica"
 
 #, fuzzy
 msgid "Edit %{title}"
 msgstr "Modifica %(title)s"
-
-#, fuzzy
-msgid "modified"
-msgstr "File modificato"
 
 #, fuzzy
 msgid "Could not reach the server."
@@ -107230,6 +107287,11 @@ msgstr "Carica il file MIB"
 msgid "Import failed"
 msgstr "Importazione di iCalendar"
 
+msgid ""
+"The background image %{image} is not part of the map file. Upload it in the "
+"map's settings under Background image."
+msgstr ""
+
 #, fuzzy
 msgid "Yours"
 msgstr "Ore"
@@ -107322,6 +107384,11 @@ msgid ""
 "The image \"%{name}\" is referenced by %{count} map(s). Deleting it will "
 "leave those maps without an image. Continue?"
 msgstr ""
+
+msgid "%{n} of them is a map you cannot see."
+msgid_plural "%{n} of them are maps you cannot see."
+msgstr[0] ""
+msgstr[1] ""
 
 #, fuzzy
 msgid "Delete failed"
@@ -114662,6 +114729,22 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Prova scaduta"
+
+#, fuzzy
+#~ msgid "Built-in images cannot be overwritten."
+#~ msgstr "I periodi di tempo incorporati non possono essere modificati"
+
+#, fuzzy
+#~ msgid "Could not load the sites."
+#~ msgstr "Non è possibile eliminare questa connessione."
+
+#, fuzzy
+#~ msgid "Could not load the contact groups."
+#~ msgstr "Non è possibile eliminare questa connessione."
+
+#, fuzzy
+#~ msgid "Site overrides only"
+#~ msgstr "Panoramica del sito"
 
 #~ msgid ""
 #~ "OMD_SITE environment variable not set. You can only execute this in an "

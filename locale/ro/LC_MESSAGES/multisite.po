@@ -6779,6 +6779,10 @@ msgstr "Tipul de agent"
 msgid "Agent update status"
 msgstr "Starea de actualizare a agentului"
 
+#, fuzzy
+msgid "Agent updater"
+msgstr "Actualizări agent"
+
 msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr "Agent de actualizare (Linux, Windows, Solaris)"
 
@@ -6806,6 +6810,16 @@ msgstr ""
 
 msgid "Agent updates are enabled"
 msgstr "Actualizările agentului sunt activate"
+
+#, fuzzy
+msgid "Agent updates are not enabled."
+msgstr "Actualizările agentului sunt activate"
+
+#, fuzzy
+msgid "Agent updates use the Agent Controller only."
+msgstr ""
+"Limitarea accesului agenților locali la datele agentului la controlerul "
+"agentului"
 
 #, fuzzy
 msgid "Agent user"
@@ -7152,6 +7166,15 @@ msgstr "Stări ale regulilor Alertmanager (Rezumat)"
 
 msgid "Alerts"
 msgstr "Alerte"
+
+msgid ""
+"Alerts are sent again on every execution of the plug-in until this period "
+"has passed since they were first sent, so that none are lost if the agent is "
+"called more often than the SAP system host is checked. The monitoring site "
+"processes every alert only once. Set it to at least the check interval of "
+"the SAP system hosts. Longer periods increase the amount of transmitted "
+"data. If not set, one hour is used."
+msgstr ""
 
 #, fuzzy
 msgid "Alerts for items scheduled for deletion"
@@ -11981,10 +12004,6 @@ msgstr "Vizibilitate încorporată a pictogramelor"
 
 #, fuzzy
 msgid "Built-in images cannot be deleted."
-msgstr "Perioadele de timp încorporate nu pot fi modificate"
-
-#, fuzzy
-msgid "Built-in images cannot be overwritten."
 msgstr "Perioadele de timp încorporate nu pot fi modificate"
 
 msgid "Built-in time periods cannot be modified"
@@ -61786,6 +61805,10 @@ msgid ""
 msgstr ""
 "A fost schimbată variabila de configurare specifică site-ului %s în %s."
 
+#, fuzzy, python-format
+msgid "Removed some files of extension package %(name)s %(version)s"
+msgstr "Pachet de extensie eliminat %(name)s %(version)s"
+
 #, python-format
 msgid "Removed tag group %(message)s (%(del_id)s)"
 msgstr "Eliminat grupul de etichete %(message)s (%(del_id)s)"
@@ -62945,6 +62968,10 @@ msgstr ""
 "hardware și software"
 
 msgid "Retention period"
+msgstr "Perioada de păstrare"
+
+#, fuzzy
+msgid "Retention period of alerts"
 msgstr "Perioada de păstrare"
 
 #, fuzzy
@@ -69103,6 +69130,13 @@ msgstr ""
 "Unele dispozitive trimit texte în caractere non-ASCII. Checkmk presupune "
 "întotdeauna codificarea UTF-8. Puteți declara și alte codificări aici"
 
+#, python-format
+msgid ""
+"Some files of the package could not be removed: %(e)s. All other files of "
+"the package are removed, but the package is still enabled. Fix the cause and "
+"disable the package again."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Some firewalls are not capable of dealing with a few thousand ping packets "
@@ -74929,6 +74963,10 @@ msgid ""
 "service details."
 msgstr ""
 
+#, python-format
+msgid "The agent updater rule set still deploys the legacy updater: %(modes)s."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "The agent will automatically discover Podman sockets on the system. This "
@@ -77049,6 +77087,17 @@ msgstr ""
 "se găsesc în var/checkmk/crashes"
 
 msgid "The latest licensed active time series count of the data backend"
+msgstr ""
+
+#, python-format
+msgid ""
+"The legacy agent updater is deprecated. The Agent Controller updates the "
+"agents itself, so the activation mode <i>Enable agent updates using the "
+"Agent Controller</i> is the only one that does without the legacy updater. "
+"The two other enabling modes still deploy it, either beside the Agent "
+"Controller or on its own. Move the rules of the rule set <a "
+"href=\"%(url)s\">Agent updater (Linux, Windows, Solaris)</a> to the Agent "
+"Controller before the legacy updater is removed."
 msgstr ""
 
 msgid ""
@@ -102233,7 +102282,9 @@ msgstr "nume de utilizator ntopng pentru a achiziționa date pentru"
 msgid "number of processes"
 msgstr "Numărul de procese"
 
-msgid "object_filter must be one or more 'Filter: …' lines."
+#, python-format
+msgid ""
+"object_filter must be one or more 'Filter: …' lines, at most %(max)d bytes."
 msgstr ""
 
 msgid "of Service"
@@ -104159,6 +104210,10 @@ msgid "No data in this timeframe."
 msgstr "Nu există încă metrici în acest grafic."
 
 #, fuzzy
+msgid "Embedded page"
+msgstr "Imagine încorporată"
+
+#, fuzzy
 msgid "Invalid URL"
 msgstr "URL invalid dat"
 
@@ -105477,6 +105532,14 @@ msgid "Search custom graphs ..."
 msgstr "Noul grafic personalizat..."
 
 #, fuzzy
+msgid "No sites available."
+msgstr "Porturi disponibile"
+
+#, fuzzy
+msgid "No contact groups available."
+msgstr "Nu există informații disponibile"
+
+#, fuzzy
 msgid "Enter a title."
 msgstr "Nume de fișier invalid"
 
@@ -105501,22 +105564,6 @@ msgstr "Vă rugăm să selectați cel puțin un element"
 #, fuzzy
 msgid "Select at least one contact group."
 msgstr "Vă rugăm să adăugați cel puțin un nod copil."
-
-#, fuzzy
-msgid "No sites available."
-msgstr "Porturi disponibile"
-
-#, fuzzy
-msgid "No contact groups available."
-msgstr "Nu există informații disponibile"
-
-#, fuzzy
-msgid "Could not load the sites."
-msgstr "Nu puteți șterge această conexiune."
-
-#, fuzzy
-msgid "Could not load the contact groups."
-msgstr "Nu puteți șterge această conexiune."
 
 #, fuzzy
 msgid "The graph could not be saved."
@@ -106427,11 +106474,6 @@ msgstr "Setări gazdă"
 msgid "Toggle %{title}"
 msgstr "Comutarea intrărilor din jurnal"
 
-msgid ""
-"Show only settings configured for this site whether globally or as a site "
-"override"
-msgstr ""
-
 #, fuzzy
 msgid "Show only settings modified globally for all sites"
 msgstr "Atribuiți servicii la următorul cluster:"
@@ -106453,16 +106495,32 @@ msgid "Show all settings"
 msgstr "Afișați toate subiectele"
 
 #, fuzzy
-msgid "Modified only"
+msgid "Modified globally"
 msgstr "Mod de numai citire"
 
 #, fuzzy
-msgid "Site overrides only"
-msgstr "Prezentare generală a site-ului"
+msgid "Overridden by site"
+msgstr "Suprascrierea de către utilizatori"
+
+#, fuzzy
+msgid "Overridden by sites"
+msgstr "Suprascrierea de către utilizatori"
+
+#, fuzzy
+msgid "%{count} modified globally"
+msgstr "numărare"
 
 #, fuzzy
 msgid "%{count} modified"
 msgstr "numărare"
+
+#, fuzzy
+msgid "Show only the settings modified globally"
+msgstr "Atribuiți servicii la următorul cluster:"
+
+#, fuzzy
+msgid "Show only the modified settings"
+msgstr "Afișați numai setările modificate"
 
 #, fuzzy
 msgid "%{count} overridden on this site"
@@ -106481,16 +106539,16 @@ msgid "Show only the settings the sites override"
 msgstr "Atribuiți servicii la următorul cluster:"
 
 #, fuzzy
-msgid "Show only the modified settings"
-msgstr "Afișați numai setările modificate"
+msgid "modified"
+msgstr "Fișier modificat"
+
+#, fuzzy
+msgid "overridden"
+msgstr "Prezentare generală"
 
 #, fuzzy
 msgid "Edit %{title}"
 msgstr "Editare %(title)s"
-
-#, fuzzy
-msgid "modified"
-msgstr "Fișier modificat"
 
 #, fuzzy
 msgid "Could not reach the server."
@@ -107829,6 +107887,11 @@ msgstr "Încărcați fișierul MIB"
 msgid "Import failed"
 msgstr "Importați iCalendar"
 
+msgid ""
+"The background image %{image} is not part of the map file. Upload it in the "
+"map's settings under Background image."
+msgstr ""
+
 #, fuzzy
 msgid "Yours"
 msgstr "Ore"
@@ -107922,6 +107985,12 @@ msgid ""
 "The image \"%{name}\" is referenced by %{count} map(s). Deleting it will "
 "leave those maps without an image. Continue?"
 msgstr ""
+
+msgid "%{n} of them is a map you cannot see."
+msgid_plural "%{n} of them are maps you cannot see."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #, fuzzy
 msgid "Delete failed"
@@ -115379,6 +115448,22 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Procesul a expirat"
+
+#, fuzzy
+#~ msgid "Built-in images cannot be overwritten."
+#~ msgstr "Perioadele de timp încorporate nu pot fi modificate"
+
+#, fuzzy
+#~ msgid "Could not load the sites."
+#~ msgstr "Nu puteți șterge această conexiune."
+
+#, fuzzy
+#~ msgid "Could not load the contact groups."
+#~ msgstr "Nu puteți șterge această conexiune."
+
+#, fuzzy
+#~ msgid "Site overrides only"
+#~ msgstr "Prezentare generală a site-ului"
 
 #~ msgid ""
 #~ "OMD_SITE environment variable not set. You can only execute this in an "

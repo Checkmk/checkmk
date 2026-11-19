@@ -14,7 +14,13 @@ def main() {
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION).replaceAll("\\+security", "");
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
-    def use_case = params.USE_CASE.trim() ?: "daily";
+
+    // keep in sync with trigger-all-nightlies-fast.groovy
+    def expected_use_case = "daily";
+    if (Calendar.getInstance().get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
+        expected_use_case = "weekly";
+    }
+    def use_case = params.USE_CASE.trim() ?: expected_use_case;
 
     print(
         """

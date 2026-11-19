@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { userEvent } from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 
@@ -165,27 +165,104 @@ test('the connection test sends the settings as entered', async () => {
   )
 })
 
+const MAKE_THESE_CHANGES = 'Make these changes'
+const REFUSAL_MESSAGE = 'Check "Make these changes" to save and make them.'
+const DISABLED_TELEMETRY_OF_REMOTE1: FormSpec.DataBackendImpliedChange = {
+  identity: 'feature_disabled:remote1:telemetry',
+  text: 'Site remote1: "OpenTelemetry metrics" is set from "Central data backend" to "Disabled".',
+  new: false
+}
+const DISABLED_TELEMETRY_OF_REMOTE2: FormSpec.DataBackendImpliedChange = {
+  identity: 'feature_disabled:remote2:telemetry',
+  text: 'Site remote2: "OpenTelemetry metrics" is set from "Central data backend" to "Disabled".',
+  new: false
+}
+
+function refusal(impliedChanges: FormSpec.DataBackendImpliedChange[]): FormSpec.ValidationMessage {
+  return {
+    location: ['implied_changes_acceptance'],
+    message: REFUSAL_MESSAGE,
+    replacement_value: { implied_changes: impliedChanges, accepted: false }
+  }
+}
+
 test('the settings still render when a save is refused for acceptance', async () => {
   await renderForm({
     spec,
     data: { features: { telemetry: DISABLED } },
-    backendValidation: [
-      {
-        location: ['implied_changes_acceptance'],
-        message: 'Check "Make these changes" to save and make them.',
-        replacement_value: {
-          implied_changes: [
-            {
-              identity: 'feature_disabled:remote1:telemetry',
-              text: 'Site remote1: "OpenTelemetry metrics" is set from "Central data backend" to "Disabled".',
-              new: false
-            }
-          ],
-          accepted: false
-        }
-      }
-    ]
+    backendValidation: [refusal([DISABLED_TELEMETRY_OF_REMOTE1])]
   })
 
   expect(screen.getByRole('combobox', { name: 'OpenTelemetry metrics' })).toBeVisible()
+})
+
+test('every refusal lists its implied changes', async () => {
+  const { rerender } = await renderForm({
+    spec,
+    data: { features: { telemetry: DISABLED } },
+    backendValidation: [refusal([DISABLED_TELEMETRY_OF_REMOTE1])]
+  })
+
+  await rerender({
+    backendValidation: [refusal([DISABLED_TELEMETRY_OF_REMOTE1, DISABLED_TELEMETRY_OF_REMOTE2])]
+  })
+
+  const lines = screen.getAllByRole('listitem').map((line) => line.textContent?.trim())
+  expect(lines).toEqual([DISABLED_TELEMETRY_OF_REMOTE1.text, DISABLED_TELEMETRY_OF_REMOTE2.text])
+})
+
+test('a new refusal unchecks "Make these changes"', async () => {
+  const { rerender } = await renderForm({
+    spec,
+    data: { features: { telemetry: DISABLED } },
+    backendValidation: [refusal([DISABLED_TELEMETRY_OF_REMOTE1])]
+  })
+  await userEvent.click(screen.getByRole('checkbox', { name: MAKE_THESE_CHANGES }))
+
+  await rerender({
+    backendValidation: [refusal([DISABLED_TELEMETRY_OF_REMOTE1, DISABLED_TELEMETRY_OF_REMOTE2])]
+  })
+
+  expect(screen.getByRole('checkbox', { name: MAKE_THESE_CHANGES })).not.toBeChecked()
+})
+
+test('a refusal shows its message at "Make these changes"', async () => {
+  await renderForm({
+    spec,
+    data: { features: { telemetry: DISABLED } },
+    backendValidation: [refusal([DISABLED_TELEMETRY_OF_REMOTE1])]
+  })
+
+  expect(screen.getByText(REFUSAL_MESSAGE)).toBeVisible()
+})
+
+test('checking "Make these changes" accepts exactly the implied changes shown', async () => {
+  const { getCurrentData } = await renderForm({
+    spec,
+    data: { features: { telemetry: DISABLED } },
+    backendValidation: [refusal([DISABLED_TELEMETRY_OF_REMOTE1, DISABLED_TELEMETRY_OF_REMOTE2])]
+  })
+
+  await userEvent.click(screen.getByRole('checkbox', { name: MAKE_THESE_CHANGES }))
+
+  expect(JSON.parse(getCurrentData()!)).toMatchObject({
+    implied_changes_acceptance: {
+      implied_changes: [DISABLED_TELEMETRY_OF_REMOTE1, DISABLED_TELEMETRY_OF_REMOTE2],
+      accepted: true
+    }
+  })
+})
+
+test('marks the implied changes the server reports as new', async () => {
+  await renderForm({
+    spec,
+    data: { features: { telemetry: DISABLED } },
+    backendValidation: [
+      refusal([DISABLED_TELEMETRY_OF_REMOTE1, { ...DISABLED_TELEMETRY_OF_REMOTE2, new: true }])
+    ]
+  })
+
+  const [shownBefore, appeared] = screen.getAllByRole('listitem')
+  expect(within(shownBefore!).queryByText('New')).toBeNull()
+  expect(within(appeared!).getByText('New')).toBeVisible()
 })

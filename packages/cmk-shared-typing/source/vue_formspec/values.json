@@ -94,6 +94,42 @@
         "required": ["operator", "label_group"]
       }
     },
+    "data_backend_implied_change": {
+      "type": "object",
+      "description": "An implied change of a save of the data backend setting, as listed for acceptance.",
+      "properties": {
+        "identity": {
+          "type": "string",
+          "description": "Identifies the change across saves: an acceptance covers the changes whose identities it lists."
+        },
+        "text": {
+          "type": "string",
+          "description": "The change as shown to the admin."
+        },
+        "new": {
+          "type": "boolean",
+          "description": "Whether the save answered an earlier refusal whose list did not show this change."
+        }
+      },
+      "required": ["identity", "text", "new"]
+    },
+    "data_backend_implied_changes_acceptance": {
+      "type": "object",
+      "description": "The implied changes a save of the data backend setting is refused for, and whether the admin accepts them. No form spec element has this value: the refusal delivers it as the replacement value of its validation message at the form data key \"implied_changes_acceptance\", and the next save submits it back under that key.",
+      "properties": {
+        "implied_changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/data_backend_implied_change"
+          }
+        },
+        "accepted": {
+          "type": "boolean",
+          "description": "Whether the admin accepts the listed changes."
+        }
+      },
+      "required": ["implied_changes", "accepted"]
+    },
     "values": {
       "oneOf": [
         {
@@ -101,6 +137,9 @@
         },
         {
           "$ref": "#/$defs/binary_condition_choices_value"
+        },
+        {
+          "$ref": "#/$defs/data_backend_implied_changes_acceptance"
         }
       ]
     }

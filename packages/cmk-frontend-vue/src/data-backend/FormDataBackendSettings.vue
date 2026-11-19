@@ -5,13 +5,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
-import type { DataBackendSettings } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type {
+  DataBackendImpliedChangesAcceptance,
+  DataBackendSettings
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed } from 'vue'
 
 import FormDictionary from '@/form/private/forms/FormDictionary/FormDictionary.vue'
-import type { ValidationMessages } from '@/form/private/validation'
+import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
 import CentralConnectionTest from './CentralConnectionTest.vue'
+import ImpliedChangesAcceptance from './ImpliedChangesAcceptance.vue'
 import {
   ADDRESS_SEEN_BY_CENTRAL,
   IMPLIED_CHANGES_ACCEPTANCE,
@@ -54,9 +58,27 @@ const settingsValidation = computed(() =>
 const addressValidation = computed(() =>
   props.backendValidation.filter((message) => message.location[0] === ADDRESS_SEEN_BY_CENTRAL)
 )
+
+const [acceptanceValidation, acceptance] = useValidation(
+  computed({
+    get: () =>
+      data.value[IMPLIED_CHANGES_ACCEPTANCE] as DataBackendImpliedChangesAcceptance | undefined,
+    set: (value) => {
+      data.value[IMPLIED_CHANGES_ACCEPTANCE] = value
+    }
+  }),
+  [],
+  () =>
+    props.backendValidation.filter((message) => message.location[0] === IMPLIED_CHANGES_ACCEPTANCE)
+)
 </script>
 
 <template>
+  <ImpliedChangesAcceptance
+    v-if="acceptance"
+    v-model:acceptance="acceptance"
+    :validation="acceptanceValidation"
+  />
   <FormDictionary v-model:data="data" :spec="settings" :backend-validation="settingsValidation" />
   <FormDictionary
     v-if="showAddress"

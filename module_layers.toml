@@ -444,6 +444,7 @@ allows = [
 
 [components."cmk.ai_control_plane.conversation"]
 allows = [
+  "cmk.ai_control_plane.mcp_tool_results",
   "cmk.ai_control_plane.protocols",
   "cmk.ai_control_plane.site",
   "cmk.ai_control_plane.storage",
@@ -458,6 +459,9 @@ allows = [
   "cmk.ai_control_plane.protocols",
   "cmk.password_store.v1",
 ]
+
+[components."cmk.ai_control_plane.mcp_tool_results"]
+allows = []
 
 [components."cmk.ai_control_plane.protocols"]
 allows = []

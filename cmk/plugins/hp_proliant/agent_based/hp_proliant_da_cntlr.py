@@ -192,27 +192,27 @@ def discovery_hp_proliant_da_cntlr(section: ParsedSection) -> DiscoveryResult:
 
 
 def check_hp_proliant_da_cntlr(item: ControllerID, section: ParsedSection) -> CheckResult:
-    if not (subsection := section.get(item)):
+    if not (controller := section.get(item)):
         yield Result(state=State.UNKNOWN, summary="Controller not found in SNMP data")
         return
 
-    states: Mapping[str, SNMPCondition | SNMPState] = {
-        "Condition": subsection.cond,
-        "Board-Condition": subsection.b_cond,
-        "Board-Status": subsection.b_status,
-    }
+    for label, value in (
+        ("Condition", controller.cond),
+        ("Board-Condition", controller.b_cond),
+        ("Board-Status", controller.b_status),
+    ):
+        yield Result(state=value.to_state(), summary=f"{label}: {value}")
 
     yield Result(
-        state=State.worst(*(state.to_state() for state in states.values())),
+        state=State.OK,
         summary=(
-            f"{', '.join(f'{label}: {state}' for label, state in states.items())} "
-            f"(Role: {subsection.role}, Model: {subsection.model}, Slot: {subsection.slot}, "
-            f"Serial: {subsection.serial})"
+            f"Role: {controller.role}, Model: {controller.model}, "
+            f"Slot: {controller.slot}, Serial: {controller.serial}"
         ),
-        details=OTHER_STATE_DESCRIPTION
-        if SNMPCondition.OTHER in states.values() or SNMPState.OTHER in states.values()
-        else None,
     )
+
+    if "other" in (controller.cond, controller.b_cond, controller.b_status):
+        yield Result(state=State.OK, notice=OTHER_STATE_DESCRIPTION)
 
 
 snmp_section_hp_proliant_da_cntlr = SimpleSNMPSection(

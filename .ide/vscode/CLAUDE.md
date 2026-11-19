@@ -321,15 +321,18 @@ a cloud site while that port is free.
 The file `.ide/vscode/ci_parity.md` (VSCode & Bazel: Local vs CI Parity) is mirrored to Confluence at:
 
 - **Space**: DEV (Developer Documentation > IDE > VSCode)
-- **Page ID**: 190555122
-- **URL**: <https://wiki.lan.checkmk.net/pages/viewpage.action?pageId=190555122>
+- **Page ID**: 207980807
+- **URL**: <https://checkmk-int.atlassian.net/wiki/spaces/DEV/pages/207980807>
 
 When `.ide/vscode/ci_parity.md` changes, update the Confluence page by running:
 
 ```sh
-CONFLUENCE_TOKEN=<token> python .ide/vscode/scripts/update_confluence_vscode_page.py
+CONFLUENCE_EMAIL=<email> CONFLUENCE_TOKEN=<token> \
+  python .ide/vscode/scripts/update_confluence_vscode_page.py
 ```
 
+The token is an Atlassian API token
+(<https://id.atlassian.com/manage-profile/security/api-tokens>).
 Use `--dry-run` to preview the generated XHTML without making API calls.
 
 ## Settings Dashboard

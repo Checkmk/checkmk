@@ -7,24 +7,26 @@
 
 Confluence location:
     Developer Documentation > IDE > VSCode > "VSCode & Bazel: Local vs CI Parity"
-    Page ID: 190555122
+    Page ID: 207980807
 
 Usage:
     # Dry run — print generated XHTML to stdout:
     python .ide/vscode/scripts/update_confluence_vscode_page.py --dry-run
 
     # Create or update the page:
-    CONFLUENCE_TOKEN=<token> \
+    CONFLUENCE_EMAIL=<email> CONFLUENCE_TOKEN=<token> \
     python .ide/vscode/scripts/update_confluence_vscode_page.py
 
 Environment variables:
-    CONFLUENCE_TOKEN  — Confluence personal access token (required for non-dry-run)
-    CONFLUENCE_URL    — Base URL (default: https://wiki.lan.checkmk.net)
+    CONFLUENCE_EMAIL  — Atlassian account email (required for non-dry-run)
+    CONFLUENCE_TOKEN  — Atlassian API token (required for non-dry-run)
+    CONFLUENCE_URL    — Base URL (default: https://checkmk-int.atlassian.net/wiki)
 """
 
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import os
 import re
@@ -34,10 +36,10 @@ from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-CONFLUENCE_URL = os.environ.get("CONFLUENCE_URL", "https://wiki.lan.checkmk.net")
+CONFLUENCE_URL = os.environ.get("CONFLUENCE_URL", "https://checkmk-int.atlassian.net/wiki")
 README_PATH = Path(__file__).resolve().parent.parent / "ci_parity.md"
 PAGE_TITLE = "VSCode & Bazel: Local vs CI Parity"
-PAGE_ID = "190555122"
+PAGE_ID = "207980807"
 
 # Confluence status macro colour mapping for parity values
 STATUS_COLORS: dict[str, str] = {
@@ -205,9 +207,10 @@ def _md_to_confluence(md: str) -> str:
 def _api_request(
     method: str, path: str, data: Mapping[str, object] | None = None
 ) -> dict[str, object]:
+    email = os.environ.get("CONFLUENCE_EMAIL", "")
     token = os.environ.get("CONFLUENCE_TOKEN", "")
-    if not token:
-        print("ERROR: CONFLUENCE_TOKEN env var is required.", file=sys.stderr)  # noqa: T201  # It's OK for scripts to print()
+    if not email or not token:
+        print("ERROR: CONFLUENCE_EMAIL and CONFLUENCE_TOKEN are required.", file=sys.stderr)  # noqa: T201  # It's OK for scripts to print()
         sys.exit(1)
 
     url = f"{CONFLUENCE_URL.rstrip('/')}{path}"
@@ -222,7 +225,8 @@ def _api_request(
     body = json.dumps(data).encode() if data else None
 
     req = Request(url, data=body, headers=headers, method=method)
-    req.add_header("Authorization", f"Bearer {token}")
+    credentials = base64.b64encode(f"{email}:{token}".encode()).decode()
+    req.add_header("Authorization", f"Basic {credentials}")
 
     try:
         with urlopen(req) as resp:  # nosec B310 # scheme validated above
@@ -240,7 +244,7 @@ def _api_request(
 
 def _get_page_version(page_id: str) -> int:
     """Get the current version number of a page."""
-    result = _api_request("GET", f"/rest/api/content/{page_id}?expand=version")
+    result = _api_request("GET", f"/api/v2/pages/{page_id}")
     version = result["version"]
     assert isinstance(version, dict)
     number = version["number"]
@@ -251,17 +255,16 @@ def _get_page_version(page_id: str) -> int:
 def _update_page(page_id: str, title: str, body_xhtml: str, version: int) -> dict[str, object]:
     """Update an existing Confluence page."""
     payload = {
-        "type": "page",
+        "id": page_id,
+        "status": "current",
         "title": title,
         "version": {"number": version + 1},
         "body": {
-            "storage": {
-                "value": body_xhtml,
-                "representation": "storage",
-            }
+            "representation": "storage",
+            "value": body_xhtml,
         },
     }
-    return _api_request("PUT", f"/rest/api/content/{page_id}", payload)
+    return _api_request("PUT", f"/api/v2/pages/{page_id}", payload)
 
 
 # ---------------------------------------------------------------------------

@@ -18,10 +18,11 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const { _t } = usei18n()
 
-const props = defineProps<{
+const { wrap = false, ...props } = defineProps<{
   title?: TranslatedString
   code_txt: string
   copyButtonTestId?: string
+  wrap?: boolean
 }>()
 
 const MAX_LINES = 10
@@ -46,7 +47,10 @@ const toggleExpansion = () => {
   <div>
     <CmkHeading v-if="title" type="h4" class="cmk-code__heading">{{ title }}</CmkHeading>
     <div class="code_wrapper">
-      <div class="code_container" :class="{ 'has-toggle': shouldShowToggle, expanded: isExpanded }">
+      <div
+        class="code_container"
+        :class="{ 'has-toggle': shouldShowToggle, expanded: isExpanded, 'cmk-code__wrap': wrap }"
+      >
         <CmkScrollContainer type="outer" class="code_scroll_container">
           <pre><code v-text="displayedCode"></code></pre>
         </CmkScrollContainer>
@@ -67,6 +71,7 @@ const toggleExpansion = () => {
       <CmkCopy :text="code_txt">
         <CmkIconButton
           name="copied"
+          :title="_t('Copy to clipboard')"
           size="medium"
           class="copy_button"
           :data-testId="copyButtonTestId"
@@ -124,6 +129,11 @@ const toggleExpansion = () => {
     pre {
       margin: 0;
       white-space: pre;
+    }
+
+    &.cmk-code__wrap pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

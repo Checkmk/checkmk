@@ -13,6 +13,9 @@ The module `aspect_rules_lint_rules_rust` is not on BCR, and
   from `@aspect_rules_lint//lint:defs.bzl` (`rules_lint_export_helpers.patch`).
 - `clippy.bzl`: clippy warnings set the exit code to 1, so that
   `bazel lint` fails on them (clippy runs with `-Wwarnings` and exits 0).
+- `clippy.bzl`: `--remap-path-prefix` strips the bin directory from the
+  diagnostics. Crates with generated sources are compiled from the bin
+  directory, and the patcher failed with ENOENT on their fixes.
 - `BUILD`: upstream tests removed, `no-lint` tags added.
 
 The `.bash` and `.cjs` files are unchanged and excluded from formatting

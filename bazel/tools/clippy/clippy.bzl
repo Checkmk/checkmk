@@ -139,6 +139,12 @@ def _clippy_aspect_impl(target, ctx):
         # They do this to force Bazel to re-run targets on failures.
         # However, we don't need to do that because we keep track of output files and exit codes separately.
         "-Wwarnings",
+        # rules_rust compiles crates with generated sources from symlinks in
+        # the bin directory, so the diagnostics name bazel-out/<cfg>/bin/<pkg>/...
+        # The patcher resolves these names relative to the bin directory, so
+        # strip the prefix. Unlike rules_rust's remap for coverage, this one
+        # is a fixed string and breaks with --experimental_output_paths=strip.
+        "--remap-path-prefix={}/=".format(ctx.bin_dir.path),
     ] + ctx.attr._clippy_flags + ctx.attr._args
 
     raw_output = ctx.actions.declare_file(OUTFILE_FORMAT.format(label = target.label.name, mnemonic = _MNEMONIC, suffix = "raw_process_wrapper_wrapper_output_human"), sibling = sibling)

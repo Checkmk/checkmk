@@ -7,6 +7,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Self
 
 from cmk.ccc.hostaddress import HostName, HostNameValidationError
 
@@ -22,7 +23,7 @@ class TreePath:
             raise ValueError(self.path)
 
     @classmethod
-    def from_archive_or_delta_cache_file_path(cls, file_path: Path) -> TreePath:
+    def from_archive_or_delta_cache_file_path(cls, file_path: Path) -> Self:
         return (
             cls(path=file_path, legacy=file_path.with_suffix(""))
             if file_path.suffix == ".json"

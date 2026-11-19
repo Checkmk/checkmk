@@ -345,6 +345,8 @@ class SNMPTrapTranslator:
         oid: pysnmp.proto.rfc1902.ObjectName, value: SimpleAsn1Type
     ) -> tuple[str, str]:
         key = "Uptime" if oid.asTuple() == (1, 3, 6, 1, 2, 1, 1, 3, 0) else str(oid)
+        # pysnmp converts the var binds of SNMPv1 traps to SNMPv2 types, but the sysUpTime.0 it
+        # adds from the header of such a trap keeps its SNMPv1 type.
         # We could use Asn1Type.isSuperTypeOf() instead of isinstance() below.
         if isinstance(value, pysnmp.proto.rfc1155.TimeTicks | pysnmp.proto.rfc1902.TimeTicks):
             val = _approx_age(float(value) / 100)
@@ -403,6 +405,8 @@ class SNMPTrapTranslator:
         # only for IP addresses and for values whose event text would contain C0 control
         # characters other than CR. This turns some text into hex, too, e.g. with escape
         # sequences or in UTF-16, but we can't tell it apart from binary data.
+        # pysnmp converts the var binds of SNMPv1 traps to SNMPv2 types, but the snmpTrapAddress.0
+        # it adds from the header of such a trap keeps its SNMPv1 type.
         if not isinstance(value, pysnmp.proto.rfc1155.IpAddress | pysnmp.proto.rfc1902.IpAddress):
             text = str(value)
             if all(c >= " " or c == "\r" for c in scrub_string(text)):

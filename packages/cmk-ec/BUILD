@@ -158,6 +158,7 @@ py_cmk_test(
     deps = [
         ":cmk-ec",
         ":forwarder",
+        requirement("pyasn1"),
         requirement("pymongo"),
         requirement("pysnmp"),
         requirement("time-machine"),

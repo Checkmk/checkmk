@@ -2,17 +2,19 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Translating the var binds of SNMP traps"""
+"""Parsing SNMP traps and translating their var binds"""
 
 import logging
 
 import pytest
-from pysnmp.proto import rfc1155
+from pyasn1.codec.ber import encoder
+from pysnmp.proto import api, rfc1155
 from pysnmp.proto.rfc1902 import IpAddress, ObjectName, OctetString, TimeTicks
 
 import cmk.ec.export as ec
 from cmk.ec.config import Config
-from cmk.ec.snmp import SNMPTrapTranslator
+from cmk.ec.settings import PortNumber
+from cmk.ec.snmp import SNMPTrapParser, SNMPTrapTranslator
 
 # sysORDescr.1.2, but sysORTable has only one index.
 UNTRANSLATABLE_OID = ObjectName("1.3.6.1.2.1.1.9.1.3.1.2")
@@ -26,6 +28,40 @@ def fixture_translator(
     settings: ec.Settings, config: Config, logger: logging.Logger
 ) -> SNMPTrapTranslator:
     return SNMPTrapTranslator(settings, config | {"translate_snmptraps": (True, {})}, logger)
+
+
+@pytest.fixture(name="parser")
+def fixture_parser(settings: ec.Settings, config: Config, logger: logging.Logger) -> SNMPTrapParser:
+    options = settings.options._replace(snmptrap_udp=PortNumber(162))
+    return SNMPTrapParser(settings._replace(options=options), config, logger)
+
+
+def v1_trap(time_stamp: int) -> bytes:
+    """An SNMPv1 trap from the "public" community, which the default configuration accepts"""
+    proto = api.PROTOCOL_MODULES[api.SNMP_VERSION_1]
+    pdu = proto.TrapPDU()
+    # Not set_defaults(), which looks up the address of the local host as the agent address.
+    proto.apiTrapPDU.set_enterprise(pdu, (1, 3, 6, 1, 4, 1, 32473))
+    proto.apiTrapPDU.set_agent_address(pdu, "192.0.2.1")
+    proto.apiTrapPDU.set_generic_trap(pdu, "coldStart")
+    proto.apiTrapPDU.set_specific_trap(pdu, 0)
+    proto.apiTrapPDU.set_timestamp(pdu, time_stamp)
+    proto.apiTrapPDU.set_varbinds(pdu, [])
+    message = proto.Message()
+    proto.apiMessage.set_defaults(message)
+    proto.apiMessage.set_community(message, "public")
+    proto.apiMessage.set_pdu(message, pdu)
+    trap: bytes = encoder.encode(message)
+    return trap
+
+
+def test_untranslated_snmpv1_trap_shows_its_time_stamp_as_uptime(parser: SNMPTrapParser) -> None:
+    trap = v1_trap(time_stamp=123456)
+
+    result = parser.parse(trap, ("192.0.2.1", 162))
+
+    assert result is not None
+    assert ("Uptime", "20 m") in result[0]
 
 
 def test_failed_translation_warns_about_the_oid_and_the_sender(
@@ -47,7 +83,9 @@ def test_failed_translation_warns_about_the_oid_and_the_sender(
     [
         # All 4 bytes are printable in Latin-1.
         pytest.param(IpAddress("198.51.100.42"), "198.51.100.42", id="IP address"),
-        pytest.param(rfc1155.IpAddress("198.51.100.42"), "198.51.100.42", id="SNMPv1 IP address"),
+        pytest.param(
+            rfc1155.IpAddress("198.51.100.42"), "198.51.100.42", id="SNMPv1 agent address"
+        ),
         pytest.param(OctetString(b"\x00\x1a\x2b"), "0x001a2b", id="binary data"),
     ],
 )

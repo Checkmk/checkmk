@@ -95141,7 +95141,8 @@ msgstr "Visualisierungstypen"
 msgid "Owner (private)"
 msgstr "Eigentümer (privat)"
 
-msgid "No contact groups found"
+#, fuzzy
+msgid "No contact groups to share with"
 msgstr "Keine Kontakt-Gruppen gefunden"
 
 msgid "Users of site"

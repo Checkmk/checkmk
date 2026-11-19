@@ -98360,7 +98360,7 @@ msgid "Owner (private)"
 msgstr ""
 
 #, fuzzy
-msgid "No contact groups found"
+msgid "No contact groups to share with"
 msgstr "Geen contactgroepen toegewezen."
 
 #, fuzzy

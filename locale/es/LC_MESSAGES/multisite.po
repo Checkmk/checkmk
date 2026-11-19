@@ -99066,7 +99066,7 @@ msgid "Owner (private)"
 msgstr ""
 
 #, fuzzy
-msgid "No contact groups found"
+msgid "No contact groups to share with"
 msgstr "No se han asignado grupos de contacto."
 
 #, fuzzy

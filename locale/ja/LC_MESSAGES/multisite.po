@@ -93334,7 +93334,8 @@ msgstr "視覚化レベル"
 msgid "Owner (private)"
 msgstr "オーナー（プライベート）"
 
-msgid "No contact groups found"
+#, fuzzy
+msgid "No contact groups to share with"
 msgstr "連絡先グループが見つかりませんでした"
 
 #, fuzzy

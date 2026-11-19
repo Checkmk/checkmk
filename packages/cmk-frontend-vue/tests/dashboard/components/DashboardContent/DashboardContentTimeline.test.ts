@@ -7,6 +7,10 @@ import type * as intl from '@internationalized/date'
 import { render, screen, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import {
+  resizeObserverReporting,
+  useFakeResizeObserver
+} from 'cmk-ui-library/vitest.resize-observer'
 import { describe, expect, it, vi } from 'vitest'
 
 import DashboardContentTimeline from '@/dashboard/components/DashboardContent/DashboardContentTimeline.vue'
@@ -14,7 +18,6 @@ import type { TimelineContent } from '@/dashboard/types/widget'
 
 import { useRequestRecords } from '@tests/dashboard/apiHandlers'
 import { makeContentProps } from '@tests/dashboard/contentProps'
-import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {

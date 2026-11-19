@@ -7,6 +7,7 @@ import { fromDate } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { configure, fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { FakeResizeObserver, deliverSize } from 'cmk-ui-library/vitest.resize-observer'
 import { HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, toRaw } from 'vue'
@@ -37,7 +38,6 @@ import {
 import { durationSeconds, endsNow } from '@/graphing/GlobalTimePicker/private/timeRange'
 
 import { dashboardMetadataHandlers, mainMenuTopicsHandler } from '@tests/dashboard/apiHandlers'
-import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
 
 // reka's dialog warns about the missing DialogTitle of the bare slide-in, which fails the test.
 vi.mock('cmk-ui-library/components/CmkSlideIn', () => ({

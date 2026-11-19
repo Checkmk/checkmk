@@ -5,6 +5,10 @@
  */
 import { render, screen } from '@testing-library/vue'
 import { restApiHttp } from 'cmk-ui-library/vitest.msw'
+import {
+  resizeObserverReporting,
+  useFakeResizeObserver
+} from 'cmk-ui-library/vitest.resize-observer'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
@@ -14,7 +18,6 @@ import type { LinkProperties, Stats, StatsContent } from '@/dashboard/types/widg
 
 import { useComputeWidgetEndpoint } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
-import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 const HOST_STATS: Stats = {
   links: [],

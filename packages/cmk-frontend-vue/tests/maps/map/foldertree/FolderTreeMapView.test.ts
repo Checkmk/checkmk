@@ -5,6 +5,11 @@
  */
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
+import {
+  FakeResizeObserver,
+  resizeObserverReporting,
+  useFakeResizeObserver
+} from 'cmk-ui-library/vitest.resize-observer'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { type PropType, defineComponent, markRaw } from 'vue'
 
@@ -12,12 +17,6 @@ import { useObjectHoverMenu } from '@/maps/map/composables/useObjectHoverMenu'
 import FolderTreeMapView from '@/maps/map/foldertree/FolderTreeMapView.vue'
 import { HOVER_REST_MS } from '@/maps/map/foldertree/composables/useTileHoverIntent'
 import type { FolderHostService, FolderServiceSearchResult, FolderTreeNode } from '@/maps/types/api'
-
-import {
-  FakeResizeObserver,
-  resizeObserverReporting,
-  useFakeResizeObserver
-} from '@tests/lib/fakeResizeObserver'
 
 import { aFolderNode, aMap, newMapView } from '../../support/fixtures'
 import { fakeMapsServices, provideServices } from '../../support/services'

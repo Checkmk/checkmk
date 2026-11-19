@@ -8,6 +8,7 @@
     "tests/**/*.vue",
     "ui-component-library/**/*",
     "../cmk-ui-library/vitest.msw.ts",
+    "../cmk-ui-library/vitest.resize-observer.ts",
     "../cmk-ui-library/vitest.sanitize.ts"
   ],
   "compilerOptions": {
@@ -17,6 +18,7 @@
     "paths": {
       "cmk-ui-library/lib/i18nString": ["./weaki18nString.d.ts"],
       "cmk-ui-library/vitest.msw": ["../cmk-ui-library/vitest.msw.ts"],
+      "cmk-ui-library/vitest.resize-observer": ["../cmk-ui-library/vitest.resize-observer.ts"],
       "cmk-ui-library/vitest.sanitize": ["../cmk-ui-library/vitest.sanitize.ts"],
       "@/*": ["./src/*"],
       "@ucl/*": ["./ui-component-library/*"],

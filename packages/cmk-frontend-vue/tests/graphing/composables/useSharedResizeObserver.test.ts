@@ -3,17 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { afterEach, expect, test, vi } from 'vitest'
-import { type EffectScope, effectScope, ref } from 'vue'
-
-import { useSharedResizeObserver } from '@/graphing/composables/useSharedResizeObserver'
-
 import {
   FakeResizeObserver,
   deliverSize,
   resizeObserverReporting,
   useFakeResizeObserver
-} from '@tests/lib/fakeResizeObserver'
+} from 'cmk-ui-library/vitest.resize-observer'
+import { afterEach, expect, test, vi } from 'vitest'
+import { type EffectScope, effectScope, ref } from 'vue'
+
+import { useSharedResizeObserver } from '@/graphing/composables/useSharedResizeObserver'
 
 let scopes: EffectScope[] = []
 

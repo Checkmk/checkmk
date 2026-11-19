@@ -64,6 +64,9 @@ export default defineConfig(({ command }) => {
         // Test-only files of cmk-ui-library, kept out of its package; must precede the
         // package alias, which would claim them first.
         'cmk-ui-library/vitest.msw': path.resolve('../cmk-ui-library/vitest.msw.ts'),
+        'cmk-ui-library/vitest.resize-observer': path.resolve(
+          '../cmk-ui-library/vitest.resize-observer.ts'
+        ),
         'cmk-ui-library/vitest.sanitize': path.resolve('../cmk-ui-library/vitest.sanitize.ts'),
         'cmk-ui-library': path.resolve('./node_modules/cmk-ui-library'),
         '@ucl': path.resolve('./ui-component-library'),

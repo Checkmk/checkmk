@@ -4,12 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render } from '@testing-library/vue'
+import { FakeResizeObserver, useFakeResizeObserver } from 'cmk-ui-library/vitest.resize-observer'
 import { expect, test, vi } from 'vitest'
 import { type Ref, defineComponent, h, nextTick, ref } from 'vue'
 
 import { useHeaderLineBreakLevel } from '@/graphing/components/header/useHeaderLineBreakLevel'
-
-import { FakeResizeObserver, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 interface Rect {
   top: number

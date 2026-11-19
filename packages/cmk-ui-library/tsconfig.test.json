@@ -9,6 +9,7 @@
     "vitest.shared-setup.ts",
     "vitest.shared.ts",
     "vitest.msw.ts",
+    "vitest.resize-observer.ts",
     "vitest.sanitize.ts"
   ],
   // i18nString.ts strongly types TranslatedString; tests use the weak variant

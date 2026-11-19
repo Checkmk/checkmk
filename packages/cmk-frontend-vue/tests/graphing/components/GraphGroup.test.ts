@@ -9,6 +9,12 @@ import type { CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_s
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
+import {
+  FakeResizeObserver,
+  deliverSize,
+  deliverSizes,
+  useFakeResizeObserver
+} from 'cmk-ui-library/vitest.resize-observer'
 import { nextTick } from 'vue'
 
 import {
@@ -21,12 +27,6 @@ import { MAX_FIGURE_WIDTH } from '@/graphing/components/constants'
 import type { GraphDisplayOptions } from '@/graphing/types'
 
 import { FakeIntersectionObserver, reportIntersection } from '@tests/lib/fakeIntersectionObserver'
-import {
-  FakeResizeObserver,
-  deliverSize,
-  deliverSizes,
-  useFakeResizeObserver
-} from '@tests/lib/fakeResizeObserver'
 
 // Hoisted so the panel stub below can bake the ranges its buttons report into its template.
 const { RANGE_START, RANGE_END, PAN_TARGET, ZOOM_TARGET } = vi.hoisted(() => {

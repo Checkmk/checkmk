@@ -396,6 +396,7 @@ js_library(
     srcs = glob(["tests/**/*.ts"]) + [":tsconfig"],
     deps = [
         "//packages/cmk-ui-library:vitest_msw",
+        "//packages/cmk-ui-library:vitest_resize_observer",
         "//packages/cmk-ui-library:vitest_sanitize",
     ],
 )

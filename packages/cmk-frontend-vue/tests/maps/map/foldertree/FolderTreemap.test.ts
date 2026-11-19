@@ -4,14 +4,16 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import {
+  resizeObserverReporting,
+  useFakeResizeObserver
+} from 'cmk-ui-library/vitest.resize-observer'
 import { describe, expect, it } from 'vitest'
 import { computed, ref } from 'vue'
 
 import FolderTreemap from '@/maps/map/foldertree/components/FolderTreemap.vue'
 import { type FolderQuery, parseFolderQuery } from '@/maps/map/foldertree/filter'
 import type { FolderTreeNode } from '@/maps/types/api'
-
-import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 import { aFolderNode } from '../../support/fixtures'
 import { fakeMapsServices, provideServices } from '../../support/services'

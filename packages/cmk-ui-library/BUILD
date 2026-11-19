@@ -92,6 +92,13 @@ js_library(
 )
 
 js_library(
+    name = "vitest_resize_observer",
+    srcs = ["vitest.resize-observer.ts"],
+    visibility = ["//packages:__subpackages__"],
+    deps = ["//:node_modules/vitest"],
+)
+
+js_library(
     name = "vitest_sanitize",
     srcs = ["vitest.sanitize.ts"],
     visibility = ["//packages:__subpackages__"],
@@ -114,6 +121,7 @@ vue_library(
         ":node_modules/msw",
         ":node_modules/vue-component-type-helpers",
         ":vitest_msw",
+        ":vitest_resize_observer",
         ":vitest_sanitize",
         ":vitest_shared",
         ":vitest_shared_setup",

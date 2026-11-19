@@ -13,6 +13,11 @@ import type {
 } from '@tanstack/vue-table'
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, within } from '@testing-library/vue'
+import {
+  FakeResizeObserver,
+  deliverSize,
+  useFakeResizeObserver
+} from 'cmk-ui-library/vitest.resize-observer'
 import { type Ref, defineComponent, h, inject, nextTick, provide, ref } from 'vue'
 
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
@@ -23,12 +28,6 @@ import {
 } from '@/monitoring/shared/components/MonitoringTableContext'
 import { fitColumnsToContent } from '@/monitoring/shared/components/contentColumns'
 import type { FetchState, MonitoringService } from '@/monitoring/shared/services/MonitoringService'
-
-import {
-  FakeResizeObserver,
-  deliverSize,
-  useFakeResizeObserver
-} from '@tests/lib/fakeResizeObserver'
 
 const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
 const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')

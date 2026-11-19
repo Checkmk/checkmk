@@ -6,6 +6,7 @@
 import { parseAbsolute, toZoned } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { render, screen, within } from '@testing-library/vue'
+import { FakeResizeObserver, useFakeResizeObserver } from 'cmk-ui-library/vitest.resize-observer'
 import { describe, expect, it, test } from 'vitest'
 import { nextTick } from 'vue'
 
@@ -19,8 +20,6 @@ import ScheduleDowntimeForm, {
   presetSelection,
   untilPresetEnd
 } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
-
-import { FakeResizeObserver, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 /** What a site offers out of the box, as `user_downtime_timeranges` has it. */
 const PRESETS: DowntimePresetOption[] = [

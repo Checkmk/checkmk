@@ -6,6 +6,10 @@
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import { restApiHttp } from 'cmk-ui-library/vitest.msw'
+import {
+  resizeObserverReporting,
+  useFakeResizeObserver
+} from 'cmk-ui-library/vitest.resize-observer'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
@@ -16,7 +20,6 @@ import type { ComputedTopList, TopListContent, VisualContext } from '@/dashboard
 
 import { useComputeWidgetEndpoint } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
-import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 function topList(overrides: Partial<ComputedTopList> = {}): ComputedTopList {
   return {

@@ -4,17 +4,16 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
+import {
+  FakeResizeObserver,
+  deliverSize,
+  useFakeResizeObserver
+} from 'cmk-ui-library/vitest.resize-observer'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { h, nextTick } from 'vue'
 
 import WidgetFigureFrame from '@/dashboard/components/DashboardContent/figures/WidgetFigureFrame.vue'
 import type { WidgetDataState } from '@/dashboard/composables/useWidgetData'
-
-import {
-  FakeResizeObserver,
-  deliverSize,
-  useFakeResizeObserver
-} from '@tests/lib/fakeResizeObserver'
 
 const GENERAL_SETTINGS = {
   title: { text: 'Hosts', render_mode: 'with_background' as const },

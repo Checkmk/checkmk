@@ -6,14 +6,14 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-
-import AgentDownloadDialog from '@/setup/AgentDownloadDialog.vue'
-
 import {
   FakeResizeObserver,
   deliverSize,
   useFakeResizeObserver
-} from '@tests/lib/fakeResizeObserver'
+} from 'cmk-ui-library/vitest.resize-observer'
+
+import AgentDownloadDialog from '@/setup/AgentDownloadDialog.vue'
+
 import {
   commandPlaceholders,
   installCmds,

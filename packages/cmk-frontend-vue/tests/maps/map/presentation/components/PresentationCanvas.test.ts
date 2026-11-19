@@ -5,6 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { FakeResizeObserver, useFakeResizeObserver } from 'cmk-ui-library/vitest.resize-observer'
 import { afterEach, describe, expect, it } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
@@ -20,8 +21,6 @@ import type {
   ShapeElement,
   TextElement
 } from '@/maps/types/api'
-
-import { FakeResizeObserver, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 import { aMap, aState, newMapView } from '../../../support/fixtures'
 import { mapsGlobal } from '../../../support/services'

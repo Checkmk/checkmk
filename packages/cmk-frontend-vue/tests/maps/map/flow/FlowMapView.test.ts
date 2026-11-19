@@ -5,6 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { FakeResizeObserver, useFakeResizeObserver } from 'cmk-ui-library/vitest.resize-observer'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
@@ -12,8 +13,6 @@ import type { CommandVerb } from '@/maps/api/session'
 import FlowMapView from '@/maps/map/flow/FlowMapView.vue'
 import type { MapElement, TopologyNode } from '@/maps/types/api'
 import { newMapView } from '@/maps/utils/model'
-
-import { FakeResizeObserver, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 import { aMap, aTopologyNode } from '../../support/fixtures'
 import {

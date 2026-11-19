@@ -7,6 +7,11 @@ import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import {
+  FakeResizeObserver,
+  deliverSize,
+  useFakeResizeObserver
+} from 'cmk-ui-library/vitest.resize-observer'
 import { HttpResponse } from 'msw'
 import { afterAll, afterEach, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { defineComponent, effectScope, h, nextTick } from 'vue'
@@ -25,11 +30,6 @@ import {
 
 import { useRequestRecords } from '@tests/dashboard/apiHandlers'
 import { makeContentProps } from '@tests/dashboard/contentProps'
-import {
-  FakeResizeObserver,
-  deliverSize,
-  useFakeResizeObserver
-} from '@tests/lib/fakeResizeObserver'
 
 const CONTENT: MonitoringTableContent = {
   type: 'monitoring_table',

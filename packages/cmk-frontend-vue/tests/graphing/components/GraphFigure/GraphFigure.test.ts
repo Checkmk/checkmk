@@ -7,12 +7,14 @@ import type * as intl from '@internationalized/date'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
+import {
+  resizeObserverReporting,
+  useFakeResizeObserver
+} from 'cmk-ui-library/vitest.resize-observer'
 import { type PropType, type VNode, defineComponent, h, nextTick, onMounted, ref } from 'vue'
 
 import GraphFigure from '@/graphing/components/GraphFigure/GraphFigure.vue'
 import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
-
-import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 // The mock stands in for the view-only renderer: the buttons replay its zoom/pan/reset/pin
 // intent emits so the tests can drive the figure's interaction wiring.

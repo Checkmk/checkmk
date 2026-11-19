@@ -6,6 +6,10 @@
 import { fromDate } from '@internationalized/date'
 import { render, screen, waitFor } from '@testing-library/vue'
 import { restApiHttp } from 'cmk-ui-library/vitest.msw'
+import {
+  resizeObserverReporting,
+  useFakeResizeObserver
+} from 'cmk-ui-library/vitest.resize-observer'
 import { describe, expect, it } from 'vitest'
 
 import DashboardContentAlertOverview from '@/dashboard/components/DashboardContent/figures/DashboardContentAlertOverview.vue'
@@ -14,7 +18,6 @@ import type { AlertOverview, AlertOverviewContent } from '@/dashboard/types/widg
 
 import { useComputeWidgetEndpoint } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
-import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 const OTHER_RANGE = {
   from: fromDate(new Date('2026-01-02T00:00:00Z'), 'UTC'),

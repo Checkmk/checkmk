@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
 
 from cmk.gui.availability import AVEntry
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.gui.availability.openapi.conftest import TIME_FROM, TIME_UNTIL
 
@@ -38,6 +40,28 @@ def test_show_host_availability_returns_object(
 
 
 @pytest.mark.usefixtures("request_context")
+def test_show_host_availability_declares_the_permissions_of_its_livestatus_query(
+    clients: ClientRegistry,
+    host_av_entry: AVEntry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table("statehist", [])
+    mock_livestatus.expect_query(["GET statehist"], match_type="loose")
+
+    with (
+        patch(f"{_MODULE}.compute_availability", return_value=[host_av_entry]),
+        mock_livestatus,
+    ):
+        resp = clients.HostAvailability.get(
+            host_name="my-host",
+            time_range_from=TIME_FROM,
+            time_range_until=TIME_UNTIL,
+        )
+
+    assert resp.json["extensions"]["host"] == "my-host"
+
+
+@pytest.mark.usefixtures("request_context")
 def test_show_host_availability_returns_404_when_not_found(
     clients: ClientRegistry,
 ) -> None:
@@ -50,4 +74,4 @@ def test_show_host_availability_returns_404_when_not_found(
             time_range_from=TIME_FROM,
             time_range_until=TIME_UNTIL,
             expect_ok=False,
-        ).assert_status_code(404)
+        ).assert_status_code(HTTPStatus.NOT_FOUND)

@@ -14,6 +14,7 @@ from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
     DomainObjectModel,
     LinkModel,
+    MultiSiteCollectionExtensions,
 )
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.restful_objects.constructors import object_href, sub_object_href
@@ -293,6 +294,9 @@ class HostAvailabilityCollection(DomainObjectCollectionModel):
     value: list[HostAvailabilityObject] = api_field(
         description="A list of host availability objects.",
     )
+    extensions: MultiSiteCollectionExtensions = api_field(  # type: ignore[assignment]
+        description="Additional attributes alongside the collection."
+    )
 
 
 @api_model
@@ -383,4 +387,7 @@ class ServiceAvailabilityCollection(DomainObjectCollectionModel):
     )
     value: list[ServiceAvailabilityObject] = api_field(
         description="A list of service availability objects.",
+    )
+    extensions: MultiSiteCollectionExtensions = api_field(  # type: ignore[assignment]
+        description="Additional attributes alongside the collection."
     )

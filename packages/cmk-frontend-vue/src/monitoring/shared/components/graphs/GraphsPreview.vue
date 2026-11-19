@@ -10,10 +10,10 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, onMounted, ref } from 'vue'
 
 import { type GraphDisplayOptions, GraphGroup, GraphSkeleton } from '@/graphing'
-import { type DiscoveredGraphs, GraphsApi, toTimeSeriesGraph } from '@/monitoring/shared/api/graphs'
+import { toTimeSeriesGraph } from '@/graphing/api/discoveredGraph'
+import GraphsNoData from '@/graphing/components/GraphsNoData.vue'
+import { type DiscoveredGraphs, GraphsApi } from '@/monitoring/shared/api/graphs'
 import type { HostRef } from '@/monitoring/shared/api/types'
-
-import GraphsNoData from './GraphsNoData.vue'
 
 const props = defineProps<{
   host: HostRef

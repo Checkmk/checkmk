@@ -6,7 +6,7 @@
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { expect, test, vi } from 'vitest'
 
-import { GraphsApi, toTimeSeriesGraph } from '@/monitoring/shared/api/graphs'
+import { GraphsApi } from '@/monitoring/shared/api/graphs'
 
 const HOST = { site_id: 'local', name: 'localhost' }
 
@@ -80,35 +80,4 @@ test('the graphs of the host itself are asked for under the name the backend rea
       body: { hostname: 'localhost', service_description: '_HOST_', site: 'local', graph_id: null }
     })
   )
-})
-
-test('a discovered graph is dressed as the graph the renderer takes, at the size and interaction given', () => {
-  const size = { width: 330, height: 110, mode: 'fixed' } as const
-  const interaction = {
-    burger: 'disabled',
-    zoom: 'disabled',
-    panning: 'disabled',
-    hover: 'disabled',
-    brush: 'disabled',
-    pin: 'disabled'
-  } as const
-
-  const graph = toTimeSeriesGraph(
-    {
-      internal: '{"graphs":[]}',
-      title: 'CPU utilization',
-      name: 'cpu_utilization',
-      add_to_specification: null,
-      add_type: null,
-      y_axis: null
-    },
-    size,
-    interaction
-  )
-
-  expect(graph.internal).toBe('{"graphs":[]}')
-  expect(graph.options.name).toBe('cpu_utilization')
-  expect(graph.options.header).toEqual({ title: 'CPU utilization', show_graph_time: true })
-  expect(graph.size).toEqual(size)
-  expect(graph.interaction).toEqual(interaction)
 })

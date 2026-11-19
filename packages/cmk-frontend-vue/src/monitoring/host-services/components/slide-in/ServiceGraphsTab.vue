@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import type { CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 
-import { type DiscoveredGraph, toTimeSeriesGraph } from '@/monitoring/shared/api/graphs'
+import { type DiscoveredGraph, toTimeSeriesGraph } from '@/graphing/api/discoveredGraph'
 
 export interface ServiceGraphs {
   graphs: DiscoveredGraph[]
@@ -49,7 +49,7 @@ import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, onMounted, ref } from 'vue'
 
 import { GraphGroup } from '@/graphing'
-import GraphsNoData from '@/monitoring/shared/components/graphs/GraphsNoData.vue'
+import GraphsNoData from '@/graphing/components/GraphsNoData.vue'
 
 const props = defineProps<{ data: ServiceGraphs }>()
 

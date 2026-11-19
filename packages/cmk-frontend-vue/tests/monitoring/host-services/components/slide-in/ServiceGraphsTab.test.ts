@@ -6,11 +6,11 @@
 import { render, screen } from '@testing-library/vue'
 import { expect, test } from 'vitest'
 
+import type { DiscoveredGraph } from '@/graphing/api/discoveredGraph'
 import ServiceGraphsTab, {
   type ServiceGraphs,
   toPanelGraph
 } from '@/monitoring/host-services/components/slide-in/ServiceGraphsTab.vue'
-import type { DiscoveredGraph } from '@/monitoring/shared/api/graphs'
 
 const GRAPHS_LINK = 'view.py?view_name=service_graphs&site=local&host=web-1&service=CPU+load'
 

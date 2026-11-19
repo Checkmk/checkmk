@@ -152,7 +152,19 @@ function hostAssignment(model: CompleteModel): CustomServiceUpdate['host_assignm
     : { mode: 'host_name_template', host_name_template: model.hostNameTemplate }
 }
 
-function customServiceBody(model: CompleteModel): CustomServiceUpdate {
+function newHostFolderList(
+  newHostFolders: Record<string, string>
+): NonNullable<CustomServiceUpdate['new_host_folders']> {
+  return Object.entries(newHostFolders).map(([hostName, folder]) => ({
+    host_name: hostName,
+    folder
+  }))
+}
+
+function customServiceBody(
+  model: CompleteModel,
+  newHostFolders: Record<string, string>
+): CustomServiceUpdate {
   return {
     host_assignment: hostAssignment(model),
     configuration: {
@@ -161,28 +173,38 @@ function customServiceBody(model: CompleteModel): CustomServiceUpdate {
       ...(model.attributeFilter === undefined ? {} : { attribute_filter: model.attributeFilter }),
       consolidation: model.consolidation,
       ...(model.aggregator === undefined ? {} : { aggregator: model.aggregator })
-    }
+    },
+    ...(Object.keys(newHostFolders).length === 0
+      ? {}
+      : { new_host_folders: newHostFolderList(newHostFolders) })
   }
 }
 
-export function buildCustomServiceDefinition(model: CompleteModel): CustomServiceDefinition {
+export function buildCustomServiceDefinition(
+  model: CompleteModel,
+  newHostFolders: Record<string, string> = {}
+): CustomServiceDefinition {
   return {
     configuration_name: model.configurationName,
-    ...customServiceBody(model)
+    ...customServiceBody(model, newHostFolders)
   }
 }
 
-export function buildCustomServiceUpdate(model: CompleteModel): CustomServiceUpdate {
-  return customServiceBody(model)
+export function buildCustomServiceUpdate(
+  model: CompleteModel,
+  newHostFolders: Record<string, string> = {}
+): CustomServiceUpdate {
+  return customServiceBody(model, newHostFolders)
 }
 
 /** ``configurationName`` is the stored custom service being edited, if any. */
 export function buildResolveServicesRequest(
   model: CompleteModel,
-  configurationName: string | null
+  configurationName: string | null,
+  newHostFolders: Record<string, string> = {}
 ): ServicesToCreateRequest {
   return {
-    ...customServiceBody(model),
+    ...customServiceBody(model, newHostFolders),
     ...(configurationName === null ? {} : { configuration_name: configurationName })
   }
 }

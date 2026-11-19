@@ -6,18 +6,35 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBadge from 'cmk-ui-library/components/CmkBadge.vue'
+import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
+import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { ServicesToCreate } from '../definition'
+import type { CreatableFolder, NewHostFolders } from '../newHostFolders'
 import type { ServicesPreview } from '../servicesPreview'
 
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
 
 // More clashes are only counted, the list flags every one of them
 const CLASHES_EXPLAINED = 3
 
-const { preview } = defineProps<{ preview: ServicesPreview }>()
+const {
+  preview,
+  folders = [],
+  newHostFolders = {},
+  foldersNotLookedUp = false
+} = defineProps<{
+  preview: ServicesPreview
+  folders?: CreatableFolder[]
+  newHostFolders?: NewHostFolders
+  foldersNotLookedUp?: boolean
+}>()
+
+const emit = defineEmits<{
+  chooseFolder: [hostNames: string[], folder: string]
+}>()
 
 type Clash = ServicesToCreate['services'][number]['clash']
 
@@ -34,15 +51,72 @@ function clashLabel(clash: Clash): string | null {
   }
 }
 
-const services = computed(() => (preview.status === 'resolved' ? preview.services : null))
+const services = computed(() =>
+  preview.status === 'resolved' || preview.status === 'refreshing' ? preview.services : null
+)
+
+const createdInMainUnasked = computed<boolean>(() => {
+  const listed = services.value
+  return (
+    foldersNotLookedUp &&
+    listed !== null &&
+    (listed.total > listed.services.length || listed.services.some((service) => service.new_host))
+  )
+})
+
+const folderOptions = computed<Suggestions>(() => ({
+  type: 'fixed',
+  suggestions: folders.map((folder) => ({ name: folder.path, title: untranslated(folder.title) }))
+}))
+
+function folderTitle(path: string): string {
+  return folders.find((folder) => folder.path === path)?.title ?? path
+}
+
+type Service = ServicesToCreate['services'][number]
+
+function choosesFolder(service: Service): boolean {
+  return service.new_host && newHostFolders[service.host_name] !== undefined
+}
+
+/** The rows that choose the folder of their host: the first listed service of each new host. */
+const choosingRows = computed<Map<number, string>>(() => {
+  const rows = new Map<number, string>()
+  const seen = new Set<string>()
+  services.value?.services.forEach((service, index) => {
+    if (choosesFolder(service) && !seen.has(service.host_name)) {
+      seen.add(service.host_name)
+      rows.set(index, service.host_name)
+    }
+  })
+  return rows
+})
+
+/** New hosts no row chooses the folder of, given one folder together */
+const otherNewHosts = computed<string[]>(() => {
+  const chosenInRows = new Set(choosingRows.value.values())
+  return Object.keys(newHostFolders).filter((hostName) => !chosenInRows.has(hostName))
+})
+
+const otherNewHostsFolder = computed<string | null>(() => {
+  const paths = new Set(otherNewHosts.value.map((hostName) => newHostFolders[hostName]))
+  return paths.size === 1 ? [...paths][0]! : null
+})
 </script>
 
 <template>
   <div class="mode-custom-services-services-to-be-created" aria-live="polite">
-    <span class="mode-custom-services-services-to-be-created__label">
-      {{ _t('Services to be created') }}
-      <template v-if="services">({{ services.total }})</template>
-    </span>
+    <div class="mode-custom-services-services-to-be-created__header">
+      <span class="mode-custom-services-services-to-be-created__label">
+        {{ _t('Services to be created') }}
+        <template v-if="services">({{ services.total }})</template>
+      </span>
+      <span
+        v-if="preview.status === 'refreshing'"
+        class="mode-custom-services-services-to-be-created__note"
+        >{{ _t('Updating…') }}</span
+      >
+    </div>
     <span v-if="preview.status === 'idle'">{{
       _t(
         'Enter a service name and select a host or enter a host name template to see the services to be created.'
@@ -89,6 +163,23 @@ const services = computed(() => (preview.status === 'resolved' ? preview.service
               service.new_host ? _t('To be created') : _t('Existing')
             }}</CmkBadge>
           </div>
+          <template v-if="choosesFolder(service)">
+            <span
+              class="mode-custom-services-services-to-be-created__key mode-custom-services-services-to-be-created__key--folder"
+              >{{ _t('Folder:') }}</span
+            >
+            <CmkDropdown
+              v-if="choosingRows.has(index)"
+              :model-value="newHostFolders[service.host_name]!"
+              :options="folderOptions"
+              :label="_t('Folder of %{host}', { host: service.host_name })"
+              @update:model-value="
+                (folder: string | null) =>
+                  folder !== null && emit('chooseFolder', [service.host_name], folder)
+              "
+            />
+            <span v-else>{{ folderTitle(newHostFolders[service.host_name]!) }}</span>
+          </template>
           <span
             v-if="clashLabel(service.clash)"
             class="mode-custom-services-services-to-be-created__clash"
@@ -96,6 +187,16 @@ const services = computed(() => (preview.status === 'resolved' ? preview.service
           >
         </li>
       </ol>
+      <CmkAlert
+        v-if="createdInMainUnasked"
+        size="small"
+        variant="warning"
+        :text="
+          _t(
+            'The folders you may create hosts in could not be looked up, so new hosts go to the Main folder. Saving fails if you may not create hosts there.'
+          )
+        "
+      />
       <span v-if="services.total > services.services.length">{{
         _t('Showing the first %{shown} of %{total} services.', {
           shown: services.services.length,
@@ -123,6 +224,37 @@ const services = computed(() => (preview.status === 'resolved' ? preview.service
         _t('Series appearing after saving add services that are not shown here.')
       }}</span>
     </template>
+    <div
+      v-if="(services !== null || preview.status === 'failed') && otherNewHosts.length > 0"
+      class="mode-custom-services-services-to-be-created__more-hosts"
+    >
+      <span>{{
+        choosingRows.size > 0
+          ? _tn(
+              '%{n} more new host is created in',
+              '%{n} more new hosts are created in',
+              otherNewHosts.length,
+              { n: otherNewHosts.length }
+            )
+          : _tn(
+              '%{n} new host is created in',
+              '%{n} new hosts are created in',
+              otherNewHosts.length,
+              {
+                n: otherNewHosts.length
+              }
+            )
+      }}</span>
+      <CmkDropdown
+        :model-value="otherNewHostsFolder"
+        :options="folderOptions"
+        :input-hint="_t('Several folders')"
+        :label="_t('Folder of the other new hosts')"
+        @update:model-value="
+          (folder: string | null) => folder !== null && emit('chooseFolder', otherNewHosts, folder)
+        "
+      />
+    </div>
   </div>
 </template>
 
@@ -133,6 +265,13 @@ const services = computed(() => (preview.status === 'resolved' ? preview.service
   gap: var(--dimension-3);
   font-size: var(--font-size-small);
   overflow-wrap: anywhere;
+}
+
+.mode-custom-services-services-to-be-created__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--dimension-3);
 }
 
 .mode-custom-services-services-to-be-created__label {
@@ -179,6 +318,17 @@ const services = computed(() => (preview.status === 'resolved' ? preview.service
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+}
+
+.mode-custom-services-services-to-be-created__key--folder {
+  grid-column: 2;
+}
+
+.mode-custom-services-services-to-be-created__more-hosts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dimension-3);
 }
 
 .mode-custom-services-services-to-be-created__name {

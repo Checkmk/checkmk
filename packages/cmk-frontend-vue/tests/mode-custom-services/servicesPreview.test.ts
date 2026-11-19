@@ -6,7 +6,7 @@
 import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
+import { HttpResponse, delay, http } from 'msw'
 import { afterEach, expect, test, vi } from 'vitest'
 import { type EffectScope, effectScope, ref } from 'vue'
 
@@ -60,10 +60,15 @@ function mount(
   const scope = effectScope()
   scopes.push(scope)
   const model = ref<ServiceModel | null>(initial)
+  const newHostFolders = ref<Record<string, string>>({})
   const { preview } = scope.run(() =>
-    useServicesPreview(() => model.value, configurationName, { debounceMs, timeoutMs })
+    useServicesPreview(() => model.value, configurationName, {
+      debounceMs,
+      timeoutMs,
+      getNewHostFolders: () => newHostFolders.value
+    })
   )!
-  return { model, preview }
+  return { model, newHostFolders, preview }
 }
 
 test.each<[string, Partial<ServiceModel>]>([
@@ -124,6 +129,62 @@ test('a changed service name resolves the services again', async () => {
   })
 })
 
+function answerSlowlyOnceAsked(): void {
+  server.use(
+    http.post(RESOLVE_URL, async ({ request }) => {
+      requests.push(await request.json())
+      if (requests.length > 1) {
+        await delay('infinite')
+      }
+      return HttpResponse.json(SERVICES)
+    })
+  )
+}
+
+test('services looked up again for other folders stay shown as refreshing', async () => {
+  answerSlowlyOnceAsked()
+  const { newHostFolders, preview } = mount(hostService())
+  await vi.waitFor(() => expect(preview.value.status).toBe('resolved'))
+
+  newHostFolders.value = { 'pod-new': '/k8s/shop' }
+
+  await vi.waitFor(() => expect(requests).toHaveLength(2))
+  expect(requests[1]).toMatchObject({
+    new_host_folders: [{ host_name: 'pod-new', folder: '/k8s/shop' }]
+  })
+  expect(preview.value).toEqual({ status: 'refreshing', services: SERVICES })
+})
+
+test('services looked up again for another service name are not shown meanwhile', async () => {
+  answerSlowlyOnceAsked()
+  const { model, preview } = mount(hostService())
+  await vi.waitFor(() => expect(preview.value.status).toBe('resolved'))
+
+  model.value = hostService({ serviceName: 'Duration' })
+
+  await vi.waitFor(() => expect(requests).toHaveLength(2))
+  expect(preview.value).toEqual({ status: 'loading' })
+})
+
+test('a refused change of folders fails, as the template preview does not explain it', async () => {
+  const { newHostFolders, preview } = mount(
+    hostService({ hostName: null, hostNameTemplate: '$RESOURCE_ATTR.k8s.pod.name$' })
+  )
+  await vi.waitFor(() => expect(preview.value.status).toBe('resolved'))
+  server.use(
+    http.post(RESOLVE_URL, () =>
+      HttpResponse.json(
+        { title: 'Bad Request', status: 400, detail: 'Unknown folder' },
+        { status: 400 }
+      )
+    )
+  )
+
+  newHostFolders.value = { 'pod-new': '/gone' }
+
+  await vi.waitFor(() => expect(preview.value.status).toBe('failed'))
+})
+
 function answerWith(status: number): void {
   server.use(
     http.post(RESOLVE_URL, () => HttpResponse.json({ title: 'Error', status }, { status }))
@@ -155,6 +216,11 @@ test.each<[string, ServicesPreview, boolean]>([
   [
     'resolved with a clash',
     { status: 'resolved', services: { ...SERVICES, clashes: [CLASH] } },
+    true
+  ],
+  [
+    'refreshing with a clash',
+    { status: 'refreshing', services: { ...SERVICES, clashes: [CLASH] } },
     true
   ],
   ['refused', { status: 'refused' }, false],

@@ -322,6 +322,19 @@ test.each<[string, TemplatePreview, boolean]>([
     'an incomplete list',
     { status: 'resolved', resolution: { ...RESOLUTION, truncated: true } },
     true
+  ],
+  [
+    'new hosts but no folder to create them in',
+    { status: 'resolved', resolution: { ...RESOLUTION, creatable_folders: [] } },
+    true
+  ],
+  [
+    'no folder to create hosts in but no new host',
+    {
+      status: 'resolved',
+      resolution: { ...RESOLUTION, unmatched_host_names: [], creatable_folders: [] }
+    },
+    false
   ]
 ])('saving with %s', (_, preview, blocked) => {
   expect(templatePreviewBlocksSave(preview)).toBe(blocked)

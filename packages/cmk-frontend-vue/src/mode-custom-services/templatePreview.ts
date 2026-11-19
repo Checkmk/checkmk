@@ -41,7 +41,8 @@ export function templatePreviewBlocksSave(preview: TemplatePreview): boolean {
       return (
         (resolution.matching_hosts.length === 0 && resolution.unmatched_host_names.length === 0) ||
         resolution.hidden_match_count > 0 ||
-        resolution.truncated
+        resolution.truncated ||
+        (resolution.unmatched_host_names.length > 0 && resolution.creatable_folders.length === 0)
       )
     }
     default:

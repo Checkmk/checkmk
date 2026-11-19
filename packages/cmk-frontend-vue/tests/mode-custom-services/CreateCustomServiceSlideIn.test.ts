@@ -7,7 +7,7 @@ import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
+import { HttpResponse, delay, http } from 'msw'
 import { afterEach, expect, test } from 'vitest'
 
 import CreateCustomServiceSlideIn from '@/mode-custom-services/CreateCustomServiceSlideIn.vue'
@@ -249,6 +249,90 @@ test('a host name template that resolves only to new hosts can be saved', async 
   expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
 })
 
+test('a new host is looked up and created in the folder chosen for it', async () => {
+  let servicesRequest: unknown = null
+  server.use(
+    http.post(RESOLVE_URL, () =>
+      HttpResponse.json({
+        matching_hosts: [],
+        unmatched_host_names: ['pod-cart'],
+        hidden_match_count: 0,
+        truncated: false,
+        creatable_folders: [
+          { path: '/', title: 'Main' },
+          { path: '/k8s/shop', title: 'Main / K8s / Shop' }
+        ]
+      })
+    ),
+    http.post(RESOLVE_SERVICES_URL, async ({ request }) => {
+      servicesRequest = await request.json()
+      return HttpResponse.json({
+        services: [
+          { host_name: 'pod-cart', service_name: 'HTTP duration', new_host: true, clash: null }
+        ],
+        total: 1,
+        clashes: [],
+        complete: true
+      })
+    })
+  )
+  const { emitted } = renderSlideIn(
+    initialModel({ hostNameTemplate: '$RESOURCE_ATTR.service.name$' })
+  )
+  await enterConfigurationName('pod_latency')
+
+  await userEvent.click(await screen.findByRole('combobox', { name: 'Folder of pod-cart' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Main / K8s / Shop' }))
+  const chosen = { new_host_folders: [{ host_name: 'pod-cart', folder: '/k8s/shop' }] }
+  await waitFor(() => expect(servicesRequest).toMatchObject(chosen))
+  await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+  await waitFor(() => expect(emitted('close')).toBeTruthy())
+  expect(lastBody).toMatchObject(chosen)
+})
+
+test('choosing a folder keeps the services and the folder choice shown while looking up', async () => {
+  let servicesRequests = 0
+  server.use(
+    http.post(RESOLVE_URL, () =>
+      HttpResponse.json({
+        matching_hosts: [],
+        unmatched_host_names: ['pod-cart'],
+        hidden_match_count: 0,
+        truncated: false,
+        creatable_folders: [
+          { path: '/', title: 'Main' },
+          { path: '/k8s/shop', title: 'Main / K8s / Shop' }
+        ]
+      })
+    ),
+    http.post(RESOLVE_SERVICES_URL, async () => {
+      servicesRequests += 1
+      if (servicesRequests > 1) {
+        await delay('infinite')
+      }
+      return HttpResponse.json({
+        services: [
+          { host_name: 'pod-cart', service_name: 'HTTP duration', new_host: true, clash: null }
+        ],
+        total: 1,
+        clashes: [],
+        complete: true
+      })
+    })
+  )
+  renderSlideIn(initialModel({ hostNameTemplate: '$RESOURCE_ATTR.service.name$' }))
+
+  await userEvent.click(await screen.findByRole('combobox', { name: 'Folder of pod-cart' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Main / K8s / Shop' }))
+
+  await screen.findByText('Updating…')
+  expect(screen.getByText('HTTP duration')).toBeTruthy()
+  expect(screen.getByRole('combobox', { name: 'Folder of pod-cart' })).toHaveTextContent(
+    'Main / K8s / Shop'
+  )
+})
+
 test('a refused new host keeps the dialog open and says why', async () => {
   server.use(
     http.post(RESOLVE_URL, () =>
@@ -311,7 +395,8 @@ test('a service name that clashes cannot be saved', async () => {
         matching_hosts: [],
         unmatched_host_names: ['pod-cart'],
         hidden_match_count: 0,
-        truncated: false
+        truncated: false,
+        creatable_folders: [{ path: '/', title: 'Main' }]
       })
     )
   )

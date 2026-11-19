@@ -42,7 +42,7 @@ test('names the hosts saving creates apart', () => {
   })
 
   expect(screen.getByText(/New hosts/)).toHaveTextContent(
-    'New hosts, created in the Main folder on saving: pod-search'
+    'New hosts, created on saving: pod-search'
   )
   expect(screen.getByText(/Target hosts:/)).not.toHaveTextContent('pod-search')
 })
@@ -62,6 +62,21 @@ test('warns that the service cannot be saved when the template resolves to no ho
 
   expect(isAlert(/resolves to no host name/)).toBe(true)
   expect(screen.queryByText(/Target hosts:/)).toBeNull()
+})
+
+test('warns that new hosts cannot be created without a folder to create them in', () => {
+  renderMatches({
+    status: 'resolved',
+    resolution: { ...RESOLUTION, unmatched_host_names: ['pod-search'], creatable_folders: [] }
+  })
+
+  expect(isAlert(/You may not create hosts in any folder/)).toBe(true)
+})
+
+test('does not warn about folders while no host is created', () => {
+  renderMatches({ status: 'resolved', resolution: { ...RESOLUTION, creatable_folders: [] } })
+
+  expect(screen.queryByText(/You may not create hosts in any folder/)).toBeNull()
 })
 
 test('warns about matching hosts the user may not see', () => {

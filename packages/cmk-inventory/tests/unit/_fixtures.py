@@ -19,7 +19,7 @@ from cmk.inventory.serialization import (
     serialize_tree,
 )
 from cmk.inventory.store import InventoryStore
-from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName
+from cmk.inventory.trees import ImmutableTree, MutableTree, RetentionInterval, SDKey, SDNodeName
 
 
 def inventory_store() -> InventoryStore:
@@ -50,6 +50,21 @@ def raw_tree(value: str) -> SDRawTree:
             ),
         },
     )
+
+
+def tree_with_table_retentions() -> SDRawTree:
+    return SDRawTree(
+        Attributes={},
+        Table={
+            "KeyColumns": [SDKey("kc")],
+            "Rows": [{SDKey("kc"): "KC", SDKey("c1"): "C1"}],
+            "Retentions": {("KC",): {SDKey("c1"): (1, 2, 3, "current")}},
+        },
+        Nodes={},
+    )
+
+
+TABLE_RETENTIONS = {("KC",): {SDKey("c1"): RetentionInterval(1, 2, 3, "current")}}
 
 
 def gzipped_repr(raw_tree: SDRawTree) -> bytes:

@@ -10,6 +10,9 @@ from pathlib import Path
 import pytest
 
 import cmk.ccc.store
+from cmk.ccc.hostaddress import HostName
+from cmk.inventory.history import HistoryStore
+from cmk.inventory.store import InventoryStore
 from cmk.inventory.transformation.tree_files import (
     _compute_bundle_size,
     show_transformation_results,
@@ -18,7 +21,7 @@ from cmk.inventory.transformation.tree_files import (
     TransformationResultsStore,
 )
 
-from ._fixtures import gzipped_repr, raw_tree
+from ._fixtures import gzipped_repr, raw_tree, TABLE_RETENTIONS, tree_with_table_retentions
 from ._logger import null_logger
 
 
@@ -123,6 +126,42 @@ def test_transform_replaces_the_legacy_delta_cache_tree(tmp_path: Path) -> None:
         (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456").exists(),
         (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456.json").exists(),
     ) == (False, True)
+
+
+def _transform_all_trees_of_hostname(omd_root: Path) -> None:
+    transform_inventory_trees(
+        logger=null_logger(),
+        omd_root=omd_root,
+        bundle_length=0,
+        filter_host_names=["hostname"],
+        all_host_names=["hostname"],
+        clock=FakeClock(0.0),
+    )
+
+
+def test_transform_archive_tree_keeps_the_table_retentions(tmp_path: Path) -> None:
+    cmk.ccc.store.save_object_to_file(
+        tmp_path / "var/check_mk/inventory_archive/hostname/123", tree_with_table_retentions()
+    )
+    _transform_all_trees_of_hostname(tmp_path)
+    assert (
+        InventoryStore(tmp_path)
+        .load_previous_inventory_tree(host_name=HostName("hostname"))
+        .table.retentions
+        == TABLE_RETENTIONS
+    )
+
+
+def test_transform_delta_cache_tree_keeps_the_delta(tmp_path: Path) -> None:
+    cmk.ccc.store.save_object_to_file(
+        tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456",
+        (1, 0, 0, {"Attributes": {"Pairs": {"key": (None, "val")}}, "Table": {}, "Nodes": {}}),
+    )
+    _transform_all_trees_of_hostname(tmp_path)
+    assert [
+        (e.new, e.changed, e.removed)
+        for e in HistoryStore(tmp_path).load(HostName("hostname"), delta_tree_filters=None).entries
+    ] == [(1, 0, 0)]
 
 
 def test_transformation_results_store_is_empty_without_a_file(tmp_path: Path) -> None:

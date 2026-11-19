@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import logging
 import math
 import os
@@ -16,10 +17,14 @@ import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.paths import collect_files, InventoryPaths, TreePath, TreePathGz
 from cmk.inventory.raw_store import save_raw_tree, save_raw_tree_gz
-from cmk.inventory.serialization import parse_from_gzipped
+from cmk.inventory.serialization import normalize_raw_tree, parse_from_gzipped
 
 _KILO = 1000
 _NUMBER_OF_BUNDLES = 200
+
+
+class _DeltaCachePath(TreePath):
+    pass
 
 
 def _transform_tree_path(tree_path: TreePath, mtime: float) -> None:
@@ -27,9 +32,22 @@ def _transform_tree_path(tree_path: TreePath, mtime: float) -> None:
         if raw_tree := cmk.ccc.store.load_object_from_file(
             tree_path.legacy, default=None, debug=False
         ):
-            save_raw_tree(tree_path, raw_tree)
+            save_raw_tree(tree_path, normalize_raw_tree(raw_tree))
             os.utime(tree_path.path, (mtime, mtime))
     tree_path.legacy.unlink(missing_ok=True)
+
+
+def _transform_delta_cache_path(delta_cache_path: _DeltaCachePath, mtime: float) -> None:
+    with (
+        cmk.ccc.store.locked(delta_cache_path.path),
+        cmk.ccc.store.locked(delta_cache_path.legacy),
+    ):
+        if raw_delta := cmk.ccc.store.load_object_from_file(
+            delta_cache_path.legacy, default=None, debug=False
+        ):
+            cmk.ccc.store.save_text_to_file(delta_cache_path.path, json.dumps(raw_delta))
+            os.utime(delta_cache_path.path, (mtime, mtime))
+    delta_cache_path.legacy.unlink(missing_ok=True)
 
 
 def _transform_tree_path_gz(tree_path_gz: TreePathGz, mtime: float) -> None:
@@ -42,8 +60,10 @@ def _transform_tree_path_gz(tree_path_gz: TreePathGz, mtime: float) -> None:
     tree_path_gz.legacy.unlink(missing_ok=True)
 
 
-def transform(tree_path: TreePath | TreePathGz, mtime: float) -> None:
+def transform(tree_path: TreePath | TreePathGz | _DeltaCachePath, mtime: float) -> None:
     match tree_path:
+        case _DeltaCachePath():
+            _transform_delta_cache_path(tree_path, mtime)
         case TreePath():
             _transform_tree_path(tree_path, mtime)
         case TreePathGz():
@@ -53,7 +73,7 @@ def transform(tree_path: TreePath | TreePathGz, mtime: float) -> None:
 @dataclass(frozen=True)
 class _HostTreePath:
     host_name: str
-    tree_path: TreePath | TreePathGz
+    tree_path: TreePath | TreePathGz | _DeltaCachePath
     stat: os.stat_result
 
 
@@ -76,6 +96,16 @@ def _compute_host_tree_path_or_unknown_file_path(
     if tree_path.legacy in all_file_paths and (stat := _compute_file_path_stat(tree_path.legacy)):
         return _HostTreePath(str(host_name), tree_path, stat)
     return tree_path.legacy
+
+
+def _collect_history_file_paths(directory: Path) -> Iterator[tuple[str, Path]]:
+    for host_dir in collect_files(directory):
+        try:
+            file_paths = list(host_dir.iterdir())
+        except FileNotFoundError, NotADirectoryError:
+            file_paths = []
+        for file_path in file_paths:
+            yield host_dir.name, file_path
 
 
 def _iter_host_tree_paths_or_unknown_file_paths(
@@ -101,19 +131,15 @@ def _iter_host_tree_paths_or_unknown_file_paths(
         ):
             yield path
 
-    for host_dir in list(collect_files(inv_paths.archive_dir)) + list(
-        collect_files(inv_paths.delta_cache_dir)
-    ):
-        try:
-            file_paths = list(host_dir.iterdir())
-        except FileNotFoundError, NotADirectoryError:
-            file_paths = []
+    for raw_host_name, file_path in _collect_history_file_paths(inv_paths.archive_dir):
+        tree_path = TreePath.from_archive_or_delta_cache_file_path(file_path)
+        if stat := _compute_file_path_stat(tree_path.legacy):
+            yield _HostTreePath(raw_host_name, tree_path, stat)
 
-        raw_host_name = host_dir.name
-        for file_path in file_paths:
-            tree_path = TreePath.from_archive_or_delta_cache_file_path(file_path)
-            if stat := _compute_file_path_stat(tree_path.legacy):
-                yield _HostTreePath(raw_host_name, tree_path, stat)
+    for raw_host_name, file_path in _collect_history_file_paths(inv_paths.delta_cache_dir):
+        delta_cache_path = _DeltaCachePath.from_archive_or_delta_cache_file_path(file_path)
+        if stat := _compute_file_path_stat(delta_cache_path.legacy):
+            yield _HostTreePath(raw_host_name, delta_cache_path, stat)
 
 
 def _collect_host_tree_paths_or_unknown_file_paths(

@@ -16,7 +16,7 @@ from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 
 from .paths import InventoryPaths, tree_mtime, TreePath, TreePathGz
-from .serialization import deserialize_tree, SDMetaAndRawTree, SDRawTree
+from .serialization import deserialize_tree, normalize_raw_tree, SDMetaAndRawTree, SDRawTree
 from .trees import ImmutableTree
 
 
@@ -93,8 +93,7 @@ def archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName, *, de
         return
 
     if raw_tree := store.load_object_from_file(tree_path.legacy, default=None, debug=debug):
-        inv_paths.archive_host(host_name).mkdir(parents=True, exist_ok=True)
-        store.save_text_to_file(archive_tree.path, json.dumps(raw_tree))
+        save_raw_tree(archive_tree, normalize_raw_tree(raw_tree))
         tree_path.legacy.unlink(missing_ok=True)
         tree_path_gz.legacy.unlink(missing_ok=True)
 

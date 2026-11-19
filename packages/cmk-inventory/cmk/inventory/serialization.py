@@ -293,6 +293,10 @@ def deserialize_tree(raw_tree: object) -> ImmutableTree:
     )
 
 
+def normalize_raw_tree(raw_tree: object) -> SDRawTree:
+    return serialize_tree(deserialize_tree(raw_tree))
+
+
 def _serialize_delta_value(delta_value: SDDeltaValue) -> tuple[SDValue, SDValue]:
     return (delta_value.old, delta_value.new)
 
@@ -420,10 +424,12 @@ def _parse_raw_meta(raw_meta: object) -> SDMeta:
 def _parse_raw_tree(raw_tree: object) -> SDRawTree:
     if not isinstance(raw_tree, dict):
         raise TypeError(raw_tree)
-    return SDRawTree(
-        Attributes=raw_tree.get("Attributes", {}),
-        Table=raw_tree.get("Table", {}),
-        Nodes=raw_tree.get("Nodes", {}),
+    return normalize_raw_tree(
+        SDRawTree(
+            Attributes=raw_tree.get("Attributes", {}),
+            Table=raw_tree.get("Table", {}),
+            Nodes=raw_tree.get("Nodes", {}),
+        )
     )
 
 
@@ -440,11 +446,7 @@ def _parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
             version="1",
             do_archive=raw.get("meta_do_archive", True),
         ),
-        raw_tree=SDRawTree(
-            Attributes=raw.get("Attributes", {}),
-            Table=raw.get("Table", {}),
-            Nodes=raw.get("Nodes", {}),
-        ),
+        raw_tree=_parse_raw_tree(raw),
     )
 
 

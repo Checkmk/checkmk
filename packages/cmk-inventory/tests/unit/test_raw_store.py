@@ -16,8 +16,15 @@ from cmk.inventory.serialization import (
     parse_from_gzipped,
     SDMetaAndRawTree,
 )
+from cmk.inventory.store import InventoryStore
 
-from ._fixtures import gzipped_json, gzipped_repr, raw_tree
+from ._fixtures import (
+    gzipped_json,
+    gzipped_repr,
+    raw_tree,
+    TABLE_RETENTIONS,
+    tree_with_table_retentions,
+)
 
 
 def _host_files(tmp_path: Path, host_name: HostName, suffix: str) -> Sequence[Path]:
@@ -198,3 +205,34 @@ def test_archive_inventory_tree_moves_the_tree_dated_by_its_mtime(tmp_path: Path
     assert list((tmp_path / "var/check_mk/inventory_archive/hostname").iterdir()) == [
         tmp_path / "var/check_mk/inventory_archive/hostname/123.json"
     ]
+
+
+def test_archive_inventory_tree_keeps_the_table_retentions_of_a_legacy_tree(
+    tmp_path: Path,
+) -> None:
+    cmk.ccc.store.save_object_to_file(
+        tmp_path / "var/check_mk/inventory/hostname", tree_with_table_retentions()
+    )
+    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"), debug=False)
+    assert (
+        InventoryStore(tmp_path)
+        .load_previous_inventory_tree(host_name=HostName("hostname"))
+        .table.retentions
+        == TABLE_RETENTIONS
+    )
+
+
+def test_save_meta_and_raw_inventory_tree_keeps_the_table_retentions_of_a_legacy_tree(
+    tmp_path: Path,
+) -> None:
+    RawInventoryStore(tmp_path).save_meta_and_raw_inventory_tree(
+        host_name=HostName("hostname"),
+        meta_and_raw_tree=parse_from_gzipped(gzipped_repr(tree_with_table_retentions())),
+        timestamp=123456,
+    )
+    assert (
+        InventoryStore(tmp_path)
+        .load_inventory_tree(host_name=HostName("hostname"))
+        .table.retentions
+        == TABLE_RETENTIONS
+    )

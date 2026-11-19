@@ -46,6 +46,9 @@ If you wish a clippy lint exception to fail the build, please enable the `--@asp
 Please note that the aspect will propagate to all transitive Rust dependencies of your
 `rust_library`, `rust_binary`, and `rust_test` targets.
 
+A `rust_test` with `crate` lints the sources of that crate again, with cfg(test), but
+reports only the findings which the crate's own run doesn't have.
+
 Please watch issue https://github.com/aspect-build/rules_lint/issues/385 for updates on this behavior.
 """
 
@@ -53,6 +56,14 @@ load("@aspect_rules_lint//lint:defs.bzl", "LintOptionsInfo", "OUTFILE_FORMAT", "
 load("@rules_rust//rust:defs.bzl", "rust_clippy_action")
 
 _MNEMONIC = "AspectRulesLintClippy"
+
+_ClippyCrateInfo = provider(
+    doc = "What the clippy aspect linted for a crate, for the rust_test targets with this `crate`.",
+    fields = {
+        "diagnostics": "File: rustc's JSON diagnostics of the crate",
+        "srcs": "list of File: the linted sources of the crate",
+    },
+)
 
 def _parse_wrapper_output_into_files(ctx, outputs, raw_process_wrapper_wrapper_output):
     arguments = [
@@ -104,6 +115,21 @@ echo "${output}" >&2
         outputs = outs,
     )
 
+def _drop_known_diagnostics(ctx, target, sibling, raw_output, diagnostics, known_diagnostics):
+    """Keeps the findings of a rust_test which its `crate` doesn't have, see filter_known_diagnostics.mjs."""
+    new_raw_output = ctx.actions.declare_file(OUTFILE_FORMAT.format(label = target.label.name, mnemonic = _MNEMONIC, suffix = "raw_process_wrapper_wrapper_output_human_new"), sibling = sibling)
+    new_diagnostics = ctx.actions.declare_file(OUTFILE_FORMAT.format(label = target.label.name, mnemonic = _MNEMONIC, suffix = "rustc_json_diagnostics_new"), sibling = sibling)
+    ctx.actions.run(
+        executable = ctx.executable._filter_known_diagnostics,
+        arguments = [raw_output.path, diagnostics.path, known_diagnostics.path, new_raw_output.path, new_diagnostics.path],
+        inputs = [raw_output, diagnostics, known_diagnostics],
+        outputs = [new_raw_output, new_diagnostics],
+        # Must be set for js_binary to run, see _parse_to_sarif_action.
+        env = {"BAZEL_BINDIR": "."},
+        progress_message = "Dropping known clippy findings for %{label}",
+    )
+    return new_raw_output, new_diagnostics
+
 _CLIPPY_SKIP_TAG = "noclippy"
 
 def _has_skip_tag(rule):
@@ -117,6 +143,15 @@ def _clippy_aspect_impl(target, ctx):
     clippy_bin = ctx.toolchains[Label("@rules_rust//rust:toolchain_type")].clippy_driver
 
     files_to_lint = filter_srcs(ctx.rule)
+
+    # A rust_test with `crate` compiles the sources of that crate again, with
+    # cfg(test). Lint them, too, but report only what the crate's own run
+    # doesn't, see _drop_known_diagnostics.
+    crate = getattr(ctx.rule.attr, "crate", None)
+    known_diagnostics = None
+    if crate and _ClippyCrateInfo in crate:
+        files_to_lint = files_to_lint + [src for src in crate[_ClippyCrateInfo].srcs if src not in files_to_lint]
+        known_diagnostics = crate[_ClippyCrateInfo].diagnostics
 
     # Declare outputs with sibling = crate_info.output when available, so they're placed in the same directory
     # structure that rustc expects. This is required because rust_clippy_action sets --out-dir based on
@@ -164,13 +199,17 @@ def _clippy_aspect_impl(target, ctx):
         clippy_diagnostics_file = raw_rustc_json_diagnostics,
     )
 
-    _parse_wrapper_output_into_files(ctx, outputs, raw_output)
-    _parse_to_sarif_action(ctx, raw_rustc_json_diagnostics, outputs.machine.out)
+    output, diagnostics = raw_output, raw_rustc_json_diagnostics
+    if known_diagnostics:
+        output, diagnostics = _drop_known_diagnostics(ctx, target, sibling, raw_output, raw_rustc_json_diagnostics, known_diagnostics)
+
+    _parse_wrapper_output_into_files(ctx, outputs, output)
+    _parse_to_sarif_action(ctx, diagnostics, outputs.machine.out)
 
     if patch_file != None:
-        _run_patcher(ctx, files_to_lint, raw_rustc_json_diagnostics, patch_file)
+        _run_patcher(ctx, files_to_lint, diagnostics, patch_file)
 
-    return [info]
+    return [info, _ClippyCrateInfo(diagnostics = raw_rustc_json_diagnostics, srcs = files_to_lint)]
 
 def _run_patcher(ctx, srcs, rustc_diagnostics_file, patch_file):
     args = [
@@ -255,6 +294,12 @@ def lint_clippy_aspect(config, rule_kinds = DEFAULT_RULE_KINDS, clippy_flags = [
             default = config,
             allow_single_file = True,
         ),
+        "_filter_known_diagnostics": attr.label(
+            doc = "Drops the findings of a crate's own run from those of a rust_test with `crate`.",
+            default = Label(":filter_known_diagnostics"),
+            executable = True,
+            cfg = "exec",
+        ),
         "_options": attr.label(
             default = "@aspect_rules_lint//lint:options",
             providers = [LintOptionsInfo],
@@ -297,7 +342,7 @@ References:
     }
     return aspect(
         fragments = ["cpp"],
-        attr_aspects = ["deps"],
+        attr_aspects = ["crate", "deps"],
         implementation = _clippy_aspect_impl,
         attrs = patcher_attrs | attrs,
         toolchains =

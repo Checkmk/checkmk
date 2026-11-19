@@ -16,6 +16,10 @@ The module `aspect_rules_lint_rules_rust` is not on BCR, and
 - `clippy.bzl`: `--remap-path-prefix` strips the bin directory from the
   diagnostics. Crates with generated sources are compiled from the bin
   directory, and the patcher failed with ENOENT on their fixes.
+- `clippy.bzl`: a `rust_test` with `crate` lints the crate's sources, too,
+  and reports only what the crate's own run doesn't
+  (`filter_known_diagnostics.mjs`, not vendored). Upstream lints only the
+  test's own `srcs`, so unit tests were never linted.
 - `BUILD`: upstream tests removed, `no-lint` tags added.
 
 The `.bash` and `.cjs` files are unchanged and excluded from formatting

@@ -14,6 +14,18 @@ js_binary(
     visibility = ["//visibility:public"],
 )
 
+js_library(
+    name = "filter_known_diagnostics_lib",
+    srcs = ["filter_known_diagnostics.mjs"],
+)
+
+js_binary(
+    name = "filter_known_diagnostics",
+    data = [":filter_known_diagnostics_lib"],
+    entry_point = "filter_known_diagnostics.mjs",
+    visibility = ["//visibility:public"],
+)
+
 sh_binary(
     name = "process_wrapper_wrapper",
     srcs = ["process_wrapper_wrapper.bash"],

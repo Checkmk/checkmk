@@ -598,7 +598,7 @@ PagerDutyWebhookURL = Literal[
 
 
 class PagerDutyPluginModel(TypedDict):
-    routing_key: tuple[Literal["routing_key", "store"], str]
+    routing_key: RoutingKeyType | CheckmkPassword
     webhook_url: PagerDutyWebhookURL
     ignore_ssl: NotRequired[Literal[True]]
     proxy_url: NotRequired[ProxyUrl]

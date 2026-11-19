@@ -1264,7 +1264,7 @@ class LivestatusConnection(ConnectionBase):
         # collapses its two columns with ``Or: 2`` first, then a trailing ``And:``
         # ANDs all the resulting conditions together.
         def _rx(needle: str) -> str:
-            return lqencode(re.escape(needle))
+            return re.escape(lqencode(needle))
 
         filters = ""
         for t in service_terms:

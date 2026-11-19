@@ -70,3 +70,14 @@ def test_services_summary_counts_nothing_for_a_host_not_found(
     summaries = asyncio.run(conn.get_services_summary(["web-01", "web-02"]))
 
     assert summaries == {"web-01": ServicesSummary(ok=3, warning=1), "web-02": ServicesSummary()}
+
+
+def test_service_search_drops_a_line_break_from_a_term(monkeypatch: pytest.MonkeyPatch) -> None:
+    queries: list[str] = []
+    conn = _connection(monkeypatch, [], queries)
+
+    asyncio.run(
+        conn.search_services(host_terms=[], service_terms=["c\npu"], any_terms=[], limit=10)
+    )
+
+    assert "Filter: description ~~ cpu\n" in queries[0]

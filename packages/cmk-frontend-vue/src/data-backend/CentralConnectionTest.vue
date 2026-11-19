@@ -19,7 +19,7 @@ type Step = components['schemas']['_ConnectionTestStep']
 type Status = components['schemas']['_ConnectionTestStatus']
 type Settings = Pick<
   components['schemas']['_CentralConnectionTest'],
-  'centrally_routed_features' | 'address_seen_by_central'
+  'centrally_located_features' | 'address_seen_by_central'
 >
 
 type State =
@@ -153,7 +153,7 @@ function show(status: Status): void {
 
 function sameSettings(some: Partial<Settings>, other: Partial<Settings>): boolean {
   const features = (settings: Partial<Settings>) =>
-    [...(settings.centrally_routed_features ?? [])].sort().join()
+    [...(settings.centrally_located_features ?? [])].sort().join()
   return (
     features(some) === features(other) &&
     (some.address_seen_by_central ?? '') === (other.address_seen_by_central ?? '')

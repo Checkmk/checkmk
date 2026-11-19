@@ -2431,14 +2431,14 @@ class DataBackendAPI(BaseAPI):
     def close_to_the_central(self, site_id: str) -> None:
         self._request(site_id, {"type": "enabled", "central_access": {"type": "disabled"}})
 
-    def place_features(
+    def set_feature_locations(
         self,
         site_id: str,
         features: Mapping[str, str],
         address_seen_by_central: str | None = None,
     ) -> None:
         response = self.session.patch(
-            "domain-types/data_backend/actions/update_feature_placement/invoke",
+            "domain-types/data_backend/actions/update_feature_locations/invoke",
             api_version=APIVersion.INTERNAL,
             json={
                 "site_id": site_id,

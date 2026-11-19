@@ -14,9 +14,9 @@ import type { ValidationMessages } from '@/form/private/validation'
 import CentralConnectionTest from './CentralConnectionTest.vue'
 import {
   ADDRESS_SEEN_BY_CENTRAL,
-  centrallyRoutedFeatures,
+  centrallyLocatedFeatures,
   dictionaryOf,
-  placesAFeatureCentrally
+  locatesAFeatureCentrally
 } from './settings'
 
 const props = defineProps<{
@@ -31,12 +31,12 @@ const settings = computed(() =>
   dictionaryOf(props.spec, (name) => name !== ADDRESS_SEEN_BY_CENTRAL)
 )
 const address = computed(() => dictionaryOf(props.spec, (name) => name === ADDRESS_SEEN_BY_CENTRAL))
-const showAddress = computed(() => placesAFeatureCentrally(props.spec, data.value))
+const showAddress = computed(() => locatesAFeatureCentrally(props.spec, data.value))
 
 const remoteSettings = computed(() => {
   const enteredAddress = data.value[ADDRESS_SEEN_BY_CENTRAL] as string | undefined
   return {
-    centrally_routed_features: centrallyRoutedFeatures(props.spec, data.value) as Array<
+    centrally_located_features: centrallyLocatedFeatures(props.spec, data.value) as Array<
       components['schemas']['FeatureName']
     >,
     ...(enteredAddress ? { address_seen_by_central: enteredAddress } : {})

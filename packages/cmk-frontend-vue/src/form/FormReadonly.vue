@@ -65,7 +65,7 @@ import {
 import {
   ADDRESS_SEEN_BY_CENTRAL,
   dictionaryOf,
-  placesAFeatureCentrally
+  locatesAFeatureCentrally
 } from '@/data-backend/settings'
 import { attributeKindPrefix, pillLabel } from '@/telemetry-metrics/attribute-filter/pill-label'
 import { fromAttributeFilter } from '@/telemetry-metrics/attributeFilterAdapter'
@@ -245,7 +245,7 @@ function renderDataBackendSettings(
   value: Record<string, unknown>,
   backendValidation: ValidationMessages
 ): VNode {
-  const showAddress = placesAFeatureCentrally(formSpec, value)
+  const showAddress = locatesAFeatureCentrally(formSpec, value)
   return renderDict(
     dictionaryOf(formSpec, (name) => showAddress || name !== ADDRESS_SEEN_BY_CENTRAL),
     'one_column',

@@ -158,7 +158,7 @@ test('the connection test sends the settings as entered', async () => {
   await waitFor(() =>
     expect(requestBody).toEqual({
       site_id: 'remote1',
-      centrally_routed_features: ['telemetry'],
+      centrally_located_features: ['telemetry'],
       address_seen_by_central: '10.0.0.20',
       allow_restart: false
     })

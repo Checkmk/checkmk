@@ -151,7 +151,7 @@ describe('POST_SAVE_ACTIONS', () => {
 
   describe('enableDataBackend.execute', () => {
     const UPDATE_URL = '/domain-types/data_backend/actions/update/invoke'
-    const PLACEMENT_URL = '/domain-types/data_backend/actions/update_feature_placement/invoke'
+    const LOCATIONS_URL = '/domain-types/data_backend/actions/update_feature_locations/invoke'
 
     function setInstance(type: 'enabled' | 'disabled') {
       return [
@@ -160,9 +160,9 @@ describe('POST_SAVE_ACTIONS', () => {
       ]
     }
 
-    function placeTelemetry(location: 'local' | 'disabled') {
+    function setTelemetryLocation(location: 'local' | 'disabled') {
       return [
-        PLACEMENT_URL,
+        LOCATIONS_URL,
         {
           params: { header: JSON_HEADER },
           body: { site_id: 'prod', features: { telemetry: location } }
@@ -172,14 +172,14 @@ describe('POST_SAVE_ACTIONS', () => {
 
     test.each([
       {
-        name: 'enables the local instance and places telemetry on it',
+        name: 'enables the local instance and locates telemetry on it',
         instance: 'disabled',
-        calls: [setInstance('enabled'), placeTelemetry('local')]
+        calls: [setInstance('enabled'), setTelemetryLocation('local')]
       },
       {
-        name: 'places telemetry on an already enabled local instance',
+        name: 'locates telemetry on an already enabled local instance',
         instance: 'enabled',
-        calls: [placeTelemetry('local')]
+        calls: [setTelemetryLocation('local')]
       }
     ])('$name', async ({ instance, calls }) => {
       spyOnClient('GET').mockResolvedValueOnce(
@@ -212,14 +212,14 @@ describe('POST_SAVE_ACTIONS', () => {
 
     test.each([
       {
-        name: 'rolls back the placement and the instance it enabled',
+        name: 'rolls back the feature location and the instance it enabled',
         instance: 'disabled',
-        rollbackCalls: [placeTelemetry('disabled'), setInstance('disabled')]
+        rollbackCalls: [setTelemetryLocation('disabled'), setInstance('disabled')]
       },
       {
-        name: 'rolls back only the placement on an already enabled local instance',
+        name: 'rolls back only the feature location on an already enabled local instance',
         instance: 'enabled',
-        rollbackCalls: [placeTelemetry('disabled')]
+        rollbackCalls: [setTelemetryLocation('disabled')]
       }
     ])('$name', async ({ instance, rollbackCalls }) => {
       spyOnClient('GET').mockResolvedValueOnce(
@@ -238,7 +238,7 @@ describe('POST_SAVE_ACTIONS', () => {
       expect(patchSpy.mock.calls).toEqual(rollbackCalls)
     })
 
-    test('disables the instance it enabled when placing telemetry fails', async () => {
+    test('disables the instance it enabled when locating telemetry fails', async () => {
       spyOnClient('GET').mockResolvedValueOnce(
         makeOk({ type: 'disabled', features: { telemetry: 'disabled' } })
       )
@@ -256,7 +256,7 @@ describe('POST_SAVE_ACTIONS', () => {
       })
       expect(patchSpy.mock.calls).toEqual([
         setInstance('enabled'),
-        placeTelemetry('local'),
+        setTelemetryLocation('local'),
         setInstance('disabled')
       ])
     })

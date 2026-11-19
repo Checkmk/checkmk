@@ -126,9 +126,9 @@ async function setLocalDataBackendInstance(
   )
 }
 
-async function placeTelemetry(siteId: string, location: 'local' | 'disabled'): Promise<void> {
+async function setTelemetryLocation(siteId: string, location: 'local' | 'disabled'): Promise<void> {
   unwrap(
-    await client.PATCH('/domain-types/data_backend/actions/update_feature_placement/invoke', {
+    await client.PATCH('/domain-types/data_backend/actions/update_feature_locations/invoke', {
       params: { header: CONTENT_TYPE_JSON },
       body: { site_id: siteId, features: { telemetry: location } }
     })
@@ -291,7 +291,7 @@ export const enableCollectorAction: PostSaveAction = {
 /**
  * Action: store the selected site's telemetry metrics in a data backend.
  *
- * Enables the local instance (ClickHouse) and places telemetry on it, unless
+ * Enables the local instance (ClickHouse) and locates telemetry on it, unless
  * the site already stores telemetry locally or on the central site. Rollback
  * reverts only what this run changed.
  */
@@ -309,7 +309,7 @@ export const enableDataBackendAction: PostSaveAction = {
         await setLocalDataBackendInstance(ctx.siteId, 'enabled')
       }
       try {
-        await placeTelemetry(ctx.siteId, 'local')
+        await setTelemetryLocation(ctx.siteId, 'local')
       } catch (err) {
         // The state machine only rolls back actions that succeeded.
         if (enablesInstance) {
@@ -320,7 +320,7 @@ export const enableDataBackendAction: PostSaveAction = {
       return {
         ok: true,
         rollback: async () => {
-          await placeTelemetry(ctx.siteId, 'disabled')
+          await setTelemetryLocation(ctx.siteId, 'disabled')
           if (enablesInstance) {
             await setLocalDataBackendInstance(ctx.siteId, 'disabled')
           }

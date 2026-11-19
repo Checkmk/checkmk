@@ -41,7 +41,7 @@ function showing(status: Status): void {
 
 function renderTest(): ReturnType<typeof render> {
   return render(CentralConnectionTest, {
-    props: { siteId: 'remote1', settings: { centrally_routed_features: ['telemetry'] } }
+    props: { siteId: 'remote1', settings: { centrally_located_features: ['telemetry'] } }
   })
 }
 
@@ -85,7 +85,7 @@ function restartingCentral(restartConsented: ConnectionTest['allow_restart'][]):
 function runningTest(tested: Pick<Status, 'site_id' | 'address_seen_by_central'>): void {
   showing({
     running: true,
-    centrally_routed_features: ['telemetry'],
+    centrally_located_features: ['telemetry'],
     ...tested,
     phases: [
       phase('Verify the connection between the sites', 'running', [
@@ -255,7 +255,7 @@ test('changing the settings during a test tells that it checks the old ones', as
   await screen.findByText('Connect via HTTPS')
 
   await rerender({
-    settings: { centrally_routed_features: ['telemetry'], address_seen_by_central: '10.0.0.3' }
+    settings: { centrally_located_features: ['telemetry'], address_seen_by_central: '10.0.0.3' }
   })
 
   expect(
@@ -270,7 +270,7 @@ test('changing the settings clears the result', async () => {
   await screen.findByText('Start the data backend')
 
   await rerender({
-    settings: { centrally_routed_features: ['telemetry'], address_seen_by_central: '10.0.0.3' }
+    settings: { centrally_located_features: ['telemetry'], address_seen_by_central: '10.0.0.3' }
   })
 
   expect(screen.queryByText('Start the data backend')).toBeNull()

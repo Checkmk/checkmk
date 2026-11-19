@@ -5200,12 +5200,12 @@ class DataBackendClient(RestApiClient):
             api_version=APIVersion.UNSTABLE,
         )
 
-    def update_feature_placement(
+    def update_feature_locations(
         self, payload: Mapping[str, Any], expect_ok: bool = True
     ) -> Response:
         return self.request(
             "patch",
-            url=f"/domain-types/{self.domain}/actions/update_feature_placement/invoke",
+            url=f"/domain-types/{self.domain}/actions/update_feature_locations/invoke",
             body=dict(payload),
             expect_ok=expect_ok,
         )

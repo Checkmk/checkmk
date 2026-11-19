@@ -8,7 +8,7 @@
 # mypy: disable-error-code="no-untyped-call"
 
 import traceback
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
 from typing import Any
 
@@ -34,7 +34,7 @@ from .event import scrub_string
 from .settings import Paths, Settings
 
 VarBind = tuple[pysnmp.proto.rfc1902.ObjectName, SimpleAsn1Type]
-VarBinds = Iterable[VarBind]
+VarBinds = Sequence[VarBind]
 
 
 class SNMPTrapParser:

@@ -204,6 +204,7 @@ const groupAction = narrowing.actionFor(groupCondition)
     column-id="name"
     :value="row.name"
     :button="!readOnly"
+    main
     @click="emit('open', row)"
   >
     <!-- Every name keeps the slot, so the names line up whether their service has graphs or not. -->
@@ -292,6 +293,7 @@ const groupAction = narrowing.actionFor(groupCondition)
     column-id="perfometer"
     :data="row.perfometer"
     :button="!readOnly && row.perfometer !== undefined"
+    :button-label="_t('Open graphs')"
     @click="emit('openGraphs', row)"
   />
   <ActionsCell

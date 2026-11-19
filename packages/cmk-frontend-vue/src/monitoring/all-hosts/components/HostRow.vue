@@ -163,6 +163,7 @@ const lastStateChange = computed(() =>
     column-id="name"
     :value="row.name"
     :button="!readOnly"
+    main
     @click="emit('open', row)"
   >
     <!-- Every name keeps the slot, so the names line up whether their host has graphs or not.

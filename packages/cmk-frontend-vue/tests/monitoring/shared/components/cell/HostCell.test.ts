@@ -20,10 +20,10 @@ function mountCell(props: Record<string, unknown> = {}) {
   )
 }
 
-test('opens the host from a button', () => {
+test('opens the host from a button named after it', () => {
   mountCell()
 
-  expect(screen.getByRole('button')).toHaveTextContent('web-1')
+  expect(screen.getByRole('button', { name: 'web-1' })).toBeInTheDocument()
 })
 
 test('offers no button when it must not open the host', () => {

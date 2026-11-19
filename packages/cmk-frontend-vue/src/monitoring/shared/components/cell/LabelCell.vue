@@ -168,7 +168,7 @@ watch(columnWidth, (width, previous) => {
 </script>
 
 <template>
-  <BaseCell class="monitoring-label-cell" :column-id="columnId">
+  <BaseCell interactive class="monitoring-label-cell" :column-id="columnId">
     <template #default>
       <div
         ref="row"

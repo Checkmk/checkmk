@@ -108,6 +108,7 @@ async function onCommand(row: T, command: RowCommand<Target>): Promise<void> {
       :column-pinning="columnPinning"
       :filter-state="[]"
       :get-row-key="(row: T) => descriptor.rowKey(row)"
+      :open-row="readOnly ? undefined : (row: T) => open(descriptor.rowSubject(row))"
     >
       <template #row="{ row, tableRow }">
         <component

@@ -62,15 +62,22 @@ function tableColumns(columnIds: string[]): ColumnDef<unknown>[] {
 
 const HOST = { name: 'web-1', site_id: 'local', state: 'UP' } as HostEntry
 
+// Stands in for a plain cell of each row with a "plain cell" text, which opens the row.
 const rowsStub = defineComponent({
   inheritAttrs: false,
-  props: { rows: { type: Array as PropType<unknown[]>, required: true } },
+  props: {
+    rows: { type: Array as PropType<unknown[]>, required: true },
+    openRow: { type: Function as PropType<(row: unknown) => void>, default: undefined }
+  },
   setup:
     (props, { slots }) =>
     () =>
       h(
         'div',
-        props.rows.map((row) => slots['row']?.({ row, tableRow: {} }))
+        props.rows.map((row) => [
+          slots['row']?.({ row, tableRow: {} }),
+          h('span', { onClick: () => props.openRow?.(row) }, 'plain cell')
+        ])
       )
 })
 
@@ -197,6 +204,10 @@ class CommandTableDescriptor extends MonitoringTableDescriptor<HostEntry, HostEn
   rowListeners(): object {
     return {}
   }
+
+  rowSubject(row: HostEntry): HostEntry {
+    return row
+  }
 }
 
 /** A widget whose host row runs `run` once clicked, telling how it goes in `stack`. */
@@ -243,6 +254,22 @@ describe('MonitoringTableWidget', () => {
     expect(screen.getByText('Details of host web-1')).toBeInTheDocument()
   })
 
+  it('opens the details of the host whose row is clicked outside its name', async () => {
+    renderWidget(new HostsTableDescriptor(), [HOST], false)
+
+    await userEvent.click(screen.getByText('plain cell'))
+
+    expect(screen.getByText('Details of host web-1')).toBeInTheDocument()
+  })
+
+  it('opens nothing for a click in a read-only row', async () => {
+    renderWidget(new HostsTableDescriptor(), [HOST], true)
+
+    await userEvent.click(screen.getByText('plain cell'))
+
+    expect(screen.queryByText('Details of host web-1')).not.toBeInTheDocument()
+  })
+
   it('passes read-only on to its rows', () => {
     const readOnlySeen = renderWidget(new HostsTableDescriptor(), [HOST], true)
 
@@ -253,6 +280,14 @@ describe('MonitoringTableWidget', () => {
     renderWidget(new ServicesTableDescriptor(), [SERVICE], false)
 
     await userEvent.click(screen.getByRole('button', { name: 'CPU load' }))
+
+    expect(screen.getByText('Details of service CPU load')).toBeInTheDocument()
+  })
+
+  it('opens the details of the service whose row is clicked outside its name', async () => {
+    renderWidget(new ServicesTableDescriptor(), [SERVICE], false)
+
+    await userEvent.click(screen.getByText('plain cell'))
 
     expect(screen.getByText('Details of service CPU load')).toBeInTheDocument()
   })

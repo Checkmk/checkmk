@@ -17,6 +17,9 @@ import HostServicesApp from '@/monitoring/host-services/HostServicesApp.vue'
 import { CHECK_POLL_INTERVAL_MS } from '@/monitoring/shared/components/action/actions/reschedule'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 
+import { pastDoubleClick, userOnFakeClock } from '../shared/deferredClick'
+import { layOutThePage } from '../shared/layOutThePage'
+
 type ApiServiceEntry = components['schemas']['HostServiceEntry']
 type ApiHostEntry = components['schemas']['HostEntry']
 
@@ -991,36 +994,24 @@ test('reads the host of the page alongside its services', async () => {
   )
 })
 
-/**
- * Gives the page a size for the tests of the surrounding describe, so the rows lay out, and with
- * `slideIns` a content area for the slide-ins to open in.
- */
-function layOutThePage({ slideIns }: { slideIns: boolean }): void {
-  const originalOffsetHeight = Object.getOwnPropertyDescriptor(
-    HTMLElement.prototype,
-    'offsetHeight'
-  )
-  const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+describe('a row', () => {
+  layOutThePage({ slideIns: true })
 
   beforeEach(() => {
-    if (slideIns) {
-      const contentArea = document.createElement('div')
-      contentArea.id = 'content_area'
-      document.body.appendChild(contentArea)
-    }
-    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
-    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
+    vi.spyOn(client, 'GET').mockReturnValue(new Promise(() => {}) as never)
   })
 
-  afterEach(() => {
-    if (originalOffsetHeight) {
-      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight)
-    }
-    if (originalOffsetWidth) {
-      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', originalOffsetWidth)
-    }
+  test('opens the service slide-in when clicked outside its name', async () => {
+    mockServices([makeApiEntry()])
+    const user = userOnFakeClock()
+    renderApp()
+
+    await user.click(await screen.findByText('OK - 15 min load: 0.5'))
+    await pastDoubleClick()
+
+    expect(await screen.findByText('Service details')).toBeInTheDocument()
   })
-}
+})
 
 describe('the host slide-in', () => {
   layOutThePage({ slideIns: true })

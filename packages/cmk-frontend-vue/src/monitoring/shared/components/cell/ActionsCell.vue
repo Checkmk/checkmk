@@ -27,7 +27,12 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <BaseCell class="monitoring-actions-cell" :column-id="columnId" :vertical-align="verticalAlign">
+  <BaseCell
+    interactive
+    class="monitoring-actions-cell"
+    :column-id="columnId"
+    :vertical-align="verticalAlign"
+  >
     <template #default>
       <ActionButtons
         class="monitoring-actions-cell__actions"

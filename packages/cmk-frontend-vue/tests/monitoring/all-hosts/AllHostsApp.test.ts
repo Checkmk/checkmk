@@ -10,12 +10,15 @@ import type {
   MonitoringAllHostsApp
 } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import AllHostsApp from '@/monitoring/all-hosts/AllHostsApp.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import { CHECK_POLL_INTERVAL_MS } from '@/monitoring/shared/components/action/actions/reschedule'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+
+import { pastDoubleClick, userOnFakeClock } from '../shared/deferredClick'
+import { layOutThePage } from '../shared/layOutThePage'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
@@ -640,4 +643,38 @@ test('cancelling the confirmation removes nothing', async () => {
     '/monitor/hosts/actions/remove_acknowledgements',
     expect.anything()
   )
+})
+
+describe('with the rows laid out', () => {
+  layOutThePage({ slideIns: true })
+
+  beforeEach(() => {
+    vi.spyOn(client, 'GET').mockReturnValue(new Promise(() => {}) as never)
+  })
+
+  test('opens the slide-in of a row clicked outside its name', async () => {
+    mockHosts([makeHost({ address: '10.0.0.7' })])
+    const user = userOnFakeClock()
+    renderApp('community')
+
+    await user.click(await screen.findByText('10.0.0.7'))
+    await pastDoubleClick()
+
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+  })
+
+  test('only closes the open row limit selector on a click in a row', async () => {
+    mockHosts([makeHost({ address: '10.0.0.7' })])
+    const user = userOnFakeClock()
+    renderApp('community')
+    const limitSelector = await screen.findByLabelText('Show:')
+
+    await user.click(limitSelector)
+    expect(limitSelector).toHaveAttribute('aria-expanded', 'true')
+    await user.click(await screen.findByText('10.0.0.7'))
+    await pastDoubleClick()
+
+    expect(limitSelector).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByText('Host details')).not.toBeInTheDocument()
+  })
 })

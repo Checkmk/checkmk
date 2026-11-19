@@ -5,6 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render } from '@testing-library/vue'
+import { onTestFinished } from 'vitest'
 import { type ComputedRef, computed, defineComponent, h, nextTick, provide } from 'vue'
 
 import {
@@ -14,9 +15,14 @@ import {
 } from '@/monitoring/shared/components/MonitoringTableContext'
 import BaseCell, { type CellVerticalAlign } from '@/monitoring/shared/components/cell/BaseCell.vue'
 
+import { markText, pastDoubleClick, userOnFakeClock } from '../../deferredClick'
+
 type CellProps = {
   breakpoints?: CellBreakpoints
   button?: boolean
+  interactive?: boolean
+  instant?: boolean
+  buttonLabel?: string
   onClick?: (payload: MouseEvent) => void
   verticalAlign?: CellVerticalAlign
   noWrap?: boolean
@@ -128,9 +134,137 @@ test('offers the open-details icon inside the button', async () => {
   expect(container.querySelector('button .monitoring-base-cell__action-icon')).not.toBeNull()
 })
 
-test('marks the cell so the button can cover it entirely', async () => {
+test('marks the cell as clickable as a whole', async () => {
   const { container } = await mountCell({ button: true }, { cellWidth: 500 })
   expect(container.querySelector('td')).toHaveClass('monitoring-base-cell--button')
+})
+
+test('emits click for a click on its content, which stays out of the button', async () => {
+  const onClick = vi.fn()
+  const { getByText } = await mountCell({ button: true, onClick }, { cellWidth: 500 })
+
+  const user = userOnFakeClock()
+
+  expect(getByText('cell content').closest('button')).toBeNull()
+  await user.click(getByText('cell content'))
+  expect(onClick).not.toHaveBeenCalled()
+  await pastDoubleClick()
+
+  expect(onClick).toHaveBeenCalledOnce()
+})
+
+test('emits an instant click at once', async () => {
+  const onClick = vi.fn()
+  const { getByText } = await mountCell(
+    { button: true, instant: true, onClick },
+    { cellWidth: 500 }
+  )
+  const user = userOnFakeClock()
+
+  await user.click(getByText('cell content'))
+
+  expect(onClick).toHaveBeenCalledOnce()
+})
+
+test('emits click at once for Enter on the open-details button', async () => {
+  const onClick = vi.fn()
+  const { getByRole } = await mountCell({ button: true, onClick }, { cellWidth: 500 })
+  const user = userOnFakeClock()
+
+  getByRole('button').focus()
+  await user.keyboard('{Enter}')
+
+  expect(onClick).toHaveBeenCalledOnce()
+})
+
+test('emits no click for a double-click marking its text', async () => {
+  const onClick = vi.fn()
+  const { getByText } = await mountCell({ button: true, onClick }, { cellWidth: 500 })
+
+  const user = userOnFakeClock()
+
+  await user.dblClick(getByText('cell content'))
+  await pastDoubleClick()
+
+  expect(onClick).not.toHaveBeenCalled()
+})
+
+test('emits no click when a press elsewhere follows the click', async () => {
+  const onClick = vi.fn()
+  const { getByText } = await mountCell({ button: true, onClick }, { cellWidth: 500 })
+  const user = userOnFakeClock()
+
+  await user.click(getByText('cell content'))
+  await user.pointer({ keys: '[MouseLeft]', target: document.body })
+  await pastDoubleClick()
+
+  expect(onClick).not.toHaveBeenCalled()
+})
+
+test('emits no click for a click with a modifier key', async () => {
+  const onClick = vi.fn()
+  const { getByText } = await mountCell({ button: true, onClick }, { cellWidth: 500 })
+
+  const user = userOnFakeClock()
+  await user.keyboard('{Control>}')
+  await user.click(getByText('cell content'))
+  await user.keyboard('{/Control}')
+  await pastDoubleClick()
+
+  expect(onClick).not.toHaveBeenCalled()
+})
+
+test('lets a click in an interactive cell reach the document, which closes open popups', async () => {
+  const onDocumentClick = vi.fn()
+  const { getByText } = await mountCell({ interactive: true }, { cellWidth: 500 })
+  document.body.addEventListener('click', onDocumentClick)
+  onTestFinished(() => document.body.removeEventListener('click', onDocumentClick))
+
+  await userEvent.click(getByText('cell content'))
+
+  expect(onDocumentClick).toHaveBeenCalledOnce()
+})
+
+test('emits no click when the click ends marking its text', async () => {
+  const onClick = vi.fn()
+  const { getByText } = await mountCell({ button: true, onClick }, { cellWidth: 500 })
+  const user = userOnFakeClock()
+
+  await markText(user, getByText('cell content'))
+  await pastDoubleClick()
+
+  expect(onClick).not.toHaveBeenCalled()
+})
+
+test('lets a click in a button cell reach the document, which closes open popups', async () => {
+  const onDocumentClick = vi.fn()
+  const { getByText } = await mountCell({ button: true }, { cellWidth: 500 })
+  document.body.addEventListener('click', onDocumentClick)
+  onTestFinished(() => document.body.removeEventListener('click', onDocumentClick))
+
+  await userEvent.click(getByText('cell content'))
+
+  expect(onDocumentClick).toHaveBeenCalledOnce()
+})
+
+test('emits one click for a click on the open-details button', async () => {
+  const onClick = vi.fn()
+  const { getByRole } = await mountCell({ button: true, onClick }, { cellWidth: 500 })
+  const user = userOnFakeClock()
+
+  await user.click(getByRole('button'))
+  await pastDoubleClick()
+
+  expect(onClick).toHaveBeenCalledOnce()
+})
+
+test('names the open-details button after its label', async () => {
+  const { getByRole } = await mountCell(
+    { button: true, buttonLabel: 'CPU load' },
+    { cellWidth: 500 }
+  )
+
+  expect(getByRole('button', { name: 'CPU load' })).toBeInTheDocument()
 })
 
 test('offers no open-details icon without the button prop', async () => {

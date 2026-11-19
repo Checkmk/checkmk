@@ -6,8 +6,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkIconLink from 'cmk-ui-library/components/CmkIconLink.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type CSSProperties, computed, inject, useSlots } from 'vue'
+
+import {
+  OWN_CLICKS_ATTRIBUTE,
+  closesPopup,
+  useDeferredPlainClick
+} from '@/monitoring/shared/plainClick'
 
 import {
   COLUMN_LAYOUT_KEY,
@@ -34,9 +41,17 @@ const props = defineProps<{
   linkedTo?: CellLink | undefined
   highlight?: CellHighlight | undefined
   justify?: ColumnJustify | undefined
+  /** Acts on a click anywhere in the cell, offering its open-details icon as the button. */
   button?: boolean | undefined
-  /** Names the button for a screen reader, where its content alone does not say what it does. */
+  /** Names the open-details button for a screen reader. */
   buttonLabel?: TranslatedString | undefined
+  /** Opens what a click on its row opens, so it shows its open-details icon on row hover. */
+  main?: boolean | undefined
+  /** Holds elements of its own to click, so a click in it never opens the row's details. */
+  interactive?: boolean | undefined
+  /** Acts on a click at once rather than after the wait for a double-click, so a double-click
+   * cannot mark its text: for content where opening fast beats copying. */
+  instant?: boolean | undefined
   verticalAlign?: CellVerticalAlign | undefined
   noWrap?: boolean | undefined
   background?: CellBackground | undefined
@@ -48,6 +63,22 @@ const emit = defineEmits<{
 }>()
 
 const slots = useSlots()
+
+const { _t } = usei18n()
+
+const emitDeferred = useDeferredPlainClick((event) => emit('click', event))
+
+function onActionClick(event: MouseEvent): void {
+  if (!closesPopup(event)) {
+    emit('click', event)
+  }
+}
+
+function onCellClick(event: MouseEvent): void {
+  if (props.button) {
+    emitDeferred(event, props.instant === true)
+  }
+}
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)
 
@@ -111,6 +142,8 @@ const highlightStyle = computed<CSSProperties>(() =>
       'monitoring-base-cell--last-pinned': columnInfo?.isLastPinned,
       'monitoring-base-cell--first-pinned-right': columnInfo?.isFirstPinnedRight,
       'monitoring-base-cell--button': button === true,
+      'monitoring-base-cell--main': button === true && main === true,
+      'monitoring-base-cell--interactive': interactive === true,
       'monitoring-base-cell--vertical-middle': verticalAlign === 'middle',
       'monitoring-base-cell--no-wrap': noWrap === true,
       'monitoring-base-cell--with-aside': slots.aside !== undefined,
@@ -118,27 +151,30 @@ const highlightStyle = computed<CSSProperties>(() =>
       'monitoring-base-cell--fill': fill === true
     }"
     :style="pinnedStyle"
+    v-bind="interactive || button ? { [OWN_CLICKS_ATTRIBUTE]: '' } : {}"
+    @click="onCellClick"
   >
-    <button
-      v-if="button"
-      type="button"
-      class="monitoring-base-cell__button"
-      :aria-label="buttonLabel"
-      @click="emit('click', $event)"
-    >
+    <div v-if="button" class="monitoring-base-cell__clickable">
       <div v-if="highlight" :class="highlightClasses" :style="highlightStyle">
         <slot :name="activeSlot" />
       </div>
       <div v-else class="monitoring-base-cell__plain">
         <slot :name="activeSlot" />
       </div>
-      <CmkMultitoneIcon
-        class="monitoring-base-cell__action-icon"
-        name="open-details"
-        :primary-color="{ custom: 'var(--font-color-secondary)' }"
-        size="medium"
-      />
-    </button>
+      <button
+        type="button"
+        class="monitoring-base-cell__action"
+        :aria-label="buttonLabel ?? _t('Open details')"
+        @click="onActionClick"
+      >
+        <CmkMultitoneIcon
+          class="monitoring-base-cell__action-icon"
+          name="open-details"
+          :primary-color="{ custom: 'var(--font-color-secondary)' }"
+          size="medium"
+        />
+      </button>
+    </div>
     <a
       v-else-if="linkedTo && linkedTo.variant !== 'icon'"
       class="monitoring-base-cell__link"
@@ -220,47 +256,39 @@ const highlightStyle = computed<CSSProperties>(() =>
     }
   }
 
-  .monitoring-base-cell__button {
+  .monitoring-base-cell__clickable {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
     justify-content: v-bind(justifyContent);
     width: 100%;
     min-height: 31px;
+  }
+
+  .monitoring-base-cell__action {
+    display: flex;
+    flex: 0 0 auto;
+    align-self: center;
     padding: 0;
     margin: 0;
     background: transparent;
     border: none;
-    color: var(--font-color);
-    font: inherit;
-    text-align: left;
     cursor: pointer;
 
     &:focus-visible {
+      --monitoring-base-cell-icon-visibility: visible;
+
       outline: 1px solid var(--success);
       outline-offset: -1px;
     }
 
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-    }
-
     /* Counted in `HOST_CELL_CHROME` (hostCell.ts), so keep it in sync when resizing. */
     .monitoring-base-cell__action-icon {
-      flex: 0 0 auto;
-      align-self: center;
       margin-left: var(--dimension-3);
       margin-right: var(--dimension-3);
       width: var(--dimension-6);
       height: var(--dimension-6);
-      visibility: hidden;
-    }
-
-    &:hover .monitoring-base-cell__action-icon,
-    &:focus-visible .monitoring-base-cell__action-icon {
-      visibility: visible;
+      visibility: var(--monitoring-base-cell-icon-visibility, hidden);
     }
   }
 
@@ -274,7 +302,7 @@ const highlightStyle = computed<CSSProperties>(() =>
   }
 
   /* Underline the name only, so the reserved icon slot stays undecorated. */
-  .monitoring-base-cell__button .monitoring-base-cell__plain {
+  .monitoring-base-cell__clickable .monitoring-base-cell__plain {
     min-width: 0;
     text-decoration: underline dotted;
     text-decoration-color: var(--font-underline-color);
@@ -286,8 +314,22 @@ const highlightStyle = computed<CSSProperties>(() =>
   background-color: var(--ux-theme-3);
 }
 
+/* Keeps the row's pointer off the gaps around the elements of its own, where a click does nothing. */
+.monitoring-base-cell--interactive {
+  cursor: auto;
+}
+
+.monitoring-base-cell--main {
+  --monitoring-base-cell-icon-visibility: var(--monitoring-table-row-main-icon-visibility, hidden);
+}
+
 .monitoring-base-cell--button {
   position: relative;
+  cursor: pointer;
+
+  &:hover {
+    --monitoring-base-cell-icon-visibility: visible;
+  }
 }
 
 /* The aside keeps a slot of its own on the right, so the content (and the button's hover icon)
@@ -316,7 +358,7 @@ const highlightStyle = computed<CSSProperties>(() =>
 
   .monitoring-base-cell__link,
   .monitoring-base-cell__wrapper,
-  .monitoring-base-cell__button {
+  .monitoring-base-cell__clickable {
     align-items: center;
   }
 }

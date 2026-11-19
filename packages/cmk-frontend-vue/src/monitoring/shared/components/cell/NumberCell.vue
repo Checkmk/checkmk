@@ -47,6 +47,7 @@ const valueString = computed(() => {
     :highlight="highlight"
     :button="button"
     :button-label="buttonLabel"
+    instant
     @click="emit('click', $event)"
   >
     <template #default>{{ valueString }}</template>

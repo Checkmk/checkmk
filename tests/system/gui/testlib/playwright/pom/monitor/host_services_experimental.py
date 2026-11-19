@@ -140,13 +140,10 @@ class HostServicesExperimental(CmkPage):
         ``StringCell`` injects zero-width spaces into the *displayed* text but
         keeps the unmodified value in the ``title`` attribute, so read names
         from ``title`` rather than from the text content. The name cell is the
-        only one rendered as a button (it opens the detail slide-in), which
-        identifies it without depending on a shifting column position.
+        row's main cell (it opens the detail slide-in), which identifies it
+        without depending on a shifting column position.
         """
-        return self.rows().locator(
-            "td.monitoring-base-cell:has(button.monitoring-base-cell__button) "
-            ".monitoring-string-cell__text"
-        )
+        return self.rows().locator("td.monitoring-base-cell--main .monitoring-string-cell__text")
 
     def rendered_service_names(self) -> list[str]:
         """The raw names of the currently rendered rows, in row order.
@@ -171,7 +168,7 @@ class HostServicesExperimental(CmkPage):
         cells: list[dict[str, str]] = self.rows().evaluate_all(
             """(rows, summaryIndex) => rows.map((row) => {
                 const nameCell = row.querySelector(
-                    'button.monitoring-base-cell__button .monitoring-string-cell__text'
+                    'td.monitoring-base-cell--main .monitoring-string-cell__text'
                 )
                 const stateTag = row.querySelector(
                     '.monitoring-state-cell .cmk-state-tag'
@@ -311,7 +308,9 @@ class HostServicesExperimental(CmkPage):
 
     def open_slide_in(self, service_name: str) -> None:
         """Open the service detail slide-in by activating the service name cell."""
-        self.row_by_service(service_name).locator("button.monitoring-base-cell__button").click()
+        self.row_by_service(service_name).locator(
+            "td.monitoring-base-cell--main button.monitoring-base-cell__action"
+        ).click()
 
     @property
     def slide_in(self) -> Locator:

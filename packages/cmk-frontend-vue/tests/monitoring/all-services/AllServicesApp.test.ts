@@ -13,6 +13,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import AllServicesApp from '@/monitoring/all-services/AllServicesApp.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 
+import { pastDoubleClick, userOnFakeClock } from '../shared/deferredClick'
+
 type MonitoringAction = NonNullable<MonitoringAllServicesApp['actions']>[number]
 
 type ApiServiceEntry = components['schemas']['ServiceEntry']
@@ -368,6 +370,21 @@ describe('with the rows laid out', () => {
     expect(requestedFor(OVERVIEW_PATH, 'web-1', 'local')).toBe(false)
   })
 
+  test('opens the slide-in of a row clicked outside its name', async () => {
+    mockServices([
+      makeApiEntry({ host_name: 'web-1', site_id: 'local', summary: 'first summary' }),
+      makeApiEntry({ host_name: 'web-2', site_id: 'remote', summary: 'second summary' })
+    ])
+    const user = userOnFakeClock()
+    renderApp()
+
+    await user.click(await screen.findByText('second summary'))
+    await pastDoubleClick()
+
+    await vi.waitUntil(() => requestedFor(OVERVIEW_PATH, 'web-2', 'remote'))
+    expect(requestedFor(OVERVIEW_PATH, 'web-1', 'local')).toBe(false)
+  })
+
   function graphsDiscoveredFor(hostName: string, siteId: string): boolean {
     return servicesPost.mock.calls.some(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -469,6 +486,18 @@ describe('with the rows laid out', () => {
 
     expect(await screen.findByRole('button', { name: 'Reschedule host check' })).toBeInTheDocument()
     expect(hostsPost).not.toHaveBeenCalled()
+  })
+
+  test('opens the host slide-in for a click on the host cell, not the service one', async () => {
+    mockServicesAndHost()
+    const user = userOnFakeClock()
+    renderApp()
+
+    await user.click(await screen.findByText('web-2'))
+    await pastDoubleClick()
+
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+    expect(requestedFor(OVERVIEW_PATH, 'web-2', 'remote')).toBe(false)
   })
 
   test('names the host it shows in the URL fragment apart from a service', async () => {

@@ -269,7 +269,7 @@ class AllHostsExperimental(CmkPage):
     def open_slide_in(self, host_name: str) -> None:
         """Open the host detail slide-in by activating the host name cell."""
         self.row_by_host(host_name).locator(
-            'td[data-column-id="name"] button.monitoring-base-cell__button'
+            'td[data-column-id="name"] button.monitoring-base-cell__action'
         ).click()
 
     @property

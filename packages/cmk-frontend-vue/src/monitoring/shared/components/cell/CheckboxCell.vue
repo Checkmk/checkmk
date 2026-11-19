@@ -24,7 +24,12 @@ function toggle(): void {
 </script>
 
 <template>
-  <BaseCell class="monitoring-checkbox-cell" :column-id="columnId" :vertical-align="verticalAlign">
+  <BaseCell
+    interactive
+    class="monitoring-checkbox-cell"
+    :column-id="columnId"
+    :vertical-align="verticalAlign"
+  >
     <template #default>
       <div
         class="monitoring-checkbox-cell__hit-area"

@@ -46,6 +46,8 @@ const borderSpacing = TABLE_BORDER_SPACING_PX
 
 const props = defineProps<{
   rows: T[]
+  /** Opens the details of a row clicked anywhere outside its own click targets. */
+  openRow?: ((row: T) => void) | undefined
   /**
    * The kind of fetch in flight: `'foreground'` (initial load or
    * search/filter/sort) shows the skeleton; `'background'` (refresh-timer poll)
@@ -469,6 +471,8 @@ function tableRowAt(index: number): Row<T> {
             :ref="measureRowElement"
             class="monitoring-table__row"
             :data-index="virtualRow.index"
+            :clickable="openRow !== undefined"
+            @open="openRow?.(rowAt(virtualRow.index))"
           >
             <slot
               name="row"

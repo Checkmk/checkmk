@@ -21,6 +21,7 @@ import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequi
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
+import { useOpenPopup } from 'cmk-ui-library/lib/openPopups'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { useFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
@@ -181,6 +182,7 @@ const canOpenDropdown = computed(() => {
 })
 
 const suggestionsShown = ref(false)
+useOpenPopup(() => suggestionsShown.value)
 const suggestionsRef = ref<InstanceType<typeof CmkSuggestions> | null>(null)
 const comboboxButtonRef =
   useTemplateRef<InstanceType<typeof CmkDropdownButton>>('comboboxButtonRef')

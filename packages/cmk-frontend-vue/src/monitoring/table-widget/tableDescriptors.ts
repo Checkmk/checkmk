@@ -118,6 +118,9 @@ export abstract class MonitoringTableDescriptor<T, Target = unknown, Subject = u
 
   abstract rowListeners(row: T, open: (subject: Subject) => void): object
 
+  /** What a click anywhere in a row opens, as a click on its name does. */
+  abstract rowSubject(row: T): Subject
+
   catalog(): MonitoringTableColumn[] {
     return this.inRowOrder(this.columnIds).map(([id, column]) => ({
       id,
@@ -212,6 +215,10 @@ export class HostsTableDescriptor extends MonitoringTableDescriptor<
     }
   }
 
+  rowSubject(row: HostEntry): HostsTableSubject {
+    return { host: row, revealRelations: false }
+  }
+
   truncatedHint(shown: number, matched: number): string {
     const { _t } = usei18n()
     return _t('Showing %{shown} of %{matched} hosts', {
@@ -288,6 +295,10 @@ export class ServicesTableDescriptor extends MonitoringTableDescriptor<
       openGraphs: () => open({ kind: 'service', service: row, graphs: true }),
       openHost: (host: HostSlideInSubject) => open({ kind: 'host', host })
     }
+  }
+
+  rowSubject(row: ServiceEntry): ServicesTableSubject {
+    return { kind: 'service', service: row, graphs: false }
   }
 
   truncatedHint(shown: number, matched: number): string {

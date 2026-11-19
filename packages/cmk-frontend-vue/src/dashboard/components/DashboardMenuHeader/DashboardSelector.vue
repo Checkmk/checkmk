@@ -8,6 +8,7 @@ import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useOpenPopup } from 'cmk-ui-library/lib/openPopups'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { computed, ref, watch } from 'vue'
 
@@ -31,6 +32,7 @@ const emit = defineEmits<{
 }>()
 
 const showDashboardDropdown = ref(false)
+useOpenPopup(() => showDashboardDropdown.value)
 const dropdownRef = ref<HTMLElement>()
 const inputRef = ref<HTMLInputElement>()
 const inputValue = ref('')

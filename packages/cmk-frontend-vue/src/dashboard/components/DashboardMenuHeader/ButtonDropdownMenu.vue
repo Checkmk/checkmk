@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
+import { useOpenPopup } from 'cmk-ui-library/lib/openPopups'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { nextTick, ref } from 'vue'
 
@@ -21,6 +22,7 @@ const {
 const vClickOutside = useClickOutside()
 
 const menuShown = ref(false)
+useOpenPopup(() => menuShown.value)
 const menuRef = ref<HTMLDivElement | null>(null)
 
 function showMenu(): void {

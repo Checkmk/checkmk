@@ -10,6 +10,7 @@ import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import { useOpenPopup } from 'cmk-ui-library/lib/openPopups'
 import { renderDate, renderTimeOfDay } from 'cmk-ui-library/lib/renderTime'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { onMounted, onUnmounted, ref } from 'vue'
@@ -37,6 +38,7 @@ const showDateTime = ref(true)
 let intervalId: number | null = null
 
 const menuShown = ref(false)
+useOpenPopup(() => menuShown.value)
 
 const updateUtcTime = () => {
   const now = new Date()

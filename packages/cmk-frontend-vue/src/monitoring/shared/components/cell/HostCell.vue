@@ -5,6 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { untranslated } from 'cmk-ui-library/lib/i18n'
+
 import type { HostState } from '../../api/types.ts'
 import HostStateDisplay from '../HostStateDisplay.vue'
 import BaseCell from './BaseCell.vue'
@@ -25,7 +27,12 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <BaseCell :column-id="columnId" :button="button" @click="emit('open')">
+  <BaseCell
+    :column-id="columnId"
+    :button="button"
+    :button-label="untranslated(name)"
+    @click="emit('open')"
+  >
     <div class="monitoring-host-cell">
       <HostStateDisplay class="monitoring-host-cell__state" :state="state" inline />
       <span class="monitoring-host-cell__name" :title="name">{{ name }}</span>

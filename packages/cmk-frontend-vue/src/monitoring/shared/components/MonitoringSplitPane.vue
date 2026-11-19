@@ -52,6 +52,8 @@ const props = withDefaults(
     columns: ColumnDef<T>[]
     columnPinning: ColumnPinningState
     getRowKey: (row: T) => string
+    /** Opens the details of a row clicked anywhere outside its own click targets. */
+    openRow?: ((row: T) => void) | undefined
     /** Maps a row to the reference the actions act on. */
     getActionTarget: (row: T) => Target
     /** The same key for every reference to the same object, e.g. from different rows. */
@@ -311,6 +313,7 @@ function onRightPaneCollapse(collapsed: boolean): void {
           :filter-state="service.tableColumnFilters.value"
           :column-pinning="columnPinning"
           :get-row-key="getRowKey"
+          :open-row="openRow"
           @update:filter-state="service.onColumnFiltersUpdate($event)"
           @retry="service.retry()"
         >

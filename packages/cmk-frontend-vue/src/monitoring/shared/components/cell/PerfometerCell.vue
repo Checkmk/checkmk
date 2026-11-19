@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkPerfometer from 'cmk-ui-library/components/CmkPerfometer.vue'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { Perfometer } from '../../api/types'
 import BaseCell, { type CellLink } from './BaseCell.vue'
@@ -14,6 +15,7 @@ export interface PerfometerCellProps {
   stale?: boolean | undefined
   linkedTo?: CellLink | undefined
   button?: boolean | undefined
+  buttonLabel?: TranslatedString | undefined
   columnId?: string | undefined
 }
 
@@ -29,6 +31,8 @@ const emit = defineEmits<{
     :column-id="columnId"
     :linked-to="linkedTo"
     :button="button"
+    :button-label="buttonLabel"
+    instant
     @click="emit('click', $event)"
   >
     <template #default>

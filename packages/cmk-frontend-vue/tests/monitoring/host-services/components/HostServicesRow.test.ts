@@ -22,6 +22,7 @@ import {
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
+import { pastDoubleClick, userOnFakeClock } from '../../shared/deferredClick'
 import { makeListingService } from '../../shared/services/testHelpers'
 
 // 'abs' keeps assertions comparable to plain `renderDateAndTime`, independent of how old
@@ -426,9 +427,9 @@ test('the perfometer asks for the graphs of its service', async () => {
       formatted: '42%'
     }
   })
-  const { container } = mountRow(service, makeTableRow(), { onOpenGraphs: openGraphs })
+  mountRow(service, makeTableRow(), { onOpenGraphs: openGraphs })
 
-  await userEvent.click(container.querySelector('td[data-column-id="perfometer"] button')!)
+  await userEvent.click(screen.getByRole('button', { name: 'Open graphs' }))
 
   expect(openGraphs).toHaveBeenCalledWith(service)
 })
@@ -748,9 +749,12 @@ test('opens the host on a click anywhere in its cell, its state included', async
   const openHost = vi.fn()
   const { container } = mountRow(makeServiceOfHost(), makeTableRow(), { onOpenHost: openHost })
   const hostCell = container.querySelector('[data-column-id="host_name"]') as HTMLElement
+  const user = userOnFakeClock()
 
-  await userEvent.click(within(hostCell).getByText('UP'))
-  await userEvent.click(within(hostCell).getByText('web-2'))
+  await user.click(within(hostCell).getByText('UP'))
+  await pastDoubleClick()
+  await user.click(within(hostCell).getByText('web-2'))
+  await pastDoubleClick()
 
   expect(openHost).toHaveBeenCalledTimes(2)
   expect(openHost).toHaveBeenLastCalledWith({ name: 'web-2', site_id: 'remote', state: 'UP' })

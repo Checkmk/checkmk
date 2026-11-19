@@ -364,6 +364,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :columns="tableColumns"
         :column-pinning="columnPinning"
         :get-row-key="rowKey"
+        :open-row="openSlideIn"
         :get-action-target="hostRefOf"
         :get-target-key="refKey"
         :get-action-targets="hostActionTargets"

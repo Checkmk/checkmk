@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
 import { spellStateMarkers } from '@/monitoring/shared/spellStateMarkers'
@@ -19,6 +20,8 @@ const props = withDefaults(
     columnId?: string | undefined
     emptyLabel?: string | undefined
     button?: boolean | undefined
+    /** Opens what a click on its row opens. */
+    main?: boolean | undefined
     verticalAlign?: CellVerticalAlign | undefined
     noWrap?: boolean | undefined
     titleOnlyWhenCut?: boolean | undefined
@@ -54,6 +57,8 @@ function measureCut(event: MouseEvent): void {
     :column-id="columnId"
     :linked-to="linkedTo"
     :button="button"
+    :button-label="value === undefined ? undefined : untranslated(value)"
+    :main="main"
     :vertical-align="verticalAlign"
     :no-wrap="noWrap"
     @click="emit('click', $event)"
@@ -103,7 +108,7 @@ function measureCut(event: MouseEvent): void {
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.monitoring-string-cell :deep(.monitoring-base-cell__button) .monitoring-string-cell__text {
+.monitoring-string-cell :deep(.monitoring-base-cell__clickable) .monitoring-string-cell__text {
   width: auto;
   max-width: 100%;
 }

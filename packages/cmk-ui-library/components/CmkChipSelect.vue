@@ -16,6 +16,7 @@ import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useOpenPopup } from 'cmk-ui-library/lib/openPopups'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import useId from 'cmk-ui-library/lib/useId'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
@@ -49,6 +50,7 @@ defineSlots<{
 const vClickOutside = useClickOutside()
 
 const open = ref(false)
+useOpenPopup(() => open.value)
 const popupId = useId()
 const labelId = useId()
 const selectedOption = ref<SuggestionValue>(new NoSelection())

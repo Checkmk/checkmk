@@ -26,6 +26,7 @@ import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
+import { useOpenPopup } from 'cmk-ui-library/lib/openPopups'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
 import useId from 'cmk-ui-library/lib/useId'
@@ -107,6 +108,7 @@ let shortcutIds: string[] = []
 const monitoringService = inject(MONITORING_SERVICE, null)
 
 const isOpen = ref(false)
+useOpenPopup(() => isOpen.value)
 const flipUp = ref(false)
 const alignment = ref<CSSProperties>({})
 // Swallow the click-outside fired by the same click that opened the popover.

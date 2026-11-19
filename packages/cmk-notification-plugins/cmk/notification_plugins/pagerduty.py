@@ -19,6 +19,7 @@ from cmk.notification_plugins.utils import (
     process_by_status_code,
     service_url_from_context,
 )
+from cmk.utils import password_store
 
 
 def pagerduty_event_type(event: str) -> str:
@@ -53,6 +54,16 @@ def _notification_source_from_context(context: dict[str, str]) -> str:
     return context.get("HOSTADDRESS") or context.get("HOSTNAME") or "Undeclared Host identifier"
 
 
+def _routing_key(context: dict[str, str]) -> str:
+    if (old_format := context.get("PARAMETER_ROUTING_KEY")) is not None:
+        # The format before the key became a password, ("routing_key" | "store", value), from
+        # the REST API or older personal notification rules. add_to_event_context only adds the
+        # unsuffixed PARAMETER_ROUTING_KEY for a tuple of strings, never for a password.
+        option, _separator, value = old_format.partition("\t")
+        return password_store.extract(value) if option == "store" else value
+    return get_password_from_env_or_context(key="PARAMETER_ROUTING_KEY", context=context)
+
+
 def _pagerduty_msg(context: dict[str, str]) -> dict[str, JsonPayload]:
     """Build the PagerDuty incident payload"""
 
@@ -70,9 +81,7 @@ def _pagerduty_msg(context: dict[str, str]) -> dict[str, JsonPayload]:
         incident_url = host_url_from_context(context)
 
     msg_payload: dict[str, JsonPayload] = {
-        "routing_key": get_password_from_env_or_context(
-            key="PARAMETER_ROUTING_KEY", context=context
-        ),
+        "routing_key": _routing_key(context),
         "event_action": pagerduty_event_type(context["NOTIFICATIONTYPE"]),
         "dedup_key": incident_key,
         "payload": {

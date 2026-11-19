@@ -474,6 +474,18 @@ class URLPrefixForLinksToCheckMkCheckbox(CheckboxOutput):
     )
 
 
+class ExplicitOrStoreOptions(BaseSchema):
+    option = fields.String(
+        enum=["store", "explicit"],
+        example="store",
+    )
+
+
+class SMTPPassword(ExplicitOrStoreOptions):
+    store_id = PasswordStoreIDField()
+    password = fields.String(example="password")
+
+
 class Authentication(BaseSchema):
     method = fields.String(
         enum=["plaintext"],
@@ -484,9 +496,10 @@ class Authentication(BaseSchema):
         description="The username for the SMTP connection",
         example="user_1",
     )
-    password = fields.String(
-        description="The password for the SMTP connection.",
-        example="password",
+    password = fields.Nested(
+        SMTPPassword,
+        description="The password for the SMTP connection, either from the password store or "
+        "explicitly configured.",
     )
 
 
@@ -544,13 +557,6 @@ class HTMLEmailParamsResponse(MailCommonParams):
 
 
 # Cisco -------------------------------------------------------------
-
-
-class ExplicitOrStoreOptions(BaseSchema):
-    option = fields.String(
-        enum=["store", "explicit"],
-        example="store",
-    )
 
 
 class WebhookURLResponse(ExplicitOrStoreOptions):

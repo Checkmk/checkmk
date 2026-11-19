@@ -12,9 +12,10 @@ from pysnmp.proto import api, rfc1155
 from pysnmp.proto.rfc1902 import IpAddress, ObjectName, OctetString, TimeTicks
 
 import cmk.ec.export as ec
+from cmk.ccc.log import VERBOSE
 from cmk.ec.config import Config
 from cmk.ec.settings import PortNumber
-from cmk.ec.snmp import SNMPTrapParser, SNMPTrapTranslator
+from cmk.ec.snmp import SNMPTrapParser, SNMPTrapTranslator, VarBinds
 
 # sysORDescr.1.2, but sysORTable has only one index.
 UNTRANSLATABLE_OID = ObjectName("1.3.6.1.2.1.1.9.1.3.1.2")
@@ -62,6 +63,32 @@ def test_untranslated_snmpv1_trap_shows_its_time_stamp_as_uptime(parser: SNMPTra
 
     assert result is not None
     assert ("Uptime", "20 m") in result[0]
+
+
+def v2c_trap(var_binds: VarBinds) -> bytes:
+    """An SNMPv2c trap from the "public" community, which the default configuration accepts"""
+    proto = api.PROTOCOL_MODULES[api.SNMP_VERSION_2C]
+    pdu = proto.SNMPv2TrapPDU()
+    proto.apiTrapPDU.set_defaults(pdu)
+    proto.apiTrapPDU.set_varbinds(pdu, [*proto.apiTrapPDU.get_varbinds(pdu), *var_binds])
+    message = proto.Message()
+    proto.apiMessage.set_defaults(message)
+    proto.apiMessage.set_community(message, "public")
+    proto.apiMessage.set_pdu(message, pdu)
+    trap: bytes = encoder.encode(message)
+    return trap
+
+
+def test_trap_details_show_the_oids_types_and_values_of_the_var_binds(
+    parser: SNMPTrapParser, logger: logging.Logger, caplog: pytest.LogCaptureFixture
+) -> None:
+    if_phys_address = ObjectName("1.3.6.1.2.1.2.2.1.6.1")
+    trap = v2c_trap([(if_phys_address, OctetString(b"\x00\x1a\x2b\x3c\x4d\x5e"))])
+    caplog.set_level(VERBOSE, logger=logger.name)
+
+    parser.parse(trap, ("192.0.2.1", 162))
+
+    assert f"{if_phys_address!s:<40} = OctetString 0x001a2b3c4d5e" in caplog.messages
 
 
 def test_failed_translation_warns_about_the_oid_and_the_sender(

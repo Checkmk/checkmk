@@ -222,8 +222,12 @@ class SNMPTrapParser:
             for name, val in var_binds:
                 self._logger.log(
                     VERBOSE,
-                    "%(name)-40s = %(value)s",
-                    {"name": name.prettyPrint(), "value": val.prettyPrint()},
+                    "%(name)-40s = %(type)s %(value)s",
+                    {
+                        "name": name.prettyPrint(),
+                        "type": type(val).__name__,
+                        "value": val.prettyPrint(),
+                    },
                 )
 
     def _handle_unauthenticated_snmptrap(

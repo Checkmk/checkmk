@@ -47,7 +47,7 @@ class WidgetTimeRangeSettings:
     @property
     def range_selector(self) -> Locator:
         """The widget's own range selector, shown only while it uses a separate range."""
-        return self._wizard.locator(".lib-time-range-preset-row")
+        return self._wizard.locator(".graphing-time-range-preset-row")
 
     @property
     def _chips(self) -> Locator:
@@ -62,7 +62,7 @@ class WidgetTimeRangeSettings:
     @property
     def _overflow(self) -> Locator:
         """The "More time ranges" dropdown, present only when the chips do not all fit."""
-        return self.range_selector.locator(".lib-time-range-preset-row__overflow")
+        return self.range_selector.locator(".graphing-time-range-preset-row__overflow")
 
     def _open_overflow(self) -> Locator:
         """Open the overflow dropdown and return the options it offers."""

@@ -69,7 +69,7 @@ class GlobalTimePicker:
     def overflow(self) -> Locator:
         """The time range dropdown: "More time ranges" beside the chips, present only when they
         do not all fit, or "Time ranges" alone in the condensed picker of a dashboard header."""
-        return self.root.locator("div.lib-time-range-preset-row__overflow")
+        return self.root.locator("div.graphing-time-range-preset-row__overflow")
 
     @property
     def dropdown_selection(self) -> Locator:

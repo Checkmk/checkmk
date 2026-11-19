@@ -32,7 +32,7 @@ const chipStyle = computed(() => ({
   <CmkChip
     variant="fill"
     color="success"
-    class="lib-time-range-chip"
+    class="graphing-time-range-chip"
     :as-div="asDiv"
     :aria-pressed="asDiv ? undefined : selected"
     :style="chipStyle"
@@ -43,7 +43,7 @@ const chipStyle = computed(() => ({
 </template>
 
 <style scoped>
-.lib-time-range-chip {
+.graphing-time-range-chip {
   text-wrap: nowrap;
 }
 </style>

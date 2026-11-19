@@ -73,16 +73,16 @@ function onOverflowSelect(name: string | null): void {
 </script>
 
 <template>
-  <div ref="rootRef" class="lib-time-range-preset-row">
+  <div ref="rootRef" class="graphing-time-range-preset-row">
     <!-- Every chip at natural width, off-screen: the fit is measured here, never on the live row,
          so trimming the row cannot feed back into the measurement. -->
     <div
       v-if="!isCondensed"
-      class="lib-time-range-preset-row__measure-clip"
+      class="graphing-time-range-preset-row__measure-clip"
       aria-hidden="true"
       inert
     >
-      <div ref="measureRef" class="lib-time-range-preset-row__measure">
+      <div ref="measureRef" class="graphing-time-range-preset-row__measure">
         <TimeRangeChip v-for="preset in presets" :key="preset.name" :selected="false">
           {{ preset.title }}
         </TimeRangeChip>
@@ -116,7 +116,7 @@ function onOverflowSelect(name: string | null): void {
       </template>
     </template>
 
-    <div v-if="isCondensed || hasOverflow" class="lib-time-range-preset-row__overflow">
+    <div v-if="isCondensed || hasOverflow" class="graphing-time-range-preset-row__overflow">
       <CmkChipSelect
         :model-value="overflowSelectedName"
         :options="overflowOptions"
@@ -131,14 +131,14 @@ function onOverflowSelect(name: string | null): void {
       </CmkChipSelect>
     </div>
 
-    <div v-if="$slots.trailing" class="lib-time-range-preset-row__trailing">
+    <div v-if="$slots.trailing" class="graphing-time-range-preset-row__trailing">
       <slot name="trailing" />
     </div>
   </div>
 </template>
 
 <style scoped>
-.lib-time-range-preset-row {
+.graphing-time-range-preset-row {
   min-width: 0;
   overflow: clip visible;
   overflow-clip-margin: 2px;
@@ -148,21 +148,21 @@ function onOverflowSelect(name: string | null): void {
   gap: var(--dimension-3);
 }
 
-.lib-time-range-preset-row__measure-clip {
+.graphing-time-range-preset-row__measure-clip {
   position: absolute;
   width: 0;
   height: 0;
   overflow: clip;
 }
 
-.lib-time-range-preset-row__measure {
+.graphing-time-range-preset-row__measure {
   display: flex;
   width: max-content;
   gap: var(--dimension-3);
 }
 
-.lib-time-range-preset-row__overflow,
-.lib-time-range-preset-row__trailing {
+.graphing-time-range-preset-row__overflow,
+.graphing-time-range-preset-row__trailing {
   flex: 0 0 auto;
 }
 </style>

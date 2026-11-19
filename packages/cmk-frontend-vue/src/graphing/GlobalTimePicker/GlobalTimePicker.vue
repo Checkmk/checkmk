@@ -15,8 +15,7 @@ import {
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
-import TimeRangeChip from '@/lib/time-range-presets/TimeRangeChip.vue'
-
+import TimeRangeChip from './presets/TimeRangeChip.vue'
 import DynamicPresets from './private/DynamicPresets.vue'
 import { firstDayOfWeekAsWeekday } from './private/firstDayOfWeek.ts'
 import { type CustomPreset, useCustomPresets } from './private/useCustomPresets.ts'

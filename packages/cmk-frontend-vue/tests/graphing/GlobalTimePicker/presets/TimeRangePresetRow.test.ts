@@ -9,8 +9,8 @@ import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { type VNode, defineComponent, h, ref } from 'vue'
 
-import TimeRangePresetRow from '@/lib/time-range-presets/TimeRangePresetRow.vue'
-import type { TimeRangePresetItem } from '@/lib/time-range-presets/types'
+import TimeRangePresetRow from '@/graphing/GlobalTimePicker/presets/TimeRangePresetRow.vue'
+import type { TimeRangePresetItem } from '@/graphing/GlobalTimePicker/presets/types'
 
 const PRESETS: TimeRangePresetItem[] = [
   { name: 'today', title: untranslated('Today') },

@@ -12,8 +12,8 @@ import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import type { Ref } from 'vue'
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 
-import TimeRangePresetRow from '@/lib/time-range-presets/TimeRangePresetRow.vue'
-import type { TimeRangePresetItem } from '@/lib/time-range-presets/types'
+import TimeRangePresetRow from '@/graphing/GlobalTimePicker/presets/TimeRangePresetRow.vue'
+import type { TimeRangePresetItem } from '@/graphing/GlobalTimePicker/presets/types'
 
 import DateRangeFields from './DateRangeFields.vue'
 import DurationFields from './DurationFields.vue'

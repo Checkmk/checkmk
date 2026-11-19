@@ -13,10 +13,9 @@ import { useRelativeTimeRangeText } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
-import TimeRangeChip from '@/lib/time-range-presets/TimeRangeChip.vue'
-import TimeRangePresetRow from '@/lib/time-range-presets/TimeRangePresetRow.vue'
-import type { TimeRangePresetItem } from '@/lib/time-range-presets/types'
-
+import TimeRangeChip from '../presets/TimeRangeChip.vue'
+import TimeRangePresetRow from '../presets/TimeRangePresetRow.vue'
+import type { TimeRangePresetItem } from '../presets/types'
 import type { CustomPreset } from './useCustomPresets.ts'
 
 const props = withDefaults(

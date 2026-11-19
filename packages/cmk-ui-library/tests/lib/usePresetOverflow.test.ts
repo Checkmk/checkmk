@@ -4,11 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render } from '@testing-library/vue'
+import { type PresetOverflow, usePresetOverflow } from 'cmk-ui-library/lib/usePresetOverflow'
 import { FakeResizeObserver, useFakeResizeObserver } from 'cmk-ui-library/vitest.resize-observer'
 import { describe, expect, test } from 'vitest'
 import { type Ref, defineComponent, h, nextTick, ref } from 'vue'
-
-import { type PresetOverflow, usePresetOverflow } from '@/lib/usePresetOverflow'
 
 function stubGeometry(
   el: HTMLElement,

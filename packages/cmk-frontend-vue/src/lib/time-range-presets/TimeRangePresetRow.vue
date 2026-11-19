@@ -7,9 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkChipSelect from 'cmk-ui-library/components/CmkChipSelect.vue'
 import type { Suggestion, Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { usePresetOverflow } from 'cmk-ui-library/lib/usePresetOverflow'
 import { computed, ref } from 'vue'
-
-import { usePresetOverflow } from '@/lib/usePresetOverflow'
 
 import TimeRangeChip from './TimeRangeChip.vue'
 import type { TimeRangePresetItem } from './types'

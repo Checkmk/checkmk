@@ -195,9 +195,8 @@ import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequi
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useId from 'cmk-ui-library/lib/useId'
+import { usePresetOverflow } from 'cmk-ui-library/lib/usePresetOverflow'
 import { computed, ref, watch } from 'vue'
-
-import { usePresetOverflow } from '@/lib/usePresetOverflow'
 
 import { ACTION_DATE_TIME_SETTINGS } from '@/monitoring/shared/constants'
 

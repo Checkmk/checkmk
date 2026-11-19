@@ -56,6 +56,36 @@ def test_openapi_list_all_downtimes_for_a_specific_site(
         assert len(resp.json["value"]) == 1
 
 
+def test_openapi_list_downtimes_names_a_site_that_does_not_answer(
+    mock_livestatus: MockLiveStatusConnection,
+    clients: ClientRegistry,
+) -> None:
+    mock_livestatus.add_table("downtimes", [])
+    mock_livestatus.make_site_unreachable("remote")
+    mock_livestatus.expect_query(["GET downtimes"], match_type="loose")
+
+    with mock_livestatus:
+        resp = clients.Downtime.get_all()
+
+    assert resp.json["extensions"] == {"unreachable_sites": ["remote"], "incomplete": True}
+
+
+def test_openapi_list_downtimes_names_a_site_that_fails_during_the_query(
+    mock_livestatus: MockLiveStatusConnection,
+    clients: ClientRegistry,
+) -> None:
+    mock_livestatus.add_table("downtimes", [])
+    mock_livestatus.expect_query(
+        ["GET downtimes"], match_type="loose", sites=["remote"], error=(502, "Bad gateway")
+    )
+    mock_livestatus.expect_query(["GET downtimes"], match_type="loose", sites=["NO_SITE", "local"])
+
+    with mock_livestatus:
+        resp = clients.Downtime.get_all()
+
+    assert resp.json["extensions"] == {"unreachable_sites": ["remote"], "incomplete": True}
+
+
 @pytest.mark.usefixtures("with_groups")
 def test_openapi_schedule_hostgroup_downtime(
     clients: ClientRegistry,

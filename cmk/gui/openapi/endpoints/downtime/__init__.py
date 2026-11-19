@@ -377,11 +377,9 @@ def _show_downtimes(param: Mapping[str, Any]) -> Response:
         q = q.filter(Downtimes.service_description.contains(service_description))
 
     _site_id: SiteId | None = param.get("site_id")
-    return serve_json(
-        _serialize_downtimes(
-            q.fetchall(sites.live(), True, [_site_id] if _site_id is not None else _site_id)
-        )
-    )
+    only_sites = [_site_id] if _site_id is not None else None
+    downtimes = q.fetchall(sites.live(), include_site_ids=True, only_sites=only_sites)
+    return serve_json(_serialize_downtimes(downtimes, sites.unreachable_sites(only_sites)))
 
 
 @Endpoint(
@@ -543,10 +541,16 @@ def _generate_target_downtimes_query(
     return query_expr, site_id
 
 
-def _serialize_downtimes(downtimes: Iterable[ResultRow]) -> CollectionObject:
+def _serialize_downtimes(
+    downtimes: Iterable[ResultRow], unreachable_sites: list[SiteId]
+) -> CollectionObject:
     return constructors.collection_object(
         "downtime",
         value=[_serialize_single_downtime(downtime) for downtime in downtimes],
+        extensions={
+            "unreachable_sites": unreachable_sites,
+            "incomplete": bool(unreachable_sites),
+        },
     )
 
 

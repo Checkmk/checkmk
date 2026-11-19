@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 import cmk.utils.paths
 from cmk.ccc.site import SiteId
 from cmk.gui import sites, user_sites
@@ -13,6 +15,7 @@ from cmk.livestatus_client import (
     SiteConfigurations,
     UnixSocketDetails,
 )
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 def default_site_config() -> SiteConfiguration:
@@ -157,6 +160,28 @@ def test_sorted_sites(request_context: None) -> None:
         )
         == expected
     )
+
+
+@pytest.mark.usefixtures("load_config")
+@pytest.mark.parametrize(
+    "only_sites, expected",
+    [
+        pytest.param(None, [SiteId("local"), SiteId("remote")], id="no filter"),
+        pytest.param([], [SiteId("local"), SiteId("remote")], id="empty filter"),
+        pytest.param([SiteId("remote")], [SiteId("remote")], id="dead site requested"),
+        pytest.param([SiteId("NO_SITE")], [], id="dead site not requested"),
+    ],
+)
+def test_unreachable_sites_names_dead_sites_among_the_requested_ones(
+    mock_livestatus: MockLiveStatusConnection,
+    only_sites: list[SiteId] | None,
+    expected: list[SiteId],
+) -> None:
+    mock_livestatus.make_site_unreachable("remote")
+    mock_livestatus.make_site_unreachable("local")
+
+    with mock_livestatus():
+        assert sites.unreachable_sites(only_sites) == expected
 
 
 def _site_config(site_id: SiteId, alias: str) -> SiteConfiguration:

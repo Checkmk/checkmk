@@ -7,7 +7,11 @@
 
 from cmk import fields
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
+from cmk.gui.openapi.restful_objects.response_schemas import (
+    DomainObject,
+    DomainObjectCollection,
+    LegacyMultiSiteCollectionExtensions,
+)
 
 
 class CommentAttributes(BaseSchema):
@@ -60,4 +64,8 @@ class CommentCollection(DomainObjectCollection):
     value = fields.List(
         fields.Nested(CommentObject),
         description="A list of comment objects.",
+    )
+    extensions = fields.Nested(  # type: ignore[assignment]
+        LegacyMultiSiteCollectionExtensions,
+        description="Additional attributes alongside the collection.",
     )

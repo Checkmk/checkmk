@@ -213,10 +213,15 @@ def show_comments(params: Mapping[str, Any]) -> Response:
             detail="You set collection_name to host but the provided filtering parameters will return only service comments.",
         )
 
+    unreachable_sites = sites.unreachable_sites([sites_to_query] if sites_to_query else None)
     return serve_json(
         constructors.collection_object(
             domain_type="comment",
             value=[_serialize_comment(comment) for _, comment in sorted(comments_dict.items())],
+            extensions={
+                "unreachable_sites": unreachable_sites,
+                "incomplete": bool(unreachable_sites),
+            },
         )
     )
 

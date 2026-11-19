@@ -358,6 +358,24 @@ class DomainObjectBaseCollection(BaseSchema):
 class DomainObjectCollection(DomainObjectBaseCollection, Linkable): ...
 
 
+class LegacyMultiSiteCollectionExtensions(BaseSchema):
+    unreachable_sites = fields.List(
+        fields.String(),
+        description=(
+            "The IDs of the sites that could not be reached. Their objects are missing from the "
+            "collection."
+        ),
+        example=["remote_1"],
+    )
+    incomplete = fields.Boolean(
+        description=(
+            "Whether objects are missing from the collection. True when a site could not be "
+            "reached."
+        ),
+        example=True,
+    )
+
+
 class VersionCapabilities(BaseSchema):
     blobsClobs = fields.Boolean(
         required=False,

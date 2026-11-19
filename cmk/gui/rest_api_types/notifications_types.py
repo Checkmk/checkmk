@@ -38,6 +38,7 @@ from cmk.utils.notify_types import (
     PluginOptions,
     PushoverPluginModel,
     PushoverPluginName,
+    RoutingKeyType,
     ServiceNowPluginModel,
     ServiceNowPluginName,
     SignL4PluginModel,
@@ -77,7 +78,6 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     APICheckmkPassword_FromPassword,
     APICheckmkPassword_FromSecret,
     APINotifyPlugin,
-    APIPagerDutyKeyOption,
     APIPluginDict,
     BasicOrTokenAuth,
     CheckboxEmailBodyInfo,
@@ -1171,11 +1171,25 @@ class JsmOperationsPlugin:
         )
 
 
+def _routing_key_as_password(routing_key: RoutingKeyType | CheckmkPassword) -> CheckmkPassword:
+    """The routing key in the format of the password, also if it was stored in the format before"""
+    if len(routing_key) == 3:
+        return routing_key
+    option, value = routing_key
+    if option == "routing_key":
+        return (
+            "cmk_postprocessed",
+            "explicit_password",
+            (password_store.ad_hoc_password_id(), value),
+        )
+    return "cmk_postprocessed", "stored_password", (value, "")
+
+
 @dataclass
 class PagerDutyPlugin:
     plugin_name: ClassVar[PagerdutyPluginName] = "pagerduty"
     option: PluginOptions = PluginOptions.CANCEL
-    integration_key: APIPagerDutyKeyOption = field(default_factory=APIPagerDutyKeyOption)
+    integration_key: APICheckmkPassword_FromKey = field(default_factory=APICheckmkPassword_FromKey)
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
@@ -1188,7 +1202,9 @@ class PagerDutyPlugin:
 
         return cls(
             option=PluginOptions.WITH_PARAMS,
-            integration_key=APIPagerDutyKeyOption.from_mk_file_format(pluginparams["routing_key"]),
+            integration_key=APICheckmkPassword_FromKey.from_mk_file_format(
+                _routing_key_as_password(pluginparams["routing_key"])
+            ),
             disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("ignore_ssl"),
             ),
@@ -1210,7 +1226,7 @@ class PagerDutyPlugin:
 
         return cls(
             option=PluginOptions.WITH_PARAMS,
-            integration_key=APIPagerDutyKeyOption.from_api_request(params["integration_key"]),
+            integration_key=APICheckmkPassword_FromKey.from_api_request(params["integration_key"]),
             disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
                 params["disable_ssl_cert_verification"]
             ),

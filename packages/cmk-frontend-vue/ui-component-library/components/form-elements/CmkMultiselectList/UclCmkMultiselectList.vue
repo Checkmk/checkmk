@@ -68,7 +68,9 @@ const fewSelected = ref(['state'])
           :label="untranslated('Columns')"
           :empty-text="untranslated('No matching columns')"
         />
-        <CmkParagraph>Selected: {{ selected.join(', ') || '—' }}</CmkParagraph>
+        <CmkParagraph class="ucl-cmk-multiselect-list__selected">
+          Selected: {{ selected.join(', ') || '—' }}
+        </CmkParagraph>
         <CmkParagraph>With fewer items, the list hugs them.</CmkParagraph>
         <CmkMultiselectList
           v-model="fewSelected"
@@ -83,3 +85,12 @@ const fewSelected = ref(['state'])
     <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>
+
+<style scoped>
+/* Wraps at the width of the lists instead of widening the centered preview, which would move
+   the lists sideways while the selection grows. */
+.ucl-cmk-multiselect-list__selected {
+  width: 0;
+  min-width: 100%;
+}
+</style>

@@ -144,7 +144,8 @@ def main(argv: Sequence[str]) -> int:
         extra_args = ["--warn-only"]
     else:
         suites = _collect_bazel_suites(results, job_name(the_version, edition, env))
-        extra_args = []
+        # Only warn until the suites run on a stable machine (CMK-42580).
+        extra_args = ["--warn-only"]
     # A suite's failed upload or check fails the job, but only after every suite is uploaded.
     rc = 0
     for root_dir, db in suites:

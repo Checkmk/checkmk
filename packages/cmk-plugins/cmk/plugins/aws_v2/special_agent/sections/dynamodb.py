@@ -208,7 +208,7 @@ class DynamoDBLimits(AWSSectionLimits):
             account_write_usage += table_usage_write
 
             self._add_read_write_limits(
-                hosts.DynamoDBTable(table["TableName"], self._region),
+                hosts.DynamoDBTable(table["TableName"], table["TableArn"]),
                 table_usage_read,
                 table_usage_write,
                 limits["TableMaxReadCapacityUnits"],
@@ -322,7 +322,8 @@ class DynamoDBSummary(AWSSection):
         content_by_piggyback_hosts: dict[str, str] = {}
         for table in raw_content.content:
             content_by_piggyback_hosts.setdefault(
-                self._target_host(hosts.DynamoDBTable(table["TableName"], self._region)), table
+                self._target_host(hosts.DynamoDBTable(table["TableName"], table["TableArn"])),
+                table,
             )
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 

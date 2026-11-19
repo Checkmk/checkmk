@@ -120,7 +120,9 @@ def test_ec2_instance_without_a_name_has_no_host(
         ),
         pytest.param(LoadBalancerV2("alb.example.com"), "alb.example.com", id="load balancer v2"),
         pytest.param(
-            DynamoDBTable("users", "eu-central-1"), "users_eu-central-1", id="dynamodb table"
+            DynamoDBTable("users", "arn:aws:dynamodb:eu-central-1:111122223333:table/users"),
+            "aws_dynamodb_table_users_a93630d8",
+            id="dynamodb table",
         ),
         pytest.param(WAFV2WebACL("acl", "eu-central-1"), "acl_eu-central-1", id="regional web acl"),
         pytest.param(WAFV2WebACL("acl", "CloudFront"), "acl_CloudFront", id="cloudfront web acl"),

@@ -35,6 +35,11 @@ from .agent_aws_fake_clients import (
 )
 
 ACCOUNT_HOST = TargetHost("123456789012")
+TABLE_HOSTS = {
+    "TableName-0": TargetHost("aws_dynamodb_table_TableName-0_d7dffb80"),
+    "TableName-1": TargetHost("aws_dynamodb_table_TableName-1_edd21086"),
+    "TableName-2": TargetHost("aws_dynamodb_table_TableName-2_fcc99407"),
+}
 
 
 class PaginatorTables:
@@ -267,8 +272,9 @@ def test_agent_aws_dynamodb_limits(
             assert len(result.content) == 3  # additionally number of tables
         else:
             assert len(result.content) == 2
-            table_name = result.piggyback_hostname.split("_")[0]
-            assert table_name in provisioned_table_names
+            assert result.piggyback_hostname in {
+                TABLE_HOSTS[name] for name in provisioned_table_names
+            }
 
 
 def _test_summary(
@@ -385,7 +391,7 @@ def test_agent_aws_dynamodb_summary_filters_tags(
         assert list(result["TagsForCmkLabels"].keys()) == expected_tags[result["TableName"]]
 
 
-def test_agent_aws_dynamodb_table_metrics_go_to_a_host_per_table_and_region(
+def test_agent_aws_dynamodb_table_metrics_go_to_a_host_per_table(
     get_dynamodb_sections: DynamobSections,
 ) -> None:
     dynamodb_sections = get_dynamodb_sections(None, (None, None))
@@ -393,11 +399,9 @@ def test_agent_aws_dynamodb_table_metrics_go_to_a_host_per_table_and_region(
 
     dynamodb_table_results = dynamodb_sections["dynamodb_table"].run().results
 
-    assert sorted(result.piggyback_hostname for result in dynamodb_table_results) == [
-        "TableName-0_region",
-        "TableName-1_region",
-        "TableName-2_region",
-    ]
+    assert sorted(result.piggyback_hostname for result in dynamodb_table_results) == sorted(
+        TABLE_HOSTS.values()
+    )
 
 
 def test_agent_aws_dynamodb_table_hosts_get_the_resource_labels(
@@ -415,7 +419,7 @@ def test_agent_aws_dynamodb_table_hosts_get_the_resource_labels(
         "cmk/aws/tag/Key-2": "Value-2",
     }
     assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
-        f"TableName-{i}_region": {
+        TABLE_HOSTS[f"TableName-{i}"]: {
             "cmk/aws/service": "dynamodb",
             "cmk/aws/name": f"TableName-{i}",
             "cmk/aws/resource_id": f"TableId-{i}",

@@ -106,3 +106,17 @@ def test_failed_translation_keeps_values_without_other_control_characters_as_bef
     var_binds = [(UNTRANSLATABLE_OID, value)]
 
     assert translator.translate("192.0.2.1", var_binds) == [(str(UNTRANSLATABLE_OID), rendered)]
+
+
+def test_failed_translation_logs_the_traceback_with_the_oid(
+    translator: SNMPTrapTranslator, logger: logging.Logger, caplog: pytest.LogCaptureFixture
+) -> None:
+    var_binds = [(UNTRANSLATABLE_OID, OctetString("hurz"))]
+    caplog.set_level(logging.DEBUG, logger=logger.name)
+
+    translator.translate("192.0.2.1", var_binds)
+
+    assert (
+        f"Failed to translate OID {UNTRANSLATABLE_OID}\nTraceback (most recent call last):"
+        in caplog.text
+    )

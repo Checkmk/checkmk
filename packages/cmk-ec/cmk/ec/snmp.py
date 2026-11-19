@@ -6,7 +6,6 @@
 # NOTE: We *really* need type stubs or a typed version of the SNMP libraries...
 # mypy: disable-error-code="no-untyped-call"
 
-import traceback
 from collections.abc import Iterable, Mapping
 from logging import Logger
 from pathlib import Path
@@ -348,11 +347,7 @@ class SNMPTrapTranslator:
                     oid.prettyPrint(),
                     ipaddress,
                 )
-                self._logger.debug(
-                    "Failed trap var binds:\n%s",
-                    "\n".join(f"{i}: {repr(i)}" for i in var_bind_list),
-                )
-                self._logger.debug(traceback.format_exc())
+                self._logger.debug("Failed to translate OID %s", oid.prettyPrint(), exc_info=True)
                 translated_oid, translated_value = self._translate_binding_raw(oid, value)
             var_binds.append((translated_oid, translated_value))
         return var_binds

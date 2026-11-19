@@ -23,8 +23,8 @@ from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashbo
 
 logger = logging.getLogger(__name__)
 
-# Absent a user preference the picker opens on the first configured range.
-DEFAULT_PRESET = "Last 1 h"
+# Absent a user preference the picker opens on the 4 h range.
+DEFAULT_PRESET = "Last 4 h"
 OTHER_PRESET = "Last 25 h"
 
 # Only a window wider than a day spans two dates, so a shifted hour cannot match.

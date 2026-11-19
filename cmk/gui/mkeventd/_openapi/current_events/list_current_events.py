@@ -23,7 +23,10 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel
+from cmk.gui.openapi.framework.model.base_models import (
+    DomainObjectCollectionModel,
+    MultiSiteCollectionExtensions,
+)
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.livestatus_client import OnlySites
 
@@ -42,6 +45,9 @@ class CurrentEventsCollectionModel(DomainObjectCollectionModel):
     value: list[CurrentEventModel] = api_field(
         description="A list of current event objects.",
         example=[],
+    )
+    extensions: MultiSiteCollectionExtensions = api_field(  # type: ignore[assignment]
+        description="Additional attributes alongside the collection."
     )
 
 
@@ -106,15 +112,15 @@ def list_current_events_v1(
 
     _site_id: OnlySites = [site_id] if site_id is not None else None
 
+    events = q.fetchall(sites.live(), include_site_ids=True, only_sites=_site_id)
+    unreachable_sites = sites.unreachable_sites(_site_id)
+
     return CurrentEventsCollectionModel(
         id="event_console",
         domainType="event_console",
-        value=[
-            CurrentEventModel.current_event_from_internal(event)
-            for event in q.fetchall(sites.live(), True, _site_id)
-        ],
+        value=[CurrentEventModel.current_event_from_internal(event) for event in events],
         links=[],
-        extensions={},
+        extensions=MultiSiteCollectionExtensions.create(unreachable_sites),
     )
 
 

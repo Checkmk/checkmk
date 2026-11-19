@@ -65,19 +65,36 @@ test('warns that the service cannot be saved when the template resolves to no ho
   expect(screen.queryByText(/Target hosts:/)).toBeNull()
 })
 
-test('warns that new hosts cannot be created without a folder to create them in', () => {
+test.each([
+  { refusal: 'missing_permission', reason: /you lack the permission "Add & remove hosts"/ },
+  { refusal: 'no_write_access', reason: /neither "Write access to all hosts and folders"/ },
+  { refusal: 'hosts_locked', reason: /the hosts are locked in every folder you may write to/ },
+  { refusal: null, reason: /You may not create hosts in any folder\. Saving is refused/ }
+] as const)('warns why new hosts cannot be created: $refusal', ({ refusal, reason }) => {
   renderMatches({
     status: 'resolved',
-    resolution: { ...RESOLUTION, unmatched_host_names: ['pod-search'], creatable_folders: [] }
+    resolution: {
+      ...RESOLUTION,
+      unmatched_host_names: ['pod-search'],
+      creatable_folders: [],
+      host_creation_refusal: refusal
+    }
   })
 
-  expect(isAlert(/You may not create hosts in any folder/)).toBe(true)
+  expect(isAlert(reason)).toBe(true)
 })
 
 test('does not warn about folders while no host is created', () => {
-  renderMatches({ status: 'resolved', resolution: { ...RESOLUTION, creatable_folders: [] } })
+  renderMatches({
+    status: 'resolved',
+    resolution: {
+      ...RESOLUTION,
+      creatable_folders: [],
+      host_creation_refusal: 'missing_permission'
+    }
+  })
 
-  expect(screen.queryByText(/You may not create hosts in any folder/)).toBeNull()
+  expect(screen.queryByText(/You may not create hosts/)).toBeNull()
 })
 
 test('warns about matching hosts the user may not see', () => {

@@ -791,16 +791,40 @@ class Site:
     ) -> subprocess.Popen[str]:
         return execute(cmd, preserve_env=preserve_env, sudo=True, substitute_user=self.id, **kwargs)
 
+    @overload
     def run(
         self,
         args: list[str],
+        encoding: str = "utf-8",
         capture_output: bool = True,
         check: bool = True,
-        encoding: str | None = "utf-8",
         input_: str | None = None,
         preserve_env: list[str] | None = None,
         **kwargs: Any,
-    ) -> subprocess.CompletedProcess[str]:
+    ) -> subprocess.CompletedProcess[str]: ...
+
+    @overload
+    def run(
+        self,
+        args: list[str],
+        encoding: None,
+        capture_output: bool = True,
+        check: bool = True,
+        input_: str | None = None,
+        preserve_env: list[str] | None = None,
+        **kwargs: Any,
+    ) -> subprocess.CompletedProcess[bytes]: ...
+
+    def run(
+        self,
+        args: list[str],
+        encoding: str | None = "utf-8",
+        capture_output: bool = True,
+        check: bool = True,
+        input_: str | None = None,
+        preserve_env: list[str] | None = None,
+        **kwargs: Any,
+    ) -> subprocess.CompletedProcess[str] | subprocess.CompletedProcess[bytes]:
         return run(
             args=args,
             capture_output=capture_output,
@@ -3308,18 +3332,68 @@ class PythonHelper:
         finally:
             self.site.delete_file(str(self.site_path))
 
+    @overload
     def check_output(
         self,
         input_: str | None = None,
         encoding: str = "utf-8",
         args: list[str] | None = None,
-    ) -> str:
+    ) -> str: ...
+
+    @overload
+    def check_output(
+        self,
+        input_: str | None = None,
+        encoding: None = ...,
+        args: list[str] | None = None,
+    ) -> bytes: ...
+
+    def check_output(
+        self,
+        input_: str | None = None,
+        encoding: str | None = "utf-8",
+        args: list[str] | None = None,
+    ) -> str | bytes:
         with self.copy_helper():
             return self.site.check_output(
                 ["python3", str(self.site_path)] + (args or []),
                 input_=input_,
                 encoding=encoding,
                 stderr=subprocess.PIPE,
+            )
+
+    @overload
+    def run(
+        self,
+        input_: str | None = None,
+        encoding: str = "utf-8",
+        args: list[str] | None = None,
+        check: bool = True,
+    ) -> subprocess.CompletedProcess[str]: ...
+
+    @overload
+    def run(
+        self,
+        input_: str | None = None,
+        encoding: None = ...,
+        args: list[str] | None = None,
+        check: bool = True,
+    ) -> subprocess.CompletedProcess[bytes]: ...
+
+    def run(
+        self,
+        input_: str | None = None,
+        encoding: str | None = "utf-8",
+        args: list[str] | None = None,
+        check: bool = True,
+    ) -> subprocess.CompletedProcess[str] | subprocess.CompletedProcess[bytes]:
+        with self.copy_helper():
+            return self.site.run(
+                ["python3", str(self.site_path)] + (args or []),
+                input_=input_,
+                encoding=encoding,
+                capture_output=True,
+                check=check,
             )
 
     @contextmanager

@@ -215,17 +215,45 @@ def spawn_expect_process(
     return rc
 
 
+@overload
 def run(
     args: list[str],
+    encoding: str = "utf-8",
     capture_output: bool = True,
     check: bool = True,
-    encoding: str | None = "utf-8",
     input_: str | bytes | None = None,
     preserve_env: list[str] | None = None,
     sudo: bool = False,
     substitute_user: str | None = None,
     **kwargs: Any,
-) -> subprocess.CompletedProcess[str]:
+) -> subprocess.CompletedProcess[str]: ...
+
+
+@overload
+def run(
+    args: list[str],
+    encoding: None,
+    capture_output: bool = True,
+    check: bool = True,
+    input_: str | bytes | None = None,
+    preserve_env: list[str] | None = None,
+    sudo: bool = False,
+    substitute_user: str | None = None,
+    **kwargs: Any,
+) -> subprocess.CompletedProcess[bytes]: ...
+
+
+def run(
+    args: list[str],
+    encoding: str | None = "utf-8",
+    capture_output: bool = True,
+    check: bool = True,
+    input_: str | bytes | None = None,
+    preserve_env: list[str] | None = None,
+    sudo: bool = False,
+    substitute_user: str | None = None,
+    **kwargs: Any,
+) -> subprocess.CompletedProcess[str] | subprocess.CompletedProcess[bytes]:
     """Run a process and return a `subprocess.CompletedProcess` object."""
     preserve_env, kwargs = _add_trace_context(kwargs, preserve_env, sudo)
     args_ = _extend_command(args, substitute_user, None, sudo, preserve_env, kwargs)

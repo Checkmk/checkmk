@@ -13,7 +13,9 @@ pub struct Cli {
     /// Enable verbose output. Use once (-v) for logging level INFO, twice (-vv) for
     /// logging level DEBUG, and three times (-vvv) for logging level TRACE.
     /// Applies to both `log` and `tracing` messages.
-    #[arg(short, long, action = clap::ArgAction::Count)]
+    // clap does not add up the occurrences before and after the mode. If both
+    // positions carry the flag, the count after the mode applies.
+    #[arg(short, long, global = true, action = clap::ArgAction::Count)]
     verbose: u8,
 
     #[command(subcommand)]
@@ -408,6 +410,23 @@ mod tests {
         assert_eq!(
             Cli::parse_from(["cmk-agent-ctl", "-v", "install-agent"]).logging_level(),
             "info"
+        );
+    }
+
+    #[test]
+    fn test_verbosity_is_accepted_before_the_mode() {
+        assert_eq!(
+            Cli::parse_from(["cmk-agent-ctl", "-vv", "dump"]).logging_level(),
+            "debug"
+        );
+    }
+
+    #[test]
+    fn test_verbosity_is_accepted_after_the_options_of_a_mode() {
+        assert_eq!(
+            Cli::parse_from(["cmk-agent-ctl", "status", "--no-query-remote", "-vv"])
+                .logging_level(),
+            "debug"
         );
     }
 

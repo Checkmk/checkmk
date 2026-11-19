@@ -7,7 +7,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 
-import traceback
 from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
 from typing import Any
@@ -370,10 +369,8 @@ class SNMPTrapTranslator:
                     {"oid": oid.prettyPrint(), "ipaddress": ipaddress},
                 )
                 self._logger.debug(
-                    "Failed trap var binds:\n%(var_binds)s",
-                    {"var_binds": "\n".join(f"{i}: {repr(i)}" for i in var_bind_list)},
+                    "Failed to translate OID %(oid)s", {"oid": oid.prettyPrint()}, exc_info=True
                 )
-                self._logger.debug(traceback.format_exc())
                 translated_oid, translated_value = self._translate_binding_raw(oid, value)
             var_binds.append((translated_oid, translated_value))
         return var_binds

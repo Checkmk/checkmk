@@ -69,7 +69,8 @@ if [ "$exit_code" -eq 0 ]; then
     # to treat warnings as errors.  However, we want `fail_on_violation` to fail
     # the build in case of warnings, too.
     # We thus have to explicitly search for warnings in clippy's output message.
-    warning_count="$(grep -m1 -oP '\\d+(?= warnings emitted)' "$1")"
+    # rustc says "1 warning emitted" for a single warning.
+    warning_count="$(grep -m1 -oP '\\d+(?= warnings? emitted)' "$1")"
     if [ -n "$warning_count" ] && [ "$warning_count" -ne 0 ]; then
         exit_code=1
     fi

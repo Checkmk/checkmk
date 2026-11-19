@@ -33,7 +33,7 @@ from cmk.maps.backend.schemas.map import (
     MapElementUpdate,
     WorldmapView,
 )
-from cmk.maps.backend.services.state_service import _names_or_filter
+from cmk.maps.backend.services.state_service import _names_filter
 from cmk.maps.shared.validators import (
     coerce_asset_ref,
     coerce_url_target,
@@ -434,15 +434,15 @@ def test_map_element_rejects_a_service_pattern_on_a_host(element: dict[str, obje
         MapElement.model_validate(element)
 
 
-# The runtime location-bundle filter (``_names_or_filter``) is built from live
+# The runtime location-bundle filter (``_names_filter``) is built from live
 # geo-host names and — unlike a persisted object_filter — skips the schema-layer
 # normalize_object_filter. get_dyngroup_state later un-escapes ``\n`` → a real
 # newline, so a name carrying a literal backslash-n (or a real newline) must be
 # dropped here or it smuggles in extra Livestatus header lines.
 
 
-def test_names_or_filter_drops_injection_candidates() -> None:
-    out = _names_or_filter(
+def test_names_filter_drops_injection_candidates() -> None:
+    out = _names_filter(
         [
             "good-host",
             "evil\\nStats: state = 0",  # literal backslash-n → un-escaped downstream
@@ -454,8 +454,8 @@ def test_names_or_filter_drops_injection_candidates() -> None:
     assert "\\n" not in out
 
 
-def test_names_or_filter_builds_or_for_multiple_safe_names() -> None:
-    assert _names_or_filter(["h1", "h2"]) == "Filter: name = h1\nFilter: name = h2\nOr: 2\n"
+def test_names_filter_matches_multiple_safe_names() -> None:
+    assert _names_filter(["h1", "h2"]) == "Filter: name ~ ^(?:h1|h2)$\n"
 
 
 # --- AuthUser header escaping (the one query value that reaches a header) ---

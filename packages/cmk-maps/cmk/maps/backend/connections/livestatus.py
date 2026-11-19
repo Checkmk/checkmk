@@ -334,6 +334,37 @@ def _host_states_query(state_col: str, more_columns: str = "") -> str:
 _HOST_STATE_COLUMN_COUNT = 6 + len(_HOST_EXTRA_COLS.split())
 
 
+# Above this many host sets, all hosts and services are asked for at once.
+_PAIR_GROUPS_MAX = 64
+
+
+def _pairs_filter(pairs: Collection[tuple[str, str]]) -> str:
+    """A filter for the services ``pairs`` name, which may return others too.
+
+    The hosts and the service names asked for alone match every service of those
+    names on every one of those hosts, such as all 48 interfaces of 200 switches
+    pinned one each. So the rows they match are narrowed down further to the
+    services asked for by the hosts that have them, while that takes few
+    expressions. The narrowing comes last: the core then tries it only on the
+    rows the two expressions matched, not on every service.
+    """
+    hosts_of: dict[str, set[str]] = {}
+    for host, service in pairs:
+        hosts_of.setdefault(service, set()).add(host)
+    hosts = {host for host, _service in pairs}
+    candidates = f"{one_of('host_name', hosts)}{one_of('description', hosts_of.keys())}"
+    by_hosts: dict[frozenset[str], set[str]] = {}
+    for service, on in hosts_of.items():
+        by_hosts.setdefault(frozenset(on), set()).add(service)
+    if len(by_hosts) == 1 or len(by_hosts) > _PAIR_GROUPS_MAX:
+        return candidates
+    narrowed = "".join(
+        f"{one_of('host_name', on)}{one_of('description', names)}And: 2\n"
+        for on, names in by_hosts.items()
+    )
+    return f"{candidates}{narrowed}Or: {len(by_hosts)}\n"
+
+
 def _service_states_query(state_col: str) -> str:
     """The head of a query ``_parse_service_state_row`` reads; filters follow."""
     return (
@@ -1324,8 +1355,7 @@ class LivestatusConnection(ConnectionBase):
             host_names = {row_str(r, 0) for r in svc_rows if row_str(r, 0)}
             if not host_names:
                 return []
-            host_filters = "".join(f"Filter: name = {lqencode(h)}\n" for h in host_names)
-            group_filter = f"{host_filters}Or: {len(host_names)}\n"
+            group_filter = one_of("name", host_names)
 
         # Each block leaves one combined expression on the stack; AND them.
         filt = geo_filter if not group_filter else f"{geo_filter}{group_filter}And: 2\n"
@@ -1674,10 +1704,9 @@ class LivestatusConnection(ConnectionBase):
         if not hostnames:
             return {}
         state_col = "last_hard_state" if only_hard else "state"
-        filters = "".join(f"Filter: name = {lqencode(h)}\n" for h in hostnames)
-        if len(hostnames) > 1:
-            filters += f"Or: {len(hostnames)}\n"
-        tagged = await self._query_with_site(f"{_host_states_query(state_col)}{filters}")
+        tagged = await self._query_with_site(
+            f"{_host_states_query(state_col)}{one_of('name', hostnames)}"
+        )
         return _worst_state_dict(
             _parse_host_state_row(r, site_id=_default_site_id(sid)) for sid, r in tagged
         )
@@ -1892,18 +1921,14 @@ class LivestatusConnection(ConnectionBase):
         if not pairs:
             return {}
         state_col = "last_hard_state" if only_hard else "state"
-        filter_lines = ""
-        for host, svc in pairs:
-            filter_lines += (
-                f"Filter: host_name = {lqencode(host)}\n"
-                f"Filter: description = {lqencode(svc)}\n"
-                f"And: 2\n"
-            )
-        if len(pairs) > 1:
-            filter_lines += f"Or: {len(pairs)}\n"
-        tagged = await self._query_with_site(f"{_service_states_query(state_col)}{filter_lines}")
+        tagged = await self._query_with_site(
+            f"{_service_states_query(state_col)}{_pairs_filter(pairs)}"
+        )
+        wanted = set(pairs)
         return _worst_state_dict(
-            _parse_service_state_row(r, site_id=_default_site_id(sid)) for sid, r in tagged
+            _parse_service_state_row(r, site_id=_default_site_id(sid))
+            for sid, r in tagged
+            if (row_str(r, 0), row_str(r, 1)) in wanted
         )
 
     # Above this host count we drop the per-host filter list and post-filter
@@ -1932,34 +1957,23 @@ class LivestatusConnection(ConnectionBase):
         if cached is not None:
             return dict(cached)
 
-        query_all = len(hostnames) > self._SERVICES_SUMMARY_FILTER_THRESHOLD
-        if query_all:
-            filters = ""
-        else:
-            filters = "".join(f"Filter: name = {lqencode(h)}\n" for h in hostnames)
-            if len(hostnames) > 1:
-                filters += f"Or: {len(hostnames)}\n"
         query = (
             "GET hosts\n"
             "Columns: name num_services_ok num_services_warn num_services_crit "
             "num_services_unknown num_services_pending\n"
-            f"{filters}"
         )
+        if len(hostnames) <= self._SERVICES_SUMMARY_FILTER_THRESHOLD:
+            query += one_of("name", hostnames)
         try:
             rows = await self._query(query)
         except Exception:
             logger.warning("services-summary query failed", exc_info=True)
             return {h: ServicesSummary() for h in hostnames}
 
-        wanted = set(hostnames) if query_all else None
         merged: dict[str, ServicesSummary] = {h: ServicesSummary() for h in hostnames}
         for r in rows:
-            name = row_str(r, 0)
-            if not name:
-                continue
-            if wanted is not None and name not in wanted:
-                continue
-            merged[name] = _services_summary_from_row(r, 1)
+            if (name := row_str(r, 0)) in merged:
+                merged[name] = _services_summary_from_row(r, 1)
 
         self._services_summary_cache.set(cache_key, merged)
         return dict(merged)
@@ -1971,14 +1985,11 @@ class LivestatusConnection(ConnectionBase):
         chunk_size = settings.flow_map_bulk_service_chunk_size
 
         async def _query_chunk(hosts: list[str]) -> list[LivestatusRow]:
-            filters = "".join(f"Filter: host_name = {lqencode(h)}\n" for h in hosts)
-            if len(hosts) > 1:
-                filters += f"Or: {len(hosts)}\n"
             return await self._query(
                 "GET services\n"
                 "Columns: host_name description state plugin_output "
                 "acknowledged scheduled_downtime_depth notifications_enabled "
-                "last_state_change last_check next_check\n" + filters
+                "last_state_change last_check next_check\n" + one_of("host_name", hosts)
             )
 
         async def _bounded_query_chunk(hosts: list[str]) -> list[LivestatusRow]:
@@ -1987,8 +1998,7 @@ class LivestatusConnection(ConnectionBase):
 
         # Split top-K into smaller parallel queries: one slow host stalls only
         # its own chunk. The semaphore caps in-flight chunks so high host counts
-        # (e.g. 500-host top-K → 100 chunks) don't exhaust the livestatus
-        # listen backlog. ``return_exceptions=True`` lets a single failed chunk
+        # don't exhaust the livestatus listen backlog. ``return_exceptions=True`` lets a single failed chunk
         # degrade gracefully (those hosts get an empty service list) instead of
         # killing the whole topology broadcast.
         chunks = [hostnames[i : i + chunk_size] for i in range(0, len(hostnames), chunk_size)]

@@ -842,9 +842,7 @@ def test_location_bundle_matches_hosts_at_coordinate(
     assert "auto:srv2" not in by_id
     assert "auto:srv3" in by_id
     called_filter = mock_connection.get_dyngroup_state.await_args.args[1]
-    assert "Filter: name = srv1" in called_filter
-    assert "Filter: name = srv2" in called_filter
-    assert "Or: 2" in called_filter
+    assert called_filter == "Filter: name ~ ^(?:srv1|srv2)$\n"
 
 
 def test_location_bundle_without_auto_source_uses_baseline(
@@ -882,8 +880,7 @@ def test_location_bundle_without_auto_source_uses_baseline(
     assert "loc1" in {s.object_id for s in result.states}
     mock_connection.get_dyngroup_state.assert_awaited_once()
     called_filter = mock_connection.get_dyngroup_state.await_args.args[1]
-    assert "Filter: name = srv1" in called_filter
-    assert "Filter: name = srv2" in called_filter
+    assert called_filter == "Filter: name ~ ^(?:srv1|srv2)$\n"
 
 
 # ---------------------------------------------------------------------------

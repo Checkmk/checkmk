@@ -57,6 +57,7 @@ from cmk.maps.backend.schemas.topology import (
 from cmk.maps.backend.services import map_service
 from cmk.maps.backend.services.map_service import LinkSource
 from cmk.maps.backend.services.settings_service import get_daemon_runtime
+from cmk.maps.shared.filters import one_of
 from cmk.maps.shared.map_links import LINKED_MAPS_MAX
 from cmk.maps.shared.map_payload import (
     AUTO_OBJECT_ID_PREFIX,
@@ -284,15 +285,14 @@ async def _execute_map_states(
     )
 
 
-def _names_or_filter(names: list[str]) -> str:
+def _names_filter(names: list[str]) -> str:
     # Drop names carrying a newline OR a backslash: this runtime-built filter
     # skips the schema-layer normalize_object_filter, and get_dyngroup_state
     # later un-escapes ``\n`` → a real newline. A literal backslash-n in a name
     # would therefore smuggle in extra Livestatus header lines (Stats:/Filter:).
     # Real host names contain neither character.
     safe = [n for n in names if "\n" not in n and "\\" not in n]
-    lines = "".join(f"Filter: name = {n}\n" for n in safe)
-    return lines + (f"Or: {len(safe)}\n" if len(safe) > 1 else "")
+    return one_of("name", safe) if safe else ""
 
 
 async def inflate_auto_objects(cfg: MapConfig, connection: ConnectionBase) -> list[MapElement]:
@@ -346,7 +346,7 @@ async def inflate_auto_objects(cfg: MapConfig, connection: ConnectionBase) -> li
                 o.model_copy(
                     update={
                         "bundle_hosts": members,
-                        "object_filter": _names_or_filter(members) if members else o.object_filter,
+                        "object_filter": _names_filter(members) if members else o.object_filter,
                     }
                 )
             )

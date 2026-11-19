@@ -87,8 +87,10 @@ class Settings(BaseModel):
     flow_map_top_affected_hosts: int = _bounded(
         "MAPS_FLOW_TOP_AFFECTED_HOSTS", 25, 0, FLOW_TOP_AFFECTED_HOSTS_MAX
     )
+    # The services of a single host come by the core's index; those of several
+    # take a look at every service.
     flow_map_bulk_service_chunk_size: int = _bounded(
-        "MAPS_FLOW_BULK_SERVICE_CHUNK_SIZE", 5, 1, 1000
+        "MAPS_FLOW_BULK_SERVICE_CHUNK_SIZE", 1, 1, 1000
     )
     # Cap parallel chunks per Livestatus connection: each chunk opens its own
     # socket; firing 100+ in parallel exhausts the unix-socket listen backlog.

@@ -59,8 +59,8 @@ flowchart TD
   `packages/cmk-agent-ctl/`. `winagt-build-cmk-agent-ctl` does not vote. Under Wine, the tests do
   not run here.
 - **`cv/test-system-agent-updates`** runs only when someone posts
-  `start: test-system-agent-updates` on a change. It runs on `ubuntu-24.04` with the Pro
-  edition, so it tests the baked deb. The cases that need the Ultimate edition skip themselves.
+  `start: test-system-agent-updates` on a change. It runs on `ubuntu-24.04` with the Ultimate
+  edition, as the nightly run does, so it runs all cases against the baked deb.
 - **The suite tests the baked package.** The unbaked package, built from `agents/BUILD`,
   `agents/debian/` and the `.spec` files, is not tested.
 

@@ -435,12 +435,12 @@ onUnmounted(() => {
 
 useResizeObserver(() => map?.invalidateSize()).observe(container)
 
+// The editor changes objects in place, so the configuration is watched deep.
 watch(
   () => [
     props.config.objects,
     props.config.icon_size,
     props.config.default_z,
-    props.states,
     props.selectedObjectId,
     props.selectedIds,
     props.editMode,
@@ -450,6 +450,10 @@ watch(
   syncAll,
   { deep: true }
 )
+// Apart, so a state update does not walk the configuration. Of a state, the
+// map draws only what follows from its name: which objects show, their colour
+// and their rank.
+watch(() => props.config.objects.map((object) => props.states[object.id]?.state).join(), syncAll)
 
 // Leaflet's own crosshair class, which covers the markers too — a cursor on
 // the container alone stops at whatever sits on top of it.

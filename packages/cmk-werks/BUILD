@@ -245,7 +245,6 @@ py_wheel(
     entry_points = {"console_scripts": ["werk = cmk.werks.tool.cli:main"]},
     version = "1.0.0",
     visibility = ["//visibility:public"],
-    deps = [],
 )
 
 build_test(
@@ -302,5 +301,4 @@ py_binary(
     srcs = ["scripts/werk_ids_server.py"],
     main = "scripts/werk_ids_server.py",
     visibility = ["//visibility:public"],
-    deps = [],
 )

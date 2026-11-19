@@ -109,7 +109,6 @@ py_wheel(
     entry_points = {"console_scripts": ["cmk-upload-crashes = cmk.crash_reporting.cli:main"]},
     version = "1.0.0",
     visibility = ["//visibility:public"],
-    deps = [],
 )
 
 build_test(

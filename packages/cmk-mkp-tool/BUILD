@@ -89,7 +89,6 @@ py_wheel(
     entry_points = {"console_scripts": ["mkp = cmk.mkp_tool.cli:main"]},
     version = "2.0.0",
     visibility = ["//visibility:public"],
-    deps = [],
 )
 
 py_requirements_test(

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
+from http import HTTPStatus
 from typing import Literal
 
 import cmk.web.utils.permission_verification as permissions
@@ -18,7 +19,7 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
-from cmk.gui.openapi.restful_objects.type_defs import LinkRelation
+from cmk.gui.openapi.restful_objects.type_defs import LinkRelation, StatusCodeInt
 
 from ._family import DASHBOARD_FAMILY
 from ._widget_resolution import PERMISSIONS_LINK_TARGET, PERMISSIONS_WIDGET_QUERY
@@ -37,6 +38,16 @@ def widget_compute_endpoint[T](
     shared_dashboards: bool = True,
 ) -> VersionedEndpoint:
     """The endpoint that computes the data of a widget, for a dashboard token if shared."""
+    failures: dict[StatusCodeInt, str] = {
+        HTTPStatus.NOT_FOUND: (
+            "The widget has no data, or the dashboard has no such widget."
+            if shared_dashboards
+            else "The widget has no data."
+        ),
+        HTTPStatus.SERVICE_UNAVAILABLE: "The monitoring data source is not available.",
+    }
+    if shared_dashboards:
+        failures[HTTPStatus.FORBIDDEN] = "A dashboard token may only name a saved widget."
     return VersionedEndpoint(
         metadata=EndpointMetadata(
             path=domain_type_action_href(domain_type="dashboard", action=action),
@@ -53,6 +64,12 @@ def widget_compute_endpoint[T](
             supported_editions=set() if supported_editions == "all" else supported_editions,
         ),
         behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
-        versions={APIVersion.INTERNAL: EndpointHandler(handler=handler)},
+        versions={
+            APIVersion.INTERNAL: EndpointHandler(
+                handler=handler,
+                additional_status_codes=list(failures),
+                status_descriptions=failures,
+            )
+        },
         allowed_tokens={"dashboard"} if shared_dashboards else set(),
     )

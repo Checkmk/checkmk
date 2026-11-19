@@ -22,27 +22,27 @@ degrading it to the pre-0.71.0 heuristic for those from outside.
 diff --git a/rust/private/rustc.bzl b/rust/private/rustc.bzl
 --- a/rust/private/rustc.bzl
 +++ b/rust/private/rustc.bzl
-@@ -984,7 +984,8 @@
-         require_explicit_unstable_features = False,
+@@ -1052,7 +1052,8 @@
          error_format = None,
          allowed_unstable_rust_features = None,
--        link_std_dylib = False):
-+        link_std_dylib = False,
+         link_std_dylib = False,
+-        bin_link_flags = None):
++        bin_link_flags = None,
 +        process_wrapper = None):
      """Builds an Args object containing common rustc flags
  
      Args:
-@@ -1057,6 +1058,9 @@
-         error_format (str, optional): Error format to pass to the `--error-format` command line argument. If set to None, uses the "_error_format" entry in `attr`.
+@@ -1126,6 +1127,9 @@
          allowed_unstable_rust_features (list, optional): List of unstable Rust language features allowed for this target.
          link_std_dylib (bool): Whether to dynamically link the Rust standard library using `--prefer-dynamic`.
+         bin_link_flags (File, optional): Binary-scoped build-script arguments, selected by `cargo_bin_name`.
 +        process_wrapper (File, optional): The process wrapper which will launch the tool. Defaults to the
 +            `_process_wrapper` attribute of the calling rule or aspect, which callers from outside of
 +            rules_rust (e.g. via `rust_clippy_action`) don't necessarily have.
  
      Returns:
          tuple: A tuple of the following items
-@@ -1194,7 +1198,9 @@
+@@ -1266,7 +1270,9 @@
      # Rustc arguments
      rustc_flags = ctx.actions.args()
      rustc_flags.set_param_file_format("multiline")
@@ -56,7 +56,7 @@ diff --git a/rust/private/rustc.bzl b/rust/private/rustc.bzl
 diff --git a/rust/private/clippy.bzl b/rust/private/clippy.bzl
 --- a/rust/private/clippy.bzl
 +++ b/rust/private/clippy.bzl
-@@ -174,6 +174,7 @@
+@@ -175,6 +175,7 @@
          file = ctx.file,
          toolchain = toolchain,
          tool_file = clippy_executable,

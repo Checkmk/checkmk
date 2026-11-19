@@ -12,7 +12,11 @@ from cmk import fields
 from cmk.gui.fields import SiteField, Timestamp
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.livestatus_utils.commands.event_console import ServiceLevelType
-from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
+from cmk.gui.openapi.restful_objects.response_schemas import (
+    DomainObject,
+    DomainObjectCollection,
+    LegacyMultiSiteCollectionExtensions,
+)
 
 from .common_fields import HostNameField, PhaseField, StateField
 
@@ -159,4 +163,8 @@ class EventConsoleResponseCollection(DomainObjectCollection):
                 },
             }
         ],
+    )
+    extensions = fields.Nested(  # type: ignore[assignment]
+        LegacyMultiSiteCollectionExtensions,
+        description="Additional attributes alongside the collection.",
     )

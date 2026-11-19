@@ -27,7 +27,10 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel
+from cmk.gui.openapi.framework.model.base_models import (
+    DomainObjectCollectionModel,
+    MultiSiteCollectionExtensions,
+)
 from cmk.gui.openapi.framework.model.common_fields import query_expression_validator
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.livestatus_client.expressions import QueryExpression
@@ -68,6 +71,9 @@ class HistoricalEventsCollectionModel(DomainObjectCollectionModel):
                 "links": {"self": {"href": "/mkeventd/historical_events/42"}},
             }
         ],
+    )
+    extensions: MultiSiteCollectionExtensions = api_field(  # type: ignore[assignment]
+        description="Additional attributes alongside the collection."
     )
 
 
@@ -140,14 +146,15 @@ def list_historical_events_unstable(
     )
     _site_id: OnlySites = [site_id] if not isinstance(site_id, ApiOmitted) else None
 
+    rows = tuple(q.fetchall(sites.live(), include_site_ids=True, only_sites=_site_id))
+    unreachable_sites = sites.unreachable_sites(_site_id)
+
     return HistoricalEventsCollectionModel(
         id="historical_event",
         domainType="historical_event",
-        value=HistoricalEventModel.historical_collection_from_internal(
-            tuple(q.fetchall(sites.live(), True, _site_id))
-        ),
+        value=HistoricalEventModel.historical_collection_from_internal(rows),
         links=[],
-        extensions={},
+        extensions=MultiSiteCollectionExtensions.create(unreachable_sites),
     )
 
 

@@ -274,6 +274,20 @@ def test_get_all_ec_events(
         }
 
 
+def test_get_historical_ec_events_names_a_site_that_does_not_answer(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table("eventconsolehistory", [])
+    mock_livestatus.make_site_unreachable("remote")
+    mock_livestatus.expect_query(["GET eventconsolehistory"], match_type="loose")
+
+    with mock_livestatus:
+        resp = clients.HistoricalEventConsole.get_all()
+
+    assert resp.json["extensions"] == {"unreachable_sites": ["remote"], "incomplete": True}
+
+
 def test_get_all_ec_events_host(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,

@@ -209,13 +209,17 @@ def show_events(params: Mapping[str, Any]) -> Response:
         phase=params.get("phase"),
         query=params.get("query"),
     )
+    site_id = params.get("site_id")
+    events = get_all_events(sites.live(), query, site_id)
+    unreachable_sites = sites.unreachable_sites([site_id] if site_id is not None else None)
     return serve_json(
         constructors.collection_object(
             domain_type="event_console",
-            value=[
-                _serialize_event(ev)
-                for _, ev in get_all_events(sites.live(), query, params.get("site_id")).items()
-            ],
+            value=[_serialize_event(ev) for _, ev in events.items()],
+            extensions={
+                "unreachable_sites": unreachable_sites,
+                "incomplete": bool(unreachable_sites),
+            },
         )
     )
 

@@ -130,6 +130,20 @@ def test_get_all_ec_events_query(
         )
 
 
+def test_get_ec_events_names_a_site_that_does_not_answer(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table("eventconsoleevents", [])
+    mock_livestatus.make_site_unreachable("remote")
+    mock_livestatus.expect_query(["GET eventconsoleevents"], match_type="loose")
+
+    with mock_livestatus:
+        resp = clients.EventConsole.get_all()
+
+    assert resp.json["extensions"] == {"unreachable_sites": ["remote"], "incomplete": True}
+
+
 def test_get_ec_event_by_id(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,

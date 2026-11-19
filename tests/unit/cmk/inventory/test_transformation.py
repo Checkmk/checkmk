@@ -6,11 +6,9 @@
 import gzip
 import io
 import logging
-import os
 from pathlib import Path
 
 import cmk.ccc.store
-from cmk.inventory.paths import TreePath
 from cmk.inventory.structured_data import (
     make_meta,
     SDKey,
@@ -19,8 +17,7 @@ from cmk.inventory.structured_data import (
     SDRawTree,
 )
 from cmk.inventory.transformation import (
-    _compute_bundle,
-    _HostTreePath,
+    _compute_bundle_size,
     transform_inventory_trees,
     TransformationResultsStore,
 )
@@ -170,19 +167,27 @@ def test_transform_delta_cache_tree(tmp_path: Path) -> None:
 
 
 def test_the_bundle_spreads_all_trees_including_the_transformed_ones() -> None:
-    pending = [
-        _HostTreePath(
-            host_name=f"host{index}",
-            tree_path=TreePath(
-                path=Path(f"host{index}.json"),
-                legacy=Path(f"host{index}"),
-            ),
-            stat=os.stat_result((0,) * 10),
-        )
-        for index in range(400)
-    ]
+    assert _compute_bundle_size(0, 400, 600) == 5
 
-    assert len(_compute_bundle(0, pending, 600)) == 5
+
+def test_a_tree_failing_to_transform_leaves_its_slot_to_the_next_tree(tmp_path: Path) -> None:
+    cmk.ccc.store.save_object_to_file(
+        tmp_path / "var/check_mk/inventory/broken",
+        {"not", "a", "tree"},
+    )
+    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", _raw_tree())
+
+    transform_inventory_trees(
+        logger=_logger(),
+        omd_root=tmp_path,
+        show_results=False,
+        bundle_length=1,
+        filter_host_names=[],
+        all_host_names=["broken", "hostname"],
+        clock=FakeClock(0.0),
+    )
+
+    assert (tmp_path / "var/check_mk/inventory/hostname.json").exists()
 
 
 def test_transform_records_the_precise_duration(tmp_path: Path) -> None:

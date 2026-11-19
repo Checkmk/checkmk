@@ -16,7 +16,10 @@ from cmk.inventory.structured_data import (
     InventoryStore,
     load_history,
     make_meta,
+    parse_from_gzipped,
+    RawInventoryStore,
     rename,
+    RetentionInterval,
     SDKey,
     SDMetaAndRawTree,
     SDNodeName,
@@ -71,6 +74,21 @@ def _gzipped_json(raw_tree: SDRawTree) -> bytes:
             ).encode("utf-8")
         )
     return buf.getvalue()
+
+
+def _tree_with_table_retentions() -> SDRawTree:
+    return SDRawTree(
+        Attributes={},
+        Table={
+            "KeyColumns": [SDKey("kc")],
+            "Rows": [{SDKey("kc"): "KC", SDKey("c1"): "C1"}],
+            "Retentions": {("KC",): {SDKey("c1"): (1, 2, 3, "current")}},
+        },
+        Nodes={},
+    )
+
+
+_TABLE_RETENTIONS = {("KC",): {SDKey("c1"): RetentionInterval(1, 2, 3, "current")}}
 
 
 def test_load_inventory_tree_legacy(tmp_path: Path) -> None:
@@ -364,3 +382,34 @@ def test_rename(tmp_path: Path) -> None:
         assert (
             tmp_path / f"var/check_mk/inventory_delta_cache/{new_host_name}/{prev}_{cur}.json"
         ).exists()
+
+
+def test_archive_inventory_tree_keeps_the_table_retentions_of_a_legacy_tree(
+    tmp_path: Path,
+) -> None:
+    cmk.ccc.store.save_object_to_file(
+        tmp_path / "var/check_mk/inventory/hostname", _tree_with_table_retentions()
+    )
+    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"))
+    assert (
+        InventoryStore(tmp_path)
+        .load_previous_inventory_tree(host_name=HostName("hostname"))
+        .table.retentions
+        == _TABLE_RETENTIONS
+    )
+
+
+def test_save_meta_and_raw_inventory_tree_keeps_the_table_retentions_of_a_legacy_tree(
+    tmp_path: Path,
+) -> None:
+    RawInventoryStore(tmp_path).save_meta_and_raw_inventory_tree(
+        host_name=HostName("hostname"),
+        meta_and_raw_tree=parse_from_gzipped(_gzipped_repr(_tree_with_table_retentions())),
+        timestamp=123456,
+    )
+    assert (
+        InventoryStore(tmp_path)
+        .load_inventory_tree(host_name=HostName("hostname"))
+        .table.retentions
+        == _TABLE_RETENTIONS
+    )

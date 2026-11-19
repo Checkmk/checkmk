@@ -9,8 +9,13 @@ import logging
 from pathlib import Path
 
 import cmk.ccc.store
+from cmk.ccc.hostaddress import HostName
 from cmk.inventory.structured_data import (
+    HistoryStore,
+    InventoryStore,
+    load_history,
     make_meta,
+    RetentionInterval,
     SDKey,
     SDMetaAndRawTree,
     SDNodeName,
@@ -164,6 +169,54 @@ def test_transform_delta_cache_tree(tmp_path: Path) -> None:
 
     assert not (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456").exists()
     assert (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456.json").exists()
+
+
+def _transform_all_trees_of_hostname(omd_root: Path) -> None:
+    transform_inventory_trees(
+        logger=_logger(),
+        omd_root=omd_root,
+        show_results=False,
+        bundle_length=0,
+        filter_host_names=["hostname"],
+        all_host_names=["hostname"],
+        clock=FakeClock(0.0),
+    )
+
+
+def test_transform_archive_tree_keeps_the_table_retentions(tmp_path: Path) -> None:
+    cmk.ccc.store.save_object_to_file(
+        tmp_path / "var/check_mk/inventory_archive/hostname/123",
+        SDRawTree(
+            Attributes={},
+            Table={
+                "KeyColumns": [SDKey("kc")],
+                "Rows": [{SDKey("kc"): "KC", SDKey("c1"): "C1"}],
+                "Retentions": {("KC",): {SDKey("c1"): (1, 2, 3, "current")}},
+            },
+            Nodes={},
+        ),
+    )
+    _transform_all_trees_of_hostname(tmp_path)
+    assert InventoryStore(tmp_path).load_previous_inventory_tree(
+        host_name=HostName("hostname")
+    ).table.retentions == {("KC",): {SDKey("c1"): RetentionInterval(1, 2, 3, "current")}}
+
+
+def test_transform_delta_cache_tree_keeps_the_delta(tmp_path: Path) -> None:
+    cmk.ccc.store.save_object_to_file(
+        tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456",
+        (1, 0, 0, {"Attributes": {"Pairs": {"key": (None, "val")}}, "Table": {}, "Nodes": {}}),
+    )
+    _transform_all_trees_of_hostname(tmp_path)
+    assert [
+        (e.new, e.changed, e.removed)
+        for e in load_history(
+            HistoryStore(tmp_path),
+            HostName("hostname"),
+            history_paths_filter=lambda paths: paths,
+            delta_tree_filters=None,
+        ).entries
+    ] == [(1, 0, 0)]
 
 
 def test_the_bundle_spreads_all_trees_including_the_transformed_ones() -> None:

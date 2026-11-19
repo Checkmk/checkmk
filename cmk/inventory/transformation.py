@@ -15,14 +15,14 @@ from typing import TypedDict
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
 
-from .paths import Paths, TreePath, TreePathGz
+from .paths import DeltaCachePath, Paths, TreePath, TreePathGz
 from .structured_data import transform
 
 
 @dataclass(frozen=True)
 class _HostTreePath:
     host_name: str
-    tree_path: TreePath | TreePathGz
+    tree_path: TreePath | TreePathGz | DeltaCachePath
     stat: os.stat_result
 
 
@@ -50,6 +50,20 @@ def _compute_host_tree_path_or_unknown_file_path(
     return tree_path.legacy
 
 
+def _collect_history_file_paths(directory: Path) -> Iterator[tuple[str, Path]]:
+    try:
+        host_dirs = list(directory.iterdir())
+    except FileNotFoundError:
+        host_dirs = []
+    for host_dir in host_dirs:
+        try:
+            file_paths = list(host_dir.iterdir())
+        except (FileNotFoundError, NotADirectoryError):
+            file_paths = []
+        for file_path in file_paths:
+            yield host_dir.name, file_path
+
+
 def _iter_host_tree_paths_or_unknown_file_paths(
     omd_root: Path, all_host_names: Sequence[str]
 ) -> Iterator[_HostTreePath | Path]:
@@ -73,27 +87,15 @@ def _iter_host_tree_paths_or_unknown_file_paths(
         ):
             yield path
 
-    try:
-        archive_dirs = list(inv_paths.archive_dir.iterdir())
-    except FileNotFoundError:
-        archive_dirs = []
+    for raw_host_name, file_path in _collect_history_file_paths(inv_paths.archive_dir):
+        tree_path = TreePath.from_archive_or_delta_cache_file_path(file_path)
+        if stat := _compute_file_path_stat(tree_path.legacy):
+            yield _HostTreePath(raw_host_name, tree_path, stat)
 
-    try:
-        delta_cache_dirs = list(inv_paths.delta_cache_dir.iterdir())
-    except FileNotFoundError:
-        delta_cache_dirs = []
-
-    for host_dir in archive_dirs + delta_cache_dirs:
-        try:
-            file_paths = list(host_dir.iterdir())
-        except (FileNotFoundError, NotADirectoryError):
-            file_paths = []
-
-        raw_host_name = host_dir.name
-        for file_path in file_paths:
-            tree_path = TreePath.from_archive_or_delta_cache_file_path(file_path)
-            if stat := _compute_file_path_stat(tree_path.legacy):
-                yield _HostTreePath(raw_host_name, tree_path, stat)
+    for raw_host_name, file_path in _collect_history_file_paths(inv_paths.delta_cache_dir):
+        delta_cache_path = DeltaCachePath.from_archive_or_delta_cache_file_path(file_path)
+        if stat := _compute_file_path_stat(delta_cache_path.legacy):
+            yield _HostTreePath(raw_host_name, delta_cache_path, stat)
 
 
 def _collect_host_tree_paths_or_unknown_file_paths(

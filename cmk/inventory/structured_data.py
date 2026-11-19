@@ -29,8 +29,8 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import Error, OK, Result
 
+from .paths import DeltaCachePath, TreePath, TreePathGz
 from .paths import Paths as InventoryPaths
-from .paths import TreePath, TreePathGz
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO filter table rows?
@@ -1530,6 +1530,10 @@ def deserialize_tree(raw_tree: object) -> ImmutableTree:
     )
 
 
+def normalize_raw_tree(raw_tree: object) -> SDRawTree:
+    return serialize_tree(deserialize_tree(raw_tree))
+
+
 def _serialize_delta_value(delta_value: SDDeltaValue) -> tuple[SDValue, SDValue]:
     return (delta_value.old, delta_value.new)
 
@@ -1613,9 +1617,17 @@ def deserialize_delta_tree(raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
 def _transform_tree_path(tree_path: TreePath, mtime: float) -> None:
     with store.locked(tree_path.path), store.locked(tree_path.legacy):
         if raw_tree := store.load_object_from_file(tree_path.legacy, default=None):
-            _save_raw_tree(tree_path, raw_tree)
+            _save_raw_tree(tree_path, normalize_raw_tree(raw_tree))
             os.utime(tree_path.path, (mtime, mtime))
     tree_path.legacy.unlink(missing_ok=True)
+
+
+def _transform_delta_cache_path(delta_cache_path: DeltaCachePath, mtime: float) -> None:
+    with store.locked(delta_cache_path.path), store.locked(delta_cache_path.legacy):
+        if raw_delta := store.load_object_from_file(delta_cache_path.legacy, default=None):
+            store.save_text_to_file(delta_cache_path.path, json.dumps(raw_delta))
+            os.utime(delta_cache_path.path, (mtime, mtime))
+    delta_cache_path.legacy.unlink(missing_ok=True)
 
 
 def _transform_tree_path_gz(tree_path_gz: TreePathGz, mtime: float) -> None:
@@ -1626,8 +1638,10 @@ def _transform_tree_path_gz(tree_path_gz: TreePathGz, mtime: float) -> None:
     tree_path_gz.legacy.unlink(missing_ok=True)
 
 
-def transform(tree_path: TreePath | TreePathGz, mtime: float) -> None:
+def transform(tree_path: TreePath | TreePathGz | DeltaCachePath, mtime: float) -> None:
     match tree_path:
+        case DeltaCachePath():
+            _transform_delta_cache_path(tree_path, mtime)
         case TreePath():
             _transform_tree_path(tree_path, mtime)
         case TreePathGz():
@@ -1738,8 +1752,7 @@ def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> N
         return
 
     if raw_tree := store.load_object_from_file(tree_path.legacy, default=None):
-        inv_paths.archive_host(host_name).mkdir(parents=True, exist_ok=True)
-        store.save_text_to_file(archive_tree.path, json.dumps(raw_tree))
+        _save_raw_tree(archive_tree, normalize_raw_tree(raw_tree))
         tree_path.legacy.unlink(missing_ok=True)
         tree_path_gz.legacy.unlink(missing_ok=True)
 
@@ -1770,10 +1783,12 @@ def _parse_raw_meta(raw_meta: object) -> SDMeta:
 def _parse_raw_tree(raw_tree: object) -> SDRawTree:
     if not isinstance(raw_tree, dict):
         raise TypeError(raw_tree)
-    return SDRawTree(
-        Attributes=raw_tree.get("Attributes", {}),
-        Table=raw_tree.get("Table", {}),
-        Nodes=raw_tree.get("Nodes", {}),
+    return normalize_raw_tree(
+        SDRawTree(
+            Attributes=raw_tree.get("Attributes", {}),
+            Table=raw_tree.get("Table", {}),
+            Nodes=raw_tree.get("Nodes", {}),
+        )
     )
 
 
@@ -1791,11 +1806,7 @@ def _parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
             version="1",
             do_archive=raw.get("meta_do_archive", True),
         ),
-        raw_tree=SDRawTree(
-            Attributes=raw.get("Attributes", {}),
-            Table=raw.get("Table", {}),
-            Nodes=raw.get("Nodes", {}),
-        ),
+        raw_tree=_parse_raw_tree(raw),
     )
 
 

@@ -37,6 +37,10 @@ class TreePath:
         )
 
 
+class DeltaCachePath(TreePath):
+    pass
+
+
 # TODO CMK-23408
 @dataclass(frozen=True, kw_only=True)
 class TreePathGz:

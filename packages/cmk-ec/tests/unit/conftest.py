@@ -43,6 +43,16 @@ from cmk.ec.settings import create_settings
 from .helpers import FakeConnection, MakeStatusServer
 
 
+def pytest_configure(config: pytest.Config) -> None:
+    # pysnmp loads MIB modules via runpy.run_path(), which sets their __loader__ and __spec__ to
+    # None. Since Python 3.15, linecache warns about the missing __spec__.loader when formatting a
+    # traceback through them, although there is no __loader__ to fall back to, either. It warns only
+    # the first time it sees a file, so which test gets the warning depends on the selected tests.
+    config.addinivalue_line(
+        "filterwarnings", "ignore:Module globals is missing a __spec__.loader:DeprecationWarning"
+    )
+
+
 @pytest.fixture(name="settings")
 def fixture_settings(tmp_path: Path) -> ec.Settings:
     settings = create_settings("1.2.3i45", tmp_path, ["mkeventd"])

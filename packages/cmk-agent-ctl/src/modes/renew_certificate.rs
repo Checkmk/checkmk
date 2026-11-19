@@ -227,6 +227,36 @@ mod test_renew_certificate {
         }
     }
 
+    /// While the site answers, another process changes the registry on disk.
+    struct ApiWhileAnotherProcessSaves {
+        registry_path: std::path::PathBuf,
+        change: fn(&mut Registry),
+    }
+
+    impl agent_receiver_api::RenewCertificate for ApiWhileAnotherProcessSaves {
+        fn renew_certificate(
+            &self,
+            _base_url: &reqwest::Url,
+            connection: &config::TrustedConnection,
+            _csr: String,
+        ) -> AnyhowResult<agent_receiver_api::RenewCertificateResponse> {
+            let mut registry = Registry::from_file(&self.registry_path)?;
+            (self.change)(&mut registry);
+            registry.save()?;
+            Ok(agent_receiver_api::RenewCertificateResponse {
+                agent_cert: format!("new_cert_for_{}", connection.uuid),
+            })
+        }
+    }
+
+    fn register_meanwhile(registry: &mut Registry) {
+        registry.register_connection(
+            &config::ConnectionMode::Pull,
+            &site_spec::SiteID::from_str("server/registered-meanwhile").unwrap(),
+            new_trusted_connection_with_remote(String::from("certificate")),
+        );
+    }
+
     struct RegistryFixture {
         test_registry: TestRegistry,
         push_uuid: uuid::Uuid,
@@ -421,6 +451,90 @@ mod test_renew_certificate {
         let saved_registry = Registry::from_file(registry.path())?;
         let connection = get_connection(&saved_registry, "server/site");
         assert!(connection.certificate == format!("new_cert_for_{}", connection.uuid));
+        Ok(())
+    }
+
+    #[test]
+    #[ignore = "CMK-42587: the renewal overwrites concurrent changes of the registry"]
+    fn test_renew_all_certificates_keeps_a_connection_registered_meanwhile() -> AnyhowResult<()> {
+        let mut fixture = TestRegistry::new().add_connection(
+            &config::ConnectionMode::Pull,
+            "server/site",
+            new_trusted_connection_with_remote(mk_ca_cert(10)?),
+        );
+        let registry = &mut fixture.registry;
+        registry.save()?;
+        let api = ApiWhileAnotherProcessSaves {
+            registry_path: registry.path().to_owned(),
+            change: register_meanwhile,
+        };
+
+        renew_all_certificates(registry, &api)?;
+
+        let saved_registry = Registry::from_file(registry.path())?;
+        assert!(saved_registry
+            .get_connection(&site_spec::SiteID::from_str("server/registered-meanwhile")?)
+            .is_some());
+        Ok(())
+    }
+
+    #[test]
+    #[ignore = "CMK-42587: the renewal overwrites concurrent changes of the registry"]
+    fn test_renew_all_certificates_keeps_a_connection_deleted_meanwhile() -> AnyhowResult<()> {
+        let mut fixture = TestRegistry::new()
+            .add_connection(
+                &config::ConnectionMode::Pull,
+                "server/site",
+                new_trusted_connection_with_remote(mk_ca_cert(10)?),
+            )
+            .add_connection(
+                &config::ConnectionMode::Pull,
+                "server/deleted-meanwhile",
+                new_trusted_connection_with_remote(mk_ca_cert(100)?),
+            );
+        let registry = &mut fixture.registry;
+        registry.save()?;
+        let api = ApiWhileAnotherProcessSaves {
+            registry_path: registry.path().to_owned(),
+            change: |registry| {
+                registry
+                    .delete_standard_connection(
+                        &site_spec::SiteID::from_str("server/deleted-meanwhile").unwrap(),
+                    )
+                    .unwrap()
+            },
+        };
+
+        renew_all_certificates(registry, &api)?;
+
+        let saved_registry = Registry::from_file(registry.path())?;
+        assert!(saved_registry
+            .get_connection(&site_spec::SiteID::from_str("server/deleted-meanwhile")?)
+            .is_none());
+        Ok(())
+    }
+
+    #[test]
+    #[ignore = "CMK-42587: the renewal overwrites concurrent changes of the registry"]
+    fn test_renew_all_certificates_without_renewal_keeps_a_connection_registered_meanwhile(
+    ) -> AnyhowResult<()> {
+        let mut fixture = TestRegistry::new().add_connection(
+            &config::ConnectionMode::Pull,
+            "server/site",
+            new_trusted_connection_with_remote(mk_ca_cert(100)?),
+        );
+        let registry = &mut fixture.registry;
+        registry.save()?;
+        let mut registered_meanwhile = Registry::from_file(registry.path())?;
+        register_meanwhile(&mut registered_meanwhile);
+        registered_meanwhile.save()?;
+
+        renew_all_certificates(registry, &TestApi {})?;
+
+        let saved_registry = Registry::from_file(registry.path())?;
+        assert!(saved_registry
+            .get_connection(&site_spec::SiteID::from_str("server/registered-meanwhile")?)
+            .is_some());
         Ok(())
     }
 

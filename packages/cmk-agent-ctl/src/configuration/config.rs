@@ -1308,6 +1308,28 @@ mod test_registry {
     }
 
     #[test]
+    #[ignore = "CMK-42587: concurrent saves share one temporary file"]
+    fn test_concurrent_saves_succeed() {
+        let test_registry = TestRegistry::new().fill_registry();
+        test_registry.registry.save().unwrap();
+        let path = test_registry.registry.path();
+        std::thread::scope(|scope| {
+            for _ in 0..2 {
+                scope.spawn(|| {
+                    let registry = Registry::from_file(path).unwrap();
+                    for _ in 0..500 {
+                        registry.save().unwrap();
+                    }
+                });
+            }
+        });
+        assert_eq!(
+            Registry::from_file(path).unwrap().connections,
+            test_registry.registry.connections
+        );
+    }
+
+    #[test]
     fn test_reload() {
         let test_registry = TestRegistry::new().fill_registry();
         let reg = &test_registry.registry;

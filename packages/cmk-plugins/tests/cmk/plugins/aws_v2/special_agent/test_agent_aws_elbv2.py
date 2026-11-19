@@ -42,6 +42,17 @@ from .agent_aws_fake_clients import (
 )
 
 ACCOUNT_HOST = TargetHost("123456789012")
+LOAD_BALANCER_HOSTS = {
+    "LoadBalancerName-0": TargetHost(
+        "aws_elasticloadbalancing_loadbalancer_LoadBalancerName-0_2f7ad708"
+    ),
+    "LoadBalancerName-1": TargetHost(
+        "aws_elasticloadbalancing_loadbalancer_LoadBalancerName-1_593762ba"
+    ),
+    "LoadBalancerName-2": TargetHost(
+        "aws_elasticloadbalancing_loadbalancer_LoadBalancerName-2_f02fbf86"
+    ),
+}
 
 
 class Paginator:
@@ -217,6 +228,8 @@ def check_target_groups_results(
         if entry_found:
             assert len(result.content) == expected_length
             break
+    else:
+        pytest.fail(f"No result for {target_group_name} on {piggyback_hostname}")
 
 
 class _TargetGroupInfo(TypedDict):
@@ -226,7 +239,7 @@ class _TargetGroupInfo(TypedDict):
 
 class _ELBv2SummaryContent(TypedDict):
     Type: str
-    DNSName: str
+    LoadBalancerName: str
     TargetGroups: Sequence[_TargetGroupInfo]
 
 
@@ -242,7 +255,7 @@ def check_target_group_errors_results(
     for elbv2 in elbv2_summary_content:
         if elbv2["Type"] == "application":
             n_elbv2_application += 1
-            piggyback_hostname = elbv2["DNSName"]
+            piggyback_hostname = LOAD_BALANCER_HOSTS[elbv2["LoadBalancerName"]]
 
             for target_group in elbv2["TargetGroups"]:
                 if target_group["TargetType"] == "lambda":
@@ -327,9 +340,7 @@ def test_agent_aws_elbv2_limits_go_to_each_load_balancer_then_to_the_account(
     elbv2_limits_results = get_elbv2_sections().elbv2_limits.run().results
 
     assert [result.piggyback_hostname for result in elbv2_limits_results] == [
-        "DNSName-0",
-        "DNSName-1",
-        "DNSName-2",
+        *LOAD_BALANCER_HOSTS.values(),
         ACCOUNT_HOST,
     ]
 
@@ -342,11 +353,9 @@ def test_agent_aws_elbv2_target_groups_go_to_the_host_of_their_load_balancer(
 
     elbv2_target_groups_results = elbv2_sections.elbv2_target_groups.run().results
 
-    assert sorted(result.piggyback_hostname for result in elbv2_target_groups_results) == [
-        "DNSName-0",
-        "DNSName-1",
-        "DNSName-2",
-    ]
+    assert sorted(result.piggyback_hostname for result in elbv2_target_groups_results) == sorted(
+        LOAD_BALANCER_HOSTS.values()
+    )
 
 
 @pytest.mark.parametrize("names,tags,found_instances", elbv2_params)
@@ -599,7 +608,7 @@ def test_agent_aws_elbv2_filters_tags(
     elbv2_results = elbv2_application.run().results
 
     labels = {result.piggyback_hostname: result.piggyback_host_labels for result in elbv2_results}[
-        "DNSName-0"
+        LOAD_BALANCER_HOSTS["LoadBalancerName-0"]
     ]
     assert [key for key in labels if key.startswith("cmk/aws/tag/")] == [
         f"cmk/aws/tag/{tag}" for tag in expected_tags
@@ -625,7 +634,7 @@ def test_agent_aws_elbv2_load_balancer_hosts_get_the_resource_labels(
         "cmk/aws/tag/Key-2": "Value-2",
     }
     assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
-        f"DNSName-{i}": {
+        LOAD_BALANCER_HOSTS[f"LoadBalancerName-{i}"]: {
             "cmk/aws/service": "elbv2",
             "cmk/aws/name": f"LoadBalancerName-{i}",
             "cmk/aws/resource_id": f"LoadBalancerName-{i}",

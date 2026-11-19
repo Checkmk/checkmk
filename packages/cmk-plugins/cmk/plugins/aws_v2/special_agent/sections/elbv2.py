@@ -113,7 +113,9 @@ class ELBv2Limits(AWSSectionLimits):
         nlb_count = 0
         target_groups_count = 0
         for load_balancer in load_balancers:
-            lb = hosts.LoadBalancerV2(load_balancer["DNSName"])
+            lb = hosts.LoadBalancerV2(
+                load_balancer["LoadBalancerName"], load_balancer["LoadBalancerArn"]
+            )
             lb_type = load_balancer["Type"]
 
             lb_listeners_count = len(load_balancer.get("Listeners", []))

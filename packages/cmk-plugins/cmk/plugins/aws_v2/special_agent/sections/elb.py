@@ -8,7 +8,7 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, override
 
 from botocore.client import BaseClient
@@ -108,6 +108,14 @@ class ELBLimits(AWSSectionLimits):
         return AWSComputedContent(load_balancers, raw_content.cache_timestamp)
 
 
+def _classic_load_balancer(load_balancer: Mapping[str, Any]) -> hosts.ClassicLoadBalancer:
+    return hosts.ClassicLoadBalancer(load_balancer["DNSName"])
+
+
+def _load_balancer_v2(load_balancer: Mapping[str, Any]) -> hosts.LoadBalancerV2:
+    return hosts.LoadBalancerV2(load_balancer["LoadBalancerName"], load_balancer["LoadBalancerArn"])
+
+
 class ELBSummaryGeneric(AWSSection):
     def __init__(
         self,
@@ -118,21 +126,23 @@ class ELBSummaryGeneric(AWSSection):
         resource: str = "",
     ) -> None:
         self._resource = resource
-        self._load_balancer_type: type[hosts.ClassicLoadBalancer] | type[hosts.LoadBalancerV2]
+        self._load_balancer_resource: Callable[
+            [Mapping[str, Any]], hosts.ClassicLoadBalancer | hosts.LoadBalancerV2
+        ]
         if self._resource == "elb":
             self._describe_load_balancers_karg = "LoadBalancerNames"
             self._describe_load_balancers_key = "LoadBalancerDescriptions"
             self._describe_tags_karg = "LoadBalancerNames"
             self._load_balancer_id_key = "LoadBalancerName"
             self._tag_description_id_key = "LoadBalancerName"
-            self._load_balancer_type = hosts.ClassicLoadBalancer
+            self._load_balancer_resource = _classic_load_balancer
         elif self._resource == "elbv2":
             self._describe_load_balancers_karg = "Names"
             self._describe_load_balancers_key = "LoadBalancers"
             self._describe_tags_karg = "ResourceArns"
             self._load_balancer_id_key = "LoadBalancerArn"
             self._tag_description_id_key = "ResourceArn"
-            self._load_balancer_type = hosts.LoadBalancerV2
+            self._load_balancer_resource = _load_balancer_v2
         else:
             raise AssertionError(
                 "ELBSummaryGeneric: resource argument must be either 'elb' or 'elbv2'"
@@ -228,13 +238,13 @@ class ELBSummaryGeneric(AWSSection):
     ) -> AWSComputedContent:
         content_by_piggyback_hosts: dict[str, str] = {}
         for load_balancer in raw_content.content:
-            if (dns_name := load_balancer.get("DNSName")) is None:
+            if load_balancer.get("DNSName") is None:
                 # SUP-15023
                 # We skip "gateway" type load balancers
                 # because they don't provide DNSName information
                 continue
             content_by_piggyback_hosts.setdefault(
-                self._target_host(self._load_balancer_type(dns_name)), load_balancer
+                self._target_host(self._load_balancer_resource(load_balancer)), load_balancer
             )
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 

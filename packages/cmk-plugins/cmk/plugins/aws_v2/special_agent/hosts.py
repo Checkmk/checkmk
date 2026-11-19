@@ -77,7 +77,8 @@ class ClassicLoadBalancer:
 
 @dataclass(frozen=True)
 class LoadBalancerV2:
-    dns_name: str
+    name: str
+    arn: str
 
 
 @dataclass(frozen=True)
@@ -172,7 +173,7 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost:
         case ClassicLoadBalancer():
             return _classic_load_balancer_host(resource)
         case LoadBalancerV2():
-            return _load_balancer_v2_host(resource)
+            return _load_balancer_v2_host(resource, naming.non_ec2)
         case DynamoDBTable():
             return _dynamodb_table_host(resource, naming.non_ec2)
         case WAFV2WebACL():
@@ -247,8 +248,12 @@ def _classic_load_balancer_host(load_balancer: ClassicLoadBalancer) -> TargetHos
     return TargetHost(load_balancer.dns_name)
 
 
-def _load_balancer_v2_host(load_balancer: LoadBalancerV2) -> TargetHost:
-    return TargetHost(load_balancer.dns_name)
+def _load_balancer_v2_host(
+    load_balancer: LoadBalancerV2, template: NonEC2PiggybackTemplate
+) -> TargetHost:
+    return _hostname_with_hashed_arn(
+        "elasticloadbalancing_loadbalancer", load_balancer.name, load_balancer.arn, template
+    )
 
 
 def _dynamodb_table_host(table: DynamoDBTable, template: NonEC2PiggybackTemplate) -> TargetHost:

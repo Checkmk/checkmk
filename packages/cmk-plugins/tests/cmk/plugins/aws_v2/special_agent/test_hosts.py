@@ -118,7 +118,14 @@ def test_ec2_instance_without_a_name_has_no_host(
         pytest.param(
             ClassicLoadBalancer("elb.example.com"), "elb.example.com", id="classic load balancer"
         ),
-        pytest.param(LoadBalancerV2("alb.example.com"), "alb.example.com", id="load balancer v2"),
+        pytest.param(
+            LoadBalancerV2(
+                "alb",
+                "arn:aws:elasticloadbalancing:eu-central-1:123456789012:loadbalancer/app/alb/50dc6c495c0c9188",
+            ),
+            "aws_elasticloadbalancing_loadbalancer_alb_48da024d",
+            id="load balancer v2",
+        ),
         pytest.param(
             DynamoDBTable("users", "arn:aws:dynamodb:eu-central-1:111122223333:table/users"),
             "aws_dynamodb_table_users_a93630d8",

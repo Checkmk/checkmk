@@ -333,7 +333,7 @@ URLPrefix = HTTPPrefixURL | HTTPSPrefixURL | ManualPrefixURL
 
 class SMTPAuthAttrs(TypedDict):
     method: Literal["plaintext"]
-    password: str
+    password: str | CheckmkPassword
     user: str
 
 

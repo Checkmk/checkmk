@@ -1023,6 +1023,24 @@ def test_send_mail_via_smtp_logs_in_with_configured_credentials(
     assert [base64.b64decode(a) for a in auth] == [b"\x00smtpuser\x00s3cret"]
 
 
+def test_send_mail_via_smtp_logs_in_with_password_stored_as_text(
+    smtp_server: _FakeSmtpServer,
+) -> None:
+    mail.send_mail(
+        MIMEText("hello"),
+        "to@example.com",
+        "from@example.com",
+        _smtp_context(
+            smtp_server,
+            PARAMETER_SMTP_AUTH_USER="smtpuser",
+            PARAMETER_SMTP_AUTH_PASSWORD="s3cret",
+        ),
+    )
+
+    auth = [c.split(" ")[2] for c in smtp_server.commands if c.upper().startswith("AUTH PLAIN")]
+    assert [base64.b64decode(a) for a in auth] == [b"\x00smtpuser\x00s3cret"]
+
+
 def test_send_mail_via_smtp_rejected_login_is_final(
     smtp_server: _FakeSmtpServer, capsys: pytest.CaptureFixture[str]
 ) -> None:

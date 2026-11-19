@@ -134,6 +134,11 @@ executes this command in a 10 minutes interval. The command creates a json dump,
 which will then be copied to the server hosting the homepage and read by a cron
 job.
 
+Before the job copies the json dump, it validates the HTML of all descriptions
+with vnu. The ``WebsiteWerk*`` models in
+``packages/cmk-werks/cmk/werks/tool/models.py`` are the contract with the
+website and have to stay in sync with it.
+
 Beside the Checkmk git repository, also the repository for the Checkmk appliance and
 the kubernetes repository contain Werks (robotmk will join this club eventually).
 As all of them have different configuration and version numbers you have to
@@ -151,7 +156,9 @@ Mailing-lists
 In Werks you can specify the impact of a change via the "level" metadata. There
 are three levels (1=trivial change, 3=big impact), for each of those levels a
 mailing-list exists. An additional security mailing-list is also available (each
-Werk is either a fix, a feature or security related).
+Werk is either a fix, a feature or security related). A Werk goes to the list of
+its level and to the lists of all lower levels, so a level 3 Werk reaches all
+three lists.
 
 The mails are sent via the ``mail`` sub-command of ``bazel run //cmk/utils:werks_bin``. The command is
 executed daily on jenkins for each currently supported branch. It sends mails
@@ -170,7 +177,21 @@ disabling sending mails. The normal workflow for that is:
 * reject unwanted mails on the mailing list
 * ask IT-Admins to disable emergency moderation
 
-If a mail was sent for a particular commit is saved in git notes.
+Whether a mail was sent for a particular commit is saved in git notes.
+
+QA
+--
+
+``scripts/gerrit_api/scrape_werks.py`` and
+``tests/qa-test-data/qa_utils/release_workflow/scrape_werks.py`` collect the Werk
+numbers and Jira references of a release for QA.
+
+CI
+--
+
+``bazel test //tests/code_quality/werks`` reads and tests all Werks. One of the
+tests checks that a commit adding a Werk references a Jira issue in its commit
+message.
 
 Checkmk
 -------
@@ -208,6 +229,9 @@ Werks if the destination branch has markdown Werks enabled.
 
 There are also some convenience functions to grep, list or edit Werks from the
 command-line.
+
+The IDs of new Werks come from the Werk ID server, which hands out unique IDs to
+all developers. See ``packages/cmk-werks/README.md``.
 
 
 Technical background

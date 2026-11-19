@@ -9,6 +9,7 @@ from typing import Annotated
 from pydantic import AwareDatetime
 
 from cmk.ccc.site import SiteId
+from cmk.gui import sites
 from cmk.gui.availability.annotations import load_annotations
 from cmk.gui.availability.computation import (
     compute_availability,
@@ -25,7 +26,7 @@ from cmk.gui.openapi.framework import (
     QueryParam,
     VersionedEndpoint,
 )
-from cmk.gui.openapi.framework.model.base_models import LinkModel
+from cmk.gui.openapi.framework.model.base_models import LinkModel, MultiSiteCollectionExtensions
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 
 from ._utils import (
@@ -80,6 +81,7 @@ def list_host_availability_v1(
         # This endpoint filters by host/service, not by a visual context
         active_filters=(),
     )
+    unreachable_sites = sites.unreachable_sites(only_sites)
     av_data = compute_availability("host", raw_data, avoptions, load_annotations())
 
     return HostAvailabilityCollection(
@@ -87,6 +89,7 @@ def list_host_availability_v1(
         domainType="host_availability",
         value=[HostAvailabilityObject.from_internal(entry) for entry in av_data],
         links=[LinkModel.create("self", collection_href("host_availability"))],
+        extensions=MultiSiteCollectionExtensions.create(unreachable_sites),
     )
 
 

@@ -9,6 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from cmk.gui.availability.type_defs import AVEntry
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.gui.availability.openapi.testlib import TIME_FROM, TIME_UNTIL
 
@@ -37,6 +38,29 @@ def test_show_service_availability_returns_object(
     assert resp.json["extensions"]["site"] == "NO_SITE"
     assert resp.json["extensions"]["states"]["ok"] == 3600
     assert resp.json["extensions"]["states"]["crit"] == 0
+
+
+@pytest.mark.usefixtures("request_context")
+def test_show_service_availability_declares_the_permissions_of_its_livestatus_query(
+    clients: ClientRegistry,
+    service_av_entry: AVEntry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table("statehist", [])
+    mock_livestatus.expect_query(["GET statehist"], match_type="loose")
+
+    with (
+        patch(f"{_MODULE}.compute_availability", return_value=[service_av_entry]),
+        mock_livestatus,
+    ):
+        resp = clients.ServiceAvailability.get(
+            host_name="my-host",
+            service_name="CPU load",
+            time_range_from=TIME_FROM,
+            time_range_until=TIME_UNTIL,
+        )
+
+    assert resp.json["extensions"]["service"] == "CPU load"
 
 
 @pytest.mark.usefixtures("request_context")

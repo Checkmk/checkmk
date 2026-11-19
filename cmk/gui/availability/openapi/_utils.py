@@ -14,7 +14,20 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.livestatus_client import lqencode, OnlySites
 from cmk.web.utils import permission_verification as permissions
 
-PERMISSIONS = permissions.AllPerm([permissions.Perm("general.see_availability")])
+PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("general.see_availability"),
+        permissions.Undocumented(
+            permissions.AnyPerm(
+                [
+                    permissions.Perm("general.see_all"),
+                    permissions.OkayToIgnorePerm("bi.see_all"),
+                    permissions.OkayToIgnorePerm("mkeventd.seeall"),
+                ]
+            )
+        ),
+    ]
+)
 
 
 def build_avoptions(time_range_from: dt.datetime, time_range_until: dt.datetime) -> AVOptions:

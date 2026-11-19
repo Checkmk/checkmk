@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import re
 import uuid
 from http import HTTPStatus
@@ -12,6 +13,15 @@ import requests
 
 from tests.testlib.system.site import Site
 from tests.testlib.system.web_session import CMKWebSession
+
+
+def test_hook_omd_wrote_matches_the_site_settings(site: Site) -> None:
+    """The GUI relies on what omd_site_user check-apache-config prints"""
+    output = site.check_output(
+        [(site.root / "lib/omd/omd_site_user").as_posix(), "check-apache-config", "--site", site.id]
+    )
+
+    assert json.loads(output) == {"state": "up-to-date", "changed": {}}
 
 
 def test_http_methods(site: Site) -> None:

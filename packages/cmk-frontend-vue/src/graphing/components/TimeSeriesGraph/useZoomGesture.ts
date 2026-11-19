@@ -48,6 +48,12 @@ export interface ZoomGestureOptions {
 export function useZoomGesture(options: ZoomGestureOptions) {
   // Drag rectangle in plot-relative pixels; null = no drag in progress.
   const selection = ref<SelectionPoints | null>(null)
+  // Fixed at the press, so letting go of Ctrl or the meta key mid-drag cannot swap the axis under it.
+  const pressMode = ref<ZoomMode | null>(null)
+
+  function activeMode(): ZoomMode {
+    return pressMode.value ?? options.zoomMode()
+  }
 
   // Infinity while auto-scaling: with no fixed window there is no floor to be at.
   function valueSpan(): number {
@@ -56,7 +62,7 @@ export function useZoomGesture(options: ZoomGestureOptions) {
   }
 
   function atFloorForMode(): boolean {
-    if (options.zoomMode() === 'value') {
+    if (activeMode() === 'value') {
       return atFloor(valueSpan(), options.minValueRange())
     }
     return options.atTimeFloor()
@@ -66,7 +72,7 @@ export function useZoomGesture(options: ZoomGestureOptions) {
     if (selection.value !== null) {
       return 'zoom-in'
     }
-    return options.zoomMode() === 'value' ? 'ns-resize' : 'ew-resize'
+    return activeMode() === 'value' ? 'ns-resize' : 'ew-resize'
   })
   const plotBox = computed(() => ({
     left: 0,
@@ -76,7 +82,7 @@ export function useZoomGesture(options: ZoomGestureOptions) {
   }))
 
   const selectionBand = computed(() =>
-    selection.value ? selectionRect(options.zoomMode(), selection.value, plotBox.value) : null
+    selection.value ? selectionRect(activeMode(), selection.value, plotBox.value) : null
   )
 
   const pendingBand = computed(() => {
@@ -102,9 +108,13 @@ export function useZoomGesture(options: ZoomGestureOptions) {
 
   // Thresholding the clamped pixels keeps a drag whose visible part is sub-threshold a
   // click, however far outside the plot the cursor travelled.
-  function isClick(press: { x: number; y: number }, release: { x: number; y: number }): boolean {
+  function isClick(
+    mode: ZoomMode,
+    press: { x: number; y: number },
+    release: { x: number; y: number }
+  ): boolean {
     const [from, to, extent] =
-      options.zoomMode() === 'value'
+      mode === 'value'
         ? [press.y, release.y, options.plotHeight.value]
         : [press.x, release.x, options.plotWidth.value]
     return (
@@ -122,6 +132,7 @@ export function useZoomGesture(options: ZoomGestureOptions) {
     }
     pressPoint = point
     cursorPoint = point
+    pressMode.value = options.zoomMode()
     // Nothing is armed at the floor, so no band is ever drawn there. The refusal waits for the
     // release, which is the first point a zoom can be told from a click.
     if (!atFloorForMode()) {
@@ -150,13 +161,15 @@ export function useZoomGesture(options: ZoomGestureOptions) {
     // A release needs no preceding move, so it is the event that ends the gesture; the tracked
     // cursor only stands in when the plot has gone away.
     const release = options.plotCoords(ev) ?? cursorPoint
+    const mode = activeMode()
     selection.value = null
     pressPoint = null
     cursorPoint = null
+    pressMode.value = null
     if (!press || !release) {
       return
     }
-    if (isClick(press, release)) {
+    if (isClick(mode, press, release)) {
       options.onPlotClick?.(ev)
       return
     }
@@ -164,7 +177,7 @@ export function useZoomGesture(options: ZoomGestureOptions) {
       options.onZoomRefused?.(press)
       return
     }
-    if (options.zoomMode() === 'value') {
+    if (mode === 'value') {
       const fromY = clampPixelToPlot(drag.y0, options.plotHeight.value)
       const toY = clampPixelToPlot(drag.y1, options.plotHeight.value)
       const valueA = options.yScale.invert(fromY)

@@ -27,7 +27,7 @@ interface GestureOptions {
 
 // A 200×100px plot: x maps to the given time range (1000..2000s by default, so 1px is 5s),
 // y maps screen-inverted to value 100..0. onBeforeUnmount needs a mounted harness.
-function mountGesture(mode: ZoomMode, options: GestureOptions = {}) {
+function mountGesture(mode: ZoomMode | (() => ZoomMode), options: GestureOptions = {}) {
   const timeRange = options.timeRange ?? DEFAULT_TIME_RANGE
   const onZoom = vi.fn()
   const onZoomRefused = vi.fn()
@@ -40,7 +40,7 @@ function mountGesture(mode: ZoomMode, options: GestureOptions = {}) {
   const harness = defineComponent({
     setup() {
       api = useZoomGesture({
-        zoomMode: () => mode,
+        zoomMode: typeof mode === 'function' ? mode : () => mode,
         timeRange: () => timeRange,
         minTimeRange: () => options.minTimeRange ?? null,
         minValueRange: () => options.minValueRange ?? null,
@@ -242,6 +242,23 @@ describe('useZoomGesture', () => {
     const { api, onZoom } = mountGesture('value')
 
     drag(api, DIAGONAL_DRAG_FROM, DIAGONAL_DRAG_TO)
+
+    expect(onZoom).toHaveBeenCalledWith({
+      timeRange: DEFAULT_TIME_RANGE,
+      valueRange: { min: 25, max: 75 }
+    })
+  })
+})
+
+describe('useZoomGesture — a mode change during a drag', () => {
+  test('a drag zooms the axis that was armed at the press', () => {
+    let mode: ZoomMode = 'value'
+    const { api, onZoom } = mountGesture(() => mode)
+    api.onPlotMouseDown(new MouseEvent('mousedown', { button: 0, clientX: 40, clientY: 25 }))
+
+    mode = 'time'
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 120, clientY: 75 }))
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 120, clientY: 75 }))
 
     expect(onZoom).toHaveBeenCalledWith({
       timeRange: DEFAULT_TIME_RANGE,

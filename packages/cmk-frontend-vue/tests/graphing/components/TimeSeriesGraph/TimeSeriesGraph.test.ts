@@ -898,6 +898,89 @@ describe('TimeSeriesGraph — keyboard access to the zoom reset', () => {
   })
 })
 
+describe('TimeSeriesGraph — holding Ctrl or the meta key for value zoom', () => {
+  const plotCursor = (): string => document.querySelector('canvas')!.style.cursor
+
+  async function dragPlotDiagonally(modifiers: { ctrlKey?: boolean } = {}): Promise<void> {
+    await fireEvent.mouseDown(document.querySelector('canvas')!, {
+      button: 0,
+      clientX: 200,
+      clientY: 50,
+      ...modifiers
+    })
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 280, clientY: 200 }))
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 280, clientY: 200 }))
+  }
+
+  test('holding Ctrl points the plot cursor along the value axis', async () => {
+    renderComponent()
+
+    await fireEvent.keyDown(window, { key: 'Control', ctrlKey: true })
+
+    expect(plotCursor()).toBe('ns-resize')
+  })
+
+  test('holding the meta key points the plot cursor along the value axis', async () => {
+    renderComponent()
+
+    await fireEvent.keyDown(window, { key: 'Meta', metaKey: true })
+
+    expect(plotCursor()).toBe('ns-resize')
+  })
+
+  // The press itself tells, even when the keydown went unseen, e.g. Ctrl was already down
+  // when the window got the focus back.
+  test('a drag started with Ctrl held zooms the values, not the time', async () => {
+    const { emitted } = renderComponent()
+
+    await dragPlotDiagonally({ ctrlKey: true })
+
+    const [payload] = (emitted()['zoom'] as Array<[{ valueRange?: unknown }]>)[0]!
+    expect(payload.valueRange).toBeDefined()
+  })
+
+  // E.g. the keyup went to another frame.
+  test('a press without Ctrl zooms the time though no keyup was seen', async () => {
+    const { emitted } = renderComponent()
+    await fireEvent.keyDown(window, { key: 'Control', ctrlKey: true })
+
+    await dragPlotDiagonally({ ctrlKey: false })
+
+    const [payload] = (emitted()['zoom'] as Array<[{ valueRange?: unknown }]>)[0]!
+    expect(payload.valueRange).toBeUndefined()
+  })
+
+  test('letting go of Ctrl returns to time zoom', async () => {
+    renderComponent()
+    await fireEvent.keyDown(window, { key: 'Control', ctrlKey: true })
+
+    await fireEvent.keyUp(window, { key: 'Control', ctrlKey: false })
+
+    expect(plotCursor()).toBe('ew-resize')
+  })
+
+  // No keyup arrives once another window has the focus.
+  test('leaving the window with Ctrl held returns to time zoom', async () => {
+    renderComponent()
+    await fireEvent.keyDown(window, { key: 'Control', ctrlKey: true })
+
+    await fireEvent.blur(window)
+
+    expect(plotCursor()).toBe('ew-resize')
+  })
+})
+
+describe('TimeSeriesGraph — the icon-only zoom reset', () => {
+  test('drops the label but keeps "Reset zoom" as name and tooltip', () => {
+    renderComponent({ inspecting: true, resetIconOnly: true })
+
+    const resetButton = screen.getByRole('button', { name: 'Reset zoom' })
+
+    expect(resetButton).not.toHaveTextContent('Reset zoom')
+    expect(resetButton).toHaveAttribute('title', 'Reset zoom')
+  })
+})
+
 describe('TimeSeriesGraph — bars', () => {
   const HOUR = 3600
   const TWO_HOURS = { start: 400_000 * HOUR, end: 400_002 * HOUR, step: 60 }

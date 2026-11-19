@@ -46,15 +46,17 @@ import {
 } from './render/composeSeries'
 import { drawHorizontalLines } from './render/horizontalLines'
 import { drawShadedRegions } from './render/shadedRegions'
-import type { PinPayload, TimeRange, TimeSeriesGraphProps, ZoomPayload } from './types'
+import type { PinPayload, TimeRange, TimeSeriesGraphProps, ZoomMode, ZoomPayload } from './types'
 import { useAxes } from './useAxes'
 import { useHover } from './useHover'
 import { usePanGesture } from './usePanGesture'
 import { useZoomGesture } from './useZoomGesture'
+import { useZoomModifier } from './useZoomModifier'
 
 const props = withDefaults(defineProps<TimeSeriesGraphProps>(), {
   showTimeAxis: true,
-  showValueAxis: true
+  showValueAxis: true,
+  resetIconOnly: false
 })
 
 const emit = defineEmits<{
@@ -227,13 +229,16 @@ const hoverAtPin = computed(
 
 const pendingTimeRange = () => props.pendingTimeRange ?? null
 
+const { held: zoomModifierHeld, sync: syncZoomModifier } = useZoomModifier()
+const zoomMode = computed<ZoomMode>(() => (zoomModifierHeld.value ? 'value' : props.zoomMode))
+
 const {
   selectionBand,
   pendingBand,
   plotCursor,
   onPlotMouseDown: startZoomSelection
 } = useZoomGesture({
-  zoomMode: () => props.zoomMode,
+  zoomMode: () => zoomMode.value,
   timeRange: () => props.view_time_range,
   minTimeRange: () => props.minTimeRange,
   minValueRange: () => props.minValueRange,
@@ -456,6 +461,7 @@ function leaveHoverZone(ev: MouseEvent): void {
 }
 
 function onPlotMouseDown(ev: MouseEvent): void {
+  syncZoomModifier(ev)
   clearHover()
   startZoomSelection(ev)
 }
@@ -486,7 +492,10 @@ function onPinActionClick(): void {
 }
 
 const { _t } = usei18n()
-useWidgetKeys(_t('Graph'), [{ combo: ['Home'], description: _t('Reset zoom') }])
+useWidgetKeys(_t('Graph'), [
+  { combo: ['Home'], description: _t('Reset zoom') },
+  { combo: ['Ctrl'], description: _t('Hold to zoom the value axis') }
+])
 const resetLabel = _t('Reset zoom')
 const maxZoomLabel = _t('Maximum zoom reached')
 const panHovered = ref(false)
@@ -716,7 +725,7 @@ defineExpose({ showMaxZoomHint })
       v-if="inspecting"
       ref="resetButton"
       variant="secondary"
-      size="small"
+      :size="resetIconOnly ? 'iconOnly' : 'small'"
       class="graphing-time-series-graph__reset"
       :style="{ top: `${plotTop + 6}px`, right: `${PLOT_INSET_X + 6}px` }"
       :title="resetLabel"
@@ -728,7 +737,7 @@ defineExpose({ showMaxZoomHint })
         class="graphing-time-series-graph__reset-icon"
         aria-hidden="true"
       />
-      <span>{{ resetLabel }}</span>
+      <span v-if="!resetIconOnly">{{ resetLabel }}</span>
     </CmkButton>
     <!-- Transparent grab strip over the x-axis labels; arms the pan drag. -->
     <div
@@ -865,10 +874,12 @@ defineExpose({ showMaxZoomHint })
   .graphing-time-series-graph__pan-step {
     position: absolute;
     z-index: 3;
-    background-color: var(--ux-theme-0);
-    border-color: var(--border-color-default);
+    background-color: var(--ux-theme-5);
+    border-color: transparent;
 
-    &:hover {
+    /* :enabled also lifts this above CmkButton's own hover rule. */
+    &:hover:enabled {
+      background-color: var(--ux-theme-5);
       background-image: linear-gradient(var(--background-hover-wash), var(--background-hover-wash));
     }
 

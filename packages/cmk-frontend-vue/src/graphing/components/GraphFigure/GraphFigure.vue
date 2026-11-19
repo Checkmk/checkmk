@@ -409,6 +409,7 @@ onBeforeUnmount(() => {
         :min-time-range="timeAxis.minSpan(null, graph.answer.dataTimeRange)"
         :min-value-range="null"
         :inspecting="inspectionActive"
+        reset-icon-only
         :pan-enabled="true"
         :zoom-enabled="true"
         :pin-enabled="showPin"

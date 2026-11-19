@@ -256,3 +256,47 @@ test('metric names are plain text unless named as clickable', () => {
 
   expect(screen.queryByRole('button', { name: 'Show details for CPU' })).not.toBeInTheDocument()
 })
+
+// jsdom lays nothing out, so the row is given the widths a browser would measure.
+function layOutRow(row: Element, widths: { client: number; scroll: number }): void {
+  Object.defineProperty(row, 'clientWidth', { configurable: true, value: widths.client })
+  Object.defineProperty(row, 'scrollWidth', { configurable: true, value: widths.scroll })
+}
+
+function renderOverflowingLegend() {
+  const result = render(GraphLegendCompact, {
+    props: { metrics: [makeMetric('a', 'Alpha'), makeMetric('b', 'Beta')] }
+  })
+  const row = screen.getByRole('group', { name: 'Graph metrics' })
+  layOutRow(row, { client: 100, scroll: 300 })
+  return { ...result, row }
+}
+
+test('a legend that fits shows no scroll steps', async () => {
+  render(GraphLegendCompact, { props: { metrics: [makeMetric('a', 'Alpha')] } })
+  const row = screen.getByRole('group', { name: 'Graph metrics' })
+  layOutRow(row, { client: 300, scroll: 300 })
+
+  await fireEvent.scroll(row)
+
+  expect(screen.queryByRole('button', { name: 'Scroll legend forward' })).not.toBeInTheDocument()
+})
+
+test('an overflowing legend at its start can only step forward', async () => {
+  const { row } = renderOverflowingLegend()
+
+  await fireEvent.scroll(row)
+
+  expect(screen.getByRole('button', { name: 'Scroll legend back' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Scroll legend forward' })).toBeEnabled()
+})
+
+test('an overflowing legend at its end can only step back', async () => {
+  const { row } = renderOverflowingLegend()
+  row.scrollLeft = 200
+
+  await fireEvent.scroll(row)
+
+  expect(screen.getByRole('button', { name: 'Scroll legend back' })).toBeEnabled()
+  expect(screen.getByRole('button', { name: 'Scroll legend forward' })).toBeDisabled()
+})

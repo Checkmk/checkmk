@@ -272,11 +272,6 @@ test('a refused new host keeps the dialog open and says why', async () => {
   await waitFor(() => expect(save).toBeEnabled())
   await userEvent.click(save)
 
-  expect(
-    await screen.findByText(
-      'Some hosts could not be created. Try again, or verify your configuration.'
-    )
-  ).toBeTruthy()
-  expect(screen.getByText('Sorry, the hosts in the folder Main are locked.')).toBeTruthy()
+  expect(await screen.findByText('Sorry, the hosts in the folder Main are locked.')).toBeTruthy()
   expect(emitted('close')).toBeUndefined()
 })

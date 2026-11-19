@@ -397,9 +397,6 @@ const NEW_HOSTS_REFUSED = {
   ext: { new_host_names: ['pod-cart'] }
 }
 
-const SOME_HOSTS_NOT_CREATED =
-  'Some hosts could not be created. Try again, or verify your configuration.'
-
 async function saveStoredTemplateService(): Promise<void> {
   serveStoredTemplateService()
   renderWizard()
@@ -435,15 +432,6 @@ test('a save that creates no host shows no host creation', async () => {
   expect(screen.queryByText('New host creation')).toBeNull()
 })
 
-test('a refused new host says that some hosts could not be created', async () => {
-  server.use(http.put(OBJECT_URL, () => HttpResponse.json(NEW_HOSTS_REFUSED, { status: 403 })))
-
-  serveResolution(['pod-cart'])
-  await saveStoredTemplateService()
-
-  expect(await screen.findByText(SOME_HOSTS_NOT_CREATED)).toBeTruthy()
-})
-
 test('a refused new host shows why the server refused it', async () => {
   server.use(http.put(OBJECT_URL, () => HttpResponse.json(NEW_HOSTS_REFUSED, { status: 403 })))
 
@@ -459,7 +447,7 @@ test('after a refused new host the save can be tried again', async () => {
   serveResolution(['pod-cart'])
   await saveStoredTemplateService()
 
-  await screen.findByText(SOME_HOSTS_NOT_CREATED)
+  await screen.findByText('Sorry, the hosts in the folder Main are locked.')
   expect(screen.getByRole('button', { name: 'Save & activate changes' })).toBeEnabled()
 })
 

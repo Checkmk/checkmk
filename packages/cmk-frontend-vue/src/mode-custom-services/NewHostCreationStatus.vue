@@ -21,26 +21,15 @@ const { _t } = usei18n()
     :class="`mode-custom-services-new-host-creation-status--${status}`"
     role="status"
   >
-    <div class="mode-custom-services-new-host-creation-status__line">
-      <CmkIcon v-if="status === 'created'" name="checkmark" variant="inline" />
-      <CmkIcon v-else-if="status === 'refused'" name="cross" variant="inline" />
-      <span>{{ _t('New host creation') }}</span>
-      <CmkLoading v-if="status === 'creating'" />
-    </div>
-    <span v-if="status === 'refused'">
-      {{ _t('Some hosts could not be created. Try again, or verify your configuration.') }}
-    </span>
+    <CmkIcon v-if="status === 'created'" name="checkmark" variant="inline" />
+    <CmkIcon v-else-if="status === 'refused'" name="cross" variant="inline" />
+    <span>{{ _t('New host creation') }}</span>
+    <CmkLoading v-if="status === 'creating'" />
   </div>
 </template>
 
 <style scoped>
 .mode-custom-services-new-host-creation-status {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
-}
-
-.mode-custom-services-new-host-creation-status__line {
   display: flex;
   align-items: center;
   gap: var(--dimension-3);

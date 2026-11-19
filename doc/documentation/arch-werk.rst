@@ -2,6 +2,9 @@
 Werk
 ====================
 
+.. contents::
+   :local:
+
 A "Werk" (German for work) is a changelog element. Normally it is added with the
 commit that implements the feature or fix. It holds a title, a description and
 some metadata.
@@ -43,19 +46,58 @@ A Mail and a Forum post is generated from the Werk files added in this version.
 
 See ``announce`` sub-command of ``bazel run //cmk/utils:werks_bin`` (used by the
 ``announcement`` make-target).
+Werks without a version count as Werks of the current version, see `Burn the Werks`_.
 
-Rewrite Versions of Werks
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Burn the Werks
+~~~~~~~~~~~~~~
 
-During the release process, a new release candidate may need to be created.
-In this case, dedicated commits will be picked onto the corresponding release
-branch ``release/A.B.CpX``. [#]_ After the final release, the ``burn`` sub-command of
-``bazel run //packages/cmk-werks:utils-bin`` writes the released version into all
-Werks without a version (Jenkins job ``buildscripts/scripts/burn-werks.groovy``).
+Werks used to be created with a version. This version was only a best guess of
+the release the Werk would ship with, and it caused many problems with releases
+and security releases. [#]_ For details, see the
+`RFC <https://docs.google.com/document/d/1sR69OpeAFn1Qmd4-Tgr3je2-eim5bUDXJd5wETOlSmA/edit>`__.
 
-.. [#] In the past, every Werk had a version. Werks picked onto the release
-   branch needed a fix-up of their version field, and the version of the
-   corresponding Werk in the upstream branch ``A.B.C`` had to be updated as well.
+.. [#] For example, Werks picked onto the release branch ``release/A.B.CpX`` for
+   a new release candidate needed a fix-up of their version field, and the
+   version of the corresponding Werk in the upstream branch ``A.B.C`` had to be
+   updated as well.
+
+Now Werks are created without a version. Until a Werk is released, tools that
+need its version use the current version of the branch, the ``VERSION`` in
+``defines.make``. After the release, the released version is burned into the
+Werk file, so the Werk keeps the version it shipped with.
+
+After a final release, the Jenkins job ``buildscripts/scripts/burn-werks.groovy``
+burns the released version into the Werks: on top of the release tag, it runs
+the ``burn`` sub-command of ``bazel run //packages/cmk-werks:utils-bin``, which
+writes the released version into every Werk without a version. The job picks
+this commit onto the release branch and the version branch, and for the first
+release of a version branch (e.g. 3.0.0b1) also onto master, as master contains
+the same Werks.
+
+.. image:: arch-werk-burn.svg
+   :alt: Burning the Werks of the release 2.5.0p4
+   :align: center
+   :width: 100%
+
+The diagram shows the release of 2.5.0p4:
+
+* Werk 0 is a boring standard feature/fix.
+* Werk 3 is added on the release branch, but then reverted. It does not ship
+  with 2.5.0p4.
+* Werk 3 and Werk 4 are only on ``2.5.0``. The burn commit does not touch them:
+  they keep no version until they are released and burned with 2.5.0p5.
+* A security release has to start from the burn commit on the release branch,
+  not from the release tag. Started from the tag, Werk 0 would have no version
+  on ``sec-release/2.5.0p5``, and the burn after the security release would
+  write 2.5.0p5 into it instead of 2.5.0p4.
+
+This leaves a small inconsistency: the version of a Werk is resolved twice, on
+two different code paths. The release itself is built from the tag
+``v2.5.0p4``, where Werk 0 has no version yet, so precompile, announce, collect
+and mail fill in the version on the fly. After the release, the burn commit
+resolves the version again and writes it into the Werk file. Both steps have to
+come to the same version for every Werk. Otherwise a Werk ships with one version
+and is listed with another one afterwards.
 
 Precompiled Werks
 ~~~~~~~~~~~~~~~~~
@@ -77,6 +119,7 @@ Version 2.3 and higher ship only Werks from the current major version.
 Precompiled Werks consist of multiple files: one for each edition. It is created
 while building Checkmk: Bazel rules in ``omd/packages/changelog/BUILD`` execute
 ``bazel run //packages/cmk-werks:utils-bin -- precompile`` for each edition.
+Werks without a version get the current version, see `Burn the Werks`_.
 
 
 Website
@@ -99,6 +142,7 @@ json dumps are joined to one big json dump.
 
 One Werk can be specified in multiple branches potentially with different content.
 Higher versions and finally the master branch will always overwrite others.
+Werks without a version get the current version of their branch, see `Burn the Werks`_.
 
 
 Mailing-lists
@@ -112,6 +156,7 @@ Werk is either a fix, a feature or security related).
 The mails are sent via the ``mail`` sub-command of ``bazel run //cmk/utils:werks_bin``. The command is
 executed daily on jenkins for each currently supported branch. It sends mails
 directly to the mailing-list addresses.
+For Werks without a version, the mail uses the base version of the branch (e.g. 2.5.0), see `Burn the Werks`_.
 
 Each and every edit on a Werk will result in at least one mail to the
 mailing lists. So if you need to modify many (>10) Werks, you should think about

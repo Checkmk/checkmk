@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1050" height="420" viewBox="0 0 1050 420" font-family="Helvetica, Arial, sans-serif" font-size="12" role="img" aria-label="Burning the Werks of the release 2.5.0p4">
+<title>Burning the Werks of the release 2.5.0p4</title>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+  </marker>
+</defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+
+<!-- Layout: time runs from left to right. Lanes: 2.5.0 at y=100, release/2.5.0p4 at y=200, sec-release/2.5.0p5 at y=330. -->
+
+<!-- branch lines -->
+<g fill="none" stroke-width="3">
+  <path d="M 30 100 H 870" stroke="#2563eb"/>
+  <path d="M 170 100 C 230 100, 210 200, 250 200 H 870" stroke="#16a34a"/>
+  <path d="M 620 200 C 700 200, 680 330, 720 330 H 870" stroke="#dc2626"/>
+</g>
+
+<!-- cherry-picks -->
+<g stroke="#6b7280" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)">
+  <line x1="296" y1="195" x2="413" y2="106"/>
+  <line x1="624" y1="193" x2="755" y2="107"/>
+</g>
+
+<!-- commits -->
+<g stroke="#ffffff" stroke-width="2">
+  <circle cx="80" cy="100" r="8" fill="#2563eb"/>
+  <circle cx="170" cy="100" r="8" fill="#2563eb"/>
+  <circle cx="290" cy="100" r="8" fill="#2563eb"/>
+  <circle cx="420" cy="100" r="8" fill="#2563eb"/>
+  <circle cx="535" cy="100" r="8" fill="#2563eb"/>
+  <circle cx="645" cy="100" r="8" fill="#2563eb"/>
+  <circle cx="760" cy="100" r="8" fill="#2563eb"/>
+  <circle cx="290" cy="200" r="8" fill="#16a34a"/>
+  <circle cx="400" cy="200" r="8" fill="#16a34a"/>
+  <circle cx="510" cy="200" r="8" fill="#16a34a"/>
+  <circle cx="620" cy="200" r="8" fill="#16a34a"/>
+  <circle cx="770" cy="330" r="8" fill="#dc2626"/>
+</g>
+
+<!-- commit messages: above the commits of 2.5.0, below the commits of the other branches -->
+<g fill="#374151" text-anchor="middle">
+  <text x="80" y="80">add werk 0</text>
+  <text x="170" y="80" fill="#9ca3af">change 2</text>
+  <text x="290" y="80">set version 2.5.0p5</text>
+  <text x="420" y="80">add werk 3</text>
+  <text x="535" y="80" fill="#9ca3af">change 3</text>
+  <text x="645" y="80">add werk 4</text>
+  <text x="760" y="80">burn werks</text>
+  <text x="290" y="226">add werk 3</text>
+  <text x="400" y="226">revert werk 3</text>
+  <text x="510" y="226" fill="#9ca3af">change 4</text>
+  <text x="620" y="226">burn werks</text>
+  <text x="770" y="356">security fix with werk</text>
+</g>
+
+<!-- tags -->
+<g font-family="monospace" fill="#6b7280">
+  <path d="M 115 45 L 123 36 H 225 V 54 H 123 Z" fill="#f9fafb" stroke="#9ca3af"/>
+  <text x="129" y="49">v2.5.0p4-rc1</text>
+  <path d="M 455 250 L 463 241 H 565 V 259 H 463 Z" fill="#f9fafb" stroke="#9ca3af"/>
+  <text x="469" y="254">v2.5.0p4-rc2</text>
+  <path d="M 470 274 L 478 265 H 550 V 283 H 478 Z" fill="#f9fafb" stroke="#9ca3af"/>
+  <text x="484" y="278">v2.5.0p4</text>
+</g>
+
+<!-- branches -->
+<g font-family="monospace" fill="#ffffff">
+  <rect x="880" y="89" width="52" height="22" rx="11" fill="#2563eb"/>
+  <text x="888" y="104">2.5.0</text>
+  <rect x="880" y="189" width="124" height="22" rx="11" fill="#16a34a"/>
+  <text x="888" y="204">release/2.5.0p4</text>
+  <rect x="880" y="319" width="153" height="22" rx="11" fill="#dc2626"/>
+  <text x="888" y="334">sec-release/2.5.0p5</text>
+</g>
+
+<!-- legend -->
+<g fill="#374151">
+  <circle cx="38" cy="400" r="6" fill="#6b7280"/>
+  <text x="52" y="404">commit</text>
+  <rect x="118" y="389" width="44" height="22" rx="11" fill="#6b7280"/>
+  <text x="174" y="404">branch</text>
+  <path d="M 240 400 L 248 391 H 282 V 409 H 248 Z" fill="#f9fafb" stroke="#9ca3af"/>
+  <text x="294" y="404">tag</text>
+  <line x1="340" y1="400" x2="390" y2="400" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <text x="400" y="404">cherry-pick</text>
+</g>
+</svg>

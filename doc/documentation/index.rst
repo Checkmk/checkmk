@@ -11,6 +11,8 @@ Checkmk - Developer documentation
    sec-boundaries.rst
    arch-werk.rst
 
+.. include:: package-pages.inc
+
 .. toctree::
    :maxdepth: 1
    :caption: Developer tools

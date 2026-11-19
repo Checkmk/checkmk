@@ -40,7 +40,6 @@ Components
    arch-comp-gui-metrics.rst
    arch-comp-host-relations.rst
    arch-comp-apache.rst
-   arch-comp-checkengine.rst
    arch-comp-checkengine-keepalive.rst
    arch-comp-core.rst
    arch-comp-smartping.rst

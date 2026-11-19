@@ -2,6 +2,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_sphinx//sphinx:defs.bzl", "sphinx_html")
+load(":defs.bzl", "doc_srcs")
 
 py_binary(
     name = "sphinx_build",
@@ -22,13 +23,16 @@ py_binary(
     ],
 )
 
-filegroup(
+doc_srcs(
     name = "srcs",
     srcs = glob([
         "**/*.puml",
         "**/*.rst",
         "**/*.svg",
-    ]),
+    ]) + [
+        # Pages that live in the package they describe
+        "//packages/cmk-check-engine:docs",
+    ],
     visibility = ["//:__subpackages__"],
 )
 

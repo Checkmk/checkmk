@@ -7,6 +7,13 @@ load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
+load("//doc/documentation:defs.bzl", "package_docs")
+
+package_docs(
+    name = "docs",
+    index = "docs/arch-comp-checkengine.rst",
+    visibility = ["//doc/documentation:__pkg__"],
+)
 
 exports_files(
     [

@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { afterEach, expect, test, vi } from 'vitest'
 import { type EffectScope, effectScope, ref } from 'vue'
 
 import { useSharedResizeObserver } from '@/graphing/composables/useSharedResizeObserver'
@@ -11,7 +11,8 @@ import { useSharedResizeObserver } from '@/graphing/composables/useSharedResizeO
 import {
   FakeResizeObserver,
   deliverSize,
-  resizeObserverReporting
+  resizeObserverReporting,
+  useFakeResizeObserver
 } from '@tests/lib/fakeResizeObserver'
 
 let scopes: EffectScope[] = []
@@ -23,14 +24,11 @@ function observe(element: Element, onResize: () => void = () => {}): EffectScope
   return scope
 }
 
-beforeEach(() => {
-  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
-})
+useFakeResizeObserver(FakeResizeObserver)
 
 afterEach(() => {
   scopes.forEach((scope) => scope.stop())
   scopes = []
-  FakeResizeObserver.instances = []
 })
 
 test('all callers on the page share one observer', () => {

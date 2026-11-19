@@ -13,6 +13,8 @@ import FlowMapView from '@/maps/map/flow/FlowMapView.vue'
 import type { MapElement, TopologyNode } from '@/maps/types/api'
 import { newMapView } from '@/maps/utils/model'
 
+import { FakeResizeObserver, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
+
 import { aMap, aTopologyNode } from '../../support/fixtures'
 import {
   aSession,
@@ -106,6 +108,8 @@ async function waitForNodes() {
 }
 
 describe('FlowMapView', () => {
+  useFakeResizeObserver(FakeResizeObserver)
+
   beforeEach(() => {
     // jsdom has no layout: getBBox / getBoundingClientRect on SVG elements
     // would throw or return zeros. d3 itself is pure JS and runs as-is.
@@ -121,14 +125,6 @@ describe('FlowMapView', () => {
         get: () => ({ baseVal: { value: dim === 'width' ? 900 : 600 } })
       })
     }
-    vi.stubGlobal(
-      'ResizeObserver',
-      class {
-        observe() {}
-        unobserve() {}
-        disconnect() {}
-      }
-    )
   })
 
   afterEach(() => {

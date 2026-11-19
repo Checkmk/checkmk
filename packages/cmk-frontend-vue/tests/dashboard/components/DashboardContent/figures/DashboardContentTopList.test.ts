@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
@@ -13,11 +13,9 @@ import { useProvideDrillDownSource } from '@/dashboard/composables/useDrillDownS
 import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { ComputedTopList, TopListContent, VisualContext } from '@/dashboard/types/widget'
 
-import {
-  renderComputedWidget,
-  useComputeWidgetEndpoint
-} from '@tests/dashboard/computeWidgetEndpoint'
+import { useComputeWidgetEndpoint } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
+import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 function topList(overrides: Partial<ComputedTopList> = {}): ComputedTopList {
   return {
@@ -72,6 +70,7 @@ function props(content: Partial<TopListContent> = {}, filters: VisualContext = {
 }
 
 const endpoint = useComputeWidgetEndpoint<ComputedTopList>('compute-top-list', () => topList())
+useFakeResizeObserver(resizeObserverReporting(400, 200))
 
 async function renderWidget(
   content: Partial<TopListContent> = {},
@@ -93,7 +92,7 @@ async function renderWidget(
       return () => h(DashboardContentTopList, componentProps)
     }
   })
-  const rendered = await renderComputedWidget(wrapper, {})
+  const rendered = render(wrapper)
   await waitFor(() =>
     expect(rendered.container.querySelector('.db-content-top-list__scroll')).not.toBeNull()
   )

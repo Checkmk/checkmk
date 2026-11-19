@@ -4,18 +4,16 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fromDate } from '@internationalized/date'
-import { screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import DashboardContentTimelineCount from '@/dashboard/components/DashboardContent/figures/DashboardContentTimelineCount.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import type { TimelineContent, TimelineCount } from '@/dashboard/types/widget'
 
-import {
-  renderComputedWidget,
-  useComputeWidgetEndpoint
-} from '@tests/dashboard/computeWidgetEndpoint'
+import { useComputeWidgetEndpoint } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
+import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 const OTHER_RANGE = {
   from: fromDate(new Date('2026-01-02T00:00:00Z'), 'UTC'),
@@ -39,9 +37,10 @@ const FIXED_WINDOW: TimelineContent = {
 const endpoint = useComputeWidgetEndpoint<TimelineCount>('compute-timeline-count', () => ({
   count: 42
 }))
+useFakeResizeObserver(resizeObserverReporting(400, 200))
 
 async function renderWidget(props: ContentProps<TimelineContent>) {
-  const rendered = await renderComputedWidget(DashboardContentTimelineCount, props)
+  const rendered = render(DashboardContentTimelineCount, { props })
   await waitFor(() => expect(endpoint.requests).toHaveLength(1))
   return rendered
 }

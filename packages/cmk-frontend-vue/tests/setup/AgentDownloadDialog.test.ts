@@ -9,7 +9,11 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import AgentDownloadDialog from '@/setup/AgentDownloadDialog.vue'
 
-import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
+import {
+  FakeResizeObserver,
+  deliverSize,
+  useFakeResizeObserver
+} from '@tests/lib/fakeResizeObserver'
 import {
   commandPlaceholders,
   installCmds,
@@ -117,14 +121,13 @@ function renderInDiscoveryPage(layout: Layout): DiscoveryPage {
 const WIDE: Layout = { contentRight: 1300, containerWidth: 1050 }
 const NARROW_BESIDE_LONG_ROWS: Layout = { contentRight: 940, containerWidth: 900 }
 
+useFakeResizeObserver(FakeResizeObserver)
+
 beforeEach(() => {
   localStorage.clear()
-  FakeResizeObserver.instances = []
-  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
 })
 
 afterEach(() => {
-  vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })
 

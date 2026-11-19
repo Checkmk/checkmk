@@ -3,17 +3,15 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { screen } from '@testing-library/vue'
+import { render, screen } from '@testing-library/vue'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import DashboardContentStats from '@/dashboard/components/DashboardContent/figures/DashboardContentStats.vue'
 import type { Stats, StatsContent } from '@/dashboard/types/widget'
 
-import {
-  renderComputedWidget,
-  useComputeWidgetEndpoint
-} from '@tests/dashboard/computeWidgetEndpoint'
+import { useComputeWidgetEndpoint } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
+import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 const HOST_STATS: Stats = {
   links: [],
@@ -32,6 +30,7 @@ const PROPS = makeContentProps<StatsContent>({
 })
 
 useComputeWidgetEndpoint<Stats>('compute-stats', () => HOST_STATS)
+useFakeResizeObserver(resizeObserverReporting(400, 200))
 
 beforeEach(() => {
   Object.defineProperty(SVGElement.prototype, 'getBBox', {
@@ -45,7 +44,7 @@ afterEach(() => {
 
 describe('DashboardContentStats', () => {
   it('draws the counts as delivered by the backend', async () => {
-    await renderComputedWidget(DashboardContentStats, PROPS)
+    render(DashboardContentStats, { props: PROPS })
 
     expect(await screen.findByRole('img', { name: 'Down: 3' })).toBeInTheDocument()
   })

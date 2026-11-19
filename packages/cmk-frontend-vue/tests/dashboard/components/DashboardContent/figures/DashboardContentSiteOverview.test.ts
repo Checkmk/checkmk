@@ -3,18 +3,15 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import DashboardContentSiteOverview from '@/dashboard/components/DashboardContent/figures/DashboardContentSiteOverview.vue'
-import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import type { SiteOverview, SiteOverviewContent } from '@/dashboard/types/widget'
 
-import {
-  renderComputedWidget,
-  useComputeWidgetEndpoint
-} from '@tests/dashboard/computeWidgetEndpoint'
+import { useComputeWidgetEndpoint } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
+import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 const VALUE: SiteOverview = {
   mode: 'hosts',
@@ -43,14 +40,15 @@ const CONTENT: SiteOverviewContent = {
 }
 
 const endpoint = useComputeWidgetEndpoint<SiteOverview>('compute-site-overview', () => VALUE)
+useFakeResizeObserver(resizeObserverReporting(400, 200))
 
-async function renderWidget(props: ContentProps<SiteOverviewContent> = makeContentProps(CONTENT)) {
-  return renderComputedWidget(DashboardContentSiteOverview, props)
+function renderWidget() {
+  return render(DashboardContentSiteOverview, { props: makeContentProps(CONTENT) })
 }
 
 describe('DashboardContentSiteOverview', () => {
   it('requests the explicit widget', async () => {
-    await renderWidget()
+    renderWidget()
 
     await waitFor(() =>
       expect(endpoint.requests).toEqual([
@@ -60,7 +58,7 @@ describe('DashboardContentSiteOverview', () => {
   })
 
   it('draws the hosts as delivered by the backend', async () => {
-    await renderWidget()
+    renderWidget()
 
     expect(await screen.findByRole('figure', { name: '1 host, 1 critical' })).toBeInTheDocument()
   })

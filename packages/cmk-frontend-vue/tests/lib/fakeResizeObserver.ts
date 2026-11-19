@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { beforeEach, vi } from 'vitest'
 
 /** A ResizeObserver for jsdom, which has none and does no layout. */
 export class FakeResizeObserver {
@@ -68,4 +69,12 @@ export function resizeObserverReporting(width: number, height: number): typeof F
       this.fire([entryFor(element, width, height)])
     }
   }
+}
+
+/** Stubs ResizeObserver with the fake before each test, which starts without fake instances. */
+export function useFakeResizeObserver(fake: typeof FakeResizeObserver): void {
+  beforeEach(() => {
+    FakeResizeObserver.instances = []
+    vi.stubGlobal('ResizeObserver', fake)
+  })
 }

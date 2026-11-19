@@ -13,6 +13,12 @@ import FolderTreeMapView from '@/maps/map/foldertree/FolderTreeMapView.vue'
 import { HOVER_REST_MS } from '@/maps/map/foldertree/composables/useTileHoverIntent'
 import type { FolderHostService, FolderServiceSearchResult, FolderTreeNode } from '@/maps/types/api'
 
+import {
+  FakeResizeObserver,
+  resizeObserverReporting,
+  useFakeResizeObserver
+} from '@tests/lib/fakeResizeObserver'
+
 import { aFolderNode, aMap, newMapView } from '../../support/fixtures'
 import { fakeMapsServices, provideServices } from '../../support/services'
 
@@ -133,15 +139,9 @@ async function waitForRows() {
 }
 
 describe('FolderTreeMapView (list mode)', () => {
+  useFakeResizeObserver(FakeResizeObserver)
+
   beforeEach(() => {
-    vi.stubGlobal(
-      'ResizeObserver',
-      class {
-        observe() {}
-        unobserve() {}
-        disconnect() {}
-      }
-    )
     // jsdom has no layout, so the windowed list would measure a 0px viewport.
     // A fixed clientHeight gives the windowing something real to work from.
     Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
@@ -612,23 +612,7 @@ describe('FolderTreeMapView (list mode)', () => {
 })
 
 describe('FolderTreeMapView (map mode)', () => {
-  beforeEach(() => {
-    // jsdom has no layout, so the stage reports its size the moment it is observed.
-    vi.stubGlobal(
-      'ResizeObserver',
-      class {
-        constructor(private readonly onResize: ResizeObserverCallback) {}
-        observe(): void {
-          this.onResize(
-            [{ contentRect: { width: 800, height: 600 } }] as unknown as ResizeObserverEntry[],
-            this as unknown as ResizeObserver
-          )
-        }
-        unobserve() {}
-        disconnect() {}
-      }
-    )
-  })
+  useFakeResizeObserver(resizeObserverReporting(800, 600))
 
   it('opens the same hover card as the list on a host tile, with the host own state', async () => {
     // The tile is yellow for a failing service; the card speaks for the host.

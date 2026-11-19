@@ -6,7 +6,7 @@
 import { parseAbsolute, toZoned } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { render, screen, within } from '@testing-library/vue'
-import { afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 import { nextTick } from 'vue'
 
 import ScheduleDowntimeForm, {
@@ -20,7 +20,7 @@ import ScheduleDowntimeForm, {
   untilPresetEnd
 } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
 
-import { FakeResizeObserver } from '@tests/lib/fakeResizeObserver'
+import { FakeResizeObserver, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 /** What a site offers out of the box, as `user_downtime_timeranges` has it. */
 const PRESETS: DowntimePresetOption[] = [
@@ -189,13 +189,7 @@ test('an until preset explains itself with the end date', () => {
 })
 
 describe('a row too narrow for every duration', () => {
-  beforeEach(() => {
-    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
-  })
-
-  afterEach(() => {
-    FakeResizeObserver.instances = []
-  })
+  useFakeResizeObserver(FakeResizeObserver)
 
   it('narrows the row further than the count cap already does', async () => {
     const { container } = mountForm({ comment: 'maintenance' })

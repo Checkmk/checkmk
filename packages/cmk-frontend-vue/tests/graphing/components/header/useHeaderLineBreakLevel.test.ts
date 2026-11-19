@@ -4,12 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render } from '@testing-library/vue'
-import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { type Ref, defineComponent, h, nextTick, ref } from 'vue'
 
 import { useHeaderLineBreakLevel } from '@/graphing/components/header/useHeaderLineBreakLevel'
 
-import { FakeResizeObserver } from '@tests/lib/fakeResizeObserver'
+import { FakeResizeObserver, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 interface Rect {
   top: number
@@ -113,13 +113,7 @@ const FIRST_ROW: Rect = { top: 0, height: 20, width: 120 }
 const SECOND_ROW: Rect = { top: 40, height: 20, width: 120 }
 const THIRD_ROW: Rect = { top: 60, height: 20, width: 120 }
 
-beforeEach(() => {
-  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
-})
-
-afterEach(() => {
-  FakeResizeObserver.instances = []
-})
+useFakeResizeObserver(FakeResizeObserver)
 
 test('level 0: every block shares one row and the title is a single line', () => {
   const { level } = setupHeaderLineBreakLevel({

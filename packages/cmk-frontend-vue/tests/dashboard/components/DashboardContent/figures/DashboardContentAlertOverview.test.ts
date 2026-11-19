@@ -4,18 +4,16 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fromDate } from '@internationalized/date'
-import { screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import DashboardContentAlertOverview from '@/dashboard/components/DashboardContent/figures/DashboardContentAlertOverview.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import type { AlertOverview, AlertOverviewContent } from '@/dashboard/types/widget'
 
-import {
-  renderComputedWidget,
-  useComputeWidgetEndpoint
-} from '@tests/dashboard/computeWidgetEndpoint'
+import { useComputeWidgetEndpoint } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
+import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 const OTHER_RANGE = {
   from: fromDate(new Date('2026-01-02T00:00:00Z'), 'UTC'),
@@ -47,16 +45,17 @@ const FIXED_WINDOW: AlertOverviewContent = {
 }
 
 const endpoint = useComputeWidgetEndpoint<AlertOverview>('compute-alert-overview', () => VALUE)
+useFakeResizeObserver(resizeObserverReporting(400, 200))
 
-async function renderWidget(
+function renderWidget(
   props: ContentProps<AlertOverviewContent> = makeContentProps(FOLLOWS_DASHBOARD)
 ) {
-  return renderComputedWidget(DashboardContentAlertOverview, props)
+  return render(DashboardContentAlertOverview, { props })
 }
 
 describe('DashboardContentAlertOverview', () => {
   it('requests the explicit widget with the dashboard time range', async () => {
-    await renderWidget()
+    renderWidget()
 
     await waitFor(() =>
       expect(endpoint.requests).toEqual([
@@ -69,13 +68,13 @@ describe('DashboardContentAlertOverview', () => {
   })
 
   it('draws the alerts as delivered by the backend', async () => {
-    await renderWidget()
+    renderWidget()
 
     expect(await screen.findByRole('figure', { name: '1 object with alerts' })).toBeInTheDocument()
   })
 
   it('fetches again when the dashboard range changes and the widget follows it', async () => {
-    const { rerender } = await renderWidget(makeContentProps(FOLLOWS_DASHBOARD))
+    const { rerender } = renderWidget(makeContentProps(FOLLOWS_DASHBOARD))
 
     await rerender(makeContentProps(FOLLOWS_DASHBOARD, { range: OTHER_RANGE }))
 
@@ -83,7 +82,7 @@ describe('DashboardContentAlertOverview', () => {
   })
 
   it('does not fetch again when the dashboard range changes under a fixed window', async () => {
-    const { rerender } = await renderWidget(makeContentProps(FIXED_WINDOW))
+    const { rerender } = renderWidget(makeContentProps(FIXED_WINDOW))
 
     await rerender(makeContentProps(FIXED_WINDOW, { range: OTHER_RANGE }))
     await rerender(makeContentProps(FIXED_WINDOW, { range: OTHER_RANGE, tick: 1 }))

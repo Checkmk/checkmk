@@ -24,7 +24,11 @@ import {
 import { fitColumnsToContent } from '@/monitoring/shared/components/contentColumns'
 import type { FetchState, MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
-import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
+import {
+  FakeResizeObserver,
+  deliverSize,
+  useFakeResizeObserver
+} from '@tests/lib/fakeResizeObserver'
 
 const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
 const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
@@ -736,6 +740,8 @@ describe('a column that fits its header', () => {
   // position 6px.
   let textWidth: number
 
+  useFakeResizeObserver(FakeResizeObserver)
+
   function resizeHeader(): void {
     const thead = document.querySelector('thead')!
     FakeResizeObserver.instances.find((observer) => observer.observed.has(thead))!.fire()
@@ -743,7 +749,6 @@ describe('a column that fits its header', () => {
 
   beforeEach(() => {
     textWidth = 50
-    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
     const elementRect = HTMLElement.prototype.getBoundingClientRect
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
       this: HTMLElement
@@ -773,8 +778,6 @@ describe('a column that fits its header', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
-    vi.unstubAllGlobals()
-    FakeResizeObserver.instances = []
   })
 
   test('grows past its minimum width when its label would be cut', async () => {
@@ -857,14 +860,7 @@ describe('the width left beyond the minimums', () => {
     await nextTick()
   }
 
-  beforeEach(() => {
-    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    FakeResizeObserver.instances = []
-  })
+  useFakeResizeObserver(FakeResizeObserver)
 
   test('goes to the columns in proportion to how much they grow', async () => {
     await mountSizedTable(
@@ -933,14 +929,7 @@ describe('pinned columns', () => {
     await nextTick()
   }
 
-  beforeEach(() => {
-    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    FakeResizeObserver.instances = []
-  })
+  useFakeResizeObserver(FakeResizeObserver)
 
   test('stay in place while the table scrolls', async () => {
     await mountPinnedTable(1000)
@@ -970,14 +959,7 @@ describe('a table without pinned columns', () => {
     return container
   }
 
-  beforeEach(() => {
-    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    FakeResizeObserver.instances = []
-  })
+  useFakeResizeObserver(FakeResizeObserver)
 
   const CAPPED_COLUMNS: ColumnDef<Row>[] = [
     { id: 'name', header: 'Name', enableSorting: false, minSize: 100, maxSize: 300 },

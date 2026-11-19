@@ -4,13 +4,17 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { h, nextTick } from 'vue'
 
 import WidgetFigureFrame from '@/dashboard/components/DashboardContent/figures/WidgetFigureFrame.vue'
 import type { WidgetDataState } from '@/dashboard/composables/useWidgetData'
 
-import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
+import {
+  FakeResizeObserver,
+  deliverSize,
+  useFakeResizeObserver
+} from '@tests/lib/fakeResizeObserver'
 
 const GENERAL_SETTINGS = {
   title: { text: 'Hosts', render_mode: 'with_background' as const },
@@ -31,12 +35,9 @@ async function renderFrame(state: WidgetDataState<string>, size = { width: 400, 
   return rendered
 }
 
-beforeEach(() => {
-  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
-})
+useFakeResizeObserver(FakeResizeObserver)
 
 afterEach(() => {
-  FakeResizeObserver.instances = []
   vi.useRealTimers()
 })
 

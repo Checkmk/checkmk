@@ -165,6 +165,5 @@ describe('FolderContextMenu placement', () => {
 
     // 500 (pointer) - 250 (grown menu height).
     await waitFor(() => expect(style.top).toBe('250px'))
-    vi.unstubAllGlobals()
   })
 })

@@ -4,28 +4,17 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { computed, ref } from 'vue'
 
 import FolderTreemap from '@/maps/map/foldertree/components/FolderTreemap.vue'
 import { type FolderQuery, parseFolderQuery } from '@/maps/map/foldertree/filter'
 import type { FolderTreeNode } from '@/maps/types/api'
 
+import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
+
 import { aFolderNode } from '../../support/fixtures'
 import { fakeMapsServices, provideServices } from '../../support/services'
-
-/** jsdom has no layout, so the stage reports its size the moment it is observed. */
-class StageResizeObserver {
-  constructor(private readonly onResize: ResizeObserverCallback) {}
-  observe(): void {
-    this.onResize(
-      [{ contentRect: { width: 800, height: 600 } }] as unknown as ResizeObserverEntry[],
-      this as unknown as ResizeObserver
-    )
-  }
-  unobserve(): void {}
-  disconnect(): void {}
-}
 
 /** Two hosts, reachable only through a folder whose name a search can hit. */
 const tree = (): FolderTreeNode =>
@@ -101,9 +90,7 @@ function renderTreemap(needle: string, checkmkUrl: string | null = null, root = 
 }
 
 describe('FolderTreemap', () => {
-  beforeEach(() => {
-    vi.stubGlobal('ResizeObserver', StageResizeObserver)
-  })
+  useFakeResizeObserver(resizeObserverReporting(800, 600))
 
   it('reveals a host services when the folder above it is what the search matched', async () => {
     renderTreemap('datacenter')

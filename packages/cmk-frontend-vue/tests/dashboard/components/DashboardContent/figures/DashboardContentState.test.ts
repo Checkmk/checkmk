@@ -3,18 +3,15 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import DashboardContentState from '@/dashboard/components/DashboardContent/figures/DashboardContentState.vue'
-import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import type { HostOrServiceState, StateContent } from '@/dashboard/types/widget'
 
-import {
-  renderComputedWidget,
-  useComputeWidgetEndpoint
-} from '@tests/dashboard/computeWidgetEndpoint'
+import { useComputeWidgetEndpoint } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
+import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 const HOST_STATE: HostOrServiceState = {
   links: [],
@@ -32,14 +29,15 @@ const CONTENT: StateContent = {
 }
 
 const endpoint = useComputeWidgetEndpoint<HostOrServiceState>('compute-state', () => HOST_STATE)
+useFakeResizeObserver(resizeObserverReporting(400, 200))
 
-async function renderWidget(props: ContentProps<StateContent> = makeContentProps(CONTENT)) {
-  return renderComputedWidget(DashboardContentState, props)
+function renderWidget() {
+  return render(DashboardContentState, { props: makeContentProps(CONTENT) })
 }
 
 describe('DashboardContentState', () => {
   it('requests the explicit widget', async () => {
-    await renderWidget()
+    renderWidget()
 
     await waitFor(() =>
       expect(endpoint.requests).toEqual([
@@ -49,7 +47,7 @@ describe('DashboardContentState', () => {
   })
 
   it('draws the state as delivered by the backend', async () => {
-    await renderWidget()
+    renderWidget()
 
     expect(await screen.findByText('DOWN')).toBeInTheDocument()
   })

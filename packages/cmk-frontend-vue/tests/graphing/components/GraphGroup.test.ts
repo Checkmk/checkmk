@@ -21,7 +21,12 @@ import { MAX_FIGURE_WIDTH } from '@/graphing/components/constants'
 import type { GraphDisplayOptions } from '@/graphing/types'
 
 import { FakeIntersectionObserver, reportIntersection } from '@tests/lib/fakeIntersectionObserver'
-import { FakeResizeObserver, deliverSize, deliverSizes } from '@tests/lib/fakeResizeObserver'
+import {
+  FakeResizeObserver,
+  deliverSize,
+  deliverSizes,
+  useFakeResizeObserver
+} from '@tests/lib/fakeResizeObserver'
 
 // Hoisted so the panel stub below can bake the ranges its buttons report into its template.
 const { RANGE_START, RANGE_END, PAN_TARGET, ZOOM_TARGET } = vi.hoisted(() => {
@@ -237,7 +242,6 @@ afterEach(() => {
   document.getElementById(PANEL_PADDING_STYLE_ID)?.remove()
   resetGlobalTimeState()
   vi.useRealTimers()
-  FakeResizeObserver.instances = []
 })
 
 const skeletons = (): NodeListOf<Element> => document.querySelectorAll('.graphing-graph-skeleton')
@@ -884,8 +888,9 @@ describe('GraphGroup - the height a skeleton holds', () => {
   const skeletonHeights = (): string[] =>
     Array.from(skeletons(), (skeleton) => (skeleton as HTMLElement).style.height)
 
+  useFakeResizeObserver(FakeResizeObserver)
+
   beforeEach(() => {
-    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
     vi.useFakeTimers()
   })
 

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fromDate } from '@internationalized/date'
-import { screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
@@ -13,11 +13,9 @@ import type { ContentProps } from '@/dashboard/components/DashboardContent/types
 import { useProvideDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
 import type { ComputedSingleMetric, SingleMetricContent } from '@/dashboard/types/widget'
 
-import {
-  renderComputedWidget,
-  useComputeWidgetEndpoint
-} from '@tests/dashboard/computeWidgetEndpoint'
+import { useComputeWidgetEndpoint } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
+import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 const OTHER_RANGE = {
   from: fromDate(new Date('2026-01-02T00:00:00Z'), 'UTC'),
@@ -93,11 +91,12 @@ const FIXED_WINDOW: SingleMetricContent = {
 const endpoint = useComputeWidgetEndpoint<ComputedSingleMetric>('compute-single-metric', () =>
   singleMetric()
 )
+useFakeResizeObserver(resizeObserverReporting(400, 200))
 
 async function renderWidget(
   props: ContentProps<SingleMetricContent> = makeContentProps(CURRENT_VALUE)
 ) {
-  const rendered = await renderComputedWidget(DashboardContentSingleMetric, props)
+  const rendered = render(DashboardContentSingleMetric, { props })
   await screen.findByText('801.84')
   return rendered
 }
@@ -148,7 +147,7 @@ describe('DashboardContentSingleMetric', () => {
         return () => h(DashboardContentSingleMetric, props)
       }
     })
-    const { container } = await renderComputedWidget(dashboard, {})
+    const { container } = render(dashboard)
     await screen.findByText('801.84')
 
     expect(container.querySelector('a')).toHaveAttribute(

@@ -3,15 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type RenderResult, render } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
-import { afterEach, beforeEach, vi } from 'vitest'
-import { nextTick } from 'vue'
-import { type ComponentProps } from 'vue-component-type-helpers'
-
-import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
+import { afterEach } from 'vitest'
 
 export interface ComputeWidgetEndpoint<T> {
   requests: unknown[]
@@ -36,14 +31,9 @@ export function useComputeWidgetEndpoint<T>(
     )
   )
 
-  beforeEach(() => {
-    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
-  })
   afterEach(() => {
     current = value
     requests.length = 0
-    FakeResizeObserver.instances = []
-    vi.unstubAllGlobals()
   })
 
   return {
@@ -52,15 +42,4 @@ export function useComputeWidgetEndpoint<T>(
       current = () => next
     }
   }
-}
-
-/** Renders a computed widget and gives its figure frame a measured size. */
-export async function renderComputedWidget<C>(
-  component: C,
-  props: ComponentProps<C>
-): Promise<RenderResult> {
-  const rendered = render(component, { props })
-  await nextTick()
-  deliverSize(400, 200)
-  return rendered
 }

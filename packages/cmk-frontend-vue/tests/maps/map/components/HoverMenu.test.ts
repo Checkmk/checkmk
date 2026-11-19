@@ -110,7 +110,6 @@ describe('HoverMenu placement', () => {
 
     // 480 (anchor top) - 8 (gap) - 250 (grown card height).
     await waitFor(() => expect(style.top).toBe('222px'))
-    vi.unstubAllGlobals()
   })
 })
 

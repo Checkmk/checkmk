@@ -8,7 +8,7 @@ import { render, screen, waitFor } from '@testing-library/vue'
 import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 
 import DashboardContentMonitoringTable from '@/dashboard/components/DashboardContent/DashboardContentMonitoringTable.vue'
@@ -24,7 +24,11 @@ import {
 } from '@/monitoring/shared/services/useActionFeedbackStack'
 
 import { makeContentProps } from '@tests/dashboard/contentProps'
-import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
+import {
+  FakeResizeObserver,
+  deliverSize,
+  useFakeResizeObserver
+} from '@tests/lib/fakeResizeObserver'
 
 const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions/compute-monitoring-table/invoke`
 
@@ -177,9 +181,7 @@ afterAll(() => {
   }
 })
 
-beforeEach(() => {
-  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
-})
+useFakeResizeObserver(FakeResizeObserver)
 
 afterEach(() => {
   value = VALUE
@@ -190,8 +192,6 @@ afterEach(() => {
   askedForSetupLinks = []
   hostLastCheck = SCHEDULED_AT
   vi.useRealTimers()
-  FakeResizeObserver.instances = []
-  vi.unstubAllGlobals()
 })
 
 /** Renders the widget on a page that tells how the actions run in it go, as a dashboard does. */

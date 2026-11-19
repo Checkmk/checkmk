@@ -3,18 +3,15 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import DashboardContentInventory from '@/dashboard/components/DashboardContent/figures/DashboardContentInventory.vue'
-import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import type { InventoryAttribute, InventoryContent } from '@/dashboard/types/widget'
 
-import {
-  renderComputedWidget,
-  useComputeWidgetEndpoint
-} from '@tests/dashboard/computeWidgetEndpoint'
+import { useComputeWidgetEndpoint } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
+import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 const ATTRIBUTE: InventoryAttribute = {
   links: [],
@@ -29,14 +26,15 @@ const CONTENT: InventoryContent = {
 }
 
 const endpoint = useComputeWidgetEndpoint<InventoryAttribute>('compute-inventory', () => ATTRIBUTE)
+useFakeResizeObserver(resizeObserverReporting(400, 200))
 
-async function renderWidget(props: ContentProps<InventoryContent> = makeContentProps(CONTENT)) {
-  return renderComputedWidget(DashboardContentInventory, props)
+function renderWidget() {
+  return render(DashboardContentInventory, { props: makeContentProps(CONTENT) })
 }
 
 describe('DashboardContentInventory', () => {
   it('requests the explicit widget', async () => {
-    await renderWidget()
+    renderWidget()
 
     await waitFor(() =>
       expect(endpoint.requests).toEqual([
@@ -46,7 +44,7 @@ describe('DashboardContentInventory', () => {
   })
 
   it('draws the attribute as delivered by the backend', async () => {
-    await renderWidget()
+    renderWidget()
 
     expect(await screen.findByText('8')).toBeInTheDocument()
   })

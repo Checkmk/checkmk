@@ -4,12 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render } from '@testing-library/vue'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { type Ref, defineComponent, h, nextTick, ref } from 'vue'
 
 import { type PresetOverflow, usePresetOverflow } from '@/lib/usePresetOverflow'
 
-import { FakeResizeObserver } from '@tests/lib/fakeResizeObserver'
+import { FakeResizeObserver, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 function stubGeometry(
   el: HTMLElement,
@@ -96,13 +96,7 @@ function setupOverflow(
   return { api, fire, setReplica, presetsRef, ids }
 }
 
-beforeEach(() => {
-  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
-})
-
-afterEach(() => {
-  FakeResizeObserver.instances = []
-})
+useFakeResizeObserver(FakeResizeObserver)
 
 describe('usePresetOverflow', () => {
   test('all chips fit → all visible, no overflow, replica width ignored', () => {

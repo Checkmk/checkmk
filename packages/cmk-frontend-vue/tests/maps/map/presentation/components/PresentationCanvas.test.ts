@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 import PresentationCanvas from '@/maps/map/presentation/components/PresentationCanvas.vue'
@@ -20,6 +20,8 @@ import type {
   ShapeElement,
   TextElement
 } from '@/maps/types/api'
+
+import { FakeResizeObserver, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 import { aMap, aState, newMapView } from '../../../support/fixtures'
 import { mapsGlobal } from '../../../support/services'
@@ -85,18 +87,8 @@ const editStubs = {
 const connectorStubs = { PresentationConnector: true, PresentationConnectorLabels: true }
 
 describe('PresentationCanvas', () => {
-  beforeEach(() => {
-    // useSlideViewport observes the viewport for zoom-to-fit; jsdom has no
-    // ResizeObserver, and the canvas never needs real layout here.
-    vi.stubGlobal(
-      'ResizeObserver',
-      class {
-        observe() {}
-        unobserve() {}
-        disconnect() {}
-      }
-    )
-  })
+  useFakeResizeObserver(FakeResizeObserver)
+
   afterEach(() => {
     sessionStorage.clear()
   })

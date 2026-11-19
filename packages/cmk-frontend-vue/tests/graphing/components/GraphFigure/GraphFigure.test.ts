@@ -12,7 +12,7 @@ import { type PropType, type VNode, defineComponent, h, nextTick, onMounted, ref
 import GraphFigure from '@/graphing/components/GraphFigure/GraphFigure.vue'
 import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
 
-import { FakeResizeObserver, resizeObserverReporting } from '@tests/lib/fakeResizeObserver'
+import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 // The mock stands in for the view-only renderer: the buttons replay its zoom/pan/reset/pin
 // intent emits so the tests can drive the figure's interaction wiring.
@@ -124,10 +124,11 @@ const FETCHED = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
 
+useFakeResizeObserver(resizeObserverReporting(800, 200))
+
 beforeEach(() => {
   // The mocked pin is a module-level singleton, so it has to be cleared between tests.
   useGlobalPin().clearPin()
-  vi.stubGlobal('ResizeObserver', resizeObserverReporting(800, 200))
   postSpy = vi.spyOn(client, 'POST')
   postSpy.mockResolvedValue({
     data: FETCHED,
@@ -138,7 +139,6 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers()
-  FakeResizeObserver.instances = []
 })
 
 const loadingIcon = (): Element | null =>

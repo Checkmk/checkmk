@@ -3,18 +3,15 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import DashboardContentBarplot from '@/dashboard/components/DashboardContent/figures/DashboardContentBarplot.vue'
-import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import type { Barplot, BarplotContent } from '@/dashboard/types/widget'
 
-import {
-  renderComputedWidget,
-  useComputeWidgetEndpoint
-} from '@tests/dashboard/computeWidgetEndpoint'
+import { useComputeWidgetEndpoint } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
+import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 const BARPLOT: Barplot = {
   links: [],
@@ -44,14 +41,15 @@ const CONTENT: BarplotContent = {
 }
 
 const endpoint = useComputeWidgetEndpoint<Barplot>('compute-barplot', () => BARPLOT)
+useFakeResizeObserver(resizeObserverReporting(400, 200))
 
-async function renderWidget(props: ContentProps<BarplotContent> = makeContentProps(CONTENT)) {
-  return renderComputedWidget(DashboardContentBarplot, props)
+function renderWidget() {
+  return render(DashboardContentBarplot, { props: makeContentProps(CONTENT) })
 }
 
 describe('DashboardContentBarplot', () => {
   it('requests the explicit widget', async () => {
-    await renderWidget()
+    renderWidget()
 
     await waitFor(() =>
       expect(endpoint.requests).toEqual([
@@ -61,7 +59,7 @@ describe('DashboardContentBarplot', () => {
   })
 
   it('draws the bars as delivered by the backend', async () => {
-    await renderWidget()
+    renderWidget()
 
     expect(await screen.findByRole('img', { name: 'myhost: 40%' })).toBeInTheDocument()
   })

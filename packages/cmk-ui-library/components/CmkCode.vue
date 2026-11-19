@@ -78,6 +78,7 @@ const containerClasses = computed(() => ({
       <CmkCopy :text="codeText">
         <CmkIconButton
           name="cmkcode-copied"
+          :title="_t('Copy to clipboard')"
           size="xxlarge"
           class="copy_button"
           :data-testId="copyButtonTestId"

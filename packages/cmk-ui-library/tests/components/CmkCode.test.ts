@@ -44,3 +44,12 @@ test('code updates when its content and collapsible setting change', async () =>
   expect(screen.queryByText(/last: line/)).not.toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Show more' })).toBeVisible()
 })
+
+test('copies the code to the clipboard', async () => {
+  const user = userEvent.setup()
+  render(CmkCode, { props: { codeText } })
+
+  await user.click(screen.getByRole('button', { name: 'Copy to clipboard' }))
+
+  expect(await navigator.clipboard.readText()).toBe(codeText)
+})

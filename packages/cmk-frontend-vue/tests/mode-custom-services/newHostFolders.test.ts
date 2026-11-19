@@ -28,7 +28,8 @@ function resolved(
     unmatched_host_names: unmatchedHostNames,
     hidden_match_count: 0,
     truncated: false,
-    creatable_folders: creatableFolders
+    creatable_folders: creatableFolders,
+    host_creation_refusal: null
   }
   return { status: 'resolved', resolution }
 }

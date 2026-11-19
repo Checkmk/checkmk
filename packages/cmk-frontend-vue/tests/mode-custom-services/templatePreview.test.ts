@@ -25,7 +25,8 @@ const RESOLUTION = {
   unmatched_host_names: ['pod-search'],
   hidden_match_count: 0,
   truncated: false,
-  creatable_folders: [{ path: '/', title: 'Main' }]
+  creatable_folders: [{ path: '/', title: 'Main' }],
+  host_creation_refusal: null
 }
 
 let requests: unknown[] = []

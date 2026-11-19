@@ -907,6 +907,25 @@ class Site:
         helper_file = caller_file.parent / name
         return PythonHelper(self, helper_file)
 
+    def delete_qs_config_bundle(self, bundle_id: str) -> subprocess.CompletedProcess[str]:
+        """Delete a quick setup configuration bundle and all objects it owns.
+
+        Exit 0: deleted; 1: absent (acceptable after a partial setup).
+        Raises ``RuntimeError`` for any other exit code.
+        """
+        logger.info("Deleting quick setup bundle: %r", bundle_id)
+        result = self.python_helper("_helper_delete_qs_config_bundle.py").run(
+            args=[bundle_id], check=False
+        )
+        if result.returncode == 1:
+            logger.debug("Quick setup bundle %r did not exist! No need to delete ...", bundle_id)
+        elif result.returncode != 0:
+            raise RuntimeError(
+                f"Bundle deletion for {bundle_id!r} failed (exit {result.returncode}):\n"
+                f"{result.stderr}"
+            )
+        return result
+
     def omd(self, mode: str, *args: str, check: bool = False) -> subprocess.CompletedProcess[str]:
         """run the "omd" command with the given mode and arguments.
 

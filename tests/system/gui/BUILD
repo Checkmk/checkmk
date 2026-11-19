@@ -43,7 +43,6 @@ py_library(
             "//non-free/tests/testlib/system:data_backend",
             "//non-free/tests/testlib/system:telemetry_custom_services",
             "//non-free/tests/testlib/system/licensing",
-            "//packages/cmk-wsgi",
         ],
         "//:gpl_repo": [],
     }),

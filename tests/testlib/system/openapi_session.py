@@ -62,6 +62,7 @@ from cmk.relay_protocols.tasks import (
     TaskResponse,
 )
 from cmk.utils.keypair_store import KeyId
+from tests.testlib.common.utils import wait_until
 from tests.testlib.common.version import CMKVersion, TypeCMKEdition
 
 logger = logging.getLogger("rest-session")
@@ -91,6 +92,10 @@ class NoActiveChanges(RestSessionException):
 
 
 class AuthorizationFailed(RestSessionException):
+    pass
+
+
+class QuickSetupAlreadyRunning(RestSessionException):
     pass
 
 
@@ -183,6 +188,7 @@ class CMKOpenApiSession(requests.Session):
         self.autocomplete = AutocompleteAPI(self)
         self.custom_service = CustomServiceAPI(self)
         self.alerts = AlertsAPI(self)
+        self.quick_setup = QuickSetupAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -3002,3 +3008,99 @@ class AlertsAPI(BaseAPI):
             return
         if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
+
+
+class QuickSetupAPI(BaseAPI):
+    """REST API client for Quick Setup operations.
+
+    Run a quick setup action and wait until the resulting background job completes.
+    The background job could result in successful completion or exceptions.
+    """
+
+    def run_action_and_wait(
+        self,
+        quick_setup_id: str,
+        payload: dict[str, Any],
+        timeout: int = 120,
+    ) -> Any:
+        """POST the quick setup action and block until the background job finishes.
+
+        Raises ``RuntimeError`` if the job ends in state ``"exception"``
+        or the action result contains stage errors.
+        Raises ``TimeoutError`` if the job has not finished within *timeout* seconds.
+        Raises ``AuthorizationFailed`` on 403.
+        Raises ``QuickSetupAlreadyRunning`` on 429.
+        Raises ``UnexpectedResponse`` for unexpected HTTP status codes.
+        """
+        logger.info("QS: creating configuration with quick setup id %r", quick_setup_id)
+        response = self.session.post(
+            f"objects/quick_setup/{quick_setup_id}/actions/run-action/invoke",
+            json=payload,
+            allow_redirects=False,
+        )
+
+        match response.status_code:
+            case HTTPStatus.CREATED:
+                return response.json()
+            case HTTPStatus.FOUND | HTTPStatus.SEE_OTHER:
+                pass
+            case HTTPStatus.BAD_REQUEST:
+                raise UnexpectedResponse.from_response(response)
+            case HTTPStatus.FORBIDDEN:
+                raise AuthorizationFailed(response.text)
+            case HTTPStatus.NOT_FOUND:
+                raise UnexpectedResponse(
+                    response.status_code,
+                    f"Quick setup {quick_setup_id!r} not found",
+                )
+            case HTTPStatus.TOO_MANY_REQUESTS:
+                raise QuickSetupAlreadyRunning(response.text)
+            case _:
+                raise UnexpectedResponse.from_response(response)
+
+        # Background job: extract job_id from the Location header.
+        location = response.headers["Location"]
+        # Location looks like …/objects/background_job/{job_id}
+        job_id = location.rstrip("/").rsplit("/", 1)[-1]
+        logger.info("QS: waiting for background job %s...", job_id)
+
+        terminal_state: str = ""
+
+        def _reached_terminal_state() -> bool:
+            nonlocal terminal_state
+            job = self.session.background_jobs.show(job_id)
+            terminal_state = job.get("extensions", {}).get("status", {}).get("state", "")
+            return terminal_state in ("finished", "exception", "stopped")
+
+        wait_until(
+            _reached_terminal_state,
+            timeout=timeout,
+            interval=1,
+            condition_name=f"QS background job {job_id!r}",
+        )
+
+        if terminal_state == "stopped":
+            raise RuntimeError(f"QS: background job {job_id!r} was stopped!")
+
+        result = self._get_action_result(job_id)
+        if exc := result.get("background_job_exception"):
+            raise RuntimeError(
+                f"Quick setup background job {job_id!r} ended with exception:\n"
+                f"{exc['message']}\n{exc['traceback']}"
+            )
+        if errors := result.get("all_stage_errors"):
+            raise RuntimeError(
+                f"Quick setup background job {job_id!r} finished with stage errors:\n{errors}"
+            )
+
+        logger.info("QS: background job %r finished successfully.", job_id)
+        return result
+
+    def _get_action_result(self, job_id: str) -> Any:
+        response = self.session.get(
+            f"objects/quick_setup_action_result/{job_id}",
+            headers={"Content-Type": "application/json"},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response.json()

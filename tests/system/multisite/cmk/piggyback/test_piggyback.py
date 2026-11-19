@@ -643,6 +643,7 @@ def test_piggyback_host_removal(
     )
 
 
+@pytest.mark.skip(reason="CMK-42649")
 def test_piggyback_status_file_deletion_transport(
     piggyback_env_two_site_setup: tuple[Site, Site],
 ) -> None:

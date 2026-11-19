@@ -4266,6 +4266,15 @@ checkgroup_parameters['hp_msa_psu_voltage'] = [
 
 checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 
+checkgroup_parameters.setdefault('hp_proliant_da_cntlr', [])
+
+checkgroup_parameters['hp_proliant_da_cntlr'] = [
+{'id': '0c8eed06-430e-4eb2-adc5-5531e4d7aed6', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+] + checkgroup_parameters['hp_proliant_da_cntlr']
+
+
+checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
+
 checkgroup_parameters.setdefault('hpux_multipath', [])
 
 checkgroup_parameters['hpux_multipath'] = [
@@ -11719,6 +11728,15 @@ static_checks.setdefault('hp_msa_psu_voltage', [])
 static_checks['hp_msa_psu_voltage'] = [
 {'id': 'ef0de888-c737-4036-87b3-1b6d364d39f9', 'value': ('hp_msa_psu_sensor', '', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['hp_msa_psu_voltage']
+
+
+static_checks = locals().setdefault('static_checks', {})
+
+static_checks.setdefault('hp_proliant_da_cntlr', [])
+
+static_checks['hp_proliant_da_cntlr'] = [
+{'id': '87c58aa2-5eb4-47ab-9980-34b7dd3f60e2', 'value': ('hp_proliant_da_cntlr', '0', {}), 'condition': {}, 'options': {'disabled': False}},
+] + static_checks['hp_proliant_da_cntlr']
 
 
 static_checks = locals().setdefault('static_checks', {})

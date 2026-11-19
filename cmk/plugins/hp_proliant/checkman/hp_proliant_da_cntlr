@@ -11,7 +11,8 @@ description:
  to be installed on the monitored systems.
 
  The check monitors the reported state of the RAID controllers in
- HPE Proliant Servers.
+ HPE Proliant Servers. The rule "HPE ProLiant RAID controller" sets the
+ monitoring state for each reported condition and status.
 
  This check has been developed with ProLiant DL360 G5 systems but should work
  on other HPE Proliant Servers too.

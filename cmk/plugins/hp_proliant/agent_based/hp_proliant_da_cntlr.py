@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import NamedTuple, Self
+from typing import NamedTuple, Self, TypedDict
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -163,6 +163,19 @@ _BOARD_STATUS_STATES: Mapping[SNMPState, State] = {
 }
 
 
+class Params(TypedDict):
+    condition: Mapping[str, int]
+    board_condition: Mapping[str, int]
+    board_status: Mapping[str, int]
+
+
+DEFAULT_PARAMETERS: Params = {
+    "condition": {value.value: state.value for value, state in _CONDITION_STATES.items()},
+    "board_condition": {value.value: state.value for value, state in _CONDITION_STATES.items()},
+    "board_status": {value.value: state.value for value, state in _BOARD_STATUS_STATES.items()},
+}
+
+
 OTHER_STATE_DESCRIPTION = (
     "The instrument agent does not recognize the status of the controller. "
     "You may need to upgrade the instrument agent."
@@ -178,18 +191,31 @@ def discovery_hp_proliant_da_cntlr(section: ParsedSection) -> DiscoveryResult:
         yield from (Service(item=item) for item in section)
 
 
-def check_hp_proliant_da_cntlr(item: ControllerID, section: ParsedSection) -> CheckResult:
+def check_hp_proliant_da_cntlr(
+    item: ControllerID, params: Params, section: ParsedSection
+) -> CheckResult:
     if not (controller := section.get(item)):
         yield Result(state=State.UNKNOWN, summary="Controller not found in SNMP data")
         return
 
-    yield Result(state=_CONDITION_STATES[controller.cond], summary=f"Condition: {controller.cond}")
+    # Rule merging is only applied to the top-level elements.
+    condition_states = {**DEFAULT_PARAMETERS["condition"], **params["condition"]}
+    board_condition_states = {
+        **DEFAULT_PARAMETERS["board_condition"],
+        **params["board_condition"],
+    }
+    board_status_states = {**DEFAULT_PARAMETERS["board_status"], **params["board_status"]}
+
     yield Result(
-        state=_CONDITION_STATES[controller.b_cond],
+        state=State(condition_states[controller.cond]),
+        summary=f"Condition: {controller.cond}",
+    )
+    yield Result(
+        state=State(board_condition_states[controller.b_cond]),
         summary=f"Board-Condition: {controller.b_cond}",
     )
     yield Result(
-        state=_BOARD_STATUS_STATES[controller.b_status],
+        state=State(board_status_states[controller.b_status]),
         summary=f"Board-Status: {controller.b_status.replace('_', ' ')}",
     )
 
@@ -221,4 +247,6 @@ check_plugin_hp_proliant_da_cntlr = CheckPlugin(
     service_name="HW Controller %s",
     discovery_function=discovery_hp_proliant_da_cntlr,
     check_function=check_hp_proliant_da_cntlr,
+    check_default_parameters=DEFAULT_PARAMETERS,
+    check_ruleset_name="hp_proliant_da_cntlr",
 )

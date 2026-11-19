@@ -8,9 +8,11 @@ import type { Row } from '@tanstack/vue-table'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, inject } from 'vue'
 
+import { checkAgeEmphasis, stateAgeEmphasis } from '@/monitoring/shared/ageEmphasis'
 import type { HostEntry, HostRef, ServiceState } from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import AgeCell from '@/monitoring/shared/components/cell/AgeCell.vue'
 import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
 import IndicatorCell from '@/monitoring/shared/components/cell/IndicatorCell.vue'
@@ -199,11 +201,17 @@ const lastStateChange = computed(() =>
   <StringCell v-if="hasColumn('folder')" column-id="folder" :value="row.folder" />
   <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="row.site_id" />
 
-  <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />
-  <StringCell
+  <AgeCell
+    v-if="hasColumn('last_check')"
+    column-id="last_check"
+    :value="lastCheck"
+    :emphasis="checkAgeEmphasis(row.stale)"
+  />
+  <AgeCell
     v-if="hasColumn('last_state_change')"
     column-id="last_state_change"
     :value="lastStateChange"
+    :emphasis="stateAgeEmphasis(row.last_state_change, displayOptions.timestampFormat)"
   />
   <LabelCell
     v-if="hasColumn('labels')"
@@ -323,10 +331,3 @@ const lastStateChange = computed(() =>
     @select="onActionSelect"
   />
 </template>
-
-<style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.monitoring-base-cell {
-  color: var(--font-color-secondary);
-}
-</style>

@@ -11,6 +11,7 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, inject } from 'vue'
 
 import { AI_EXPLAIN_ACTION_ID } from '@/monitoring/host-services/aiExplain'
+import { checkAgeEmphasis, stateAgeEmphasis } from '@/monitoring/shared/ageEmphasis'
 import type {
   HostRef,
   HostServiceEntry,
@@ -20,6 +21,7 @@ import type {
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import AgeCell from '@/monitoring/shared/components/cell/AgeCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
 import HostCell from '@/monitoring/shared/components/cell/HostCell.vue'
 import IndicatorCell from '@/monitoring/shared/components/cell/IndicatorCell.vue'
@@ -242,12 +244,18 @@ const groupAction = narrowing.actionFor(groupCondition)
     />
     <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="host.site_id" />
   </template>
-  <StringCell
+  <AgeCell
     v-if="hasColumn('last_state_change')"
     column-id="last_state_change"
     :value="lastStateChange"
+    :emphasis="stateAgeEmphasis(row.last_state_change, displayOptions.timestampFormat)"
   />
-  <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />
+  <AgeCell
+    v-if="hasColumn('last_check')"
+    column-id="last_check"
+    :value="lastCheck"
+    :emphasis="checkAgeEmphasis(row.stale)"
+  />
   <LabelCell
     v-if="hasColumn('labels')"
     column-id="labels"
@@ -305,10 +313,3 @@ const groupAction = narrowing.actionFor(groupCondition)
     @select="onActionSelect"
   />
 </template>
-
-<style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.monitoring-base-cell {
-  color: var(--font-color-secondary);
-}
-</style>

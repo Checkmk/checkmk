@@ -6,7 +6,7 @@
 import type { ColumnDef } from '@tanstack/vue-table'
 import { type ComputedRef, type Ref, computed, shallowRef, watch } from 'vue'
 
-import { longestTimestampShape } from '@/monitoring/shared/formatTimestamp'
+import { FORMATS_SHOWING_AGES, longestTimestampShape } from '@/monitoring/shared/formatTimestamp'
 import type { DisplayOptions, TimestampFormatId } from '@/monitoring/shared/types'
 
 import { CELL_PADDING, SUBPIXEL_SLACK } from './MonitoringTableContext'
@@ -14,8 +14,6 @@ import { CELL_PADDING, SUBPIXEL_SLACK } from './MonitoringTableContext'
 export type TextWidth = (text: string) => number
 
 const DIGITS = '0123456789'
-
-const FORMATS_SHOWING_AGES: ReadonlySet<TimestampFormatId> = new Set(['rel', 'mixed', 'both'])
 
 /**
  * Measures text in the font of the table's cells, read from a probe cell within `reference`, which

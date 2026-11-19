@@ -13,6 +13,9 @@ import { spellStateMarkers } from '@/monitoring/shared/spellStateMarkers'
 import PluginOutput from '../PluginOutput.vue'
 import BaseCell, { type CellLink, type CellVerticalAlign } from './BaseCell.vue'
 
+/** A text colour other than the regular one. */
+export type StringCellTone = 'secondary' | 'error'
+
 const props = withDefaults(
   defineProps<{
     value: string | undefined
@@ -27,6 +30,7 @@ const props = withDefaults(
     titleOnlyWhenCut?: boolean | undefined
     /** Renders the state markers a check embeds in its output, for a cell showing one. */
     stateMarkers?: boolean | undefined
+    tone?: StringCellTone | undefined
   }>(),
   { linkedTo: undefined }
 )
@@ -68,6 +72,7 @@ function measureCut(event: MouseEvent): void {
         :title="title"
         class="monitoring-string-cell__text"
         :class="{
+          [`monitoring-string-cell__text--${tone}`]: tone !== undefined,
           'monitoring-string-cell__text--empty-string': display === 'n/a' || display === emptyLabel
         }"
         @mouseenter="titleOnlyWhenCut && measureCut($event)"
@@ -94,6 +99,15 @@ function measureCut(event: MouseEvent): void {
   overflow: hidden;
   overflow-wrap: anywhere;
 
+  &.monitoring-string-cell__text--secondary {
+    color: var(--font-color-secondary);
+  }
+
+  &.monitoring-string-cell__text--error {
+    color: var(--status-text-color-error-strong);
+  }
+
+  /* After the tones, so an empty value looks empty whatever its tone. */
   &.monitoring-string-cell__text--empty-string {
     font-style: italic;
     color: var(--font-color-dimmed);

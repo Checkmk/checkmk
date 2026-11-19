@@ -126,6 +126,36 @@ test('renders last state change before last check, matching the legacy view', ()
   expect(lastCheckIndex).toBeGreaterThan(lastStateChangeIndex)
 })
 
+function ageText(container: Element, columnId: string): Element | null {
+  return container.querySelector(`[data-column-id="${columnId}"] .monitoring-string-cell__text`)
+}
+
+test('dims the age columns of a service whose ages need no attention', () => {
+  const { container } = mountRow(makeService())
+
+  for (const columnId of ['last_state_change', 'last_check']) {
+    expect(ageText(container, columnId)).toHaveClass('monitoring-string-cell__text--secondary')
+  }
+})
+
+test('flags the check age of a stale service', () => {
+  const { container } = mountRow(makeService({ stale: true }))
+
+  expect(ageText(container, 'last_check')).toHaveClass('monitoring-string-cell__text--error')
+})
+
+test('emphasises the state age of a service that changed its state just now', () => {
+  const { container } = mountRow(
+    makeService({ last_state_change: Date.now() / 1000 - 60 }),
+    makeTableRow(),
+    { displayOptions: { ...DISPLAY_OPTIONS, timestampFormat: 'rel' } }
+  )
+
+  expect(ageText(container, 'last_state_change')).not.toHaveClass(
+    'monitoring-string-cell__text--secondary'
+  )
+})
+
 test('renders the state markers of the summary as badges', () => {
   const { container } = mountRow(makeService({ summary: 'load: 3.1(!), temp: 90(!!)' }))
 

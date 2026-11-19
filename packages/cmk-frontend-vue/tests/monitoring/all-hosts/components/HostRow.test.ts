@@ -59,6 +59,7 @@ function makeTableRow(overrides: Partial<Row<HostEntry>> = {}): Row<HostEntry> {
 }
 
 interface RowActionProps {
+  displayOptions?: DisplayOptions
   readOnly?: boolean
   rowActions?: CellAction[]
   loadActionMenu?: () => Promise<CellAction[]>
@@ -172,6 +173,36 @@ test('dashes out the timestamps of a host that has never been checked', () => {
   mountRow(makeHost({ last_check: null, last_state_change: null }))
 
   expect(screen.getAllByText('–')).toHaveLength(2)
+})
+
+function ageText(container: Element, columnId: string): Element | null {
+  return container.querySelector(`[data-column-id="${columnId}"] .monitoring-string-cell__text`)
+}
+
+test('dims the age columns of a host whose ages need no attention', () => {
+  const { container } = mountRow(makeHost())
+
+  for (const columnId of ['last_state_change', 'last_check']) {
+    expect(ageText(container, columnId)).toHaveClass('monitoring-string-cell__text--secondary')
+  }
+})
+
+test('flags the check age of a stale host', () => {
+  const { container } = mountRow(makeHost({ stale: true }))
+
+  expect(ageText(container, 'last_check')).toHaveClass('monitoring-string-cell__text--error')
+})
+
+test('emphasises the state age of a host that changed its state just now', () => {
+  const { container } = mountRow(
+    makeHost({ last_state_change: Date.now() / 1000 - 60 }),
+    makeTableRow(),
+    { displayOptions: { ...DISPLAY_OPTIONS, timestampFormat: 'rel' } }
+  )
+
+  expect(ageText(container, 'last_state_change')).not.toHaveClass(
+    'monitoring-string-cell__text--secondary'
+  )
 })
 
 test('emits open with the host when the name cell button is clicked', async () => {

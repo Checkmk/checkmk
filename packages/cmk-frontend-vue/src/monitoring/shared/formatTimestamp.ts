@@ -5,7 +5,14 @@
  */
 import { renderDate, renderTimeOfDay } from 'cmk-ui-library/lib/renderTime'
 
-import type { DateFormatId, DisplayOptions } from '@/monitoring/shared/types'
+import type { DateFormatId, DisplayOptions, TimestampFormatId } from '@/monitoring/shared/types'
+
+/** The timestamp formats that show an age, not just a date or epoch seconds. */
+export const FORMATS_SHOWING_AGES: ReadonlySet<TimestampFormatId> = new Set([
+  'rel',
+  'mixed',
+  'both'
+])
 
 function formatDate(unixSeconds: number, format: DateFormatId): string {
   const [year, month, day] = renderDate(unixSeconds).split('-')

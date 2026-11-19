@@ -12,7 +12,9 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     /// Enable verbose output. Use once (-v) for logging level INFO and twice (-vv) for logging
     /// level DEBUG.
-    #[arg(short, long, action = clap::ArgAction::Count)]
+    // clap does not add up the occurrences before and after the mode. If both
+    // positions carry the flag, the count after the mode applies.
+    #[arg(short, long, global = true, action = clap::ArgAction::Count)]
     verbose: u8,
 
     #[command(subcommand)]
@@ -324,6 +326,23 @@ impl Cli {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_verbosity_is_accepted_before_the_mode() {
+        assert_eq!(
+            Cli::parse_from(["cmk-agent-ctl", "-vv", "dump"]).logging_level(),
+            "debug"
+        );
+    }
+
+    #[test]
+    fn test_verbosity_is_accepted_after_the_options_of_a_mode() {
+        assert_eq!(
+            Cli::parse_from(["cmk-agent-ctl", "status", "--no-query-remote", "-vv"])
+                .logging_level(),
+            "debug"
+        );
+    }
 
     #[test]
     fn test_logging_level() {

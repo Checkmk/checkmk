@@ -27,8 +27,8 @@ _RRD = RRDMetric(
 )
 
 
-def _built_graph(vertical_range: MinimalRange) -> BuiltGraph:
-    unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
+def _built_graph(vertical_range: MinimalRange, unit_symbol: str = "X") -> BuiltGraph:
+    unit = Unit(notation=DecimalNotation(unit_symbol), precision=AutoPrecision(2))
     return BuiltGraph(
         graph=Graph(
             name="mygraph",
@@ -63,3 +63,21 @@ def test_the_axis_leaves_out_a_minimal_bound_only_the_data_resolves() -> None:
     )
     assert y_axis is not None
     assert y_axis.vertical_range == ApiMinimalRange(type="minimal", min=0.0, max=ApiOmitted())
+
+
+def test_the_axis_converts_its_range_to_the_unit_of_the_drawn_metrics() -> None:
+    y_axis = ApiYAxis.from_built(
+        _built_graph(MinimalRange(lower=0.0, upper=100.0), unit_symbol="°C"),
+        TemperatureUnit.FAHRENHEIT,
+    )
+    assert y_axis is not None
+    assert y_axis.vertical_range == ApiMinimalRange(type="minimal", min=32.0, max=212.0)
+
+
+def test_the_axis_leaves_out_the_unit_the_graph_does_not_name() -> None:
+    y_axis = ApiYAxis.from_built(
+        _built_graph(MinimalRange(lower=0.0, upper=100.0), unit_symbol="°C"),
+        TemperatureUnit.FAHRENHEIT,
+    )
+    assert y_axis is not None
+    assert y_axis.unit == ApiOmitted()

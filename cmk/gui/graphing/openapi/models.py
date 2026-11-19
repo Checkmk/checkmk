@@ -284,12 +284,17 @@ class ApiYAxis:
         axis_range = built.y_axis_range()
         if built.y_axis_unit is None and axis_range is None:
             return None
+        resolved_unit = built.resolved_y_axis_unit()
         unit_format: UnitFormat | None = None
         conversion: Callable[[float], float] = lambda value: value
-        if built.y_axis_unit is not None:
-            unit_format, conversion = user_unit_format(built.y_axis_unit, temperature_unit)
+        if resolved_unit is not None:
+            unit_format, conversion = user_unit_format(resolved_unit, temperature_unit)
         return cls(
-            unit=(ApiOmitted() if unit_format is None else ApiUnitFormat.from_shared(unit_format)),
+            unit=(
+                ApiOmitted()
+                if built.y_axis_unit is None or unit_format is None
+                else ApiUnitFormat.from_shared(unit_format)
+            ),
             vertical_range=_api_vertical_range(axis_range, conversion),
         )
 

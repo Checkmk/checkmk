@@ -72,7 +72,8 @@ class EBSAttachment:
 
 @dataclass(frozen=True)
 class ClassicLoadBalancer:
-    dns_name: str
+    name: str
+    arn: str  # Constructed from the name by us, the API doesn't include it.
 
 
 @dataclass(frozen=True)
@@ -171,7 +172,7 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost:
         case EBSAttachment():
             return _ebs_attachment_host(resource, naming.account)
         case ClassicLoadBalancer():
-            return _classic_load_balancer_host(resource)
+            return _classic_load_balancer_host(resource, naming.non_ec2)
         case LoadBalancerV2():
             return _load_balancer_v2_host(resource, naming.non_ec2)
         case DynamoDBTable():
@@ -244,8 +245,12 @@ def _ebs_attachment_host(attachment: EBSAttachment, account_host: str | None) ->
     return attachment.instance_host
 
 
-def _classic_load_balancer_host(load_balancer: ClassicLoadBalancer) -> TargetHost:
-    return TargetHost(load_balancer.dns_name)
+def _classic_load_balancer_host(
+    load_balancer: ClassicLoadBalancer, template: NonEC2PiggybackTemplate
+) -> TargetHost:
+    return _hostname_with_hashed_arn(
+        "elasticloadbalancing_loadbalancer", load_balancer.name, load_balancer.arn, template
+    )
 
 
 def _load_balancer_v2_host(

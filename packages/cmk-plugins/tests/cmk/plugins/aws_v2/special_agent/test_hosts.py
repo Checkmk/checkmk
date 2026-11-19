@@ -116,7 +116,11 @@ def test_ec2_instance_without_a_name_has_no_host(
     ("resource", "expected"),
     [
         pytest.param(
-            ClassicLoadBalancer("elb.example.com"), "elb.example.com", id="classic load balancer"
+            ClassicLoadBalancer(
+                "elb", "arn:aws:elasticloadbalancing:eu-central-1:123456789012:loadbalancer/elb"
+            ),
+            "aws_elasticloadbalancing_loadbalancer_elb_3a50c4d7",
+            id="classic load balancer",
         ),
         pytest.param(
             LoadBalancerV2(

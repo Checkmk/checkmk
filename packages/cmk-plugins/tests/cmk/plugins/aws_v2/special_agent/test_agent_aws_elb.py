@@ -6,6 +6,7 @@
 
 from argparse import Namespace as Args
 from collections.abc import Iterator, Mapping, Sequence
+from types import SimpleNamespace
 from typing import Protocol
 
 import pytest
@@ -39,6 +40,17 @@ from .agent_aws_fake_clients import (
 )
 
 ACCOUNT_HOST = TargetHost("123456789012")
+LOAD_BALANCER_HOSTS = {
+    "LoadBalancerName-0": TargetHost(
+        "aws_elasticloadbalancing_loadbalancer_LoadBalancerName-0_fd0af55f"
+    ),
+    "LoadBalancerName-1": TargetHost(
+        "aws_elasticloadbalancing_loadbalancer_LoadBalancerName-1_31b3c73e"
+    ),
+    "LoadBalancerName-2": TargetHost(
+        "aws_elasticloadbalancing_loadbalancer_LoadBalancerName-2_af6db882"
+    ),
+}
 
 
 class Paginator:
@@ -59,6 +71,8 @@ class Paginator:
 
 
 class FakeELBClient:
+    meta = SimpleNamespace(partition="aws")
+
     def describe_account_limits(self) -> Mapping[str, object]:
         return {
             "Limits": ELBDescribeAccountLimitsIB.create_instances(amount=1)[0]["Limits"],
@@ -129,6 +143,8 @@ class LoadBalancersPaginator:
 
 
 class FakeManyELBClient:
+    meta = SimpleNamespace(partition="aws")
+
     def __init__(self, amount: int) -> None:
         self._load_balancers = ELBDescribeLoadBalancersIB.create_instances(amount=amount)
         self.tag_request_sizes: list[int] = []
@@ -274,9 +290,7 @@ def test_agent_aws_elb_limits_go_to_the_account_first_then_to_each_load_balancer
 
     assert [result.piggyback_hostname for result in elb_limits_results] == [
         ACCOUNT_HOST,
-        "DNSName-0",
-        "DNSName-1",
-        "DNSName-2",
+        *LOAD_BALANCER_HOSTS.values(),
     ]
 
 
@@ -288,11 +302,9 @@ def test_agent_aws_elb_metrics_go_to_the_host_of_their_load_balancer(
 
     elb_results = elb.run().results
 
-    assert sorted(result.piggyback_hostname for result in elb_results) == [
-        "DNSName-0",
-        "DNSName-1",
-        "DNSName-2",
-    ]
+    assert sorted(result.piggyback_hostname for result in elb_results) == sorted(
+        LOAD_BALANCER_HOSTS.values()
+    )
 
 
 @pytest.mark.parametrize("names,tags,found_instances", elb_params)
@@ -444,7 +456,7 @@ def test_agent_aws_elb_filters_tags(
     elb_results = elb.run().results
 
     labels = {result.piggyback_hostname: result.piggyback_host_labels for result in elb_results}[
-        "DNSName-0"
+        LOAD_BALANCER_HOSTS["LoadBalancerName-0"]
     ]
     assert [key for key in labels if key.startswith("cmk/aws/tag/")] == [
         f"cmk/aws/tag/{tag}" for tag in expected_tags
@@ -463,7 +475,7 @@ def test_agent_aws_elb_load_balancer_hosts_get_the_resource_labels(
     results = elb.run().results
 
     assert {result.piggyback_hostname: result.piggyback_host_labels for result in results}[
-        "DNSName-0"
+        LOAD_BALANCER_HOSTS["LoadBalancerName-0"]
     ] == {
         "cmk/aws/service": "elb",
         "cmk/aws/name": "LoadBalancerName-0",

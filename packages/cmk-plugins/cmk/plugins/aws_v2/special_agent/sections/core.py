@@ -233,6 +233,7 @@ class AWSSection(DataCache):
         self._client = client
         self._region = region
         self._config = config
+        self._account_id: str = config.account_id
         self._distributor = ResultDistributor() if distributor is None else distributor
         self._received_results: dict[str, AWSComputedContent] = {}
 

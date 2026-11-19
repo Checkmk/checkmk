@@ -8,7 +8,7 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, override
 
 from botocore.client import BaseClient
@@ -86,7 +86,9 @@ class ELBLimits(AWSSectionLimits):
         )
 
         for load_balancer in load_balancers:
-            lb = hosts.ClassicLoadBalancer(load_balancer["DNSName"])
+            lb = _classic_load_balancer(
+                load_balancer, self._client.meta.partition, self._region, self._account_id
+            )
             self._add_limit(
                 AWSLimit(
                     "load_balancer_listeners",
@@ -108,8 +110,14 @@ class ELBLimits(AWSSectionLimits):
         return AWSComputedContent(load_balancers, raw_content.cache_timestamp)
 
 
-def _classic_load_balancer(load_balancer: Mapping[str, Any]) -> hosts.ClassicLoadBalancer:
-    return hosts.ClassicLoadBalancer(load_balancer["DNSName"])
+def _classic_load_balancer(
+    load_balancer: Mapping[str, Any], partition: str, region: str, account_id: str
+) -> hosts.ClassicLoadBalancer:
+    # The API of classic load balancers does not return their ARN.
+    name = load_balancer["LoadBalancerName"]
+    return hosts.ClassicLoadBalancer(
+        name, f"arn:{partition}:elasticloadbalancing:{region}:{account_id}:loadbalancer/{name}"
+    )
 
 
 def _load_balancer_v2(load_balancer: Mapping[str, Any]) -> hosts.LoadBalancerV2:
@@ -126,23 +134,18 @@ class ELBSummaryGeneric(AWSSection):
         resource: str = "",
     ) -> None:
         self._resource = resource
-        self._load_balancer_resource: Callable[
-            [Mapping[str, Any]], hosts.ClassicLoadBalancer | hosts.LoadBalancerV2
-        ]
         if self._resource == "elb":
             self._describe_load_balancers_karg = "LoadBalancerNames"
             self._describe_load_balancers_key = "LoadBalancerDescriptions"
             self._describe_tags_karg = "LoadBalancerNames"
             self._load_balancer_id_key = "LoadBalancerName"
             self._tag_description_id_key = "LoadBalancerName"
-            self._load_balancer_resource = _classic_load_balancer
         elif self._resource == "elbv2":
             self._describe_load_balancers_karg = "Names"
             self._describe_load_balancers_key = "LoadBalancers"
             self._describe_tags_karg = "ResourceArns"
             self._load_balancer_id_key = "LoadBalancerArn"
             self._tag_description_id_key = "ResourceArn"
-            self._load_balancer_resource = _load_balancer_v2
         else:
             raise AssertionError(
                 "ELBSummaryGeneric: resource argument must be either 'elb' or 'elbv2'"
@@ -172,6 +175,15 @@ class ELBSummaryGeneric(AWSSection):
     @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return self._received_inventory(f"{self._resource}_limits")
+
+    def _load_balancer_resource(
+        self, load_balancer: Mapping[str, Any]
+    ) -> hosts.ClassicLoadBalancer | hosts.LoadBalancerV2:
+        if self._resource == "elb":
+            return _classic_load_balancer(
+                load_balancer, self._client.meta.partition, self._region, self._account_id
+            )
+        return _load_balancer_v2(load_balancer)
 
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:

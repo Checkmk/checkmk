@@ -12,6 +12,7 @@ from cmk.maps.shared.filters import (
     FILTER_NESTING_MAX,
     normalize_object_filter,
     OBJECT_FILTER_MAX_BYTES,
+    one_of,
     validate_member_pattern,
 )
 
@@ -163,3 +164,31 @@ def test_excluded_members_filter_builds_what_nagvis_does(
     members: ExcludedMembers, pattern: str, expected: str
 ) -> None:
     assert excluded_members_filter(members, pattern) == expected
+
+
+def test_one_name_is_matched_by_equality() -> None:
+    # Only a single name lets the core look it up in its index.
+    assert one_of("name", ["web-01"]) == "Filter: name = web-01\n"
+
+
+def test_several_names_are_matched_by_one_expression() -> None:
+    assert one_of("host_name", ["web-02", "web-01", "web-02"]) == (
+        "Filter: host_name ~ ^(?:web\\-01|web\\-02)$\n"
+    )
+
+
+def test_a_name_is_matched_as_written() -> None:
+    assert one_of("description", ["Mount /a|b (x)", "C.*"]) == (
+        "Filter: description ~ ^(?:C\\.\\*|Mount\\ /a\\|b\\ \\(x\\))$\n"
+    )
+
+
+def test_a_name_cannot_end_the_filter_line() -> None:
+    assert one_of("name", ["web\nStats: state = 0"]) == "Filter: name = webStats: state = 0\n"
+
+
+def test_many_names_are_split_into_several_expressions() -> None:
+    lines = one_of("name", [f"h{i:04d}" for i in range(2500)]).splitlines()
+
+    assert [line.count("|") + 1 for line in lines[:-1]] == [1000, 1000, 500]
+    assert lines[-1] == "Or: 3"

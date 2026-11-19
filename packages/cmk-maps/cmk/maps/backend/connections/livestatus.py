@@ -66,7 +66,7 @@ from cmk.maps.backend.schemas.state import (
     ServicesSummary,
 )
 from cmk.maps.shared.config_vars import MAX_STATE_REFRESH_INTERVAL
-from cmk.maps.shared.filters import excluded_members_filter
+from cmk.maps.shared.filters import excluded_members_filter, one_of
 from cmk.maps.shared.geo import LAT_LABEL, LAT_VAR, LNG_LABEL, LNG_VAR, resolve_host_coords
 from cmk.maps.shared.perfdata import parse_perf_metrics
 from cmk.maps.shared.rows import (
@@ -181,6 +181,14 @@ def _state_count_stats(state_col: str, states: int) -> str:
 def _summed(rows: list[LivestatusRow], width: int) -> list[int]:
     """The ``Stats:`` columns added up over the sites, one row each."""
     return [sum(row_int(row, column) for row in rows) for column in range(width)]
+
+
+def _counted_services(counts: Sequence[int]) -> ServicesSummary:
+    """The services counted by ``_state_count_stats(state_col, 4)``."""
+    pending, ok, warning, critical, unknown = counts
+    return ServicesSummary(
+        ok=ok, warning=warning, critical=critical, unknown=unknown, pending=pending
+    )
 
 
 def _worst_counted(pending: int, counts: Sequence[int], states: Mapping[int, str]) -> str:
@@ -933,21 +941,23 @@ class LivestatusConnection(ConnectionBase):
         members = excluded_members_filter("host_services", exclude)
         if not members or not hostnames:
             return None
-        hosts = "".join(f"Filter: host_name = {lqencode(h)}\n" for h in hostnames)
-        if len(hostnames) > 1:
-            hosts += f"Or: {len(hostnames)}\n"
         rows = await self._query(
-            f"GET services\nColumns: host_name state has_been_checked\n{hosts}{members}"
+            f"GET services\nColumns: host_name\n{one_of('host_name', hostnames)}{members}"
+            f"{_state_count_stats('state', 4)}"
         )
-        states: dict[str, list[str]] = {h: [] for h in hostnames}
+        rows_by_host: dict[str, list[LivestatusRow]] = {h: [] for h in hostnames}
         for r in rows:
-            states.setdefault(row_str(r, 0), []).append(_row_state(r, 1, SERVICE_STATE_MAP))
-        return {host: _service_states_summary(host_states) for host, host_states in states.items()}
+            if (host_rows := rows_by_host.get(row_str(r, 0))) is not None:
+                host_rows.append(r[1:])
+        return {
+            host: _counted_services(_summed(host_rows, 5))
+            for host, host_rows in rows_by_host.items()
+        }
 
     async def _services_summary_where(self, filters: str, *, only_hard: bool) -> ServicesSummary:
         state_col = "last_hard_state" if only_hard else "state"
-        rows = await self._query(f"GET services\nColumns: {state_col} has_been_checked\n{filters}")
-        return _service_states_summary([_row_state(r, 0, SERVICE_STATE_MAP) for r in rows])
+        rows = await self._query(f"GET services\n{filters}{_state_count_stats(state_col, 4)}")
+        return _counted_services(_summed(rows, 5))
 
     @override
     async def get_dyngroup_state(
@@ -970,17 +980,15 @@ class LivestatusConnection(ConnectionBase):
             rows = await self._query(
                 f"GET services\n{lql_filter}{_state_count_stats(state_col, 4)}"
             )
-            pending, *counts = _summed(rows, 5)
-            if not pending and not any(counts):
+            counted = _summed(rows, 5)
+            if not any(counted):
                 return ObjectState(object_id="", type="dyngroup", state="PENDING")
-            ok, warning, critical, unknown = counts
+            pending, *counts = counted
             return ObjectState(
                 object_id="",
                 type="dyngroup",
                 state=_worst_counted(pending, counts, SERVICE_STATE_MAP),
-                services_summary=ServicesSummary(
-                    ok=ok, warning=warning, critical=critical, unknown=unknown, pending=pending
-                ),
+                services_summary=_counted_services(counted),
             )
         service_sums = ""
         if with_services:

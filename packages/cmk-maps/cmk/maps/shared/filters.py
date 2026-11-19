@@ -18,6 +18,8 @@ wraps it to re-raise ``MKUserError`` for its request context.
 """
 
 import re
+from collections.abc import Collection
+from itertools import batched
 from typing import Final, Literal
 
 # Only the filter-combinator headers may appear; any other header (Stats:,
@@ -152,6 +154,29 @@ def check_host_member_patterns(bound_type: str, *patterns: str | None) -> None:
     """
     if bound_type == "host" and any(p and "~~" in p for p in patterns):
         raise ValueError("a host's member pattern names its services; host~~service does not apply")
+
+
+# The names one regular expression holds. The core compiles each with RE2,
+# which slows down well before it refuses a larger one.
+_NAMES_PER_EXPRESSION: Final = 1000
+
+
+def one_of(column: str, names: Collection[str]) -> str:
+    """The Livestatus filter matching *column* to any of *names*, at least one.
+
+    Only a single name uses the core's index. Several are matched by regular
+    expressions, as ``cmk.gui.nodevis`` does: ORed names would each be compared
+    with every row.
+    """
+    # A newline would end the filter line, as ``lqencode`` knows.
+    encoded = sorted({name.replace("\n", "") for name in names})
+    if len(encoded) == 1:
+        return f"Filter: {column} = {encoded[0]}\n"
+    chunks = list(batched(encoded, _NAMES_PER_EXPRESSION))
+    lines = "".join(
+        f"Filter: {column} ~ ^(?:{'|'.join(map(re.escape, chunk))})$\n" for chunk in chunks
+    )
+    return lines + (f"Or: {len(chunks)}\n" if len(chunks) > 1 else "")
 
 
 def excluded_members_filter(members: ExcludedMembers, pattern: str) -> str:

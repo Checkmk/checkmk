@@ -174,9 +174,9 @@ def test_hostgroup_leaves_out_the_hosts_that_match(monkeypatch: pytest.MonkeyPat
 def test_hostgroup_leaves_out_services_by_host_and_service(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # state, has_been_checked per service
+    # The services counted: pending, then each state
     conn, queries = _connection(
-        monkeypatch, [[0, 1, 3, 1, 0, 0, 0]], service_rows=[[0, 1], [2, 1], [0, 0]]
+        monkeypatch, [[0, 1, 3, 1, 0, 0, 0]], service_rows=[[1, 1, 0, 1, 0]]
     )
 
     state = asyncio.run(
@@ -185,10 +185,10 @@ def test_hostgroup_leaves_out_services_by_host_and_service(
 
     assert state.services_summary == ServicesSummary(ok=1, critical=1, pending=1)
     assert "!~~" not in queries[-2]
-    assert queries[-1].endswith(
+    assert (
         "Filter: host_groups >= web\nFilter: host_name !~~ ^web-01\n"
-        "Filter: description !~~ ^CPU\nOr: 2\n"
-    )
+        "Filter: description !~~ ^CPU\nOr: 2\nStats: has_been_checked = 0\n"
+    ) in queries[-1]
 
 
 def test_servicegroup_leaves_out_the_services_that_match(
@@ -204,20 +204,28 @@ def test_servicegroup_leaves_out_the_services_that_match(
 def test_hosts_services_summaries_leave_out_the_services_that_match(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # host_name, state, has_been_checked per service
-    conn, queries = _connection(monkeypatch, [["web-01", 1, 1], ["web-01", 0, 1], ["web-02", 0, 0]])
+    # host_name, then its services counted: pending, then each state; one row
+    # per host and site
+    conn, queries = _connection(
+        monkeypatch,
+        [
+            ["web-01", 0, 1, 1, 0, 0],
+            ["web-02", 1, 0, 0, 0, 0],
+            ["web-02", 0, 2, 0, 0, 0],
+        ],
+    )
 
     summaries = asyncio.run(conn.get_hosts_services_summaries(["web-01", "web-02", "db"], "^CPU"))
 
     assert summaries == {
         "web-01": ServicesSummary(ok=1, warning=1),
-        "web-02": ServicesSummary(pending=1),
+        "web-02": ServicesSummary(ok=2, pending=1),
         "db": ServicesSummary(),
     }
-    assert queries[-1].endswith(
-        "Filter: host_name = web-01\nFilter: host_name = web-02\nFilter: host_name = db\n"
-        "Or: 3\nFilter: description !~~ ^CPU\n"
-    )
+    assert (
+        "Filter: host_name ~ ^(?:db|web\\-01|web\\-02)$\n"
+        "Filter: description !~~ ^CPU\nStats: has_been_checked = 0\n"
+    ) in queries[-1]
 
 
 def test_hosts_services_summaries_ignore_a_service_pattern(

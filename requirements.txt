@@ -204,6 +204,7 @@ anthropic==2.13.0 \
     # via
     #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
+    #   -r non-free/packages/cmk-ai-router/dev-requirements.in
     #   pydantic-ai-slim
 anyio==4.16.0 \
     --hash=sha256:59bb03251907983d1603d27c3087ddb1e93299ea2163adcdba37899a4fb12ffb \
@@ -1703,6 +1704,7 @@ google-auth==2.63.1 \
     --hash=sha256:3c977ca57114a302c2589f3a24be7ca1b6862d30da7619f4230a78809f58a0e9 \
     --hash=sha256:f69f387dba9abe536fec87483a749485f2ef0c81bfa79f609d9873e57054a1a5
     # via
+    #   -r non-free/packages/cmk-ai-router/requirements.in
     #   -r packages/cmk-plugins/requirements.in
     #   google-api-core
     #   google-api-python-client
@@ -1957,6 +1959,7 @@ httpx2==2.16.2 \
     # via
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r non-free/packages/cmk-ai-router/dev-requirements.in
+    #   -r non-free/packages/cmk-ai-router/requirements.in
     #   -r non-free/packages/cmk-dev-ai/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in

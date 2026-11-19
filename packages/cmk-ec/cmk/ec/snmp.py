@@ -362,7 +362,7 @@ class SNMPTrapTranslator:
                 translated_oid, translated_value = self._translate_binding_via_mibs(oid, value)
             except pysnmp.smi.error.SmiError, pyasn1.error.ValueConstraintError:
                 self._logger.warning(
-                    "Failed to translate OID %(oid)s (in trap from %(ipaddress)s): "
+                    "Failed to translate OID %(oid)s in trap from %(ipaddress)s "
                     "(enable debug logging for details)",
                     {"oid": oid.prettyPrint(), "ipaddress": ipaddress},
                 )

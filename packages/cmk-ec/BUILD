@@ -159,6 +159,7 @@ py_cmk_test(
         ":cmk-ec",
         ":forwarder",
         requirement("pymongo"),
+        requirement("pysnmp"),
         requirement("time-machine"),
     ],
 )

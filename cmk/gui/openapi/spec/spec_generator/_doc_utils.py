@@ -5,8 +5,9 @@
 
 # mypy: disable-error-code="type-arg"
 
-import enum
 from collections.abc import Callable, Container, Mapping
+from http import HTTPStatus
+from typing import Final
 
 from apispec import APISpec
 from apispec.utils import dedent
@@ -15,38 +16,60 @@ from werkzeug.utils import import_string
 from cmk.ccc.version import Edition
 from cmk.gui.fields.utils import get_multiple_edition_description
 from cmk.gui.openapi import endpoint_family_registry
-from cmk.gui.openapi.restful_objects.type_defs import OpenAPITag, TagGroup
+from cmk.gui.openapi.restful_objects.type_defs import (
+    ErrorStatusCodeInt,
+    OpenAPITag,
+    RedirectStatusCodeInt,
+    SuccessStatusCodeInt,
+    TagGroup,
+)
 from cmk.gui.openapi.versioned_endpoint_map import EndpointVersionChange
 from cmk.gui.permissions import permission_registry
 from cmk.licensing.basics.options import OptionName
 from cmk.web.utils import permission_verification as permissions
 
-
-class DefaultStatusCodeDescription(enum.Enum):
-    Code406 = "The requests accept headers can not be satisfied."
-    Code401 = (
+ERROR_DESCRIPTIONS: Final[Mapping[ErrorStatusCodeInt, str]] = {
+    HTTPStatus.NOT_ACCEPTABLE: "The requests accept headers can not be satisfied.",
+    HTTPStatus.UNAUTHORIZED: (
         "No authentication credentials were provided, or the provided credentials are invalid. "
         "Retry with valid credentials."
-    )
-    Code403 = (
+    ),
+    HTTPStatus.FORBIDDEN: (
         "The user is authenticated but lacks a permission required for this request. "
         "Retrying with the same user will not help."
-    )
-    Code404 = "The requested object has not be found."
-    Code422 = "The request could not be processed."
-    Code423 = "The resource is currently locked."
-    Code405 = "Method not allowed: This request is only allowed with other HTTP methods."
-    Code409 = "The request is in conflict with the stored resource."
-    Code415 = "The submitted content-type is not supported."
-    Code302 = (
-        "Either the resource has moved or has not yet completed. "
-        "Please see this resource for further information."
-    )
-    Code400 = "Parameter or validation failure."
-    Code412 = "The value of the If-Match header doesn't match the object's ETag."
-    Code428 = "The required If-Match header is missing."
-    Code200 = "The operation was done successfully."
-    Code204 = "Operation done successfully. No further output."
+    ),
+    HTTPStatus.NOT_FOUND: "The requested object has not be found.",
+    HTTPStatus.METHOD_NOT_ALLOWED: (
+        "Method not allowed: This request is only allowed with other HTTP methods."
+    ),
+    HTTPStatus.CONFLICT: "The request is in conflict with the stored resource.",
+    HTTPStatus.BAD_REQUEST: "Parameter or validation failure.",
+    HTTPStatus.PRECONDITION_FAILED: (
+        "The value of the If-Match header doesn't match the object's ETag."
+    ),
+    HTTPStatus.UNSUPPORTED_MEDIA_TYPE: "The submitted content-type is not supported.",
+    HTTPStatus.UNPROCESSABLE_ENTITY: "The request could not be processed.",
+    HTTPStatus.LOCKED: "The resource is currently locked.",
+    HTTPStatus.PRECONDITION_REQUIRED: "The required If-Match header is missing.",
+    HTTPStatus.TOO_MANY_REQUESTS: "The client sent too many requests. Retry later.",
+    HTTPStatus.INTERNAL_SERVER_ERROR: "An unexpected error occurred on the server.",
+    HTTPStatus.SERVICE_UNAVAILABLE: (
+        "A service that the request needs is not available. Retry later."
+    ),
+    HTTPStatus.GATEWAY_TIMEOUT: "A service that the request needs did not answer in time.",
+}
+
+_REDIRECT_DESCRIPTION: Final = (
+    "Either the resource has moved or has not yet completed. "
+    "Please see this resource for further information."
+)
+
+SUCCESS_DESCRIPTIONS: Final[Mapping[SuccessStatusCodeInt | RedirectStatusCodeInt, str]] = {
+    HTTPStatus.OK: "The operation was done successfully.",
+    HTTPStatus.NO_CONTENT: "Operation done successfully. No further output.",
+    HTTPStatus.FOUND: _REDIRECT_DESCRIPTION,
+    HTTPStatus.SEE_OTHER: _REDIRECT_DESCRIPTION,
+}
 
 
 def endpoint_title_and_description_from_docstring(

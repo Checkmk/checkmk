@@ -567,29 +567,7 @@ class PathItem(TypedDict, total=False):
     headers: dict[str, OpenAPIParameter]
 
 
-ResponseType = TypedDict(
-    "ResponseType",
-    {
-        "200": PathItem,
-        "204": PathItem,
-        "301": PathItem,
-        "302": PathItem,
-        "303": PathItem,
-        "400": PathItem,
-        "401": PathItem,
-        "403": PathItem,
-        "404": PathItem,
-        "405": PathItem,
-        "406": PathItem,
-        "409": PathItem,
-        "415": PathItem,
-        "412": PathItem,
-        "422": PathItem,
-        "423": PathItem,
-        "428": PathItem,
-    },
-    total=False,
-)
+ResponseType = dict[HTTPStatus, PathItem]
 
 
 class CodeSample(TypedDict, total=True):

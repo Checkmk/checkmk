@@ -3,10 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal
+from http import HTTPStatus
+from typing import get_args, Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.spec.spec_generator._doc_pydantic import _extract_body_example
+from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt
+from cmk.gui.openapi.spec.spec_generator._doc_pydantic import (
+    _extract_body_example,
+    PydanticResponses,
+)
+from cmk.gui.openapi.spec.spec_generator._doc_utils import ERROR_DESCRIPTIONS
 
 
 def test_extract_body_example_with_examples() -> None:
@@ -122,3 +128,20 @@ def test_extract_body_example_generic_without_examples_returns_none() -> None:
         payload: T = api_field(description="")
 
     assert _extract_body_example(Generic[Inner]) is None
+
+
+def test_error_responses_cover_every_error_status() -> None:
+    assert set(ERROR_DESCRIPTIONS) == set(get_args(ErrorStatusCodeInt))
+
+
+def test_generate_error_responses_documents_a_declared_server_error() -> None:
+    responses = PydanticResponses.generate_error_responses(
+        {HTTPStatus.SERVICE_UNAVAILABLE},
+        {HTTPStatus.SERVICE_UNAVAILABLE: "Livestatus is down."},
+        {},
+    )
+
+    assert (
+        responses[HTTPStatus.SERVICE_UNAVAILABLE]["description"]
+        == "Service Unavailable: Livestatus is down."
+    )

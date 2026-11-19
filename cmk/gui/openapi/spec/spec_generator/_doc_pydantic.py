@@ -39,8 +39,10 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     OperationObject,
     OperationSpecType,
     PathItem,
+    RedirectStatusCodeInt,
     ResponseType,
     StatusCodeInt,
+    SuccessStatusCodeInt,
 )
 from cmk.gui.openapi.restful_objects.utils import (
     identify_expected_status_codes,
@@ -51,8 +53,9 @@ from cmk.gui.openapi.spec.spec_generator._doc_utils import (
     add_tag,
     build_spec_description,
     build_tag_obj_from_family,
-    DefaultStatusCodeDescription,
     endpoint_title_and_description_from_docstring,
+    ERROR_DESCRIPTIONS,
+    SUCCESS_DESCRIPTIONS,
 )
 from cmk.gui.openapi.spec.spec_generator._type_defs import DocEndpoint, SpecEndpoint
 from cmk.gui.openapi.versioned_endpoint_map import EndpointVersionChange
@@ -356,114 +359,26 @@ class PydanticResponses:
         responses: ResponseType = {}
 
         # Always include 406
-        responses["406"] = PydanticResponses._error_response_path_item(
-            status_descriptions,
-            error_schemas,
-            HTTPStatus.NOT_ACCEPTABLE,
-            DefaultStatusCodeDescription.Code406,
+        responses[HTTPStatus.NOT_ACCEPTABLE] = PydanticResponses._error_response_path_item(
+            status_descriptions, error_schemas, HTTPStatus.NOT_ACCEPTABLE
         )
 
         # 3xx responses
         if HTTPStatus.FOUND in expected_status_codes:
-            responses["302"] = PydanticResponses._path_item(
-                status_descriptions, HTTPStatus.FOUND, DefaultStatusCodeDescription.Code302.value
+            responses[HTTPStatus.FOUND] = PydanticResponses._path_item(
+                status_descriptions, HTTPStatus.FOUND
             )
 
         if HTTPStatus.SEE_OTHER in expected_status_codes:
-            responses["303"] = PydanticResponses._path_item(
-                status_descriptions,
-                HTTPStatus.SEE_OTHER,
-                DefaultStatusCodeDescription.Code302.value,
+            responses[HTTPStatus.SEE_OTHER] = PydanticResponses._path_item(
+                status_descriptions, HTTPStatus.SEE_OTHER
             )
 
-        # 4xx responses
-        if HTTPStatus.UNAUTHORIZED in expected_status_codes:
-            responses["401"] = PydanticResponses._error_response_path_item(
-                status_descriptions,
-                error_schemas,
-                HTTPStatus.UNAUTHORIZED,
-                DefaultStatusCodeDescription.Code401,
-            )
-
-        if HTTPStatus.FORBIDDEN in expected_status_codes:
-            responses["403"] = PydanticResponses._error_response_path_item(
-                status_descriptions,
-                error_schemas,
-                HTTPStatus.FORBIDDEN,
-                DefaultStatusCodeDescription.Code403,
-            )
-
-        if HTTPStatus.NOT_FOUND in expected_status_codes:
-            responses["404"] = PydanticResponses._error_response_path_item(
-                status_descriptions,
-                error_schemas,
-                HTTPStatus.NOT_FOUND,
-                DefaultStatusCodeDescription.Code404,
-            )
-
-        if HTTPStatus.METHOD_NOT_ALLOWED in expected_status_codes:
-            responses["405"] = PydanticResponses._error_response_path_item(
-                status_descriptions,
-                error_schemas,
-                HTTPStatus.METHOD_NOT_ALLOWED,
-                DefaultStatusCodeDescription.Code405,
-            )
-
-        if HTTPStatus.CONFLICT in expected_status_codes:
-            responses["409"] = PydanticResponses._error_response_path_item(
-                status_descriptions,
-                error_schemas,
-                HTTPStatus.CONFLICT,
-                DefaultStatusCodeDescription.Code409,
-            )
-
-        if HTTPStatus.BAD_REQUEST in expected_status_codes:
-            responses["400"] = PydanticResponses._error_response_path_item(
-                status_descriptions,
-                error_schemas,
-                HTTPStatus.BAD_REQUEST,
-                DefaultStatusCodeDescription.Code400,
-            )
-
-        if HTTPStatus.PRECONDITION_FAILED in expected_status_codes:
-            responses["412"] = PydanticResponses._error_response_path_item(
-                status_descriptions,
-                error_schemas,
-                HTTPStatus.PRECONDITION_FAILED,
-                DefaultStatusCodeDescription.Code412,
-            )
-
-        if HTTPStatus.UNSUPPORTED_MEDIA_TYPE in expected_status_codes:
-            responses["415"] = PydanticResponses._error_response_path_item(
-                status_descriptions,
-                error_schemas,
-                HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
-                DefaultStatusCodeDescription.Code415,
-            )
-
-        if HTTPStatus.UNPROCESSABLE_ENTITY in expected_status_codes:
-            responses["422"] = PydanticResponses._error_response_path_item(
-                status_descriptions,
-                error_schemas,
-                HTTPStatus.UNPROCESSABLE_ENTITY,
-                DefaultStatusCodeDescription.Code422,
-            )
-
-        if HTTPStatus.LOCKED in expected_status_codes:
-            responses["423"] = PydanticResponses._error_response_path_item(
-                status_descriptions,
-                error_schemas,
-                HTTPStatus.LOCKED,
-                DefaultStatusCodeDescription.Code423,
-            )
-
-        if HTTPStatus.PRECONDITION_REQUIRED in expected_status_codes:
-            responses["428"] = PydanticResponses._error_response_path_item(
-                status_descriptions,
-                error_schemas,
-                HTTPStatus.PRECONDITION_REQUIRED,
-                DefaultStatusCodeDescription.Code428,
-            )
+        for status_code in ERROR_DESCRIPTIONS:
+            if status_code in expected_status_codes:
+                responses[status_code] = PydanticResponses._error_response_path_item(
+                    status_descriptions, error_schemas, status_code
+                )
 
         return responses
 
@@ -496,19 +411,16 @@ class PydanticResponses:
             else:
                 raise ValueError(f"Unknown content-type: {content_type} Please add condition.")
 
-            responses["200"] = PydanticResponses._path_item(
+            responses[HTTPStatus.OK] = PydanticResponses._path_item(
                 status_descriptions,
                 HTTPStatus.OK,
-                DefaultStatusCodeDescription.Code200.value,
                 content=content,
                 headers=response_headers,
             )
 
         if HTTPStatus.NO_CONTENT in expected_status_codes:
-            responses["204"] = PydanticResponses._path_item(
-                status_descriptions,
-                HTTPStatus.NO_CONTENT,
-                DefaultStatusCodeDescription.Code204.value,
+            responses[HTTPStatus.NO_CONTENT] = PydanticResponses._path_item(
+                status_descriptions, HTTPStatus.NO_CONTENT
             )
 
         return responses
@@ -516,11 +428,11 @@ class PydanticResponses:
     @staticmethod
     def _path_item(
         status_descriptions: Mapping[StatusCodeInt, str] | None,
-        status_code: StatusCodeInt,
-        description: str,
+        status_code: SuccessStatusCodeInt | RedirectStatusCodeInt,
         content: dict[str, dict[str, object]] | None = None,
         headers: dict[str, OpenAPIParameter] | None = None,
     ) -> PathItem:
+        description = SUCCESS_DESCRIPTIONS[status_code]
         if status_descriptions and status_code in status_descriptions:
             description = status_descriptions[status_code]
 
@@ -537,17 +449,15 @@ class PydanticResponses:
         status_descriptions: Mapping[StatusCodeInt, str],
         error_schemas: Mapping[ErrorStatusCodeInt, type[ApiErrorDataclass]],
         status_code: ErrorStatusCodeInt,
-        default_description: DefaultStatusCodeDescription,
     ) -> PathItem:
-        description = default_description.value
-        if status_code not in status_descriptions:
-            schema = DEFAULT_STATUS_CODE_SCHEMAS.get((status_code, default_description))
-        else:
+        if status_code in status_descriptions:
             description = status_descriptions[status_code]
             schema = _api_error_schema("custom", status_code, description)
+        else:
+            description = ERROR_DESCRIPTIONS[status_code]
+            schema = DEFAULT_STATUS_CODE_SCHEMAS[status_code]
 
         error_schema = error_schemas.get(status_code, schema)
-        assert error_schema is not None, f"Expected error description for {status_code}"
         # TypeAdapter performance: this is only used during spec generation
         type_adapter = get_cached_type_adapter(error_schema)
         response: PathItem = {
@@ -599,64 +509,6 @@ def _api_error_schema(
 
 
 DEFAULT_STATUS_CODE_SCHEMAS = {
-    (HTTPStatus.NOT_ACCEPTABLE, DefaultStatusCodeDescription.Code406): _api_error_schema(
-        "default",
-        HTTPStatus.NOT_ACCEPTABLE,
-        DefaultStatusCodeDescription.Code406.value,
-    ),
-    (HTTPStatus.UNAUTHORIZED, DefaultStatusCodeDescription.Code401): _api_error_schema(
-        "default",
-        HTTPStatus.UNAUTHORIZED,
-        DefaultStatusCodeDescription.Code401.value,
-    ),
-    (HTTPStatus.FORBIDDEN, DefaultStatusCodeDescription.Code403): _api_error_schema(
-        "default",
-        HTTPStatus.FORBIDDEN,
-        DefaultStatusCodeDescription.Code403.value,
-    ),
-    (HTTPStatus.NOT_FOUND, DefaultStatusCodeDescription.Code404): _api_error_schema(
-        "default",
-        HTTPStatus.NOT_FOUND,
-        DefaultStatusCodeDescription.Code404.value,
-    ),
-    (HTTPStatus.UNPROCESSABLE_ENTITY, DefaultStatusCodeDescription.Code422): _api_error_schema(
-        "default",
-        HTTPStatus.UNPROCESSABLE_ENTITY,
-        DefaultStatusCodeDescription.Code422.value,
-    ),
-    (HTTPStatus.LOCKED, DefaultStatusCodeDescription.Code423): _api_error_schema(
-        "default",
-        HTTPStatus.LOCKED,
-        DefaultStatusCodeDescription.Code423.value,
-    ),
-    (HTTPStatus.METHOD_NOT_ALLOWED, DefaultStatusCodeDescription.Code405): _api_error_schema(
-        "default",
-        HTTPStatus.METHOD_NOT_ALLOWED,
-        DefaultStatusCodeDescription.Code405.value,
-    ),
-    (HTTPStatus.CONFLICT, DefaultStatusCodeDescription.Code409): _api_error_schema(
-        "default",
-        HTTPStatus.CONFLICT,
-        DefaultStatusCodeDescription.Code409.value,
-    ),
-    (HTTPStatus.UNSUPPORTED_MEDIA_TYPE, DefaultStatusCodeDescription.Code415): _api_error_schema(
-        "default",
-        HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
-        DefaultStatusCodeDescription.Code415.value,
-    ),
-    (HTTPStatus.BAD_REQUEST, DefaultStatusCodeDescription.Code400): _api_error_schema(
-        "default",
-        HTTPStatus.BAD_REQUEST,
-        DefaultStatusCodeDescription.Code400.value,
-    ),
-    (HTTPStatus.PRECONDITION_FAILED, DefaultStatusCodeDescription.Code412): _api_error_schema(
-        "default",
-        HTTPStatus.PRECONDITION_FAILED,
-        DefaultStatusCodeDescription.Code412.value,
-    ),
-    (HTTPStatus.PRECONDITION_REQUIRED, DefaultStatusCodeDescription.Code428): _api_error_schema(
-        "default",
-        HTTPStatus.PRECONDITION_REQUIRED,
-        DefaultStatusCodeDescription.Code428.value,
-    ),
+    status_code: _api_error_schema("default", status_code, description)
+    for status_code, description in ERROR_DESCRIPTIONS.items()
 }

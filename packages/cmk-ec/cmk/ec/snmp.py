@@ -30,6 +30,7 @@ from pyasn1.type.base import SimpleAsn1Type
 from cmk.ccc.log import VERBOSE
 
 from .config import AuthenticationProtocol, Config, PrivacyProtocol
+from .event import scrub_string
 from .settings import Paths, Settings
 
 VarBind = tuple[pysnmp.proto.rfc1902.ObjectName, SimpleAsn1Type]
@@ -371,8 +372,7 @@ class SNMPTrapTranslator:
                     {"var_binds": "\n".join(f"{i}: {repr(i)}" for i in var_bind_list)},
                 )
                 self._logger.debug(traceback.format_exc())
-                translated_oid = str(oid)
-                translated_value = str(value)
+                translated_oid, translated_value = self._translate_binding_raw(oid, value)
             var_binds.append((translated_oid, translated_value))
         return var_binds
 
@@ -393,6 +393,21 @@ class SNMPTrapTranslator:
         if description := getattr(node, "getDescription", str)():
             translated_value += f"({description})"
         return translated_oid, translated_value
+
+    @staticmethod
+    def _translate_binding_raw(
+        oid: pysnmp.proto.rfc1902.ObjectName, value: SimpleAsn1Type
+    ) -> tuple[str, str]:
+        # str() decodes octet strings as Latin-1, which garbles IP addresses and binary data.
+        # prettyPrint() shows any text with a non-ASCII or control character in hex, so use it
+        # only for IP addresses and for values whose event text would contain C0 control
+        # characters other than CR. This turns some text into hex, too, e.g. with escape
+        # sequences or in UTF-16, but we can't tell it apart from binary data.
+        if not isinstance(value, pysnmp.proto.rfc1155.IpAddress | pysnmp.proto.rfc1902.IpAddress):
+            text = str(value)
+            if all(c >= " " or c == "\r" for c in scrub_string(text)):
+                return str(oid), text
+        return str(oid), value.prettyPrint()
 
 
 # Note: This is a local copy of the same function from cmk.utils.render, but for decoupling reasons

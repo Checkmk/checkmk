@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen, waitFor } from '@testing-library/vue'
+import { restApiHttp } from 'cmk-ui-library/vitest.msw'
 import { describe, expect, it } from 'vitest'
 
 import DashboardContentBarplot from '@/dashboard/components/DashboardContent/figures/DashboardContentBarplot.vue'
@@ -40,7 +41,11 @@ const CONTENT: BarplotContent = {
   contextual_link: { type: 'default' }
 }
 
-const endpoint = useComputeWidgetEndpoint<Barplot>('compute-barplot', () => BARPLOT)
+const endpoint = useComputeWidgetEndpoint(
+  restApiHttp.post,
+  '/domain-types/dashboard/actions/compute-barplot/invoke',
+  BARPLOT
+)
 useFakeResizeObserver(resizeObserverReporting(400, 200))
 
 function renderWidget() {

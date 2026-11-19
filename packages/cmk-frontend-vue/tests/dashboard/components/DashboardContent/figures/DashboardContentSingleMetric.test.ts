@@ -5,6 +5,7 @@
  */
 import { fromDate } from '@internationalized/date'
 import { render, screen, waitFor } from '@testing-library/vue'
+import { restApiHttp } from 'cmk-ui-library/vitest.msw'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
@@ -21,6 +22,8 @@ const OTHER_RANGE = {
   from: fromDate(new Date('2026-01-02T00:00:00Z'), 'UTC'),
   to: fromDate(new Date('2026-01-02T01:00:00Z'), 'UTC')
 }
+
+const HOST_FILTER = { host: { host: 'myhost' } }
 
 function singleMetric(overrides: Partial<ComputedSingleMetric> = {}): ComputedSingleMetric {
   return {
@@ -88,7 +91,9 @@ const FIXED_WINDOW: SingleMetricContent = {
   }
 }
 
-const endpoint = useComputeWidgetEndpoint<ComputedSingleMetric>('compute-single-metric', () =>
+const endpoint = useComputeWidgetEndpoint(
+  restApiHttp.post,
+  '/domain-types/dashboard/actions/compute-single-metric/invoke',
   singleMetric()
 )
 useFakeResizeObserver(resizeObserverReporting(400, 200))
@@ -157,7 +162,7 @@ describe('DashboardContentSingleMetric', () => {
   })
 
   it('does not link the value without a resolved link', async () => {
-    endpoint.answer(singleMetric({ links: [], link_properties: { links: [] } }))
+    endpoint.answerInThisTest(singleMetric({ links: [], link_properties: { links: [] } }))
 
     const { container } = await renderWidget()
 
@@ -165,7 +170,7 @@ describe('DashboardContentSingleMetric', () => {
   })
 
   it('shows the service state when the backend reports one', async () => {
-    endpoint.answer(singleMetric({ state: { severity: 'warn', tint_background: true } }))
+    endpoint.answerInThisTest(singleMetric({ state: { severity: 'warn', tint_background: true } }))
 
     const { container } = await renderWidget()
 
@@ -176,7 +181,9 @@ describe('DashboardContentSingleMetric', () => {
   })
 
   it('labels the range ends when the backend reports them', async () => {
-    endpoint.answer(singleMetric({ range_limits: { minimum: '0 B', maximum: '1.00 TB' } }))
+    endpoint.answerInThisTest(
+      singleMetric({ range_limits: { minimum: '0 B', maximum: '1.00 TB' } })
+    )
 
     const { container } = await renderWidget()
 
@@ -189,7 +196,7 @@ describe('DashboardContentSingleMetric', () => {
   })
 
   it('scales the comparison value like the value itself', async () => {
-    endpoint.answer(
+    endpoint.answerInThisTest(
       singleMetric({
         series: [
           { timestamp: 0, value: 1_000_000 },
@@ -208,7 +215,7 @@ describe('DashboardContentSingleMetric', () => {
   })
 
   it('gives the whole widget to the value for the current value alone', async () => {
-    endpoint.answer(singleMetric({ series: [] }))
+    endpoint.answerInThisTest(singleMetric({ series: [] }))
 
     const { container } = await renderWidget()
 
@@ -223,15 +230,31 @@ describe('DashboardContentSingleMetric', () => {
 
     await rerender(makeContentProps(FOLLOWS_DASHBOARD, { range: OTHER_RANGE }))
 
-    await waitFor(() => expect(endpoint.requests).toHaveLength(2))
+    await waitFor(() =>
+      expect(endpoint.requests.map((request) => request.time_range)).toEqual([
+        { start: '2026-01-01T00:00:00.000Z', end: '2026-01-01T01:00:00.000Z' },
+        { start: '2026-01-02T00:00:00.000Z', end: '2026-01-02T01:00:00.000Z' }
+      ])
+    )
   })
 
   it('does not fetch again when the dashboard range changes under a fixed window', async () => {
     const { rerender } = await renderWidget(makeContentProps(FIXED_WINDOW))
 
     await rerender(makeContentProps(FIXED_WINDOW, { range: OTHER_RANGE }))
-    await rerender(makeContentProps(FIXED_WINDOW, { range: OTHER_RANGE, tick: 1 }))
+    // A separate rerender, so that a wrong fetch for the range change comes before this one.
+    await rerender(
+      makeContentProps(FIXED_WINDOW, {
+        range: OTHER_RANGE,
+        effective_filter_context: { uses_infos: [], filters: HOST_FILTER, restricted_to_single: [] }
+      })
+    )
 
-    await waitFor(() => expect(endpoint.requests).toHaveLength(2))
+    await waitFor(() =>
+      expect(endpoint.requests.map((request) => request.source)).toEqual([
+        { type: 'explicit', content: FIXED_WINDOW, context: {} },
+        { type: 'explicit', content: FIXED_WINDOW, context: HOST_FILTER }
+      ])
+    )
   })
 })

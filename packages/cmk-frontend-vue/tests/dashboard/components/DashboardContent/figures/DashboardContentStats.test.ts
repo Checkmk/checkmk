@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
+import { restApiHttp } from 'cmk-ui-library/vitest.msw'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import DashboardContentStats from '@/dashboard/components/DashboardContent/figures/DashboardContentStats.vue'
@@ -29,7 +30,11 @@ const PROPS = makeContentProps<StatsContent>({
   contextual_link: { type: 'default' }
 })
 
-useComputeWidgetEndpoint<Stats>('compute-stats', () => HOST_STATS)
+useComputeWidgetEndpoint(
+  restApiHttp.post,
+  '/domain-types/dashboard/actions/compute-stats/invoke',
+  HOST_STATS
+)
 useFakeResizeObserver(resizeObserverReporting(400, 200))
 
 beforeEach(() => {

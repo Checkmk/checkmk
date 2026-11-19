@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen, waitFor } from '@testing-library/vue'
+import { restApiHttp } from 'cmk-ui-library/vitest.msw'
 import { describe, expect, it } from 'vitest'
 
 import DashboardContentStateSummary from '@/dashboard/components/DashboardContent/figures/DashboardContentStateSummary.vue'
@@ -21,7 +22,11 @@ const HOST_SUMMARY: StateSummary = {
 
 const CONTENT: StateSummaryContent = { type: 'host_state_summary', state: 'DOWN' }
 
-const endpoint = useComputeWidgetEndpoint<StateSummary>('compute-state-summary', () => HOST_SUMMARY)
+const endpoint = useComputeWidgetEndpoint(
+  restApiHttp.post,
+  '/domain-types/dashboard/actions/compute-state-summary/invoke',
+  HOST_SUMMARY
+)
 useFakeResizeObserver(resizeObserverReporting(400, 200))
 
 function renderWidget() {

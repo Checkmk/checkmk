@@ -5,6 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
+import { restApiHttp } from 'cmk-ui-library/vitest.msw'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
@@ -69,7 +70,11 @@ function props(content: Partial<TopListContent> = {}, filters: VisualContext = {
   )
 }
 
-const endpoint = useComputeWidgetEndpoint<ComputedTopList>('compute-top-list', () => topList())
+const endpoint = useComputeWidgetEndpoint(
+  restApiHttp.post,
+  '/domain-types/dashboard/actions/compute-top-list/invoke',
+  topList()
+)
 useFakeResizeObserver(resizeObserverReporting(400, 200))
 
 async function renderWidget(
@@ -154,7 +159,7 @@ describe('DashboardContentTopList', () => {
     const host = { status: 'encoded' as const, variables: { host: 'host-b' } }
     const service = { status: 'encoded' as const, variables: { service: 'CPU load' } }
     const inherited = topList()
-    endpoint.answer({
+    endpoint.answerInThisTest({
       ...inherited,
       links: [
         {
@@ -205,7 +210,7 @@ describe('DashboardContentTopList', () => {
       include_time_range: false,
       show_filter_form: false
     }
-    endpoint.answer({
+    endpoint.answerInThisTest({
       ...custom,
       links: [
         { ...destination, title: 'Same OS' },
@@ -270,7 +275,7 @@ describe('DashboardContentTopList', () => {
 
   it('fills the bar of a lone entry, whose automatic range has no span', async () => {
     const single = topList()
-    endpoint.answer({
+    endpoint.answerInThisTest({
       ...single,
       value_range: { min_value: 20, max_value: 20 },
       entries: [single.entries[0]!]
@@ -282,13 +287,13 @@ describe('DashboardContentTopList', () => {
   })
 
   it('renders the placeholder when there are no entries', async () => {
-    endpoint.answer(topList({ entries: [] }))
+    endpoint.answerInThisTest(topList({ entries: [] }))
     await renderWidget()
     expect(screen.getByText('No entries')).toBeInTheDocument()
   })
 
   it('renders the conflicting-metrics table when the backend reports errors', async () => {
-    endpoint.answer(
+    endpoint.answerInThisTest(
       topList({
         errors: [
           {

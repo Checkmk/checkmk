@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen, waitFor } from '@testing-library/vue'
+import { restApiHttp } from 'cmk-ui-library/vitest.msw'
 import { describe, expect, it } from 'vitest'
 
 import DashboardContentSiteOverview from '@/dashboard/components/DashboardContent/figures/DashboardContentSiteOverview.vue'
@@ -39,7 +40,11 @@ const CONTENT: SiteOverviewContent = {
   contextual_link: { type: 'default' }
 }
 
-const endpoint = useComputeWidgetEndpoint<SiteOverview>('compute-site-overview', () => VALUE)
+const endpoint = useComputeWidgetEndpoint(
+  restApiHttp.post,
+  '/domain-types/dashboard/actions/compute-site-overview/invoke',
+  VALUE
+)
 useFakeResizeObserver(resizeObserverReporting(400, 200))
 
 function renderWidget() {

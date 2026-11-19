@@ -5,14 +5,14 @@
  */
 import type * as intl from '@internationalized/date'
 import { render, screen, waitFor } from '@testing-library/vue'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { describe, expect, it, vi } from 'vitest'
 
 import DashboardContentTimeline from '@/dashboard/components/DashboardContent/DashboardContentTimeline.vue'
 import type { TimelineContent } from '@/dashboard/types/widget'
 
+import { useRequestRecords } from '@tests/dashboard/apiHandlers'
 import { makeContentProps } from '@tests/dashboard/contentProps'
 import { resizeObserverReporting, useFakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
@@ -36,8 +36,6 @@ vi.mock('@internationalized/date', async (importOriginal) => {
   return { ...actual, getLocalTimeZone: () => 'UTC' }
 })
 
-const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions/compute-timeline/invoke`
-
 const HOUR = 3600
 
 const HOURLY: TimelineContent = {
@@ -50,17 +48,14 @@ const HOURLY: TimelineContent = {
   }
 }
 
-interface TimelineRequest {
-  source: unknown
-  time_range: { start: string; end: string }
-  step: number
-}
+type TimelineRequest = components['schemas']['TimelineRequest']
+type TimelineResponse = components['schemas']['ComputedWidgetResponse_GraphFetchResponse_']
 
-let requests: TimelineRequest[] = []
-function countsOnGrid(request: TimelineRequest, step: number): Response {
+const requests = useRequestRecords<TimelineRequest>()
+function countsOnGrid(request: TimelineRequest, step: number): TimelineResponse {
   const start = Date.parse(request.time_range.start) / 1000
   const end = Date.parse(request.time_range.end) / 1000
-  return HttpResponse.json({
+  return {
     domainType: 'widget-compute',
     value: {
       title: '',
@@ -88,29 +83,21 @@ function countsOnGrid(request: TimelineRequest, step: number): Response {
       warnings: [],
       errors: []
     }
-  })
+  }
 }
-
-function countsPerStep(request: TimelineRequest): Response {
-  return countsOnGrid(request, request.step)
-}
-
-let respond: (request: TimelineRequest) => Response = countsPerStep
 
 const server = useMswServer(
-  http.post(ENDPOINT, async ({ request }) => {
-    const body = (await request.json()) as TimelineRequest
-    requests.push(body)
-    return respond(body)
-  })
+  restApiHttp.post(
+    '/domain-types/dashboard/actions/compute-timeline/invoke',
+    async ({ request, response }) => {
+      const body = await request.json()
+      requests.push(body)
+      return response(200).json(countsOnGrid(body, body.step))
+    }
+  )
 )
 
 useFakeResizeObserver(resizeObserverReporting(800, 200))
-
-afterEach(() => {
-  respond = countsPerStep
-  requests = []
-})
 
 describe('DashboardContentTimeline', () => {
   it('requests whole local hours on the hour grid', async () => {
@@ -129,9 +116,9 @@ describe('DashboardContentTimeline', () => {
   it('cancels its pending request when it unmounts', async () => {
     const signals: AbortSignal[] = []
     server.use(
-      http.post(ENDPOINT, ({ request }) => {
+      restApiHttp.post('/domain-types/dashboard/actions/compute-timeline/invoke', ({ request }) => {
         signals.push(request.signal)
-        return new Promise<Response>(() => {})
+        return new Promise<never>(() => {})
       })
     )
 
@@ -152,7 +139,13 @@ describe('DashboardContentTimeline', () => {
   })
 
   it('draws on the grid that the backend answers, not on the one it asked for', async () => {
-    respond = (request) => countsOnGrid(request, HOUR / 2)
+    server.use(
+      restApiHttp.post(
+        '/domain-types/dashboard/actions/compute-timeline/invoke',
+        async ({ request, response }) =>
+          response(200).json(countsOnGrid(await request.json(), HOUR / 2))
+      )
+    )
 
     render(DashboardContentTimeline, { props: makeContentProps(HOURLY) })
 
@@ -166,7 +159,15 @@ describe('DashboardContentTimeline', () => {
   })
 
   it('shows the no-data notice when the backend finds no data', async () => {
-    respond = () => HttpResponse.json({ title: 'No data available', status: 404 }, { status: 404 })
+    server.use(
+      restApiHttp.post('/domain-types/dashboard/actions/compute-timeline/invoke', ({ response }) =>
+        response(404).json({
+          title: 'No data available',
+          status: 404,
+          detail: 'The time range has no events.'
+        })
+      )
+    )
 
     render(DashboardContentTimeline, { props: makeContentProps(HOURLY) })
 
@@ -174,8 +175,11 @@ describe('DashboardContentTimeline', () => {
   })
 
   it('states a failed fetch', async () => {
-    respond = () =>
-      HttpResponse.json({ title: 'Bad request', status: 400, detail: 'Too long' }, { status: 400 })
+    server.use(
+      restApiHttp.post('/domain-types/dashboard/actions/compute-timeline/invoke', ({ response }) =>
+        response(400).json({ title: 'Bad request', status: 400, detail: 'Too long' })
+      )
+    )
 
     render(DashboardContentTimeline, { props: makeContentProps(HOURLY) })
 

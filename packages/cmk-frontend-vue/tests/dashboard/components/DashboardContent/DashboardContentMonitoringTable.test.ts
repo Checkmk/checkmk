@@ -5,9 +5,9 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
-// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
+import { HttpResponse } from 'msw'
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 
@@ -23,14 +23,13 @@ import {
   useActionFeedbackStack
 } from '@/monitoring/shared/services/useActionFeedbackStack'
 
+import { useRequestRecords } from '@tests/dashboard/apiHandlers'
 import { makeContentProps } from '@tests/dashboard/contentProps'
 import {
   FakeResizeObserver,
   deliverSize,
   useFakeResizeObserver
 } from '@tests/lib/fakeResizeObserver'
-
-const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions/compute-monitoring-table/invoke`
 
 const CONTENT: MonitoringTableContent = {
   type: 'monitoring_table',
@@ -130,24 +129,22 @@ const HEUTE_OVERVIEW: HostOverview = {
 const CMK_TOKEN = '0:the-token'
 
 let value: ComputedMonitoringTable = VALUE
-let failWith: number | null = null
-let requests: unknown[] = []
-let authorizations: (string | null)[] = []
-let reschedules: unknown[] = []
-// Whether each service menu opened asked for the links into Setup.
-let askedForSetupLinks: (string | null)[] = []
+const requests = useRequestRecords<components['schemas']['MonitoringTableRequest']>()
+const authorizations = useRequestRecords<string | null>()
+const reschedules = useRequestRecords<unknown>()
+const askedForSetupLinks = useRequestRecords<string | null>()
 // When the host's check last ran: by default, since it was rescheduled.
 let hostLastCheck = SCHEDULED_AT
 
 const server = useMswServer(
-  http.post(ENDPOINT, async ({ request }) => {
-    requests.push(await request.json())
-    authorizations.push(request.headers.get('Authorization'))
-    if (failWith !== null) {
-      return HttpResponse.json({ title: 'Internal error' }, { status: failWith })
+  restApiHttp.post(
+    '/domain-types/dashboard/actions/compute-monitoring-table/invoke',
+    async ({ request, response }) => {
+      requests.push(await request.json())
+      authorizations.push(request.headers.get('Authorization'))
+      return response(200).json({ domainType: 'widget-compute', value })
     }
-    return HttpResponse.json({ domainType: 'widget-compute', value })
-  }),
+  ),
   restApiHttp.get('/monitor/hosts/{hostname}/action_menu', ({ response }) =>
     response(200).json({ items: [] })
   ),
@@ -185,11 +182,6 @@ useFakeResizeObserver(FakeResizeObserver)
 
 afterEach(() => {
   value = VALUE
-  failWith = null
-  requests = []
-  authorizations = []
-  reschedules = []
-  askedForSetupLinks = []
   hostLastCheck = SCHEDULED_AT
   vi.useRealTimers()
 })
@@ -453,7 +445,13 @@ describe('DashboardContentMonitoringTable', () => {
   })
 
   it('offers a retry when the data cannot be loaded', async () => {
-    failWith = 500
+    server.use(
+      restApiHttp.post(
+        '/domain-types/dashboard/actions/compute-monitoring-table/invoke',
+        ({ response }) =>
+          response.untyped(HttpResponse.json({ title: 'Internal error' }, { status: 500 }))
+      )
+    )
 
     await renderWidget()
 

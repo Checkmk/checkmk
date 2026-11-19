@@ -5,9 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'
 
@@ -18,7 +16,9 @@ import {
 } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 
 useMswServer(
-  http.get('*/domain-types/graph_timerange/collections/all', () => HttpResponse.json({ value: [] }))
+  restApiHttp.get('/domain-types/graph_timerange/collections/all', ({ response }) =>
+    response(200).json({ domainType: 'graph_timerange', id: 'all', links: [], value: [] })
+  )
 )
 
 function renderSource(current: TimeRangeSourceModel | null) {

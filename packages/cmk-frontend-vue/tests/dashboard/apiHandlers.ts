@@ -5,6 +5,7 @@
  */
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { restApiHttp } from 'cmk-ui-library/vitest.msw'
+import { beforeEach } from 'vitest'
 
 import type { ViewModel } from '@/dashboard/types/api'
 import type { DashboardMetadata } from '@/dashboard/types/dashboard'
@@ -116,4 +117,13 @@ export function viewsHandler(views: ViewModel[]) {
   return restApiHttp.get('/domain-types/view/collections/all', ({ response }) =>
     response(200).json({ domainType: 'view', id: 'all', links: [], value: views })
   )
+}
+
+/** A list of request records that is empty at the start of each test. */
+export function useRequestRecords<T>(): T[] {
+  const records: T[] = []
+  beforeEach(() => {
+    records.length = 0
+  })
+  return records
 }

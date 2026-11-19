@@ -21,19 +21,28 @@ use crate::types::AgentHash;
 use crate::updater::install;
 use crate::updater::{InstallRequest, InstallResult, InstallVerdict, TrustAnchors};
 use anyhow::{bail, Context, Result as AnyhowResult};
+use nix::errno::Errno;
 use nix::fcntl::{fcntl, FcntlArg, SealFlag};
 use nix::sys::memfd::{memfd_create, MemFdCreateFlag};
 use sha2::{Digest, Sha256};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, Read, Seek, Write};
 use std::os::unix::fs::OpenOptionsExt;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd};
+use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
+use std::time::Duration;
 
 /// Permissions of the install result: root writes it, the controller reads it
 /// as the agent user.
 const RESULT_FILE_MODE: u32 = 0o644;
+
+/// How long the install step waits for each read from the controller.
+///
+/// The package manager runs without a bound, because stopping it halfway would
+/// leave a broken installation behind.
+const CONTROLLER_TIMEOUT: Duration = Duration::from_secs(300);
 
 /// The package managers an agent package can be installed with.
 ///
@@ -117,18 +126,53 @@ impl VerifiedPackage {
 /// # Errors
 ///
 /// If the package is refused, if the controller ends the connection before it
-/// sends `install`, or if the package manager fails. The error carries what
-/// the package manager said, because that is the only diagnostic an operator
-/// gets. A result that cannot be written or sent is not one of them: the
-/// installation has happened either way.
+/// sends `install`, if the controller sends nothing for [`CONTROLLER_TIMEOUT`]
+/// while the mode waits for it, or if the package manager fails. The error
+/// carries what the package manager said, because that is the only diagnostic
+/// an operator gets. A result that cannot be written or sent is not one of
+/// them: the installation has happened either way.
 pub fn install_agent(result_path: &Path) -> AnyhowResult<()> {
     let config_path = std::env::var_os(constants::ENV_UPDATE_CONFIG).map(PathBuf::from);
+    let input = std::io::stdin();
+    bound_reads(input.as_fd(), CONTROLLER_TIMEOUT)?;
     serve(
-        &mut std::io::stdin().lock(),
+        &mut input.lock(),
         &mut std::io::stdout().lock(),
         config_path.as_deref(),
         result_path,
     )
+    .map_err(|error| {
+        if install::timed_out(&error) {
+            error.context(format!(
+                "The controller sent nothing for {CONTROLLER_TIMEOUT:?}"
+            ))
+        } else {
+            error
+        }
+    })
+}
+
+/// Let every read from `connection` fail after `timeout` without data.
+///
+/// The option belongs to the socket, not to the descriptor, so setting it
+/// through a duplicate bounds the reads through `connection` as well. Outside
+/// its unit, as in the smoke test, the mode reads from a file or a pipe, which
+/// takes no timeout.
+///
+/// # Errors
+///
+/// If `connection` cannot be duplicated, or the timeout of a socket cannot be
+/// set.
+fn bound_reads(connection: BorrowedFd, timeout: Duration) -> AnyhowResult<()> {
+    let socket = UnixStream::from(
+        connection
+            .try_clone_to_owned()
+            .context("Cannot duplicate the connection to the controller")?,
+    );
+    match socket.set_read_timeout(Some(timeout)) {
+        Err(error) if error.raw_os_error() == Some(Errno::ENOTSOCK as i32) => Ok(()),
+        result => result.context("Cannot set the timeout of the connection to the controller"),
+    }
 }
 
 /// One conversation on the installer socket, from the request to the result.
@@ -654,6 +698,33 @@ mod tests {
             panic!("the unit refused the package");
         };
         assert!(reason.contains("No signature of the package matches a configured signature key"));
+    }
+
+    /// The timeout is set through a duplicate and still bounds the reads of
+    /// the original.
+    #[test]
+    fn test_the_step_stops_waiting_for_a_silent_controller() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let (connection, _controller) = UnixStream::pair().unwrap();
+        bound_reads(connection.as_fd(), Duration::from_millis(100)).unwrap();
+        let mut output = connection.try_clone().unwrap();
+
+        let error = serve(
+            &mut std::io::BufReader::new(connection),
+            &mut output,
+            None,
+            &dir.path().join("agent-install-result.json"),
+        )
+        .unwrap_err();
+
+        assert!(install::timed_out(&error));
+    }
+
+    #[test]
+    fn test_input_that_is_no_socket_takes_no_timeout() {
+        let file = tempfile::tempfile().unwrap();
+
+        assert!(bound_reads(file.as_fd(), Duration::from_millis(100)).is_ok());
     }
 
     fn a_result() -> InstallResult {

@@ -192,10 +192,23 @@ pub fn read_install(source: &mut impl BufRead) -> AnyhowResult<bool> {
     Ok(line.strip_suffix(b"\n").unwrap_or(&line) == INSTALL.as_bytes())
 }
 
+/// A read past the timeout of a socket fails with `WouldBlock` on Unix.
+#[cfg(unix)]
+pub fn timed_out(error: &anyhow::Error) -> bool {
+    error.downcast_ref::<std::io::Error>().is_some_and(|error| {
+        matches!(
+            error.kind(),
+            std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
+        )
+    })
+}
+
 /// The controller's side of the conversation.
 #[cfg(unix)]
 mod client {
-    use super::{read_line, write_line, InstallRequest, InstallResult, InstallVerdict, INSTALL};
+    use super::{
+        read_line, timed_out, write_line, InstallRequest, InstallResult, InstallVerdict, INSTALL,
+    };
     use anyhow::{bail, Context, Result as AnyhowResult};
     use std::io::{BufReader, ErrorKind, Read, Write};
     use std::net::Shutdown;
@@ -282,13 +295,6 @@ mod client {
                 }
             }
         }
-    }
-
-    /// A read past the timeout of a socket fails with `WouldBlock` on Unix.
-    fn timed_out(error: &anyhow::Error) -> bool {
-        error.downcast_ref::<std::io::Error>().is_some_and(|error| {
-            matches!(error.kind(), ErrorKind::WouldBlock | ErrorKind::TimedOut)
-        })
     }
 
     /// Where sending a package broke off.

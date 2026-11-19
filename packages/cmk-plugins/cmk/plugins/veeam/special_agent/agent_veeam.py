@@ -23,7 +23,7 @@ from typing import override
 import requests
 import requests.auth
 import urllib3
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 from pydantic.alias_generators import to_camel
 
 from cmk.password_store.v1 import (
@@ -635,6 +635,30 @@ def _total_count(backup_objects: Sequence[_BackupObject]) -> int | None:
     return sum(ints) if len(ints) == len(counts) else None
 
 
+def _load_cache[Entry](
+    storage: Storage, key: str, cache_model: TypeAdapter[dict[str, Entry]]
+) -> dict[str, Entry]:
+    """The cache stored under `key`, or an empty one if it doesn't match `cache_model`,
+    e.g. because an older version of the agent wrote it."""
+    try:
+        return cache_model.validate_json(storage.read(key, "{}"))
+    except ValidationError as exc:
+        _LOGGER.warning(
+            "Discarding the cache %(key)r, which has an unexpected format: %(error)s",
+            {"key": key, "error": exc},
+        )
+        return {}
+
+
+def _write_cache[Entry](
+    storage: Storage,
+    key: str,
+    cache_model: TypeAdapter[dict[str, Entry]],
+    cache: dict[str, Entry],
+) -> None:
+    storage.write(key, cache_model.dump_json(cache).decode())
+
+
 BACKUP_OBJECTS_STORAGE_KEY = "backup_objects"
 
 
@@ -643,20 +667,7 @@ class _CachedBackupObjects(BaseModel):
     objects: list[_BackupObject]
 
 
-def _load_backup_objects_cache(storage: Storage) -> Mapping[str, _CachedBackupObjects]:
-    try:
-        raw = json.loads(storage.read(BACKUP_OBJECTS_STORAGE_KEY, "{}"))
-    except json.JSONDecodeError:
-        return {}
-    if not isinstance(raw, dict):
-        return {}
-    cache: dict[str, _CachedBackupObjects] = {}
-    for backup_id, entry in raw.items():
-        try:
-            cache[backup_id] = _CachedBackupObjects.model_validate(entry)
-        except ValidationError:
-            continue
-    return cache
+_BACKUP_OBJECTS_CACHE = TypeAdapter(dict[str, _CachedBackupObjects])
 
 
 def fetch_restore_points(limit: int = 500) -> FetchStrategy:
@@ -710,7 +721,7 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
             if job.status == "Stopped" and job.session_id is not None
         }
 
-        old_cache = _load_backup_objects_cache(client.storage)
+        old_cache = _load_cache(client.storage, BACKUP_OBJECTS_STORAGE_KEY, _BACKUP_OBJECTS_CACHE)
         new_cache: dict[str, _CachedBackupObjects] = {}
         objects_by_backup_id: dict[str, Sequence[_BackupObject]] = {}
         for backup_id in backup_ids:
@@ -739,10 +750,7 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
                 new_cache[backup_id] = _CachedBackupObjects(
                     session_id=session_id, objects=chain_objects
                 )
-        client.storage.write(
-            BACKUP_OBJECTS_STORAGE_KEY,
-            json.dumps({backup_id: entry.model_dump() for backup_id, entry in new_cache.items()}),
-        )
+        _write_cache(client.storage, BACKUP_OBJECTS_STORAGE_KEY, _BACKUP_OBJECTS_CACHE, new_cache)
 
         object_id_by_name_platform: dict[tuple[str, str], str] = {
             (obj.name, obj.platform_id): obj.id
@@ -910,22 +918,7 @@ class _CachedJobCollection(BaseModel):
     session: _SessionInfo
 
 
-def _load_job_object_names_cache(storage: Storage) -> Mapping[str, _CachedJobCollection]:
-    try:
-        raw = json.loads(storage.read(JOB_OBJECT_NAMES_STORAGE_KEY, "{}"))
-    except json.JSONDecodeError:
-        return {}
-    if not isinstance(raw, dict):
-        return {}
-    cache: dict[str, _CachedJobCollection] = {}
-    for job_id, entry in raw.items():
-        if not isinstance(job_id, str):
-            continue
-        try:
-            cache[job_id] = _CachedJobCollection.model_validate(entry)
-        except ValidationError:
-            continue
-    return cache
+_JOB_OBJECT_NAMES_CACHE = TypeAdapter(dict[str, _CachedJobCollection])
 
 
 def _resolve_job_object_names(
@@ -955,7 +948,7 @@ def _resolve_job_object_names(
     in-progress snapshot until the job's next run. A job no longer present this run
     is simply dropped from the cache.
     """
-    old_cache = _load_job_object_names_cache(client.storage)
+    old_cache = _load_cache(client.storage, JOB_OBJECT_NAMES_STORAGE_KEY, _JOB_OBJECT_NAMES_CACHE)
     new_cache: dict[str, _CachedJobCollection] = {}
     objects_by_job: dict[JobId, _JobObjects] = {}
     for session_id, job in session_to_job.items():
@@ -998,14 +991,12 @@ def _resolve_job_object_names(
                 new_cache[job_id] = _CachedJobCollection(
                     session_id=session_id, names=names, session=session_info
                 )
-    client.storage.write(
-        JOB_OBJECT_NAMES_STORAGE_KEY,
-        json.dumps({job_id: entry.model_dump() for job_id, entry in new_cache.items()}),
-    )
+    _write_cache(client.storage, JOB_OBJECT_NAMES_STORAGE_KEY, _JOB_OBJECT_NAMES_CACHE, new_cache)
     return objects_by_job
 
 
-def _session_tasks(client: VeeamClient, session_id: SessionId) -> list[_Task]:
+def _session_tasks(client: VeeamClient, session_id: SessionId) -> list[_Task] | None:
+    """None if the session's tasks could not be read."""
     try:
         items = client.get_all(
             f"/api/v1/sessions/{session_id}/taskSessions", extra_params="&typeFilter=Backup"
@@ -1014,9 +1005,41 @@ def _session_tasks(client: VeeamClient, session_id: SessionId) -> list[_Task]:
         # The task sessions of an agent management session 500 ("The value of
         # enum ESessionType is not supported") instead of coming back empty.
         if _is_skippable(exc, extra=(HTTPStatus.INTERNAL_SERVER_ERROR,)):
-            return []
+            return None
         raise
     return _parse_backup_tasks(items)
+
+
+SESSION_TASKS_STORAGE_KEY = "session_tasks"
+
+
+class _CachedSessionTasks(BaseModel):
+    session_id: SessionId
+    tasks: list[Mapping[str, object]]
+
+
+_SESSION_TASKS_CACHE = TypeAdapter(dict[str, _CachedSessionTasks])
+
+
+def _cached_session_tasks(
+    client: VeeamClient,
+    cached: _CachedSessionTasks | None,
+    session_id: SessionId,
+    session_stopped: bool,
+) -> tuple[list[_Task] | None, _CachedSessionTasks | None]:
+    """The tasks of the job's current session, and the job's entry for the next cache.
+
+    The tasks come from the `cached` entry while the job is still on its session, otherwise
+    they are fetched. They are cached if the session and all its tasks have stopped. A
+    session can already report "Stopped" while a task still changes in place, e.g. right
+    after the job was stopped by hand; such a task is fetched again on the next run.
+    """
+    if cached is not None and cached.session_id == session_id:
+        return _parse_backup_tasks(cached.tasks), cached
+    tasks = _session_tasks(client, session_id)
+    if tasks is None or not session_stopped or any(task.state != "Stopped" for task in tasks):
+        return tasks, None
+    return tasks, _CachedSessionTasks(session_id=session_id, tasks=[task.record for task in tasks])
 
 
 def _newest_task_per_object(
@@ -1052,20 +1075,7 @@ class _CachedJobTasks(BaseModel):
     """The job's current session when `_look_back` was last done."""
 
 
-def _load_last_tasks_cache(storage: Storage) -> Mapping[JobId, _CachedJobTasks]:
-    try:
-        raw = json.loads(storage.read(LAST_TASKS_STORAGE_KEY, "{}"))
-    except json.JSONDecodeError:
-        return {}
-    if not isinstance(raw, dict):
-        return {}
-    cache: dict[JobId, _CachedJobTasks] = {}
-    for job_id, entry in raw.items():
-        try:
-            cache[job_id] = _CachedJobTasks.model_validate(entry)
-        except ValidationError:
-            continue
-    return cache
+_LAST_TASKS_CACHE = TypeAdapter(dict[str, _CachedJobTasks])
 
 
 def _merge_newest(
@@ -1133,7 +1143,7 @@ def _look_back(
     ]
     found: dict[ObjectName, _Task] = {}
     for session_id in earlier_session_ids[:sessions]:
-        tasks = _newest_task_per_object(_session_tasks(client, session_id), resolved_names)
+        tasks = _newest_task_per_object(_session_tasks(client, session_id) or [], resolved_names)
         # Sessions come newest first, so an object's task found earlier is newer.
         found = {name: task for name, task in tasks.items() if name in object_names} | found
         if len(found) == len(object_names):
@@ -1200,6 +1210,9 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     a time window over /api/v1/taskSessions would reach back to the least recently
     run job and pull everything since. A task session lookup that 400s/404s/500s
     leaves that job without tasks (a single-object job still falls back to its session).
+    The tasks of a session whose own `state` is "Stopped" don't change any more, so
+    they are cached per job, like the job's objects (`_resolve_job_object_names`), and
+    a job still on that session makes no request.
 
     A session need not hold a task for every object of a multi-object job, e.g. a
     retry session only holds the objects it retried. So the newest finished task of
@@ -1227,15 +1240,27 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     }
 
     records: dict[ObjectName, dict[JobId, Mapping[str, object]]] = {}
-    old_last_tasks = _load_last_tasks_cache(client.storage)
+    old_last_tasks = _load_cache(client.storage, LAST_TASKS_STORAGE_KEY, _LAST_TASKS_CACHE)
     new_last_tasks: dict[JobId, _CachedJobTasks] = {}
+    old_session_tasks = _load_cache(client.storage, SESSION_TASKS_STORAGE_KEY, _SESSION_TASKS_CACHE)
+    new_session_tasks: dict[JobId, _CachedSessionTasks] = {}
     for session_id, job in session_to_job.items():
         if (job_objects_entry := job_objects.get(job.job_id)) is None:
             if (cached := old_last_tasks.get(job.job_id)) is not None:
                 new_last_tasks[job.job_id] = cached
+            if (cached_tasks := old_session_tasks.get(job.job_id)) is not None:
+                new_session_tasks[job.job_id] = cached_tasks
             continue
         resolved_names = job_objects_entry.names
-        tasks = _newest_task_per_object(_session_tasks(client, session_id), resolved_names)
+        session_tasks, session_tasks_entry = _cached_session_tasks(
+            client,
+            old_session_tasks.get(job.job_id),
+            session_id,
+            session_stopped=job_objects_entry.session.state == "Stopped",
+        )
+        if session_tasks_entry is not None:
+            new_session_tasks[job.job_id] = session_tasks_entry
+        tasks = _newest_task_per_object(session_tasks or [], resolved_names)
         if len(resolved_names) > 1:
             cached = old_last_tasks.get(job.job_id)
             stored = _newest_task_per_object(
@@ -1265,10 +1290,8 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
                 "jobName": job.job_name,
             }
 
-    client.storage.write(
-        LAST_TASKS_STORAGE_KEY,
-        json.dumps({job_id: entry.model_dump() for job_id, entry in new_last_tasks.items()}),
-    )
+    _write_cache(client.storage, LAST_TASKS_STORAGE_KEY, _LAST_TASKS_CACHE, new_last_tasks)
+    _write_cache(client.storage, SESSION_TASKS_STORAGE_KEY, _SESSION_TASKS_CACHE, new_session_tasks)
 
     # Single-object jobs whose session has no task at all (e.g. the
     # Linux/Windows Agent Backup gap) fall back to the job's own session: with only

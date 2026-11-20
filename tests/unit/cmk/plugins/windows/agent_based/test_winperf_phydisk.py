@@ -394,3 +394,93 @@ def test_parse_winperf_phydisk_pairs_wait_with_own_direction() -> None:
     disk = section["C:"]
     assert disk["average_read_wait_base"] == disk["read_ios"]
     assert disk["average_write_wait_base"] == disk["write_ios"]
+
+
+def test_calc_rate_corrects_wrapped_dword() -> None:
+    rate = winperf_phydisk.calc_rate(
+        winperf_phydisk.DataPoint(0.0, 2**32 - 10),
+        new=winperf_phydisk.DataPoint(10.0, 10),
+        raise_overflow=True,
+        wrap_at=winperf_phydisk._WRAP_AT_DWORD,  # noqa: SLF001
+    )
+    assert rate == 2.0
+
+
+def test_calc_rate_raises_on_decrease_of_counter_of_unknown_width() -> None:
+    with pytest.raises(winperf_phydisk.GetRateErrorCounter):
+        winperf_phydisk.calc_rate(
+            winperf_phydisk.DataPoint(0.0, 2**32 - 10),
+            new=winperf_phydisk.DataPoint(10.0, 10),
+            raise_overflow=True,
+        )
+
+
+# Two samples of one disk of a Hyper-V host, 306.03 s apart, metric names as
+# parse_winperf_phydisk produces them. Only writes happened in between, so every counter fed by
+# reads stands still. The wait counter of the busy direction is a PERF_AVERAGE_TIMER, read as a
+# DWORD by the agent, and it wrapped at 2**32 between the two samples.
+_HYPER_V_DISK_BEFORE_WRAP: diskstat.Disk = {
+    "timestamp": 1762358784.25,
+    "frequency": 10000000,
+    "read_ql": 6956904154540,
+    "write_ql": 115928363637934,
+    "average_read_wait": 3352102316,
+    "average_read_wait_base": 214215397,
+    "average_write_wait": 2901351598,
+    "average_write_wait_base": 1171804458,
+    "read_ios": 214215397,
+    "write_ios": 1171804458,
+    "read_throughput": 49791527346176,
+    "write_throughput": 66567489191936,
+}
+
+_HYPER_V_DISK_AFTER_WRAP: diskstat.Disk = {
+    **_HYPER_V_DISK_BEFORE_WRAP,
+    "timestamp": 1762359090.28,
+    "write_ql": 115930450799285,
+    "average_write_wait": 693545653,
+    "average_write_wait_base": 1171820324,
+    "write_ios": 1171820324,
+    "write_throughput": 66568423059456,
+}
+
+
+def test_compute_rates_single_disk_survives_wrapped_dword() -> None:
+    value_store: dict[str, object] = {}
+    with pytest.raises(IgnoreResultsError):
+        winperf_phydisk._compute_rates_single_disk(  # noqa: SLF001
+            _HYPER_V_DISK_BEFORE_WRAP, value_store
+        )
+
+    disk_with_rates = winperf_phydisk._compute_rates_single_disk(  # noqa: SLF001
+        _HYPER_V_DISK_AFTER_WRAP, value_store
+    )
+
+    # ((N1 - N0 + 2**32) / F) / (D1 - D0) with F = 10 MHz and 15866 operations
+    assert disk_with_rates["average_write_wait"] == pytest.approx(0.013154930990797933)
+    # The idle direction: numerator and denominator are both zero.
+    assert disk_with_rates["average_read_wait"] == 0.0
+    assert disk_with_rates["read_ios"] == 0.0
+
+
+def test_compute_rates_single_disk_ignores_counter_reset() -> None:
+    """A reboot resets the 64 bit counters too. Those must still drop the whole disk, so that
+    the wrap correction of the 32 bit counters cannot invent a latency spike."""
+    value_store: dict[str, object] = {}
+    with pytest.raises(IgnoreResultsError):
+        winperf_phydisk._compute_rates_single_disk(  # noqa: SLF001
+            _HYPER_V_DISK_AFTER_WRAP, value_store
+        )
+
+    after_reboot: diskstat.Disk = {
+        **{
+            metric: 0
+            for metric in _HYPER_V_DISK_AFTER_WRAP
+            if metric not in ("timestamp", "frequency")
+        },
+        "timestamp": _HYPER_V_DISK_AFTER_WRAP["timestamp"] + 60,
+        "frequency": 10000000,
+    }
+
+    with pytest.raises(IgnoreResultsError):
+        winperf_phydisk._compute_rates_single_disk(after_reboot, value_store)  # noqa: SLF001

@@ -53,6 +53,7 @@ def update_value_and_calc_rate(
     timestamp: float,
     value: float,
     raise_overflow: bool = False,
+    wrap_at: int | None = None,
 ) -> float:
     """
     1. Update value store.
@@ -70,6 +71,8 @@ def update_value_and_calc_rate(
         timestamp:       Timestamp of new value
         value:           The new value
         raise_overflow:  Raise a :class:`GetRateError` if the rate is negative
+        wrap_at:         Width of the counter, if it is known. A decreasing value is then
+                         read as a wrapped counter instead of an error.
 
     This function returns the rate of a measurement rₙ as the quotient of the `value` and `time`
     provided to the current function call (xₙ, tₙ) and the `value` and `time` provided to the
@@ -99,7 +102,7 @@ def update_value_and_calc_rate(
     try:
         data_point = DataPoint(timestamp, value)
         prev = update_store(value_store, key, data_point)
-        return calc_rate(prev, new=data_point, raise_overflow=raise_overflow)
+        return calc_rate(prev, new=data_point, raise_overflow=raise_overflow, wrap_at=wrap_at)
     except GetRateError as e:
         raise type(e)(f"At {key!r}: {str(e)}")
 
@@ -155,6 +158,7 @@ def calc_rate(
     *,
     new: DataPoint,
     raise_overflow: bool = False,
+    wrap_at: int | None = None,
 ) -> float:
     """
     Calculate rate based on two data points, last one and new one.
@@ -164,6 +168,8 @@ def calc_rate(
         prev:      timestamp + value from update_store
         new:       current timestamp + value
         raise_overflow:  Raise a :class:`GetRateError` if the rate is negative
+        wrap_at:         Width of the counter, if it is known. A decreasing value is then
+                         read as a wrapped counter instead of an error.
 
     This function returns the rate of a measurement rₙ as the quotient of the `value` and `time`
     provided to the current function call (xₙ, tₙ) and the `value` and `time` provided to the
@@ -194,12 +200,17 @@ def calc_rate(
     if new_time <= prev_time:
         raise GetRateErrorTime(f"No time difference: {new_time} <= {prev_time}")
 
-    rate = (new_value - prev_value) / (new_time - prev_time)
+    value_delta = new_value - prev_value
+    if value_delta < 0 and wrap_at is not None and prev_value < wrap_at:
+        # The counter wrapped. A counter reset (reboot, disk replaced) looks the same here,
+        # but it resets the 64 bit counters of the same disk as well. Those still raise, and
+        # the caller drops the whole disk for one interval. See _compute_rates_single_disk.
+        value_delta += wrap_at
+
+    rate = value_delta / (new_time - prev_time)
     if raise_overflow and rate < 0:
-        # Do not try to handle wrapped counters. We do not know
-        # whether they are 32 or 64 bit. It also could happen counter
-        # reset (reboot, etc.). Better is to leave this value undefined
-        # and wait for the next check interval.
+        # Counter of unknown width. It also could happen counter reset (reboot, etc.).
+        # Better is to leave this value undefined and wait for the next check interval.
         raise GetRateErrorCounter(f"Value overflow: {new_value} <= {prev_value}")
 
     return rate
@@ -291,6 +302,24 @@ _LINE_TO_METRIC: Final = {
     "-26": "average_read_wait",  # 208 Avg. Disc sec/Read
     "-24": "average_write_wait",  # 210 Avg. Disc sec/Write
 }
+
+# Windows stores a counter either as a DWORD or as a LARGE, see the PERF_SIZE_* bits of
+# PERF_COUNTER_DEFINITION.CounterType. The agent reads exactly that width, so a DWORD counter
+# wraps at 2**32 (wtools.cpp, GetCounterValueFromBlock). The rows of _LINE_TO_METRIC listed
+# below are PERF_AVERAGE_TIMER, PERF_AVERAGE_BASE and PERF_COUNTER_COUNTER, all of them
+# PERF_SIZE_DWORD. The throughput and queue length rows are PERF_SIZE_LARGE and not listed.
+_WRAP_AT_DWORD: Final = 1 << 32
+
+_DWORD_METRICS: Final = frozenset(
+    {
+        "read_ios",  # counter
+        "write_ios",  # counter
+        "average_read_wait",  # average_timer
+        "average_write_wait",  # average_timer
+        "average_read_wait_base",  # average_base
+        "average_write_wait_base",  # average_base
+    }
+)
 
 DiskType = dict[str, int | float]
 SectionsType = dict[str, DiskType]
@@ -542,6 +571,7 @@ def _update_value_and_calc_rate(metric: str, compute_specs: _ComputeSpec, value:
         timestamp=compute_specs.timestamp,
         value=value,
         raise_overflow=True,
+        wrap_at=_WRAP_AT_DWORD if metric in _DWORD_METRICS else None,
     )
 
 

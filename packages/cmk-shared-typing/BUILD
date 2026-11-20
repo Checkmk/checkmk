@@ -52,6 +52,7 @@ SOURCES_COMMON = [
     "monitoring/all_services.json",
     "monitoring/host_services.json",
     "monitoring/page_link_button.json",
+    "monitoring/unapplied_filter.json",
     "notifications.json",
     "setup.json",
     "icon.json",

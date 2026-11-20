@@ -26,6 +26,7 @@ from cmk.gui.monitor.command import (
     notification_rules_url,
 )
 from cmk.gui.monitor.export import EXPORT_EVENT, MonitorExportMenu
+from cmk.gui.monitor.legacy_context import FilterTitleLookup, read_unapplied_filter_titles
 from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.monitor.services._api._limits import LIMIT_TIERS
 from cmk.gui.monitor.services._legacy_view_link import ALL_SERVICES_SURVEY_URL
@@ -48,6 +49,7 @@ from cmk.shared_typing.monitoring.all_services import (
     RowLink,
     ServiceActionIdent,
     Site,
+    UnappliedFilter,
 )
 from cmk.utils import paths
 from cmk.web.utils.urls import makeuri_contextless
@@ -64,10 +66,13 @@ class MonitorAllServicesPage(Page):
         commands: MonitorCommands,
         recurrences: DowntimeRecurrences,
         teleport_target: str | None = None,
+        *,
+        look_up_filter_title: FilterTitleLookup,
     ) -> None:
         self._commands = commands
         self._recurrences = recurrences
         self._teleport_target = teleport_target
+        self._look_up_filter_title = look_up_filter_title
 
     @override
     def page(self, ctx: PageContext) -> None:
@@ -169,6 +174,12 @@ class MonitorAllServicesPage(Page):
                         title=_("Return to classic view"),
                         survey_url=ALL_SERVICES_SURVEY_URL,
                     ),
+                    unapplied_filters=[
+                        UnappliedFilter(id=name, title=title)
+                        for name, title in read_unapplied_filter_titles(
+                            ctx.request, self._look_up_filter_title
+                        )
+                    ],
                 )
             ),
         )

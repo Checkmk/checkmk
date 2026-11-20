@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.monitor.command import DowntimeRecurrences, MonitorCommands
+from cmk.gui.monitor.legacy_context import FilterTitleLookup
 from cmk.gui.pages import PageEndpoint, PageRegistry
 
 from ._monitor_all_hosts import MonitorAllHostsPage
@@ -13,10 +14,16 @@ def register_pages(
     command_registry: MonitorCommands,
     recurrences: DowntimeRecurrences,
     teleport_target: str | None,
+    look_up_filter_title: FilterTitleLookup,
 ) -> None:
     page_registry.register(
         PageEndpoint(
             "monitor_all_hosts",
-            MonitorAllHostsPage(command_registry, recurrences, teleport_target),
+            MonitorAllHostsPage(
+                command_registry,
+                recurrences,
+                teleport_target,
+                look_up_filter_title=look_up_filter_title,
+            ),
         )
     )

@@ -54,6 +54,7 @@ def test_page_denied_without_legacy_view_permission() -> None:
         DowntimeRecurrences(),
         HostMenus(),
         setup_folders=lambda _config, _user: _SetupGrantingAll(),
+        look_up_filter_title=lambda _name: None,
     )
 
     with pytest.raises(MKAuthException):

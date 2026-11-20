@@ -5,6 +5,7 @@
 
 from cmk.gui.hooks import register_builtin
 from cmk.gui.monitor.command import DowntimeRecurrences, MonitorCommands
+from cmk.gui.monitor.legacy_context import FilterTitleLookup
 from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
@@ -23,7 +24,10 @@ def register(
     downtime_recurrences: DowntimeRecurrences,
     teleport_target: str | None,
     setup_folders: SetupFolderSource,
+    look_up_filter_title: FilterTitleLookup,
 ) -> None:
     register_endpoints(endpoint_family_registry, versioned_endpoint_registry, setup_folders)
-    register_pages(page_registry, command_registry, downtime_recurrences, teleport_target)
+    register_pages(
+        page_registry, command_registry, downtime_recurrences, teleport_target, look_up_filter_title
+    )
     register_builtin("experimental_view_button", AllHostsLinkButton(teleport_target))

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.monitor.command import DowntimeRecurrences, MonitorCommands
+from cmk.gui.monitor.legacy_context import FilterTitleLookup
 from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.pages import PageEndpoint, PageRegistry
 
@@ -19,6 +20,7 @@ def register_pages(
     host_menus: HostMenus,
     teleport_target: str | None,
     setup_folders: SetupFolderSource,
+    look_up_filter_title: FilterTitleLookup,
 ) -> None:
     page_registry.register(
         PageEndpoint(
@@ -29,12 +31,18 @@ def register_pages(
                 host_menus,
                 teleport_target,
                 setup_folders=setup_folders,
+                look_up_filter_title=look_up_filter_title,
             ),
         )
     )
     page_registry.register(
         PageEndpoint(
             "monitor_all_services",
-            MonitorAllServicesPage(command_registry, recurrences, teleport_target),
+            MonitorAllServicesPage(
+                command_registry,
+                recurrences,
+                teleport_target,
+                look_up_filter_title=look_up_filter_title,
+            ),
         )
     )

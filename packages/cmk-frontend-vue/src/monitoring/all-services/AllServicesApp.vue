@@ -75,6 +75,7 @@ import { useServiceListing } from '@/monitoring/shared/services/useServiceListin
 import { buildTableStateSchema } from '@/monitoring/shared/tableState/schema'
 import { readTableStateFromUrl, tableStateWriter } from '@/monitoring/shared/tableState/urlState'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
+import { unappliedFiltersWriter } from '@/monitoring/shared/unappliedFilters'
 import {
   type SlideInListing,
   type SlideInUrlDescriptor,
@@ -352,6 +353,7 @@ const hostListing: SlideInListing<HostSlideInSubject> = {
 useUrlSync([
   tableStateWriter(allServicesService, schema),
   filterStateWriter(allServicesService),
+  unappliedFiltersWriter(),
   displayOptionsWriter(displayOptions),
   slideInWriter({
     descriptor: SERVICE_SLIDE_IN,
@@ -419,6 +421,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       <MonitoringToolbar
         ref="toolbar"
         :service="allServicesService"
+        :unapplied-filters="unapplied_filters"
         :search-placeholder="_t('Search services and hosts…')"
       />
       <MonitoringExportFeedback v-model="exportFeedback" />

@@ -74,6 +74,7 @@ import {
 import { useServiceListing } from '../shared/services/useServiceListing'
 import { buildTableStateSchema } from '../shared/tableState/schema'
 import { readTableStateFromUrl, tableStateWriter } from '../shared/tableState/urlState'
+import { unappliedFiltersWriter } from '../shared/unappliedFilters'
 import {
   type SlideInListing,
   type SlideInUrlDescriptor,
@@ -355,6 +356,7 @@ const hostListing: SlideInListing<HostEntry> = {
 useUrlSync([
   tableStateWriter(hostServicesService, schema),
   filterStateWriter(hostServicesService),
+  unappliedFiltersWriter(),
   displayOptionsWriter(displayOptions),
   slideInWriter({
     descriptor: SERVICE_SLIDE_IN,
@@ -431,6 +433,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       <MonitoringToolbar
         ref="toolbar"
         :service="hostServicesService"
+        :unapplied-filters="unapplied_filters"
         :search-placeholder="_t('Search services…')"
       >
         <template v-if="hostServicesService.hostEntry.value" #subject>

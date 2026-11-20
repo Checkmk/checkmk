@@ -33,6 +33,7 @@ from cmk.gui.monitor.command import (
 )
 from cmk.gui.monitor.export import EXPORT_EVENT, MonitorReportExportMenu
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
+from cmk.gui.monitor.legacy_context import FilterTitleLookup, read_unapplied_filter_titles
 from cmk.gui.monitor.services._access import HOST_SERVICES_PERMISSION, LEGACY_HOST_VIEW_NAME
 from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.monitor.services._api._limits import LIMIT_TIERS
@@ -56,6 +57,7 @@ from cmk.shared_typing.monitoring.host_services import (
     MonitoringPageLinkButton,
     RowLink,
     ServiceActionIdent,
+    UnappliedFilter,
 )
 from cmk.utils import paths
 from cmk.web.utils.urls import makeuri_contextless
@@ -92,12 +94,14 @@ class MonitorHostServicesPage(Page):
         teleport_target: str | None = None,
         *,
         setup_folders: SetupFolderSource,
+        look_up_filter_title: FilterTitleLookup,
     ) -> None:
         self._commands = commands
         self._recurrences = recurrences
         self._host_menus = host_menus
         self._teleport_target = teleport_target
         self._setup_folders = setup_folders
+        self._look_up_filter_title = look_up_filter_title
 
     def _permitted_actions(self) -> list[MonitoringAction]:
         return [
@@ -227,6 +231,12 @@ class MonitorHostServicesPage(Page):
                         ),
                         title=_("Return to classic view"),
                     ),
+                    unapplied_filters=[
+                        UnappliedFilter(id=name, title=title)
+                        for name, title in read_unapplied_filter_titles(
+                            ctx.request, self._look_up_filter_title
+                        )
+                    ],
                 )
             ),
         )

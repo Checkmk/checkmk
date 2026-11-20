@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts" generic="T">
+import type { UnappliedFilter } from 'cmk-shared-typing/typescript/monitoring/unapplied_filter'
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -18,6 +19,8 @@ import type { MonitoringService } from '@/monitoring/shared/services/MonitoringS
 const props = defineProps<{
   service: MonitoringService<T>
   searchPlaceholder: TranslatedString
+  /** The filters of the legacy view the page was opened from that it does not apply. */
+  unappliedFilters: UnappliedFilter[]
 }>()
 
 const { _t } = usei18n()
@@ -58,7 +61,11 @@ defineExpose({
             @deactivate="service.deactivateQuickFilter(chip)"
           />
         </div>
-        <MonitoringFilterHint class="monitoring-toolbar__hint" :service="service" />
+        <MonitoringFilterHint
+          class="monitoring-toolbar__hint"
+          :service="service"
+          :unapplied-filters="unappliedFilters"
+        />
         <CmkButton
           variant="text"
           size="small"

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2019-09/schema",
   "type": "object",
   "title": "Monitoring - Base Structure",
-  "required": ["limit_tiers"],
+  "required": ["limit_tiers", "unapplied_filters"],
   "properties": {
     "show_indicators": {
       "type": "boolean",
@@ -54,6 +54,11 @@
       "type": "array",
       "items": { "$ref": "#/$defs/downtime_preset" },
       "default": []
+    },
+    "unapplied_filters": {
+      "description": "The filters of the legacy view the page was opened from that it does not apply.",
+      "type": "array",
+      "items": { "$ref": "unapplied_filter.json" }
     }
   },
   "$defs": {

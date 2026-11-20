@@ -59,5 +59,9 @@ class FilterRegistry(Registry[Filter]):
     def plugin_name(self, instance: Filter) -> str:
         return instance.ident
 
+    def title_of(self, name: FilterName) -> str | None:
+        """The title of the filter ``name``, ``None`` if no such filter is registered."""
+        return None if (instance := self.get(name)) is None else instance.title
+
 
 filter_registry = FilterRegistry()

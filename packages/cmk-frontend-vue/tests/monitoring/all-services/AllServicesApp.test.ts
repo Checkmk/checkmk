@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen, within } from '@testing-library/vue'
+import { fireEvent, render, screen, within } from '@testing-library/vue'
 import type { MonitoringAllServicesApp } from 'cmk-shared-typing/typescript/monitoring/all_services'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
@@ -113,6 +113,7 @@ function renderApp(overrides: Partial<MonitoringAllServicesApp> = {}) {
       ],
       edition: 'pro',
       limit_tiers: [1000, 5000],
+      unapplied_filters: [],
       export_event: EXPORT_EVENT,
       ...overrides
     } satisfies MonitoringAllServicesApp
@@ -527,6 +528,65 @@ describe('with the rows laid out', () => {
     expect(await screen.findByText('Host details')).toBeInTheDocument()
     expect(hostsPost).not.toHaveBeenCalled()
   })
+})
+
+const UNAPPLIED_FILTERS = [{ id: 'hostalias', title: 'Host alias' }]
+
+test('names the filters of the classic view it was opened from that it does not apply', async () => {
+  mockServices([makeApiEntry()])
+  renderApp({ unapplied_filters: UNAPPLIED_FILTERS })
+
+  expect(await screen.findByText('Some filters not supported yet: Host alias')).toBeVisible()
+})
+
+test('names the unapplied filters next to the filter it applies from the classic view', async () => {
+  const filter = { type: 'condition', field: 'host_name', op: 'contains', value: 'web' }
+  window.history.replaceState(
+    null,
+    '',
+    `/monitor_all_services.py?filter=${encodeURIComponent(JSON.stringify(filter))}&unapplied=hostalias`
+  )
+  mockServices([makeApiEntry()])
+  renderApp({ unapplied_filters: UNAPPLIED_FILTERS })
+
+  await vi.waitUntil(() =>
+    servicesPost.mock.calls.some(
+      ([path, init]: [string, { body: { filter?: unknown } }]) =>
+        path === SERVICES_PATH && JSON.stringify(init.body.filter) === JSON.stringify(filter)
+    )
+  )
+
+  expect(await screen.findByText('Some filters not supported yet: Host alias')).toBeVisible()
+})
+
+test('drops the unapplied filters from the address bar', async () => {
+  window.history.replaceState(null, '', '/monitor_all_services.py?unapplied=hostalias')
+  mockServices([makeApiEntry()])
+  renderApp({ unapplied_filters: UNAPPLIED_FILTERS })
+
+  await screen.findByText('Some filters not supported yet: Host alias')
+
+  await vi.waitFor(() =>
+    expect(new URLSearchParams(window.location.search).has('unapplied')).toBe(false)
+  )
+})
+
+test('keeps naming the unapplied filters when the user searches', async () => {
+  mockServices([makeApiEntry()])
+  renderApp({ unapplied_filters: UNAPPLIED_FILTERS })
+  await screen.findByText('Some filters not supported yet: Host alias')
+
+  const search = screen.getByRole('searchbox')
+  await fireEvent.update(search, 'cpu')
+  await fireEvent.keyDown(search, { key: 'Enter' })
+  await vi.waitUntil(() =>
+    servicesPost.mock.calls.some(
+      ([path, init]: [string, { body: { q?: string } }]) =>
+        path === SERVICES_PATH && init.body.q === 'cpu'
+    )
+  )
+
+  expect(screen.getByText('Some filters not supported yet: Host alias')).toBeVisible()
 })
 
 describe('export', () => {

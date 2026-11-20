@@ -27,7 +27,11 @@ from cmk.gui.utils.transaction_manager import transactions
 
 @pytest.mark.usefixtures("user_without_permissions")
 def test_page_denied_without_legacy_view_permission() -> None:
-    page = MonitorAllHostsPage(MonitorCommands(monitor_command_registry), DowntimeRecurrences())
+    page = MonitorAllHostsPage(
+        MonitorCommands(monitor_command_registry),
+        DowntimeRecurrences(),
+        look_up_filter_title=lambda _name: None,
+    )
 
     with pytest.raises(MKAuthException):
         page.page(

@@ -121,6 +121,7 @@ function renderApp(overrides: Partial<MonitoringHostServicesApp> = {}) {
       user_id: 'cmkadmin',
       edition: 'pro',
       limit_tiers: [1000, 5000],
+      unapplied_filters: [],
       export_event: EXPORT_EVENT,
       ...overrides
     } satisfies MonitoringHostServicesApp
@@ -1609,4 +1610,55 @@ describe('rescheduling', () => {
       })
     })
   })
+})
+
+const UNAPPLIED_FILTERS = [{ id: 'hostgroup', title: 'Host group' }]
+
+test('names the filters of the classic view it was opened from that it does not apply', async () => {
+  mockServices([makeApiEntry()])
+  renderApp({ unapplied_filters: UNAPPLIED_FILTERS })
+
+  expect(await screen.findByText('Some filters not supported yet: Host group')).toBeVisible()
+})
+
+test('drops the unapplied filters from the address bar, keeping the host it shows', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    '/monitor_host_services.py?host=web-1&site=local&unapplied=hostgroup'
+  )
+  mockServices([makeApiEntry()])
+  renderApp({ unapplied_filters: UNAPPLIED_FILTERS })
+
+  await screen.findByText('Total rows: 1')
+
+  const params = new URLSearchParams(window.location.search)
+  expect([params.has('unapplied'), params.get('host'), params.get('site')]).toEqual([
+    false,
+    'web-1',
+    'local'
+  ])
+})
+
+test('no longer names the unapplied filters once the user changed the filters', async () => {
+  mockServices([makeApiEntry()])
+  renderApp({ unapplied_filters: UNAPPLIED_FILTERS })
+  await screen.findByText('Some filters not supported yet: Host group')
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter Service' }))
+  const panel = screen.getByRole('group', { name: 'Filter Service' })
+  await fireEvent.update(within(panel).getByRole('textbox'), 'cpu')
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  expect(screen.queryByText('Some filters not supported yet: Host group')).toBeNull()
+})
+
+test('no longer names the unapplied filters once the user reset them', async () => {
+  mockServices([makeApiEntry()])
+  renderApp({ unapplied_filters: UNAPPLIED_FILTERS })
+  await screen.findByText('Some filters not supported yet: Host group')
+
+  await userEvent.click(screen.getByRole('button', { name: 'Reset search and filters' }))
+
+  expect(screen.queryByText('Some filters not supported yet: Host group')).toBeNull()
 })

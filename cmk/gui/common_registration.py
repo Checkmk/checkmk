@@ -258,6 +258,7 @@ def register(
         downtime_recurrences,
         monitoring_teleport_target,
         FolderReader,
+        filter_registry.title_of,
     )
     monitor_services_registration.register(
         endpoint_family_registry,
@@ -268,6 +269,7 @@ def register(
         host_menus,
         monitoring_teleport_target,
         FolderReader,
+        filter_registry.title_of,
     )
     monitor_router_registration.register(page_registry, FolderReader)
     crash_reporting.register(

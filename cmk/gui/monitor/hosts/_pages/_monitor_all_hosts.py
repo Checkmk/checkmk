@@ -29,6 +29,7 @@ from cmk.gui.monitor.command import (
     notification_rules_url,
 )
 from cmk.gui.monitor.export import EXPORT_EVENT, MonitorReportExportMenu
+from cmk.gui.monitor.legacy_context import FilterTitleLookup, read_unapplied_filter_titles
 from cmk.gui.monitor.shared import any_custom_icons
 from cmk.gui.page_menu import (
     make_simple_link,
@@ -53,6 +54,7 @@ from cmk.shared_typing.monitoring.all_hosts import (
     MonitoringPageLinkButton,
     RowLink,
     Site,
+    UnappliedFilter,
 )
 from cmk.utils import paths
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
@@ -93,10 +95,13 @@ class MonitorAllHostsPage(Page):
         commands: MonitorCommands,
         recurrences: DowntimeRecurrences,
         teleport_target: str | None = None,
+        *,
+        look_up_filter_title: FilterTitleLookup,
     ) -> None:
         self._commands = commands
         self._recurrences = recurrences
         self._teleport_target = teleport_target
+        self._look_up_filter_title = look_up_filter_title
 
     @override
     def page(self, ctx: PageContext) -> None:
@@ -192,6 +197,12 @@ class MonitorAllHostsPage(Page):
                         ),
                         title=_("Return to classic view"),
                     ),
+                    unapplied_filters=[
+                        UnappliedFilter(id=name, title=title)
+                        for name, title in read_unapplied_filter_titles(
+                            ctx.request, self._look_up_filter_title
+                        )
+                    ],
                 )
             ),
         )

@@ -79,6 +79,7 @@ function renderApp(
       sites: [{ id: 'local', alias: 'Local site' }],
       edition,
       limit_tiers: [1000, 5000],
+      unapplied_filters: [],
       export_event: EXPORT_EVENT,
       ...overrides
     } satisfies MonitoringAllHostsApp
@@ -679,6 +680,35 @@ describe('with the rows laid out', () => {
   })
 })
 
+const UNAPPLIED_FILTERS = [
+  { id: 'wato_folder', title: 'Folder' },
+  { id: 'hostgroup', title: 'Host group' }
+]
+
+test('names the filters of the classic view it was opened from that it does not apply', async () => {
+  mockHosts([makeHost()])
+  renderApp('community', { unapplied_filters: UNAPPLIED_FILTERS })
+
+  expect(
+    await screen.findByText('Some filters not supported yet: Folder, Host group')
+  ).toBeVisible()
+})
+
+test('names the unapplied filters next to the filter it applies from the classic view', async () => {
+  const filter = { type: 'condition', field: 'name', op: 'contains', value: 'web' }
+  window.history.replaceState(
+    null,
+    '',
+    `/monitor_all_hosts.py?filter=${encodeURIComponent(JSON.stringify(filter))}&unapplied=wato_folder`
+  )
+  mockHosts([makeHost()])
+  renderApp('community', { unapplied_filters: [UNAPPLIED_FILTERS[0]!] })
+
+  await screen.findByText('Total rows: 1')
+
+  expect(screen.getByText('Some filters not supported yet: Folder')).toBeVisible()
+})
+
 const ALIAS_FILTER = { type: 'condition', field: 'alias', op: 'contains', value: 'web' }
 
 test('points out a filter on a hidden column', async () => {
@@ -705,4 +735,36 @@ test('does not point out a filter on a shown column', async () => {
   await screen.findByText('Total rows: 1')
 
   expect(screen.queryByText('Filters active in hidden columns')).toBeNull()
+})
+
+test('names the unapplied filters along with a filter on a hidden column', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    `/monitor_all_hosts.py?filter=${encodeURIComponent(JSON.stringify(ALIAS_FILTER))}&unapplied=wato_folder`
+  )
+  mockHosts([makeHost()])
+  renderApp('community', { unapplied_filters: [UNAPPLIED_FILTERS[0]!] })
+
+  expect(
+    await screen.findByText(
+      'Some filters not supported yet: Folder; others active in hidden columns'
+    )
+  ).toBeVisible()
+})
+
+test('drops the unapplied filters from the address bar, keeping the filter it applies', async () => {
+  const filter = { type: 'condition', field: 'name', op: 'contains', value: 'web' }
+  window.history.replaceState(
+    null,
+    '',
+    `/monitor_all_hosts.py?filter=${encodeURIComponent(JSON.stringify(filter))}&unapplied=wato_folder`
+  )
+  mockHosts([makeHost()])
+  renderApp('community', { unapplied_filters: [UNAPPLIED_FILTERS[0]!] })
+
+  await screen.findByText('Total rows: 1')
+
+  const params = new URLSearchParams(window.location.search)
+  expect([params.has('unapplied'), JSON.parse(params.get('filter')!)]).toEqual([false, filter])
 })

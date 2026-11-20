@@ -254,6 +254,11 @@ export abstract class MonitoringService<T> extends ServiceBase {
    */
   readonly rowToReveal: Ref<T | null> = ref(null) as Ref<T | null>
   readonly filterState: Ref<FilterNode | undefined> = ref(undefined)
+  /**
+   * Whether {@link updateFilters} ran since the page loaded, even if it left the filters as they
+   * were: a change, reset or quick filter. A search does not count.
+   */
+  readonly filtersUpdatedSinceLoad: Ref<boolean> = ref(false)
   /** The table's row-narrowing state - filter plus applied search - for a URL sync to watch. */
   readonly filterUrlState: ComputedRef<FilterUrlState>
 
@@ -560,6 +565,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
 
   updateFilters(node: FilterNode | undefined): void {
     this.filterState.value = node
+    this.filtersUpdatedSinceLoad.value = true
     this.offset.value = 0
     void this.fetch()
   }

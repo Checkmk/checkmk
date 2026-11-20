@@ -66,6 +66,7 @@ import {
 } from '../shared/services/MonitoringService'
 import { buildTableStateSchema } from '../shared/tableState/schema'
 import { readTableStateFromUrl, tableStateWriter } from '../shared/tableState/urlState'
+import { unappliedFiltersWriter } from '../shared/unappliedFilters'
 import {
   type SlideInUrlDescriptor,
   readSlideInFromHash,
@@ -317,6 +318,7 @@ const HOST_SLIDE_IN: SlideInUrlDescriptor<HostEntry, HostRef> = {
 useUrlSync([
   tableStateWriter(hostService, schema),
   filterStateWriter(hostService),
+  unappliedFiltersWriter(),
   displayOptionsWriter(displayOptions),
   slideInWriter({
     descriptor: HOST_SLIDE_IN,
@@ -353,6 +355,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       <MonitoringToolbar
         ref="toolbar"
         :service="hostService"
+        :unapplied-filters="unapplied_filters"
         :search-placeholder="_t('Search hosts…')"
       />
       <MonitoringExportFeedback v-model="exportFeedback" />

@@ -44,7 +44,6 @@ const std::vector<std::string_view> g_special_processes{
 }  // namespace
 
 TEST(PsTest, Component) {
-    GTEST_SKIP() << "CMK-42664";
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     for (auto use_full_path : {false, true}) {
@@ -73,6 +72,12 @@ TEST(PsTest, Component) {
             auto by_comma = tools::SplitString(by_tab[0], ",");
             ASSERT_EQ(by_comma.size(), 11);
 
+            // The WMI snapshot may catch a process during start-up,
+            // when it reports 0 handles or 0 threads for a moment.
+            // Check both only for a process that runs at least 2
+            // seconds, the uptime being whole seconds (CMK-42664).
+            const auto ready = convert(by_comma[10]) > 1;
+
             EXPECT_TRUE(!by_comma[0].empty());
 
             EXPECT_TRUE(convert(by_comma[1]) >= 0);
@@ -86,7 +91,7 @@ TEST(PsTest, Component) {
             EXPECT_TRUE(convert(by_comma[5]) >= 0);
             EXPECT_TRUE(convert(by_comma[6]) >= 0);
             EXPECT_TRUE(convert(by_comma[7]) >= 0);
-            if (!special) {
+            if (!special && ready) {
                 EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
                 EXPECT_TRUE(convert(by_comma[9]) > 0)
                     << "'" << process_name << "'";

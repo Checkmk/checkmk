@@ -45,13 +45,14 @@ def _link(
     location: ContextualLinkLocationConfig,
     *filters: ContextFilterConfig,
     include_context: bool = True,
+    include_time_range: bool = True,
 ) -> ContextualLinkEntryConfig:
     return ContextualLinkEntryConfig(
         title=location[1],
         location=location,
         filters=list(filters),
         include_context=include_context,
-        include_time_range=True,
+        include_time_range=include_time_range,
         show_filter_form=False,
     )
 
@@ -236,6 +237,61 @@ def test_view_editor_column_spec_with_drilldown_keeps_an_inherited_drilldown_wit
 
 
 @pytest.mark.usefixtures("request_context")
+def test_view_editor_column_spec_with_drilldown_keeps_an_inherited_drilldown_without_the_time_range(
+    admin_painter_context: PainterContext,
+) -> None:
+    vs = view_editor_column_spec("columns", "hosts", admin_painter_context, with_drilldown=True)
+    value = {
+        "columns": [
+            ColumnSpec(
+                "host",
+                parameters=PainterParameters(color_choices=[]),
+                column_title="",
+                _column_type="column",
+                column_link=_link(("views", "allhosts"), include_time_range=False),
+            )
+        ]
+    }
+
+    assert vs.transform_value(value) == value
+
+
+@pytest.mark.usefixtures("request_context")
+def test_view_editor_column_spec_with_drilldown_rejects_checked_but_empty_filters(
+    admin_painter_context: PainterContext,
+) -> None:
+    vs = view_editor_column_spec("columns", "hosts", admin_painter_context, with_drilldown=True)
+    submitted = {
+        "columns": [
+            (
+                "column",
+                {
+                    "painter_spec": ("host", PainterParameters(color_choices=[])),
+                    "column_title": "",
+                    "link_spec": (
+                        "drilldown_custom",
+                        {
+                            "target": ("views", "allhosts"),
+                            "pass_on": {
+                                "filters": [],
+                                "include_context": True,
+                                "include_time_range": True,
+                            },
+                        },
+                    ),
+                },
+            )
+        ]
+    }
+
+    with pytest.raises(MKUserError) as excinfo:
+        vs.validate_value(vs.transform_value(submitted), "columns")
+
+    assert "filters" in (excinfo.value.varname or "")
+    assert "Please add at least one filter" in str(excinfo.value)
+
+
+@pytest.mark.usefixtures("request_context")
 def test_view_editor_column_spec_with_drilldown_keeps_a_custom_drilldown(
     admin_painter_context: PainterContext,
 ) -> None:
@@ -363,6 +419,12 @@ def test_view_editor_column_spec_with_drilldown_rejects_a_link_to(
             ),
             id="single-host view without its host filter",
         ),
+        pytest.param(
+            "hosts",
+            "alias",
+            _link(("dashboards", "main"), ContextFilterConfig(filter_id="wato_folder")),
+            id="host filter to a dashboard",
+        ),
     ],
 )
 @pytest.mark.usefixtures("request_context")
@@ -396,7 +458,7 @@ def test_view_editor_column_spec_with_drilldown_labels_a_dashboard_with_its_id(
             "event_id",
             _link(("dashboards", "main"), ContextFilterConfig(filter_id="event_state")),
             "filters",
-            "is not allowed here",
+            "works only with a view as the target page",
             id="view-only filter to a dashboard",
         ),
         pytest.param(

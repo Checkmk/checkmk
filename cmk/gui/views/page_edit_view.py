@@ -15,7 +15,17 @@ import datetime as dt
 import string
 from collections.abc import Iterator, Mapping, Sequence
 from functools import partial
-from typing import Any, Literal, NamedTuple, overload, override, TypedDict, TypeIs
+from typing import (
+    Any,
+    cast,
+    Literal,
+    NamedTuple,
+    NotRequired,
+    overload,
+    override,
+    TypedDict,
+    TypeIs,
+)
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
@@ -26,7 +36,7 @@ from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.http import request, response
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.painter import all_painters, Cell, InternalPainter, PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
@@ -59,6 +69,7 @@ from cmk.gui.valuespec import (
     CascadingDropdownChoice,
     Checkbox,
     Dictionary,
+    DictionaryModel,
     DropdownChoice,
     DropdownChoiceEntries,
     DropdownChoiceEntry,
@@ -99,29 +110,9 @@ from .store import get_all_views
 from .view_choices import view_choices
 
 # Inherited: carries the clicked row's object; custom: the filters the user picks.
-type _InheritedDrilldownChoice = Literal["drilldown_views", "drilldown_dashboards"]
-_INHERITED_DRILLDOWN_TARGETS: Mapping[_InheritedDrilldownChoice, ContextualLinkTargetType] = {
-    "drilldown_views": "views",
-    "drilldown_dashboards": "dashboards",
-}
-_INHERITED_DRILLDOWN_CHOICES: Mapping[ContextualLinkTargetType, _InheritedDrilldownChoice] = {
-    target: choice for choice, target in _INHERITED_DRILLDOWN_TARGETS.items()
-}
-
-type _CustomDrilldownChoice = Literal["custom_drilldown_views", "custom_drilldown_dashboards"]
-_CUSTOM_DRILLDOWN_TARGETS: Mapping[_CustomDrilldownChoice, ContextualLinkTargetType] = {
-    "custom_drilldown_views": "views",
-    "custom_drilldown_dashboards": "dashboards",
-}
-_CUSTOM_DRILLDOWN_CHOICES: Mapping[ContextualLinkTargetType, _CustomDrilldownChoice] = {
-    target: choice for choice, target in _CUSTOM_DRILLDOWN_TARGETS.items()
-}
-_DRILLDOWN_TITLES = {
-    "drilldown_views": _l("Drill down to view (inherited)"),
-    "drilldown_dashboards": _l("Drill down to dashboard (inherited)"),
-    "custom_drilldown_views": _l("Drill down to view (custom)"),
-    "custom_drilldown_dashboards": _l("Drill down to dashboard (custom)"),
-}
+# Distinct from the legacy links' "views" and "dashboards".
+type _DrilldownMode = Literal["drilldown_inherited", "drilldown_custom"]
+_DRILLDOWN_MODES: frozenset[str] = frozenset({"drilldown_inherited", "drilldown_custom"})
 
 
 def page_edit_view(ctx: PageContext) -> None:
@@ -616,12 +607,15 @@ def _get_vs_link_or_tooltip_elements(
             "link_spec",
             CascadingDropdown(
                 title=_("Link"),
-                choices=(
-                    _column_link_choices(painter_context.user_permissions)
-                    if drilldown_choices is None
-                    else drilldown_choices
-                ),
+                choices=_column_link_choices(painter_context.user_permissions),
                 orientation="horizontal",
+            )
+            if drilldown_choices is None
+            else CascadingDropdown(
+                title=_("Link to dashboard or view"),
+                choices=drilldown_choices,
+                sorted=False,
+                show_title_of_choices=True,
             ),
         ),
         (
@@ -641,23 +635,19 @@ def _raw_filter_name(raw: _RawVSDrilldownFilter) -> FilterName:
     return raw if isinstance(raw, str) else raw[0]
 
 
-class _RawVSInheritedDrilldown(TypedDict):
-    target: VisualName
-    include_context: bool
-
-
-class _RawVSCustomDrilldown(TypedDict):
-    target: VisualName
-    filters: list[_RawVSDrilldownFilter]
+class _RawVSPassOn(TypedDict):
+    # Only a custom drill-down has them; without them, it saves as an inherited one.
+    filters: NotRequired[list[_RawVSDrilldownFilter]]
     include_context: bool
     include_time_range: bool
 
 
-type _RawVSLinkSpec = (
-    tuple[VisualTypeName, VisualName]
-    | tuple[_InheritedDrilldownChoice, _RawVSInheritedDrilldown]
-    | tuple[_CustomDrilldownChoice, _RawVSCustomDrilldown]
-)
+class _RawVSDrilldown(TypedDict):
+    target: tuple[ContextualLinkTargetType, VisualName]
+    pass_on: _RawVSPassOn
+
+
+type _RawVSLinkSpec = tuple[VisualTypeName, VisualName] | tuple[_DrilldownMode, _RawVSDrilldown]
 
 
 class _RawVSColumnSpecOptional(TypedDict, total=False):
@@ -665,66 +655,54 @@ class _RawVSColumnSpecOptional(TypedDict, total=False):
     tooltip: ColumnName
 
 
-def _is_inherited_drilldown(
-    link_spec: _RawVSLinkSpec,
-) -> TypeIs[tuple[_InheritedDrilldownChoice, _RawVSInheritedDrilldown]]:
-    return link_spec[0] in _INHERITED_DRILLDOWN_TARGETS
+def _is_drilldown(link_spec: _RawVSLinkSpec) -> TypeIs[tuple[_DrilldownMode, _RawVSDrilldown]]:
+    return link_spec[0] in _DRILLDOWN_MODES
 
 
-def _is_custom_drilldown(
-    link_spec: _RawVSLinkSpec,
-) -> TypeIs[tuple[_CustomDrilldownChoice, _RawVSCustomDrilldown]]:
-    return link_spec[0] in _CUSTOM_DRILLDOWN_TARGETS
+def _has_emptied_filters(link_spec: _RawVSLinkSpec | None) -> bool:
+    """A custom drill-down's filters checked but left empty."""
+    return (
+        link_spec is not None
+        and _is_drilldown(link_spec)
+        and link_spec[1]["pass_on"].get("filters") == []
+    )
 
 
 def _drilldown_link(link_spec: _RawVSLinkSpec | None) -> ContextualLinkEntryConfig | None:
-    if link_spec is None:
+    if link_spec is None or not _is_drilldown(link_spec):
         return None
-    if _is_inherited_drilldown(link_spec):
-        target_type, inherited = _INHERITED_DRILLDOWN_TARGETS[link_spec[0]], link_spec[1]
-        # The editor offers no time range, so it saves the wizard's default.
-        return ContextualLinkEntryConfig(
-            title=inherited["target"],
-            location=(target_type, inherited["target"]),
-            filters=[],
-            include_context=inherited["include_context"],
-            include_time_range=True,
-            show_filter_form=False,
-        )
-    if _is_custom_drilldown(link_spec):
-        target_type, custom = _CUSTOM_DRILLDOWN_TARGETS[link_spec[0]], link_spec[1]
-        # The editor offers no title or filter form, so it saves the defaults.
-        return ContextualLinkEntryConfig(
-            title=custom["target"],
-            location=(target_type, custom["target"]),
-            filters=[
-                ContextFilterConfig(filter_id=raw)
-                if isinstance(raw, str)
-                else ContextFilterConfig(filter_id=raw[0], key=raw[1])
-                for raw in custom["filters"]
-            ],
-            include_context=custom["include_context"],
-            include_time_range=custom["include_time_range"],
-            show_filter_form=False,
-        )
-    return None
+    target_type, name = link_spec[1]["target"]
+    pass_on = link_spec[1]["pass_on"]
+    # The editor offers no title or filter form, so it saves the defaults.
+    return ContextualLinkEntryConfig(
+        title=name,
+        location=(target_type, name),
+        filters=[
+            ContextFilterConfig(filter_id=raw)
+            if isinstance(raw, str)
+            else ContextFilterConfig(filter_id=raw[0], key=raw[1])
+            for raw in pass_on.get("filters", [])
+        ],
+        include_context=pass_on["include_context"],
+        include_time_range=pass_on["include_time_range"],
+        show_filter_form=False,
+    )
 
 
 def _drilldown_link_spec(link: ContextualLinkEntryConfig) -> _RawVSLinkSpec:
     target_type, name, *_owner = link["location"]
-    if not link["filters"]:
-        return _INHERITED_DRILLDOWN_CHOICES[target_type], _RawVSInheritedDrilldown(
-            target=name, include_context=link["include_context"]
-        )
-    return _CUSTOM_DRILLDOWN_CHOICES[target_type], _RawVSCustomDrilldown(
-        target=name,
-        filters=[
-            (config["filter_id"], config["key"]) if "key" in config else config["filter_id"]
-            for config in link["filters"]
-        ],
+    pass_on = _RawVSPassOn(
         include_context=link["include_context"],
         include_time_range=link["include_time_range"],
     )
+    drilldown = _RawVSDrilldown(target=(target_type, name), pass_on=pass_on)
+    if not link["filters"]:
+        return "drilldown_inherited", drilldown
+    pass_on["filters"] = [
+        (config["filter_id"], config["key"]) if "key" in config else config["filter_id"]
+        for config in link["filters"]
+    ]
+    return "drilldown_custom", drilldown
 
 
 class _RawVSColumnSpec(_RawVSColumnSpecOptional):
@@ -827,11 +805,7 @@ def _view_editor_spec(
         return painter_spec, PainterParameters()
 
     def _get_link_spec(value: _RawVSColumnSpec | _RawVSJoinInvColumnSpec) -> VisualLinkSpec | None:
-        if (
-            (ls := value.get("link_spec")) is None
-            or _is_inherited_drilldown(ls)
-            or _is_custom_drilldown(ls)
-        ):
+        if (ls := value.get("link_spec")) is None or _is_drilldown(ls):
             return None
         return VisualLinkSpec.from_raw(ls)
 
@@ -891,11 +865,11 @@ def _view_editor_spec(
         return (column_spec.name, column_spec.parameters)
 
     def _from_vs_with_drilldown(value: _RawVSColumn) -> ColumnSpec | _RawVSColumn:
-        if isinstance(column_spec := _from_vs(value), tuple):
-            return column_spec
-        return dataclasses.replace(
-            column_spec, column_link=_drilldown_link(value[1].get("link_spec"))
-        )
+        link_spec = value[1].get("link_spec")
+        # Emptied filters stay raw as well, so that validation reports them at their list
+        if isinstance(column_spec := _from_vs(value), tuple) or _has_emptied_filters(link_spec):
+            return value
+        return dataclasses.replace(column_spec, column_link=_drilldown_link(link_spec))
 
     def _to_vs_with_drilldown(column_spec: ColumnSpec | _RawVSColumn | None) -> _RawVSColumn | None:
         raw = _to_vs(column_spec)
@@ -965,21 +939,37 @@ def _drilldown_link_choices(
     data_source = data_source_registry[ds_name]()
     choices: list[CascadingDropdownChoice] = [
         (
-            choice,
-            f"{_DRILLDOWN_TITLES[choice]}:",
-            _inherited_drilldown_valuespec(target_type, user_permissions),
+            "drilldown_inherited",
+            _("Inherited"),
+            Dictionary(
+                title=_("Always filtered by the clicked item."),
+                elements=[_drilldown_target(user_permissions), ("pass_on", _drilldown_pass_on())],
+                optional_keys=[],
+            ),
         )
-        for choice, target_type in _INHERITED_DRILLDOWN_TARGETS.items()
     ]
-    choices += [
-        (
-            choice,
-            f"{_DRILLDOWN_TITLES[choice]}:",
-            _custom_drilldown_valuespec(target_type, filters, tags, user_permissions),
+    if filters := drilldown_filters(data_source, "views"):
+        choices.append(
+            (
+                "drilldown_custom",
+                _("Custom"),
+                Dictionary(
+                    title=_("Matching selected attributes of the clicked item."),
+                    elements=[
+                        _drilldown_target(user_permissions),
+                        (
+                            "pass_on",
+                            _drilldown_pass_on(_drilldown_filters_valuespec(filters, tags)),
+                        ),
+                    ],
+                    optional_keys=[],
+                    validate=partial(
+                        _validate_filters_reach_target,
+                        drilldown_filters(data_source, "dashboards"),
+                    ),
+                ),
+            )
         )
-        for choice, target_type in _CUSTOM_DRILLDOWN_TARGETS.items()
-        if (filters := drilldown_filters(data_source, target_type))
-    ]
     return choices
 
 
@@ -995,78 +985,88 @@ def _drilldown_targets(
     ]
 
 
-def _inherited_drilldown_valuespec(
-    target_type: ContextualLinkTargetType, user_permissions: UserPermissions
-) -> Dictionary:
-    return Dictionary(
-        elements=[
-            (
-                "target",
-                DropdownChoice(
-                    title=_("Target page"),
-                    choices=_drilldown_targets(target_type, user_permissions),
-                    sorted=True,
+def _drilldown_target(user_permissions: UserPermissions) -> tuple[str, ValueSpec]:
+    return (
+        "target",
+        CascadingDropdown(
+            title=_("Target page"),
+            choices=[
+                (
+                    "views",
+                    _("Link to view") + ":",
+                    DropdownChoice(
+                        choices=_drilldown_targets("views", user_permissions), sorted=True
+                    ),
                 ),
-            ),
-            (
-                "include_context",
-                Checkbox(label=_("Include dashboard and widget filters"), default_value=True),
-            ),
-        ],
-        optional_keys=[],
+                (
+                    "dashboards",
+                    _("Link to dashboard") + ":",
+                    DropdownChoice(
+                        choices=_drilldown_targets("dashboards", user_permissions), sorted=True
+                    ),
+                ),
+            ],
+            orientation="horizontal",
+        ),
     )
 
 
-def _custom_drilldown_valuespec(
-    target_type: ContextualLinkTargetType,
-    filters: Sequence[FilterName],
-    tags: TagConfig,
-    user_permissions: UserPermissions,
-) -> Dictionary:
+def _drilldown_pass_on(filters: ListOf | None = None) -> Dictionary:
+    """Without its filters checked, a custom drill-down saves as an inherited one."""
     return Dictionary(
+        title=f"<b>{_('Pass on to target page')}</b>",
         elements=[
-            (
-                "target",
-                DropdownChoice(
-                    title=_("Target page"),
-                    choices=_drilldown_targets(target_type, user_permissions),
-                    sorted=True,
-                ),
-            ),
-            (
-                "filters",
-                ListOf(
-                    valuespec=CascadingDropdown(
-                        choices=[
-                            (
-                                filter_name,
-                                _filter_title(filter_name),
-                                _filter_key_valuespec(filter_key(filter_name), tags),
-                            )
-                            for filter_name in filters
-                        ],
-                        orientation="horizontal",
-                    ),
-                    title=_("Filters of the clicked element"),
-                    add_label=_("Add filter"),
-                    # Distinct from the default placeholder of the enclosing column list.
-                    magic="@!!",
-                    allow_empty=False,
-                    empty_text=_("Please add at least one filter."),
-                    validate=_validate_filters,
-                ),
-            ),
+            *([] if filters is None else [("filters", filters)]),
             (
                 "include_context",
-                Checkbox(label=_("Include dashboard and widget filters"), default_value=True),
+                Checkbox(label=_("Dashboard & widget filters"), default_value=True),
             ),
             (
                 "include_time_range",
-                Checkbox(label=_("Include current time range"), default_value=True),
+                Checkbox(label=_("Time range"), default_value=True),
             ),
         ],
-        optional_keys=[],
+        optional_keys=["filters"],
+        default_keys=["filters"],
     )
+
+
+def _drilldown_filters_valuespec(filters: Sequence[FilterName], tags: TagConfig) -> ListOf:
+    return ListOf(
+        valuespec=CascadingDropdown(
+            choices=[
+                (
+                    filter_name,
+                    _filter_title(filter_name),
+                    _filter_key_valuespec(filter_key(filter_name), tags),
+                )
+                for filter_name in filters
+            ],
+            orientation="horizontal",
+        ),
+        title=_("Filters from the clicked item"),
+        add_label=_("Add filter"),
+        # Distinct from the default placeholder of the enclosing column list.
+        magic="@!!",
+        allow_empty=False,
+        empty_text=_("Please add at least one filter."),
+        validate=_validate_filters,
+    )
+
+
+def _validate_filters_reach_target(
+    dashboard_filters: Sequence[FilterName], value: DictionaryModel, varprefix: str
+) -> None:
+    drilldown = cast(_RawVSDrilldown, value)
+    if drilldown["target"][0] != "dashboards":
+        return
+    for raw in drilldown["pass_on"].get("filters", []):
+        if (filter_name := _raw_filter_name(raw)) not in dashboard_filters:
+            raise MKUserError(
+                f"{varprefix}_p_pass_on_p_filters",
+                _("The filter %(filter)s works only with a view as the target page.")
+                % {"filter": _filter_title(filter_name)},
+            )
 
 
 def _filter_title(filter_name: FilterName) -> str:

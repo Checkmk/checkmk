@@ -12,7 +12,7 @@ from cmk.gui.png.renderer import drawings_to_json, PngDrawing, pngs_from_json, R
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from ._drawing import png_drawing
-from ._wire import PngGraph, PngTexts
+from ._input import PngGraph, PngTexts
 
 
 @dataclass(frozen=True)

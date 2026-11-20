@@ -37,6 +37,7 @@ from cmk.gui.png.renderer import RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from ._client import render_pngs
+from ._input import PngGraph
 from ._settings import (
     compute_image_graph_ranges,
     graph_image_render_options,
@@ -44,7 +45,6 @@ from ._settings import (
     png_options,
     png_texts,
 )
-from ._wire import PngGraph
 
 _GRAPH_PERIOD_SECONDS: Final = 25 * 3600
 

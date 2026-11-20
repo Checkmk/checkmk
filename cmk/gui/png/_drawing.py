@@ -42,8 +42,8 @@ from cmk.gui.png.renderer import (
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.unit_formatter import Label, NotationFormatter
 
+from ._input import PngGraph, PngOptions, PngTexts
 from ._size import legend_height_ex, png_size_inches
-from ._wire import PngGraph, PngOptions, PngTexts
 
 _EMPTY_Y_RANGE: Final = (-0.05, 0.05)
 

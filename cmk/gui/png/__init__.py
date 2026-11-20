@@ -6,6 +6,7 @@
 from cmk.gui.png.renderer import RenderingFailure
 
 from ._client import render_pngs
+from ._input import PngGraph, PngOptions, PngTexts
 from ._notification_images import AjaxGraphImagesForNotifications
 from ._settings import (
     compute_image_graph_ranges,
@@ -15,7 +16,6 @@ from ._settings import (
     png_texts,
 )
 from ._size import compute_png_size_mm, mm_per_ex
-from ._wire import PngGraph, PngOptions, PngTexts
 
 __all__ = [
     "GraphDisplayConfigImage",

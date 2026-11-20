@@ -5,7 +5,7 @@
 
 from cmk.graphing_engine import drawn_curves, EvaluatedGraph
 
-from ._wire import PngOptions
+from ._input import PngOptions
 
 _MM_PER_INCH = 25.4
 

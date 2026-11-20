@@ -3,7 +3,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import copy
 import dataclasses
+import re
 import uuid
 
 import pytest
@@ -38,42 +40,101 @@ STATIC_TEST_CERT = certificate.Certificate.load_pem(
     certificate.CertificatePEM(STATIC_TEST_CERT_PEM)
 )
 
+ALL_PROTOCOL_VERSIONS = ["2.0", "3.0", "3.2"]
+
+
+TEST_VERIFICATION_RESPONSE_V3_2 = {
+    "VERSION": "3.2",
+    "certificate": STATIC_TEST_CERT_PEM,
+    "created_at": 1795093935,
+    "payload": {
+        "active_metric_series_limit": 6969,
+        "additional_features": [
+            {"enabled": False, "name": "ntop"},
+            {"enabled": False, "name": "virt1_appliance"},
+            {"enabled": False, "limit": 0, "name": "synthetic_monitoring"},
+        ],
+        "checkmk_edition": "cme",
+        "checkmk_max_version": "",
+        "grace_period_after_expiration": 0,
+        "group_and_managed_services_use": False,
+        "message": "Thank you for uploading your license usage report.",
+        "operational_state": "active",
+        "reseller_name": "",
+        "service_limit": 3000,
+        "status": "successful",
+        "subscription_auto_renewal": True,
+        "subscription_expiration_ts": 1785196800,
+        "subscription_recurrence_unit": "millenially",
+        "subscription_start_ts": 1753660800,
+        "unbound_license": False,
+    },
+    "request_id": "45c7fcba-7c67-11f1-8d8b-325096b39f47",
+    "response_id": "587d0c9b-c9dd-480f-b835-dd830afba72d",
+    "signature": "dEaDBeeF",
+}
+
+TEST_VERIFICATION_RESPONSE_V3_0 = {
+    "VERSION": "3.0",
+    "certificate": STATIC_TEST_CERT_PEM,
+    "created_at": 1795093935,
+    "payload": {
+        "additional_features": [
+            {"enabled": False, "name": "ntop"},
+            {"enabled": False, "name": "virt1_appliance"},
+            {"enabled": True, "limit": 17, "name": "synthetic_monitoring"},
+        ],
+        "checkmk_edition": "cme",
+        "checkmk_max_version": "",
+        "group_and_managed_services_use": False,
+        "message": "Thank you for uploading your license usage report.",
+        "operational_state": "active",
+        "reseller_name": "",
+        "service_limit": 3000,
+        "status": "successful",
+        "subscription_auto_renewal": True,
+        "subscription_expiration_ts": 1785196800,
+        "subscription_start_ts": 1753660800,
+        "unbound_license": False,
+    },
+    "request_id": "45c7fcba-7c67-11f1-8d8b-325096b39f47",
+    "response_id": "587d0c9b-c9dd-480f-b835-dd830afba72d",
+    "signature": "dEaDBeeF",
+}
+
+TEST_VERIFICATION_RESPONSE_V2_0 = {
+    "VERSION": "2.0",
+    "certificate": STATIC_TEST_CERT_PEM,
+    "created_at": 1795093935,
+    "payload": {
+        "additional_features": ["ntop", "virt1_appliance"],
+        "checkmk_edition": "cme",
+        "checkmk_max_version": "",
+        "group_and_managed_services_use": True,
+        "limits": {
+            "services": 3000,
+        },
+        "message": "Thank you for uploading your license usage report.",
+        "operational_state": "active",
+        "reseller_name": "Bob Reseller Inc.",
+        "status": "successful",
+        "subscription_auto_renewal": True,
+        "subscription_expiration_ts": 1785196800,
+        "subscription_start_ts": 1753660800,
+        "unbound_license": False,
+    },
+    "request_id": "45c7fcba-7c67-11f1-8d8b-325096b39f47",
+    "response_id": "587d0c9b-c9dd-480f-b835-dd830afba72d",
+    "signature": "dEaDBeeF",
+}
+
 
 @pytest.mark.parametrize(
     "protocol_version, raw_message, expected_response",
     [
         pytest.param(
             "3.2",
-            {
-                "VERSION": "3.2",
-                "certificate": STATIC_TEST_CERT_PEM,
-                "created_at": 1795093935,
-                "payload": {
-                    "active_metric_series_limit": 6969,
-                    "additional_features": [
-                        {"enabled": False, "name": "ntop"},
-                        {"enabled": False, "name": "virt1_appliance"},
-                        {"enabled": False, "limit": 0, "name": "synthetic_monitoring"},
-                    ],
-                    "checkmk_edition": "cme",
-                    "checkmk_max_version": "",
-                    "grace_period_after_expiration": 0,
-                    "group_and_managed_services_use": False,
-                    "message": "Thank you for uploading your license usage report.",
-                    "operational_state": "active",
-                    "reseller_name": "",
-                    "service_limit": 3000,
-                    "status": "successful",
-                    "subscription_auto_renewal": True,
-                    "subscription_expiration_ts": 1785196800,
-                    "subscription_recurrence_unit": "millenially",
-                    "subscription_start_ts": 1753660800,
-                    "unbound_license": False,
-                },
-                "request_id": "45c7fcba-7c67-11f1-8d8b-325096b39f47",
-                "response_id": "587d0c9b-c9dd-480f-b835-dd830afba72d",
-                "signature": "dEaDBeeF",
-            },
+            TEST_VERIFICATION_RESPONSE_V3_2,
             verification.PlainVerificationResponse(
                 certificate=STATIC_TEST_CERT,
                 created_at=1795093935,
@@ -107,33 +168,7 @@ STATIC_TEST_CERT = certificate.Certificate.load_pem(
         ),
         pytest.param(
             "3.0",
-            {
-                "VERSION": "3.0",
-                "certificate": STATIC_TEST_CERT_PEM,
-                "created_at": 1795093935,
-                "payload": {
-                    "additional_features": [
-                        {"enabled": False, "name": "ntop"},
-                        {"enabled": False, "name": "virt1_appliance"},
-                        {"enabled": True, "limit": 17, "name": "synthetic_monitoring"},
-                    ],
-                    "checkmk_edition": "cme",
-                    "checkmk_max_version": "",
-                    "group_and_managed_services_use": False,
-                    "message": "Thank you for uploading your license usage report.",
-                    "operational_state": "active",
-                    "reseller_name": "",
-                    "service_limit": 3000,
-                    "status": "successful",
-                    "subscription_auto_renewal": True,
-                    "subscription_expiration_ts": 1785196800,
-                    "subscription_start_ts": 1753660800,
-                    "unbound_license": False,
-                },
-                "request_id": "45c7fcba-7c67-11f1-8d8b-325096b39f47",
-                "response_id": "587d0c9b-c9dd-480f-b835-dd830afba72d",
-                "signature": "dEaDBeeF",
-            },
+            TEST_VERIFICATION_RESPONSE_V3_0,
             verification.PlainVerificationResponse(
                 certificate=STATIC_TEST_CERT,
                 created_at=1795093935,
@@ -167,31 +202,7 @@ STATIC_TEST_CERT = certificate.Certificate.load_pem(
         ),
         pytest.param(
             "2.0",
-            {
-                "VERSION": "2.0",
-                "certificate": STATIC_TEST_CERT_PEM,
-                "created_at": 1795093935,
-                "payload": {
-                    "additional_features": ["ntop", "virt1_appliance"],
-                    "checkmk_edition": "cme",
-                    "checkmk_max_version": "",
-                    "group_and_managed_services_use": True,
-                    "limits": {
-                        "services": 3000,
-                    },
-                    "message": "Thank you for uploading your license usage report.",
-                    "operational_state": "active",
-                    "reseller_name": "Bob Reseller Inc.",
-                    "status": "successful",
-                    "subscription_auto_renewal": True,
-                    "subscription_expiration_ts": 1785196800,
-                    "subscription_start_ts": 1753660800,
-                    "unbound_license": False,
-                },
-                "request_id": "45c7fcba-7c67-11f1-8d8b-325096b39f47",
-                "response_id": "587d0c9b-c9dd-480f-b835-dd830afba72d",
-                "signature": "dEaDBeeF",
-            },
+            TEST_VERIFICATION_RESPONSE_V2_0,
             verification.PlainVerificationResponse(
                 certificate=STATIC_TEST_CERT,
                 created_at=1795093935,
@@ -288,3 +299,72 @@ def test_parse_plain_verification_response(
     assert response.certificate.dump_pem().str == expected_response.certificate.dump_pem().str
     response = dataclasses.replace(response, certificate=expected_response.certificate)
     assert response == expected_response
+
+
+@pytest.mark.parametrize("protocol_version", ALL_PROTOCOL_VERSIONS)
+def test_parse_plain_verification_response_not_a_dict(
+    protocol_version: protocol_version.AllowedVerificationResponseVersions,
+) -> None:
+    with pytest.raises(TypeError):
+        verification.parse_plain_verification_response(protocol_version, "not a dict")
+
+
+@pytest.mark.parametrize("protocol_version", ALL_PROTOCOL_VERSIONS)
+def test_parse_plain_verification_response_payload_missing(
+    protocol_version: protocol_version.AllowedVerificationResponseVersions,
+) -> None:
+    with pytest.raises(TypeError):
+        verification.parse_plain_verification_response(protocol_version, {})
+
+
+@pytest.mark.parametrize("protocol_version", ALL_PROTOCOL_VERSIONS)
+def test_parse_plain_verification_response_payload_not_a_dict(
+    protocol_version: protocol_version.AllowedVerificationResponseVersions,
+) -> None:
+    with pytest.raises(TypeError):
+        verification.parse_plain_verification_response(protocol_version, {"payload": ""})
+
+
+def test_parse_plain_verification_response_missing_key_v2_0() -> None:
+    for missing_key in TEST_VERIFICATION_RESPONSE_V2_0:
+        if missing_key in ("VERSION", "payload"):
+            continue
+        response = copy.deepcopy(TEST_VERIFICATION_RESPONSE_V2_0)
+        del response[missing_key]
+        with pytest.raises(KeyError, match=re.escape(missing_key)):
+            verification.parse_plain_verification_response("2.0", response)
+    for missing_key in TEST_VERIFICATION_RESPONSE_V2_0["payload"]:  # type: ignore[attr-defined]
+        response = copy.deepcopy(TEST_VERIFICATION_RESPONSE_V2_0)
+        del response["payload"][missing_key]  # type: ignore[attr-defined]
+        with pytest.raises(KeyError, match=re.escape(missing_key)):
+            verification.parse_plain_verification_response("2.0", response)
+
+
+def test_parse_plain_verification_response_missing_key_v3_0() -> None:
+    for missing_key in TEST_VERIFICATION_RESPONSE_V3_0:
+        if missing_key in ("VERSION", "payload"):
+            continue
+        response = copy.deepcopy(TEST_VERIFICATION_RESPONSE_V3_0)
+        del response[missing_key]
+        with pytest.raises(KeyError, match=re.escape(missing_key)):
+            verification.parse_plain_verification_response("3.0", response)
+    for missing_key in TEST_VERIFICATION_RESPONSE_V3_0["payload"]:  # type: ignore[attr-defined]
+        response = copy.deepcopy(TEST_VERIFICATION_RESPONSE_V3_0)
+        del response["payload"][missing_key]  # type: ignore[attr-defined]
+        with pytest.raises(KeyError, match=re.escape(missing_key)):
+            verification.parse_plain_verification_response("3.0", response)
+
+
+def test_parse_plain_verification_response_missing_key_v3_2() -> None:
+    for missing_key in TEST_VERIFICATION_RESPONSE_V3_2:
+        if missing_key in ("VERSION", "payload"):
+            continue
+        response = copy.deepcopy(TEST_VERIFICATION_RESPONSE_V3_2)
+        del response[missing_key]
+        with pytest.raises(KeyError, match=re.escape(missing_key)):
+            verification.parse_plain_verification_response("3.2", response)
+    for missing_key in TEST_VERIFICATION_RESPONSE_V3_2["payload"]:  # type: ignore[attr-defined]
+        response = copy.deepcopy(TEST_VERIFICATION_RESPONSE_V3_2)
+        del response["payload"][missing_key]  # type: ignore[attr-defined]
+        with pytest.raises(KeyError, match=re.escape(missing_key)):
+            verification.parse_plain_verification_response("3.2", response)

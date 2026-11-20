@@ -67,8 +67,8 @@ _PT_PER_PX = 72 / _DPI
 _EMPTY_Y_RANGE = (-0.05, 0.05)
 
 
-def _mirroring_sign(inverse: bool) -> float:
-    return -1.0 if inverse else 1.0
+def _mirroring_sign(*, mirrored: bool) -> float:
+    return -1.0 if mirrored else 1.0
 
 
 def _region_bound_series(graph: EvaluatedGraph) -> Iterator[TimeSeries]:
@@ -117,7 +117,7 @@ def _stack_extents(
 ) -> list[tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.bool_]]]:
     """Each member's (bottom, top, has_value) at the running sum it is drawn at, so that the axis
     bounds follow the drawn areas."""
-    sign = _mirroring_sign(stack.inverse)
+    sign = _mirroring_sign(mirrored=stack.inverse)
     bottom = np.zeros(len(times))
     extents: list[
         tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.bool_]]
@@ -177,7 +177,7 @@ def _plot_metrics(ax: Axes, graph: EvaluatedGraph, visible: TimeRange) -> None:
             _plot_stack(ax, stack, times)
 
     for line in graph.lines:
-        sign = _mirroring_sign(line.inverse)
+        sign = _mirroring_sign(mirrored=line.inverse)
         ax.plot(
             times,
             _values(line.curve, sign=sign),
@@ -219,7 +219,7 @@ def _drawn_vertical_extent(
             values.extend(_values_drawn_on(visible, times, np.where(has_value, bottom, np.nan)))
             values.extend(_values_drawn_on(visible, times, np.where(has_value, top, np.nan)))
     for line in graph.lines:
-        sign = _mirroring_sign(line.inverse)
+        sign = _mirroring_sign(mirrored=line.inverse)
         values.extend(_values_drawn_on(visible, times, _values(line.curve, sign=sign)))
     for series in _region_bound_series(graph):
         values.extend(_values_drawn_on(visible, times, _series_values(series)))
@@ -275,7 +275,11 @@ def _rules_in_range(
     rules: Sequence[EvaluatedRule], limits: tuple[float, float]
 ) -> Sequence[EvaluatedRule]:
     lower, upper = limits
-    return [rule for rule in rules if lower <= _mirroring_sign(rule.inverse) * rule.value <= upper]
+    return [
+        rule
+        for rule in rules
+        if lower <= _mirroring_sign(mirrored=rule.inverse) * rule.value <= upper
+    ]
 
 
 def _resolution_label(step: int) -> str:
@@ -664,7 +668,7 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
     ax.set_ylim(*limits)
     _plot_regions(ax, graph)
     for rule in _rules_in_range(graph.rules, limits):
-        sign = _mirroring_sign(rule.inverse)
+        sign = _mirroring_sign(mirrored=rule.inverse)
         ax.axhline(sign * rule.value, color=rule.attributes.color)
     title_artist = _apply_render_config(
         ax,

@@ -45,7 +45,7 @@ from cmk.gui.png.renderer._image import (
     _plot_stack,
     _rules_in_range,
     _vertical_range_bounds,
-    _y_axis_limits,
+    _y_range,
     render_pngs,
 )
 from cmk.gui.utils.temperature_unit import TemperatureUnit
@@ -240,12 +240,9 @@ def test_the_legend_shows_the_natural_values_of_a_mirrored_curve() -> None:
 
 
 def test_mirrored_y_labels_mirrors_positive_text_to_the_negative_side() -> None:
-    fig = Figure()
-    ax = fig.add_subplot(1, 1, 1)
-    ax.set_ylim(-2000, 2000)
     formatter = DecimalFormatter(symbol="B", precision_kind="auto", digits=2)
 
-    labels = _mirrored_y_labels(ax, formatter, 4.0)
+    labels = _mirrored_y_labels(formatter, (-2000.0, 2000.0), 4.0)
 
     positive = {label.position: label.text for label in labels if label.position > 0}
     negative = {label.position: label.text for label in labels if label.position < 0}
@@ -273,7 +270,7 @@ def test_far_away_rule_is_clipped_and_does_not_stretch_the_axis() -> None:
     )
 
     lower, upper = _vertical_range_bounds(graph, graph.time_range)
-    limits = _y_axis_limits(lower, upper, is_mirrored=False)
+    limits = _y_range(lower, upper, is_mirrored=False)
     rules = _rules_in_range(graph.rules, limits)
 
     assert rules == []
@@ -299,7 +296,7 @@ def test_vertical_range_bounds_use_the_stacked_top_not_each_members_own_max() ->
 
 
 def test_a_graph_without_data_keeps_the_range_of_an_empty_plot() -> None:
-    assert _y_axis_limits(None, None, is_mirrored=False) == (-0.05, 0.05)
+    assert _y_range(None, None, is_mirrored=False) == (-0.05, 0.05)
 
 
 def test_a_fixed_range_open_at_the_bottom_ends_at_its_bound_without_data() -> None:
@@ -316,7 +313,7 @@ def test_a_fixed_range_open_at_the_bottom_ends_at_its_bound_without_data() -> No
 
     lower, upper = _vertical_range_bounds(graph, graph.time_range)
 
-    assert _y_axis_limits(lower, upper, is_mirrored=False) == (99.0, 100.0)
+    assert _y_range(lower, upper, is_mirrored=False) == (99.0, 100.0)
 
 
 def test_a_fixed_range_open_at_the_bottom_ends_at_its_bound_with_data_at_the_bound() -> None:
@@ -333,11 +330,11 @@ def test_a_fixed_range_open_at_the_bottom_ends_at_its_bound_with_data_at_the_bou
 
     lower, upper = _vertical_range_bounds(graph, graph.time_range)
 
-    assert _y_axis_limits(lower, upper, is_mirrored=False) == (99.0, 100.0)
+    assert _y_range(lower, upper, is_mirrored=False) == (99.0, 100.0)
 
 
 def test_y_axis_limits_are_symmetric_for_a_mirrored_graph() -> None:
-    assert _y_axis_limits(2.0, 30.0, is_mirrored=True) == (-30.0, 30.0)
+    assert _y_range(2.0, 30.0, is_mirrored=True) == (-30.0, 30.0)
 
 
 def test_the_image_has_the_size_computed_for_it_without_a_legend() -> None:
@@ -838,4 +835,4 @@ def test_a_fixed_range_open_at_the_top_keeps_its_bound_without_data() -> None:
 
     lower, upper = _vertical_range_bounds(graph, graph.time_range)
 
-    assert _y_axis_limits(lower, upper, is_mirrored=False) == (100.0, 101.0)
+    assert _y_range(lower, upper, is_mirrored=False) == (100.0, 101.0)

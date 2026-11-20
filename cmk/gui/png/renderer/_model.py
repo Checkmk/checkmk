@@ -8,6 +8,17 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True, kw_only=True)
+class AxisLabel:
+    position: float
+    text: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class VerticalAxis:
+    labels: Sequence[AxisLabel] | None
+
+
+@dataclass(frozen=True, kw_only=True)
 class LegendRow:
     color: str
     cells: Sequence[str]

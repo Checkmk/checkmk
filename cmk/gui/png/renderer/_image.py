@@ -43,7 +43,7 @@ from cmk.gui.png._wire import PngGraph, PngOptions, PngTexts, RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.unit_formatter import Label, NotationFormatter
 
-from ._model import Legend, LegendRow
+from ._model import AxisLabel, Legend, LegendRow, VerticalAxis
 from ._time_axis import compute_time_axis
 
 _DPI = 96
@@ -259,9 +259,7 @@ def _vertical_range_bounds(
     return lower, upper
 
 
-def _y_axis_limits(
-    lower: float | None, upper: float | None, *, is_mirrored: bool
-) -> tuple[float, float]:
+def _y_range(lower: float | None, upper: float | None, *, is_mirrored: bool) -> tuple[float, float]:
     """matplotlib cannot scale a flat graph, so it is widened."""
     if lower is None or upper is None:
         return _EMPTY_Y_RANGE
@@ -306,17 +304,43 @@ def _graph_time_caption(time_range: TimeRange, texts: PngTexts, tz: datetime.tzi
 
 
 def _mirrored_y_labels(
-    ax: Axes, formatter: NotationFormatter, target_number_of_labels: float
+    formatter: NotationFormatter, y_range: tuple[float, float], target_number_of_labels: float
 ) -> Sequence[Label]:
     """The negative half repeats the positive labels: mirroring below zero is a display choice,
     not a change of sign."""
-    lower, upper = ax.get_ylim()
-    abs_limit = max(abs(lower), abs(upper))
+    abs_limit = max(abs(y_range[0]), abs(y_range[1]))
     labels = formatter.render_y_labels(0, abs_limit, target_number_of_labels)
     return [
         *(Label(-label.position, label.text) for label in labels if label.position != 0),
         *labels,
     ]
+
+
+def _y_labels(
+    formatter: NotationFormatter,
+    y_range: tuple[float, float],
+    options: PngOptions,
+    *,
+    is_mirrored: bool,
+) -> Sequence[Label]:
+    if is_mirrored:
+        return _mirrored_y_labels(formatter, y_range, max(1.0, options.size[1] / 8.0 + 1))
+    return formatter.render_y_labels(*y_range, max(1.0, options.size[1] / 4.0 + 1))
+
+
+def _vertical_axis(
+    formatter: NotationFormatter | None,
+    y_range: tuple[float, float],
+    options: PngOptions,
+    *,
+    is_mirrored: bool,
+) -> VerticalAxis:
+    if formatter is None:
+        return VerticalAxis(labels=None)
+    labels = _y_labels(formatter, y_range, options, is_mirrored=is_mirrored)
+    return VerticalAxis(
+        labels=[AxisLabel(position=label.position, text=label.text) for label in labels] or None
+    )
 
 
 def _apply_render_config(
@@ -325,10 +349,9 @@ def _apply_render_config(
     graph: EvaluatedGraph,
     options: PngOptions,
     texts: PngTexts,
-    formatter: NotationFormatter | None,
+    vertical_axis: VerticalAxis | None,
     *,
     visible: TimeRange,
-    is_mirrored: bool,
     tz: datetime.tzinfo | None,
 ) -> Text | None:
     ax.tick_params(labelsize=options.font_size, length=0)
@@ -346,20 +369,13 @@ def _apply_render_config(
             color=_TITLE_COLOR,
         )
 
-    if options.show_vertical_axis:
-        if formatter is not None and is_mirrored:
-            target_number_of_labels = max(1.0, options.size[1] / 8.0 + 1)
-            if labels := _mirrored_y_labels(ax, formatter, target_number_of_labels):
-                ax.set_yticks([label.position for label in labels])
-                ax.set_yticklabels([label.text for label in labels])
-        elif formatter is not None:
-            target_number_of_labels = max(1.0, options.size[1] / 4.0 + 1)
-            if labels := formatter.render_y_labels(*ax.get_ylim(), target_number_of_labels):
-                ax.set_yticks([label.position for label in labels])
-                ax.set_yticklabels([label.text for label in labels])
-        ax.grid(axis="y", color=_DIVISION_COLOR, linestyle="--")
-    else:
+    if vertical_axis is None:
         ax.yaxis.set_visible(False)
+    else:
+        if (labels := vertical_axis.labels) is not None:
+            ax.set_yticks([label.position for label in labels])
+            ax.set_yticklabels([label.text for label in labels])
+        ax.grid(axis="y", color=_DIVISION_COLOR, linestyle="--")
 
     if options.show_time_axis:
         ax.tick_params(axis="x", which="minor", labelsize=options.font_size, length=0)
@@ -624,7 +640,7 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
     is_mirrored = any(drawn.inverse for drawn in drawn_curves(graph.stacks, graph.lines))
     visible = _visible_time_range(graph, png_graph.visible_time_range)
     lower, upper = _vertical_range_bounds(graph, visible)
-    limits = _y_axis_limits(lower, upper, is_mirrored=is_mirrored)
+    limits = _y_range(lower, upper, is_mirrored=is_mirrored)
     table_height_ex = legend_height_ex(graph, png_graph.options)
 
     width_in, height_in = png_size_inches(graph, png_graph.options)
@@ -656,9 +672,12 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
         graph,
         png_graph.options,
         texts,
-        formatter,
+        (
+            _vertical_axis(formatter, limits, png_graph.options, is_mirrored=is_mirrored)
+            if png_graph.options.show_vertical_axis
+            else None
+        ),
         visible=visible,
-        is_mirrored=is_mirrored,
         tz=png_graph.time_zone,
     )
     TightLayoutEngine().execute(fig)

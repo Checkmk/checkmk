@@ -12,6 +12,7 @@ import numpy as np
 import numpy.typing as npt
 from matplotlib import rc_context
 from matplotlib.axes import Axes
+from matplotlib.backend_bases import RendererBase
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 from matplotlib.font_manager import FontProperties
@@ -320,6 +321,7 @@ def _mirrored_y_labels(
 
 def _apply_render_config(
     ax: Axes,
+    renderer: RendererBase,
     graph: EvaluatedGraph,
     options: PngOptions,
     texts: PngTexts,
@@ -363,7 +365,7 @@ def _apply_render_config(
         ax.tick_params(axis="x", which="minor", labelsize=options.font_size, length=0)
         # A first placement, so the layout pass reserves room for the labels; the plot width
         # it settles on is only known afterwards (see _fit_time_axis).
-        _fit_time_axis(ax, options, tz)
+        _fit_time_axis(ax, renderer, options, tz)
         ax.grid(axis="x", color=DIVISION_COLOR, linestyle="--")
     else:
         ax.tick_params(axis="x", labelbottom=False, bottom=False)
@@ -378,12 +380,20 @@ def _apply_render_config(
     return title_artist
 
 
-def _fit_time_axis(ax: Axes, options: PngOptions, tz: datetime.tzinfo | None) -> None:
+def _agg_renderer(fig: Figure) -> RendererBase:
+    renderer = FigureCanvasAgg(fig).get_renderer()  # type: ignore[no-untyped-call]
+    if not isinstance(renderer, RendererBase):
+        raise TypeError(f"expected a renderer, got {type(renderer).__name__}")
+    return renderer
+
+
+def _fit_time_axis(
+    ax: Axes, renderer: RendererBase, options: PngOptions, tz: datetime.tzinfo | None
+) -> None:
     """Ticks as the Vue graph places them. Their density follows the plot width, so this runs
     again once a layout pass has settled it."""
     if not options.show_time_axis:
         return
-    renderer = FigureCanvasAgg(ax.get_figure(root=True)).get_renderer()  # type: ignore[no-untyped-call]
     font = FontProperties(size=options.font_size)
 
     def measure_label(text: str) -> float:
@@ -404,11 +414,12 @@ def _fit_time_axis(ax: Axes, options: PngOptions, tz: datetime.tzinfo | None) ->
     )
 
 
-def _align_title_to_y_ticks(fig: Figure, ax: Axes, title_artist: Text | None) -> None:
+def _align_title_to_y_ticks(
+    fig: Figure, ax: Axes, renderer: RendererBase, title_artist: Text | None
+) -> None:
     """Runs after a layout pass: the tick label widths are only known once measured."""
     if title_artist is None:
         return
-    renderer = FigureCanvasAgg(fig).get_renderer()  # type: ignore[no-untyped-call]
     label_artists = [*ax.get_yticklabels(), ax.yaxis.label]
     left_edges = [
         label.get_window_extent(renderer).x0 for label in label_artists if label.get_text()
@@ -584,6 +595,7 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
     width_in, height_in = png_size_inches(graph, png_graph.options)
 
     fig = Figure(figsize=(width_in, height_in), dpi=DPI, facecolor=BACKGROUND_COLOR)
+    renderer = _agg_renderer(fig)
 
     if table_height_ex:
         gs = fig.add_gridspec(2, 1, height_ratios=[png_graph.options.size[1], table_height_ex])
@@ -606,6 +618,7 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
         ax.axhline(sign * rule.value, color=rule.attributes.color)
     title_artist = _apply_render_config(
         ax,
+        renderer,
         graph,
         png_graph.options,
         texts,
@@ -615,8 +628,8 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
         tz=png_graph.time_zone,
     )
     TightLayoutEngine().execute(fig)
-    _fit_time_axis(ax, png_graph.options, png_graph.time_zone)
-    _align_title_to_y_ticks(fig, ax, title_artist)
+    _fit_time_axis(ax, renderer, png_graph.options, png_graph.time_zone)
+    _align_title_to_y_ticks(fig, ax, renderer, title_artist)
     buf = io.BytesIO()
     fig.savefig(buf, format="png")
     buf.seek(0)

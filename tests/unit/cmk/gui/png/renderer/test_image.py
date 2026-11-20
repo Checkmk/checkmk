@@ -35,6 +35,7 @@ from cmk.gui.png import compute_png_size_mm
 from cmk.gui.png._size import MM_PER_INCH
 from cmk.gui.png._wire import PngGraph, PngOptions, PngTexts, RenderingFailure
 from cmk.gui.png.renderer._image import (
+    _agg_renderer,
     _fit_time_axis,
     _graph_scalars,
     _graph_time_caption,
@@ -489,7 +490,7 @@ def test_time_axis_of_a_multi_day_graph_is_labelled_with_weekday_and_time() -> N
     ax = fig.add_subplot(1, 1, 1)
     _plot_metrics(ax, graph, graph.time_range)
 
-    _fit_time_axis(ax, _OPTIONS, None)
+    _fit_time_axis(ax, _agg_renderer(fig), _OPTIONS, None)
 
     labels = [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
     assert len(labels) > 2
@@ -575,7 +576,7 @@ def test_time_axis_is_labelled_in_the_given_time_zone() -> None:
         fig = Figure()
         ax = fig.add_subplot(1, 1, 1)
         _plot_metrics(ax, graph, graph.time_range)
-        _fit_time_axis(ax, _OPTIONS, tz)
+        _fit_time_axis(ax, _agg_renderer(fig), _OPTIONS, tz)
         return [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
 
     utc_labels = labels(ZoneInfo("UTC"))

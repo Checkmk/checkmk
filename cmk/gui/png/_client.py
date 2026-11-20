@@ -52,4 +52,6 @@ def render_pngs(
         return _all_failed(
             graphs, f"{' '.join(command)} failed: {rendering.stderr.decode(errors='replace')}"
         )
-    return pngs_from_json(rendering.stdout.decode())
+    results = pngs_from_json(rendering.stdout.decode())
+    missing = RenderingFailure(f"{' '.join(command)} answered no image for this graph")
+    return [*results[: len(graphs)], *[missing] * (len(graphs) - len(results))]

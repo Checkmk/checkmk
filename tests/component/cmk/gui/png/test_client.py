@@ -70,3 +70,14 @@ def test_no_rendering_process_starts_for_no_graphs() -> None:
     )
 
     assert results == []
+
+
+def test_a_graph_missing_from_the_answer_fails_while_the_others_keep_their_images() -> None:
+    command = (sys.executable, "-c", 'print(\'[{"png": ""}]\')')
+
+    results = render_pngs([_graph(), _graph()], _TEXTS, TemperatureUnit.CELSIUS, command=command)
+
+    assert results == [
+        b"",
+        RenderingFailure(f"{' '.join(command)} answered no image for this graph"),
+    ]

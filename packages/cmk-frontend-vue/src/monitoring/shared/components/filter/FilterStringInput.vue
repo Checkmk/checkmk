@@ -31,6 +31,11 @@ function isExactMatch(node: ColumnFilterNode<F> | undefined): boolean {
   return node?.type === 'condition' && node.op === 'one_of'
 }
 
+// E.g. the exact host name a link from a classic view carries, as an anchored expression.
+function isPattern(node: ColumnFilterNode<F> | undefined): boolean {
+  return node?.type === 'condition' && node.op === 'matches'
+}
+
 function fieldText(node: ColumnFilterNode<F> | undefined): string {
   const values = extractValues(node)
   return values.length === 1 ? values[0]! : ''
@@ -39,6 +44,7 @@ function fieldText(node: ColumnFilterNode<F> | undefined): string {
 const value = ref<string>(fieldText(model.value))
 
 const showsExactMatch = computed(() => isExactMatch(model.value) && value.value !== '')
+const showsPattern = computed(() => isPattern(model.value) && value.value !== '')
 
 function containsNode(text: string): ColumnFilterNode<F> {
   return {
@@ -110,6 +116,9 @@ const selected = computed<string[]>({
       class="monitoring-filter-string-input__hint"
     >
       {{ _t('Exact match. Editing searches by substring.') }}
+    </span>
+    <span v-if="!definition.suggest && showsPattern" class="monitoring-filter-string-input__hint">
+      {{ _t('Regular expression. Editing searches by substring.') }}
     </span>
   </div>
 </template>

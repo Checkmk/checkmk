@@ -88,3 +88,24 @@ test('an exact match of several names leaves the field empty', () => {
     value: ['alice', 'bob']
   })
 })
+
+test('a regular expression set elsewhere shows in the field as one', () => {
+  const model = ref<ColumnFilterNode<'name'> | undefined>({
+    type: 'condition',
+    field: 'name',
+    op: 'matches',
+    value: '^web\\-01$'
+  })
+  render(
+    defineComponent({
+      components: { FilterStringInput },
+      setup() {
+        return { model, definition }
+      },
+      template: '<FilterStringInput v-model="model" :definition="definition" />'
+    })
+  )
+
+  expect(screen.getByRole('textbox', { name: 'Value' })).toHaveValue('^web\\-01$')
+  expect(screen.getByText('Regular expression. Editing searches by substring.')).toBeVisible()
+})

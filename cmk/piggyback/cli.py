@@ -14,7 +14,7 @@ THIS DOES NOT PROVIDE A STABLE INTERFACE FOR SCRIPTING.
 import argparse
 import sys
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Sequence, Set
 
 from cmk.livestatus_client import LocalConnection, MKLivestatusSocketError, Query
 from cmk.livestatus_client.queries import (
@@ -49,6 +49,7 @@ def _args_list(
 
 def _command_list(
     args: argparse.Namespace,
+    get_monitored_hosts: Callable[[], Set[str]],
 ) -> int:
     """Show hosts of the specified type.
 
@@ -69,7 +70,7 @@ def _command_list(
         _write(f"{' '.join(sorted(piggybacked))}\n")
         return 0
 
-    known_hosts = _get_monitored_hosts()
+    known_hosts = get_monitored_hosts()
     _write(f"{' '.join(sorted(piggybacked - known_hosts))}\n")
     return 0
 
@@ -83,6 +84,7 @@ def _args_sections(
 
 def _command_sections(
     args: argparse.Namespace,
+    _monitored_hosts: Callable[[], Set[str]],
 ) -> int:
     """Create piggyback sections for the specified hosts.
 
@@ -113,6 +115,7 @@ def _write(message: str) -> None:
 
 def _command_track(
     _args: argparse.Namespace,
+    _monitored_hosts: Callable[[], Set[str]],
 ) -> int:
     """Track incoming piggyback messages.
 
@@ -153,7 +156,7 @@ def _add_command(
     subparsers: argparse._SubParsersAction,  # providing one will crash
     cmd: str,
     args_adder: Callable[[argparse.ArgumentParser], None],
-    handler: Callable[[argparse.Namespace], int],
+    handler: Callable[[argparse.Namespace, Callable[[], Set[str]]], int],
 ) -> None:
     assert handler.__doc__
     subparser = subparsers.add_parser(
@@ -163,13 +166,16 @@ def _add_command(
     subparser.set_defaults(handler=handler)
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def main(
+    argv: Sequence[str] | None = None,
+    get_monitored_hosts: Callable[[], Set[str]] = _get_monitored_hosts,
+) -> int:
     if argv is None:
         argv = sys.argv[1:]
     args = _parse_arguments(argv)
 
     try:
-        return int(args.handler(args))
+        return int(args.handler(args, get_monitored_hosts))
     except Exception as exc:
         if args.debug:
             raise

@@ -89,6 +89,7 @@ py_cmk_test(
         "//cmk/config",
         "//cmk/diskspace",
         "//cmk/fields",
+        "//cmk/piggyback:cli",
         "//cmk/piggyback:hub",
         "//cmk/product_usage:product_usage_cli",
         "//cmk/special_agents",

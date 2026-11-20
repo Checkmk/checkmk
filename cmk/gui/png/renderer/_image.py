@@ -17,10 +17,11 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 from matplotlib.font_manager import FontProperties
 from matplotlib.layout_engine import TightLayoutEngine
+from matplotlib.lines import Line2D
 from matplotlib.offsetbox import AnnotationBbox, DrawingArea
 from matplotlib.patches import FancyBboxPatch
 from matplotlib.text import Text
-from matplotlib.transforms import Bbox, blended_transform_factory, ScaledTranslation
+from matplotlib.transforms import blended_transform_factory, ScaledTranslation
 
 from cmk.graphing_engine import (
     converted_graph,
@@ -57,6 +58,9 @@ _LEGEND_TEXT_COLOR = "#2C3843"
 _LEGEND_MARKER_WIDTH_PX = 4
 _LEGEND_MARKER_HEIGHT_PX = 16
 _LEGEND_MARKER_RADIUS_PX = 2
+_LEGEND_COLUMN_WIDTHS = (0.04, 0.56, 0.125, 0.125, 0.125, 0.125)
+_LEGEND_TITLE_PAD = 0.02
+_LEGEND_VALUE_PAD = 0.1
 _TITLE_Y_OFFSET_PX = 10
 _REGION_FILL_ALPHA = 0.15
 _PT_PER_PX = 72 / _DPI
@@ -438,7 +442,15 @@ def _format_value(value: float | None, formatter: NotationFormatter | None) -> s
     return formatter.render(value) if formatter is not None else f"{value:.2f}"
 
 
-def _plot_legend_table(
+def _legend_column_edges() -> Sequence[float]:
+    total = sum(_LEGEND_COLUMN_WIDTHS)
+    edges = [0.0]
+    for width in _LEGEND_COLUMN_WIDTHS:
+        edges.append(edges[-1] + width / total)
+    return edges
+
+
+def _plot_legend(
     ax: Axes,
     scalars: Sequence[_CurveScalars],
     rules: Sequence[EvaluatedRule],
@@ -451,73 +463,105 @@ def _plot_legend_table(
     reads like the graph."""
     ax.axis("off")
     ax.set_in_layout(False)
-    col_labels = ["", "", texts.minimum, texts.maximum, texts.average, texts.last]
-    cell_text = (
-        [
+    font_size = options.font_size
+    curve_rows = [
+        (
+            s.color,
             [
-                "",
                 s.title,
                 _format_value(s.minimum, formatter),
                 _format_value(s.maximum, formatter),
                 _format_value(s.average, formatter),
                 _format_value(s.last, formatter),
-            ]
-            for s in reversed(scalars)
-        ]
-        + [
-            ["", rule.attributes.title, "", "", "", _format_value(rule.value, formatter)]
-            for rule in rules
-        ]
-        + [["", region.attributes.title, "", "", "", ""] for region in regions]
-    )
+            ],
+        )
+        for s in reversed(scalars)
+    ]
+    rule_rows = [
+        (
+            rule.attributes.color,
+            [rule.attributes.title, "", "", "", _format_value(rule.value, formatter)],
+        )
+        for rule in rules
+    ]
+    region_rows = [
+        (region.attributes.color, [region.attributes.title, "", "", "", ""]) for region in regions
+    ]
+    rows = [*curve_rows, *rule_rows, *region_rows]
+    row_count = len(rows) + 1
+    edges = _legend_column_edges()
 
-    col_widths = [0.04, 0.56, 0.125, 0.125, 0.125, 0.125]
-    table = ax.table(
-        cellText=cell_text,
-        colLabels=col_labels,
-        colWidths=col_widths,
-        cellLoc="center",
-        loc="center",
-        bbox=Bbox.from_bounds(0, 0, 1, 1),
-    )
-    table.set_in_layout(False)
-    table.auto_set_font_size(False)
-    table.set_fontsize(options.font_size)
+    def row_top(row_index: int) -> float:
+        return 1 - row_index / row_count
 
-    for cell in table.get_celld().values():
-        cell.visible_edges = ""
-    for col in range(len(col_labels)):
-        table[0, col].visible_edges = "B"  # separates the header from the curve rows
-        table[0, col].set_edgecolor(_LEGEND_HEADER_SEPARATOR_COLOR)
+    def row_center(row_index: int) -> float:
+        return 1 - (row_index + 0.5) / row_count
+
+    def add_text(x: float, row_index: int, text: str, *, alignment: str, color: str) -> None:
+        if not text:
+            return
+        ax.text(
+            x,
+            row_center(row_index),
+            text,
+            transform=ax.transAxes,
+            horizontalalignment=alignment,
+            verticalalignment="center",
+            fontsize=font_size,
+            color=color,
+            clip_on=False,
+        )
+
+    def add_title(row_index: int, text: str) -> None:
+        left, right = edges[1], edges[2]
+        add_text(
+            left + (right - left) * _LEGEND_TITLE_PAD,
+            row_index,
+            text,
+            alignment="left",
+            color=_LEGEND_TEXT_COLOR,
+        )
+
+    def add_value(row_index: int, column: int, text: str, color: str) -> None:
+        left, right = edges[column], edges[column + 1]
+        add_text(
+            right - (right - left) * _LEGEND_VALUE_PAD,
+            row_index,
+            text,
+            alignment="right",
+            color=color,
+        )
+
+    def add_separator(y: float) -> None:
+        ax.add_line(
+            Line2D(
+                [0, 1],
+                [y, y],
+                transform=ax.transAxes,
+                color=_LEGEND_HEADER_SEPARATOR_COLOR,
+                linewidth=1.0,
+                solid_capstyle="butt",
+                clip_on=False,
+            )
+        )
+
+    for column, label in enumerate(
+        [texts.minimum, texts.maximum, texts.average, texts.last], start=2
+    ):
+        add_value(0, column, label, _LEGEND_HEADER_COLOR)
+    add_separator(row_top(1))
     if rules:
-        first_rule_row = len(scalars) + 1
-        for col in range(len(col_labels)):
-            # separates the curve rows from the horizontal-rule rows
-            table[first_rule_row, col].visible_edges = "T"
-            table[first_rule_row, col].set_edgecolor(_LEGEND_HEADER_SEPARATOR_COLOR)
+        add_separator(row_top(len(curve_rows) + 1))
 
-    n_rows = len(scalars) + len(rules) + len(regions)
-    row_count = n_rows + 1  # +1 for the header row
-    for col in range(len(col_labels)):
-        table[0, col].set_text_props(color=_LEGEND_HEADER_COLOR)
-    for row in range(row_count):
-        table[row, 1].set_text_props(ha="left")
-        table[row, 1].PAD = 0.02
-        for col in range(2, len(col_labels)):
-            table[row, col].set_text_props(ha="right")
-        if row > 0:
-            for col in range(len(col_labels)):
-                table[row, col].set_text_props(color=_LEGEND_TEXT_COLOR)
-
-    marker_x = (col_widths[0] / 2) / sum(col_widths)
-
-    def marker_y(row: int) -> float:
-        return (n_rows - row + 0.5) / row_count
-
-    def add_marker(x: float, y: float, color: str) -> None:
-        width = _LEGEND_MARKER_WIDTH_PX * _PT_PER_PX
-        height = _LEGEND_MARKER_HEIGHT_PX * _PT_PER_PX
-        radius = _LEGEND_MARKER_RADIUS_PX * _PT_PER_PX
+    marker_x = (edges[0] + edges[1]) / 2
+    width = _LEGEND_MARKER_WIDTH_PX * _PT_PER_PX
+    height = _LEGEND_MARKER_HEIGHT_PX * _PT_PER_PX
+    radius = _LEGEND_MARKER_RADIUS_PX * _PT_PER_PX
+    for row_index, (color, cells) in enumerate(rows, start=1):
+        title, *values = cells
+        add_title(row_index, title)
+        for column, text in enumerate(values, start=2):
+            add_value(row_index, column, text, _LEGEND_TEXT_COLOR)
         drawing_area = DrawingArea(width, height, 0, 0, clip=False)
         drawing_area.add_artist(
             FancyBboxPatch(
@@ -532,7 +576,7 @@ def _plot_legend_table(
         ax.add_artist(
             AnnotationBbox(
                 drawing_area,
-                (x, y),
+                (marker_x, row_center(row_index)),
                 xycoords=ax.transAxes,
                 frameon=False,
                 box_alignment=(0.5, 0.5),
@@ -540,15 +584,6 @@ def _plot_legend_table(
                 annotation_clip=False,
             )
         )
-
-    for row, s in enumerate(reversed(scalars), start=1):
-        add_marker(marker_x, marker_y(row), s.color)
-
-    for row, rule in enumerate(rules, start=len(scalars) + 1):
-        add_marker(marker_x, marker_y(row), rule.attributes.color)
-
-    for row, region in enumerate(regions, start=len(scalars) + len(rules) + 1):
-        add_marker(marker_x, marker_y(row), region.attributes.color)
 
 
 def _with_requested_vertical_range(
@@ -602,7 +637,7 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
         ax = fig.add_subplot(gs[0])
         legend_ax = fig.add_subplot(gs[1])
         legend_ax.set_facecolor(_BACKGROUND_COLOR)
-        _plot_legend_table(
+        _plot_legend(
             legend_ax, scalars, graph.rules, graph.regions, png_graph.options, texts, formatter
         )
     else:

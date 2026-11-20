@@ -38,8 +38,8 @@ from cmk.gui.png.renderer._image import (
     _agg_renderer,
     _DPI,
     _fit_time_axis,
-    _graph_scalars,
     _graph_time_caption,
+    _legend,
     _mirrored_y_labels,
     _plot_metrics,
     _plot_stack,
@@ -127,7 +127,7 @@ def test_mirrored_stack_is_drawn_below_zero() -> None:
     assert top_values.max() <= 0
 
 
-def test_graph_scalars_use_the_curves_own_values_not_the_stacked_position() -> None:
+def test_the_legend_shows_the_curves_own_maxima_not_their_stacked_position() -> None:
     first = _curve("first", [1.0, 2.0, 3.0])
     second = _curve("second", [10.0, 20.0, 30.0])
     graph = EvaluatedGraph(
@@ -139,11 +139,9 @@ def test_graph_scalars_use_the_curves_own_values_not_the_stacked_position() -> N
         lines=[],
     )
 
-    scalars = _graph_scalars(graph)
+    legend = _legend(graph, _TEXTS, None, 6.0)
 
-    assert [s.title for s in scalars] == ["first", "second"]
-    assert scalars[0].maximum == 3.0
-    assert scalars[1].maximum == 30.0
+    assert [row.cells[2] for row in legend.curves] == ["30.00", "3.00"]
 
 
 def test_render_png_produces_bytes_for_an_empty_graph() -> None:
@@ -225,7 +223,7 @@ def test_render_png_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> 
     assert isinstance(png_bytes, bytes) and png_bytes.startswith(b"\x89PNG")
 
 
-def test_graph_scalars_are_natural_values_even_when_mirrored() -> None:
+def test_the_legend_shows_the_natural_values_of_a_mirrored_curve() -> None:
     member = _curve("out", [10.0, 20.0, 30.0])
     graph = EvaluatedGraph(
         name="g",
@@ -236,11 +234,9 @@ def test_graph_scalars_are_natural_values_even_when_mirrored() -> None:
         lines=[],
     )
 
-    scalars = _graph_scalars(graph)
+    legend = _legend(graph, _TEXTS, None, 6.0)
 
-    assert scalars[0].minimum == 10.0
-    assert scalars[0].maximum == 30.0
-    assert scalars[0].last == 30.0
+    assert legend.curves[0].cells == ["out", "10.00", "30.00", "20.00", "30.00"]
 
 
 def test_mirrored_y_labels_mirrors_positive_text_to_the_negative_side() -> None:

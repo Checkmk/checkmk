@@ -28,7 +28,6 @@ from cmk.graphing_engine import (
     drawn_curves,
     EvaluatedCurve,
     EvaluatedGraph,
-    EvaluatedRegion,
     EvaluatedRule,
     EvaluatedStack,
     EvaluatedVerticalRange,
@@ -44,6 +43,7 @@ from cmk.gui.png._wire import PngGraph, PngOptions, PngTexts, RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.unit_formatter import Label, NotationFormatter
 
+from ._model import Legend, LegendRow
 from ._time_axis import compute_time_axis
 
 _DPI = 96
@@ -110,10 +110,6 @@ def _curve_scalars(curve: EvaluatedCurve) -> _CurveScalars:
         average=float(np.mean(finite)) if finite.size else None,
         last=last_present(curve.time_series.values),
     )
-
-
-def _graph_scalars(graph: EvaluatedGraph) -> Sequence[_CurveScalars]:
-    return [_curve_scalars(drawn.curve) for drawn in drawn_curves(graph.stacks, graph.lines)]
 
 
 def _stack_extents(
@@ -442,6 +438,47 @@ def _format_value(value: float | None, formatter: NotationFormatter | None) -> s
     return formatter.render(value) if formatter is not None else f"{value:.2f}"
 
 
+def _legend(
+    graph: EvaluatedGraph,
+    texts: PngTexts,
+    formatter: NotationFormatter | None,
+    height: float,
+) -> Legend:
+    """Curves are listed topmost first, the reverse of their drawing order, so that the legend
+    reads like the graph."""
+    scalars = [_curve_scalars(drawn.curve) for drawn in drawn_curves(graph.stacks, graph.lines)]
+    return Legend(
+        height=height,
+        header=[texts.minimum, texts.maximum, texts.average, texts.last],
+        curves=[
+            LegendRow(
+                color=s.color,
+                cells=[
+                    s.title,
+                    _format_value(s.minimum, formatter),
+                    _format_value(s.maximum, formatter),
+                    _format_value(s.average, formatter),
+                    _format_value(s.last, formatter),
+                ],
+            )
+            for s in reversed(scalars)
+        ],
+        rules=[
+            LegendRow(
+                color=rule.attributes.color,
+                cells=[rule.attributes.title, "", "", "", _format_value(rule.value, formatter)],
+            )
+            for rule in graph.rules
+        ],
+        regions=[
+            LegendRow(
+                color=region.attributes.color, cells=[region.attributes.title, "", "", "", ""]
+            )
+            for region in graph.regions
+        ],
+    )
+
+
 def _legend_column_edges() -> Sequence[float]:
     total = sum(_LEGEND_COLUMN_WIDTHS)
     edges = [0.0]
@@ -450,44 +487,10 @@ def _legend_column_edges() -> Sequence[float]:
     return edges
 
 
-def _plot_legend(
-    ax: Axes,
-    scalars: Sequence[_CurveScalars],
-    rules: Sequence[EvaluatedRule],
-    regions: Sequence[EvaluatedRegion],
-    options: PngOptions,
-    texts: PngTexts,
-    formatter: NotationFormatter | None,
-) -> None:
-    """Curves are listed topmost first, the reverse of their drawing order, so that the legend
-    reads like the graph."""
+def _plot_legend(ax: Axes, legend: Legend, font_size: float) -> None:
     ax.axis("off")
     ax.set_in_layout(False)
-    font_size = options.font_size
-    curve_rows = [
-        (
-            s.color,
-            [
-                s.title,
-                _format_value(s.minimum, formatter),
-                _format_value(s.maximum, formatter),
-                _format_value(s.average, formatter),
-                _format_value(s.last, formatter),
-            ],
-        )
-        for s in reversed(scalars)
-    ]
-    rule_rows = [
-        (
-            rule.attributes.color,
-            [rule.attributes.title, "", "", "", _format_value(rule.value, formatter)],
-        )
-        for rule in rules
-    ]
-    region_rows = [
-        (region.attributes.color, [region.attributes.title, "", "", "", ""]) for region in regions
-    ]
-    rows = [*curve_rows, *rule_rows, *region_rows]
+    rows = [*legend.curves, *legend.rules, *legend.regions]
     row_count = len(rows) + 1
     edges = _legend_column_edges()
 
@@ -545,20 +548,18 @@ def _plot_legend(
             )
         )
 
-    for column, label in enumerate(
-        [texts.minimum, texts.maximum, texts.average, texts.last], start=2
-    ):
+    for column, label in enumerate(legend.header, start=2):
         add_value(0, column, label, _LEGEND_HEADER_COLOR)
     add_separator(row_top(1))
-    if rules:
-        add_separator(row_top(len(curve_rows) + 1))
+    if legend.rules:
+        add_separator(row_top(len(legend.curves) + 1))
 
     marker_x = (edges[0] + edges[1]) / 2
     width = _LEGEND_MARKER_WIDTH_PX * _PT_PER_PX
     height = _LEGEND_MARKER_HEIGHT_PX * _PT_PER_PX
     radius = _LEGEND_MARKER_RADIUS_PX * _PT_PER_PX
-    for row_index, (color, cells) in enumerate(rows, start=1):
-        title, *values = cells
+    for row_index, row in enumerate(rows, start=1):
+        title, *values = row.cells
         add_title(row_index, title)
         for column, text in enumerate(values, start=2):
             add_value(row_index, column, text, _LEGEND_TEXT_COLOR)
@@ -569,7 +570,7 @@ def _plot_legend(
                 width,
                 height,
                 boxstyle=f"round,pad=0,rounding_size={radius}",
-                facecolor=color,
+                facecolor=row.color,
                 edgecolor="none",
             )
         )
@@ -620,7 +621,6 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
         png_graph.requested_vertical_range,
     )
     formatter = None if axis is None else axis.formatter
-    scalars = _graph_scalars(graph)
     is_mirrored = any(drawn.inverse for drawn in drawn_curves(graph.stacks, graph.lines))
     visible = _visible_time_range(graph, png_graph.visible_time_range)
     lower, upper = _vertical_range_bounds(graph, visible)
@@ -633,13 +633,12 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
     renderer = _agg_renderer(fig)
 
     if table_height_ex:
-        gs = fig.add_gridspec(2, 1, height_ratios=[png_graph.options.size[1], table_height_ex])
+        legend = _legend(graph, texts, formatter, table_height_ex)
+        gs = fig.add_gridspec(2, 1, height_ratios=[png_graph.options.size[1], legend.height])
         ax = fig.add_subplot(gs[0])
         legend_ax = fig.add_subplot(gs[1])
         legend_ax.set_facecolor(_BACKGROUND_COLOR)
-        _plot_legend(
-            legend_ax, scalars, graph.rules, graph.regions, png_graph.options, texts, formatter
-        )
+        _plot_legend(legend_ax, legend, png_graph.options.font_size)
     else:
         ax = fig.add_subplot(1, 1, 1)
     ax.set_facecolor(_BACKGROUND_COLOR)

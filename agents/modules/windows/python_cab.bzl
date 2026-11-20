@@ -202,13 +202,12 @@ def _python_cab_impl(ctx):
     requirements = _wheel_requirements(ctx.files.wheels)
 
     # The venv seeds pip (the historic flow's virtualenv did, so customers can
-    # `.venv\Scripts\pip install` extra plugin deps); the same pinned wheel
-    # also replaces the base interpreter's ensurepip bootstrap.
-    pip_requirement = _pip_requirement(requirements)
+    # `.venv\Scripts\pip install` extra plugin deps). The base interpreter gets
+    # none, see build_python_cab.sh. pip_offline needs the wheel nonetheless.
+    _pip_requirement(requirements)
 
     args = _cab_args(ctx, cab, requirements)
     args.add("--make-exe-wrappers", ctx.executable._make_exe_wrappers)
-    args.add("--pip-requirement", pip_requirement)
     args.add("--postinstall", ctx.file.postinstall_cmd)
     args.add_all(ctx.files.venv_scripts, before_each = "--venv-script")
 

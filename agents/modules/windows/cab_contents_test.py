@@ -46,3 +46,15 @@ def test_venv_python_has_the_dlls_of_the_base_python(cab_archive: CabArchive) ->
     missing = {m for m in base_dlls if f".venv/scripts/{m}" not in members}
 
     assert not missing, f"The venv lacks {', '.join(sorted(missing))} in .venv/Scripts"
+
+
+def test_base_python_has_no_site_packages(cab_archive: CabArchive) -> None:
+    # The agent runs the venv, which does not see the base interpreter's
+    # site-packages: anything there would only ship as an unused second copy.
+    members = {m.replace("\\", "/").lstrip("/") for m in cab_archive}
+
+    base_site_packages = {m for m in members if m.lower().startswith("lib/site-packages/")} - {
+        "Lib/site-packages/README.txt"
+    }
+
+    assert not base_site_packages, f"The base python has {sorted(base_site_packages)[:5]}"

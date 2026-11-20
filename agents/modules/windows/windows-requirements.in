@@ -15,7 +15,7 @@ urllib3  # jolokia
 cryptography  # cmk_update_agent
 pywin32  # logwatch
 # The historic Windows build seeded pip into the CAB's .venv (via
-# virtualenv) and upgraded the base interpreter's pip (via pipenv), so
-# customers can extend the agent's Python with `.venv\Scripts\pip install`.
-# Keep that surface.
+# virtualenv), so customers can extend the agent's Python with
+# `.venv\Scripts\pip install`. Keep that surface. The base interpreter gets
+# no pip, see build_python_cab.sh.
 pip

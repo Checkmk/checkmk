@@ -426,3 +426,140 @@ def test_a_fixed_range_open_at_the_top_keeps_its_bound_without_data() -> None:
     )
 
     assert drawing.y_range == (100.0, 101.0)
+
+
+def _region(
+    *, lower: list[float | None] | None, upper: list[float | None] | None
+) -> EvaluatedRegion:
+    return EvaluatedRegion(
+        id="region-0",
+        attributes=CurveAttributes(title="OK", unit=_UNIT, color="#15d1a0"),
+        lower=None if lower is None else TimeSeries(time_range=_TIME_RANGE, values=lower),
+        upper=None if upper is None else TimeSeries(time_range=_TIME_RANGE, values=upper),
+    )
+
+
+def test_a_line_is_drawn_at_its_values() -> None:
+    line = EvaluatedLine(curve=_curve("m", [1.0, None, 3.0]), inverse=False)
+
+    drawing = _drawing(_graph(lines=[line]))
+
+    assert drawing.lines[0].values == [1.0, None, 3.0]
+
+
+def test_a_mirrored_line_is_drawn_below_zero() -> None:
+    line = EvaluatedLine(curve=_curve("m", [1.0, None, 3.0]), inverse=True)
+
+    drawing = _drawing(_graph(lines=[line]))
+
+    assert drawing.lines[0].values == [-1.0, None, -3.0]
+
+
+def test_a_region_is_drawn_between_its_bounds() -> None:
+    line = EvaluatedLine(curve=_curve("m", [0.0, 5.0, 10.0]), inverse=False)
+
+    drawing = _drawing(
+        _graph(lines=[line], regions=[_region(lower=[2.0, 2.0, None], upper=[4.0, 4.0, 4.0])])
+    )
+
+    assert (drawing.regions[0].lower, drawing.regions[0].upper) == (
+        [2.0, 2.0, None],
+        [4.0, 4.0, 4.0],
+    )
+
+
+def test_a_region_without_an_upper_bound_reaches_up_to_the_top_of_the_axis() -> None:
+    line = EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=False)
+
+    drawing = _drawing(_graph(lines=[line], regions=[_region(lower=[2.0, 2.0, 2.0], upper=None)]))
+
+    assert drawing.regions[0].upper == [3.0, 3.0, 3.0]
+
+
+def test_the_legend_shows_the_value_of_a_rule_as_its_last_value() -> None:
+    stack = EvaluatedStack(members=[_curve("m", [1.0, 2.0, 3.0])], inverse=False)
+
+    drawing = _drawing(_graph(stacks=[stack], rules=[_rule(2.5)]))
+
+    assert drawing.legend is not None and drawing.legend.rules[0].cells == [
+        "Crit",
+        "",
+        "",
+        "",
+        "2.50",
+    ]
+
+
+def test_the_legend_lists_a_region_by_its_title() -> None:
+    line = EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=False)
+
+    drawing = _drawing(_graph(lines=[line], regions=[_region(lower=None, upper=[2.0] * 3)]))
+
+    assert drawing.legend is not None and drawing.legend.regions[0].cells == [
+        "OK",
+        "",
+        "",
+        "",
+        "",
+    ]
+
+
+def test_a_fixed_vertical_range_ignores_the_data() -> None:
+    line = EvaluatedLine(curve=_curve("m", [1.0, 20.0, 30.0]), inverse=False)
+
+    drawing = _drawing(
+        _graph(
+            lines=[line],
+            vertical_range=EvaluatedVerticalRange(
+                range_kind=VerticalRangeKind.FIXED, lower=0.0, upper=10.0
+            ),
+        )
+    )
+
+    assert drawing.y_range == (0.0, 10.0)
+
+
+def test_a_minimal_vertical_range_widens_to_the_data() -> None:
+    line = EvaluatedLine(curve=_curve("m", [1.0, 20.0, 150.0]), inverse=False)
+
+    drawing = _drawing(
+        _graph(
+            lines=[line],
+            vertical_range=EvaluatedVerticalRange(
+                range_kind=VerticalRangeKind.MINIMAL, lower=0.0, upper=100.0
+            ),
+        )
+    )
+
+    assert drawing.y_range == (0.0, 150.0)
+
+
+def test_a_flat_graph_gets_a_vertical_range_of_one_unit() -> None:
+    line = EvaluatedLine(curve=_curve("m", [5.0, 5.0, 5.0]), inverse=False)
+
+    drawing = _drawing(_graph(lines=[line]))
+
+    assert drawing.y_range == (5.0, 6.0)
+
+
+def test_the_vertical_axis_is_labelled_in_the_unit_of_the_graph() -> None:
+    line = EvaluatedLine(curve=_curve("m", [1000.0, 2000.0, 3000.0]), inverse=False)
+
+    drawing = _drawing(
+        _graph(lines=[line]),
+        y_axis_unit=Unit(notation=DecimalNotation("B"), precision=AutoPrecision(2)),
+    )
+
+    assert (
+        drawing.vertical_axis is not None
+        and drawing.vertical_axis.labels
+        and all(label.text.endswith("B") for label in drawing.vertical_axis.labels)
+    )
+
+
+def test_a_graph_without_a_unit_leaves_the_labels_of_the_vertical_axis_to_the_renderer() -> None:
+    line = EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=False)
+
+    drawing = _drawing(_graph(lines=[line]))
+
+    assert drawing.vertical_axis is not None and drawing.vertical_axis.labels is None

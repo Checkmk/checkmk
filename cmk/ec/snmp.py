@@ -15,6 +15,7 @@ import pysnmp.proto.api  # type: ignore[import-untyped]
 import pysnmp.proto.errind  # type: ignore[import-untyped]
 import pysnmp.proto.rfc1155  # type: ignore[import-untyped]
 import pysnmp.proto.rfc1902  # type: ignore[import-untyped]
+import pysnmp.proto.rfc3411  # type: ignore[import-untyped]
 import pysnmp.smi.builder  # type: ignore[import-untyped]
 import pysnmp.smi.error  # type: ignore[import-untyped]
 import pysnmp.smi.rfc1902  # type: ignore[import-untyped]
@@ -48,8 +49,13 @@ class _PySnmpDebug(pysnmp.debug.Debug):  # type: ignore[misc]
         return self & flag
 
 
+def _snmp_version(security_model: int) -> str:
+    """SNMPv1, SNMPv2c and SNMPv3 have the security models 1, 2 and 3."""
+    return "v2c" if security_model == 2 else f"v{security_model}"
+
+
 class SNMPTrapParser:
-    # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
+    # Only traps: _drop_request() drops INFORMs like the other requests.
     class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):  # type: ignore[misc]
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
@@ -72,6 +78,11 @@ class SNMPTrapParser:
         self._receiver = SNMPTrapParser._ECNotificationReceiver(
             self.snmp_engine,
             self._handle_snmptrap,
+        )
+        # PySNMP leaks unhandled SNMPv1/v2c requests.
+        # TODO: Remove after https://github.com/lextudio/pysnmp/pull/261
+        self.snmp_engine.msgAndPduDsp.registerContextEngineId(
+            b"", pysnmp.proto.rfc3411.confirmedClassPDUs, self._drop_request
         )
         self._varbinds_and_ipaddress: tuple[Iterable[tuple[str, str]], str] | None = None
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
@@ -225,6 +236,42 @@ class SNMPTrapParser:
         trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
         # NOTE: There can be only one trap per PDU, so we don't run into the risk of overwriting previous info.
         self._varbinds_and_ipaddress = trap, ipaddress
+
+    def _drop_request(
+        self,
+        snmp_engine: pysnmp.entity.engine.SnmpEngine,
+        message_processing_model: int,
+        security_model: int,
+        security_name: pysnmp.proto.rfc1902.OctetString,
+        security_level: int,
+        context_engine_id: pysnmp.proto.rfc1902.OctetString,
+        context_name: pysnmp.proto.rfc1902.OctetString,
+        pdu_version: int,
+        pdu: Any,
+        max_size_response_scoped_pdu: int,
+        state_reference: int,
+    ) -> None:
+        """Drops a request without leaking PySNMP's state of it"""
+        subsystems = snmp_engine.messageProcessingSubsystems
+        # PySNMP types the keys as pyasn1 Integers, which hash like ints.
+        message_processing = subsystems[message_processing_model]
+        # There is no API for it.
+        state = message_processing._cache.popByStateRef(state_reference)
+        snmp_engine.securityModels[security_model].releaseStateInformation(
+            state["securityStateReference"]
+        )
+        self._logger.log(
+            VERBOSE,
+            "%s (%s) dropped from %s, only traps are supported",
+            self._pdu_name(pdu),
+            _snmp_version(int(security_model)),
+            snmp_engine.getUserContext("sender_address")[0],
+        )
+
+    @staticmethod
+    def _pdu_name(pdu: Any) -> str:
+        """What we call a PDU in log messages"""
+        return type(pdu).__name__.removesuffix("PDU")
 
     def _log_snmptrap_details(
         self,

@@ -302,3 +302,65 @@ def test_data_which_is_no_snmp_message_comes_with_a_traceback_only_when_debuggin
 
     [dropped] = [r for r in caplog.records if "PySNMP failed on it" in r.getMessage()]
     assert bool(dropped.exc_info) == with_traceback
+
+
+def request(version: int, pdu_type: str) -> bytes:
+    """An SNMPv1/v2c request from the "public" community, which the default configuration accepts"""
+    proto = api.protoModules[version]
+    pdu = getattr(proto, pdu_type)()
+    proto.apiPDU.setDefaults(pdu)
+    message = proto.Message()
+    proto.apiMessage.setDefaults(message)
+    proto.apiMessage.setCommunity(message, "public")
+    proto.apiMessage.setPDU(message, pdu)
+    data: bytes = encoder.encode(message)
+    return data
+
+
+@pytest.mark.parametrize(
+    "version, pdu_type",
+    [
+        pytest.param(api.protoVersion1, "GetRequestPDU", id="v1-get"),
+        pytest.param(api.protoVersion1, "SetRequestPDU", id="v1-set"),
+        pytest.param(api.protoVersion2c, "GetRequestPDU", id="v2c-get"),
+        pytest.param(api.protoVersion2c, "GetNextRequestPDU", id="v2c-getnext"),
+        pytest.param(api.protoVersion2c, "GetBulkRequestPDU", id="v2c-getbulk"),
+        pytest.param(api.protoVersion2c, "SetRequestPDU", id="v2c-set"),
+        pytest.param(api.protoVersion2c, "InformRequestPDU", id="v2c-inform"),
+    ],
+)
+def test_requests_leave_no_pysnmp_state_behind(
+    parser: SNMPTrapParser, version: int, pdu_type: str
+) -> None:
+    parser.parse(request(version, pdu_type), ("192.0.2.1", 162))
+
+    # PySNMP's security models keep the state of each request for its response.
+    for security_model in parser.snmp_engine.securityModels.values():
+        assert not vars(security_model._cache)["_Cache__cacheEntries"]
+    # Its message processing models keep it, too.
+    for message_processing in parser.snmp_engine.messageProcessingSubsystems.values():
+        assert not vars(message_processing._cache)["_Cache__stateReferenceIndex"]
+
+
+@pytest.mark.parametrize(
+    "version, pdu_type, dropped",
+    [
+        pytest.param(api.protoVersion1, "GetRequestPDU", "GetRequest (v1)", id="v1-get"),
+        pytest.param(
+            api.protoVersion2c, "InformRequestPDU", "InformRequest (v2c)", id="v2c-inform"
+        ),
+    ],
+)
+def test_requests_are_dropped_naming_their_type_and_version(
+    parser: SNMPTrapParser,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+    version: int,
+    pdu_type: str,
+    dropped: str,
+) -> None:
+    logger.setLevel(VERBOSE)
+
+    parser.parse(request(version, pdu_type), ("192.0.2.1", 162))
+
+    assert f"{dropped} dropped from 192.0.2.1, only traps are supported" in caplog.messages

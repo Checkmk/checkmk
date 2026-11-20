@@ -19,6 +19,10 @@ _TIMEOUT_BASE_SECONDS: Final = 60
 _TIMEOUT_PER_GRAPH_SECONDS: Final = 5
 
 
+def _all_failed(graphs: Sequence[PngGraph], message: str) -> Sequence[RenderingFailure]:
+    return [RenderingFailure(message)] * len(graphs)
+
+
 def render_pngs(
     graphs: Sequence[PngGraph],
     texts: PngTexts,
@@ -37,12 +41,13 @@ def render_pngs(
             check=False,
             timeout=timeout,
         )
-    except subprocess.TimeoutExpired as e:
-        raise RuntimeError(
-            f"{' '.join(command)} did not render {len(graphs)} graphs within {timeout} seconds"
-        ) from e
+    except subprocess.TimeoutExpired:
+        return _all_failed(
+            graphs,
+            f"{' '.join(command)} did not render {len(graphs)} graphs within {timeout} seconds",
+        )
     if rendering.returncode:
-        raise RuntimeError(
-            f"{' '.join(command)} failed: {rendering.stderr.decode(errors='replace')}"
+        return _all_failed(
+            graphs, f"{' '.join(command)} failed: {rendering.stderr.decode(errors='replace')}"
         )
     return pngs_from_json(rendering.stdout.decode())

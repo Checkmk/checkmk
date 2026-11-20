@@ -5,10 +5,8 @@
 
 import sys
 
-import pytest
-
 from cmk.graphing_engine import EvaluatedGraph, TimeRange
-from cmk.gui.png import PngGraph, PngOptions, PngTexts, render_pngs
+from cmk.gui.png import PngGraph, PngOptions, PngTexts, render_pngs, RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 _TEXTS = PngTexts(
@@ -58,11 +56,9 @@ def test_the_rendering_process_answers_with_one_image_per_graph() -> None:
     assert [isinstance(png, bytes) and png[:8] for png in pngs] == [b"\x89PNG\r\n\x1a\n"] * 2
 
 
-def test_a_failing_rendering_process_reports_what_it_wrote_to_stderr() -> None:
-    with pytest.raises(RuntimeError, match="boom"):
-        render_pngs(
-            [_graph()],
-            _TEXTS,
-            TemperatureUnit.CELSIUS,
-            command=(sys.executable, "-c", "import sys; sys.stderr.write('boom'); sys.exit(1)"),
-        )
+def test_a_failing_rendering_process_fails_every_graph_with_what_it_wrote_to_stderr() -> None:
+    command = (sys.executable, "-c", "import sys; sys.stderr.write('boom'); sys.exit(1)")
+
+    results = render_pngs([_graph(), _graph()], _TEXTS, TemperatureUnit.CELSIUS, command=command)
+
+    assert results == [RenderingFailure(f"{' '.join(command)} failed: boom")] * 2

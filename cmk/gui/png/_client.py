@@ -32,6 +32,8 @@ def render_pngs(
 ) -> Sequence[bytes | RenderingFailure]:
     """One result per graph, in the order of the graphs. A graph that fails to render yields a
     RenderingFailure, so that the other graphs still get their images."""
+    if not graphs:
+        return []
     timeout = _TIMEOUT_BASE_SECONDS + _TIMEOUT_PER_GRAPH_SECONDS * len(graphs)
     try:
         rendering = subprocess.run(

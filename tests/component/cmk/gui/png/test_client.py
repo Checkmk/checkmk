@@ -62,3 +62,11 @@ def test_a_failing_rendering_process_fails_every_graph_with_what_it_wrote_to_std
     results = render_pngs([_graph(), _graph()], _TEXTS, TemperatureUnit.CELSIUS, command=command)
 
     assert results == [RenderingFailure(f"{' '.join(command)} failed: boom")] * 2
+
+
+def test_no_rendering_process_starts_for_no_graphs() -> None:
+    results = render_pngs(
+        [], _TEXTS, TemperatureUnit.CELSIUS, command=(sys.executable, "-c", "print('no answer')")
+    )
+
+    assert results == []

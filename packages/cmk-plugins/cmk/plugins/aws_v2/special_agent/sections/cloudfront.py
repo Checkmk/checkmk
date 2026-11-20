@@ -213,17 +213,21 @@ class CloudFront(AWSSectionCloudwatch):
         origin_domain_by_distribution = self._get_origin_domain_by_distribution(
             colleague_contents.content
         )
+        distributions = {d["Id"]: d for d in colleague_contents.content or [] if "Id" in d}
         for distribution_data in raw_content.content:
             distribution_id = distribution_data.get("Label", "")
+            if (distribution := distributions.get(distribution_id)) is None:
+                # The distribution is gone from the summary since its metrics were cached.
+                continue
             piggyback_host = self._target_host(
                 hosts.CloudFrontDistribution(
-                    distribution_id, origin_domain_by_distribution.get(distribution_id)
+                    distribution_id,
+                    origin_domain_by_distribution.get(distribution_id),
+                    distribution["ARN"],
                 )
             )
             content_by_host[piggyback_host].append(distribution_data)
             distributions_by_host[piggyback_host].add(distribution_id)
-
-        distributions = {d["Id"]: d for d in colleague_contents.content or [] if "Id" in d}
         account_host = self._target_host(hosts.AccountScope())
         return AWSComputedContent(
             [

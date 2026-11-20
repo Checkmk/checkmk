@@ -99,6 +99,7 @@ class CloudFrontDistribution:
     distribution_id: str
     origin_domain: str | None
     """The domain name of the first origin, if the distribution has one."""
+    arn: str
 
 
 @dataclass(frozen=True)
@@ -279,7 +280,12 @@ def _cloudfront_distribution_host(
                 return TargetHost(distribution.origin_domain)
             return _account_scope_host(naming.account)
         case CloudFrontHostAssignment.distribution:
-            return TargetHost(distribution.distribution_id)
+            return _hostname_with_hashed_arn(
+                "cloudfront_distribution",
+                distribution.distribution_id,
+                distribution.arn,
+                naming.non_ec2,
+            )
         case _:
             assert_never(naming.cloudfront)
 

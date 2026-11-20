@@ -28,6 +28,10 @@ from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from .agent_aws_fake_clients import FakeCloudwatchClient
 
 ACCOUNT_HOST = TargetHost("123456789012")
+DISTRIBUTION_HOSTS = {
+    "E2RAYOVSSL6ZM3": TargetHost("aws_cloudfront_distribution_E2RAYOVSSL6ZM3_b5d89ea6"),
+    "EWN6C0UT7HBX0": TargetHost("aws_cloudfront_distribution_EWN6C0UT7HBX0_9d10e123"),
+}
 
 PIGGYBACK_HOSTNAME = "giordano-dev-cmk.s3.us-east-1.amazonaws.com"
 
@@ -483,7 +487,7 @@ def test_agent_aws_cloudfront_puts_each_distribution_on_its_own_host(
     assert {
         result.piggyback_hostname: {row["Label"] for row in result.content}
         for result in cloudfront_results
-    } == {"E2RAYOVSSL6ZM3": {"E2RAYOVSSL6ZM3"}, "EWN6C0UT7HBX0": {"EWN6C0UT7HBX0"}}
+    } == {host: {distribution_id} for distribution_id, host in DISTRIBUTION_HOSTS.items()}
 
 
 @pytest.mark.parametrize(
@@ -531,12 +535,12 @@ def test_agent_aws_cloudfront_distribution_hosts_get_the_resource_labels(
     results = cloudfront.run().results
 
     assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
-        "E2RAYOVSSL6ZM3": {
+        DISTRIBUTION_HOSTS["E2RAYOVSSL6ZM3"]: {
             "cmk/aws/service": "cloudfront",
             "cmk/aws/resource_id": "E2RAYOVSSL6ZM3",
             "cmk/aws/arn": "arn:aws:cloudfront::710145618630:distribution/E2RAYOVSSL6ZM3",
         },
-        "EWN6C0UT7HBX0": {
+        DISTRIBUTION_HOSTS["EWN6C0UT7HBX0"]: {
             "cmk/aws/service": "cloudfront",
             "cmk/aws/resource_id": "EWN6C0UT7HBX0",
             "cmk/aws/arn": "arn:aws:cloudfront::710145618630:distribution/EWN6C0UT7HBX0",

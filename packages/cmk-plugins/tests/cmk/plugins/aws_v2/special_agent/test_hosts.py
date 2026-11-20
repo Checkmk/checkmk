@@ -234,20 +234,30 @@ def test_ebs_attachment_goes_to_the_host_of_its_monitored_instance() -> None:
 
 
 def test_cloudfront_distribution_goes_to_its_origin_domain_host_when_assigned() -> None:
-    distribution = CloudFrontDistribution("E2RAYOVSSL6ZM3", "origin.example.com")
+    distribution = CloudFrontDistribution(
+        "E2RAYOVSSL6ZM3",
+        "origin.example.com",
+        "arn:aws:cloudfront::111122223333:distribution/E2RAYOVSSL6ZM3",
+    )
 
     assert target_host(distribution, DOMAIN_HOST_NAMING) == "origin.example.com"
 
 
 def test_cloudfront_distribution_goes_to_its_own_host_when_assigned() -> None:
-    distribution = CloudFrontDistribution("E2RAYOVSSL6ZM3", "origin.example.com")
+    distribution = CloudFrontDistribution(
+        "E2RAYOVSSL6ZM3",
+        "origin.example.com",
+        "arn:aws:cloudfront::111122223333:distribution/E2RAYOVSSL6ZM3",
+    )
     naming = HostNaming(
         ec2=NamingConvention.ip_region_instance,
         non_ec2=NonEC2PiggybackTemplate.LONG,
         cloudfront=CloudFrontHostAssignment.distribution,
     )
 
-    assert target_host(distribution, naming) == "E2RAYOVSSL6ZM3"
+    assert (
+        target_host(distribution, naming) == "aws_cloudfront_distribution_E2RAYOVSSL6ZM3_348005b8"
+    )
 
 
 @pytest.mark.parametrize(
@@ -256,7 +266,11 @@ def test_cloudfront_distribution_goes_to_its_own_host_when_assigned() -> None:
 def test_cloudfront_distribution_without_origin_goes_to_the_account_host(
     origin_domain: str | None,
 ) -> None:
-    distribution = CloudFrontDistribution("E2RAYOVSSL6ZM3", origin_domain)
+    distribution = CloudFrontDistribution(
+        "E2RAYOVSSL6ZM3",
+        origin_domain,
+        "arn:aws:cloudfront::111122223333:distribution/E2RAYOVSSL6ZM3",
+    )
 
     assert target_host(distribution, DOMAIN_HOST_NAMING) == "333333333333"
 
@@ -271,12 +285,20 @@ def test_cloudfront_distribution_without_origin_goes_to_the_account_host(
             id="ebs attached to unmonitored instance",
         ),
         pytest.param(
-            CloudFrontDistribution("E2RAYOVSSL6ZM3", "origin.example.com"),
+            CloudFrontDistribution(
+                "E2RAYOVSSL6ZM3",
+                "origin.example.com",
+                "arn:aws:cloudfront::111122223333:distribution/E2RAYOVSSL6ZM3",
+            ),
             CloudFrontHostAssignment.account,
             id="cloudfront assigned to aws host",
         ),
         pytest.param(
-            CloudFrontDistribution("E2RAYOVSSL6ZM3", None),
+            CloudFrontDistribution(
+                "E2RAYOVSSL6ZM3",
+                None,
+                "arn:aws:cloudfront::111122223333:distribution/E2RAYOVSSL6ZM3",
+            ),
             CloudFrontHostAssignment.origin_domain,
             id="cloudfront without origin",
         ),

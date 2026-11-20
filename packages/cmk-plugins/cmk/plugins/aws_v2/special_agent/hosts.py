@@ -146,7 +146,7 @@ class RDSInstance:
 @dataclass(frozen=True)
 class SNSTopic:
     name: str
-    region: str
+    arn: str
 
 
 @dataclass(frozen=True)
@@ -205,7 +205,7 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost:
         case RDSInstance():
             return _rds_instance_host(resource, naming.non_ec2)
         case SNSTopic():
-            return _sns_topic_host(resource)
+            return _sns_topic_host(resource, naming.non_ec2)
         case LambdaFunction():
             return _lambda_function_host(resource, naming.non_ec2)
         case ECSCluster():
@@ -340,8 +340,8 @@ def _rds_instance_host(instance: RDSInstance, template: NonEC2PiggybackTemplate)
     return _hostname_with_hashed_arn("rds_db", instance.instance_id, instance.arn, template)
 
 
-def _sns_topic_host(topic: SNSTopic) -> TargetHost:
-    return _hostname_from_name_and_region(topic.name, topic.region)
+def _sns_topic_host(topic: SNSTopic, template: NonEC2PiggybackTemplate) -> TargetHost:
+    return _hostname_with_hashed_arn("sns_topic", topic.name, topic.arn, template)
 
 
 def _lambda_function_host(

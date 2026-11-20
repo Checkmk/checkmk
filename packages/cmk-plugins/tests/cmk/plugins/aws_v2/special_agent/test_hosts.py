@@ -201,7 +201,11 @@ def test_ec2_instance_without_a_usable_tag_has_no_host(instance: Mapping[str, ob
             "aws_s3_bucket_bucket_5c001db1",
             id="s3 bucket",
         ),
-        pytest.param(SNSTopic("topic", "eu-central-1"), "topic_eu-central-1", id="sns topic"),
+        pytest.param(
+            SNSTopic("orders", "arn:aws:sns:eu-central-1:111122223333:orders"),
+            "aws_sns_topic_orders_e19f6fbb",
+            id="sns topic",
+        ),
         pytest.param(
             LambdaFunction(
                 "function", "arn:aws:lambda:eu-central-1:123456789012:function:function"
@@ -221,9 +225,9 @@ def test_resource_goes_to_a_host_of_its_own(resource: PiggybackResource, expecte
 
 
 def test_sns_topics_with_the_same_name_in_two_regions_go_to_two_hosts() -> None:
-    assert target_host(SNSTopic("topic", "eu-central-1"), DEFAULT_NAMING) != target_host(
-        SNSTopic("topic", "us-east-1"), DEFAULT_NAMING
-    )
+    assert target_host(
+        SNSTopic("topic", "arn:aws:sns:eu-central-1:111122223333:topic"), DEFAULT_NAMING
+    ) != target_host(SNSTopic("topic", "arn:aws:sns:us-east-1:111122223333:topic"), DEFAULT_NAMING)
 
 
 def test_ecs_clusters_with_the_same_name_in_two_regions_go_to_two_hosts() -> None:

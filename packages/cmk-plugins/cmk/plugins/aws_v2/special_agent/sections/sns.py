@@ -60,12 +60,6 @@ class SNSTopic:
         # topic
         return f"{self.topic_name} [{self.region}]"
 
-    @staticmethod
-    def host_resource_from_item_id(item_id: str) -> hosts.SNSTopic:
-        # A topic name has no spaces, so the name ends before the first space.
-        topic_name, region = item_id.split(" ", 1)
-        return hosts.SNSTopic(name=topic_name, region=region.strip("[]"))
-
 
 class SNSTopicsFetcher:
     """This class will fetch the topics matching the config criteria and cache them in memory"""
@@ -437,26 +431,24 @@ class SNSTopicCloudwatch(AWSSection):
         rows_by_item_id: dict[str, list[Mapping[str, object]]] = {}
         for row in raw_content.content:
             rows_by_item_id.setdefault(row["Label"], []).append(row)
-        return AWSComputedContent(
-            [
-                self._topic_result(item_id, rows, colleague_contents.content.topics.get(item_id))
-                for item_id, rows in rows_by_item_id.items()
-            ],
-            raw_content.cache_timestamp,
-        )
+
+        results = []
+        for item_id, rows in rows_by_item_id.items():
+            # A topic can be gone from the summary since its metrics were cached.
+            if (topic := colleague_contents.content.topics.get(item_id)) is not None:
+                results.append(self._topic_result(item_id, rows, topic))
+
+        return AWSComputedContent(results, raw_content.cache_timestamp)
 
     def _topic_result(
         self,
         item_id: str,
         rows: Sequence[Mapping[str, object]],
-        topic: Mapping[str, Any] | None,
+        topic: Mapping[str, Any],
     ) -> AWSSectionResult:
-        resource = SNSTopic.host_resource_from_item_id(item_id)
-        topic_name = resource.name
+        topic_name, _ = item_id.split(" ", 1)
+        resource = hosts.SNSTopic(topic_name, topic["ARN"])
         host = self._target_host(resource)
-        if topic is None:
-            # The topic is gone from the summary since its metrics were cached.
-            return AWSSectionResult(host, rows, AwsResource(service="sns"))
         return AWSSectionResult(
             host,
             rows,

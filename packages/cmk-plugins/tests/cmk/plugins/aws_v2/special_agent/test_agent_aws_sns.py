@@ -33,6 +33,13 @@ from cmk.plugins.aws_v2.special_agent.sections.sns import (
 from .agent_aws_fake_clients import FakeCloudwatchClient, SNSListSubscriptionsIB, SNSListTopicsIB
 
 ACCOUNT_HOST = TargetHost("aws_account_123456789012")
+TOPIC_HOSTS = {
+    "TopicName-0": TargetHost("aws_sns_topic_TopicName-0_03d3aaa9"),
+    "TopicName-1": TargetHost("aws_sns_topic_TopicName-1_05451e70"),
+    "TopicName-2": TargetHost("aws_sns_topic_TopicName-2_b3fd5a92"),
+    "TopicName-3.fifo": TargetHost("aws_sns_topic_TopicName-3.fifo_67b914e1"),
+    "TopicName-4.fifo": TargetHost("aws_sns_topic_TopicName-4.fifo_4103d7b5"),
+}
 
 ALL_TOPICS = {
     "TopicName-0 [eu-west-1]",
@@ -401,13 +408,7 @@ def test_agent_aws_sns_puts_each_topic_on_its_own_host(get_sns_sections: SNSSect
     assert {
         result.piggyback_hostname: {row["Label"] for row in result.content}
         for result in sns_topic_results
-    } == {
-        "TopicName-0_eu-west-1": {"TopicName-0 [eu-west-1]"},
-        "TopicName-1_eu-west-1": {"TopicName-1 [eu-west-1]"},
-        "TopicName-2_eu-west-1": {"TopicName-2 [eu-west-1]"},
-        "TopicName-3.fifo_eu-west-1": {"TopicName-3.fifo [eu-west-1]"},
-        "TopicName-4.fifo_eu-west-1": {"TopicName-4.fifo [eu-west-1]"},
-    }
+    } == {host: {f"{topic} [eu-west-1]"} for topic, host in TOPIC_HOSTS.items()}
 
 
 def test_agent_aws_sns_topic_hosts_get_the_resource_labels(get_sns_sections: SNSSections) -> None:
@@ -422,11 +423,10 @@ def test_agent_aws_sns_topic_hosts_get_the_resource_labels(get_sns_sections: SNS
         "cmk/aws/tag/test-tag-key-0": "test-tag-value-0",
         "cmk/aws/tag/test-tag-key-1": "test-tag-value-1",
     }
-    topics = ["TopicName-0", "TopicName-1", "TopicName-2", "TopicName-3.fifo", "TopicName-4.fifo"]
     assert {
         result.piggyback_hostname: result.piggyback_host_labels for result in sns_topic_results
     } == {
-        f"{topic}_eu-west-1": {
+        host: {
             "cmk/aws/service": "sns",
             "cmk/aws/name": topic,
             "cmk/aws/resource_id": topic,
@@ -434,7 +434,7 @@ def test_agent_aws_sns_topic_hosts_get_the_resource_labels(get_sns_sections: SNS
             "cmk/aws/arn": f"arn:aws:sns:eu-west-1:710145618630:{topic}",
             **(tags if topic == "TopicName-3.fifo" else {}),
         }
-        for topic in topics
+        for topic, host in TOPIC_HOSTS.items()
     }
 
 

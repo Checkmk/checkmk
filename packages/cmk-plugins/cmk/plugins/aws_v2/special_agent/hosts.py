@@ -91,8 +91,7 @@ class DynamoDBTable:
 @dataclass(frozen=True)
 class WAFV2WebACL:
     name: str
-    region: str
-    """The region of a regional web ACL, or "CloudFront" for a global one."""
+    arn: str
 
 
 @dataclass(frozen=True)
@@ -178,7 +177,7 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost:
         case DynamoDBTable():
             return _dynamodb_table_host(resource, naming.non_ec2)
         case WAFV2WebACL():
-            return _wafv2_web_acl_host(resource)
+            return _wafv2_web_acl_host(resource, naming.non_ec2)
         case CloudFrontDistribution():
             return _cloudfront_distribution_host(resource, naming)
         case GlacierVault():
@@ -265,8 +264,8 @@ def _dynamodb_table_host(table: DynamoDBTable, template: NonEC2PiggybackTemplate
     return _hostname_with_hashed_arn("dynamodb_table", table.name, table.arn, template)
 
 
-def _wafv2_web_acl_host(web_acl: WAFV2WebACL) -> TargetHost:
-    return _hostname_from_name_and_region(web_acl.name, web_acl.region)
+def _wafv2_web_acl_host(web_acl: WAFV2WebACL, template: NonEC2PiggybackTemplate) -> TargetHost:
+    return _hostname_with_hashed_arn("wafv2_webacl", web_acl.name, web_acl.arn, template)
 
 
 def _cloudfront_distribution_host(

@@ -35,6 +35,11 @@ from .agent_aws_fake_clients import (
 )
 
 ACCOUNT_HOST = TargetHost("123456789012")
+WEB_ACL_HOSTS = {
+    "Name-0": TargetHost("aws_wafv2_webacl_Name-0_49b6d4cd"),
+    "Name-1": TargetHost("aws_wafv2_webacl_Name-1_d46b8ee2"),
+    "Name-2": TargetHost("aws_wafv2_webacl_Name-2_95d4148b"),
+}
 
 
 class FakeWAFV2Client:
@@ -424,43 +429,39 @@ def test_agent_aws_wafv2_summary_filters_tags(
 
 
 @pytest.mark.parametrize(
-    ("is_regional", "expected_suffix"),
+    "is_regional",
     [
-        pytest.param(True, "region", id="regional"),
-        pytest.param(False, "CloudFront", id="cloudfront"),
+        pytest.param(True, id="regional"),
+        pytest.param(False, id="cloudfront"),
     ],
 )
-def test_agent_aws_wafv2_web_acl_metrics_go_to_a_host_per_web_acl_and_scope(
-    is_regional: bool, expected_suffix: str
-) -> None:
+def test_agent_aws_wafv2_web_acl_metrics_go_to_a_host_per_web_acl(is_regional: bool) -> None:
     wafv2_sections = create_sections(None, (None, None), is_regional)
     wafv2_sections["wafv2_summary"].run()
 
     wafv2_web_acl_results = wafv2_sections["wafv2_web_acl"].run().results
 
-    assert sorted(result.piggyback_hostname for result in wafv2_web_acl_results) == [
-        f"Name-0_{expected_suffix}",
-        f"Name-1_{expected_suffix}",
-        f"Name-2_{expected_suffix}",
-    ]
+    assert sorted(result.piggyback_hostname for result in wafv2_web_acl_results) == sorted(
+        WEB_ACL_HOSTS.values()
+    )
 
 
 @pytest.mark.parametrize(
-    ("is_regional", "expected_suffix", "expected_region"),
+    ("is_regional", "expected_region"),
     [
-        pytest.param(True, "region", {"cmk/aws/region": "region"}, id="regional"),
-        pytest.param(False, "CloudFront", {}, id="global"),
+        pytest.param(True, {"cmk/aws/region": "region"}, id="regional"),
+        pytest.param(False, {}, id="global"),
     ],
 )
 def test_agent_aws_wafv2_web_acl_hosts_get_the_resource_labels(
-    is_regional: bool, expected_suffix: str, expected_region: Mapping[str, str]
+    is_regional: bool, expected_region: Mapping[str, str]
 ) -> None:
     wafv2_sections = create_sections(None, (None, None), is_regional)
     wafv2_sections["wafv2_summary"].run()
 
     results = wafv2_sections["wafv2_web_acl"].run().results
 
-    host = f"Name-2_{expected_suffix}"  # the third web ACL has no tags
+    host = WEB_ACL_HOSTS["Name-2"]  # the third web ACL has no tags
     assert {result.piggyback_hostname: result.piggyback_host_labels for result in results}[
         host
     ] == {

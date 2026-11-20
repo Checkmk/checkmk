@@ -224,7 +224,7 @@ class WAFV2Limits(AWSSectionLimits):
                     web_acl["Capacity"],
                 ),
                 region=self._region_report,
-                resource=hosts.WAFV2WebACL(web_acl["Name"], self._region_report),
+                resource=hosts.WAFV2WebACL(web_acl["Name"], web_acl["ARN"]),
             )
 
         return AWSComputedContent(web_acls, raw_content.cache_timestamp)
@@ -315,7 +315,7 @@ class WAFV2Summary(AWSSection):
         content_by_piggyback_hosts: dict[str, str] = {}
         for web_acl in raw_content.content:
             content_by_piggyback_hosts.setdefault(
-                self._target_host(hosts.WAFV2WebACL(web_acl["Name"], self._region_report)), web_acl
+                self._target_host(hosts.WAFV2WebACL(web_acl["Name"], web_acl["ARN"])), web_acl
             )
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 

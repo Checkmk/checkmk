@@ -135,8 +135,14 @@ def test_ec2_instance_without_a_name_has_no_host(
             "aws_dynamodb_table_users_a93630d8",
             id="dynamodb table",
         ),
-        pytest.param(WAFV2WebACL("acl", "eu-central-1"), "acl_eu-central-1", id="regional web acl"),
-        pytest.param(WAFV2WebACL("acl", "CloudFront"), "acl_CloudFront", id="cloudfront web acl"),
+        pytest.param(
+            WAFV2WebACL(
+                "api-protection",
+                "arn:aws:wafv2:eu-central-1:111122223333:regional/webacl/api-protection/a1b2c3d4-5678-90ab-cdef-111122223333",
+            ),
+            "aws_wafv2_webacl_api-protection_a8d53eb5",
+            id="web acl",
+        ),
         pytest.param(
             GlacierVault("my-vault", "arn:aws:glacier:eu-central-1:123456789012:vaults/my-vault"),
             "aws_glacier_vault_my-vault_a87a2b00",
@@ -197,6 +203,15 @@ def test_lambda_functions_with_the_same_name_and_another_arn_go_to_two_hosts(
     assert target_host(function, DEFAULT_NAMING) != target_host(
         LambdaFunction("function", other_arn), DEFAULT_NAMING
     )
+
+
+def test_regional_and_global_web_acls_with_the_same_name_go_to_two_hosts() -> None:
+    regional = WAFV2WebACL(
+        "acl", "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/acl/a1b2c3d4"
+    )
+    global_ = WAFV2WebACL("acl", "arn:aws:wafv2:us-east-1:123456789012:global/webacl/acl/e5f6a7b8")
+
+    assert target_host(regional, DEFAULT_NAMING) != target_host(global_, DEFAULT_NAMING)
 
 
 def test_lambda_function_host_follows_the_short_template() -> None:

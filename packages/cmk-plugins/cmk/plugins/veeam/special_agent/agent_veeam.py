@@ -33,6 +33,12 @@ from cmk.password_store.v1 import (
     Secret,
 )
 from cmk.plugins.veeam.lib import parse_iso8601_epoch
+from cmk.plugins.veeam.special_agent.api_revisions import (
+    API_REVISIONS,
+    ApiRevision,
+    in_section_format,
+    MIN_VEEAM_VERSION,
+)
 from cmk.server_side_programs.v1 import (
     AgentMessages,
     HostnameValidationAdapter,
@@ -50,9 +56,6 @@ __version__ = "3.0.0b1"
 
 PASSWORD_OPTION = "password"
 
-API_VERSION = "1.3-rev1"
-MIN_VEEAM_VERSION = "13.0.1.180"
-"""The first Veeam Backup & Replication build that supports `API_VERSION`."""
 TOKEN_PATH = "/api/oauth2/token"
 
 TOKEN_STORAGE_KEY = "token"
@@ -125,6 +128,8 @@ class _StoredToken(BaseModel):
     """Can be used only once, and outlives the access token (14 days by default)."""
     expires_at: float
     """Expiry of the access token, as local unix time: immune to clock skew with the server."""
+    api_version: ApiRevision
+    """The REST API revision the token was issued with, used for every request with it."""
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -278,8 +283,10 @@ class VeeamAuth(requests.auth.AuthBase):
         secrets: ObfuscatedStorage[Secret[str]],
         user: str,
         password: Secret[str],
+        revisions: Sequence[ApiRevision] = API_REVISIONS,
     ) -> None:
         self._api = api
+        self._revisions = revisions
         self._secrets = secrets
         self._user = user
         self._password = password
@@ -288,11 +295,18 @@ class VeeamAuth(requests.auth.AuthBase):
 
     @override
     def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
-        r.headers["x-api-version"] = API_VERSION
-        # Without a token the request goes out unauthenticated; its 401 triggers renew().
-        if self._token is not None:
+        if self._token is None:
+            # The request goes out unauthenticated; its 401 triggers renew().
+            r.headers["x-api-version"] = self._revisions[0]
+        else:
+            r.headers["x-api-version"] = self._token.api_version
             r.headers["Authorization"] = f"Bearer {self._token.access_token}"
         return r
+
+    @property
+    def api_version(self) -> ApiRevision | None:
+        """The revision of the current token, or None before the login."""
+        return None if self._token is None else self._token.api_version
 
     def _load_token(self) -> _StoredToken | None:
         if (raw := self._secrets.read(TOKEN_STORAGE_KEY, None)) is None:
@@ -303,10 +317,10 @@ class VeeamAuth(requests.auth.AuthBase):
             return None
         return token if token.owner == self._owner else None
 
-    def _request_token(self, data: Mapping[str, str]) -> _StoredToken:
+    def _request_token(self, data: Mapping[str, str], api_version: ApiRevision) -> _StoredToken:
         requested_at = time.time()
         response = self._api.request(
-            "POST", TOKEN_PATH, data=data, headers={"x-api-version": API_VERSION}
+            "POST", TOKEN_PATH, data=data, headers={"x-api-version": api_version}
         )
         if not response.ok:
             raise VeeamApiError(TOKEN_PATH, response)
@@ -321,6 +335,7 @@ class VeeamAuth(requests.auth.AuthBase):
             access_token=token.access_token,
             refresh_token=token.refresh_token,
             expires_at=requested_at + token.expires_in,
+            api_version=api_version,
         )
         # Store right away: the refresh token we just used is gone for good.
         self._secrets.write(TOKEN_STORAGE_KEY, Secret(stored.model_dump_json()))
@@ -329,7 +344,8 @@ class VeeamAuth(requests.auth.AuthBase):
     def _refresh(self, token: _StoredToken) -> _StoredToken | None:
         try:
             return self._request_token(
-                {"grant_type": "refresh_token", "refresh_token": token.refresh_token}
+                {"grant_type": "refresh_token", "refresh_token": token.refresh_token},
+                token.api_version,
             )
         except VeeamApiError as exc:
             if 400 <= exc.status < 500:
@@ -341,34 +357,41 @@ class VeeamAuth(requests.auth.AuthBase):
             ) from exc
 
     def _login(self) -> _StoredToken:
-        try:
-            return self._request_token(
-                {
-                    "grant_type": "password",
-                    "username": self._user,
-                    "password": self._password.reveal(),
-                }
-            )
-        except VeeamApiError as exc:
-            if exc.status == HTTPStatus.BAD_REQUEST and exc.code == "NotImplemented":
+        """Log in with the newest of `revisions` the backup server supports."""
+        credentials = {
+            "grant_type": "password",
+            "username": self._user,
+            "password": self._password.reveal(),
+        }
+        for api_version in self._revisions:
+            try:
+                return self._request_token(credentials, api_version)
+            except VeeamApiError as exc:
+                if exc.status == HTTPStatus.BAD_REQUEST and exc.code == "NotImplemented":
+                    unsupported = exc
+                    continue
+                if exc.status == HTTPStatus.UNAUTHORIZED:
+                    raise TerminateAgent(
+                        f"Authentication at the Veeam REST API failed for user '{self._user}': "
+                        f"{exc.message}. Check the user name and password. After repeated "
+                        "failed logins, Veeam may lock the user and then reject even the correct "
+                        "password until the user is unlocked"
+                    ) from exc
                 raise TerminateAgent(
-                    f"The Veeam backup server does not support the REST API version "
-                    f"{API_VERSION}. Veeam Backup & Replication {MIN_VEEAM_VERSION} or later "
-                    f"is required (server: {exc.message})"
+                    f"Login at the Veeam REST API failed with HTTP {exc.status}: {exc.message}"
                 ) from exc
-            if exc.status == HTTPStatus.UNAUTHORIZED:
-                raise TerminateAgent(
-                    f"Authentication at the Veeam REST API failed for user '{self._user}': "
-                    f"{exc.message}. Check the user name and password. After repeated "
-                    "failed logins, Veeam may lock the user and then reject even the correct "
-                    "password until the user is unlocked"
-                ) from exc
-            raise TerminateAgent(
-                f"Login at the Veeam REST API failed with HTTP {exc.status}: {exc.message}"
-            ) from exc
+        raise TerminateAgent(
+            f"The Veeam backup server supports none of the REST API versions "
+            f"{', '.join(self._revisions)}. Veeam Backup & Replication {MIN_VEEAM_VERSION} or "
+            f"later is required (server: {unsupported.message})"
+        ) from unsupported
 
     def renew(self) -> None:
-        """Replace the current token: spend its refresh token, fall back to the password."""
+        """Replace the current token: spend its refresh token, fall back to the password.
+
+        A refreshed token keeps the revision it was issued with; only the password login
+        negotiates the revision.
+        """
         refreshed = self._refresh(self._token) if self._token is not None else None
         self._token = refreshed if refreshed is not None else self._login()
 
@@ -393,7 +416,11 @@ class VeeamClient:
             self._auth.renew()
             response = self._api.request("GET", path, auth=self._auth)
         if response.ok:
-            return response.json()
+            # Whichever revision the server answered in, as the sections need it.
+            body = response.json()
+            if (revision := self._auth.api_version) is None:
+                return body
+            return in_section_format(revision, path, body)
         error = VeeamApiError(path, response)
         if error.status == HTTPStatus.UNAUTHORIZED:
             raise TerminateAgent(
@@ -453,9 +480,9 @@ def fetch_list(path: str) -> FetchStrategy:
     """A `data`/`pagination` endpoint, fetched to completion, one item per line."""
 
     def _fetch(client: VeeamClient, name: str) -> Fetched:
-        items = client.get_all(path)
         return Fetched(
-            own=f"<<<{name}:sep(0)>>>\n" + "".join(f"{json.dumps(item)}\n" for item in items)
+            own=f"<<<{name}:sep(0)>>>\n"
+            + "".join(f"{json.dumps(item)}\n" for item in client.get_all(path))
         )
 
     return _fetch
@@ -515,7 +542,8 @@ class _Job(_ApiItem):
     """An item of GET /api/v1/jobs."""
 
     id: str
-    is_disabled: bool
+    is_disabled: bool = False
+    """Optional since REST API 1.3-rev2, which documents only `true` as disabled."""
     schedule: _JobSchedule | None = None
 
 

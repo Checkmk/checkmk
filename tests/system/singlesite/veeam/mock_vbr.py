@@ -99,10 +99,21 @@ def shift_timestamps(value: object, delta: timedelta) -> object:
 def _accepts_login(
     api_version: str, credentials: Credentials, headers: dict[str, str], body: bytes
 ) -> bool:
-    """Reject what a real server rejects: an API version it does not know, or wrong credentials."""
-    if (version := _header(headers, "x-api-version")) != api_version:
+    """Reject what a real server rejects: an API version it does not know, or wrong credentials.
+
+    A failed validation is answered with HTTP 400 and the exception's text as body. For an
+    unknown API version, that is the error a real server sends, so that the special agent
+    falls back to the version the responses were recorded with.
+    """
+    if _header(headers, "x-api-version") != api_version:
         raise AssertionError(
-            f"API version {version} is not supported, the responses were recorded with {api_version}"
+            json.dumps(
+                {
+                    "errorCode": "NotImplemented",
+                    "message": "Unsupported RESTAPI version. "
+                    f"The following versions are supported: {api_version}",
+                }
+            )
         )
     form = dict(parse_qsl(body.decode()))
     match form.get("grant_type"):

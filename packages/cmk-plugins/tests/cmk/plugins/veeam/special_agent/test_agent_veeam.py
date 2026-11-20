@@ -6,7 +6,7 @@
 import json
 import logging
 import socket
-from collections.abc import Container, Iterator
+from collections.abc import Container, Iterator, Mapping
 from http import HTTPStatus
 from pathlib import Path
 from urllib.parse import parse_qs
@@ -15,6 +15,7 @@ import pytest
 import requests
 import responses
 import time_machine
+from responses import matchers
 
 from cmk.password_store.v1 import Obfuscator, Secret
 from cmk.plugins.veeam.special_agent.agent_veeam import (
@@ -40,6 +41,7 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
     VeeamClient,
     write_sections,
 )
+from cmk.plugins.veeam.special_agent.api_revisions import ApiRevision
 from cmk.server_side_programs.v1 import AgentMessages, ObfuscatedStorage, Storage
 
 URL = "https://veeam.example.com:443"
@@ -102,6 +104,13 @@ def _client(auth: VeeamAuth, storage: Storage) -> VeeamClient:
     return VeeamClient(_veeam_api(), auth, storage)
 
 
+def _logged_in_client(secrets: ObfuscatedStorage[Secret[str]], storage: Storage) -> VeeamClient:
+    """The client after the agent's login, as `main` creates it."""
+    auth = _auth(secrets)
+    auth.authenticate()
+    return _client(auth, storage)
+
+
 def _token(name: str) -> dict[str, object]:
     return {
         "access_token": f"{name}-access",
@@ -127,7 +136,7 @@ def test_authenticate_requests_a_token_with_the_credentials_and_api_version(
     _auth(secrets).authenticate()
 
     (call,) = api.calls
-    assert call.request.headers["x-api-version"] == "1.3-rev1"
+    assert call.request.headers["x-api-version"] == "1.3-rev2"
     assert parse_qs(str(call.request.body)) == {
         "grant_type": ["password"],
         "username": ["monitoring"],
@@ -2510,6 +2519,33 @@ def test_fetch_backups_does_not_look_back_for_a_job_without_retries(
     assert _look_back_requests(api) == 0
 
 
+def test_fetch_backups_follows_the_retries_of_a_job_without_is_disabled(
+    api: responses.RequestsMock, storage: Storage, secrets: ObfuscatedStorage[Secret[str]]
+) -> None:
+    # isDisabled is optional since REST API 1.3-rev2: a job without it is not disabled.
+    api.get(
+        f"{URL}/api/v1/jobs?skip=0",
+        json={
+            "data": [
+                {
+                    "id": "job-id-1",
+                    "name": "Daily_VM_Backup",
+                    "type": "Backup",
+                    "schedule": _retry(is_enabled=False, retry_count=3),
+                }
+            ],
+            "pagination": {"total": 1},
+        },
+    )
+    _mock_jobs(api, [_job()])
+    _mock_session_and_objects(api, "session-1", ["vm-1", "vm-2"])
+    _mock_tasks(api, [_task(name="vm-1")])
+
+    write_sections(_client(_auth(secrets), storage), [("veeam_backups", fetch_backups)])
+
+    assert _look_back_requests(api) == 0
+
+
 def test_fetch_backups_looks_back_once_per_current_session(
     api: responses.RequestsMock, storage: Storage, secrets: ObfuscatedStorage[Secret[str]]
 ) -> None:
@@ -2553,6 +2589,318 @@ def test_unsupported_api_version_names_the_required_and_the_supported_versions(
     with pytest.raises(
         TerminateAgent,
         match=r"13\.0\.1\.180 or later is required .*versions are supported: 1\.1-rev0",
+    ):
+        _auth(secrets).authenticate()
+
+
+_UNSUPPORTED_REVISION = {
+    "errorCode": "NotImplemented",
+    "message": "Unsupported RESTAPI version. The following versions are supported: 1.3-rev1",
+}
+
+
+def _mock_login(
+    api: responses.RequestsMock,
+    revision: ApiRevision,
+    **kwargs: object,
+) -> None:
+    api.post(TOKEN_URL, match=[matchers.header_matcher({"x-api-version": revision})], **kwargs)
+
+
+def _jobs_request_revision(api: responses.RequestsMock) -> str:
+    (call,) = [c for c in api.calls if (c.request.url or "").startswith(f"{URL}/api/v1/jobs")]
+    return str(call.request.headers["x-api-version"])
+
+
+def test_the_login_falls_back_to_the_next_revision_the_server_supports(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+) -> None:
+    # Veeam Backup & Replication 13.0 supports 1.3-rev1, but not 1.3-rev2.
+    _mock_login(
+        api, ApiRevision.V1_3_REV2, status=HTTPStatus.BAD_REQUEST, json=_UNSUPPORTED_REVISION
+    )
+    _mock_login(api, ApiRevision.V1_3_REV1, json=_token("first"))
+    api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
+    auth = _auth(secrets)
+    auth.authenticate()
+
+    write_sections(_client(auth, storage), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+
+    assert _jobs_request_revision(api) == "1.3-rev1"
+
+
+def test_the_login_uses_the_newest_revision_the_server_supports(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+) -> None:
+    # Veeam Backup & Replication 13.1 supports 1.3-rev2.
+    _mock_login(api, ApiRevision.V1_3_REV2, json=_token("first"))
+    api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
+    auth = _auth(secrets)
+    auth.authenticate()
+
+    write_sections(_client(auth, storage), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+
+    assert len(_token_requests(api)) == 1
+    assert _jobs_request_revision(api) == "1.3-rev2"
+
+
+def test_the_revision_of_the_previous_run_is_reused_with_its_token(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+) -> None:
+    _mock_login(
+        api, ApiRevision.V1_3_REV2, status=HTTPStatus.BAD_REQUEST, json=_UNSUPPORTED_REVISION
+    )
+    _mock_login(api, ApiRevision.V1_3_REV1, json=_token("first"))
+    api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
+    _auth(secrets).authenticate()
+    token_requests_of_first_run = len(_token_requests(api))
+
+    auth = _auth(secrets)
+    auth.authenticate()
+    write_sections(_client(auth, storage), [("veeam_jobs", fetch_list("/api/v1/jobs"))])
+
+    assert len(_token_requests(api)) == token_requests_of_first_run
+    assert _jobs_request_revision(api) == "1.3-rev1"
+
+
+def test_a_token_of_an_older_revision_is_refreshed_with_its_revision(
+    api: responses.RequestsMock,
+    secrets: ObfuscatedStorage[Secret[str]],
+) -> None:
+    # Refreshing does not negotiate again: no rejected request and no password login.
+    _mock_login(
+        api, ApiRevision.V1_3_REV2, status=HTTPStatus.BAD_REQUEST, json=_UNSUPPORTED_REVISION
+    )
+    _mock_login(api, ApiRevision.V1_3_REV1, json=_token("first"))
+    with time_machine.travel(0, tick=False) as traveller:
+        _auth(secrets).authenticate()
+        calls_of_the_login = len(api.calls)
+        traveller.shift(900)
+
+        _auth(secrets).authenticate()
+
+    (refresh,) = api.calls[calls_of_the_login:]
+    assert parse_qs(str(refresh.request.body))["grant_type"] == ["refresh_token"]
+    assert refresh.request.headers["x-api-version"] == "1.3-rev1"
+
+
+def test_a_protection_group_without_is_disabled_is_written_as_not_disabled(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # isDisabled is optional since REST API 1.3-rev2; the check plug-in requires it.
+    api.post(TOKEN_URL, json=_token("first"))
+    api.get(
+        f"{URL}/api/v1/agents/protectionGroups",
+        json={"data": [{"id": "group-1", "name": "Group"}], "pagination": {"total": 1}},
+    )
+
+    write_sections(
+        _logged_in_client(secrets, storage),
+        [section for section in SECTIONS if section[0] == "veeam_protection_groups"],
+    )
+
+    (line,) = capsys.readouterr().out.splitlines()[1:]
+    assert json.loads(line) == {"id": "group-1", "name": "Group", "isDisabled": False}
+
+
+def test_a_protection_group_keeps_its_is_disabled(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    api.post(TOKEN_URL, json=_token("first"))
+    api.get(
+        f"{URL}/api/v1/agents/protectionGroups",
+        json={"data": [{"id": "group-1", "isDisabled": True}], "pagination": {"total": 1}},
+    )
+
+    write_sections(
+        _logged_in_client(secrets, storage),
+        [section for section in SECTIONS if section[0] == "veeam_protection_groups"],
+    )
+
+    (line,) = capsys.readouterr().out.splitlines()[1:]
+    assert json.loads(line) == {"id": "group-1", "isDisabled": True}
+
+
+@pytest.mark.parametrize(
+    "replica_type, written_type",
+    [
+        pytest.param("Snapshot", "Regular", id="renamed in 1.3-rev2"),
+        pytest.param("Regular", "Regular", id="already the 1.3-rev1 name"),
+        pytest.param("CDP", "CDP", id="unchanged"),
+    ],
+)
+def test_replica_types_are_written_with_their_1_3_rev1_names(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+    capsys: pytest.CaptureFixture[str],
+    replica_type: str,
+    written_type: str,
+) -> None:
+    api.post(TOKEN_URL, json=_token("first"))
+    api.get(
+        f"{URL}/api/v1/replicas",
+        json={"data": [{"id": "replica-1", "type": replica_type}], "pagination": {"total": 1}},
+    )
+
+    write_sections(
+        _logged_in_client(secrets, storage),
+        [section for section in SECTIONS if section[0] == "veeam_replicas"],
+    )
+
+    (line,) = capsys.readouterr().out.splitlines()[1:]
+    assert json.loads(line) == {"id": "replica-1", "type": written_type}
+
+
+def _written_license(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+    capsys: pytest.CaptureFixture[str],
+    installed: Mapping[str, object],
+) -> dict[str, object]:
+    api.post(TOKEN_URL, json=_token("first"))
+    api.get(f"{URL}/api/v1/license", json=installed)
+    write_sections(
+        _logged_in_client(secrets, storage),
+        [section for section in SECTIONS if section[0] == "veeam_license"],
+    )
+    (line,) = capsys.readouterr().out.splitlines()[1:]
+    written: dict[str, object] = json.loads(line)
+    return written
+
+
+def test_a_1_3_rev2_license_takes_the_dates_of_its_section(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    section = {
+        "expirationDate": "2027-02-23T00:00:00Z",
+        "supportExpirationDate": "2027-03-01T00:00:00Z",
+    }
+
+    written = _written_license(
+        api, storage, secrets, capsys, {"status": "Valid", "instanceLicenseSummary": section}
+    )
+
+    assert written["expirationDate"] == "2027-02-23T00:00:00Z"
+    assert written["supportExpirationDate"] == "2027-03-01T00:00:00Z"
+
+
+def test_a_1_3_rev2_license_with_several_sections_takes_their_earliest_dates(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    written = _written_license(
+        api,
+        storage,
+        secrets,
+        capsys,
+        {
+            "status": "Valid",
+            "IsMultiSection": True,
+            "socketLicenseSummary": {
+                "expirationDate": "2027-06-01T00:00:00Z",
+                "supportExpirationDate": "2027-01-01T00:00:00Z",
+            },
+            "instanceLicenseSummary": {
+                "expirationDate": "2027-02-23T00:00:00Z",
+                "supportExpirationDate": "2027-03-01T00:00:00Z",
+            },
+        },
+    )
+
+    assert written["expirationDate"] == "2027-02-23T00:00:00Z"
+    assert written["supportExpirationDate"] == "2027-01-01T00:00:00Z"
+
+
+def test_a_license_with_its_own_dates_keeps_them(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    installed = {
+        "status": "Valid",
+        "expirationDate": "2027-02-23T00:00:00Z",
+        "instanceLicenseSummary": {"licensedInstancesNumber": 20.0},
+    }
+
+    assert _written_license(api, storage, secrets, capsys, installed) == installed
+
+
+def test_a_license_without_dates_gets_none(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    installed = {"status": "Valid", "instanceLicenseSummary": {"licensedInstancesNumber": 20.0}}
+
+    assert _written_license(api, storage, secrets, capsys, installed) == installed
+
+
+@pytest.mark.parametrize(
+    "repository_type, written_type",
+    [
+        pytest.param("DellDataDomain", "DDBoost", id="DellDataDomain renamed in 1.3-rev2"),
+        pytest.param(
+            "HPEStoreOnce", "HPStoreOnceIntegration", id="HPEStoreOnce renamed in 1.3-rev2"
+        ),
+        pytest.param("QuantumDXi", "Quantum", id="QuantumDXi renamed in 1.3-rev2"),
+        pytest.param("S3Integrated", "SmartObjectS3", id="S3Integrated renamed in 1.3-rev2"),
+        pytest.param("HPStoreOnce", "HPStoreOnce", id="unchanged"),
+        pytest.param("DDBoost", "DDBoost", id="already the 1.3-rev1 name"),
+        pytest.param("VeeamDataCloudVaultArchive", "VeeamDataCloudVaultArchive", id="new"),
+    ],
+)
+def test_repository_types_are_written_with_their_1_3_rev1_names(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+    capsys: pytest.CaptureFixture[str],
+    repository_type: str,
+    written_type: str,
+) -> None:
+    api.post(TOKEN_URL, json=_token("first"))
+    api.get(
+        f"{URL}/api/v1/backupInfrastructure/repositories/states",
+        json={"data": [{"id": "repo-1", "type": repository_type}], "pagination": {"total": 1}},
+    )
+
+    write_sections(
+        _logged_in_client(secrets, storage),
+        [section for section in SECTIONS if section[0] == "veeam_repositories"],
+    )
+
+    (line,) = capsys.readouterr().out.splitlines()[1:]
+    assert json.loads(line) == {"id": "repo-1", "type": written_type}
+
+
+def test_a_server_supporting_none_of_the_revisions_names_them_all(
+    api: responses.RequestsMock,
+    secrets: ObfuscatedStorage[Secret[str]],
+) -> None:
+    api.post(TOKEN_URL, status=HTTPStatus.BAD_REQUEST, json=_UNSUPPORTED_REVISION)
+
+    with pytest.raises(
+        TerminateAgent, match=r"none of the REST API versions 1\.3-rev2, 1\.3-rev1\."
     ):
         _auth(secrets).authenticate()
 

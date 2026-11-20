@@ -68,6 +68,7 @@ class SerializedSettings(TypedDict, total=False):
     hosts_to_update: Sequence[HostName]
     need_apache_reload: bool
     changed_passwords: Sequence[PasswordChange]
+    data_backend_logging_only: bool
 
 
 DomainSettings = Mapping[ConfigDomainName, SerializedSettings]

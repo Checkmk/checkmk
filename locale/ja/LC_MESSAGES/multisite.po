@@ -68203,6 +68203,10 @@ msgstr ""
 msgid "The global setting \"%s\" does not exist."
 msgstr "グローバル設定 \"%s\" は存在しません。"
 
+#, fuzzy
+msgid "The graph could not be loaded."
+msgstr "グループベースDNが見つかりませんでした。"
+
 msgid "The graph data range is wrong or missing"
 msgstr "グラフのデータ範囲が間違っているか欠落しています"
 
@@ -70393,6 +70397,11 @@ msgid ""
 msgstr ""
 "シリアル番号は、'openssl x509'でも示されるように、コロンで区切られた16進数形"
 "式である必要があります。大文字小文字は区別しません。"
+
+#, python-format
+msgid ""
+"The service '%(service)s' of host '%(host)s' has no matching template graphs."
+msgstr ""
 
 msgid ""
 "The service discovery of this host failed during a previous bulk service "
@@ -96288,10 +96297,6 @@ msgid "This chat and all its messages will be deleted and can’t be recovered."
 msgstr ""
 
 #, fuzzy
-msgid "No graph of %{label} is available."
-msgstr "復元可能なスナップショットはありません。"
-
-#, fuzzy
 msgid "Open in monitoring"
 msgstr "監視アイコン"
 
@@ -97583,6 +97588,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "試用期間満了"
+
+#, fuzzy
+#~ msgid "No graph of %{label} is available."
+#~ msgstr "復元可能なスナップショットはありません。"
 
 #~ msgid "OTP Digit %{count}"
 #~ msgstr "OTPの桁数：%{count}"

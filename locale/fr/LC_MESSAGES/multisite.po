@@ -72558,6 +72558,10 @@ msgstr ""
 msgid "The global setting \"%s\" does not exist."
 msgstr "Le paramètre global \"%s\" n'existe pas."
 
+#, fuzzy
+msgid "The graph could not be loaded."
+msgstr "Le DN de base du groupe n'a pas pu être trouvé."
+
 msgid "The graph data range is wrong or missing"
 msgstr "La plage de données du graphique est incorrecte ou manquante"
 
@@ -74768,6 +74772,11 @@ msgstr "Le nom du capteur"
 msgid ""
 "The serial number needs to be in colon-separated hex format, as also shown "
 "by 'openssl x509'. The format is not case sensitive."
+msgstr ""
+
+#, python-format
+msgid ""
+"The service '%(service)s' of host '%(host)s' has no matching template graphs."
 msgstr ""
 
 msgid ""
@@ -102128,10 +102137,6 @@ msgid "This chat and all its messages will be deleted and can’t be recovered."
 msgstr ""
 
 #, fuzzy
-msgid "No graph of %{label} is available."
-msgstr "Aucun graphique disponible : %s"
-
-#, fuzzy
 msgid "Open in monitoring"
 msgstr "Recherche dans le monitoring"
 
@@ -103299,6 +103304,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Essai expiré"
+
+#, fuzzy
+#~ msgid "No graph of %{label} is available."
+#~ msgstr "Aucun graphique disponible : %s"
 
 #, fuzzy
 #~ msgid "Activate Changes"

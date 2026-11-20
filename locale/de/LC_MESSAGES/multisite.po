@@ -69478,6 +69478,10 @@ msgstr ""
 msgid "The global setting \"%s\" does not exist."
 msgstr "Die Globale Einstellung %s existiert nicht."
 
+#, fuzzy
+msgid "The graph could not be loaded."
+msgstr "Der Basis-DN für die Gruppen konnte nicht gefunden werden."
+
 msgid "The graph data range is wrong or missing"
 msgstr "Der Graph-Datenbereich ist falsch oder fehlt"
 
@@ -71781,6 +71785,11 @@ msgstr ""
 "Die Seriennummer muss im durch Doppelpunkte getrennten Hex-Format angegeben "
 "werden, wie es auch von \"openssl x509\" angezeigt wird. Das Format "
 "berücksichtigt keine Groß- und Kleinschreibung."
+
+#, python-format
+msgid ""
+"The service '%(service)s' of host '%(host)s' has no matching template graphs."
+msgstr ""
 
 msgid ""
 "The service discovery of this host failed during a previous bulk service "
@@ -97850,10 +97859,6 @@ msgid "This chat and all its messages will be deleted and can’t be recovered."
 msgstr ""
 
 #, fuzzy
-msgid "No graph of %{label} is available."
-msgstr "Kein Snapshot für Wiederherstellung verfügbar."
-
-#, fuzzy
 msgid "Open in monitoring"
 msgstr "Symbol im Monitoring"
 
@@ -99101,6 +99106,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Erkundete Themen"
+
+#, fuzzy
+#~ msgid "No graph of %{label} is available."
+#~ msgstr "Kein Snapshot für Wiederherstellung verfügbar."
 
 #~ msgid "OTP Digit %{count}"
 #~ msgstr "OTP Digit %{count}"

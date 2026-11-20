@@ -71949,6 +71949,10 @@ msgstr ""
 msgid "The global setting \"%s\" does not exist."
 msgstr "De globale instelling \"%s\" bestaat niet."
 
+#, fuzzy
+msgid "The graph could not be loaded."
+msgstr "De groep Base DN kon niet worden gevonden."
+
 msgid "The graph data range is wrong or missing"
 msgstr "Het bereik van de grafiekgegevens is verkeerd of ontbreekt"
 
@@ -74139,6 +74143,11 @@ msgstr "De naam van de sensor"
 msgid ""
 "The serial number needs to be in colon-separated hex format, as also shown "
 "by 'openssl x509'. The format is not case sensitive."
+msgstr ""
+
+#, python-format
+msgid ""
+"The service '%(service)s' of host '%(host)s' has no matching template graphs."
 msgstr ""
 
 msgid ""
@@ -101223,10 +101232,6 @@ msgid "This chat and all its messages will be deleted and can’t be recovered."
 msgstr ""
 
 #, fuzzy
-msgid "No graph of %{label} is available."
-msgstr "Geen informatie beschikbaar"
-
-#, fuzzy
 msgid "Open in monitoring"
 msgstr "Zoeken in Toezicht"
 
@@ -102392,6 +102397,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Proef vervallen"
+
+#, fuzzy
+#~ msgid "No graph of %{label} is available."
+#~ msgstr "Geen informatie beschikbaar"
 
 #, fuzzy
 #~ msgid "Activate Changes"

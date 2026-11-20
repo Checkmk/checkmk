@@ -71696,6 +71696,10 @@ msgstr ""
 msgid "The global setting \"%s\" does not exist."
 msgstr "L'impostazione globale \"%s\" non esiste."
 
+#, fuzzy
+msgid "The graph could not be loaded."
+msgstr "Non è stato possibile trovare il DN di base del gruppo."
+
 msgid "The graph data range is wrong or missing"
 msgstr "L'intervallo di dati del grafico è sbagliato o mancante"
 
@@ -73949,6 +73953,11 @@ msgstr ""
 "Il numero seriale deve essere in formato separato da punto-e-virgola, "
 "conosciuto anche come 'openssl x509'. Il formato non tiene in considerazione "
 "le maiuscole e minuscole."
+
+#, python-format
+msgid ""
+"The service '%(service)s' of host '%(host)s' has no matching template graphs."
+msgstr ""
 
 msgid ""
 "The service discovery of this host failed during a previous bulk service "
@@ -101028,10 +101037,6 @@ msgid "This chat and all its messages will be deleted and can’t be recovered."
 msgstr ""
 
 #, fuzzy
-msgid "No graph of %{label} is available."
-msgstr "Non è disponibile alcuna istantanea da ripristinare."
-
-#, fuzzy
 msgid "Open in monitoring"
 msgstr "Ricerca in Monitoraggio"
 
@@ -102198,6 +102203,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Prova scaduta"
+
+#, fuzzy
+#~ msgid "No graph of %{label} is available."
+#~ msgstr "Non è disponibile alcuna istantanea da ripristinare."
 
 #~ msgid "Activate Changes"
 #~ msgstr "Attivare le modifiche"

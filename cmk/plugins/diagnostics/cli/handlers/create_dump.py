@@ -77,7 +77,7 @@ def _load_catalogue() -> Mapping[str, DiagnosticsPlugin]:
 
 def _create_dump(omd_root: Path, selection: DumpSelection, *, debug: bool) -> Path | None:
     with exit_on_config_file_load_error(debug=debug):
-        raw_config = load_raw_config()
+        raw_config = load_raw_config(omd_root=omd_root)
 
     dump = create_diagnostics_dump_v2(
         omd_root=omd_root,

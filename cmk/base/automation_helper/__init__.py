@@ -117,4 +117,4 @@ def _application() -> FastAPI:
 def _reload_automation_config() -> Mapping[str, object]:
     # Let a ConfigFileLoadError through: it names the file and the error, which the helper logs and
     # reports to the automations.
-    return config.load_raw_config()
+    return config.load_raw_config(omd_root=omd_root)

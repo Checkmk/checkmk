@@ -8,8 +8,8 @@ from logging import Logger
 from pathlib import Path
 from typing import override
 
-from cmk.base.config import get_config_file_paths
 from cmk.config import get_legacy_default_base_config
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.gui.exceptions import MKUserError
 from cmk.update_config.internal import (
     ConflictMode,
@@ -18,6 +18,7 @@ from cmk.update_config.internal import (
     PreUpdateAction,
 )
 from cmk.update_config.registry import pre_update_action_registry
+from cmk.utils import paths
 from cmk.utils.check_utils import maincheckify
 
 _VARNAME = "service_descriptions"
@@ -92,7 +93,12 @@ class CheckServiceDescriptionsPluginNames(PreUpdateAction):
         debug: bool,
     ) -> None:
         if config_file_paths is None:
-            config_file_paths = get_config_file_paths(with_conf_d=True)
+            config_file_paths = [
+                p
+                for p, _relative in BaseConfigurationMKFiles.from_omd_root(
+                    paths.omd_root
+                ).iterate_for_loading()
+            ]
 
         if not (issues := find_outdated_entries(config_file_paths)):
             return

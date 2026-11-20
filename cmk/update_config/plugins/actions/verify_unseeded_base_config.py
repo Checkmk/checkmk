@@ -29,14 +29,12 @@ from logging import Logger
 from pathlib import Path
 from typing import override
 
-from cmk.base.config import (
-    ConfigFileLoadError,
-    get_config_file_paths,
-    load_raw_config,
-)
+from cmk.base.config import ConfigFileLoadError, load_raw_config_files
 from cmk.config import get_legacy_default_base_config
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.update_config.internal import ExpiryVersion, UpdateAction
 from cmk.update_config.registry import update_action_registry
+from cmk.utils import paths
 
 
 @dataclass(frozen=True)
@@ -55,15 +53,22 @@ def check_config_files() -> UnseededConfigFindings:
     variables = get_legacy_default_base_config().keys()
     unloadable: list[tuple[Path, BaseException]] = []
     relying_on_defaults: list[tuple[Path, Sequence[str]]] = []
-    for path in get_config_file_paths(with_conf_d=True):
+    for path, relative_path in BaseConfigurationMKFiles.from_omd_root(
+        paths.omd_root
+    ).iterate_for_loading():
         try:
-            unseeded = load_raw_config(config_files=[path], context_factory=dict)
+            unseeded = load_raw_config_files(
+                config_files=[(path, relative_path)], context_factory=dict
+            )
         except ConfigFileLoadError as e:
             unloadable.append((e.path, e.__cause__ or e))
             continue
 
         try:
-            seeded = load_raw_config(config_files=[path])
+            seeded = load_raw_config_files(
+                config_files=[(path, relative_path)],
+                context_factory=get_legacy_default_base_config,
+            )
         except ConfigFileLoadError:
             continue  # fails entirely anyway, nothing to compare
 

@@ -48,7 +48,7 @@ class _UnavailableNotifyAutomation:
 
 class _FakeNotify:
     def __init__(self, result: int | None = 0, error: Exception | None = None) -> None:
-        self.asked: list[tuple[Sequence[str], Edition, bool, bool, bool]] = []
+        self.asked: list[tuple[Sequence[str], Path, Edition, bool, bool, bool]] = []
         self._result = result
         self._error = error
 
@@ -56,12 +56,13 @@ class _FakeNotify:
         self,
         args: Sequence[str],
         *,
+        omd_root: Path,
         edition: Edition,
         log_to_stdout: bool,
         keepalive: bool,
         debug: bool,
     ) -> int | None:
-        self.asked.append((args, edition, log_to_stdout, keepalive, debug))
+        self.asked.append((args, omd_root, edition, log_to_stdout, keepalive, debug))
         if self._error is not None:
             raise self._error
         return self._result
@@ -80,9 +81,12 @@ def _notify_command(
     )
 
 
+_OMD_ROOT = Path("/omd/sites/mysite")
+
+
 def _context(*, debug: bool = False) -> CLIContext:
     return CLIContext(
-        omd_root=Path("/omd/sites/mysite"),
+        omd_root=_OMD_ROOT,
         global_options=CLIGlobalOptions(debug=debug),
         logger=logging.getLogger(__name__),
     )
@@ -119,7 +123,7 @@ def test_a_notification_is_sent_with_the_command_line_arguments() -> None:
 
     _notify_command(notify=notify).run(_context(), _request("fake-service"))
 
-    assert notify.asked == [(("fake-service",), Edition.PRO, False, False, False)]
+    assert notify.asked == [(("fake-service",), _OMD_ROOT, Edition.PRO, False, False, False)]
 
 
 def test_a_spool_file_of_a_commercial_site_goes_to_the_automation_helper() -> None:
@@ -145,7 +149,7 @@ def test_a_spool_file_of_a_community_site_is_notified_locally() -> None:
 
     notification.run(_context(), _request(*_SPOOLFILE))
 
-    assert notify.asked == [(_SPOOLFILE, Edition.COMMUNITY, False, False, False)]
+    assert notify.asked == [(_SPOOLFILE, _OMD_ROOT, Edition.COMMUNITY, False, False, False)]
 
 
 def test_a_spool_file_fails_without_the_automation_helper() -> None:

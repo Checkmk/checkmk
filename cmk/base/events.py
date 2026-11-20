@@ -18,6 +18,7 @@ import sys
 import time
 import traceback
 from collections.abc import Callable, Iterable, Mapping
+from pathlib import Path
 from typing import cast, Literal, Protocol
 from urllib.parse import quote, urlencode
 
@@ -70,6 +71,7 @@ class _LoopIntervalFunction(Protocol):
 
 
 def event_keepalive(
+    omd_root: Path,
     event_function: _EventFunction,
     call_every_loop: _LoopIntervalFunction | None = None,
     loop_interval: int | None = None,
@@ -77,7 +79,7 @@ def event_keepalive(
     *,
     debug: bool,
 ) -> None:
-    last_config_timestamp = config_timestamp()
+    last_config_timestamp = config_timestamp(omd_root)
 
     # Send signal that we are ready to receive the next event, but
     # not after a config-reload-restart (see below)
@@ -102,7 +104,7 @@ def event_keepalive(
             # CMK_EVENT_RESTART=1
 
             if event_data_available(loop_interval):
-                if last_config_timestamp != config_timestamp():
+                if last_config_timestamp != config_timestamp(omd_root):
                     logger.info("Configuration has changed. Restarting myself.")
                     if shutdown_function:
                         shutdown_function()
@@ -164,16 +166,13 @@ def event_keepalive(
                 logger.exception("ERROR:")
 
 
-def config_timestamp() -> float:
+def config_timestamp(omd_root: Path) -> float:
     mtime = 0.0
-    mk_files = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root)
-    for dirpath, _unused_dirnames, filenames in os.walk(str(mk_files.conf_d)):
-        for f in filenames:
-            mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
+    mkfiles = BaseConfigurationMKFiles.from_omd_root(omd_root)
+    for path, _relative_path in mkfiles.iterate_for_loading():
+        with contextlib.suppress(FileNotFoundError):
+            mtime = max(mtime, path.stat().st_mtime)
 
-    for path in [mk_files.main_mk, mk_files.final_mk, mk_files.local_mk]:
-        with contextlib.suppress(Exception):
-            mtime = max(mtime, os.stat(path).st_mtime)
     return mtime
 
 

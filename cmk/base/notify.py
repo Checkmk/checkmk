@@ -369,6 +369,7 @@ Available commands:
 def do_notify(
     args: list[str],
     *,
+    omd_root: Path,
     log_to_stdout: bool,
     notification_config: NotificationConfig,
     define_servicegroups: Mapping[str, str],
@@ -422,6 +423,7 @@ def do_notify(
             _notify_keepalive(
                 get_http_proxy,
                 ensure_nagios,
+                omd_root=omd_root,
                 notification_config=notification_config,
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
@@ -738,6 +740,7 @@ def _notify_keepalive(
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     *,
+    omd_root: Path,
     notification_config: NotificationConfig,
     define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
@@ -745,6 +748,7 @@ def _notify_keepalive(
     debug: bool,
 ) -> None:
     events.event_keepalive(
+        omd_root=omd_root,
         event_function=partial(
             _notify_notify,
             get_http_proxy=get_http_proxy,

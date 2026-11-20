@@ -60,6 +60,7 @@ class _Notify(Protocol):
         self,
         args: Sequence[str],
         *,
+        omd_root: Path,
         edition: Edition,
         log_to_stdout: bool,
         keepalive: bool,
@@ -82,13 +83,20 @@ def _execute_notify_automation(args: Sequence[str]) -> str:
 
 
 def _notify(
-    args: Sequence[str], *, edition: Edition, log_to_stdout: bool, keepalive: bool, debug: bool
+    args: Sequence[str],
+    *,
+    omd_root: Path,
+    edition: Edition,
+    log_to_stdout: bool,
+    keepalive: bool,
+    debug: bool,
 ) -> int | None:
     with store.lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
         loading_result = config.load(validate_hosts=False, debug=debug)
 
     return do_notify(
         list(args),
+        omd_root=omd_root,
         log_to_stdout=log_to_stdout,
         notification_config=make_notification_config(
             edition,
@@ -168,6 +176,7 @@ class _NotifyCommand:
             return _notification_exit_code(
                 self.notify(
                     request.arguments,
+                    omd_root=context.omd_root,
                     edition=edition,
                     log_to_stdout=request.log_to_stdout,
                     keepalive=keepalive,

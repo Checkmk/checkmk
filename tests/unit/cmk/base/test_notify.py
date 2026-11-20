@@ -2390,6 +2390,7 @@ def _do_notify(
 ) -> int | None:
     return notify.do_notify(
         args,
+        omd_root=cmk.utils.paths.omd_root,
         log_to_stdout=False,
         notification_config=notification_config,
         define_servicegroups={},

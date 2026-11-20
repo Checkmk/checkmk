@@ -17,7 +17,7 @@ import cmk.product_usage.collectors.checks as checks_collector
 import cmk.product_usage.collectors.site_info as site_info_collector
 from cmk.ccc.version import Edition
 from cmk.product_usage.config import load_product_usage_config, ProductUsageAnalyticsSettings
-from cmk.product_usage.exceptions import ConfigError
+from cmk.product_usage.exceptions import ConfigError, EndpointUnreachableError
 from cmk.product_usage.schema import SiteInfo
 from cmk.utils import http_proxy_config, paths
 from cmk.utils.licensing.handler import LicenseState
@@ -248,3 +248,74 @@ def _raise_license_error() -> LicenseState:
 def _fail_on_license_read() -> LicenseState:
     # pytest.fail raises a BaseException, so the gate's `except Exception` cannot swallow it
     pytest.fail("the license state must not be read on non-Cloud editions")
+
+
+def _patch_unreachable_endpoint(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    """Patch the CLI to have nothing to collect and an unreachable endpoint"""
+    monkeypatch.setattr(
+        product_usage_cli,
+        "init_logging",
+        MagicMock(return_value=logging.getLogger("cmk.product_usage.test")),
+    )
+    monkeypatch.setattr(
+        product_usage_cli,
+        "load_product_usage_config",
+        MagicMock(
+            return_value=ProductUsageAnalyticsSettings(
+                enabled="enabled", proxy_setting=("no_proxy", None)
+            )
+        ),
+    )
+    monkeypatch.setattr(product_usage_cli, "should_run_collection_on_schedule", lambda *_: True)
+    monkeypatch.setattr(product_usage_cli, "get_next_run_ts", MagicMock(return_value=1))
+    monkeypatch.setattr(product_usage_cli, "is_cloud_trial", MagicMock(return_value=False))
+    monkeypatch.setattr(product_usage_cli, "collect_data", MagicMock())
+    monkeypatch.setattr(product_usage_cli, "store_data", MagicMock())
+    monkeypatch.setattr(product_usage_cli, "resolve_proxy_config", MagicMock())
+    monkeypatch.setattr(
+        product_usage_cli,
+        "transmit_data",
+        MagicMock(side_effect=EndpointUnreachableError("Could not connect")),
+    )
+    store_next_run_spy = MagicMock()
+    monkeypatch.setattr(product_usage_cli, "store_next_run_ts", store_next_run_spy)
+    return store_next_run_spy
+
+
+def test_cron_with_unreachable_endpoint_logs_only_and_plans_the_next_run(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    store_next_run_spy = _patch_unreachable_endpoint(monkeypatch)
+
+    assert product_usage_cli.main(["--cron"]) == 1
+
+    assert capsys.readouterr().err == ""
+    assert [
+        (r.getMessage(), r.exc_info) for r in caplog.records if r.levelno >= logging.WARNING
+    ] == [("Could not connect", None)]
+    store_next_run_spy.assert_called_once()
+
+
+def test_manual_upload_with_unreachable_endpoint_reports_the_error(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _patch_unreachable_endpoint(monkeypatch)
+
+    assert product_usage_cli.main(["--upload"]) == 1
+
+    assert capsys.readouterr().err == "cmk-product-usage: Could not connect\n"
+
+
+def test_cron_writes_no_unexpected_error_to_stderr(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _patch_unreachable_endpoint(monkeypatch)
+    monkeypatch.setattr(
+        product_usage_cli, "collect_data", MagicMock(side_effect=RuntimeError("collector broke"))
+    )
+
+    assert product_usage_cli.main(["--cron"]) == -1
+
+    assert capsys.readouterr().err == ""

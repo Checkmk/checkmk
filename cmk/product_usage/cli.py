@@ -23,6 +23,7 @@ from cmk.product_usage.config import (
     ProxyConfig,
     ProxySetting,
 )
+from cmk.product_usage.exceptions import EndpointUnreachableError
 from cmk.product_usage.logger import init_logging
 from cmk.product_usage.schedule import (
     create_next_random_ts,
@@ -73,6 +74,7 @@ def main(args: Sequence[str]) -> int:
     now = datetime.now()
     settings = load_product_usage_config(paths.default_config_dir, logger)
     next_run_fp = next_run_file_path(paths.var_dir)
+    upload_error: EndpointUnreachableError | None = None
 
     try:
         if request.schedule:
@@ -126,7 +128,16 @@ def main(args: Sequence[str]) -> int:
 
         if request.upload:
             proxy_config = resolve_proxy_config(settings.proxy_setting)
-            transmit_data(paths.var_dir, logger, proxy_config=proxy_config)
+            try:
+                transmit_data(paths.var_dir, logger, proxy_config=proxy_config)
+            except EndpointUnreachableError as e:
+                upload_error = e
+
+        if upload_error is not None:
+            # Not a crash: the network of the site decides about this, so the message is enough
+            # and a traceback would only hide it.
+            logger.error("%(error)s", {"error": upload_error})
+            _write_error(request, f"cmk-product-usage: {upload_error}")
 
         if request.schedule:
             interval = next_run_interval(cloud_trial=cloud_trial)
@@ -139,13 +150,23 @@ def main(args: Sequence[str]) -> int:
             store_next_run_ts(next_run_fp, next_scheduled_run_at)
 
     except Exception as e:
-        sys.stderr.write(f"cmk-product-usage: {e}\n")
+        _write_error(request, f"cmk-product-usage: {e}")
         logger.exception("Unexpected error")
         return -1
+
+    if upload_error is not None:
+        return 1
 
     logger.info("Successfully ran")
 
     return 0
+
+
+def _write_error(request: ProductUsageRequest, message: str) -> None:
+    # cron mails everything written to stderr. Scheduled runs only log, the admin finds the
+    # errors in the log.
+    if not request.schedule:
+        sys.stderr.write(f"{message}\n")
 
 
 def parse_args(args: Sequence[str]) -> ProductUsageRequest:

@@ -30,3 +30,7 @@ class InvalidTimestampError(Exception):
 
 class ConfigError(Exception):
     pass
+
+
+class EndpointUnreachableError(Exception):
+    """The product usage endpoint can not be reached, the data stays for the next run"""

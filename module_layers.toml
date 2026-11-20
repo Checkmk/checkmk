@@ -1435,7 +1435,7 @@ allows = [
 ]
 excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 
-[components."cmk.gui.png.renderer"]
+[components."cmk.png_renderer"]
 allows = []
 
 [components."cmk.gui"]
@@ -1463,12 +1463,12 @@ allows = [
   "cmk.events.notification_result",
   "cmk.fields",
   "cmk.graphing_engine",
-  "cmk.gui.png.renderer",
   "cmk.gui_plugins.internal",
   "cmk.inventory",
   "cmk.inventory_ui",
   "cmk.licensing",
   "cmk.piggyback",
+  "cmk.png_renderer",
   "cmk.product_usage",
   "cmk.profiling.backend",
   "cmk.profiling.gui",

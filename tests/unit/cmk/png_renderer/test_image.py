@@ -13,7 +13,7 @@ import numpy as np
 matplotlib.use("Agg")
 from matplotlib.figure import Figure
 
-from cmk.gui.png.renderer import (
+from cmk.png_renderer import (
     Area,
     AxisLabel,
     Legend,
@@ -26,7 +26,7 @@ from cmk.gui.png.renderer import (
     TimeAxis,
     VerticalAxis,
 )
-from cmk.gui.png.renderer._image import (
+from cmk.png_renderer._image import (
     _agg_renderer,
     _DPI,
     _fit_time_axis,

@@ -2,13 +2,13 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
-    name = "renderer",
+    name = "png_renderer",
     srcs = [
         "__init__.py",
         "_model.py",
         "_wire.py",
     ],
-    imports = ["../../../.."],
+    imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
@@ -22,13 +22,13 @@ py_library(
         "_image.py",
         "_time_axis.py",
     ],
-    imports = ["../../../.."],
+    imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
-        ":renderer",
+        ":png_renderer",
         requirement("matplotlib"),
         requirement("numpy"),
     ],

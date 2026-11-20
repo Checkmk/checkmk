@@ -8,8 +8,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from cmk.gui.png.renderer import drawings_to_json, PngDrawing, pngs_from_json, RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
+from cmk.png_renderer import drawings_to_json, PngDrawing, pngs_from_json, RenderingFailure
 
 from ._drawing import png_drawing
 from ._input import PngGraph, PngTexts

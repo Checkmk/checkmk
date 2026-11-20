@@ -27,7 +27,8 @@ from cmk.graphing_engine import (
     VerticalRangeKind,
 )
 from cmk.gui.graphing import user_specific_unit
-from cmk.gui.png.renderer import (
+from cmk.gui.utils.temperature_unit import TemperatureUnit
+from cmk.png_renderer import (
     Area,
     AxisLabel,
     Legend,
@@ -39,7 +40,6 @@ from cmk.gui.png.renderer import (
     TimeAxis,
     VerticalAxis,
 )
-from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.unit_formatter import Label, NotationFormatter
 
 from ._input import PngGraph, PngOptions, PngTexts

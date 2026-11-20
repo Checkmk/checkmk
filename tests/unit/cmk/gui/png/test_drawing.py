@@ -24,8 +24,8 @@ from cmk.graphing_engine import (
 from cmk.gui.png import compute_png_size_mm, PngGraph, PngOptions, PngTexts
 from cmk.gui.png._drawing import png_drawing
 from cmk.gui.png._size import _MM_PER_INCH
-from cmk.gui.png.renderer import PngDrawing, TimeAxis
 from cmk.gui.utils.temperature_unit import TemperatureUnit
+from cmk.png_renderer import PngDrawing, TimeAxis
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)

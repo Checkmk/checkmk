@@ -305,7 +305,6 @@ py_cmk_test(
         "//cmk/gui/monitor/table_widget",
         "//cmk/gui/nagvis",
         "//cmk/gui/png",
-        "//cmk/gui/png/renderer:process",
         "//cmk/gui/search/spec",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",

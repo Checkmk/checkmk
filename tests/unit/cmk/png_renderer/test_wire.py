@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 
-from cmk.gui.png.renderer import (
+from cmk.png_renderer import (
     Area,
     AxisLabel,
     drawings_to_json,
@@ -20,7 +20,7 @@ from cmk.gui.png.renderer import (
     TimeAxis,
     VerticalAxis,
 )
-from cmk.gui.png.renderer._wire import drawings_from_json, pngs_to_json
+from cmk.png_renderer._wire import drawings_from_json, pngs_to_json
 
 
 def _drawing(*, vertical_axis: VerticalAxis | None, legend: Legend | None) -> PngDrawing:

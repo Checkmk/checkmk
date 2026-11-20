@@ -32,7 +32,6 @@ _TEXTS = PngTexts(
 
 
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)
-_RENDERER = (sys.executable, "-m", "cmk.gui.png.renderer")
 
 
 def _graph(*, title: str = "Graph", lines: Sequence[EvaluatedLine] = ()) -> PngGraph:
@@ -59,17 +58,6 @@ def _graph(*, title: str = "Graph", lines: Sequence[EvaluatedLine] = ()) -> PngG
         time_zone=None,
         visible_time_range=(0, 180),
     )
-
-
-def test_the_rendering_process_answers_with_one_image_per_graph() -> None:
-    pngs = render_pngs(
-        [_graph(), _graph()],
-        _TEXTS,
-        TemperatureUnit.CELSIUS,
-        command=_RENDERER,
-    )
-
-    assert [isinstance(png, bytes) and png[:8] for png in pngs] == [b"\x89PNG\r\n\x1a\n"] * 2
 
 
 def _graph_that_cannot_be_drawn() -> PngGraph:

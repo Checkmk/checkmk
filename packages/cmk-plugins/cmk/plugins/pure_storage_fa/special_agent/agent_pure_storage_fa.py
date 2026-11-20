@@ -88,6 +88,46 @@ _SECTIONS = [
         min_version=_RestVersion(2, 2),
         params={"filter": "state='open'"},
     ),
+    _SectionSpec(
+        name="network_interfaces",
+        path="network-interfaces",
+        min_version=_RestVersion(2, 4),
+    ),
+    _SectionSpec(
+        name="drives",
+        path="drives",
+        min_version=_RestVersion(2, 4),
+    ),
+    _SectionSpec(
+        name="host_groups",
+        path="host-groups/hosts",
+        min_version=_RestVersion(2, 0),
+    ),
+    _SectionSpec(
+        name="admins",
+        path="admins",
+        min_version=_RestVersion(2, 2),
+    ),
+    _SectionSpec(
+        name="connections",
+        path="array-connections",
+        min_version=_RestVersion(2, 4),
+    ),
+    _SectionSpec(
+        name="certificates",
+        path="certificates",
+        min_version=_RestVersion(2, 4),
+    ),
+    _SectionSpec(
+        name="admins_settings",
+        path="admins/settings",
+        min_version=_RestVersion(2, 2),
+    ),
+    _SectionSpec(
+        name="dns",
+        path="dns",
+        min_version=_RestVersion(2, 2),
+    )
 ]
 
 

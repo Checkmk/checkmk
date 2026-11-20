@@ -2734,6 +2734,23 @@ class AgentDeploymentForwardedClient(RestApiClient):
         )
 
 
+class AgentUpdaterUsageClient(RestApiClient):
+    domain: DomainType = "agent"
+    default_version = APIVersion.INTERNAL
+
+    def get(
+        self,
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/actions/updater_usage/invoke",
+            headers=dict(headers) if headers else None,
+            expect_ok=expect_ok,
+        )
+
+
 class DowntimeClient(RestApiClient):
     domain: DomainType = "downtime"
     type FindByType = Literal["query", "by_id", "params", "hostgroup", "servicegroup"]
@@ -6096,6 +6113,7 @@ class ClientRegistry:
     Agent: AgentClient
     AgentDeploymentInternal: AgentDeploymentInternalClient
     AgentDeploymentForwarded: AgentDeploymentForwardedClient
+    AgentUpdaterUsage: AgentUpdaterUsageClient
     Downtime: DowntimeClient
     HostGroup: HostGroupClient
     ServiceGroup: ServiceGroupClient
@@ -6174,6 +6192,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         Agent=AgentClient(request_handler, url_prefix),
         AgentDeploymentInternal=AgentDeploymentInternalClient(request_handler, url_prefix),
         AgentDeploymentForwarded=AgentDeploymentForwardedClient(request_handler, url_prefix),
+        AgentUpdaterUsage=AgentUpdaterUsageClient(request_handler, url_prefix),
         Downtime=DowntimeClient(request_handler, url_prefix),
         HostGroup=HostGroupClient(request_handler, url_prefix),
         ServiceGroup=ServiceGroupClient(request_handler, url_prefix),

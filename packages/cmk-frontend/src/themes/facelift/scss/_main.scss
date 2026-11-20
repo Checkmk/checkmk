@@ -1414,6 +1414,12 @@ body.main div#main_page_content.vue-scrolling {
   padding-right: 0;
   padding-bottom: 0;
 
+  /* Room for the focus outline of the controls at the left edge of the Vue app, which the
+     hidden overflow would clip otherwise. Apps that clip their own overflow keep the same
+     room on their root. */
+  margin-left: calc(-1 * var(--dimension-3));
+  padding-left: var(--dimension-3);
+
   > * {
     height: 100%;
     display: block;

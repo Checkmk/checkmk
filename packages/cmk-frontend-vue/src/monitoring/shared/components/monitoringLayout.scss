@@ -10,3 +10,25 @@ $min-content-width: 333px;
 
 /* Height of CmkSearchInput, which the toolbar's end group has to stay level with. */
 $search-input-height: 30px;
+
+/* Room the app root keeps at its left edge for the focus outline of the controls there, which
+   its horizontal overflow would clip otherwise. Must not exceed the matching gutter of
+   #main_page_content.vue-scrolling (cmk-frontend _main.scss), which the root's negative
+   margin reaches into. */
+$focus-gutter: var(--dimension-3);
+
+/* The root element of a monitoring app. It fills the page content and scrolls horizontally as
+   a whole when narrower than $min-content-width. */
+/* stylelint-disable-next-line at-rule-no-unknown */
+@mixin app-root {
+  position: relative;
+  overflow-x: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  margin-left: calc(-1 * #{$focus-gutter});
+  padding-bottom: var(--spacing);
+  padding-left: $focus-gutter;
+}

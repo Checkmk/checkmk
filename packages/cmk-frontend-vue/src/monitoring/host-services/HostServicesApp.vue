@@ -518,15 +518,10 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
   </CmkErrorBoundary>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@use '@/monitoring/shared/components/monitoringLayout' as layout;
+
 .monitoring-host-services-app {
-  position: relative;
-  overflow-x: auto;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  padding-bottom: var(--spacing);
+  @include layout.app-root;
 }
 </style>

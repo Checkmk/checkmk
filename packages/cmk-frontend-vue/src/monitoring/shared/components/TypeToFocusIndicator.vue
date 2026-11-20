@@ -33,12 +33,15 @@ const { _t } = usei18n()
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@use './monitoringLayout' as layout;
+
 /* Inside the view, so the navigation and sidebar never cover it. */
 .monitoring-type-to-focus-indicator {
   position: absolute;
   bottom: var(--dimension-4);
-  left: var(--dimension-4);
+  /* Past the gutter the app root keeps for focus outlines at its left edge. */
+  left: calc(#{layout.$focus-gutter} + var(--dimension-4));
   z-index: var(--z-index-title-menu);
   display: flex;
   gap: var(--dimension-4);

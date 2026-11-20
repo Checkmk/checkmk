@@ -17,8 +17,9 @@ _EXPECTED_PRESENT = {
     "libcrypto-3.dll",
 }
 # The agent runs the venv, which does not see the base interpreter's
-# site-packages: build tools leaking there would only ship as unused copies.
-_ALLOWED_IN_BASE_SITE_PACKAGES = re.compile(r"^(pip|pip-.+\.dist-info|README\.txt)$", re.IGNORECASE)
+# site-packages: anything there, pip or leaked build tools, would only ship as
+# an unused copy.
+_ALLOWED_IN_BASE_SITE_PACKAGES = re.compile(r"^README\.txt$", re.IGNORECASE)
 
 
 def test_cab_contents(python_to_test: Path) -> None:

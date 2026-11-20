@@ -58,10 +58,10 @@ for /f %%i in ('dir /a:d /s /b pipenv*') do rd /s /q %%i
 for /f %%i in ('dir /a:d /s /b virtualenv*') do rd /s /q %%i
 :: The base interpreter's site-packages only held the build tools: pipenv and
 :: virtualenv with their dependencies (certifi, distlib, filelock, packaging, ...),
-:: setuptools' _distutils_hack and its .pth file. The agent runs the venv, which
-:: does not see them. Keep only pip, which the venv was seeded from.
+:: setuptools' _distutils_hack and its .pth file, and pip, which the venv was
+:: seeded from. The agent runs the venv, which does not see any of them.
 powershell Write-Host "base site-packages" -foreground white
-powershell -NoProfile -Command "Get-ChildItem -Force Lib\site-packages | Where-Object { $_.Name -notmatch '^(pip|pip-.+\.dist-info|README\.txt)$' } | Remove-Item -Recurse -Force"
+powershell -NoProfile -Command "Get-ChildItem -Force Lib\site-packages | Where-Object { $_.Name -notmatch '^README\.txt$' } | Remove-Item -Recurse -Force"
 
 powershell Write-Host "Cleaning environment phase 2" -foreground Cyan
 :: Agressive cleaning phase

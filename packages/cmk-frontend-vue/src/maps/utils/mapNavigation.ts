@@ -228,6 +228,10 @@ export function hostStateOn(state: string): string {
   return 'hst0' // UP
 }
 
+// filled_in applies the filters; Checkmk then opens its filter popup unless
+// told otherwise, which would cover the rows the link was opened for.
+export const FILTERED_VIEW = { filled_in: 'filter', _show_filter_form: '0' }
+
 // host_regex over more than this many members would push the view URL past
 // Apache's ~8 KB request-line limit, so the pill stays non-clickable above it.
 const _MAX_HOST_REGEX_MEMBERS = 90
@@ -256,7 +260,7 @@ export function buildServiceStateViewUrl(
     return null
   }
   const params: Record<string, string> = {
-    filled_in: 'filter',
+    ...FILTERED_VIEW,
     _active: 'svcstate;host',
     [svcStateOn(state)]: 'on'
   }
@@ -278,12 +282,8 @@ export function buildServiceStateViewUrl(
   } else {
     return null
   }
-  params.display_options = _VIEW_LINK_DISPLAY_OPTIONS
   return buildCheckmkViewUrl(checkmkUrl, 'allservices', params, { chrome: true })
 }
-
-// Lone lowercase "f" hides Checkmk's filter bar, keeps the rest of the chrome.
-const _VIEW_LINK_DISPLAY_OPTIONS = 'f'
 
 /**
  * Checkmk allhosts view of a site or a set of hosts, filtered to one host
@@ -302,9 +302,8 @@ export function buildHostStateViewUrl(
     return null
   }
   const params: Record<string, string> = {
-    filled_in: 'filter',
-    [hostStateOn(state)]: 'on',
-    display_options: _VIEW_LINK_DISPLAY_OPTIONS
+    ...FILTERED_VIEW,
+    [hostStateOn(state)]: 'on'
   }
   if (target.site) {
     params.site = target.site
@@ -352,11 +351,10 @@ export function buildFolderStateViewUrl(
     checkmkUrl,
     target.view,
     {
-      filled_in: 'filter',
+      ...FILTERED_VIEW,
       wato_folder: folderPath,
       _active: `${target.filter};wato_folder`,
-      [target.box(state)]: 'on',
-      display_options: _VIEW_LINK_DISPLAY_OPTIONS
+      [target.box(state)]: 'on'
     },
     { chrome: true }
   )

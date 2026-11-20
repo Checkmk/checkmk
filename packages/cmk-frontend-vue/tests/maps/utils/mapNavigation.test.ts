@@ -157,6 +157,22 @@ describe('buildFolderStateViewUrl', () => {
   })
 })
 
+describe('a count link into a Checkmk view', () => {
+  const cmk = 'http://h/SITE/check_mk/'
+
+  it.each([
+    ['services of a host', buildServiceStateViewUrl(cmk, { host: 'web01' }, 'CRITICAL')],
+    ['hosts of a site', buildHostStateViewUrl(cmk, { site: 'remote' }, 'DOWN')],
+    ['services under a folder', buildFolderStateViewUrl(cmk, 'dc', 'WARNING')]
+  ])('to the %s shows the filter applied, with its popup closed', (_, url) => {
+    const inner = new URL(url!, 'http://h').searchParams.get('start_url') ?? ''
+    const view = new URLSearchParams(inner.split('?')[1] ?? '')
+    expect(view.get('filled_in')).toBe('filter')
+    expect(view.get('_show_filter_form')).toBe('0')
+    expect(view.get('display_options')).toBeNull()
+  })
+})
+
 describe('openUrl', () => {
   function clickedHrefs(run: () => void): string[] {
     const hrefs: string[] = []

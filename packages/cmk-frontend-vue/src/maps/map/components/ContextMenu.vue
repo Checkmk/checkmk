@@ -11,7 +11,7 @@ import MapsMenu from '@/maps/shared/components/MapsMenu.vue'
 import MapsMenuItem from '@/maps/shared/components/MapsMenuItem.vue'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
-import { buildCheckmkViewUrl } from '@/maps/utils/mapNavigation'
+import { FILTERED_VIEW, buildCheckmkViewUrl } from '@/maps/utils/mapNavigation'
 import { asBoundObject, getEffectiveObjectType } from '@/maps/utils/naming'
 import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
 import { interpolateTemplate, objectName } from '@/maps/utils/template'
@@ -147,8 +147,8 @@ const hostServicesUrl = computed(() => {
     props.checkmkUrl,
     'host',
     {
+      ...FILTERED_VIEW,
       host: props.object.host_name,
-      filled_in: 'filter',
       _active: 'serviceregex;svcstate;host;siteopt',
       st1: 'on',
       st2: 'on',

@@ -7,6 +7,8 @@ ARG IMAGE_CMK_BASE
 # depends on these files only, not on everything else in the build context.
 FROM scratch AS package-source
 COPY *.deb Check_MK-pubkey.gpg /
+# Make the list of required packages available to the following command
+COPY needed-packages /needed-packages
 
 # hadolint ignore=DL3006
 FROM ${IMAGE_CMK_BASE}
@@ -42,9 +44,6 @@ COPY docker-entrypoint.sh /
 # Starts the entrypoint script and hands over CMD by default
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-# Make the list of required packages available to the following command
-COPY needed-packages /needed-packages
-
 # Install the tools we need for fetching the package and installation
 # Then fetch the package and install it. This will make sure all Checkmk
 # containers will share all dependencies, including this step.
@@ -60,7 +59,8 @@ COPY needed-packages /needed-packages
 # socket instead of the xinetd service that docker-entrypoint.sh starts.
 #
 # hadolint ignore=SC2046,DL3008
-RUN set -e \
+RUN --mount=type=bind,from=package-source,target=/build-context \
+    set -e \
     && echo "exit 101" > /usr/sbin/policy-rc.d \
     && chmod +x /usr/sbin/policy-rc.d \
     && export DEBIAN_FRONTEND=noninteractive \
@@ -80,11 +80,10 @@ RUN set -e \
         net-tools \
         git \
         systemd-standalone-sysusers \
-        $(cat needed-packages) \
+        $(cat /build-context/needed-packages) \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/* \
-    && rm needed-packages \
     && mv /etc/apt/ubuntu.sources.bak /etc/apt/sources.list.d/ubuntu.sources \
     && if getent passwd ubuntu >/dev/null; then userdel --remove ubuntu; fi
 

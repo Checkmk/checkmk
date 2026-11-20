@@ -10,12 +10,16 @@ from collections.abc import Callable, Iterator
 import pysnmp.debug  # type: ignore[import-untyped]
 import pytest
 from pyasn1.codec.ber import encoder
-from pysnmp.proto import api, rfc1155  # type: ignore[import-untyped]
+from pysnmp.proto import api, rfc1155, rfc3411  # type: ignore[import-untyped]
+from pysnmp.proto.mpmod.rfc3412 import SNMPv3Message  # type: ignore[import-untyped]
 from pysnmp.proto.rfc1902 import (  # type: ignore[import-untyped]
     IpAddress,
     ObjectName,
     OctetString,
     TimeTicks,
+)
+from pysnmp.proto.secmod.rfc3414.service import (  # type: ignore[import-untyped]
+    UsmSecurityParameters,
 )
 
 from cmk.utils.log import VERBOSE
@@ -270,6 +274,113 @@ def test_failed_translation_keeps_the_variable_for_any_error(
     )
 
     assert var_binds == [("1.3.6.1.4.1.99999.2", "backup.log")]
+
+
+def v3_message(
+    pdu_type: str,
+    *,
+    engine_id: bytes,
+    user: bytes = b"",
+    auth_flag: bool = False,
+    boots: int = 0,
+    encrypted_pdu: bytes | None = None,
+) -> bytes:
+    """An unauthenticated SNMPv3 message, built by hand for users and engines PySNMP doesn't know"""
+    proto = api.protoModules[api.protoVersion2c]
+    pdu = getattr(proto, pdu_type)()
+    proto.apiPDU.setDefaults(pdu)
+    security_parameters = UsmSecurityParameters()
+    security_parameters["msgAuthoritativeEngineId"] = engine_id
+    security_parameters["msgAuthoritativeEngineBoots"] = boots
+    security_parameters["msgAuthoritativeEngineTime"] = 0
+    security_parameters["msgUserName"] = user
+    security_parameters["msgAuthenticationParameters"] = b""
+    security_parameters["msgPrivacyParameters"] = b""
+    message = SNMPv3Message()
+    message["msgVersion"] = 3
+    message["msgGlobalData"]["msgID"] = 4711
+    message["msgGlobalData"]["msgMaxSize"] = 65507
+    # Requests are reportable, other PDUs aren't.
+    reportable = pdu.tagSet in rfc3411.confirmedClassPDUs
+    flags = (0x04 if reportable else 0x00) | (0x01 if auth_flag else 0x00)
+    message["msgGlobalData"]["msgFlags"] = bytes([flags])
+    message["msgGlobalData"]["msgSecurityModel"] = 3
+    message["msgSecurityParameters"] = encoder.encode(security_parameters)
+    if encrypted_pdu is None:
+        scoped_pdu = message["msgData"]["plaintext"]
+        scoped_pdu["contextEngineId"] = engine_id
+        scoped_pdu["contextName"] = b""
+        scoped_pdu["data"].setComponentByType(
+            pdu.tagSet, pdu, verifyConstraints=False, matchTags=False, matchConstraints=False
+        )
+    else:
+        message["msgData"]["encryptedPDU"] = encrypted_pdu
+    data: bytes = encoder.encode(message)
+    return data
+
+
+def test_snmpv3_requests_are_dropped_without_failing(
+    parser: SNMPTrapParser, logger: logging.Logger, caplog: pytest.LogCaptureFixture
+) -> None:
+    logger.setLevel(VERBOSE)
+
+    # PySNMP answers them with a discovery report.
+    result = parser.parse(v3_message("GetRequestPDU", engine_id=b""), ("192.0.2.1", 162))
+
+    assert (result, [m for m in caplog.messages if "PySNMP failed on it" in m]) == (None, [])
+
+
+def test_snmpv3_report_senders_are_forgotten(parser: SNMPTrapParser) -> None:
+    # PySNMP accepts them for its empty discovery user and caches the sender.
+    parser.parse(
+        v3_message("ReportPDU", engine_id=bytes.fromhex("8000000001020304")), ("192.0.2.1", 162)
+    )
+
+    # PySNMP keeps them for 300 s of 0.5 s ticks, i.e. 600 messages here.
+    for _ in range(600):
+        parser.parse(b"", ("192.0.2.1", 162))
+
+    message_processing = vars(parser.snmp_engine.messageProcessingSubsystems[3])
+    security_model = vars(parser.snmp_engine.securityModels[3])
+    assert (
+        message_processing["_SnmpV3MessageProcessingModel__engineIdCache"],
+        security_model["_SnmpUSMSecurityModel__timeline"],
+    ) == ({}, {})
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        pytest.param(
+            v3_message("SNMPv2TrapPDU", engine_id=b"", encrypted_pdu=b"\x01\x02\x03"),
+            id="discovery-encrypted",
+        ),
+        pytest.param(
+            v3_message(
+                "SNMPv2TrapPDU",
+                engine_id=bytes.fromhex("8000000001020304"),
+                encrypted_pdu=b"\x01\x02\x03",
+            ),
+            id="empty-user-encrypted",
+        ),
+        pytest.param(
+            v3_message(
+                "SNMPv2TrapPDU",
+                engine_id=bytes.fromhex("8000000001020304"),
+                auth_flag=True,
+                boots=2**31 - 1,
+            ),
+            id="empty-user-flagged-authNoPriv-at-the-last-boot",
+        ),
+    ],
+)
+def test_snmpv3_messages_pysnmp_fails_on_leave_no_pysnmp_state_behind(
+    parser: SNMPTrapParser, message: bytes
+) -> None:
+    parser.parse(message, ("192.0.2.1", 162))
+
+    for security_model in parser.snmp_engine.securityModels.values():
+        assert not vars(security_model._cache)["_Cache__cacheEntries"]
 
 
 def test_trap_failing_after_acceptance_leaves_no_pysnmp_state_behind(

@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Iterable, Mapping
 from logging import DEBUG, Logger
 from typing import Any
 
+import pysnmp.carrier.base  # type: ignore[import-untyped]
 import pysnmp.debug  # type: ignore[import-untyped]
 import pysnmp.entity.config  # type: ignore[import-untyped]
 import pysnmp.entity.engine  # type: ignore[import-untyped]
@@ -16,6 +18,7 @@ import pysnmp.proto.errind  # type: ignore[import-untyped]
 import pysnmp.proto.rfc1155  # type: ignore[import-untyped]
 import pysnmp.proto.rfc1902  # type: ignore[import-untyped]
 import pysnmp.proto.rfc3411  # type: ignore[import-untyped]
+import pysnmp.proto.secmod.cache  # type: ignore[import-untyped]
 import pysnmp.smi.builder  # type: ignore[import-untyped]
 import pysnmp.smi.error  # type: ignore[import-untyped]
 import pysnmp.smi.rfc1902  # type: ignore[import-untyped]
@@ -49,6 +52,13 @@ class _PySnmpDebug(pysnmp.debug.Debug):  # type: ignore[misc]
         return self & flag
 
 
+class _DroppingTransportDispatcher(pysnmp.carrier.base.AbstractTransportDispatcher):  # type: ignore[misc]
+    """Drops what PySNMP sends, e.g. reports: We only receive traps."""
+
+    def sendMessage(self, *_: object) -> None:
+        pass
+
+
 def _snmp_version(security_model: int) -> str:
     """SNMPv1, SNMPv2c and SNMPv3 have the security models 1, 2 and 3."""
     return "v2c" if security_model == 2 else f"v{security_model}"
@@ -71,6 +81,7 @@ class SNMPTrapParser:
     def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
         self._logger = logger
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
+        self.snmp_engine.registerTransportDispatcher(_DroppingTransportDispatcher())
         self._initialize_snmp_credentials(config)
         # NOTE: pysnmp has a really strange notification receiver API: The constructor call below
         # effectively registers the callback (2nd argument) at the SNMP engine. The callback stores
@@ -217,6 +228,17 @@ class SNMPTrapParser:
                 exc_info=self._logger.isEnabledFor(DEBUG),
             )
             return None
+        finally:
+            # PySNMP forgets SNMPv3 senders only on timer ticks: Tick once per message.
+            now = time.time()
+            for message_processing in self.snmp_engine.messageProcessingSubsystems.values():
+                message_processing.receiveTimerTick(self.snmp_engine, now)
+            for security_model in self.snmp_engine.securityModels.values():
+                security_model.receiveTimerTick(self.snmp_engine, now)
+            # PySNMP leaks the state of some failing SNMPv3 messages, and none is pending here.
+            usm = self.snmp_engine.securityModels[3]
+            if vars(usm._cache)["_Cache__cacheEntries"]:
+                usm._cache = pysnmp.proto.secmod.cache.Cache()
         if (error := self._receiver.error) is not None:
             raise error
         return self._varbinds_and_ipaddress

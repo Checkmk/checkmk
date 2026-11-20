@@ -9,6 +9,7 @@ from collections.abc import Iterator, Sequence
 
 import numpy as np
 import numpy.typing as npt
+from matplotlib import rc_context
 from matplotlib.axes import Axes
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
@@ -622,4 +623,5 @@ def render_pngs(
 ) -> Sequence[bytes | RenderingFailure]:
     """One result per graph, in the order of the graphs. A graph that fails to render yields a
     RenderingFailure, so that the other graphs still get their images."""
-    return [_rendered_or_failure(graph, texts, temperature_unit) for graph in graphs]
+    with rc_context({"text.parse_math": False}):
+        return [_rendered_or_failure(graph, texts, temperature_unit) for graph in graphs]

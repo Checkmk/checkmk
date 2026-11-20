@@ -165,6 +165,33 @@ def test_render_png_produces_bytes_for_an_empty_graph() -> None:
     assert isinstance(png_bytes, bytes) and png_bytes.startswith(b"\x89PNG")
 
 
+def test_dollar_signs_in_a_title_are_drawn_as_plain_text() -> None:
+    graph = EvaluatedGraph(
+        name="g",
+        title=r"Share $\frac{1}{$",
+        time_range=_TIME_RANGE,
+        vertical_range=None,
+        stacks=[],
+        lines=[],
+    )
+    (png_bytes,) = render_pngs(
+        [
+            PngGraph(
+                graph=graph,
+                options=_OPTIONS,
+                y_axis_unit=None,
+                requested_vertical_range=None,
+                time_zone=None,
+                visible_time_range=_VISIBLE_TIME_RANGE,
+            )
+        ],
+        _TEXTS,
+        TemperatureUnit.CELSIUS,
+    )
+
+    assert isinstance(png_bytes, bytes)
+
+
 def test_render_png_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> None:
     curve = _curve("m", [1.0, 2.0, 3.0], color="#123456")
     graph = EvaluatedGraph(

@@ -190,6 +190,9 @@ section_fileinfo() {
 
 section_timemachine() {
     if type tmutil >/dev/null; then
+        # Without a backup destination "tmutil latestbackup" prints an error,
+        # which the check reports as a failed backup. No destination, no section.
+        tmutil destinationinfo 2>&1 | grep -q "No destinations configured" && return
         echo '<<<timemachine>>>'
         tmutil latestbackup 2>&1
     fi

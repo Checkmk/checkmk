@@ -445,6 +445,16 @@ test('a refused new host shows why the server refused it', async () => {
   expect(await screen.findByText('Sorry, the hosts in the folder Main are locked.')).toBeTruthy()
 })
 
+test('a refused new host shows no host creation', async () => {
+  server.use(http.put(OBJECT_URL, () => HttpResponse.json(NEW_HOSTS_REFUSED, { status: 403 })))
+
+  serveResolution(['pod-cart'])
+  await saveStoredTemplateService()
+
+  await screen.findByText('Sorry, the hosts in the folder Main are locked.')
+  expect(screen.queryByText('New host creation')).toBeNull()
+})
+
 test('after a refused new host the save can be tried again', async () => {
   server.use(http.put(OBJECT_URL, () => HttpResponse.json(NEW_HOSTS_REFUSED, { status: 403 })))
 

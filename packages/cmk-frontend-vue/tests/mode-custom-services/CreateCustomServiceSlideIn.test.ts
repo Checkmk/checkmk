@@ -247,7 +247,7 @@ test('a host name template that resolves only to new hosts can be saved', async 
   expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
 })
 
-test('a refused new host keeps the dialog open and says why', async () => {
+async function saveRefusedNewHost(): Promise<ReturnType<typeof renderSlideIn>> {
   server.use(
     http.post(RESOLVE_URL, () =>
       HttpResponse.json({
@@ -269,15 +269,25 @@ test('a refused new host keeps the dialog open and says why', async () => {
       )
     )
   )
-  const { emitted } = renderSlideIn(
-    initialModel({ hostNameTemplate: '$RESOURCE_ATTR.service.name$' })
-  )
+  const rendered = renderSlideIn(initialModel({ hostNameTemplate: '$RESOURCE_ATTR.service.name$' }))
   const save = await screen.findByRole('button', { name: 'Save' })
   await waitFor(() => expect(save).toBeEnabled())
   await userEvent.click(save)
+  return rendered
+}
+
+test('a refused new host keeps the dialog open and says why', async () => {
+  const { emitted } = await saveRefusedNewHost()
 
   expect(await screen.findByText('Sorry, the hosts in the folder Main are locked.')).toBeTruthy()
   expect(emitted('close')).toBeUndefined()
+})
+
+test('a refused new host shows no host creation', async () => {
+  await saveRefusedNewHost()
+
+  await screen.findByText('Sorry, the hosts in the folder Main are locked.')
+  expect(screen.queryByText('New host creation')).toBeNull()
 })
 
 function serveClash(): void {

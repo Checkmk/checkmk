@@ -20,16 +20,13 @@ const { _t } = usei18n()
 
 export type { SaveResult }
 
-export type HostCreationStatus = 'creating' | 'created' | 'refused'
+export type HostCreationStatus = 'creating' | 'created'
 
 /** What becomes of the new hosts of a save, given whether the save was to create some. */
 export function hostCreationAfter(
   creatingHosts: boolean,
   result: SaveResult | null
 ): HostCreationStatus | null {
-  if (result?.hostsRefused === true) {
-    return 'refused'
-  }
   return creatingHosts && result?.ok === true ? 'created' : null
 }
 

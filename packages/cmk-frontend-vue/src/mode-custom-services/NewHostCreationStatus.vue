@@ -22,7 +22,6 @@ const { _t } = usei18n()
     role="status"
   >
     <CmkIcon v-if="status === 'created'" name="checkmark" variant="inline" />
-    <CmkIcon v-else-if="status === 'refused'" name="cross" variant="inline" />
     <span>{{ _t('New host creation') }}</span>
     <CmkLoading v-if="status === 'creating'" />
   </div>
@@ -37,9 +36,5 @@ const { _t } = usei18n()
 
 .mode-custom-services-new-host-creation-status--created {
   color: var(--success);
-}
-
-.mode-custom-services-new-host-creation-status--refused {
-  color: var(--color-danger);
 }
 </style>

@@ -11,4 +11,7 @@ from cmk.automations.helper._cache import Cache
 
 @pytest.fixture(name="cache")
 def get_cache() -> Cache:
-    return Cache.setup(client=FakeRedis())
+    """A cache as the watcher prepares it when it starts, before the workers do."""
+    cache = Cache.setup(client=FakeRedis())
+    cache.store_changes_unwatched(unwatched=False)
+    return cache

@@ -552,6 +552,84 @@ def test_every_automation_requires_a_reload_after_watchdog_fails_to_handle_an_ev
     assert cache.reload_required(last_reload=time.time())
 
 
+def test_every_automation_requires_a_reload_after_redis_restarted_once_a_new_folder_was_unwatched(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    watcher_config = _checked_often(_site_watcher_config(tmp_path))
+    wato = tmp_path / "etc" / "check_mk" / "conf.d" / "wato"
+    wato.mkdir()
+    _fail_to_watch_once_filled(monkeypatch, wato / "folder", ".wato")  # matches no pattern
+    client = FakeRedis()
+    cache = Cache.setup(client=client)
+
+    with run_watcher(watcher_config, cache):
+        (wato / "folder").mkdir()
+        _wait_for_reload_required(cache)
+        client.flushall()  # as a restart of the site's Redis does, which keeps nothing on disk
+        _wait_for_reload_required(cache)
+
+    assert cache.reload_required(last_reload=time.time())
+
+
+def test_every_automation_requires_a_reload_after_marking_changes_unwatched_failed_once(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    watcher_config = _checked_often(_site_watcher_config(tmp_path))
+    wato = tmp_path / "etc" / "check_mk" / "conf.d" / "wato"
+    wato.mkdir()
+    _fail_to_watch_once_filled(monkeypatch, wato / "folder", ".wato")  # matches no pattern
+    cache = _CacheTimingOutOnFirstMark.setup(client=FakeRedis())
+
+    with run_watcher(watcher_config, cache):
+        (wato / "folder").mkdir()  # makes the watcher mark that changes may go unnoticed
+        _wait_for_reload_required(cache)
+
+    assert cache.reload_required(last_reload=time.time())
+
+
+def test_reload_is_required_after_redis_lost_a_change(tmp_path: Path) -> None:
+    watcher_config = _checked_often(_site_watcher_config(tmp_path))
+    rules = tmp_path / "etc" / "check_mk" / "conf.d" / "wato" / "rules.mk"
+    rules.parent.mkdir(parents=True, exist_ok=True)
+    client = FakeRedis()
+    cache = Cache.setup(client=client)
+    reloaded_at = time.time()  # as by a worker before the change
+
+    with run_watcher(watcher_config, cache):
+        rules.touch()
+        _wait_for_detected_change(cache)
+        client.flushall()  # as a restart of the site's Redis does, which keeps nothing on disk
+        _wait_for_reload_required(cache, last_reload=reloaded_at)
+
+    assert cache.reload_required(last_reload=reloaded_at)
+
+
+def test_reload_is_required_only_once_after_redis_lost_its_data(tmp_path: Path) -> None:
+    watcher_config = _checked_often(_site_watcher_config(tmp_path))
+    client = FakeRedis()
+    cache = Cache.setup(client=client)
+
+    with run_watcher(watcher_config, cache):
+        client.flushall()  # as a restart of the site's Redis does, which keeps nothing on disk
+        _wait_for_detected_change(cache)
+        reloaded_at = time.time()  # as by a worker after the change the watcher stored for it
+        time.sleep(10 * watcher_config.check_interval)  # lets the watcher check several times
+
+    assert not cache.reload_required(last_reload=reloaded_at)
+
+
+def test_lost_redis_data_is_logged(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> None:
+    watcher_config = _checked_often(_site_watcher_config(tmp_path))
+    client = FakeRedis()
+    cache = Cache.setup(client=client)
+
+    with run_watcher(watcher_config, cache):
+        client.flushall()  # as a restart of the site's Redis does, which keeps nothing on disk
+        _wait_for_log(caplog, "Redis has lost")
+
+    assert "[watcher] Redis has lost what the watcher stored," in caplog.text
+
+
 def test_every_automation_requires_a_reload_after_watchdog_stopped_reading(
     tmp_path: Path, cache: Cache, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -749,6 +827,21 @@ class _CacheTimingOutOnMarks(Cache):
     @override
     def store_changes_unwatched(self, *, unwatched: bool) -> None:
         if unwatched:
+            raise RedisTimeoutError("Timeout reading from socket")
+        super().store_changes_unwatched(unwatched=unwatched)
+
+
+@dataclasses.dataclass(frozen=True)
+class _CacheTimingOutOnFirstMark(Cache):
+    """A cache that times out the first time the watcher marks that changes may go unnoticed, as
+    Redis may."""
+
+    timed_out: threading.Event = dataclasses.field(default_factory=threading.Event)
+
+    @override
+    def store_changes_unwatched(self, *, unwatched: bool) -> None:
+        if unwatched and not self.timed_out.is_set():
+            self.timed_out.set()
             raise RedisTimeoutError("Timeout reading from socket")
         super().store_changes_unwatched(unwatched=unwatched)
 
@@ -1002,9 +1095,16 @@ def _wait_for_detected_change(cache: Cache) -> None:
         wait_until(lambda: cache.get_last_detected_change() > 0, timeout=5, interval=0.01)
 
 
-def _wait_for_reload_required(cache: Cache) -> None:
+def _wait_for_reload_required(cache: Cache, *, last_reload: float | None = None) -> None:
+    """Wait until *cache* requires a reload after *last_reload*, by default after now."""
     with contextlib.suppress(TimeoutError):  # the test's assertion reports it
-        wait_until(lambda: cache.reload_required(last_reload=time.time()), timeout=5, interval=0.01)
+        wait_until(
+            lambda: cache.reload_required(
+                last_reload=time.time() if last_reload is None else last_reload
+            ),
+            timeout=5,
+            interval=0.01,
+        )
 
 
 def _wait_for_log(caplog: pytest.LogCaptureFixture, text: str) -> None:

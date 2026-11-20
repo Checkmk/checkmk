@@ -47,20 +47,29 @@ class Cache:
         except RedisError as err:
             raise CacheError("Redis error: Failed to store whether changes are unwatched.") from err
 
-    def _changes_unwatched(self) -> bool:
+    def get_changes_unwatched(self) -> bool | None:
+        """Whether the watcher may miss changes, or None if that is not stored, e.g. as Redis has
+        restarted since."""
         try:
             unwatched = self._client.get(CHANGES_UNWATCHED_TOPIC)
             assert not isinstance(unwatched, Awaitable)
-            return bool(int(unwatched or 0))
+            return None if unwatched is None else bool(int(unwatched))
         except RedisError as err:
             raise CacheError(
                 "Redis error: Failed to retrieve whether changes are unwatched."
             ) from err
 
     def reload_required(self, last_reload: float) -> bool:
-        """Whether a change was detected after *last_reload*, or changes may have gone unnoticed."""
+        """Whether a change was detected after *last_reload*, or changes may have gone unnoticed.
+
+        They may also if Redis has lost whether they may, e.g. as it restarted: then it may have
+        lost a change, too, until the watcher has restored what it stored.
+        """
         try:
-            return self._changes_unwatched() or last_reload < self.get_last_detected_change()
+            return (
+                self.get_changes_unwatched() is not False
+                or last_reload < self.get_last_detected_change()
+            )
         except CacheError:
             LOGGER.warning("Redis error, assuming reload required")
             return True

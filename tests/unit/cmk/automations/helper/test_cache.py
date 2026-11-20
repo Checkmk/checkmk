@@ -34,6 +34,10 @@ def test_get_last_change_detected_unset(cache: Cache) -> None:
     assert cache.get_last_detected_change() == 0.0
 
 
+def test_get_changes_unwatched_unset(cache: Cache) -> None:
+    assert cache.get_changes_unwatched() is None
+
+
 def test_reload_required(cache: Cache) -> None:
     cache.store_last_detected_change(1.0)
     assert cache.reload_required(0.0)
@@ -44,6 +48,11 @@ def test_reload_required_after_the_last_reload_while_changes_are_unwatched(cache
     cache.store_changes_unwatched(unwatched=True)
 
     assert cache.reload_required(2.0)
+
+
+def test_reload_required_while_it_is_unknown_whether_changes_are_unwatched(cache: Cache) -> None:
+    """As after a restart of Redis, which keeps nothing on disk, until the watcher restores it."""
+    assert cache.reload_required(time.time())
 
 
 @pytest.mark.parametrize(
@@ -69,6 +78,7 @@ def test_reload_required_returns_true_on_cache_error(cache: Cache, error: RedisE
         pytest.param(
             lambda cache: cache.store_changes_unwatched(unwatched=True), id="store unwatched"
         ),
+        pytest.param(lambda cache: cache.get_changes_unwatched(), id="get unwatched"),
     ],
 )
 def test_redis_timeout_raises_cache_error(access: Callable[[Cache], object]) -> None:

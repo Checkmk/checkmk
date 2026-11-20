@@ -86,6 +86,9 @@ class _Running:
     cache: Cache | None = None
     """The cache of the watcher running in this process, in which the patched watchdog marks that
     changes may go unnoticed."""
+    changes_unwatched: bool = False
+    """Whether the patched watchdog has marked that changes may go unnoticed in this run of the
+    watcher, so that the periodic check stores the mark again if Redis has lost it."""
 
 
 _running = _Running()
@@ -101,6 +104,7 @@ def _marking_unwatched_changes(cache: Cache) -> Generator[None]:
         yield
     finally:
         _running.cache = None
+        _running.changes_unwatched = False
 
 
 def _mark_changes_unwatched() -> None:
@@ -108,9 +112,11 @@ def _mark_changes_unwatched() -> None:
     automation reloads the configuration until the automation helper restarts.
 
     It marks in a thread of its own, as it runs in watchdog's reader thread, which a slow Redis must
-    not hold up: the kernel drops events once its queue for them is full.
+    not hold up: the kernel drops events once its queue for them is full. The periodic check
+    stores the mark again if Redis has lost it, or if storing it failed.
     """
     if (cache := _running.cache) is not None:
+        _running.changes_unwatched = True
         threading.Thread(
             target=_store_changes_unwatched,
             args=(cache,),
@@ -130,7 +136,8 @@ def _store_changes_unwatched(cache: Cache, *, unwatched: bool) -> None:
 
 @contextlib.contextmanager
 def _checking_threads(observer: BaseObserver, cache: Cache, *, interval: float) -> Generator[None]:
-    """Check every *interval* seconds that watchdog's threads still run, while in this context."""
+    """Check every *interval* seconds that watchdog's threads still run and that Redis still holds
+    what the watcher stored, while in this context."""
     stopped = threading.Event()
     checker = threading.Thread(
         target=_check_threads,
@@ -157,8 +164,7 @@ def _check_threads(
     scheduled directory when that directory itself is deleted. Restarting the observer would not
     revive the reader thread, which all watches of the process share.
 
-    It stores the mark again at every check, as the site's Redis keeps nothing on disk: a restart
-    of Redis alone would forget it.
+    At every check, it also restores what Redis has lost, see _restore_lost_data().
     """
     ended: str | None = None
     while not stopped.wait(interval):
@@ -168,8 +174,31 @@ def _check_threads(
                 " configuration until the automation helper restarts",
                 {"thread": ended},
             )
-        if ended is not None:
-            _store_changes_unwatched(cache, unwatched=True)
+        _restore_lost_data(cache, unwatched=ended is not None or _running.changes_unwatched)
+
+
+def _restore_lost_data(cache: Cache, *, unwatched: bool) -> None:
+    """Store in *cache* that changes may go unnoticed if *unwatched* and it lacks that, e.g. as
+    storing it failed.
+
+    If it holds nothing about that, which the watcher always stores at its start, Redis has lost its
+    data, e.g. as it restarted: the site's Redis keeps nothing on disk. Then it also stores a change,
+    as Redis may have lost one that not every worker has reloaded the configuration for yet, so that
+    each worker reloads it once.
+    """
+    try:
+        stored = cache.get_changes_unwatched()
+        if stored is None:
+            LOGGER.warning(
+                "[watcher] Redis has lost what the watcher stored, e.g. as it restarted, so each"
+                " worker of the automation helper reloads the configuration"
+            )
+            cache.store_last_detected_change(time.time())
+        if stored is None or (unwatched and not stored):
+            cache.store_changes_unwatched(unwatched=unwatched)
+    # not only CacheError: any error would end the checks
+    except Exception:
+        LOGGER.exception("[watcher] Error while checking what Redis has stored")
 
 
 def _ended_thread(observer: BaseObserver) -> str | None:

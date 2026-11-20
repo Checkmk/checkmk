@@ -467,6 +467,7 @@ async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None
 async def test_reloader_takes_state_into_account(mocker: MockerFixture) -> None:
     mock_reload_callback = mocker.MagicMock()
     cache = _RecordingCache.setup(client=fakeredis.FakeRedis())
+    cache.store_changes_unwatched(unwatched=False)  # as the watcher does when it starts
     state = _State(
         last_reload_at=1,
         engine=_DummyAutomationEngineSuccess(),

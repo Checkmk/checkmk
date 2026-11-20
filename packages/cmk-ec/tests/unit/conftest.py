@@ -5,10 +5,12 @@
 
 # mypy: disable-error-code="explicit-any"
 
+import functools
 import logging
 import os
 import threading
 import time
+import types
 import uuid
 from collections.abc import Callable, Iterator
 from pathlib import Path
@@ -16,6 +18,7 @@ from unittest import mock
 
 import pymongo
 import pysnmp.debug
+import pysnmp.smi.builder
 import pytest
 
 import cmk.ec.export as ec
@@ -52,6 +55,34 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "filterwarnings", "ignore:Module globals is missing a __spec__.loader:DeprecationWarning"
     )
+    _compile_pysnmp_mibs_once(config)
+
+
+def _compile_pysnmp_mibs_once(config: pytest.Config) -> None:
+    """Each PySNMP engine and MIB builder compiles every MIB module twice, in DirMibSource.read()
+    and in runpy.run_path(), which takes most of the time of the SNMP tests. Compile each source
+    once per session instead, but still run the modules like runpy.run_path() does."""
+
+    @functools.cache
+    def compiled(source: str | bytes, filename: str, mode: str) -> types.CodeType:
+        return compile(source, filename, mode)
+
+    def run_path(path_name: str, init_globals: dict[str, object]) -> dict[str, object]:
+        run_globals = init_globals | {
+            "__name__": "<run_path>",
+            "__file__": path_name,
+            "__doc__": None,
+            "__loader__": None,
+            "__package__": "",
+            "__spec__": None,
+        }
+        exec(compiled(Path(path_name).read_bytes(), path_name, "exec"), run_globals)  # nosec B102
+        return run_globals
+
+    patch = pytest.MonkeyPatch()
+    config.add_cleanup(patch.undo)
+    patch.setattr(pysnmp.smi.builder, "compile", compiled, raising=False)
+    patch.setattr(pysnmp.smi.builder, "runpy", types.SimpleNamespace(run_path=run_path))
 
 
 @pytest.fixture(name="settings")

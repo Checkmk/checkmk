@@ -19,7 +19,7 @@ from pysnmp.proto.secmod.rfc3414.service import UsmSecurityParameters
 
 import cmk.ec.export as ec
 from cmk.ccc.log import VERBOSE
-from cmk.ec.config import Config
+from cmk.ec.config import Config, SNMPCredentials
 from cmk.ec.snmp import SNMPTrapParser, SNMPTrapTranslator, VarBinds
 
 # sysORDescr.1.2, but sysORTable has only one index.
@@ -705,4 +705,89 @@ def test_encrypted_snmpv3_traps_are_dropped_as_messages(
     [dropped] = [message for message in caplog.messages if " dropped from " in message]
     assert (
         dropped == "Message (v3) dropped from 192.0.2.1: Unknown credentials (msgUserName: sally)"
+    )
+
+
+def snmpv3_config(config: Config, credentials: SNMPCredentials) -> Config:
+    """The configuration with only the given SNMPv3 credentials, for SENDER_ENGINE_ID"""
+    return config | {
+        "snmp_credentials": [
+            {"description": "", "credentials": credentials, "engine_ids": [SENDER_ENGINE_ID]}
+        ]
+    }
+
+
+@pytest.mark.parametrize(
+    "credentials, auth_key",
+    [
+        pytest.param(("noAuthNoPriv", "harry"), None, id="noAuthNoPriv"),
+        pytest.param(("authNoPriv", "sha", "harry", "right-key"), "right-key", id="authNoPriv"),
+        pytest.param(
+            ("authPriv", "sha", "harry", "right-key", "AES", "priv-key"),
+            "right-key",
+            id="authPriv-sending-authNoPriv",
+        ),
+    ],
+)
+def test_snmpv3_trap_of_a_configured_user_is_accepted(
+    make_parser: MakeParser, config: Config, credentials: SNMPCredentials, auth_key: str | None
+) -> None:
+    parser = make_parser(snmpv3_config(config, credentials))
+
+    result = parser.parse(v3_trap("harry", auth_key=auth_key), ("192.0.2.1", 162))
+
+    assert result is not None
+
+
+@pytest.mark.parametrize(
+    "credentials",
+    [
+        pytest.param(("authNoPriv", "sha", "harry", "right-key"), id="authNoPriv"),
+        pytest.param(("authPriv", "sha", "harry", "right-key", "AES", "priv-key"), id="authPriv"),
+    ],
+)
+def test_unauthenticated_snmpv3_trap_of_a_user_with_authentication_is_dropped(
+    make_parser: MakeParser,
+    config: Config,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+    credentials: SNMPCredentials,
+) -> None:
+    parser = make_parser(snmpv3_config(config, credentials))
+    logger.setLevel(VERBOSE)
+
+    result = parser.parse(v3_trap("harry"), ("192.0.2.1", 162))
+
+    assert (result, [m for m in caplog.messages if " dropped from " in m]) == (
+        None,
+        ["Trap (v3) dropped from 192.0.2.1: Authentication missing (msgUserName: harry)"],
+    )
+
+
+@pytest.mark.parametrize(
+    "auth_flag",
+    [
+        pytest.param(False, id="noAuthNoPriv"),
+        # PySNMP doesn't authenticate it, but reports authNoPriv.
+        pytest.param(True, id="flagged-authNoPriv"),
+    ],
+)
+def test_snmpv3_trap_of_the_empty_user_is_dropped(
+    make_parser: MakeParser,
+    config: Config,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+    auth_flag: bool,
+) -> None:
+    parser = make_parser(snmpv3_config(config, ("authNoPriv", "sha", "harry", "right-key")))
+    logger.setLevel(VERBOSE)
+
+    result = parser.parse(
+        v3_message("SNMPv2TrapPDU", engine_id=bytes.fromhex(SENDER_ENGINE_ID), auth_flag=auth_flag),
+        ("192.0.2.1", 162),
+    )
+
+    assert (result, [m for m in caplog.messages if " dropped from " in m]) == (
+        None,
+        ["Trap (v3) dropped from 192.0.2.1: Unknown credentials (msgUserName: )"],
     )

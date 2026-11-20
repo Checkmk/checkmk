@@ -99,7 +99,7 @@ def test_received_trap_is_logged_with_its_sender(
 
     parser.parse(v2c_trap([]), ("192.0.2.1", 162))
 
-    assert "Trap received from 192.0.2.1:162. Checking for acceptance now." in caplog.messages
+    assert "Message received from 192.0.2.1:162. Checking for acceptance now." in caplog.messages
 
 
 def test_failed_translation_warns_about_the_oid_the_sender_and_the_error(
@@ -284,6 +284,7 @@ def v3_message(
     engine_id: bytes,
     user: bytes = b"",
     auth_flag: bool = False,
+    priv_flag: bool = False,
     boots: int = 0,
     encrypted_pdu: bytes | None = None,
 ) -> bytes:
@@ -305,6 +306,7 @@ def v3_message(
     # Requests are reportable, other PDUs aren't.
     reportable = pdu.tagSet in rfc3411.confirmedClassPDUs
     flags = (0x04 if reportable else 0x00) | (0x01 if auth_flag else 0x00)
+    flags |= 0x02 if priv_flag else 0x00
     message["msgGlobalData"]["msgFlags"] = bytes([flags])
     message["msgGlobalData"]["msgSecurityModel"] = 3
     message["msgSecurityParameters"] = encoder.encode(security_parameters)
@@ -561,14 +563,14 @@ def test_dropped_traps_show_at_most_64_bytes_of_a_community(
     assert f"Trap (v2c) dropped from 192.0.2.1: Unknown community ({shown})" in caplog.messages
 
 
-def request(version: int, pdu_type: str) -> bytes:
-    """An SNMPv1/v2c request from the "public" community, which the default configuration accepts"""
+def request(version: int, pdu_type: str, *, community: str = "public") -> bytes:
+    """An SNMPv1/v2c request, by default from "public", which the default configuration accepts"""
     proto = api.protoModules[version]
     pdu = getattr(proto, pdu_type)()
     proto.apiPDU.setDefaults(pdu)
     message = proto.Message()
     proto.apiMessage.setDefaults(message)
-    proto.apiMessage.setCommunity(message, "public")
+    proto.apiMessage.setCommunity(message, community)
     proto.apiMessage.setPDU(message, pdu)
     data: bytes = encoder.encode(message)
     return data
@@ -621,3 +623,101 @@ def test_requests_are_dropped_naming_their_type_and_version(
     parser.parse(request(version, pdu_type), ("192.0.2.1", 162))
 
     assert f"{dropped} dropped from 192.0.2.1, only traps are supported" in caplog.messages
+
+
+@pytest.mark.parametrize(
+    "pdu_type, name",
+    [
+        pytest.param("GetRequestPDU", "GetRequest", id="get"),
+        pytest.param("InformRequestPDU", "InformRequest", id="inform"),
+        pytest.param("ReportPDU", "Report", id="report"),
+        pytest.param("SNMPv2TrapPDU", "Trap", id="trap"),
+    ],
+)
+def test_snmpv3_messages_of_an_unknown_engine_are_dropped_naming_their_type(
+    parser: SNMPTrapParser,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+    pdu_type: str,
+    name: str,
+) -> None:
+    logger.setLevel(VERBOSE)
+
+    parser.parse(v3_message(pdu_type, engine_id=b""), ("192.0.2.1", 162))
+
+    [dropped] = [message for message in caplog.messages if " dropped from " in message]
+    assert dropped == f"{name} (v3) dropped from 192.0.2.1: Unknown SNMP engine ID encountered"
+
+
+@pytest.mark.parametrize(
+    "version, pdu_type, name",
+    [
+        pytest.param(api.protoVersion1, "GetRequestPDU", "GetRequest (v1)", id="v1-get"),
+        pytest.param(
+            api.protoVersion2c, "InformRequestPDU", "InformRequest (v2c)", id="v2c-inform"
+        ),
+    ],
+)
+def test_requests_of_an_unknown_community_are_dropped_naming_their_type(
+    parser: SNMPTrapParser,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+    version: int,
+    pdu_type: str,
+    name: str,
+) -> None:
+    logger.setLevel(VERBOSE)
+
+    parser.parse(request(version, pdu_type, community="nope"), ("192.0.2.1", 162))
+
+    assert f"{name} dropped from 192.0.2.1: Unknown community (nope)" in caplog.messages
+
+
+@pytest.mark.parametrize(
+    "pdu_type, name",
+    [
+        pytest.param("GetRequestPDU", "GetRequest", id="get"),
+        pytest.param("ReportPDU", "Report", id="report"),
+    ],
+)
+def test_snmpv3_messages_of_an_unknown_user_are_dropped_naming_their_type(
+    parser: SNMPTrapParser,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+    pdu_type: str,
+    name: str,
+) -> None:
+    logger.setLevel(VERBOSE)
+
+    parser.parse(
+        v3_message(pdu_type, engine_id=bytes.fromhex(SENDER_ENGINE_ID), user=b"sally"),
+        ("192.0.2.1", 162),
+    )
+
+    [dropped] = [message for message in caplog.messages if " dropped from " in message]
+    assert (
+        dropped == f"{name} (v3) dropped from 192.0.2.1: Unknown credentials (msgUserName: sally)"
+    )
+
+
+def test_encrypted_snmpv3_traps_are_dropped_as_messages(
+    parser: SNMPTrapParser, logger: logging.Logger, caplog: pytest.LogCaptureFixture
+) -> None:
+    logger.setLevel(VERBOSE)
+
+    parser.parse(
+        v3_message(
+            "SNMPv2TrapPDU",
+            engine_id=bytes.fromhex(SENDER_ENGINE_ID),
+            user=b"sally",
+            auth_flag=True,
+            priv_flag=True,
+            encrypted_pdu=b"\x01\x02\x03",
+        ),
+        ("192.0.2.1", 162),
+    )
+
+    [dropped] = [message for message in caplog.messages if " dropped from " in message]
+    assert (
+        dropped == "Message (v3) dropped from 192.0.2.1: Unknown credentials (msgUserName: sally)"
+    )

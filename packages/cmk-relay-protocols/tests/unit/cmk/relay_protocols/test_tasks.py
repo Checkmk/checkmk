@@ -10,6 +10,7 @@ from cmk.relay_protocols.tasks import (
     AdHocActiveCheckTask,
     AdHocPasswordStore,
     AdHocSiteStores,
+    CertRotationTask,
     TaskCreateRequest,
     TaskResponse,
 )
@@ -88,3 +89,8 @@ def test_site_stores_always_name_the_ca_bundle() -> None:
 def test_a_store_path_outside_the_ad_hoc_files_dir_is_rejected(path: str) -> None:
     with pytest.raises(ValidationError, match="below tmp/check_mk"):
         AdHocPasswordStore(path=path, values={})
+
+
+def test_a_cert_rotation_task_without_a_pem_additional_ca_certificate_is_rejected() -> None:
+    with pytest.raises(ValidationError, match="Invalid additional CA certificate"):
+        TaskCreateRequest(spec=CertRotationTask(additional_ca_cert="not a certificate"))

@@ -54,7 +54,12 @@ class ActiveCheckSpec:
     site_stores: tasks_protocol.AdHocSiteStores | None = None
 
 
-Spec = FetchSpec | RelayConfigSpec | ActiveCheckSpec
+@dataclasses.dataclass(frozen=True, slots=True)
+class CertRotationSpec:
+    additional_ca_cert: str | None = None
+
+
+Spec = FetchSpec | RelayConfigSpec | ActiveCheckSpec | CertRotationSpec
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)

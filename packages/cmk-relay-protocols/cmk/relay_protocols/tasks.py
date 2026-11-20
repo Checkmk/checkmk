@@ -9,6 +9,7 @@ from enum import StrEnum
 from pathlib import PurePosixPath
 from typing import Final, Literal
 
+from cryptography import x509
 from pydantic import Base64Bytes, BaseModel, Field, field_validator
 
 # Where a relay keeps the files of one ad-hoc active check: the site's relative tmp
@@ -31,6 +32,7 @@ class _TaskType(StrEnum):
     RELAY_CONFIG = "RELAY_CONFIG"
     FETCH_AD_HOC = "FETCH_AD_HOC"
     AD_HOC_ACTIVE_CHECK = "AD_HOC_ACTIVE_CHECK"
+    CERT_ROTATION = "CERT_ROTATION"
 
 
 class TaskStatus(StrEnum):
@@ -119,16 +121,36 @@ class RelayConfigTask(BaseModel, frozen=True):
     type: Literal[_TaskType.RELAY_CONFIG] = _TaskType.RELAY_CONFIG
 
 
+class CertRotationTask(BaseModel, frozen=True):
+    additional_ca_cert: str | None = Field(
+        default=None,
+        description="PEM CA certificates the relay trusts from now on, in addition to the ones "
+        "it already trusts",
+    )
+    type: Literal[_TaskType.CERT_ROTATION] = _TaskType.CERT_ROTATION
+
+
 # Only the tasks that can be created via create task API endpoint
-TaskCreateRequestSpec = FetchAdHocTask | AdHocActiveCheckTask
+TaskCreateRequestSpec = FetchAdHocTask | AdHocActiveCheckTask | CertRotationTask
 
 # Any task that can be stored in the backend
-TaskResponseSpec = FetchAdHocTask | RelayConfigTask | AdHocActiveCheckTask
+TaskResponseSpec = FetchAdHocTask | RelayConfigTask | AdHocActiveCheckTask | CertRotationTask
 
 
 class TaskCreateRequest(BaseModel, frozen=True):
     spec: TaskCreateRequestSpec = Field(discriminator="type")
     version: int = 1
+
+    # Only on creation: a relay must not reject its whole task list over one bad bundle
+    @field_validator("spec")
+    @classmethod
+    def _additional_ca_cert_is_pem(cls, spec: TaskCreateRequestSpec) -> TaskCreateRequestSpec:
+        if isinstance(spec, CertRotationTask) and spec.additional_ca_cert is not None:
+            try:
+                x509.load_pem_x509_certificates(spec.additional_ca_cert.encode())
+            except ValueError:
+                raise ValueError("Invalid additional CA certificate: Could not parse PEM data")
+        return spec
 
 
 class TaskCreateResponse(BaseModel, frozen=True):

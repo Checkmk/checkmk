@@ -8,6 +8,7 @@ from typing import assert_never
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     ActiveCheckSpec,
+    CertRotationSpec,
     FetchSpec,
     RelayConfigSpec,
     RelayTask,
@@ -47,6 +48,10 @@ class TaskResponseSerializer:
                     command=task.spec.command,
                     timeout=task.spec.timeout,
                     site_stores=task.spec.site_stores,
+                )
+            case CertRotationSpec():
+                spec = tasks_protocol.CertRotationTask(
+                    additional_ca_cert=task.spec.additional_ca_cert
                 )
             case _:  # pragma: no cover
                 assert_never(task)

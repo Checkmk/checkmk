@@ -34,6 +34,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.localhost_authorization imp
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     ActiveCheckSpec,
+    CertRotationSpec,
     FetchSpec,
     RelayTask,
     ResultType,
@@ -114,6 +115,8 @@ async def create_task_endpoint(
                 timeout=request_body.spec.timeout,
                 site_stores=request_body.spec.site_stores,
             )
+        case tasks_protocol.CertRotationTask():
+            spec = CertRotationSpec(additional_ca_cert=request_body.spec.additional_ca_cert)
         case _:  # pragma: no cover
             assert_never(request_body.spec)
 

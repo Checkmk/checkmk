@@ -114,7 +114,7 @@ def _curve_scalars(curve: EvaluatedCurve) -> _CurveScalars:
 
 def _stack_extents(
     stack: EvaluatedStack, times: Sequence[int]
-) -> list[tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.bool_]]]:
+) -> Sequence[tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.bool_]]]:
     """Each member's (bottom, top, has_value) at the running sum it is drawn at, so that the axis
     bounds follow the drawn areas."""
     sign = _mirroring_sign(mirrored=stack.inverse)
@@ -191,7 +191,7 @@ def _plot_metrics(ax: Axes, graph: EvaluatedGraph, visible: TimeRange) -> None:
 
 def _values_drawn_on(
     visible: TimeRange, times: Sequence[int], values: npt.NDArray[np.float64]
-) -> list[float]:
+) -> Sequence[float]:
     """Like Vue's valuesDrawnOn (composeSeries.ts): the samples on the plot, and where a segment
     crosses an edge of it, the value at that edge. The samples beyond the edges are not drawn."""
     at = np.asarray(times, dtype=np.float64)

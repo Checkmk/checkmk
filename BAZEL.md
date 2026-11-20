@@ -145,12 +145,12 @@ prints the rest.
 
 ## Dependencies
 
-| I want to …                                              | Command                                                 |
-| -------------------------------------------------------- | ------------------------------------------------------- |
-| Relock Python after editing a `*.in` file                | `bazel run //:lock_python_requirements`                 |
-| Upgrade one or all Python packages                       | `scripts/update_python_libs.py [--package <name>]`      |
-| Update `MODULE.bazel.lock` after a `MODULE.bazel` change | `bazel mod deps --lockfile_mode=update`                 |
-| Update a JavaScript package                              | `bazel run -- @pnpm//:pnpm --dir $PWD update <package>` |
+| I want to …                                              | Command                                                    |
+| -------------------------------------------------------- | ---------------------------------------------------------- |
+| Relock Python after editing a `*.in` file                | `bazel run //:lock_python_requirements`                    |
+| Upgrade one or all Python packages                       | `python3 scripts/update_python_libs.py [--package <name>]` |
+| Update `MODULE.bazel.lock` after a `MODULE.bazel` change | `bazel mod deps --lockfile_mode=update`                    |
+| Update a JavaScript package                              | `bazel run -- @pnpm//:pnpm --dir $PWD update -r <package>` |
 
 ## Building and deploying
 
@@ -160,7 +160,8 @@ prints the rest.
 | Deploy my changes to a local site | `./scripts/cmk-dev-deploy.py`                                                           |
 | Start the frontend dev server     | `bazel run //bazel/tools/devserver -- //packages/cmk-frontend-vue:vite`                 |
 
-- `//omd:rpm` builds an RPM. The packages end up in `bazel-bin/omd/`;
+- `//omd:rpm` builds an RPM and requires an RPM distro, e.g.
+  `--cmk_distro=almalinux-9`. The packages end up in `bazel-bin/omd/`;
   [Build settings](#build-settings) explains the flags.
 - The package builds aren't hermetic yet: CI runs them in the Docker images of
   `buildscripts/infrastructure/build-nodes/`, which depend on our

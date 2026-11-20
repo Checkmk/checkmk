@@ -76,7 +76,7 @@ def sort_naturally(a: str, b: str) -> int:
 
 def _natural_sort_keys(s: str) -> tuple[tuple[NaturalSortChunk, ...], tuple[NaturalSortChunk, ...]]:
     # Split into alternating text/digit chunks, e.g. "CPU load 07x" -> ["CPU load ", "07", "x"].
-    chunks = [int(chunk) if chunk.isdigit() else str(chunk) for chunk in _DIGIT_REGEX.split(s)]
+    chunks = [int(chunk) if chunk.isdecimal() else str(chunk) for chunk in _DIGIT_REGEX.split(s)]
     sort_key = tuple(chunk.lower() if isinstance(chunk, str) else chunk for chunk in chunks)
     tiebreak_key = tuple(chunks)
     return sort_key, tiebreak_key

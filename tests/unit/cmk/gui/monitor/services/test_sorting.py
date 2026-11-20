@@ -328,6 +328,10 @@ def test_sort_naturally_equal(a: str, b: str) -> None:
         ("ab1", "abc"),
         ("Interface", "interface"),
         ("INTERFACE 10", "interface 10"),
+        # Superscript and subscript digits are no decimal digits: they stay text.
+        ("Zone 2²", "Zone 3"),
+        ("H₂O", "H₃O"),
+        ("10²", "10³"),
     ],
 )
 def test_sort_naturally_string_number_combinations(a: str, b: str) -> None:

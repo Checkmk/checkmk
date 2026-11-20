@@ -2852,6 +2852,19 @@ class SiteFactory:
                 ]
             )
 
+        # A dialog behind the abort would end on EOF and report the exit code of the abort.
+        if conflict_mode == "ask" and not abort:
+            pexpect_dialogs.extend(
+                [
+                    PExpectDialog(
+                        # Only an update from a version before 3.0 asks this.
+                        expect="Keep the classic layout",
+                        send="k\r",
+                        optional=True,
+                    )
+                ]
+            )
+
         with (
             replace_package_ca_certificate(
                 package_root=Path(target_package.version_path()),

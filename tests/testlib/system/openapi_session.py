@@ -2413,24 +2413,6 @@ class DataBackendAPI(BaseAPI):
             {"type": "enabled", "remote_access": {"type": "enabled", "address": address}},
         )
 
-    def open_to_the_central(
-        self, site_id: str, address: str, address_reachable_by_central: str
-    ) -> None:
-        self._request(
-            site_id,
-            {
-                "type": "enabled",
-                "central_access": {
-                    "type": "enabled",
-                    "address": address,
-                    "address_reachable_by_central": address_reachable_by_central,
-                },
-            },
-        )
-
-    def close_to_the_central(self, site_id: str) -> None:
-        self._request(site_id, {"type": "enabled", "central_access": {"type": "disabled"}})
-
     def place_features(
         self,
         site_id: str,

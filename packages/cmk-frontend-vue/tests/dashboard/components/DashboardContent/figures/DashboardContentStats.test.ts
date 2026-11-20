@@ -6,9 +6,11 @@
 import { render, screen } from '@testing-library/vue'
 import { restApiHttp } from 'cmk-ui-library/vitest.msw'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { defineComponent, h, ref } from 'vue'
 
 import DashboardContentStats from '@/dashboard/components/DashboardContent/figures/DashboardContentStats.vue'
-import type { Stats, StatsContent } from '@/dashboard/types/widget'
+import { useProvideDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
+import type { LinkProperties, Stats, StatsContent } from '@/dashboard/types/widget'
 
 import { useComputeWidgetEndpoint } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
@@ -25,12 +27,28 @@ const HOST_STATS: Stats = {
   total: { count: 15, link_properties: { links: [] } }
 }
 
+const DEFERRED_SITES: LinkProperties = { links: [{ sites: { status: 'deferred' } }] }
+
+const LINKED_HOST_STATS: Stats = {
+  ...HOST_STATS,
+  links: [
+    {
+      title: 'All hosts',
+      location: { type: 'views', name: 'allhosts' },
+      include_context: false,
+      include_time_range: false,
+      show_filter_form: false
+    }
+  ],
+  total: { ...HOST_STATS.total, link_properties: DEFERRED_SITES }
+}
+
 const PROPS = makeContentProps<StatsContent>({
   type: 'host_stats',
   contextual_link: { type: 'default' }
 })
 
-useComputeWidgetEndpoint(
+const endpoint = useComputeWidgetEndpoint(
   restApiHttp.post,
   '/domain-types/dashboard/actions/compute-stats/invoke',
   HOST_STATS
@@ -52,5 +70,23 @@ describe('DashboardContentStats', () => {
     render(DashboardContentStats, { props: PROPS })
 
     expect(await screen.findByRole('img', { name: 'Down: 3' })).toBeInTheDocument()
+  })
+
+  it('leads the total to the page that values its filters, naming the dashboard it leaves', async () => {
+    endpoint.answerInThisTest(LINKED_HOST_STATS)
+    const dashboard = defineComponent({
+      setup() {
+        useProvideDrillDownSource(ref('Overview'))
+        return () => h(DashboardContentStats, PROPS)
+      }
+    })
+    render(dashboard)
+
+    const href = (await screen.findByRole('link', { name: /Total/ })).getAttribute('href')!
+
+    expect(href.startsWith('dashboard_stats_link.py?')).toBe(true)
+    const variables = new URLSearchParams(href.split('?')[1])
+    expect(variables.get('part')).toBe('total')
+    expect(variables.get('_drilled_from')).toBe('Overview')
   })
 })

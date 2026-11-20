@@ -12,6 +12,8 @@ from logging import DEBUG, Logger
 from pathlib import Path
 from typing import Any, override
 
+import pyasn1.codec.ber.decoder
+import pyasn1.error
 import pysnmp.carrier.base
 import pysnmp.debug
 import pysnmp.entity.config
@@ -19,6 +21,7 @@ import pysnmp.entity.engine
 import pysnmp.entity.rfc3413.ntfrcv
 import pysnmp.proto.api
 import pysnmp.proto.errind
+import pysnmp.proto.mpmod.rfc3412
 import pysnmp.proto.rfc1155
 import pysnmp.proto.rfc1902
 import pysnmp.proto.rfc3411
@@ -132,10 +135,11 @@ class SNMPTrapParser:
             b"", pysnmp.proto.rfc3411.CONFIRMED_CLASS_PDUS, self._drop_request
         )
         self._varbinds_and_ipaddress: tuple[Iterable[tuple[str, str]], str] | None = None
+        self._message = b""
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
 
         self.snmp_engine.observer.register_observer(
-            self._handle_unauthenticated_snmptrap,
+            self._log_rejected_message,
             "rfc2576.prepareDataElements:sm-failure",
             "rfc3412.prepareDataElements:sm-failure",
         )
@@ -236,10 +240,11 @@ class SNMPTrapParser:
         """
         self._logger.log(
             VERBOSE,
-            "Trap received from %s:%d. Checking for acceptance now.",
+            "Message received from %s:%d. Checking for acceptance now.",
             sender_address[0],
             sender_address[1],
         )
+        self._message = data
         self._varbinds_and_ipaddress = None
         self._receiver.error = None
         self.snmp_engine.set_user_context(sender_address=sender_address)
@@ -326,6 +331,10 @@ class SNMPTrapParser:
     @staticmethod
     def _pdu_name(pdu: Any) -> str:
         """What we call a PDU in log messages"""
+        if pdu is None:  # encrypted
+            return "Message"
+        if pdu.tagSet in SNMPTrapParser._ECNotificationReceiver.SUPPORTED_PDU_TYPES:
+            return "Trap"
         return type(pdu).__name__.removesuffix("PDU")
 
     def _log_snmptrap_details(
@@ -347,13 +356,15 @@ class SNMPTrapParser:
             for name, val in var_binds:
                 self._logger.log(VERBOSE, "%-40s = %s", name.prettyPrint(), val.prettyPrint())
 
-    def _handle_unauthenticated_snmptrap(
+    def _log_rejected_message(
         self,
         snmp_engine: pysnmp.entity.engine.SnmpEngine,
         execpoint: str,
         variables: Mapping[str, Any],
         cb_ctx: None,
     ) -> None:
+        if not self._logger.isEnabledFor(VERBOSE):
+            return  # Avoids decoding messages twice.
         # 1, 2 and 3 for SNMPv1, SNMPv2c and SNMPv3
         version = int(variables["securityModel"])
         if (
@@ -372,13 +383,35 @@ class SNMPTrapParser:
             # Not the whole status: Its scoped PDU alone can take 100 KB.
             msg = str(variables["statusInformation"]["errorIndication"])
 
+        pdu = self._rejected_pdu(version)
         self._logger.log(
             VERBOSE,
-            "Trap (%s) dropped from %s: %s",
+            "%s (%s) dropped from %s: %s",
+            self._pdu_name(pdu),
             _snmp_version(version),
             variables["transportAddress"][0],
             msg,
         )
+
+    def _rejected_pdu(self, version: int) -> Any:
+        """The PDU of the message PySNMP rejected, unless it's encrypted"""
+        # PySNMP hands it over only for some SNMPv3 failures, so decode it again.
+        try:
+            if version == 3:
+                message, _ = pyasn1.codec.ber.decoder.decode(
+                    self._message, asn1Spec=pysnmp.proto.mpmod.rfc3412.SNMPv3Message()
+                )
+                data = message["msgData"]
+                if data.getName() != "plaintext":
+                    return None
+                return data["plaintext"]["data"].getComponent()
+            proto = pysnmp.proto.api.PROTOCOL_MODULES[
+                {1: pysnmp.proto.api.SNMP_VERSION_1, 2: pysnmp.proto.api.SNMP_VERSION_2C}[version]
+            ]
+            message, _ = pyasn1.codec.ber.decoder.decode(self._message, asn1Spec=proto.Message())
+            return proto.apiMessage.get_pdu(message)
+        except pyasn1.error.PyAsn1Error:
+            return None
 
 
 class SNMPTrapTranslator:

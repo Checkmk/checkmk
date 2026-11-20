@@ -6,6 +6,7 @@ import datetime
 import io
 import traceback
 from collections.abc import Iterator, Sequence
+from dataclasses import dataclass
 
 import numpy as np
 import numpy.typing as npt
@@ -80,25 +81,33 @@ def _values(curve: EvaluatedCurve, *, sign: float = 1.0) -> npt.NDArray[np.float
     return _series_values(curve.time_series) * sign
 
 
+@dataclass(frozen=True, kw_only=True)
 class _CurveScalars:
+    title: str
+    color: str
+    minimum: float | None
+    maximum: float | None
+    average: float | None
+    last: float | None
+
+
+def _curve_scalars(curve: EvaluatedCurve) -> _CurveScalars:
     """Of the curve's own values: mirroring below zero only changes where a curve is drawn, so
     the legend reports the values unmirrored."""
-
-    __slots__ = ("title", "color", "minimum", "maximum", "average", "last")
-
-    def __init__(self, curve: EvaluatedCurve) -> None:
-        raw = _values(curve)
-        finite = raw[~np.isnan(raw)]
-        self.title = curve.attributes.title
-        self.color = curve.attributes.color
-        self.minimum: float | None = float(np.min(finite)) if finite.size else None
-        self.maximum: float | None = float(np.max(finite)) if finite.size else None
-        self.average: float | None = float(np.mean(finite)) if finite.size else None
-        self.last: float | None = last_present(curve.time_series.values)
+    raw = _values(curve)
+    finite = raw[~np.isnan(raw)]
+    return _CurveScalars(
+        title=curve.attributes.title,
+        color=curve.attributes.color,
+        minimum=float(np.min(finite)) if finite.size else None,
+        maximum=float(np.max(finite)) if finite.size else None,
+        average=float(np.mean(finite)) if finite.size else None,
+        last=last_present(curve.time_series.values),
+    )
 
 
-def _graph_scalars(graph: EvaluatedGraph) -> list[_CurveScalars]:
-    return [_CurveScalars(drawn.curve) for drawn in drawn_curves(graph.stacks, graph.lines)]
+def _graph_scalars(graph: EvaluatedGraph) -> Sequence[_CurveScalars]:
+    return [_curve_scalars(drawn.curve) for drawn in drawn_curves(graph.stacks, graph.lines)]
 
 
 def _stack_extents(

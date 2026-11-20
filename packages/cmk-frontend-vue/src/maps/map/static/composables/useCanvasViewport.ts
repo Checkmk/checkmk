@@ -63,6 +63,11 @@ export interface CanvasViewport {
   /** The nearest scrolling ancestor, which panning and zooming move. */
   scroller: () => HTMLElement | null
   /**
+   * Whether the canvas is larger than its pane, so that there is somewhere to
+   * pan to: zoomed in, or drawn by the classic renderer at a size beyond it.
+   */
+  overflows: ComputedRef<boolean>
+  /**
    * The canvas element's measured size. Anything that reads the rendered DOM
    * depends on it, so that the measurement re-runs when the canvas resizes.
    */
@@ -286,6 +291,18 @@ export function useCanvasViewport(source: {
     return base
   })
 
+  const overflows = computed(() => {
+    if (zoom.value > 1) {
+      return true
+    }
+    const pane = paneSize.value
+    // Before the pane is measured, every canvas would seem to overflow it.
+    if (!pane.width || !pane.height) {
+      return false
+    }
+    return source.classic() && (source.width() > pane.width || source.height() > pane.height)
+  })
+
   const scale = computed(() => ({
     sx: source.width() > 0 ? displaySize.value.width / source.width() : 1,
     sy: source.height() > 0 ? displaySize.value.height / source.height() : 1
@@ -318,6 +335,7 @@ export function useCanvasViewport(source: {
     // Read through a ref so the value is current even when the canvas remounted
     // after this composable ran.
     scroller: () => pane.value,
+    overflows,
     displaySize,
     restingPane
   }

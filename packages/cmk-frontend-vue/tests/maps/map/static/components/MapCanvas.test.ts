@@ -71,6 +71,14 @@ const baseProps = {
 }
 
 describe('MapCanvas', () => {
+  // The pointer shape is style state with no accessible representation.
+  it('shows an administrator a clickable object outside the editor, not one to drag', () => {
+    render(MapCanvas, { props: { ...baseProps, isAdmin: true }, global: mapsGlobal(overlayStubs) })
+
+    const object = screen.getByRole('button', { name: 'localhost, Up' })
+    expect(object.closest<HTMLElement>('[data-object-id]')!.style.cursor).toBe('pointer')
+  })
+
   it('renders each object as an accessible button named "<name>, <state word>"', () => {
     render(MapCanvas, { props: baseProps, global: mapsGlobal(stubs) })
 

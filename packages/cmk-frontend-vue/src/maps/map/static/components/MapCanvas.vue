@@ -212,9 +212,7 @@ watch(
 const pan = useCanvasPan({
   canvas: () => canvas.value,
   scroller: viewport.scroller,
-  // The canvas overflows its pane either because the operator zoomed in, or
-  // because the classic renderer draws at native size.
-  pannable: () => viewport.zoom.value > 1 || classic.value
+  pannable: () => viewport.overflows.value
 })
 
 const menus = useMapObjectMenus({
@@ -248,7 +246,6 @@ const layout = useCanvasLayout({
   filterNeedle: () => props.filterNeedle,
   problemsOnly: () => props.problemsOnly,
   editMode: () => props.editMode,
-  isAdmin: () => props.isAdmin,
   classic: () => classic.value,
   draggingId: drag.draggingId,
   dragPositions: () => drag.positions
@@ -281,9 +278,7 @@ const cursorClass = computed(() => {
   if (pan.active.value) {
     return 'maps-map-canvas--panning'
   }
-  return !props.editMode && (viewport.zoom.value > 1 || classic.value)
-    ? 'maps-map-canvas--pannable'
-    : ''
+  return !props.editMode && viewport.overflows.value ? 'maps-map-canvas--pannable' : ''
 })
 
 function isSelected(id: string): boolean {

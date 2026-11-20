@@ -51,8 +51,8 @@ afterEach(() => {
   pane?.remove()
 })
 
-/** A default-renderer canvas inside a 1000×600 scrolling pane. */
-async function viewportInPane() {
+/** A canvas inside a 1000×600 scrolling pane, by default one the default renderer fills. */
+async function viewportInPane(map = { classic: false, width: 1000, height: 600 }) {
   vi.stubGlobal('ResizeObserver', ReportingResizeObserver)
   const host = document.body.appendChild(document.createElement('div'))
   pane = host
@@ -66,11 +66,11 @@ async function viewportInPane() {
     useCanvasViewport({
       canvas,
       config: () => aMap({ name: 'm', view: newMapView('static') }),
-      width: () => 1000,
-      height: () => 600,
+      width: () => map.width,
+      height: () => map.height,
       editMode: () => false,
       preview: () => false,
-      classic: () => false,
+      classic: () => map.classic,
       centered: () => false,
       backgroundUrl: () => null,
       backgroundSize: () => null,
@@ -128,6 +128,26 @@ describe('useCanvasViewport', () => {
     await nextTick()
 
     expect(viewport.restingPane.value).toEqual({ width: 800, height: 500 })
+  })
+
+  it('has nowhere to pan a classic map that fits its pane', async () => {
+    const { viewport } = await viewportInPane({ classic: true, width: 800, height: 500 })
+
+    expect(viewport.overflows.value).toBe(false)
+  })
+
+  it('pans a classic map wider than its pane', async () => {
+    const { viewport } = await viewportInPane({ classic: true, width: 1200, height: 500 })
+
+    expect(viewport.overflows.value).toBe(true)
+  })
+
+  it('pans a map zoomed in', async () => {
+    const { viewport } = await viewportInPane()
+
+    viewport.zoom.value = 2
+
+    expect(viewport.overflows.value).toBe(true)
   })
 
   // The canvas may be larger than the image when objects lie beyond it; the

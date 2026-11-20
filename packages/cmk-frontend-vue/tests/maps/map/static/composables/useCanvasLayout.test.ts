@@ -26,7 +26,6 @@ function layoutOf(
     filterNeedle: () => undefined,
     problemsOnly: () => problemsOnly,
     editMode: () => false,
-    isAdmin: () => false,
     classic: () => false,
     draggingId: () => null,
     dragPositions: () => dragPositions.value

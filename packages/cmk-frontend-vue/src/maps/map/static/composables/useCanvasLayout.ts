@@ -54,7 +54,6 @@ export function useCanvasLayout(source: {
   filterNeedle: () => string | undefined
   problemsOnly: () => boolean | undefined
   editMode: () => boolean
-  isAdmin: () => boolean | undefined
   /** The NagVis-compatible renderer, which anchors top-left, not centred. */
   classic: () => boolean
   draggingId: () => string | null
@@ -120,7 +119,7 @@ export function useCanvasLayout(source: {
   }
 
   function cursorFor(object: MapElement): string {
-    if (source.editMode() || source.isAdmin()) {
+    if (source.editMode()) {
       return source.draggingId() === object.id ? 'grabbing' : 'grab'
     }
     return source.config().click_action !== 'none' ? 'pointer' : 'default'

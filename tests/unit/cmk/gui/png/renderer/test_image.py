@@ -36,13 +36,13 @@ from cmk.gui.png._size import _MM_PER_INCH
 from cmk.gui.png._wire import PngGraph, PngOptions, PngTexts, RenderingFailure
 from cmk.gui.png.renderer._image import (
     _agg_renderer,
+    _areas,
     _DPI,
     _fit_time_axis,
     _graph_time_caption,
     _legend,
     _mirrored_y_labels,
-    _plot_metrics,
-    _plot_stack,
+    _plot,
     _rules_in_range,
     _vertical_range_bounds,
     _y_range,
@@ -54,6 +54,7 @@ from cmk.web.utils.unit_formatter import DecimalFormatter
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)
 _VISIBLE_TIME_RANGE = (_TIME_RANGE.start, _TIME_RANGE.end)
+_Y_RANGE = (0.0, 10.0)
 
 
 def _options(*, show_legend: bool) -> PngOptions:
@@ -103,28 +104,18 @@ def test_second_area_stacks_onto_the_first_not_onto_zero() -> None:
     second = _curve("second", [10.0, 20.0, 30.0])
     stack = EvaluatedStack(members=[first, second], inverse=False)
 
-    fig = Figure()
-    ax = fig.add_subplot(1, 1, 1)
-    _plot_stack(ax, stack, [0, 60, 120])
+    areas = list(_areas(stack, [0, 60, 120]))
 
-    # Two fill_between calls: one per stacked member, in stacking order.
-    assert len(ax.collections) == 2
-    second_poly = np.asarray(ax.collections[1].get_paths()[0].vertices)
-    # The second member's polygon must reach up to first + second (33 at the last point,
-    # since 3.0 + 30.0 = 33.0), not just 30.0 (second alone) as the pre-fix bug produced.
-    assert np.isclose(second_poly[:, 1].max(), 33.0)
+    assert areas[1].top == [11.0, 22.0, 33.0]
 
 
 def test_mirrored_stack_is_drawn_below_zero() -> None:
     member = _curve("inverse-member", [5.0, 5.0])
     stack = EvaluatedStack(members=[member], inverse=True)
 
-    fig = Figure()
-    ax = fig.add_subplot(1, 1, 1)
-    _plot_stack(ax, stack, [0, 60])
+    (area,) = _areas(stack, [0, 60])
 
-    top_values = np.asarray(ax.collections[0].get_paths()[0].vertices)[:, 1]
-    assert top_values.max() <= 0
+    assert area.top == [-5.0, -5.0]
 
 
 def test_the_legend_shows_the_curves_own_maxima_not_their_stacked_position() -> None:
@@ -408,7 +399,7 @@ def test_the_image_has_the_size_computed_for_it_with_a_legend() -> None:
     )
 
 
-def test_plot_metrics_spans_the_full_time_range_despite_a_long_leading_gap() -> None:
+def test_plot_spans_the_full_time_range_despite_a_long_leading_gap() -> None:
     """Regression test for CMK-38506."""
     time_range = TimeRange(start=0, end=720, step=60)
     curve = EvaluatedCurve(
@@ -428,12 +419,12 @@ def test_plot_metrics_spans_the_full_time_range_despite_a_long_leading_gap() -> 
 
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
-    _plot_metrics(ax, graph, graph.time_range)
+    _plot(ax, graph, graph.time_range, _Y_RANGE)
 
     assert ax.get_xlim() == (time_range.start, time_range.end)
 
 
-def test_plot_metrics_spans_the_full_time_range_for_an_entirely_empty_curve() -> None:
+def test_plot_spans_the_full_time_range_for_an_entirely_empty_curve() -> None:
     curve = _curve("m", [None, None, None])
     graph = EvaluatedGraph(
         name="g",
@@ -446,19 +437,19 @@ def test_plot_metrics_spans_the_full_time_range_for_an_entirely_empty_curve() ->
 
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
-    _plot_metrics(ax, graph, graph.time_range)
+    _plot(ax, graph, graph.time_range, _Y_RANGE)
 
     assert ax.get_xlim() == (_TIME_RANGE.start, _TIME_RANGE.end)
 
 
-def test_plot_metrics_spans_the_time_range_of_a_graph_without_curves() -> None:
+def test_plot_spans_the_time_range_of_a_graph_without_curves() -> None:
     graph = EvaluatedGraph(
         name="g", title="Empty", time_range=_TIME_RANGE, vertical_range=None, stacks=[], lines=[]
     )
 
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
-    _plot_metrics(ax, graph, graph.time_range)
+    _plot(ax, graph, graph.time_range, _Y_RANGE)
 
     assert ax.get_xlim() == (_TIME_RANGE.start, _TIME_RANGE.end)
 
@@ -481,7 +472,7 @@ def test_time_axis_of_a_multi_day_graph_is_labelled_with_weekday_and_time() -> N
     )
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
-    _plot_metrics(ax, graph, graph.time_range)
+    _plot(ax, graph, graph.time_range, _Y_RANGE)
 
     _fit_time_axis(ax, _agg_renderer(fig), _OPTIONS, None)
 
@@ -502,13 +493,13 @@ def test_values_are_drawn_at_their_bucket_end_like_the_vue_graph() -> None:
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
 
-    _plot_metrics(ax, graph, graph.time_range)
+    _plot(ax, graph, graph.time_range, _Y_RANGE)
 
     (line,) = ax.get_lines()
     assert np.asarray(line.get_xdata()).tolist() == [60, 120, 180]
 
 
-def test_plot_metrics_spans_the_visible_range_even_between_samples() -> None:
+def test_plot_spans_the_visible_range_even_between_samples() -> None:
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
@@ -520,7 +511,7 @@ def test_plot_metrics_spans_the_visible_range_even_between_samples() -> None:
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
 
-    _plot_metrics(ax, graph, TimeRange(start=90, end=150, step=60))
+    _plot(ax, graph, TimeRange(start=90, end=150, step=60), _Y_RANGE)
 
     assert ax.get_xlim() == (90, 150)
 
@@ -568,7 +559,7 @@ def test_time_axis_is_labelled_in_the_given_time_zone() -> None:
     def labels(tz: ZoneInfo) -> list[str]:
         fig = Figure()
         ax = fig.add_subplot(1, 1, 1)
-        _plot_metrics(ax, graph, graph.time_range)
+        _plot(ax, graph, graph.time_range, _Y_RANGE)
         _fit_time_axis(ax, _agg_renderer(fig), _OPTIONS, tz)
         return [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
 

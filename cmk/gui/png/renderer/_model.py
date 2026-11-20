@@ -8,6 +8,32 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True, kw_only=True)
+class Area:
+    color: str
+    bottom: Sequence[float]
+    top: Sequence[float | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class Line:
+    color: str
+    values: Sequence[float | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class Region:
+    color: str
+    lower: Sequence[float | None]
+    upper: Sequence[float | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class Rule:
+    color: str
+    value: float
+
+
+@dataclass(frozen=True, kw_only=True)
 class AxisLabel:
     position: float
     text: str

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
 import io
+import math
 import traceback
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
@@ -28,6 +29,7 @@ from cmk.graphing_engine import (
     drawn_curves,
     EvaluatedCurve,
     EvaluatedGraph,
+    EvaluatedLine,
     EvaluatedRule,
     EvaluatedStack,
     EvaluatedVerticalRange,
@@ -43,7 +45,7 @@ from cmk.gui.png._wire import PngGraph, PngOptions, PngTexts, RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.unit_formatter import Label, NotationFormatter
 
-from ._model import AxisLabel, Legend, LegendRow, VerticalAxis
+from ._model import Area, AxisLabel, Legend, LegendRow, Line, Region, Rule, VerticalAxis
 from ._time_axis import compute_time_axis
 
 _DPI = 96
@@ -85,6 +87,10 @@ def _series_values(series: TimeSeries) -> npt.NDArray[np.float64]:
 
 def _values(curve: EvaluatedCurve, *, sign: float = 1.0) -> npt.NDArray[np.float64]:
     return _series_values(curve.time_series) * sign
+
+
+def _optional_values(values: npt.NDArray[np.float64]) -> Sequence[float | None]:
+    return [None if math.isnan(value) else value for value in values.tolist()]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -131,62 +137,42 @@ def _stack_extents(
     return extents
 
 
-def _plot_stack(ax: Axes, stack: EvaluatedStack, times: Sequence[int]) -> None:
+def _areas(stack: EvaluatedStack, times: Sequence[int]) -> Iterator[Area]:
     for member, (bottom, top, has_value) in zip(
         stack.members, _stack_extents(stack, times), strict=True
     ):
-        ax.fill_between(
-            times, bottom, top, where=has_value, color=member.attributes.color, alpha=0.4
-        )
-        ax.plot(
-            times,
-            np.where(has_value, top, np.nan),
+        yield Area(
             color=member.attributes.color,
-            linewidth=0.5,
+            bottom=bottom.tolist(),
+            top=_optional_values(np.where(has_value, top, np.nan)),
         )
 
 
-def _plot_regions(ax: Axes, graph: EvaluatedGraph) -> None:
-    if not graph.regions:
-        return
-    times = timestamps(graph.time_range)
+def _line(line: EvaluatedLine) -> Line:
+    return Line(
+        color=line.curve.attributes.color,
+        values=_optional_values(_values(line.curve, sign=_mirroring_sign(mirrored=line.inverse))),
+    )
+
+
+def _regions(
+    graph: EvaluatedGraph, times: Sequence[int], y_range: tuple[float, float]
+) -> Sequence[Region]:
     if not times:
-        return
-    floor, ceiling = ax.get_ylim()
-    for region in graph.regions:
-        lower = np.full(len(times), floor) if region.lower is None else _series_values(region.lower)
-        upper = (
-            np.full(len(times), ceiling) if region.upper is None else _series_values(region.upper)
-        )
-        ax.fill_between(
-            times,
-            lower,
-            upper,
-            where=~(np.isnan(lower) | np.isnan(upper)),
+        return []
+    floor, ceiling = y_range
+    return [
+        Region(
             color=region.attributes.color,
-            alpha=_REGION_FILL_ALPHA,
-            zorder=0,
+            lower=[floor] * len(times)
+            if region.lower is None
+            else _optional_values(_series_values(region.lower)),
+            upper=[ceiling] * len(times)
+            if region.upper is None
+            else _optional_values(_series_values(region.upper)),
         )
-
-
-def _plot_metrics(ax: Axes, graph: EvaluatedGraph, visible: TimeRange) -> None:
-    times = timestamps(graph.time_range)
-
-    for stack in graph.stacks:
-        if stack.members:
-            _plot_stack(ax, stack, times)
-
-    for line in graph.lines:
-        sign = _mirroring_sign(mirrored=line.inverse)
-        ax.plot(
-            times,
-            _values(line.curve, sign=sign),
-            color=line.curve.attributes.color,
-        )
-
-    ax.margins(y=0)
-
-    ax.set_xlim(visible.start, visible.end)
+        for region in graph.regions
+    ]
 
 
 def _values_drawn_on(
@@ -271,15 +257,15 @@ def _y_range(lower: float | None, upper: float | None, *, is_mirrored: bool) -> 
     return lower, upper
 
 
-def _rules_in_range(
-    rules: Sequence[EvaluatedRule], limits: tuple[float, float]
-) -> Sequence[EvaluatedRule]:
-    lower, upper = limits
-    return [
-        rule
-        for rule in rules
-        if lower <= _mirroring_sign(mirrored=rule.inverse) * rule.value <= upper
-    ]
+def _rule(rule: EvaluatedRule) -> Rule:
+    return Rule(
+        color=rule.attributes.color, value=_mirroring_sign(mirrored=rule.inverse) * rule.value
+    )
+
+
+def _rules_in_range(rules: Sequence[EvaluatedRule], y_range: tuple[float, float]) -> Sequence[Rule]:
+    lower, upper = y_range
+    return [drawn for drawn in (_rule(rule) for rule in rules) if lower <= drawn.value <= upper]
 
 
 def _resolution_label(step: int) -> str:
@@ -398,6 +384,61 @@ def _apply_render_config(
         )
 
     return title_artist
+
+
+def _array(values: Sequence[float | None]) -> npt.NDArray[np.float64]:
+    return np.array([np.nan if value is None else value for value in values], dtype=np.float64)
+
+
+def _plot_area(ax: Axes, times: Sequence[int], area: Area) -> None:
+    top = _array(area.top)
+    has_value = ~np.isnan(top)
+    ax.fill_between(
+        times,
+        area.bottom,
+        np.where(has_value, top, area.bottom),
+        where=has_value,
+        color=area.color,
+        alpha=0.4,
+    )
+    ax.plot(times, top, color=area.color, linewidth=0.5)
+
+
+def _plot_line(ax: Axes, times: Sequence[int], line: Line) -> None:
+    ax.plot(times, _array(line.values), color=line.color)
+
+
+def _plot_region(ax: Axes, times: Sequence[int], region: Region) -> None:
+    lower = _array(region.lower)
+    upper = _array(region.upper)
+    ax.fill_between(
+        times,
+        lower,
+        upper,
+        where=~(np.isnan(lower) | np.isnan(upper)),
+        color=region.color,
+        alpha=_REGION_FILL_ALPHA,
+        zorder=0,
+    )
+
+
+def _plot(
+    ax: Axes, graph: EvaluatedGraph, visible: TimeRange, y_range: tuple[float, float]
+) -> None:
+    times = timestamps(graph.time_range)
+    for stack in graph.stacks:
+        for area in _areas(stack, times):
+            _plot_area(ax, times, area)
+    for line in graph.lines:
+        _plot_line(ax, times, _line(line))
+    ax.set_xlim(visible.start, visible.end)
+    # Set explicitly (not just autoscaled) *before* the rules below are drawn, so a rule far
+    # outside the data's range doesn't stretch the view via matplotlib's own autoscale.
+    ax.set_ylim(*y_range)
+    for region in _regions(graph, times, y_range):
+        _plot_region(ax, times, region)
+    for rule in _rules_in_range(graph.rules, y_range):
+        ax.axhline(rule.value, color=rule.color)
 
 
 def _agg_renderer(fig: Figure) -> RendererBase:
@@ -662,14 +703,7 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
     else:
         ax = fig.add_subplot(1, 1, 1)
     ax.set_facecolor(_BACKGROUND_COLOR)
-    _plot_metrics(ax, graph, visible)
-    # Set explicitly (not just autoscaled) *before* the rules below are drawn, so a rule far
-    # outside the data's range doesn't stretch the view via matplotlib's own autoscale.
-    ax.set_ylim(*limits)
-    _plot_regions(ax, graph)
-    for rule in _rules_in_range(graph.rules, limits):
-        sign = _mirroring_sign(mirrored=rule.inverse)
-        ax.axhline(sign * rule.value, color=rule.attributes.color)
+    _plot(ax, graph, visible, limits)
     title_artist = _apply_render_config(
         ax,
         renderer,

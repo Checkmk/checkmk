@@ -263,15 +263,10 @@ def _y_axis_limits(
 
 
 def _rules_in_range(
-    rules: Sequence[EvaluatedRule], lower: float | None, upper: float | None
+    rules: Sequence[EvaluatedRule], limits: tuple[float, float]
 ) -> Sequence[EvaluatedRule]:
-    if lower is None and upper is None:
-        return rules
-    return [
-        rule
-        for rule in rules
-        if (lower is None or rule.value >= lower) and (upper is None or rule.value <= upper)
-    ]
+    lower, upper = limits
+    return [rule for rule in rules if lower <= _mirroring_sign(rule.inverse) * rule.value <= upper]
 
 
 def _resolution_label(step: int) -> str:
@@ -573,9 +568,7 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
     is_mirrored = any(drawn.inverse for drawn in drawn_curves(graph.stacks, graph.lines))
     visible = _visible_time_range(graph, png_graph.visible_time_range)
     lower, upper = _vertical_range_bounds(graph, visible)
-    # The legend always lists every rule (e.g. warning/critical), even ones outside the visible
-    # Y range; only the drawn horizontal lines are restricted to the in-range subset.
-    in_range_rules = _rules_in_range(graph.rules, lower, upper)
+    limits = _y_axis_limits(lower, upper, is_mirrored=is_mirrored)
     table_height_ex = legend_height_ex(graph, png_graph.options)
 
     width_in = ex_to_inches(png_graph.options.size[0], png_graph.options.font_size)
@@ -599,9 +592,9 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
     _plot_metrics(ax, graph, visible)
     # Set explicitly (not just autoscaled) *before* the rules below are drawn, so a rule far
     # outside the data's range doesn't stretch the view via matplotlib's own autoscale.
-    ax.set_ylim(*_y_axis_limits(lower, upper, is_mirrored=is_mirrored))
+    ax.set_ylim(*limits)
     _plot_regions(ax, graph)
-    for rule in in_range_rules:
+    for rule in _rules_in_range(graph.rules, limits):
         sign = _mirroring_sign(rule.inverse)
         ax.axhline(sign * rule.value, color=rule.attributes.color)
     title_artist = _apply_render_config(

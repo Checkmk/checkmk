@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import io
 import re
 import struct
 from zoneinfo import ZoneInfo
@@ -28,6 +29,7 @@ from cmk.graphing_engine import (
 
 matplotlib.use("Agg")
 from matplotlib.figure import Figure
+from matplotlib.image import imread
 
 from cmk.gui.png import compute_png_size_mm
 from cmk.gui.png._size import MM_PER_INCH
@@ -274,8 +276,8 @@ def test_far_away_rule_is_clipped_and_does_not_stretch_the_axis() -> None:
     )
 
     lower, upper = _vertical_range_bounds(graph, graph.time_range)
-    rules = _rules_in_range(graph.rules, lower, upper)
     limits = _y_axis_limits(lower, upper, is_mirrored=False)
+    rules = _rules_in_range(graph.rules, limits)
 
     assert rules == []
     assert limits[1] < 100000.0
@@ -785,6 +787,44 @@ def test_a_fixed_range_open_at_the_top_follows_the_data_there() -> None:
     )
 
     assert _vertical_range_bounds(graph, graph.time_range) == (0.0, 3.0)
+
+
+def test_the_rules_of_a_mirrored_graph_are_drawn() -> None:
+    graph = EvaluatedGraph(
+        name="g",
+        title="",
+        time_range=_TIME_RANGE,
+        vertical_range=None,
+        stacks=[],
+        lines=[EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=True)],
+        rules=[
+            EvaluatedRule(
+                id="warn",
+                attributes=CurveAttributes(title="Warn", unit=_UNIT, color="#ff0000"),
+                value=2.0,
+                inverse=True,
+            )
+        ],
+    )
+
+    (png,) = render_pngs(
+        [
+            PngGraph(
+                graph=graph,
+                options=_options(show_legend=False),
+                y_axis_unit=None,
+                requested_vertical_range=None,
+                time_zone=None,
+                visible_time_range=_VISIBLE_TIME_RANGE,
+            )
+        ],
+        _TEXTS,
+        TemperatureUnit.CELSIUS,
+    )
+
+    assert isinstance(png, bytes)
+    pixels = imread(io.BytesIO(png))
+    assert bool(((pixels[..., 0] > 0.9) & (pixels[..., 1] < 0.2) & (pixels[..., 2] < 0.2)).any())
 
 
 def test_a_fixed_range_open_at_the_top_keeps_its_bound_without_data() -> None:

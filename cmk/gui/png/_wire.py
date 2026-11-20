@@ -26,6 +26,7 @@ from cmk.graphing_engine import (
     VerticalRangeKind,
 )
 from cmk.gui.graphing import ensure_type, unit_from_specification, unit_to_specification
+from cmk.gui.png.renderer import RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 
@@ -62,11 +63,6 @@ class PngGraph:
     # The graph is fetched with the samples just beyond the range it shows, as the Vue graph
     # is, so that the curves are drawn in from them up to the axes.
     visible_time_range: tuple[int, int]
-
-
-@dataclass(frozen=True)
-class RenderingFailure:
-    message: str
 
 
 def _attributes_to_json(attributes: CurveAttributes) -> Mapping[str, object]:

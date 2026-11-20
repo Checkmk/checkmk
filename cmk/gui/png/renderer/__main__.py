@@ -11,13 +11,12 @@ from cmk.gui.png._wire import (
     PngGraph,
     pngs_to_json,
     PngTexts,
-    RenderingFailure,
     request_from_json,
 )
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from ._image import render_pngs
-from ._model import PngDrawing
+from ._model import PngDrawing, RenderingFailure
 
 
 def _drawing_or_failure(

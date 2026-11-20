@@ -33,6 +33,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
+from cmk.gui.png.renderer import RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from ._client import render_pngs
@@ -43,7 +44,7 @@ from ._settings import (
     png_options,
     png_texts,
 )
-from ._wire import PngGraph, RenderingFailure
+from ._wire import PngGraph
 
 _GRAPH_PERIOD_SECONDS: Final = 25 * 3600
 

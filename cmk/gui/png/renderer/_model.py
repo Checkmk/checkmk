@@ -82,3 +82,8 @@ class PngDrawing:
     vertical_axis: VerticalAxis | None
     time_axis: TimeAxis | None
     legend: Legend | None
+
+
+@dataclass(frozen=True)
+class RenderingFailure:
+    message: str

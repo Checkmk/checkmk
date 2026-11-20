@@ -8,9 +8,10 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
+from cmk.gui.png.renderer import RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
-from ._wire import PngGraph, pngs_from_json, PngTexts, RenderingFailure, request_to_json
+from ._wire import PngGraph, pngs_from_json, PngTexts, request_to_json
 
 
 @dataclass(frozen=True)

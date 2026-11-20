@@ -22,9 +22,7 @@ from matplotlib.patches import FancyBboxPatch
 from matplotlib.text import Text
 from matplotlib.transforms import blended_transform_factory, ScaledTranslation
 
-from cmk.gui.png._wire import RenderingFailure
-
-from ._model import Area, Legend, Line, PngDrawing, Region, TimeAxis
+from ._model import Area, Legend, Line, PngDrawing, Region, RenderingFailure, TimeAxis
 from ._time_axis import compute_time_axis
 
 _DPI = 96

@@ -13,13 +13,13 @@ import numpy as np
 matplotlib.use("Agg")
 from matplotlib.figure import Figure
 
-from cmk.gui.png import RenderingFailure
 from cmk.gui.png.renderer import (
     Area,
     Legend,
     LegendRow,
     Line,
     PngDrawing,
+    RenderingFailure,
     TimeAxis,
     VerticalAxis,
 )

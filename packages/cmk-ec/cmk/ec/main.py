@@ -4363,13 +4363,20 @@ _TERMINATION_CHECK_INTERVAL = 1.0  # seconds
 
 
 def get_state_from_master(
-    config: Config, slave_status: SlaveStatus, *, terminating: Callable[[], bool]
+    config: Config,
+    slave_status: SlaveStatus,
+    *,
+    terminating: Callable[[], bool],
+    timeout: float | None = None,
+    termination_check_interval: float = _TERMINATION_CHECK_INTERVAL,
 ) -> Any:
-    """Raises ReplicationInterrupted once the given function tells that the EC terminates"""
+    """Raises ReplicationInterrupted once the given function tells that the EC terminates. Only
+    tests pass a timeout instead of the connect timeout or change the termination check interval."""
     repl_settings = config["replication"]
     if repl_settings is None:
         raise ValueError("no replication settings")
-    timeout = repl_settings["connect_timeout"]
+    if timeout is None:
+        timeout = repl_settings["connect_timeout"]
     response_text = b""
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -4377,7 +4384,13 @@ def get_state_from_master(
             sock.setblocking(False)
             if (err := sock.connect_ex(repl_settings["master"])) not in (0, errno.EINPROGRESS):
                 raise OSError(err, os.strerror(err))
-            _wait_for_master(sock, select.POLLOUT, timeout=timeout, terminating=terminating)
+            _wait_for_master(
+                sock,
+                select.POLLOUT,
+                timeout=timeout,
+                terminating=terminating,
+                check_interval=termination_check_interval,
+            )
             if err := sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR):
                 raise OSError(err, os.strerror(err))
             # The request fits into the empty send buffer of the new connection.
@@ -4387,7 +4400,13 @@ def get_state_from_master(
             sock.shutdown(socket.SHUT_WR)
 
             while True:
-                _wait_for_master(sock, select.POLLIN, timeout=timeout, terminating=terminating)
+                _wait_for_master(
+                    sock,
+                    select.POLLIN,
+                    timeout=timeout,
+                    terminating=terminating,
+                    check_interval=termination_check_interval,
+                )
                 chunk = sock.recv(8192)
                 response_text += chunk
                 if not chunk:
@@ -4410,7 +4429,12 @@ def get_state_from_master(
 
 
 def _wait_for_master(
-    sock: socket.socket, events: int, *, timeout: float, terminating: Callable[[], bool]
+    sock: socket.socket,
+    events: int,
+    *,
+    timeout: float,
+    terminating: Callable[[], bool],
+    check_interval: float,
 ) -> None:
     """Waits for the events like a socket with the timeout, but raises ReplicationInterrupted once
     the EC terminates"""
@@ -4420,7 +4444,7 @@ def _wait_for_master(
     while not terminating():
         if (left := deadline - time.monotonic()) <= 0:
             raise TimeoutError("timed out")
-        if poller.poll(min(left, _TERMINATION_CHECK_INTERVAL) * 1000):
+        if poller.poll(min(left, check_interval) * 1000):
             return
     raise ReplicationInterrupted
 

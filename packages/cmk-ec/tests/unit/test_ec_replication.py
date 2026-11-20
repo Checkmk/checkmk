@@ -652,9 +652,9 @@ def test_slave_switched_to_takeover_while_waiting_for_its_master_keeps_its_event
     assert [event["text"] for event in event_status.events()] == ["synced before"]
 
 
-def _replication_from(master: socket.socket, *, connect_timeout: int = 30) -> ec.Replication:
+def _replication_from(master: socket.socket) -> ec.Replication:
     """The replication settings of a slave of the master, which the test runs on the local host"""
-    return ec.Replication(connect_timeout=connect_timeout, interval=60, master=master.getsockname())
+    return ec.Replication(connect_timeout=30, interval=60, master=master.getsockname())
 
 
 def _accept(master: socket.socket) -> socket.socket:
@@ -720,9 +720,10 @@ def test_master_not_answering_within_the_connect_timeout_is_not_responding(
 
         with pytest.raises(Exception, match="Master not responding"):
             get_state_from_master(
-                config | {"replication": _replication_from(master, connect_timeout=1)},
+                config | {"replication": _replication_from(master)},
                 slave_status,
                 terminating=lambda: False,
+                timeout=0.01,
             )
 
 
@@ -732,7 +733,12 @@ def test_terminating_ends_waiting_for_the_master(config: Config, slave_status: S
 
     def pull(slave_config: Config) -> None:
         try:
-            get_state_from_master(slave_config, slave_status, terminating=terminating.is_set)
+            get_state_from_master(
+                slave_config,
+                slave_status,
+                terminating=terminating.is_set,
+                termination_check_interval=0.01,
+            )
         except Exception as e:
             errors.append(e)
 

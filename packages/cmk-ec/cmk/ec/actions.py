@@ -303,11 +303,13 @@ def run_in_subprocess(
     timeout: float,
     clock: Callable[[], float] = time.monotonic,
     on_start: Callable[[subprocess.Popen[str]], None] | None = None,
+    output_timeout_after_killing: float = _OUTPUT_TIMEOUT_AFTER_KILLING,
 ) -> bool:
     """
     Runs the command and logs its result. At the timeout, it kills the command with the processes it
     started, or just these if they keep its output open, and leaves behind what doesn't go away.
-    Returns whether the command finished, whatever its exit code. Only tests pass a clock.
+    Returns whether the command finished, whatever its exit code. Only tests pass a clock or change
+    how long the output of a killed command may stay open.
     """
     deadline = clock() + timeout
     # In a session of its own, so that killing its process group kills just its processes
@@ -344,7 +346,7 @@ def run_in_subprocess(
                         "%(timeout)s s, killed those in its process group",
                         {"description": description, "timeout": timeout},
                     )
-                output = _rest_of_output(process)
+                output = _rest_of_output(process, output_timeout_after_killing)
             else:
                 timed_out = left_output_open = False
         except BaseException:
@@ -438,11 +440,11 @@ def _output_by_deadline(
             input_left = None
 
 
-def _rest_of_output(process: subprocess.Popen[str]) -> str:
+def _rest_of_output(process: subprocess.Popen[str], timeout: float) -> str:
     """The output of the process after the deadline, once it has finished or got killed"""
     try:
         # Communicating again loses no output.
-        output, _ = process.communicate(timeout=_OUTPUT_TIMEOUT_AFTER_KILLING)
+        output, _ = process.communicate(timeout=timeout)
         return output
     except subprocess.TimeoutExpired as e:
         # The output so far, as bytes even in text mode

@@ -83,7 +83,10 @@ def _run_script_timing_out_once_released(script: str, running: Path, released: P
 
 
 def _run_script_timing_out_once(
-    script: str, ready: Callable[[subprocess.Popen[str]], bool]
+    script: str,
+    ready: Callable[[subprocess.Popen[str]], bool],
+    *,
+    output_timeout_after_killing: float = 1.0,
 ) -> bool:
     """
     Runs the script, timing out once it's ready and its output so far has been read, however long
@@ -116,6 +119,7 @@ def _run_script_timing_out_once(
         timeout=_TIMEOUT_ONCE_READY,
         clock=clock,
         on_start=started.append,
+        output_timeout_after_killing=output_timeout_after_killing,
     )
     assert not jumped, "the script didn't get ready within 30 s"
     return finished
@@ -218,7 +222,9 @@ def test_killed_command_doesnt_wait_for_a_process_it_started_in_a_session_of_its
     )
 
     try:
-        _run_script_timing_out_once_ready(script, ready)
+        _run_script_timing_out_once(
+            script, lambda _process: ready.exists(), output_timeout_after_killing=0.01
+        )
         still_running = _is_running(int(pid_file.read_text()))
     finally:
         with suppress(ProcessLookupError):

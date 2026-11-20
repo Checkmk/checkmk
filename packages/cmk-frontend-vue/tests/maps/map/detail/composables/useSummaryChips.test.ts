@@ -99,7 +99,9 @@ describe('hostChips / hostsSummary', () => {
       obj('site', { host_name: 'mysite' }),
       state({ type: 'site', hosts_summary: summary({ ok: 1 }) })
     )
-    expect(hostChips.value[0]!.url).toContain('site=mysite')
+    const view = decodeURIComponent(decodeURIComponent(hostChips.value[0]!.url!))
+    expect(view).toContain('site=mysite')
+    expect(view).toContain('_active=hoststate;site')
   })
 
   function hostgroupChips() {

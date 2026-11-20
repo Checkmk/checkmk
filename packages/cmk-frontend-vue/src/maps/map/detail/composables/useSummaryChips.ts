@@ -8,12 +8,7 @@ import { computed } from 'vue'
 
 import type { MapStateCount } from '@/maps/map/components/MapStateCounts.vue'
 import type { MapElement, ObjectState } from '@/maps/types/api'
-import {
-  buildHostStateViewUrl,
-  buildServiceStateViewUrl,
-  hostStateOn,
-  stripCheckmkBase
-} from '@/maps/utils/mapNavigation'
+import { buildHostStateViewUrl, buildServiceStateViewUrl } from '@/maps/utils/mapNavigation'
 import { summaryStateCounts } from '@/maps/utils/stateCounts'
 
 interface SummaryChipsOptions {
@@ -55,26 +50,16 @@ export function useSummaryChips(options: SummaryChipsOptions) {
 
   function buildHostChipUrl(stateName: string): string | null {
     const obj = object()
-    const url = checkmkUrl()
-    if (!url || !obj) {
-      return null
+    if (obj?.type === 'dyngroup') {
+      return buildHostStateViewUrl(
+        checkmkUrl() ?? null,
+        { hosts: dyngroupHosts?.() ?? null },
+        stateName
+      )
     }
-    if (obj.type === 'dyngroup') {
-      const hosts = dyngroupHosts?.() ?? null
-      return hosts?.length ? buildHostStateViewUrl(url, hosts, stateName) : null
-    }
-    if (obj.type !== 'site' || !obj.host_name) {
-      return null
-    }
-    const base = stripCheckmkBase(url)
-    const params: Record<string, string> = {
-      view_name: 'allhosts',
-      filled_in: 'filter',
-      _active: 'hoststate;site',
-      site: obj.host_name,
-      [hostStateOn(stateName)]: 'on'
-    }
-    return `${base}/check_mk/view.py?${new URLSearchParams(params)}`
+    return obj?.type === 'site'
+      ? buildHostStateViewUrl(checkmkUrl() ?? null, { site: obj.host_name }, stateName)
+      : null
   }
 
   const serviceChips = computed<MapStateCount[]>(() => {

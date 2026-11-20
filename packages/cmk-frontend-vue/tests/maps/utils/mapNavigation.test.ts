@@ -106,10 +106,26 @@ describe('buildServiceStateViewUrl', () => {
 
 describe('buildHostStateViewUrl', () => {
   it('links pending hosts through the pending box of the host state filter', () => {
-    const url = buildHostStateViewUrl('http://h/SITE/check_mk/', ['web01', 'db01'], 'PENDING')
+    const url = buildHostStateViewUrl(
+      'http://h/SITE/check_mk/',
+      { hosts: ['web01', 'db01'] },
+      'PENDING'
+    )
     const inner = new URL(url!, 'http://h').searchParams.get('start_url') ?? ''
     expect(inner).toContain('view_name=allhosts')
     expect(inner).toContain('hstp=on')
+  })
+})
+
+describe('buildHostStateViewUrl of a site', () => {
+  it('opens the hosts of the site in the state', () => {
+    const url = buildHostStateViewUrl('http://h/SITE/check_mk/', { site: 'remote' }, 'DOWN')
+    const inner = new URL(url!, 'http://h').searchParams.get('start_url') ?? ''
+    const view = new URLSearchParams(inner.split('?')[1] ?? '')
+    expect(view.get('view_name')).toBe('allhosts')
+    expect(view.get('site')).toBe('remote')
+    expect(view.get('hst1')).toBe('on')
+    expect(view.get('_active')).toBe('hoststate;site')
   })
 })
 

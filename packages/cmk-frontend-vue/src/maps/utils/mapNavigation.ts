@@ -286,12 +286,13 @@ export function buildServiceStateViewUrl(
 const _VIEW_LINK_DISPLAY_OPTIONS = 'f'
 
 /**
- * Checkmk allhosts view filtered to one host state over a member set — the
- * target of clickable HOST state pills/chips on dyngroups.
+ * Checkmk allhosts view of a site or a set of hosts, filtered to one host
+ * state — the target of clickable HOST state pills/chips on dyngroups and
+ * sites.
  */
 export function buildHostStateViewUrl(
   checkmkUrl: string | null,
-  hosts: string[],
+  target: { site?: string | null | undefined; hosts?: string[] | null | undefined },
   state: string
 ): string | null {
   if (!checkmkUrl) {
@@ -300,22 +301,22 @@ export function buildHostStateViewUrl(
   if (!['UP', 'DOWN', 'UNREACHABLE', 'PENDING'].includes(state)) {
     return null
   }
-  if (!hosts.length || hosts.length > _MAX_HOST_REGEX_MEMBERS) {
+  const params: Record<string, string> = {
+    filled_in: 'filter',
+    [hostStateOn(state)]: 'on',
+    display_options: _VIEW_LINK_DISPLAY_OPTIONS
+  }
+  if (target.site) {
+    params.site = target.site
+    params._active = 'hoststate;site'
+  } else if (target.hosts?.length && target.hosts.length <= _MAX_HOST_REGEX_MEMBERS) {
+    const alt = target.hosts.map((h) => h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
+    params.host_regex = `^(${alt})$`
+    params._active = 'hoststate;hostregex'
+  } else {
     return null
   }
-  const alt = hosts.map((h) => h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
-  return buildCheckmkViewUrl(
-    checkmkUrl,
-    'allhosts',
-    {
-      filled_in: 'filter',
-      _active: 'hoststate;hostregex',
-      host_regex: `^(${alt})$`,
-      [hostStateOn(state)]: 'on',
-      display_options: _VIEW_LINK_DISPLAY_OPTIONS
-    },
-    { chrome: true }
-  )
+  return buildCheckmkViewUrl(checkmkUrl, 'allhosts', params, { chrome: true })
 }
 
 const SERVICE_STATE_VIEW = { view: 'allservices', filter: 'svcstate', box: svcStateOn }

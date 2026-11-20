@@ -273,7 +273,7 @@ function buildCounts(summary: ServicesSummary, kind: 'hosts' | 'services'): MapS
     }
     if (kind === 'hosts') {
       return target.value.type === 'dyngroup' && hosts?.length
-        ? buildHostStateViewUrl(props.checkmkUrl, hosts, state)
+        ? buildHostStateViewUrl(props.checkmkUrl, { hosts }, state)
         : null
     }
     if (target.value.type === 'host') {

@@ -7,17 +7,12 @@ from collections.abc import Mapping
 
 from pydantic import field_validator
 
-from cmk.gui.graphing import (
-    compute_graph_ranges_for_width,
-    GraphDisplayConfigBase,
-    GraphRanges,
-    GraphRenderOptions,
-    GraphTitleFormat,
-)
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import SizeMM, SizePT
 
-from ._input import PngOptions, PngTexts
+from ._graph_display_config import GraphDisplayConfigBase, GraphRenderOptions, GraphTitleFormat
+from ._graph_png_input import PngOptions, PngTexts
+from ._graph_ranges import compute_graph_ranges_for_width, GraphRanges
 
 
 def get_mm_per_ex(font_size: float) -> SizeMM:

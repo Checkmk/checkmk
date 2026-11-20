@@ -8,7 +8,7 @@ py_cmk_test(
     use_project_pytest_config = True,
     visibility = ["//visibility:private"],
     deps = [
-        "//cmk/gui/png",
+        "//cmk/gui/graphing",
         "//cmk/gui/utils",
         "//cmk/png_renderer:process",
         "//packages/cmk-graphing-engine",

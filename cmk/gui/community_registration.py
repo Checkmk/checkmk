@@ -51,7 +51,6 @@ from cmk.gui.painter import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.parentscan.register import register as parentscan_register
 from cmk.gui.permissions import permission_registry, permission_section_registry
-from cmk.gui.png import registration as png_registration
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.rule_specs.legacy_converter import (
     convert_dictionary_formspec_to_valuespec,
@@ -376,7 +375,6 @@ def register(
         autocompleter_registry,
         livestatus_query=livestatus_query_bare,
     )
-    png_registration.register(page_registry)
     plugins.register(debug=ctx.debug)
     password_change_effect_registry.register(
         affected_domains_add=[CORE],

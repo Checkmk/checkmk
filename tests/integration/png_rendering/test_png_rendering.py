@@ -6,7 +6,7 @@
 import sys
 
 from cmk.graphing_engine import EvaluatedGraph, TimeRange
-from cmk.gui.png import PngGraph, PngOptions, PngTexts, render_pngs
+from cmk.gui.graphing import PngGraph, PngOptions, PngTexts, render_pngs
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 

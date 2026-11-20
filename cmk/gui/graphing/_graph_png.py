@@ -26,7 +26,6 @@ from cmk.graphing_engine import (
     timestamps,
     VerticalRangeKind,
 )
-from cmk.gui.graphing import user_specific_unit
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.png_renderer import (
     Area,
@@ -42,8 +41,9 @@ from cmk.png_renderer import (
 )
 from cmk.web.utils.unit_formatter import Label, NotationFormatter
 
-from ._input import PngGraph, PngOptions, PngTexts
-from ._size import legend_height_ex, png_size_inches
+from ._graph_png_input import PngGraph, PngOptions, PngTexts
+from ._graph_png_size import legend_height_ex, png_size_inches
+from ._user_specific_unit import user_specific_unit
 
 _EMPTY_Y_RANGE: Final = (-0.05, 0.05)
 

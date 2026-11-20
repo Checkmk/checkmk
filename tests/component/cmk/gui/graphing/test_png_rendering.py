@@ -17,8 +17,8 @@ from cmk.graphing_engine import (
     TimeSeries,
     Unit,
 )
-from cmk.gui.png import PngGraph, PngOptions, PngTexts, render_pngs, RenderingFailure
-from cmk.gui.png._client import _Timeout
+from cmk.gui.graphing import PngGraph, PngOptions, PngTexts, render_pngs, RenderingFailure
+from cmk.gui.graphing._png_rendering import _Timeout
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 _TEXTS = PngTexts(

@@ -15,19 +15,6 @@ from cmk.graphing_engine import ConsolidationFunction, TimeRange
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui.exceptions import MKUnauthenticatedException
-from cmk.gui.graphing import (
-    build_template_graphs,
-    evaluate_built_graphs,
-    EvaluationOptions,
-    get_temperature_unit,
-    GraphDestinations,
-    GraphEnvironment,
-    registered_graphs,
-    registered_metrics,
-    registered_translations,
-    RRDFetchMetricNames,
-    TemplateGraphSpecification,
-)
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -36,15 +23,23 @@ from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.png_renderer import RenderingFailure
 
-from ._client import render_pngs
-from ._input import PngGraph
-from ._settings import (
+from ._evaluation_options import EvaluationOptions
+from ._graph_dispatch import evaluate_built_graphs
+from ._graph_display_config import GraphDestinations
+from ._graph_png_input import PngGraph
+from ._graph_png_settings import (
     compute_image_graph_ranges,
     graph_image_render_options,
     GraphDisplayConfigImage,
     png_options,
     png_texts,
 )
+from ._graph_specification import GraphEnvironment
+from ._graph_templates import build_template_graphs, TemplateGraphSpecification
+from ._plugins import registered_graphs, registered_metrics, registered_translations
+from ._png_rendering import render_pngs
+from ._source import RRDFetchMetricNames
+from ._user_specific_unit import get_temperature_unit
 
 _GRAPH_PERIOD_SECONDS: Final = 25 * 3600
 

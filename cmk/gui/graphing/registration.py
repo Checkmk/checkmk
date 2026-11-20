@@ -15,6 +15,7 @@ from ._graph_dispatch import graph_dispatcher_registry, GraphDispatcherRegistry
 from ._graph_specification import graph_specification_registry
 from ._graph_templates import template_graph_dispatcher, TemplateGraphSpecification
 from ._metric_visitor import MetricVisitor
+from ._notification_graph_images import AjaxGraphImagesForNotifications
 from ._prediction_graphs import prediction_graph_dispatcher
 from ._prediction_page import PredictionPage, ServiceBreadcrumbFunc
 from ._settings import ConfigVariableGraphTimeranges
@@ -39,6 +40,7 @@ def register(
     livestatus_query: LivestatusQueryFunc,
 ) -> None:
     page_registry.register(PageEndpoint("ajax_vs_unit_resolver", PageVsAutocomplete()))
+    page_registry.register(PageEndpoint("ajax_graph_images", AjaxGraphImagesForNotifications()))
 
     config_variable_registry.register(ConfigVariableGraphTimeranges)
 

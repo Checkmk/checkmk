@@ -271,7 +271,6 @@ py_cmk_test(
         "bi/**/*.py",
         "graphing/**/*.py",
         "monitor/**/*.py",
-        "png/**/*.py",
         "nagvis/**/*.py",
     ]),
     args = [
@@ -280,7 +279,6 @@ py_cmk_test(
         "tests/unit/cmk/gui/graphing",
         "tests/unit/cmk/gui/monitor",
         "tests/unit/cmk/gui/nagvis",
-        "tests/unit/cmk/gui/png",
     ],
     env = {"EDITION": "community"},
     use_project_pytest_config = True,
@@ -304,7 +302,6 @@ py_cmk_test(
         "//cmk/gui/monitor/shared",
         "//cmk/gui/monitor/table_widget",
         "//cmk/gui/nagvis",
-        "//cmk/gui/png",
         "//cmk/gui/search/spec",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",

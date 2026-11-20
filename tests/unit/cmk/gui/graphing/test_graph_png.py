@@ -21,9 +21,9 @@ from cmk.graphing_engine import (
     Unit,
     VerticalRangeKind,
 )
-from cmk.gui.png import compute_png_size_mm, PngGraph, PngOptions, PngTexts
-from cmk.gui.png._drawing import png_drawing
-from cmk.gui.png._size import _MM_PER_INCH
+from cmk.gui.graphing import compute_png_size_mm, PngGraph, PngOptions, PngTexts
+from cmk.gui.graphing._graph_png import png_drawing
+from cmk.gui.graphing._graph_png_size import _MM_PER_INCH
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.png_renderer import PngDrawing, TimeAxis
 

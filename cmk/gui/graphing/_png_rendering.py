@@ -11,8 +11,8 @@ from typing import Final
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.png_renderer import drawings_to_json, PngDrawing, pngs_from_json, RenderingFailure
 
-from ._drawing import png_drawing
-from ._input import PngGraph, PngTexts
+from ._graph_png import png_drawing
+from ._graph_png_input import PngGraph, PngTexts
 
 
 @dataclass(frozen=True)

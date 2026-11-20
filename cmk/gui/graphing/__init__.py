@@ -2,6 +2,8 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from cmk.png_renderer import RenderingFailure
+
 from ._autocompleter import monitored_metrics_autocompleter
 from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._decoding import context_from_json, ensure_type
@@ -49,6 +51,15 @@ from ._graph_display_config import (
     resolve_size,
 )
 from ._graph_evaluation import EvaluateGraph, requested_window
+from ._graph_png_input import PngGraph, PngOptions, PngTexts
+from ._graph_png_settings import (
+    compute_image_graph_ranges,
+    graph_image_render_options,
+    GraphDisplayConfigImage,
+    png_options,
+    png_texts,
+)
+from ._graph_png_size import compute_png_size_mm, mm_per_ex
 from ._graph_ranges import compute_graph_ranges_for_width, GraphRanges
 from ._graph_specification import (
     AnnotatedHostName,
@@ -113,6 +124,7 @@ from ._metric_query import (
 )
 from ._metric_spec import registered_metric_ids_and_titles
 from ._metric_visitor import MetricVisitor
+from ._notification_graph_images import AjaxGraphImagesForNotifications
 from ._perfometers import (
     evaluated_perfometer,
     perfometer_label,
@@ -124,6 +136,7 @@ from ._plugins import (
     registered_perfometers,
     registered_translations,
 )
+from ._png_rendering import render_pngs
 from ._popup import PageHostServiceGraphPopup
 from ._prediction_graphs import prediction_graph_dispatcher
 from ._settings import ConfigVariableGraphTimeranges
@@ -162,6 +175,7 @@ from ._valuespecs import (
 )
 
 __all__ = [
+    "AjaxGraphImagesForNotifications",
     "GraphDisplayConfigBase",
     "AnnotatedHostName",
     "AttributeGroup",
@@ -172,6 +186,8 @@ __all__ = [
     "COMMUNITY_QUANTITY_SPECS",
     "context_from_json",
     "compute_graph_ranges_for_width",
+    "compute_image_graph_ranges",
+    "compute_png_size_mm",
     "ConfigVariableGraphTimeranges",
     "consolidation_function_from_wire",
     "ConsolidationFunction",
@@ -206,6 +222,7 @@ __all__ = [
     "global_time_picker_refresh",
     "graph_choices",
     "graph_dispatcher_registry",
+    "graph_image_render_options",
     "graph_specification_registry",
     "GraphChoices",
     "GraphCodec",
@@ -214,6 +231,7 @@ __all__ = [
     "GraphDispatcher",
     "GraphDispatcherRegistry",
     "GraphDisplayConfigHTML",
+    "GraphDisplayConfigImage",
     "GraphEnvironment",
     "GraphExportRequest",
     "GraphLineGroupByKey",
@@ -255,10 +273,16 @@ __all__ = [
     "MetricVisitor",
     "migrate_graph_render_options_title_format",
     "MKGraphNotFound",
+    "mm_per_ex",
     "PageHostServiceGraphPopup",
     "PageVsAutocomplete",
     "parse_graph_specification",
     "perfometer_label",
+    "png_options",
+    "png_texts",
+    "PngGraph",
+    "PngOptions",
+    "PngTexts",
     "prediction_graph_dispatcher",
     "QuantityCodec",
     "QuantitySpec",
@@ -278,6 +302,8 @@ __all__ = [
     "render_global_time_picker",
     "resolve_default_time_range_seconds",
     "render_graph_error_html",
+    "render_pngs",
+    "RenderingFailure",
     "resolve_graph_id_from_index",
     "resolve_size",
     "rrd_column_names",

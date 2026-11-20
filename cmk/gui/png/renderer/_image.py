@@ -15,6 +15,7 @@ from matplotlib.axes import Axes
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 from matplotlib.font_manager import FontProperties
+from matplotlib.layout_engine import TightLayoutEngine
 from matplotlib.offsetbox import AnnotationBbox, DrawingArea
 from matplotlib.patches import FancyBboxPatch
 from matplotlib.text import Text
@@ -616,7 +617,7 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
         is_mirrored=is_mirrored,
         tz=png_graph.time_zone,
     )
-    fig.tight_layout()
+    TightLayoutEngine().execute(fig)
     _fit_time_axis(ax, png_graph.options, png_graph.time_zone)
     _align_title_to_y_ticks(fig, ax, title_artist)
     buf = io.BytesIO()

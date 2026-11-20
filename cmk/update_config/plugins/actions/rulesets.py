@@ -6,13 +6,16 @@
 from logging import Logger
 from typing import override
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import Ruleset, RulesetCollection
-from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
+from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError, Rulespec
+from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.update_config.lib import ExpiryVersion, format_warning
 from cmk.update_config.plugins.lib.rulesets import load_and_transform, SKIP_ACTION
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -24,6 +27,37 @@ class UpdateRulesets(UpdateAction):
         all_rulesets = load_and_transform(logger, use_git=active_config.wato_use_git)
         validate_rule_values(logger, all_rulesets)
         all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
+
+
+class UnparsableRuleValue(Exception):
+    pass
+
+
+def _validate_rule_value(rulespec: Rulespec, value: object) -> None:
+    try:
+        form_spec = rulespec.form_spec
+    except FormSpecNotImplementedError:
+        _validate_valuespec_value(rulespec.valuespec, value)
+    else:
+        _validate_form_spec_value(form_spec, RawDiskData(value))
+
+
+def _validate_form_spec_value[T](form_spec: FormSpec[T], value: RawDiskData) -> None:
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=False, mask_values=True))
+    try:
+        visitor.to_disk(value)
+    except MKGeneralException as e:
+        raise UnparsableRuleValue(str(e)) from e
+    if validation_errors := visitor.validate(value):
+        raise MKUserError(None, f"Validation errors: {validation_errors}")
+
+
+def _validate_valuespec_value[T](valuespec: ValueSpec[T], value: T) -> None:
+    try:
+        valuespec.validate_datatype(value, "")
+    except MKUserError as e:
+        raise UnparsableRuleValue(str(e)) from e
+    valuespec.validate_value(value, "")
 
 
 def validate_rule_values(
@@ -39,23 +73,7 @@ def validate_rule_values(
         # "thanks" to the load_and_transform call from above..
         for folder, index, rule in ruleset.get_rules():
             try:
-                try:
-                    visitor = get_visitor(
-                        ruleset.rulespec.form_spec,
-                        VisitorOptions(migrate_values=False, mask_values=True),
-                    )
-                    validation_errors = visitor.validate(RawDiskData(rule.value))
-                    if validation_errors:
-                        raise ValueError(f"Validation errors: {validation_errors}")
-                except FormSpecNotImplementedError:
-                    ruleset.rulespec.valuespec.validate_datatype(
-                        rule.value,
-                        "",
-                    )
-                    ruleset.rulespec.valuespec.validate_value(
-                        rule.value,
-                        "",
-                    )
+                _validate_rule_value(ruleset.rulespec, rule.value)
             except MKUserError as excpt:
                 n_invalid += 1
                 logger.warning(

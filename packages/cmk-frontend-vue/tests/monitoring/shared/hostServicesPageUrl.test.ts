@@ -11,7 +11,10 @@ import { hostDetailsPageUrl, hostServicesPageUrl } from '@/monitoring/shared/hos
 
 const HOST: HostRef = { site_id: 'local', name: 'web-1' }
 
-const STATE_ONLY = { filterableFields: new Set<FilterField>(['state']) }
+const STATE_ONLY = {
+  filterableFields: new Set<FilterField>(['state']),
+  ageFields: new Set<FilterField>()
+}
 
 function params(url: string): URLSearchParams {
   return new URL(url, 'http://checkmk.example/site/check_mk/').searchParams

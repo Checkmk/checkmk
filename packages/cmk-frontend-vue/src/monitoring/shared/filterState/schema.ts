@@ -17,6 +17,7 @@ import type { FilterUrlSchema } from './types'
  */
 export function buildFilterUrlSchema<T>(columns: ColumnDef<T>[]): FilterUrlSchema {
   const filterableFields = new Set<FilterField>()
+  const ageFields = new Set<FilterField>()
   for (const column of columns) {
     const filter = column.meta?.filter
     if (filter === undefined) {
@@ -25,6 +26,9 @@ export function buildFilterUrlSchema<T>(columns: ColumnDef<T>[]): FilterUrlSchem
     for (const field of filterFields(filter)) {
       filterableFields.add(field)
     }
+    if (filter.type === 'date-time-range' || filter.type === 'duration') {
+      ageFields.add(filter.field)
+    }
   }
-  return { filterableFields }
+  return { filterableFields, ageFields }
 }

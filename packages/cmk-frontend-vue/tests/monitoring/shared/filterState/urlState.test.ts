@@ -45,9 +45,10 @@ function makeUrlSync(search = ''): { urlSync: UrlSync; replaceUrl: ReturnType<ty
 
 describe('readFilterUrlState', () => {
   it('decodes and reconciles the given query string', () => {
-    expect(readFilterUrlState('?q=preexisting', { filterableFields: new Set() }).search).toBe(
-      'preexisting'
-    )
+    expect(
+      readFilterUrlState('?q=preexisting', { filterableFields: new Set(), ageFields: new Set() })
+        .search
+    ).toBe('preexisting')
   })
 })
 

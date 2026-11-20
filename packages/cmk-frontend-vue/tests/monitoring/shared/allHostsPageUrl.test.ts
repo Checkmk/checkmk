@@ -27,7 +27,8 @@ describe('allHostsPageUrl', () => {
 
     expect(
       readFilterUrlState(url.slice(url.indexOf('?')), {
-        filterableFields: new Set<FilterField>(['labels'])
+        filterableFields: new Set<FilterField>(['labels']),
+        ageFields: new Set<FilterField>()
       })
     ).toEqual({ filter: CONDITION, search: '' })
   })

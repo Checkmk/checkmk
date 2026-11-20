@@ -9,7 +9,8 @@ import { reconcile } from '@/monitoring/shared/filterState/reconcile'
 import type { FilterUrlSchema, RawFilterUrlState } from '@/monitoring/shared/filterState/types'
 
 const schema: FilterUrlSchema = {
-  filterableFields: new Set(['name', 'state'])
+  filterableFields: new Set(['name', 'state', 'last_state_change']),
+  ageFields: new Set(['last_state_change'])
 }
 
 function raw(overrides: Partial<RawFilterUrlState> = {}): RawFilterUrlState {
@@ -33,8 +34,8 @@ describe('reconcile - filter', () => {
     expect(problems).toHaveLength(1)
   })
 
-  it('drops an unknown field from an and-group but keeps the rest', () => {
-    const { state } = reconcile(
+  it('drops an unknown field from an and-group, keeps the rest and records a problem', () => {
+    const { state, problems } = reconcile(
       raw({
         filter: {
           type: 'and',
@@ -47,6 +48,7 @@ describe('reconcile - filter', () => {
       schema
     )
     expect(state.filter).toEqual({ type: 'condition', field: 'name', op: 'contains', value: 'web' })
+    expect(problems).toHaveLength(1)
   })
 
   it('drops the whole and-group when nothing in it survives', () => {
@@ -60,6 +62,57 @@ describe('reconcile - filter', () => {
       schema
     )
     expect(state.filter).toBeUndefined()
+  })
+
+  it('passes through a well-formed age bound on a known field', () => {
+    const age = { type: 'age', field: 'last_state_change', op: 'younger_than', seconds: 60 }
+    const { state, problems } = reconcile(raw({ filter: age }), schema)
+    expect(state.filter).toEqual(age)
+    expect(problems).toEqual([])
+  })
+
+  it('keeps an age bound combined with a condition', () => {
+    const filter = {
+      type: 'and',
+      children: [
+        { type: 'condition', field: 'name', op: 'contains', value: 'web' },
+        { type: 'age', field: 'last_state_change', op: 'older_than', seconds: 3600 }
+      ]
+    }
+    const { state, problems } = reconcile(raw({ filter }), schema)
+    expect(state.filter).toEqual(filter)
+    expect(problems).toEqual([])
+  })
+
+  it.each([
+    ['an unknown field', { field: 'bogus', op: 'younger_than', seconds: 60 }],
+    ['a field that is not a timestamp', { field: 'state', op: 'younger_than', seconds: 60 }],
+    ['an unknown op', { field: 'last_state_change', op: 'gte', seconds: 60 }],
+    ['negative seconds', { field: 'last_state_change', op: 'younger_than', seconds: -1 }],
+    ['infinite seconds', { field: 'last_state_change', op: 'younger_than', seconds: Infinity }],
+    ['non-numeric seconds', { field: 'last_state_change', op: 'younger_than', seconds: '60' }],
+    ['missing seconds', { field: 'last_state_change', op: 'younger_than' }]
+  ])('drops an age bound with %s and records a problem', (_label, fields) => {
+    const { state, problems } = reconcile(raw({ filter: { type: 'age', ...fields } }), schema)
+    expect(state.filter).toBeUndefined()
+    expect(problems).toHaveLength(1)
+  })
+
+  it('drops a malformed age bound from an and-group, keeps the condition and records a problem', () => {
+    const { state, problems } = reconcile(
+      raw({
+        filter: {
+          type: 'and',
+          children: [
+            { type: 'condition', field: 'name', op: 'contains', value: 'web' },
+            { type: 'age', field: 'last_state_change', op: 'younger_than', seconds: -1 }
+          ]
+        }
+      }),
+      schema
+    )
+    expect(state.filter).toEqual({ type: 'condition', field: 'name', op: 'contains', value: 'web' })
+    expect(problems).toHaveLength(1)
   })
 
   it('never throws on a garbage shape', () => {

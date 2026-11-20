@@ -3,7 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ConditionNode, FilterField, FilterNode } from '@/monitoring/shared/api/types'
+import type {
+  AgeCondition,
+  ConditionNode,
+  FilterField,
+  FilterNode
+} from '@/monitoring/shared/api/types'
 
 import type { FilterUrlSchema, FilterUrlState, Problem, RawFilterUrlState } from './types'
 
@@ -29,15 +34,45 @@ function reconcileCondition(
 }
 
 /**
+ * Unlike a condition, an age bound is checked in full - its field has to be a
+ * timestamp, its `op` and `seconds` well-formed: no API schema backs it, and
+ * `MonitoringApi` resolves it into a timestamp condition before it is ever
+ * sent, so an unchecked bound would turn into a wrong or failing query rather
+ * than being dropped here with a {@link Problem}.
+ */
+function reconcileAge(
+  value: Record<string, unknown>,
+  schema: FilterUrlSchema
+): AgeCondition | undefined {
+  const { field, op, seconds } = value
+  if (typeof field !== 'string' || !schema.ageFields.has(field as FilterField)) {
+    return undefined
+  }
+  if (op !== 'younger_than' && op !== 'older_than') {
+    return undefined
+  }
+  if (typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds < 0) {
+    return undefined
+  }
+  return { type: 'age', field: field as FilterField, op, seconds }
+}
+
+/**
  * Recursively validates a decoded value against the {@link FilterNode} shape,
  * dropping whatever does not fit - an unknown field, a malformed branch - and
- * collapsing an emptied `and`/`or` rather than keeping a hollow node. `op` and
+ * collapsing an emptied `and`/`or` rather than keeping a hollow node. A group
+ * that keeps some of its children records a {@link Problem} for the dropped
+ * ones; a node dropped as a whole is left to the caller to report. `op` and
  * a leaf's `value` are trusted once its `field` is known: replicating the
  * full per-field condition schema here would duplicate what the API already
  * validates, and a rejected request degrades the same way an invalid sort
  * does (see `MonitoringService.fetch`'s error handling) rather than crashing.
  */
-function reconcileNode(value: unknown, schema: FilterUrlSchema): FilterNode | undefined {
+function reconcileNode(
+  value: unknown,
+  schema: FilterUrlSchema,
+  problems: Problem[]
+): FilterNode | undefined {
   if (!isPlainObject(value) || typeof value.type !== 'string') {
     return undefined
   }
@@ -48,19 +83,27 @@ function reconcileNode(value: unknown, schema: FilterUrlSchema): FilterNode | un
         return undefined
       }
       const children = value.children
-        .map((child: unknown) => reconcileNode(child, schema))
+        .map((child: unknown) => reconcileNode(child, schema, problems))
         .filter((child): child is FilterNode => child !== undefined)
       if (children.length === 0) {
         return undefined
       }
+      if (children.length < value.children.length) {
+        problems.push({
+          message:
+            'filter param had a part that was malformed or named a column this table does not filter; dropped that part'
+        })
+      }
       return children.length === 1 ? children[0] : ({ type: value.type, children } as FilterNode)
     }
     case 'not': {
-      const child = reconcileNode(value.child, schema)
+      const child = reconcileNode(value.child, schema, problems)
       return child === undefined ? undefined : ({ type: 'not', child } as FilterNode)
     }
     case 'condition':
       return reconcileCondition(value, schema)
+    case 'age':
+      return reconcileAge(value, schema)
     default:
       return undefined
   }
@@ -96,7 +139,7 @@ export function reconcile(
 
   let filter: FilterNode | undefined
   if (raw.filter !== undefined) {
-    filter = reconcileNode(raw.filter, schema)
+    filter = reconcileNode(raw.filter, schema, problems)
     if (filter === undefined) {
       problems.push({
         message:

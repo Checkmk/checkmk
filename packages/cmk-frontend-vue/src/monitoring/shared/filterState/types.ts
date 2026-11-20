@@ -32,6 +32,12 @@ export interface RawFilterUrlState {
 export interface FilterUrlSchema {
   /** Fields any column's filter definition targets. */
   filterableFields: ReadonlySet<FilterField>
+  /**
+   * The timestamp fields among them, the only ones an `age` bound can target.
+   * A timestamp column shows its filter as a date range or as a duration
+   * depending on the timestamp format, and both read an age bound back.
+   */
+  ageFields: ReadonlySet<FilterField>
 }
 
 export type { Problem } from '@/monitoring/shared/urlState/types'

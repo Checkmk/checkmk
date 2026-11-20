@@ -60,7 +60,7 @@ describe('round trip', () => {
   // module mirrors. Re-encoding a state that already came out of encode() must
   // reproduce the identical output; otherwise the address bar would drift on
   // every load/write cycle.
-  const schema: FilterUrlSchema = { filterableFields: new Set(['name']) }
+  const schema: FilterUrlSchema = { filterableFields: new Set(['name']), ageFields: new Set() }
   const filter = {
     type: 'condition' as const,
     field: 'name' as const,

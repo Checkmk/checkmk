@@ -305,7 +305,7 @@ def test_parse_plain_verification_response(
 def test_parse_plain_verification_response_not_a_dict(
     protocol_version: protocol_version.AllowedVerificationResponseVersions,
 ) -> None:
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         verification.parse_plain_verification_response(protocol_version, "not a dict")
 
 
@@ -313,7 +313,7 @@ def test_parse_plain_verification_response_not_a_dict(
 def test_parse_plain_verification_response_payload_missing(
     protocol_version: protocol_version.AllowedVerificationResponseVersions,
 ) -> None:
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         verification.parse_plain_verification_response(protocol_version, {})
 
 
@@ -321,7 +321,7 @@ def test_parse_plain_verification_response_payload_missing(
 def test_parse_plain_verification_response_payload_not_a_dict(
     protocol_version: protocol_version.AllowedVerificationResponseVersions,
 ) -> None:
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         verification.parse_plain_verification_response(protocol_version, {"payload": ""})
 
 
@@ -331,12 +331,12 @@ def test_parse_plain_verification_response_missing_key_v2_0() -> None:
             continue
         response = copy.deepcopy(TEST_VERIFICATION_RESPONSE_V2_0)
         del response[missing_key]
-        with pytest.raises(KeyError, match=re.escape(missing_key)):
+        with pytest.raises(ValueError, match=re.escape(missing_key)):
             verification.parse_plain_verification_response("2.0", response)
     for missing_key in TEST_VERIFICATION_RESPONSE_V2_0["payload"]:  # type: ignore[attr-defined]
         response = copy.deepcopy(TEST_VERIFICATION_RESPONSE_V2_0)
         del response["payload"][missing_key]  # type: ignore[attr-defined]
-        with pytest.raises(KeyError, match=re.escape(missing_key)):
+        with pytest.raises(ValueError, match=re.escape(missing_key)):
             verification.parse_plain_verification_response("2.0", response)
 
 
@@ -346,12 +346,12 @@ def test_parse_plain_verification_response_missing_key_v3_0() -> None:
             continue
         response = copy.deepcopy(TEST_VERIFICATION_RESPONSE_V3_0)
         del response[missing_key]
-        with pytest.raises(KeyError, match=re.escape(missing_key)):
+        with pytest.raises(ValueError, match=re.escape(missing_key)):
             verification.parse_plain_verification_response("3.0", response)
     for missing_key in TEST_VERIFICATION_RESPONSE_V3_0["payload"]:  # type: ignore[attr-defined]
         response = copy.deepcopy(TEST_VERIFICATION_RESPONSE_V3_0)
         del response["payload"][missing_key]  # type: ignore[attr-defined]
-        with pytest.raises(KeyError, match=re.escape(missing_key)):
+        with pytest.raises(ValueError, match=re.escape(missing_key)):
             verification.parse_plain_verification_response("3.0", response)
 
 
@@ -361,10 +361,10 @@ def test_parse_plain_verification_response_missing_key_v3_2() -> None:
             continue
         response = copy.deepcopy(TEST_VERIFICATION_RESPONSE_V3_2)
         del response[missing_key]
-        with pytest.raises(KeyError, match=re.escape(missing_key)):
+        with pytest.raises(ValueError, match=re.escape(missing_key)):
             verification.parse_plain_verification_response("3.2", response)
     for missing_key in TEST_VERIFICATION_RESPONSE_V3_2["payload"]:  # type: ignore[attr-defined]
         response = copy.deepcopy(TEST_VERIFICATION_RESPONSE_V3_2)
         del response["payload"][missing_key]  # type: ignore[attr-defined]
-        with pytest.raises(KeyError, match=re.escape(missing_key)):
+        with pytest.raises(ValueError, match=re.escape(missing_key)):
             verification.parse_plain_verification_response("3.2", response)

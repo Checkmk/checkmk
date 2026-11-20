@@ -140,113 +140,122 @@ def parse_plain_verification_response(
 
 def parse_verification_response_v2_0(raw: object) -> PlainVerificationResponse:
     if not isinstance(raw, dict):
-        raise TypeError(
+        raise ValueError(
             "Parse verification response for protocol versions 2.0/2.1: Wrong report type: %r"
             % type(raw)
         )
     if not isinstance(payload := raw.get("payload"), dict):
-        raise TypeError("wrong payload type: %r" % type(payload))
-    return PlainVerificationResponse(
-        request_id=UUID(raw["request_id"]),
-        response_id=UUID(raw["response_id"]),
-        created_at=int(raw["created_at"]),
-        signature=base64.b64decode(str(raw["signature"]).encode("utf-8")),
-        certificate=Certificate.load_pem(CertificatePEM(raw["certificate"])),
-        status=VerificationStatus[payload["status"]],
-        message=str(payload["message"]),
-        group_and_managed_services_use=bool(payload["group_and_managed_services_use"]),
-        reseller_name=str(payload["reseller_name"]),
-        checkmk_edition=CheckmkEdition[payload["checkmk_edition"]],
-        checkmk_max_version=str(payload["checkmk_max_version"]),
-        subscription_start_ts=int(payload["subscription_start_ts"]),
-        subscription_expiration_ts=int(payload["subscription_expiration_ts"]),
-        grace_period_after_expiration=2592000,  # seconds in 30 days
-        subscription_recurrence_unit="yearly",
-        subscription_auto_renewal=bool(payload["subscription_auto_renewal"]),
-        operational_state=OperationalState[payload["operational_state"]],
-        service_limit=payload["limits"]["services"],
-        active_metric_series_limit=payload["limits"]["services"],
-        unbound_license=bool(payload["unbound_license"]),
-        additional_features=[
-            (
-                AdditionalFeature(name="ntop", enabled=True)
-                if "ntop" in payload["additional_features"]
-                else AdditionalFeature(name="ntop", enabled=False)
-            ),
-            (
-                AdditionalFeature(name="virt1_appliance", enabled=True)
-                if "virt1_appliance" in payload["additional_features"]
-                else AdditionalFeature(name="virt1_appliance", enabled=False)
-            ),
-        ],
-    )
+        raise ValueError("wrong payload type: %r" % type(payload))
+    try:
+        return PlainVerificationResponse(
+            request_id=UUID(raw["request_id"]),
+            response_id=UUID(raw["response_id"]),
+            created_at=int(raw["created_at"]),
+            signature=base64.b64decode(str(raw["signature"]).encode("utf-8")),
+            certificate=Certificate.load_pem(CertificatePEM(raw["certificate"])),
+            status=VerificationStatus[payload["status"]],
+            message=str(payload["message"]),
+            group_and_managed_services_use=bool(payload["group_and_managed_services_use"]),
+            reseller_name=str(payload["reseller_name"]),
+            checkmk_edition=CheckmkEdition[payload["checkmk_edition"]],
+            checkmk_max_version=str(payload["checkmk_max_version"]),
+            subscription_start_ts=int(payload["subscription_start_ts"]),
+            subscription_expiration_ts=int(payload["subscription_expiration_ts"]),
+            grace_period_after_expiration=2592000,  # seconds in 30 days
+            subscription_recurrence_unit="yearly",
+            subscription_auto_renewal=bool(payload["subscription_auto_renewal"]),
+            operational_state=OperationalState[payload["operational_state"]],
+            service_limit=payload["limits"]["services"],
+            active_metric_series_limit=payload["limits"]["services"],
+            unbound_license=bool(payload["unbound_license"]),
+            additional_features=[
+                (
+                    AdditionalFeature(name="ntop", enabled=True)
+                    if "ntop" in payload["additional_features"]
+                    else AdditionalFeature(name="ntop", enabled=False)
+                ),
+                (
+                    AdditionalFeature(name="virt1_appliance", enabled=True)
+                    if "virt1_appliance" in payload["additional_features"]
+                    else AdditionalFeature(name="virt1_appliance", enabled=False)
+                ),
+            ],
+        )
+    except (TypeError, KeyError) as e:
+        raise ValueError("Failed to parse verification response: %s" % e) from e
 
 
 def parse_verification_response_v3_0(raw: object) -> PlainVerificationResponse:
     if not isinstance(raw, dict):
-        raise TypeError(
+        raise ValueError(
             "Parse verification response for protocol versions 3.0/3.1: Wrong report type: %r"
             % type(raw)
         )
     if not isinstance(payload := raw.get("payload"), dict):
-        raise TypeError("wrong payload type: %r" % type(payload))
-    return PlainVerificationResponse(
-        request_id=UUID(raw["request_id"]),
-        response_id=UUID(raw["response_id"]),
-        created_at=int(raw["created_at"]),
-        signature=base64.b64decode(str(raw["signature"]).encode("utf-8")),
-        certificate=Certificate.load_pem(CertificatePEM(raw["certificate"])),
-        status=VerificationStatus[payload["status"]],
-        message=str(payload["message"]),
-        group_and_managed_services_use=bool(payload["group_and_managed_services_use"]),
-        reseller_name=str(payload["reseller_name"]),
-        checkmk_edition=CheckmkEdition[payload["checkmk_edition"]],
-        checkmk_max_version=str(payload["checkmk_max_version"]),
-        subscription_start_ts=int(payload["subscription_start_ts"]),
-        subscription_expiration_ts=int(payload["subscription_expiration_ts"]),
-        grace_period_after_expiration=2592000,  # seconds in 30 days
-        subscription_recurrence_unit="yearly",
-        subscription_auto_renewal=bool(payload["subscription_auto_renewal"]),
-        operational_state=OperationalState[payload["operational_state"]],
-        service_limit=payload["service_limit"],
-        active_metric_series_limit=payload["service_limit"],
-        unbound_license=bool(payload["unbound_license"]),
-        additional_features=parse_additional_features(payload["additional_features"]),
-    )
+        raise ValueError("wrong payload type: %r" % type(payload))
+    try:
+        return PlainVerificationResponse(
+            request_id=UUID(raw["request_id"]),
+            response_id=UUID(raw["response_id"]),
+            created_at=int(raw["created_at"]),
+            signature=base64.b64decode(str(raw["signature"]).encode("utf-8")),
+            certificate=Certificate.load_pem(CertificatePEM(raw["certificate"])),
+            status=VerificationStatus[payload["status"]],
+            message=str(payload["message"]),
+            group_and_managed_services_use=bool(payload["group_and_managed_services_use"]),
+            reseller_name=str(payload["reseller_name"]),
+            checkmk_edition=CheckmkEdition[payload["checkmk_edition"]],
+            checkmk_max_version=str(payload["checkmk_max_version"]),
+            subscription_start_ts=int(payload["subscription_start_ts"]),
+            subscription_expiration_ts=int(payload["subscription_expiration_ts"]),
+            grace_period_after_expiration=2592000,  # seconds in 30 days
+            subscription_recurrence_unit="yearly",
+            subscription_auto_renewal=bool(payload["subscription_auto_renewal"]),
+            operational_state=OperationalState[payload["operational_state"]],
+            service_limit=payload["service_limit"],
+            active_metric_series_limit=payload["service_limit"],
+            unbound_license=bool(payload["unbound_license"]),
+            additional_features=parse_additional_features(payload["additional_features"]),
+        )
+    except (TypeError, KeyError) as e:
+        raise ValueError("Failed to parse verification response: %s" % e) from e
 
 
 def parse_verification_response_v3_2(raw: object) -> PlainVerificationResponse:
     if not isinstance(raw, dict):
-        raise TypeError(
+        raise ValueError(
             "Parse verification response for protocol version 3.2: Wrong report type: %r"
             % type(raw)
         )
     if not isinstance(payload := raw.get("payload"), dict):
-        raise TypeError("wrong payload type: %r" % type(payload))
+        raise ValueError("wrong payload type: %r" % type(payload))
 
-    return PlainVerificationResponse(
-        request_id=UUID(raw["request_id"]),
-        response_id=UUID(raw["response_id"]),
-        created_at=int(raw["created_at"]),
-        signature=base64.b64decode(str(raw["signature"]).encode("utf-8")),
-        certificate=Certificate.load_pem(CertificatePEM(raw["certificate"])),
-        status=VerificationStatus[payload["status"]],
-        message=str(payload["message"]),
-        group_and_managed_services_use=bool(payload["group_and_managed_services_use"]),
-        reseller_name=str(payload["reseller_name"]),
-        checkmk_edition=CheckmkEdition[payload["checkmk_edition"]],
-        checkmk_max_version=str(payload["checkmk_max_version"]),
-        subscription_start_ts=int(payload["subscription_start_ts"]),
-        subscription_expiration_ts=int(payload["subscription_expiration_ts"]),
-        grace_period_after_expiration=int(payload["grace_period_after_expiration"]),
-        subscription_recurrence_unit=str(payload["subscription_recurrence_unit"]),
-        subscription_auto_renewal=bool(payload["subscription_auto_renewal"]),
-        operational_state=OperationalState[payload["operational_state"]],
-        service_limit=payload["service_limit"],
-        active_metric_series_limit=payload["active_metric_series_limit"],
-        unbound_license=bool(payload["unbound_license"]),
-        additional_features=parse_additional_features(payload["additional_features"]),
-    )
+    try:
+        return PlainVerificationResponse(
+            request_id=UUID(raw["request_id"]),
+            response_id=UUID(raw["response_id"]),
+            created_at=int(raw["created_at"]),
+            signature=base64.b64decode(str(raw["signature"]).encode("utf-8")),
+            certificate=Certificate.load_pem(CertificatePEM(raw["certificate"])),
+            status=VerificationStatus[payload["status"]],
+            message=str(payload["message"]),
+            group_and_managed_services_use=bool(payload["group_and_managed_services_use"]),
+            reseller_name=str(payload["reseller_name"]),
+            checkmk_edition=CheckmkEdition[payload["checkmk_edition"]],
+            checkmk_max_version=str(payload["checkmk_max_version"]),
+            subscription_start_ts=int(payload["subscription_start_ts"]),
+            subscription_expiration_ts=int(payload["subscription_expiration_ts"]),
+            grace_period_after_expiration=int(payload["grace_period_after_expiration"]),
+            subscription_recurrence_unit=str(payload["subscription_recurrence_unit"]),
+            subscription_auto_renewal=bool(payload["subscription_auto_renewal"]),
+            operational_state=OperationalState[payload["operational_state"]],
+            service_limit=payload["service_limit"],
+            active_metric_series_limit=payload["active_metric_series_limit"],
+            unbound_license=bool(payload["unbound_license"]),
+            additional_features=parse_additional_features(payload["additional_features"]),
+        )
+    except (TypeError, KeyError) as e:
+        raise ValueError("Failed to parse verification response: %s" % e) from e
 
 
 def parse_additional_features(

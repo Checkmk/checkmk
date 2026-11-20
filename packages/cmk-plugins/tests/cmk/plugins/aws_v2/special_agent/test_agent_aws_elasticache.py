@@ -37,6 +37,10 @@ from cmk.plugins.aws_v2.special_agent.sections.elasticache import (
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
 
 ACCOUNT_HOST = TargetHost("123456789012")
+NODE_HOSTS = {
+    "node-a": TargetHost("aws_elasticache_cluster_node-a_f3331b24"),
+    "node-b": TargetHost("aws_elasticache_cluster_node-b_87b9d66f"),
+}
 
 CLUSTERS_RESPONSE1: Final[Sequence[Mapping[str, object]]] = [
     {
@@ -800,7 +804,7 @@ def test_agent_aws_elasticache_metrics_go_to_the_host_of_their_node(
 
     assert {
         result.piggyback_hostname: {row["Label"] for row in result.content} for result in results
-    } == {"node-a_region": {"node-a"}, "node-b_region": {"node-b"}}
+    } == {host: {node} for node, host in NODE_HOSTS.items()}
 
 
 def test_agent_aws_elasticache_node_hosts_get_the_resource_labels(
@@ -812,7 +816,7 @@ def test_agent_aws_elasticache_node_hosts_get_the_resource_labels(
 
     # A node has the tags of its cluster.
     assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
-        f"{node}_region": {
+        NODE_HOSTS[node]: {
             "cmk/aws/service": "elasticache",
             "cmk/aws/name": node,
             "cmk/aws/resource_id": node,

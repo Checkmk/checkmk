@@ -119,7 +119,7 @@ class ElastiCacheNode:
     """An ElastiCache node, a cache cluster in the AWS API."""
 
     node_id: str
-    region: str
+    arn: str
 
 
 @dataclass(frozen=True)
@@ -186,7 +186,7 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost:
         case S3Bucket():
             return _s3_bucket_host(resource, naming.non_ec2)
         case ElastiCacheNode():
-            return _elasticache_node_host(resource)
+            return _elasticache_node_host(resource, naming.non_ec2)
         case RDSInstance():
             return _rds_instance_host(resource)
         case SNSTopic():
@@ -298,8 +298,8 @@ def _s3_bucket_host(bucket: S3Bucket, template: NonEC2PiggybackTemplate) -> Targ
     return _hostname_with_hashed_arn("s3_bucket", bucket.name, bucket.arn, template)
 
 
-def _elasticache_node_host(node: ElastiCacheNode) -> TargetHost:
-    return _hostname_from_name_and_region(node.node_id, node.region)
+def _elasticache_node_host(node: ElastiCacheNode, template: NonEC2PiggybackTemplate) -> TargetHost:
+    return _hostname_with_hashed_arn("elasticache_cluster", node.node_id, node.arn, template)
 
 
 def _rds_instance_host(instance: RDSInstance) -> TargetHost:

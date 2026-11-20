@@ -437,24 +437,22 @@ class ElastiCache(AWSSectionCloudwatch):
         content_by_node: dict[str, list[Mapping[str, object]]] = {}
         for row in raw_content.content:
             content_by_node.setdefault(row["Label"], []).append(row)
-        return AWSComputedContent(
-            [
-                self._node_result(node_id, rows, colleague_contents.content.get(node_id))
-                for node_id, rows in content_by_node.items()
-            ],
-            raw_content.cache_timestamp,
-        )
+
+        results = []
+        for node_id, rows in content_by_node.items():
+            # A node can be gone from the summary since its metrics were cached.
+            if (node := colleague_contents.content.get(node_id)) is not None:
+                results.append(self._node_result(node_id, rows, node))
+
+        return AWSComputedContent(results, raw_content.cache_timestamp)
 
     def _node_result(
         self,
         node_id: str,
         rows: Sequence[Mapping[str, object]],
-        node: _ElastiCacheNodeInfo | None,
+        node: _ElastiCacheNodeInfo,
     ) -> AWSSectionResult:
-        host = self._target_host(hosts.ElastiCacheNode(node_id, self._region))
-        if node is None:
-            # The node is gone from the summary since its metrics were cached.
-            return AWSSectionResult(host, rows, AwsResource(service="elasticache"))
+        host = self._target_host(hosts.ElastiCacheNode(node_id, node.arn))
         return AWSSectionResult(
             host,
             rows,

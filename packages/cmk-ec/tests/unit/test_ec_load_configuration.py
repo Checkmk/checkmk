@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import override, Protocol
 from unittest.mock import Mock
 
+import pysnmp.debug
 import pytest
 
 import cmk.ec.export as ec
@@ -524,9 +525,10 @@ def fixture_snmp_trap_receiving_event_server(
     event_status: EventStatus,
     core_connection: FakeConnection,
     action_runner: ActionRunner,
-) -> EventServer:
+) -> Iterator[EventServer]:
     """An event server receiving SNMP traps, without opening the socket for them"""
-    return EventServer(
+    previous_pysnmp_logger = pysnmp.debug.logger
+    event_server = EventServer(
         logging.getLogger("cmk.mkeventd.EventServer"),
         settings._replace(options=settings.options._replace(snmptrap_udp=PortNumber(162))),
         config,
@@ -541,6 +543,9 @@ def fixture_snmp_trap_receiving_event_server(
         action_runner,
         create_pipes_and_sockets=False,
     )
+    yield event_server
+    # The trap parser hands its logger to PySNMP.
+    pysnmp.debug.set_logger(previous_pysnmp_logger)  # type: ignore[no-untyped-call]
 
 
 def test_failed_reload_keeps_the_previous_configuration(

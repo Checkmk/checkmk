@@ -5,7 +5,9 @@
 """Parsing SNMP traps and translating their var binds"""
 
 import logging
+from collections.abc import Callable, Iterator
 
+import pysnmp.debug
 import pytest
 from pyasn1.codec.ber import encoder
 from pysnmp.proto import api, rfc1155
@@ -22,6 +24,8 @@ UNTRANSLATABLE_OID = ObjectName("1.3.6.1.2.1.1.9.1.3.1.2")
 UTF_8_TEXT = "Lüfter groß".encode()  # ß contains 0x9f, a C1 control character in Latin-1.
 UTF_16_TEXT = "Link down".encode("utf-16-le")  # Every other byte is a NUL.
 
+type MakeParser = Callable[[Config], SNMPTrapParser]
+
 
 @pytest.fixture(name="translator")
 def fixture_translator(
@@ -30,9 +34,17 @@ def fixture_translator(
     return SNMPTrapTranslator(settings, config | {"translate_snmptraps": (True, {})}, logger)
 
 
+@pytest.fixture(name="make_parser")
+def fixture_make_parser(settings: ec.Settings, logger: logging.Logger) -> Iterator[MakeParser]:
+    """Parsers for the given configuration, restoring PySNMP's global logger afterwards"""
+    previous_pysnmp_logger = pysnmp.debug.logger
+    yield lambda config: SNMPTrapParser(settings, config, logger)
+    pysnmp.debug.set_logger(previous_pysnmp_logger)  # type: ignore[no-untyped-call]
+
+
 @pytest.fixture(name="parser")
-def fixture_parser(settings: ec.Settings, config: Config, logger: logging.Logger) -> SNMPTrapParser:
-    return SNMPTrapParser(settings, config, logger)
+def fixture_parser(make_parser: MakeParser, config: Config) -> SNMPTrapParser:
+    return make_parser(config)
 
 
 def v1_trap(time_stamp: int) -> bytes:

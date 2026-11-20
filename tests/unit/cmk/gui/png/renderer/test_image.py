@@ -15,15 +15,26 @@ from matplotlib.figure import Figure
 
 from cmk.gui.png.renderer import (
     Area,
+    AxisLabel,
     Legend,
     LegendRow,
     Line,
     PngDrawing,
+    Region,
     RenderingFailure,
+    Rule,
     TimeAxis,
     VerticalAxis,
 )
-from cmk.gui.png.renderer._image import _agg_renderer, _DPI, _fit_time_axis, _plot, render_pngs
+from cmk.gui.png.renderer._image import (
+    _agg_renderer,
+    _DPI,
+    _fit_time_axis,
+    _plot,
+    _plot_legend,
+    _style_axes,
+    render_pngs,
+)
 
 _LEGEND = Legend(
     height=6.0,
@@ -41,6 +52,9 @@ def _drawing(
     x_range: tuple[int, int] = (0, 180),
     areas: Sequence[Area] = (),
     lines: Sequence[Line] = (),
+    regions: Sequence[Region] = (),
+    rules: Sequence[Rule] = (),
+    vertical_axis: VerticalAxis | None = VerticalAxis(labels=None),
     time_axis: TimeAxis | None = TimeAxis(time_zone=None),
     legend: Legend | None = None,
 ) -> PngDrawing:
@@ -56,9 +70,9 @@ def _drawing(
         y_range=(0.0, 3.0),
         areas=areas,
         lines=lines,
-        regions=[],
-        rules=[],
-        vertical_axis=VerticalAxis(labels=None),
+        regions=regions,
+        rules=rules,
+        vertical_axis=vertical_axis,
         time_axis=time_axis,
         legend=legend,
     )
@@ -167,3 +181,109 @@ def test_time_axis_is_labelled_in_the_given_time_zone() -> None:
     assert utc_labels and berlin_labels == [
         f"{int(label[:2]) + 2:02d}{label[2:]}" for label in utc_labels
     ]
+
+
+def _styled(drawing: PngDrawing) -> Figure:
+    fig = Figure()
+    ax = fig.add_subplot(1, 1, 1)
+    _plot(ax, drawing)
+    _style_axes(ax, _agg_renderer(fig), drawing)
+    return fig
+
+
+def test_a_line_is_drawn_at_its_values() -> None:
+    ax = Figure().add_subplot(1, 1, 1)
+
+    _plot(ax, _drawing(lines=[Line(color="#000000", values=[1.0, 2.0, 3.0])]))
+
+    assert np.asarray(ax.get_lines()[0].get_ydata()).tolist() == [1.0, 2.0, 3.0]
+
+
+def test_a_region_is_filled_between_its_bounds() -> None:
+    region = Region(color="#15d1a0", lower=[1.0, 1.0, 1.0], upper=[2.0, 2.0, 2.0])
+    ax = Figure().add_subplot(1, 1, 1)
+
+    _plot(ax, _drawing(regions=[region]))
+
+    heights = np.asarray(ax.collections[0].get_paths()[0].vertices)[:, 1]
+    assert (heights.min(), heights.max()) == (1.0, 2.0)
+
+
+def test_a_rule_is_drawn_across_the_plot_at_its_value() -> None:
+    ax = Figure().add_subplot(1, 1, 1)
+
+    _plot(ax, _drawing(rules=[Rule(color="#ff0000", value=2.5)]))
+
+    assert np.asarray(ax.get_lines()[-1].get_ydata()).tolist() == [2.5, 2.5]
+
+
+def test_the_plot_shows_the_vertical_range_of_its_drawing() -> None:
+    ax = Figure().add_subplot(1, 1, 1)
+
+    _plot(ax, _drawing(lines=[Line(color="#000000", values=[10.0, 20.0, 30.0])]))
+
+    assert ax.get_ylim() == (0.0, 3.0)
+
+
+def test_the_vertical_axis_shows_the_labels_of_its_drawing() -> None:
+    labels = [AxisLabel(position=0.0, text="0 B"), AxisLabel(position=2.0, text="2 B")]
+
+    fig = _styled(_drawing(vertical_axis=VerticalAxis(labels=labels)))
+
+    assert [label.get_text() for label in fig.axes[0].get_yticklabels()] == ["0 B", "2 B"]
+
+
+def test_a_drawing_without_a_vertical_axis_hides_it() -> None:
+    fig = _styled(_drawing(vertical_axis=None))
+
+    assert not fig.axes[0].yaxis.get_visible()
+
+
+def test_a_drawing_without_a_time_axis_shows_no_time_labels() -> None:
+    fig = _styled(_drawing(time_axis=None))
+
+    assert fig.axes[0].xaxis.get_tick_params()["labelbottom"] is False
+
+
+def test_the_title_and_the_caption_are_shown_above_the_plot() -> None:
+    fig = _styled(_drawing(title="Disk IO"))
+
+    assert (fig.axes[0].get_title(loc="left"), fig.axes[0].get_title(loc="right")) == (
+        "Disk IO",
+        "for 2026-09-28, resolution: 1 min",
+    )
+
+
+def test_the_legend_shows_its_header_titles_and_values() -> None:
+    ax = Figure().add_subplot(1, 1, 1)
+
+    _plot_legend(ax, _LEGEND, 8.0)
+
+    assert [text.get_text() for text in ax.texts] == [
+        "Min",
+        "Max",
+        "Average",
+        "Last",
+        "m",
+        "1.00",
+        "3.00",
+        "2.00",
+        "3.00",
+        "Crit",
+        "2.50",
+    ]
+
+
+def test_a_drawing_with_every_kind_of_part_becomes_a_png() -> None:
+    drawing = _drawing(
+        areas=[Area(color="#1e90ff", bottom=[0.0, 0.0, 0.0], top=[1.0, None, 2.0])],
+        lines=[Line(color="#000000", values=[-1.0, -2.0, None])],
+        regions=[Region(color="#15d1a0", lower=[0.0, 0.0, 0.0], upper=[0.5, 0.5, 0.5])],
+        rules=[Rule(color="#ff0000", value=2.5)],
+        vertical_axis=VerticalAxis(labels=[AxisLabel(position=1.0, text="1 B")]),
+        legend=_LEGEND,
+    )
+
+    (png,) = render_pngs([drawing])
+
+    assert isinstance(png, bytes) and _size_in_px(png) == _px(drawing)

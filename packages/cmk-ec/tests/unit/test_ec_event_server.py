@@ -465,7 +465,7 @@ def test_event_pipe_is_closed_even_if_it_cannot_be_removed(
         path.mkdir()
 
         with suppress(IsADirectoryError):
-            event_server.close_pipe()
+            event_server.close_pipe(idle_timeout=0.01)
 
         # Without a reader, writing to a pipe fails.
         with pytest.raises(BrokenPipeError):

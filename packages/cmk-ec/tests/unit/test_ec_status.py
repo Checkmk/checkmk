@@ -20,6 +20,7 @@ from .helpers import (
     LIST_FILTER_CASES,
     new_event,
     query_status_server,
+    RecordingHistory,
     TIME_FILTER_CASES,
 )
 
@@ -34,6 +35,8 @@ def test_handle_client(status_server: StatusServer) -> None:
     assert "event_id" in response[0]
 
 
+# A file history would make creating the events take most of the time.
+@pytest.mark.parametrize("history", [pytest.param(RecordingHistory(), id="history in memory")])
 @pytest.mark.usefixtures("config")
 def test_mkevent_check_query_perf(event_status: EventStatus, status_server: StatusServer) -> None:
     for num in range(10000):

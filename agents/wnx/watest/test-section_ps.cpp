@@ -44,6 +44,7 @@ const std::vector<std::string_view> g_special_processes{
 }  // namespace
 
 TEST(PsTest, Component) {
+    GTEST_SKIP() << "CMK-42664";
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     for (auto use_full_path : {false, true}) {

@@ -138,6 +138,12 @@ class SNMPTrapParser:
         self._message = b""
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
 
+        # PySNMP checks security levels only for requests and accepts its empty user from anyone.
+        self._snmpv3_user: tuple[bytes, bool] | None = None
+        self.snmp_engine.observer.register_observer(
+            self._note_snmpv3_user, "rfc3414.processIncomingMsg"
+        )
+
         self.snmp_engine.observer.register_observer(
             self._log_rejected_message,
             "rfc2576.prepareDataElements:sm-failure",
@@ -247,6 +253,7 @@ class SNMPTrapParser:
         self._message = data
         self._varbinds_and_ipaddress = None
         self._receiver.error = None
+        self._snmpv3_user = None
         self.snmp_engine.set_user_context(sender_address=sender_address)
         try:
             self.snmp_engine.message_dispatcher.receive_message(
@@ -281,6 +288,28 @@ class SNMPTrapParser:
             raise error
         return self._varbinds_and_ipaddress
 
+    def _note_snmpv3_user(
+        self,
+        snmp_engine: pysnmp.entity.engine.SnmpEngine,
+        execpoint: str,
+        variables: Mapping[str, Any],
+        cb_ctx: None,
+    ) -> None:
+        """Notes an SNMPv3 message's user and whether it needs authentication"""
+        self._snmpv3_user = (
+            bytes(variables["userName"]),
+            bool(variables["authProtocol"] != pysnmp.entity.config.USM_AUTH_NONE),
+        )
+
+    def _snmpv3_trap_rejection(self, security_level: int) -> str | None:
+        """Why we drop an SNMPv3 trap PySNMP has accepted, if we do"""
+        match self._snmpv3_user:
+            case None | (b"", _):  # PySNMP's discovery user, accepting any engine ID
+                return "Unknown credentials (msgUserName: )"
+            case (user, True) if security_level == 1:  # noAuthNoPriv
+                return f"Authentication missing (msgUserName: {_printable(user)})"
+        return None
+
     def _handle_snmptrap(
         self,
         snmp_engine: pysnmp.entity.engine.SnmpEngine,
@@ -292,6 +321,17 @@ class SNMPTrapParser:
     ) -> None:
         # sender_address contains a (host: str, port: int) tuple
         ipaddress: str = self.snmp_engine.get_user_context("sender_address")[0]  # type: ignore[index]
+        message = snmp_engine.observer.get_execution_context("rfc3412.receiveMessage:request")
+        if int(message["securityModel"]) == 3 and (
+            reason := self._snmpv3_trap_rejection(int(message["securityLevel"]))
+        ):
+            self._logger.log(
+                VERBOSE,
+                "Trap (v3) dropped from %s: %s",
+                ipaddress,
+                reason,
+            )
+            return
         self._log_snmptrap_details(context_engine_id, context_name, var_binds, ipaddress)
         trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
         # NOTE: There can be only one trap per PDU, so we don't run into the risk of overwriting previous info.

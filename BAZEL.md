@@ -47,9 +47,9 @@ Scope them to your change and leave `//...` to CI.
   `hdrs`, plus the changed Starlark files with buildifier. It skips changed
   files no target lists and also reports findings in the unchanged files of
   those targets.
-- Bazel flags go after `--delta`, e.g. `--cmk_edition=pro`: `//:lint`,
-  `//:lint.check` and `//:mypy.check` pass them on to the `bazel lint` or
-  `bazel build` they run, as those given to `bazel run` don't reach it.
+- Bazel flags go after `--delta`, e.g. `--cmk_edition=pro`: `//:lint` and
+  `//:lint.check` pass them on to the `bazel lint` they run, as those given
+  to `bazel run` don't reach it.
 - `bazel lint` takes targets, not files: `bazel lint path/to/file.py` checks
   nothing and succeeds.
 - `.aspect/cli/config.yaml` lists the linters. All of them together also
@@ -59,16 +59,10 @@ Scope them to your change and leave `//...` to CI.
 
 | I want to …                                 | Command                                                  |
 | ------------------------------------------- | -------------------------------------------------------- |
-| Type-check the files I changed              | `bazel run //:mypy.check -- --delta`                     |
 | Type-check a package                        | `bazel build --config=mypy //<pkg>:all`                  |
 | Type-check TypeScript and Vue               | `bazel build //<pkg>:<lib>_type_check`                   |
 | Type-check the frontend's Node config files | `bazel test //packages/cmk-frontend-vue:type-check-node` |
 
-- `//:mypy.check -- --delta` checks the Python targets that own the changed
-  files and all targets that depend on them.
-- It can't tell what changes to mypy's own setup affect, such as
-  `pyproject.toml`, `bazel/tools/aspects.bzl` or the Python requirements; it
-  then fails and asks you to run `bazel build --config=mypy //...`.
 - Each `vue_library` `<lib>` has a `<lib>_type_check` target.
 
 ## Running tests

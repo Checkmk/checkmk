@@ -35,6 +35,11 @@ from .agent_aws_fake_clients import (
 )
 
 ACCOUNT_HOST = TargetHost("aws_account_123456789012")
+INSTANCE_HOSTS = {
+    "DBInstanceIdentifier-0": TargetHost("aws_rds_db_DBInstanceIdentifier-0_1f86a1a0"),
+    "DBInstanceIdentifier-1": TargetHost("aws_rds_db_DBInstanceIdentifier-1_abeabb8f"),
+    "DBInstanceIdentifier-2": TargetHost("aws_rds_db_DBInstanceIdentifier-2_0ea60392"),
+}
 
 
 class DBInstanceNotFoundFault(Exception):
@@ -235,7 +240,7 @@ def test_agent_aws_rds(
 
     # 21 metrics per instance, each instance on its own host
     assert {result.piggyback_hostname: len(result.content) for result in rds_results} == {
-        f"{instance}_region": 21 for instance in found_instances
+        INSTANCE_HOSTS[instance]: 21 for instance in found_instances
     }
 
 
@@ -276,9 +281,9 @@ def test_agent_aws_rds_summary_reaches_each_instance_host_with_only_its_instance
         for result in rds_summary_results
         if result.piggyback_hostname != ACCOUNT_HOST
     } == {
-        "DBInstanceIdentifier-0_region": [("DBInstanceIdentifier-0", True)],
-        "DBInstanceIdentifier-1_region": [("DBInstanceIdentifier-1", True)],
-        "DBInstanceIdentifier-2_region": [("DBInstanceIdentifier-2", True)],
+        INSTANCE_HOSTS["DBInstanceIdentifier-0"]: [("DBInstanceIdentifier-0", True)],
+        INSTANCE_HOSTS["DBInstanceIdentifier-1"]: [("DBInstanceIdentifier-1", True)],
+        INSTANCE_HOSTS["DBInstanceIdentifier-2"]: [("DBInstanceIdentifier-2", True)],
     }
 
 
@@ -315,7 +320,7 @@ def test_agent_aws_rds_instance_hosts_get_the_resource_labels(
         for result in results
         if result.piggyback_hostname != ACCOUNT_HOST
     } == {
-        f"DBInstanceIdentifier-{i}_region": {
+        INSTANCE_HOSTS[f"DBInstanceIdentifier-{i}"]: {
             "cmk/aws/service": "rds",
             "cmk/aws/name": f"DBInstanceIdentifier-{i}",
             "cmk/aws/resource_id": f"DbiResourceId-{i}",

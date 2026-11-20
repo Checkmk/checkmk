@@ -140,7 +140,7 @@ class ElastiCacheNode:
 @dataclass(frozen=True)
 class RDSInstance:
     instance_id: str
-    region: str
+    arn: str
 
 
 @dataclass(frozen=True)
@@ -203,7 +203,7 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost:
         case ElastiCacheNode():
             return _elasticache_node_host(resource, naming.non_ec2)
         case RDSInstance():
-            return _rds_instance_host(resource)
+            return _rds_instance_host(resource, naming.non_ec2)
         case SNSTopic():
             return _sns_topic_host(resource)
         case LambdaFunction():
@@ -336,8 +336,8 @@ def _elasticache_node_host(node: ElastiCacheNode, template: NonEC2PiggybackTempl
     return _hostname_with_hashed_arn("elasticache_cluster", node.node_id, node.arn, template)
 
 
-def _rds_instance_host(instance: RDSInstance) -> TargetHost:
-    return _hostname_from_name_and_region(instance.instance_id, instance.region)
+def _rds_instance_host(instance: RDSInstance, template: NonEC2PiggybackTemplate) -> TargetHost:
+    return _hostname_with_hashed_arn("rds_db", instance.instance_id, instance.arn, template)
 
 
 def _sns_topic_host(topic: SNSTopic) -> TargetHost:

@@ -154,7 +154,7 @@ _LONG_TEXT = "x" * 30_000
     "filter_lines, expected_texts",
     [
         pytest.param([f"Filter: event_text =~ {_LONG_TEXT.upper()}"],    {_LONG_TEXT}, id="long argument"),
-        pytest.param([f"Filter: event_text ~~ {'X' * 10_000}"] * 3,       {_LONG_TEXT}, id="long arguments together"),
+        pytest.param([f"Filter: event_text ~~ {'X' * 800}"] * 40,         {_LONG_TEXT}, id="long arguments together"),
         pytest.param(["Filter: event_text = a\0b"],                       set(),        id="NUL"),
     ],
 )  # fmt: skip

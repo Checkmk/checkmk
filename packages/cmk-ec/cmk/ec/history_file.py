@@ -215,10 +215,11 @@ def _grep_pipeline(filters: Iterable[QueryFilter]) -> list[str]:
     return commands
 
 
-# The shell gets the whole pipeline as a single argument, which Linux limits to 128 KiB. As
-# grep only prefilters, we leave out the greps beyond this, e.g. for a long =~ argument,
-# whose case variants take up to 9 bytes per character.
-_MAX_GREP_PIPELINE_BYTES = 64 * 1024
+# As grep only prefilters, we leave out the greps beyond this, e.g. for a long =~ argument,
+# whose case variants take up to 9 bytes per character: The shell gets the whole pipeline as a
+# single argument, which Linux limits to 128 KiB, and grep takes quadratic time to compile a
+# pattern, e.g. 2.5 s for 50 KB.
+_MAX_GREP_PIPELINE_BYTES = 4 * 1024
 
 
 def _grep_command(operator_name: OperatorName, argument: str) -> str | None:

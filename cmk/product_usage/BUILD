@@ -31,6 +31,7 @@ py_library(
         ":site_id",
         "//cmk/utils",
         "//packages/cmk-ccc:log",
+        "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version-info",
         "//packages/cmk-livestatus-client",
         requirement("requests"),

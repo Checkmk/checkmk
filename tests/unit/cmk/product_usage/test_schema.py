@@ -40,6 +40,14 @@ def _product_usage_data() -> dict[str, object]:
             "version": "2.3.4",
             "is_grafana_cloud": False,
         },
+        "agent_updater": {
+            "state": "ok",
+            "count_hosts_no_updater": 3,
+            "count_hosts_controller_only": 97,
+            "count_hosts_both": 12,
+            "count_hosts_legacy_only": 5,
+            "count_hosts_legacy_installed_package": 1,
+        },
         "checks": {
             "df": {
                 "count": 1,

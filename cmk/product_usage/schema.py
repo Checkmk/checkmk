@@ -163,6 +163,45 @@ class InventoryData(pydantic.BaseModel):
     )
 
 
+class AgentUpdaterData(pydantic.BaseModel):
+    state: typing.Literal["ok", "warn"] = pydantic.Field(
+        description=(
+            'The state of the "Agent updater" item of the "Analyze configuration" page.'
+            ' It is "ok" as long as the legacy agent updater is supported.'
+        ),
+        examples=["ok"],
+    )
+    count_hosts_no_updater: int = pydantic.Field(
+        description=(
+            "The number of hosts whose baked agent enables agent updates,"
+            " but for which no updater has contacted the site in the last 7 days."
+        ),
+        examples=[3],
+    )
+    count_hosts_controller_only: int = pydantic.Field(
+        description="The number of hosts that use the Agent Controller updater only.",
+        examples=[97],
+    )
+    count_hosts_both: int = pydantic.Field(
+        description=(
+            "The number of hosts that use both the Agent Controller updater"
+            " and the legacy agent updater."
+        ),
+        examples=[12],
+    )
+    count_hosts_legacy_only: int = pydantic.Field(
+        description="The number of hosts that use the legacy agent updater only.",
+        examples=[5],
+    )
+    count_hosts_legacy_installed_package: int = pydantic.Field(
+        description=(
+            "The number of hosts that use both updaters and whose currently installed agent"
+            " package was installed by the legacy agent updater."
+        ),
+        examples=[1],
+    )
+
+
 class Metadata(typing.TypedDict):
     version: str
     namespace: str
@@ -289,6 +328,25 @@ class ProductUsageData(SiteInfo):
             " If the site is not connected to the Grafana plug-in, this field returns null."
         ),
         examples=[{"is_used": True, "version": "12.3.0", "is_grafana_cloud": False}],
+    )
+    agent_updater: AgentUpdaterData | None = pydantic.Field(
+        default=None,
+        description=(
+            "Which agent updater the hosts of this site run, counted over the hosts whose"
+            " baked agent enables agent updates. No host names or addresses are collected."
+            " This field returns null where the site cannot count them: on a remote site,"
+            " and in an edition without the Agent Bakery."
+        ),
+        examples=[
+            {
+                "state": "ok",
+                "count_hosts_no_updater": 3,
+                "count_hosts_controller_only": 97,
+                "count_hosts_both": 12,
+                "count_hosts_legacy_only": 5,
+                "count_hosts_legacy_installed_package": 1,
+            }
+        ],
     )
 
 

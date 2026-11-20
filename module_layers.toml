@@ -1596,13 +1596,18 @@ allows = [
 [components."cmk.product_usage"]
 # NOTE: this is a dependency of both 'gui' and 'base',
 # so it must not depend on either of them.
+# NOTE: 'cmk.ccc.site' and 'cmk.utils.local_secrets' build the URL and the
+# Authorization header of the agent updater collector, which asks this site's own
+# REST API for a number that only an edition with the Agent Bakery can compute.
 allows = [
   "@livestatus_client",
   "cmk.ccc.log",
+  "cmk.ccc.site",
   "cmk.ccc.store",
   "cmk.ccc.version_info",
   "cmk.product_usage.site_id",
   "cmk.utils.http_proxy_config",
+  "cmk.utils.local_secrets",
 ]
 
 [components."cmk.product_usage.site_id"]

@@ -7,6 +7,7 @@ import logging
 import time
 from pathlib import Path
 
+import cmk.product_usage.collectors.agent_updater as agent_updater_collector
 import cmk.product_usage.collectors.audit_log as audit_log_collector
 import cmk.product_usage.collectors.checks as checks_collector
 import cmk.product_usage.collectors.grafana as grafana_collector
@@ -16,7 +17,9 @@ import cmk.product_usage.collectors.sessions as sessions_collector
 import cmk.product_usage.collectors.site_info as site_info_collector
 import cmk.product_usage.collectors.user_stats as user_stats_collector
 import cmk.product_usage.collectors.users as users_collector
+from cmk.ccc.site import omd_site
 from cmk.product_usage.schema import (
+    AgentUpdaterData,
     AuditLog,
     CloudTrialPayload,
     ProductUsagePayload,
@@ -50,7 +53,17 @@ def collect_data(
         users=user_stats_collector.collect(default_config_dir, var_dir / "web", now),
         inventory=inventory_collector.collect(),
         grafana=grafana_collector.collect(var_dir),
+        agent_updater=_collect_agent_updater(omd_root, logger),
     )
+
+
+def _collect_agent_updater(omd_root: Path, logger: logging.Logger) -> AgentUpdaterData | None:
+    """Collect the agent updater usage without letting its failure lose the payload"""
+    try:
+        return agent_updater_collector.collect(omd_root, omd_site(), logger)
+    except Exception:
+        logger.exception("Could not collect the agent updater usage, sending no counts")
+        return None
 
 
 def store_data(data: ProductUsagePayload, var_dir: Path) -> None:

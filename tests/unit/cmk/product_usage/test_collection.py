@@ -8,11 +8,15 @@ import uuid
 from pathlib import Path
 
 import pytest
+import responses
+from pytest_mock import MockerFixture, MockType
 
+from cmk.ccc.site import omd_site
 from cmk.livestatus_client import MKLivestatusSocketError
-from cmk.product_usage.collection import collect_cloud_trial_data
+from cmk.product_usage.collection import collect_cloud_trial_data, collect_data
 from cmk.product_usage.collectors.host_services import ServicesPerHostReader
 from cmk.product_usage.schema import (
+    AgentUpdaterData,
     AuditLog,
     AuditLogActorClass,
     CloudTrialPayload,
@@ -24,6 +28,17 @@ from cmk.product_usage.schema import (
 from tests.unit.cmk.product_usage.user_store import write_user_store
 
 NO_ENTRIES = AuditLogActorClass(entries=0, last_entry_at=None)
+
+APACHE_PORT = 5000
+UPDATER_USAGE_PATH = "/check_mk/api/internal/domain-types/agent/actions/updater_usage/invoke"
+UPDATER_USAGE_COUNTS = {
+    "state": "ok",
+    "count_hosts_no_updater": 3,
+    "count_hosts_controller_only": 97,
+    "count_hosts_both": 12,
+    "count_hosts_legacy_only": 5,
+    "count_hosts_legacy_installed_package": 1,
+}
 
 
 def test_cloud_trial_payload_carries_the_audit_log_of_the_site(tmp_path: Path) -> None:
@@ -197,6 +212,84 @@ def test_cloud_trial_payload_carries_the_product_usage_data(tmp_path: Path) -> N
     assert payload.model_dump(include=set(ProductUsagePayload.model_fields)) == (
         _product_usage_payload().model_dump()
     )
+
+
+@pytest.fixture(name="mock_checkmk_info")
+def fixture_mock_checkmk_info(mocker: MockerFixture) -> None:
+    """The edition and version, which are read from the installed version tree"""
+    mocker.patch(
+        "cmk.ccc.version_info.get_general_version_infos",
+        return_value={"version": "2.5.0p1", "edition": "pro", "os": "Ubuntu 24.04.3 LTS"},
+    )
+
+
+@pytest.mark.usefixtures("mock_checkmk_info")
+def test_payload_carries_the_agent_updater_usage_of_the_site(
+    tmp_path: Path, local_connection: MockType, site_api: responses.RequestsMock
+) -> None:
+    site_api.get(_updater_usage_url(), json=UPDATER_USAGE_COUNTS)
+
+    payload = _collect_product_usage(tmp_path, local_connection)
+
+    assert payload.agent_updater == AgentUpdaterData(
+        state="ok",
+        count_hosts_no_updater=3,
+        count_hosts_controller_only=97,
+        count_hosts_both=12,
+        count_hosts_legacy_only=5,
+        count_hosts_legacy_installed_package=1,
+    )
+
+
+@pytest.mark.usefixtures("mock_checkmk_info", "site_api")
+def test_payload_has_no_agent_updater_usage_when_the_site_does_not_answer(
+    tmp_path: Path, local_connection: MockType
+) -> None:
+    """A collector that fails costs its own field, never the rest of the payload
+
+    Nothing is registered on 'site_api', so the request fails the way it would with the
+    site's Apache down.
+    """
+    payload = _collect_product_usage(tmp_path, local_connection)
+
+    assert payload.agent_updater is None
+    assert (payload.count_hosts, payload.count_services, payload.checks) == (10, 20, {})
+
+
+@pytest.mark.usefixtures("mock_checkmk_info", "site_api")
+def test_failed_agent_updater_collection_logs_the_error(
+    tmp_path: Path, local_connection: MockType, caplog: pytest.LogCaptureFixture
+) -> None:
+    _collect_product_usage(tmp_path, local_connection)
+
+    assert [
+        (record.levelname, record.getMessage(), record.exc_info is not None)
+        for record in caplog.records
+    ] == [("ERROR", "Could not collect the agent updater usage, sending no counts", True)]
+
+
+def _updater_usage_url() -> str:
+    """The endpoint the collector asks, built when a test runs rather than at import
+
+    'OMD_SITE' is set by the session fixtures, so it is not there yet while the test
+    modules are collected.
+    """
+    return f"http://localhost:{APACHE_PORT}/{omd_site()}{UPDATER_USAGE_PATH}"
+
+
+def _collect_product_usage(site_dir: Path, local_connection: MockType) -> ProductUsagePayload:
+    """Collect the product usage data of a test site: 10 hosts, 20 services, nothing else
+
+    The four Livestatus answers are the site status, the services, the disabled services
+    and the hosts with inventory data, in the order 'collect_data' asks for them.
+    """
+    local_connection.query.side_effect = [[[10, 20]], [], [], []]
+    (site_dir / "wato").mkdir(parents=True, exist_ok=True)
+    site_conf = site_dir / "etc" / "omd" / "site.conf"
+    site_conf.parent.mkdir(parents=True, exist_ok=True)
+    site_conf.write_text(f"CONFIG_APACHE_TCP_PORT='{APACHE_PORT}'\n")
+
+    return collect_data(site_dir, site_dir, site_dir, site_dir, logging.getLogger(__name__))
 
 
 def _collect_from_site(

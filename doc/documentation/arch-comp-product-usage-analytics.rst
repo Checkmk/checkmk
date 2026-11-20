@@ -55,7 +55,7 @@ The ``cmk-product-usage`` command-line tool (``cmk.product_usage.cli``) is the s
 A per-site cron job invokes it every 30 minutes, but a collection actually happens only about once every 30 days (7 days on a Cloud trial site) -- see `Collection and transmission`_.
 
 **Collectors.**
-Seven collectors read from Livestatus and the filesystem: check usage (``collectors/checks.py``), site info (``collectors/site_info.py``), a previously recorded Grafana-usage snapshot (``collectors/grafana.py``), and, on a Cloud trial site only, the audit log entries per actor class (``collectors/audit_log.py``), the user counts (``collectors/users.py``), the number of hosts with default services only (``collectors/host_services.py``), and the stored login sessions (``collectors/sessions.py``).
+Eight collectors read from Livestatus, the filesystem, and this site's own REST API: check usage (``collectors/checks.py``), site info (``collectors/site_info.py``), a previously recorded Grafana-usage snapshot (``collectors/grafana.py``), which agent updater the hosts run (``collectors/agent_updater.py``), and, on a Cloud trial site only, the audit log entries per actor class (``collectors/audit_log.py``), the user counts (``collectors/users.py``), the number of hosts with default services only (``collectors/host_services.py``), and the stored login sessions (``collectors/sessions.py``).
 
 **Config and consent.**
 The config module reads the site's consent decision and HTTP-proxy setting from ``product_usage_analytics.mk``, a Checkmk global-settings file that a GUI page also reads and writes.
@@ -101,6 +101,11 @@ The CLI checks whether a site is a Cloud trial (``is_cloud_trial``) once per run
 * Per-check usage -- Livestatus's services table, keyed by check command with anything after a ``!`` stripped so check-parameter secrets are never collected.
 * Disabled-service counts -- parsed out of the discovery long-plugin-output's "Service ignored: " lines.
 * The last recorded Grafana-usage snapshot, if any.
+* Which agent updater the hosts run -- the state of the "Agent updater" item of "Analyze configuration" and its five host counts, over the hosts whose baked agent enables agent updates.
+  Only an edition with the Agent Bakery can count this, and only on a central site, and this module ships under the GPL and may not import the bakery.
+  The collector therefore asks the bakery's internal REST endpoint (``domain-types/agent/actions/updater_usage/invoke``) over this site's own REST API, authenticating with the site-internal secret as ``cmk/base/diagnostics.py`` does.
+  The numbers are counted while that request is answered, so nothing is cached or left on disk; it sends no host names.
+  Any other answer than the counts -- no Agent Bakery, a remote site, a release without the endpoint -- leaves the field ``null``.
 * On a Cloud trial site only, the audit log entries per actor class -- interactive users, automation users, and the platform (the Cloud platform's users and the site itself) -- as a count and the time of the newest entry.
   The collector reads the current and the rotated audit logs and the GUI's user store; it sends no user IDs.
 * On a Cloud trial site only, the number of activated hosts whose only services are ``Check_MK`` and ``Check_MK Discovery``, or that have no services -- hosts that deliver no data yet.
@@ -170,6 +175,7 @@ Use class ``feature`` and component ``wato``, like the other product usage analy
 A collector runs synchronously inside ``cmk-product-usage --cron`` and inside the admin download page request.
 A new collector must finish within a low single-digit number of seconds on a large site.
 Prefer Livestatus queries and data that already exists on disk, and do not call external services.
+The agent updater collector calls this site's own REST API over ``localhost``, which is not an external service but does make it the only collector that needs Apache to be running; take that route only for a data point that a GPL module cannot compute itself.
 The collector sees only the local site; in a distributed setup each site sends its own data.
 Keep additions small: single values (counts, booleans, versions) are fine, and a list or map is fine if its length depends on what Checkmk ships (check plug-ins, rulesets, features), never on the site's configuration (hosts, services, rules, users).
 For orientation, the payload is about 5--30 KB today, almost all of it the per-plug-in ``checks`` map; a new data point should not noticeably change that.
@@ -227,7 +233,7 @@ Risks and technical debts
 5. Collection is not fail-open: ``collect_data()`` calls all collectors in one step, and an exception in any of them aborts the run.
    Nothing is stored or uploaded in that run, including files left over from earlier failed uploads, and the next run is not planned, so every cron run (every 30 minutes) tries again until the error is gone.
    The intended design is fail-open: a failure while gathering one data point must not prevent collecting and sending the others.
-   New collectors are built that way from now on.
+   New collectors are built that way from now on; the agent updater collector is the first one whose errors ``collect_data()`` catches, leaving its field ``null``.
 6. The audit log collector classifies users by rules of thumb.
    The Cloud platform's user IDs are fixed (``api_user``, ``agent_registration``), so the entries of a different registration user for the preconfigured agent count as automation.
    A deleted user counts as interactive only if its ID is an email address, like a Cognito user's ID; otherwise it counts as automation.

@@ -45,21 +45,21 @@ from cmk.web.utils.unit_formatter import Label, NotationFormatter
 
 from ._time_axis import compute_time_axis
 
-DPI = 96
-TITLE_COLOR = "#1E262E"
-TITLE_FONT_SCALE = 1.3
-X_AXIS_TITLE_FONT_SCALE = 1.125
-DIVISION_COLOR = "#cacaca"
-BACKGROUND_COLOR = "#F0F0F4"
-LEGEND_HEADER_COLOR = TITLE_COLOR
-LEGEND_HEADER_SEPARATOR_COLOR = "#D0D5D9"
-LEGEND_TEXT_COLOR = "#2C3843"
-LEGEND_MARKER_WIDTH_PX = 4
-LEGEND_MARKER_HEIGHT_PX = 16
-LEGEND_MARKER_RADIUS_PX = 2
-TITLE_Y_OFFSET_PX = 10
-REGION_FILL_ALPHA = 0.15
-_PT_PER_PX = 72 / DPI
+_DPI = 96
+_TITLE_COLOR = "#1E262E"
+_TITLE_FONT_SCALE = 1.3
+_X_AXIS_TITLE_FONT_SCALE = 1.125
+_DIVISION_COLOR = "#cacaca"
+_BACKGROUND_COLOR = "#F0F0F4"
+_LEGEND_HEADER_COLOR = _TITLE_COLOR
+_LEGEND_HEADER_SEPARATOR_COLOR = "#D0D5D9"
+_LEGEND_TEXT_COLOR = "#2C3843"
+_LEGEND_MARKER_WIDTH_PX = 4
+_LEGEND_MARKER_HEIGHT_PX = 16
+_LEGEND_MARKER_RADIUS_PX = 2
+_TITLE_Y_OFFSET_PX = 10
+_REGION_FILL_ALPHA = 0.15
+_PT_PER_PX = 72 / _DPI
 _EMPTY_Y_RANGE = (-0.05, 0.05)
 
 
@@ -164,7 +164,7 @@ def _plot_regions(ax: Axes, graph: EvaluatedGraph) -> None:
             upper,
             where=~(np.isnan(lower) | np.isnan(upper)),
             color=region.attributes.color,
-            alpha=REGION_FILL_ALPHA,
+            alpha=_REGION_FILL_ALPHA,
             zorder=0,
         )
 
@@ -333,17 +333,17 @@ def _apply_render_config(
 ) -> Text | None:
     ax.tick_params(labelsize=options.font_size, length=0)
     for spine in ax.spines.values():
-        spine.set_color(DIVISION_COLOR)
+        spine.set_color(_DIVISION_COLOR)
     ax.spines["top"].set_visible(False)
 
     title_artist: Text | None = None
     if options.show_title:
         title_artist = ax.set_title(
             graph.title,
-            fontsize=options.font_size * TITLE_FONT_SCALE,
+            fontsize=options.font_size * _TITLE_FONT_SCALE,
             fontweight="bold",
             loc="left",
-            color=TITLE_COLOR,
+            color=_TITLE_COLOR,
         )
 
     if options.show_vertical_axis:
@@ -357,7 +357,7 @@ def _apply_render_config(
             if labels := formatter.render_y_labels(*ax.get_ylim(), target_number_of_labels):
                 ax.set_yticks([label.position for label in labels])
                 ax.set_yticklabels([label.text for label in labels])
-        ax.grid(axis="y", color=DIVISION_COLOR, linestyle="--")
+        ax.grid(axis="y", color=_DIVISION_COLOR, linestyle="--")
     else:
         ax.yaxis.set_visible(False)
 
@@ -366,14 +366,14 @@ def _apply_render_config(
         # A first placement, so the layout pass reserves room for the labels; the plot width
         # it settles on is only known afterwards (see _fit_time_axis).
         _fit_time_axis(ax, renderer, options, tz)
-        ax.grid(axis="x", color=DIVISION_COLOR, linestyle="--")
+        ax.grid(axis="x", color=_DIVISION_COLOR, linestyle="--")
     else:
         ax.tick_params(axis="x", labelbottom=False, bottom=False)
 
     if options.show_graph_time:
         ax.set_title(
             _graph_time_caption(visible, texts, tz),
-            fontsize=options.font_size * X_AXIS_TITLE_FONT_SCALE,
+            fontsize=options.font_size * _X_AXIS_TITLE_FONT_SCALE,
             loc="right",
         )
 
@@ -427,7 +427,7 @@ def _align_title_to_y_ticks(
     if not left_edges:
         return
     fig_x = min(left_edges) / fig.bbox.width
-    offset = ScaledTranslation(0, TITLE_Y_OFFSET_PX / DPI, fig.dpi_scale_trans)
+    offset = ScaledTranslation(0, _TITLE_Y_OFFSET_PX / _DPI, fig.dpi_scale_trans)
     title_artist.set_transform(blended_transform_factory(fig.transFigure, ax.transAxes) + offset)
     title_artist.set_position((fig_x, 1.0))
 
@@ -488,18 +488,18 @@ def _plot_legend_table(
         cell.visible_edges = ""
     for col in range(len(col_labels)):
         table[0, col].visible_edges = "B"  # separates the header from the curve rows
-        table[0, col].set_edgecolor(LEGEND_HEADER_SEPARATOR_COLOR)
+        table[0, col].set_edgecolor(_LEGEND_HEADER_SEPARATOR_COLOR)
     if rules:
         first_rule_row = len(scalars) + 1
         for col in range(len(col_labels)):
             # separates the curve rows from the horizontal-rule rows
             table[first_rule_row, col].visible_edges = "T"
-            table[first_rule_row, col].set_edgecolor(LEGEND_HEADER_SEPARATOR_COLOR)
+            table[first_rule_row, col].set_edgecolor(_LEGEND_HEADER_SEPARATOR_COLOR)
 
     n_rows = len(scalars) + len(rules) + len(regions)
     row_count = n_rows + 1  # +1 for the header row
     for col in range(len(col_labels)):
-        table[0, col].set_text_props(color=LEGEND_HEADER_COLOR)
+        table[0, col].set_text_props(color=_LEGEND_HEADER_COLOR)
     for row in range(row_count):
         table[row, 1].set_text_props(ha="left")
         table[row, 1].PAD = 0.02
@@ -507,7 +507,7 @@ def _plot_legend_table(
             table[row, col].set_text_props(ha="right")
         if row > 0:
             for col in range(len(col_labels)):
-                table[row, col].set_text_props(color=LEGEND_TEXT_COLOR)
+                table[row, col].set_text_props(color=_LEGEND_TEXT_COLOR)
 
     marker_x = (col_widths[0] / 2) / sum(col_widths)
 
@@ -515,9 +515,9 @@ def _plot_legend_table(
         return (n_rows - row + 0.5) / row_count
 
     def add_marker(x: float, y: float, color: str) -> None:
-        width = LEGEND_MARKER_WIDTH_PX * _PT_PER_PX
-        height = LEGEND_MARKER_HEIGHT_PX * _PT_PER_PX
-        radius = LEGEND_MARKER_RADIUS_PX * _PT_PER_PX
+        width = _LEGEND_MARKER_WIDTH_PX * _PT_PER_PX
+        height = _LEGEND_MARKER_HEIGHT_PX * _PT_PER_PX
+        radius = _LEGEND_MARKER_RADIUS_PX * _PT_PER_PX
         drawing_area = DrawingArea(width, height, 0, 0, clip=False)
         drawing_area.add_artist(
             FancyBboxPatch(
@@ -594,20 +594,20 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
 
     width_in, height_in = png_size_inches(graph, png_graph.options)
 
-    fig = Figure(figsize=(width_in, height_in), dpi=DPI, facecolor=BACKGROUND_COLOR)
+    fig = Figure(figsize=(width_in, height_in), dpi=_DPI, facecolor=_BACKGROUND_COLOR)
     renderer = _agg_renderer(fig)
 
     if table_height_ex:
         gs = fig.add_gridspec(2, 1, height_ratios=[png_graph.options.size[1], table_height_ex])
         ax = fig.add_subplot(gs[0])
         legend_ax = fig.add_subplot(gs[1])
-        legend_ax.set_facecolor(BACKGROUND_COLOR)
+        legend_ax.set_facecolor(_BACKGROUND_COLOR)
         _plot_legend_table(
             legend_ax, scalars, graph.rules, graph.regions, png_graph.options, texts, formatter
         )
     else:
         ax = fig.add_subplot(1, 1, 1)
-    ax.set_facecolor(BACKGROUND_COLOR)
+    ax.set_facecolor(_BACKGROUND_COLOR)
     _plot_metrics(ax, graph, visible)
     # Set explicitly (not just autoscaled) *before* the rules below are drawn, so a rule far
     # outside the data's range doesn't stretch the view via matplotlib's own autoscale.

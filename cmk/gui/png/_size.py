@@ -7,7 +7,7 @@ from cmk.graphing_engine import drawn_curves, EvaluatedGraph
 
 from ._wire import PngOptions
 
-MM_PER_INCH = 25.4
+_MM_PER_INCH = 25.4
 
 
 def ex_to_inches(size_ex: float, font_size_pt: float) -> float:
@@ -18,7 +18,7 @@ def ex_to_inches(size_ex: float, font_size_pt: float) -> float:
 def mm_per_ex(font_size_pt: float) -> float:
     """The inverse of the renderer's ex-to-mm conversion. get_mm_per_ex uses a different ex,
     so an image sized with it comes out a few percent off."""
-    return ex_to_inches(1.0, font_size_pt) * MM_PER_INCH
+    return ex_to_inches(1.0, font_size_pt) * _MM_PER_INCH
 
 
 def legend_height_ex(graph: EvaluatedGraph, options: PngOptions) -> float:
@@ -36,4 +36,4 @@ def png_size_inches(graph: EvaluatedGraph, options: PngOptions) -> tuple[float, 
 
 def compute_png_size_mm(graph: EvaluatedGraph, options: PngOptions) -> tuple[float, float]:
     width_in, height_in = png_size_inches(graph, options)
-    return width_in * MM_PER_INCH, height_in * MM_PER_INCH
+    return width_in * _MM_PER_INCH, height_in * _MM_PER_INCH

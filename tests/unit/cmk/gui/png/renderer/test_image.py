@@ -32,10 +32,11 @@ from matplotlib.figure import Figure
 from matplotlib.image import imread
 
 from cmk.gui.png import compute_png_size_mm
-from cmk.gui.png._size import MM_PER_INCH
+from cmk.gui.png._size import _MM_PER_INCH
 from cmk.gui.png._wire import PngGraph, PngOptions, PngTexts, RenderingFailure
 from cmk.gui.png.renderer._image import (
     _agg_renderer,
+    _DPI,
     _fit_time_axis,
     _graph_scalars,
     _graph_time_caption,
@@ -45,7 +46,6 @@ from cmk.gui.png.renderer._image import (
     _rules_in_range,
     _vertical_range_bounds,
     _y_axis_limits,
-    DPI,
     render_pngs,
 )
 from cmk.gui.utils.temperature_unit import TemperatureUnit
@@ -86,7 +86,7 @@ def _size_in_px(png: bytes) -> tuple[int, int]:
 
 def _px(size_mm: tuple[float, float]) -> tuple[int, int]:
     width_mm, height_mm = size_mm
-    return int(width_mm / MM_PER_INCH * DPI), int(height_mm / MM_PER_INCH * DPI)
+    return int(width_mm / _MM_PER_INCH * _DPI), int(height_mm / _MM_PER_INCH * _DPI)
 
 
 def _curve(title: str, values: list[float | None], *, color: str = "#000000") -> EvaluatedCurve:

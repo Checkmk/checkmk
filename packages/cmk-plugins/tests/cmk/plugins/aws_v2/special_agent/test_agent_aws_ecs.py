@@ -31,6 +31,11 @@ from cmk.plugins.aws_v2.special_agent.sections.ecs import ECS, ECSLimits, ECSSum
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
 
 ACCOUNT_HOST = TargetHost("aws_account_123456789012")
+CLUSTER_HOSTS = {
+    "cluster-test1": TargetHost("aws_ecs_cluster_cluster-test1_7305cef9"),
+    "cluster-test2": TargetHost("aws_ecs_cluster_cluster-test2_33d31150"),
+    "cluster-test3": TargetHost("aws_ecs_cluster_cluster-test3_b79f5bd9"),
+}
 
 CLUSTERS_CLIENT_RESPONSE1: Final[Sequence[Mapping[str, object]]] = [
     {
@@ -316,7 +321,7 @@ CLUSTER3: Final[object] = {
     "TagsForCmkLabels": {},
 }
 
-CLUSTER3_HOST = TargetHost("cluster-test3_region")
+CLUSTER3_HOST = CLUSTER_HOSTS["cluster-test3"]
 
 ACCOUNT_LIMITS = [
     AWSRegionLimit(
@@ -602,7 +607,7 @@ def test_agent_aws_ecs_metrics_go_to_the_host_of_their_cluster(
 
     assert {
         result.piggyback_hostname: {row["Label"] for row in result.content} for result in results
-    } == {"cluster-test1_region": {"cluster-test1"}, "cluster-test2_region": {"cluster-test2"}}
+    } == {CLUSTER_HOSTS[name]: {name} for name in ("cluster-test1", "cluster-test2")}
 
 
 def test_agent_aws_ecs_cluster_hosts_get_the_resource_labels(
@@ -614,7 +619,7 @@ def test_agent_aws_ecs_cluster_hosts_get_the_resource_labels(
     results = ecs.run().results
 
     assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
-        "cluster-test1_region": {
+        CLUSTER_HOSTS["cluster-test1"]: {
             "cmk/aws/service": "ecs",
             "cmk/aws/name": "cluster-test1",
             "cmk/aws/resource_id": "cluster-test1",
@@ -623,7 +628,7 @@ def test_agent_aws_ecs_cluster_hosts_get_the_resource_labels(
             "cmk/aws/tag/tag1": "true",
             "cmk/aws/tag/tag2": "2",
         },
-        "cluster-test2_region": {
+        CLUSTER_HOSTS["cluster-test2"]: {
             "cmk/aws/service": "ecs",
             "cmk/aws/name": "cluster-test2",
             "cmk/aws/resource_id": "cluster-test2",

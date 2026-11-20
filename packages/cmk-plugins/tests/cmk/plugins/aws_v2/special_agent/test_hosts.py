@@ -210,7 +210,9 @@ def test_ec2_instance_without_a_usable_tag_has_no_host(instance: Mapping[str, ob
             id="lambda function",
         ),
         pytest.param(
-            ECSCluster("cluster", "eu-central-1"), "cluster_eu-central-1", id="ecs cluster"
+            ECSCluster("orders", "arn:aws:ecs:eu-central-1:111122223333:cluster/orders"),
+            "aws_ecs_cluster_orders_0037a65b",
+            id="ecs cluster",
         ),
     ],
 )
@@ -225,8 +227,12 @@ def test_sns_topics_with_the_same_name_in_two_regions_go_to_two_hosts() -> None:
 
 
 def test_ecs_clusters_with_the_same_name_in_two_regions_go_to_two_hosts() -> None:
-    assert target_host(ECSCluster("cluster", "eu-central-1"), DEFAULT_NAMING) != target_host(
-        ECSCluster("cluster", "us-east-1"), DEFAULT_NAMING
+    assert target_host(
+        ECSCluster("cluster", "arn:aws:ecs:eu-central-1:111122223333:cluster/cluster"),
+        DEFAULT_NAMING,
+    ) != target_host(
+        ECSCluster("cluster", "arn:aws:ecs:us-east-1:111122223333:cluster/cluster"),
+        DEFAULT_NAMING,
     )
 
 

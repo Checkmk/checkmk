@@ -158,7 +158,7 @@ class LambdaFunction:
 @dataclass(frozen=True)
 class ECSCluster:
     name: str
-    region: str
+    arn: str
 
 
 # Each of these resources always goes to a piggyback host of its own.
@@ -209,7 +209,7 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost:
         case LambdaFunction():
             return _lambda_function_host(resource, naming.non_ec2)
         case ECSCluster():
-            return _ecs_cluster_host(resource)
+            return _ecs_cluster_host(resource, naming.non_ec2)
         case _:
             assert_never(resource)
 
@@ -350,8 +350,8 @@ def _lambda_function_host(
     return _hostname_with_hashed_arn("lambda_function", function.name, function.arn, template)
 
 
-def _ecs_cluster_host(cluster: ECSCluster) -> TargetHost:
-    return _hostname_from_name_and_region(cluster.name, cluster.region)
+def _ecs_cluster_host(cluster: ECSCluster, template: NonEC2PiggybackTemplate) -> TargetHost:
+    return _hostname_with_hashed_arn("ecs_cluster", cluster.name, cluster.arn, template)
 
 
 def _hostname_from_name_and_region(name: str, region: str) -> TargetHost:

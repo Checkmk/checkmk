@@ -156,7 +156,7 @@ class ECSLimits(AWSSectionLimits):
         )
 
         for cluster in ClusterSelection.from_config(self._config).select(clusters):
-            cluster_host = hosts.ECSCluster(cluster.clusterName, self._region)
+            cluster_host = hosts.ECSCluster(cluster.clusterName, cluster.clusterArn)
             self._add_limit(
                 AWSLimit(
                     key="capacity_providers",
@@ -327,21 +327,18 @@ class ECS(AWSSectionCloudwatch):
         content_by_cluster: dict[str, list[Mapping[str, object]]] = {}
         for row in raw_content.content:
             content_by_cluster.setdefault(row["Label"], []).append(row)
-        return AWSComputedContent(
-            [
-                self._cluster_result(name, rows, colleague_contents.content.get(name))
-                for name, rows in content_by_cluster.items()
-            ],
-            raw_content.cache_timestamp,
-        )
+
+        results = []
+        for name, rows in content_by_cluster.items():
+            # A cluster can be gone from the summary since its metrics were cached.
+            if (cluster := colleague_contents.content.get(name)) is not None:
+                results.append(self._cluster_result(name, rows, cluster))
+        return AWSComputedContent(results, raw_content.cache_timestamp)
 
     def _cluster_result(
-        self, name: str, rows: Sequence[Mapping[str, object]], cluster: Cluster | None
+        self, name: str, rows: Sequence[Mapping[str, object]], cluster: Cluster
     ) -> AWSSectionResult:
-        host = self._target_host(hosts.ECSCluster(name, self._region))
-        if cluster is None:
-            # The cluster is gone from the summary since its metrics were cached.
-            return AWSSectionResult(host, rows, AwsResource(service="ecs"))
+        host = self._target_host(hosts.ECSCluster(name, cluster.clusterArn))
         tags = self.process_tags_for_cmk_labels(
             [{"Key": tag.Key, "Value": tag.Value} for tag in cluster.tags]
         )

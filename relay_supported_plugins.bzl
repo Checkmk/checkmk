@@ -15,6 +15,7 @@ RELAY_SUPPORTED_PLUGIN_FAMILIES = [
     "randomds",
     "redfish",
     "splunk",
+    "veeam",
     "vsphere",
 ]
 

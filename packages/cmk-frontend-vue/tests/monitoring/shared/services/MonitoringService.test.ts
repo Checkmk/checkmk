@@ -834,6 +834,32 @@ describe('MonitoringService', () => {
       service.stopPolling()
     })
 
+    it('names the filtered columns that are hidden', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        columns: [
+          {
+            accessorKey: 'address',
+            header: 'IP address',
+            meta: { filter: { type: 'string-input', field: 'address' } }
+          },
+          {
+            accessorKey: 'alias',
+            header: 'Alias',
+            meta: { hidden: true, filter: { type: 'string-input', field: 'alias' } }
+          }
+        ]
+      })
+
+      service.filters.setColumnFilters([
+        ['address', { type: 'condition', field: 'address', op: 'contains', value: '10.' }],
+        ['alias', { type: 'condition', field: 'alias', op: 'contains', value: 'web' }]
+      ])
+
+      expect(service.hiddenFilteredColumnIds.value).toEqual(new Set(['alias']))
+
+      service.stopPolling()
+    })
+
     it('refetches when a column is revealed, whose data may never have been fetched', async () => {
       const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
       const service = new TestService(fetchBatch, {

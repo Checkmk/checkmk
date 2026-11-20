@@ -269,6 +269,13 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly filters: FilterStore
   /** Column filter state derived from {@link filters}, for binding to the table. */
   readonly tableColumnFilters: ComputedRef<ColumnFiltersState>
+  /** The columns whose funnel filters the listing. */
+  readonly filteredColumnIds: ComputedRef<Set<string>>
+  /**
+   * The filtered columns that are hidden. A column filter narrows the rows whether its column is
+   * shown or not; hidden, nothing in the table points at it.
+   */
+  readonly hiddenFilteredColumnIds: ComputedRef<Set<string>>
   /** Apply a table column-filter change back into {@link filters}. */
   readonly onColumnFiltersUpdate: (next: ColumnFiltersState) => void
 
@@ -394,6 +401,17 @@ export abstract class MonitoringService<T> extends ServiceBase {
 
     const bridge = useColumnFilterBridge(columns, this.filters)
     this.tableColumnFilters = bridge.tableColumnFilters
+    this.filteredColumnIds = computed(
+      () => new Set(this.tableColumnFilters.value.map((filter) => filter.id))
+    )
+    this.hiddenFilteredColumnIds = computed(
+      () =>
+        new Set(
+          [...this.filteredColumnIds.value].filter(
+            (id) => this.columnVisibility.value[id] === false
+          )
+        )
+    )
     this.onColumnFiltersUpdate = bridge.onColumnFiltersUpdate
     this.stopFilterWatch = watch(this.filters.filterNode, (node) => {
       this.updateFilters(node)
@@ -511,10 +529,9 @@ export abstract class MonitoringService<T> extends ServiceBase {
    * already hidden stays hidden, or a filter set elsewhere could never be got rid of.
    */
   withFilteredColumnsShown(visibility: VisibilityState): VisibilityState {
-    const filtered = new Set(this.tableColumnFilters.value.map((filter) => filter.id))
     const guarded = { ...visibility }
     for (const { id } of this.toggleableColumns) {
-      if (filtered.has(id) && this.columnVisibility.value[id] !== false) {
+      if (this.filteredColumnIds.value.has(id) && this.columnVisibility.value[id] !== false) {
         guarded[id] = true
       }
     }

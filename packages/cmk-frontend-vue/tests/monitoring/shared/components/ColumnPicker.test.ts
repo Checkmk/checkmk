@@ -36,11 +36,11 @@ function mountPicker(
   const resetColumnVisibility = vi.fn(() => {
     columnVisibility.value = withFilteredColumnsShown({ ...DEFAULT_VISIBILITY })
   })
+  const filteredColumnIds = computed(() => new Set(columnFilters.map((filter) => filter.id)))
   function withFilteredColumnsShown(visibility: VisibilityState): VisibilityState {
-    const filtered = new Set(columnFilters.map((filter) => filter.id))
     const guarded = { ...visibility }
     for (const { id } of TOGGLEABLE) {
-      if (filtered.has(id) && columnVisibility.value[id] !== false) {
+      if (filteredColumnIds.value.has(id) && columnVisibility.value[id] !== false) {
         guarded[id] = true
       }
     }
@@ -56,6 +56,7 @@ function mountPicker(
     resetColumnVisibility,
     withFilteredColumnsShown,
     tableColumnFilters: computed(() => columnFilters),
+    filteredColumnIds,
     beginAutoPause: vi.fn(),
     endAutoPause: vi.fn()
   }
@@ -236,6 +237,19 @@ test('a filtered column keeps its hint reachable, not on a disabled button', asy
   // A native `disabled` button gets no hover in Chromium, so the title would never show.
   expect(address).toBeEnabled()
   expect(address).toHaveAttribute('title', 'Clear the filter on IP address before hiding it')
+})
+
+test('marks a hidden column whose filter is active', async () => {
+  mountPicker({ alias: false }, [
+    { id: 'alias', value: { type: 'contains', field: 'alias', value: 'web' } }
+  ])
+
+  await openPicker()
+
+  expect(screen.getByRole('button', { name: 'Alias' })).toHaveAttribute(
+    'title',
+    'Alias column hidden, filter is active'
+  )
 })
 
 test('"Back to default" cannot hide a filtered column either', async () => {

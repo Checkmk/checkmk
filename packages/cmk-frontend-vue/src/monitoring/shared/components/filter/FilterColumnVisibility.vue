@@ -36,10 +36,12 @@ interface VisibilityRow {
   visible: boolean
   /** A shown column whose funnel filters the listing: hiding it would drop the filter out of sight. */
   locked: boolean
+  /** A hidden column whose funnel filters the listing, which nothing in the table points at. */
+  filteredWhileHidden: boolean
 }
 
 const filteredColumnIds = computed(
-  () => new Set(monitoringService?.tableColumnFilters.value.map((filter) => filter.id) ?? [])
+  () => monitoringService?.filteredColumnIds.value ?? new Set<string>()
 )
 
 const rows = computed<VisibilityRow[]>(() => {
@@ -52,7 +54,8 @@ const rows = computed<VisibilityRow[]>(() => {
       id: column.id,
       label: column.label,
       visible,
-      locked: visible && filteredColumnIds.value.has(column.id)
+      locked: visible && filteredColumnIds.value.has(column.id),
+      filteredWhileHidden: !visible && filteredColumnIds.value.has(column.id)
     }
   })
 })
@@ -95,7 +98,9 @@ function toggleVisible(row: VisibilityRow): void {
         :title="
           row.locked
             ? _t('Clear the filter on %{column} before hiding it', { column: row.label })
-            : undefined
+            : row.filteredWhileHidden
+              ? _t('%{column} column hidden, filter is active', { column: row.label })
+              : undefined
         "
         @click="toggleVisible(row)"
       >
@@ -108,6 +113,11 @@ function toggleVisible(row: VisibilityRow): void {
           style="pointer-events: none"
         />
         <span class="monitoring-filter-column-visibility__label">{{ row.label }}</span>
+        <span
+          v-if="row.filteredWhileHidden"
+          class="monitoring-filter-column-visibility__filter-dot"
+          aria-hidden="true"
+        ></span>
       </button>
 
       <p v-if="visibleRows.length === 0" class="monitoring-filter-column-visibility__empty">
@@ -159,6 +169,16 @@ function toggleVisible(row: VisibilityRow): void {
 .monitoring-filter-column-visibility__row[aria-pressed='false']
   .monitoring-filter-column-visibility__label {
   opacity: 0.6;
+}
+
+/* The same dot as on the funnel of a filtered column in the table header. */
+.monitoring-filter-column-visibility__filter-dot {
+  flex-shrink: 0;
+  width: var(--dimension-3);
+  height: var(--dimension-3);
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--success);
 }
 
 .monitoring-filter-column-visibility__empty {

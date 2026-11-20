@@ -678,3 +678,31 @@ describe('with the rows laid out', () => {
     expect(screen.queryByText('Host details')).not.toBeInTheDocument()
   })
 })
+
+const ALIAS_FILTER = { type: 'condition', field: 'alias', op: 'contains', value: 'web' }
+
+test('points out a filter on a hidden column', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    `/monitor_all_hosts.py?filter=${encodeURIComponent(JSON.stringify(ALIAS_FILTER))}`
+  )
+  mockHosts([makeHost()])
+  renderApp('community')
+
+  expect(await screen.findByText('Filters active in hidden columns')).toBeVisible()
+})
+
+test('does not point out a filter on a shown column', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    `/monitor_all_hosts.py?cols=alias&filter=${encodeURIComponent(JSON.stringify(ALIAS_FILTER))}`
+  )
+  mockHosts([makeHost()])
+  renderApp('community')
+
+  await screen.findByText('Total rows: 1')
+
+  expect(screen.queryByText('Filters active in hidden columns')).toBeNull()
+})

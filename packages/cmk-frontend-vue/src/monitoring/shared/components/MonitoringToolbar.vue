@@ -10,6 +10,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useTemplateRef } from 'vue'
 
+import MonitoringFilterHint from '@/monitoring/shared/components/MonitoringFilterHint.vue'
 import RefreshCountdown from '@/monitoring/shared/components/RefreshCountdown.vue'
 import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
@@ -57,6 +58,7 @@ defineExpose({
             @deactivate="service.deactivateQuickFilter(chip)"
           />
         </div>
+        <MonitoringFilterHint class="monitoring-toolbar__hint" :service="service" />
         <CmkButton
           variant="text"
           size="small"
@@ -133,6 +135,11 @@ defineExpose({
   min-width: 10em;
 }
 
+.monitoring-toolbar__hint {
+  /* A long hint is cut short, its whole text is in its tooltip. */
+  min-width: 0;
+}
+
 .monitoring-toolbar__reset {
   white-space: nowrap;
 }
@@ -156,6 +163,7 @@ defineExpose({
   }
 
   .monitoring-toolbar__quick-filters,
+  .monitoring-toolbar__hint,
   .monitoring-toolbar__reset {
     order: 2;
   }

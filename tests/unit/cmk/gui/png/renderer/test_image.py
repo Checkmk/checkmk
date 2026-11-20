@@ -278,7 +278,6 @@ def test_far_away_rule_is_clipped_and_does_not_stretch_the_axis() -> None:
     limits = _y_axis_limits(lower, upper, is_mirrored=False)
 
     assert rules == []
-    assert limits is not None
     assert limits[1] < 100000.0
 
 
@@ -298,6 +297,44 @@ def test_vertical_range_bounds_use_the_stacked_top_not_each_members_own_max() ->
 
     assert lower == 0.0
     assert upper == 30.0
+
+
+def test_a_graph_without_data_keeps_the_range_of_an_empty_plot() -> None:
+    assert _y_axis_limits(None, None, is_mirrored=False) == (-0.05, 0.05)
+
+
+def test_a_fixed_range_open_at_the_bottom_ends_at_its_bound_without_data() -> None:
+    graph = EvaluatedGraph(
+        name="g",
+        title="Graph",
+        time_range=_TIME_RANGE,
+        vertical_range=EvaluatedVerticalRange(
+            range_kind=VerticalRangeKind.FIXED, lower=None, upper=100.0
+        ),
+        stacks=[],
+        lines=[EvaluatedLine(curve=_curve("m", [None, None, None]), inverse=False)],
+    )
+
+    lower, upper = _vertical_range_bounds(graph, graph.time_range)
+
+    assert _y_axis_limits(lower, upper, is_mirrored=False) == (99.0, 100.0)
+
+
+def test_a_fixed_range_open_at_the_bottom_ends_at_its_bound_with_data_at_the_bound() -> None:
+    graph = EvaluatedGraph(
+        name="g",
+        title="Graph",
+        time_range=_TIME_RANGE,
+        vertical_range=EvaluatedVerticalRange(
+            range_kind=VerticalRangeKind.FIXED, lower=None, upper=100.0
+        ),
+        stacks=[],
+        lines=[EvaluatedLine(curve=_curve("m", [100.0, 100.0, 100.0]), inverse=False)],
+    )
+
+    lower, upper = _vertical_range_bounds(graph, graph.time_range)
+
+    assert _y_axis_limits(lower, upper, is_mirrored=False) == (99.0, 100.0)
 
 
 def test_y_axis_limits_are_symmetric_for_a_mirrored_graph() -> None:
@@ -733,3 +770,35 @@ def test_a_graph_that_fails_to_render_leaves_the_others_their_images() -> None:
     )
 
     assert [type(result) for result in results] == [RenderingFailure, bytes]
+
+
+def test_a_fixed_range_open_at_the_top_follows_the_data_there() -> None:
+    graph = EvaluatedGraph(
+        name="g",
+        title="Graph",
+        time_range=_TIME_RANGE,
+        vertical_range=EvaluatedVerticalRange(
+            range_kind=VerticalRangeKind.FIXED, lower=0.0, upper=None
+        ),
+        stacks=[],
+        lines=[EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=False)],
+    )
+
+    assert _vertical_range_bounds(graph, graph.time_range) == (0.0, 3.0)
+
+
+def test_a_fixed_range_open_at_the_top_keeps_its_bound_without_data() -> None:
+    graph = EvaluatedGraph(
+        name="g",
+        title="Graph",
+        time_range=_TIME_RANGE,
+        vertical_range=EvaluatedVerticalRange(
+            range_kind=VerticalRangeKind.FIXED, lower=100.0, upper=None
+        ),
+        stacks=[],
+        lines=[EvaluatedLine(curve=_curve("m", [None, None, None]), inverse=False)],
+    )
+
+    lower, upper = _vertical_range_bounds(graph, graph.time_range)
+
+    assert _y_axis_limits(lower, upper, is_mirrored=False) == (100.0, 101.0)

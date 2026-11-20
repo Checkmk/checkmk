@@ -57,6 +57,7 @@ LEGEND_MARKER_RADIUS_PX = 2
 TITLE_Y_OFFSET_PX = 10
 REGION_FILL_ALPHA = 0.15
 _PT_PER_PX = 72 / DPI
+_EMPTY_Y_RANGE = (-0.05, 0.05)
 
 
 def _mirroring_sign(inverse: bool) -> float:
@@ -216,6 +217,20 @@ def _drawn_vertical_extent(
     return min(values), max(values)
 
 
+def _fixed_range_bounds(
+    vertical_range: EvaluatedVerticalRange, graph: EvaluatedGraph, visible: TimeRange
+) -> tuple[float | None, float | None]:
+    lower, upper = vertical_range.lower, vertical_range.upper
+    if lower is not None and upper is not None:
+        return lower, upper
+    data_lower, data_upper = _drawn_vertical_extent(graph, visible)
+    if lower is not None:
+        return lower, lower if data_upper is None else max(lower, data_upper)
+    if upper is not None:
+        return upper - 1 if data_lower is None or data_lower >= upper else data_lower, upper
+    return data_lower, data_upper
+
+
 def _vertical_range_bounds(
     graph: EvaluatedGraph, visible: TimeRange
 ) -> tuple[float | None, float | None]:
@@ -226,7 +241,7 @@ def _vertical_range_bounds(
     if graph.vertical_range is not None:
         lower, upper = graph.vertical_range.lower, graph.vertical_range.upper
         if graph.vertical_range.range_kind is not VerticalRangeKind.MINIMAL:
-            return lower, upper
+            return _fixed_range_bounds(graph.vertical_range, graph, visible)
     data_lower, data_upper = _drawn_vertical_extent(graph, visible)
     lower = min([b for b in (lower, data_lower) if b is not None], default=None)
     upper = max([b for b in (upper, data_upper) if b is not None], default=None)
@@ -235,10 +250,10 @@ def _vertical_range_bounds(
 
 def _y_axis_limits(
     lower: float | None, upper: float | None, *, is_mirrored: bool
-) -> tuple[float, float] | None:
+) -> tuple[float, float]:
     """matplotlib cannot scale a flat graph, so it is widened."""
     if lower is None or upper is None:
-        return None
+        return _EMPTY_Y_RANGE
     if is_mirrored:
         abs_limit = max(abs(lower), abs(upper))
         lower, upper = -abs_limit, abs_limit
@@ -582,10 +597,9 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
         ax = fig.add_subplot(1, 1, 1)
     ax.set_facecolor(BACKGROUND_COLOR)
     _plot_metrics(ax, graph, visible)
-    if (limits := _y_axis_limits(lower, upper, is_mirrored=is_mirrored)) is not None:
-        # Set explicitly (not just autoscaled) *before* the rules below are drawn, so a rule far
-        # outside the data's range doesn't stretch the view via matplotlib's own autoscale.
-        ax.set_ylim(*limits)
+    # Set explicitly (not just autoscaled) *before* the rules below are drawn, so a rule far
+    # outside the data's range doesn't stretch the view via matplotlib's own autoscale.
+    ax.set_ylim(*_y_axis_limits(lower, upper, is_mirrored=is_mirrored))
     _plot_regions(ax, graph)
     for rule in in_range_rules:
         sign = _mirroring_sign(rule.inverse)

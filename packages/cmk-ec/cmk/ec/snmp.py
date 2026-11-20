@@ -7,10 +7,12 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 
+import time
 from collections.abc import Iterable, Mapping, Sequence
 from logging import DEBUG, Logger
 from typing import Any, override
 
+import pysnmp.carrier.base
 import pysnmp.debug
 import pysnmp.entity.config
 import pysnmp.entity.engine
@@ -20,6 +22,7 @@ import pysnmp.proto.errind
 import pysnmp.proto.rfc1155
 import pysnmp.proto.rfc1902
 import pysnmp.proto.rfc3411
+import pysnmp.proto.secmod.cache
 import pysnmp.smi.builder
 import pysnmp.smi.error
 import pysnmp.smi.rfc1902
@@ -57,6 +60,14 @@ class _PySnmpDebug(pysnmp.debug.Debug):
         return self._logger.isEnabledFor(DEBUG)
 
 
+class _DroppingTransportDispatcher(pysnmp.carrier.base.AbstractTransportDispatcher):
+    """Drops what PySNMP sends, e.g. reports: We only receive traps."""
+
+    @override
+    def send_message(self, *_: object) -> None:
+        pass
+
+
 def _snmp_version(security_model: int) -> str:
     """SNMPv1, SNMPv2c and SNMPv3 have the security models 1, 2 and 3."""
     return "v2c" if security_model == 2 else f"v{security_model}"
@@ -87,6 +98,7 @@ class SNMPTrapParser:
         pysnmp.debug.set_logger(_PySnmpDebug(logger))
 
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
+        self.snmp_engine.register_transport_dispatcher(_DroppingTransportDispatcher())
         self._initialize_snmp_credentials(config)
         # NOTE: pysnmp has a really strange notification receiver API: The constructor call below
         # effectively registers the callback (2nd argument) at the SNMP engine. The callback stores
@@ -233,6 +245,17 @@ class SNMPTrapParser:
                 exc_info=self._logger.isEnabledFor(DEBUG),
             )
             return None
+        finally:
+            # PySNMP forgets SNMPv3 senders only on timer ticks: Tick once per message.
+            now = time.time()
+            for message_processing in self.snmp_engine.message_processing_subsystems.values():
+                message_processing.receive_timer_tick(self.snmp_engine, now)
+            for security_model in self.snmp_engine.security_models.values():
+                security_model.receive_timer_tick(self.snmp_engine, now)
+            # PySNMP leaks the state of some failing SNMPv3 messages, and none is pending here.
+            usm = self.snmp_engine.security_models[3]
+            if not usm._cache.is_empty():  # noqa: SLF001
+                usm._cache = pysnmp.proto.secmod.cache.Cache()  # noqa: SLF001
         if (error := self._receiver.error) is not None:
             raise error
         return self._varbinds_and_ipaddress

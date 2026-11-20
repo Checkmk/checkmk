@@ -354,14 +354,6 @@ def _ecs_cluster_host(cluster: ECSCluster, template: NonEC2PiggybackTemplate) ->
     return _hostname_with_hashed_arn("ecs_cluster", cluster.name, cluster.arn, template)
 
 
-def _hostname_from_name_and_region(name: str, region: str) -> TargetHost:
-    """
-    We add the region to the the hostname because resources in different regions might have the
-    same names (for example replicated DynamoDB tables).
-    """
-    return TargetHost(f"{name}_{region}")
-
-
 def _sanitize_name(name: str) -> str:
     """
     Replace each character that a host name cannot contain with "_".

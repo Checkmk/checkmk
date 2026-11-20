@@ -16,11 +16,12 @@ from ._model import (
     TimeAxis,
     VerticalAxis,
 )
-from ._wire import pngs_from_json
+from ._wire import drawings_to_json, pngs_from_json
 
 __all__ = [
     "Area",
     "AxisLabel",
+    "drawings_to_json",
     "Legend",
     "LegendRow",
     "Line",

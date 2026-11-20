@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import traceback
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Self
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -87,3 +89,7 @@ class PngDrawing:
 @dataclass(frozen=True)
 class RenderingFailure:
     message: str
+
+    @classmethod
+    def from_exception(cls, exc: Exception) -> Self:
+        return cls("".join(traceback.format_exception_only(exc)).strip())

@@ -77,8 +77,7 @@ BIN_BINARIES: Sequence[BinarySmoke] = [
     BinarySmoke("cmk-passwd", args=["-h"], expected_stdout=r"usage:.*cmk-passwd"),
     BinarySmoke(
         "cmk-render-png-graphs",
-        stdin='{"texts": {"minimum": "", "maximum": "", "average": "", "last": "",'
-        ' "date_format": "", "caption": ""}, "temperature_unit": "celsius", "graphs": []}',
+        stdin='{"drawings": []}',
         expected_stdout=r"^\[\]$",
     ),
     BinarySmoke(

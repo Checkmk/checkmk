@@ -30,6 +30,7 @@ _TEXTS = PngTexts(
     caption="for %(date_range)s, resolution: %(resolution)s",
 )
 
+
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)
 _RENDERER = (sys.executable, "-m", "cmk.gui.png.renderer")
 
@@ -86,14 +87,14 @@ def _graph_that_cannot_be_drawn() -> PngGraph:
 
 
 def test_a_graph_that_cannot_be_drawn_leaves_the_others_their_images() -> None:
+    broken = _graph_that_cannot_be_drawn()
+    answering_one_image = (sys.executable, "-c", 'print(\'[{"png": ""}]\')')
+
     results = render_pngs(
-        [_graph(), _graph_that_cannot_be_drawn(), _graph()],
-        _TEXTS,
-        TemperatureUnit.CELSIUS,
-        command=_RENDERER,
+        [broken, _graph()], _TEXTS, TemperatureUnit.CELSIUS, command=answering_one_image
     )
 
-    assert [type(result) for result in results] == [bytes, RenderingFailure, bytes]
+    assert [type(result) for result in results] == [RenderingFailure, bytes]
 
 
 def test_a_failing_rendering_process_fails_every_graph_with_what_it_wrote_to_stderr() -> None:
@@ -144,6 +145,17 @@ def test_no_rendering_process_starts_for_no_graphs() -> None:
     )
 
     assert results == []
+
+
+def test_no_rendering_process_starts_when_no_graph_can_be_drawn() -> None:
+    results = render_pngs(
+        [_graph_that_cannot_be_drawn()],
+        _TEXTS,
+        TemperatureUnit.CELSIUS,
+        command=(sys.executable, "-c", "print('no answer')"),
+    )
+
+    assert [type(result) for result in results] == [RenderingFailure]
 
 
 def test_a_graph_missing_from_a_joint_answer_is_rendered_alone() -> None:

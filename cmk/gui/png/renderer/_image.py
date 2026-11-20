@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import io
-import traceback
 from collections.abc import Sequence
 from zoneinfo import ZoneInfo
 
@@ -333,7 +332,7 @@ def _rendered_or_failure(drawing: PngDrawing) -> bytes | RenderingFailure:
     try:
         return _render_png(drawing)
     except Exception as exc:
-        return RenderingFailure("".join(traceback.format_exception_only(exc)).strip())
+        return RenderingFailure.from_exception(exc)
 
 
 def render_pngs(drawings: Sequence[PngDrawing]) -> Sequence[bytes | RenderingFailure]:

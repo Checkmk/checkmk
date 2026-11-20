@@ -29,7 +29,6 @@ py_library(
     ],
     deps = [
         ":renderer",
-        "//cmk/gui/png",
         requirement("matplotlib"),
         requirement("numpy"),
     ],

@@ -37,7 +37,7 @@ from cmk.graphing_engine import (
     VerticalRangeKind,
 )
 from cmk.gui.graphing import user_specific_unit
-from cmk.gui.png._size import ex_to_inches, legend_height_ex
+from cmk.gui.png._size import legend_height_ex, png_size_inches
 from cmk.gui.png._wire import PngGraph, PngOptions, PngTexts, RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.unit_formatter import Label, NotationFormatter
@@ -581,10 +581,7 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
     limits = _y_axis_limits(lower, upper, is_mirrored=is_mirrored)
     table_height_ex = legend_height_ex(graph, png_graph.options)
 
-    width_in = ex_to_inches(png_graph.options.size[0], png_graph.options.font_size)
-    height_in = ex_to_inches(
-        png_graph.options.size[1] + table_height_ex, png_graph.options.font_size
-    )
+    width_in, height_in = png_size_inches(graph, png_graph.options)
 
     fig = Figure(figsize=(width_in, height_in), dpi=DPI, facecolor=BACKGROUND_COLOR)
 

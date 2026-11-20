@@ -27,7 +27,13 @@ def legend_height_ex(graph: EvaluatedGraph, options: PngOptions) -> float:
     return 2.0 * (n_legend_rows + 1) if options.show_legend and n_legend_rows else 0.0
 
 
+def png_size_inches(graph: EvaluatedGraph, options: PngOptions) -> tuple[float, float]:
+    return (
+        ex_to_inches(options.size[0], options.font_size),
+        ex_to_inches(options.size[1] + legend_height_ex(graph, options), options.font_size),
+    )
+
+
 def compute_png_size_mm(graph: EvaluatedGraph, options: PngOptions) -> tuple[float, float]:
-    width_in = ex_to_inches(options.size[0], options.font_size)
-    height_in = ex_to_inches(options.size[1] + legend_height_ex(graph, options), options.font_size)
+    width_in, height_in = png_size_inches(graph, options)
     return width_in * MM_PER_INCH, height_in * MM_PER_INCH

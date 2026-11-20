@@ -164,24 +164,24 @@ def _config() -> AWSConfig:
     ).for_account("123456789012")
 
 
-def test_service_quotas_are_read_from_aws_once_a_day() -> None:
+def test_service_quotas_are_read_from_aws_every_six_hours() -> None:
     client = CountingQuotaClient()
     ServiceQuotas(client, _config(), "region", "ecs").get(use_cache=True)
 
     cached = ServiceQuotas(client, _config(), "region", "ecs").get(
-        use_cache=True, now=time.time() + 23 * 3600
+        use_cache=True, now=time.time() + 5 * 3600
     )
 
     assert cached == QUOTAS
     assert client.listings == 1
 
 
-def test_service_quotas_are_read_from_aws_again_after_a_day() -> None:
+def test_service_quotas_are_read_from_aws_again_after_six_hours() -> None:
     client = CountingQuotaClient()
     ServiceQuotas(client, _config(), "region", "ecs").get(use_cache=True)
 
     ServiceQuotas(client, _config(), "region", "ecs").get(
-        use_cache=True, now=time.time() + 25 * 3600
+        use_cache=True, now=time.time() + 7 * 3600
     )
 
     assert client.listings == 2
@@ -193,7 +193,7 @@ def test_service_quotas_fall_back_to_stored_quotas_when_aws_throttles() -> None:
         FailingQuotaClient("TooManyRequestsException"), _config(), "region", "ecs"
     )
 
-    stored = quotas.get(use_cache=True, now=time.time() + 30 * 3600)
+    stored = quotas.get(use_cache=True, now=time.time() + 6.5 * 3600)
 
     assert stored == QUOTAS
 
@@ -201,12 +201,14 @@ def test_service_quotas_fall_back_to_stored_quotas_when_aws_throttles() -> None:
 @pytest.mark.parametrize(
     "error_code, hours, use_cache",
     [
-        pytest.param("TooManyRequestsException", 49, True, id="stored quotas too old"),
-        pytest.param("AccessDeniedException", 30, True, id="not throttled"),
-        pytest.param("TooManyRequestsException", 30, False, id="cache disabled"),
+        pytest.param("TooManyRequestsException", 13, True, id="stored quotas too old"),
+        pytest.param("AccessDeniedException", 6.5, True, id="not throttled"),
+        pytest.param("TooManyRequestsException", 6.5, False, id="cache disabled"),
     ],
 )
-def test_service_quotas_report_the_aws_error(error_code: str, hours: int, use_cache: bool) -> None:
+def test_service_quotas_report_the_aws_error(
+    error_code: str, hours: float, use_cache: bool
+) -> None:
     ServiceQuotas(CountingQuotaClient(), _config(), "region", "ecs").get(use_cache=True)
     quotas = ServiceQuotas(FailingQuotaClient(error_code), _config(), "region", "ecs")
 

@@ -459,10 +459,11 @@ class AWSSection(DataCache):
 
 
 # AWS changes a quota only when someone asks for an increase and AWS approves it. Reading the
-# quotas once a day is enough, and it keeps the agent far below the low rate limit of the
-# Service Quotas API. An approved increase shows up in the limits at most one day later.
-QUOTA_CACHE_INTERVAL = 86400
-# When AWS throttles the quota requests, the stored quotas are good enough for this long.
+# quotas every six hours keeps the agent far below the low rate limit of the Service Quotas
+# API. An approved increase shows up in the limits at most six hours later.
+QUOTA_CACHE_INTERVAL = 6 * 3600
+# When AWS throttles the quota requests, the stored quotas are used for 12 hours
+# because throttling usually lasts for hours
 STORED_QUOTAS_MAX_AGE = 2 * QUOTA_CACHE_INTERVAL
 
 _THROTTLING_ERROR_CODES = frozenset(

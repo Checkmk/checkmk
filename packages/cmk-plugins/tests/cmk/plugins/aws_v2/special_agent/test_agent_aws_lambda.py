@@ -41,7 +41,7 @@ from .agent_aws_fake_clients import (
     LambdaListTagsInstancesIB,
 )
 
-ACCOUNT_HOST = TargetHost("123456789012")
+ACCOUNT_HOST = TargetHost("aws_account_123456789012")
 FUNCTION_HOSTS = {
     "FunctionName-0": TargetHost("aws_lambda_function_FunctionName-0_c6f31aff"),
     "FunctionName-1": TargetHost("aws_lambda_function_FunctionName-1_29a018f2"),

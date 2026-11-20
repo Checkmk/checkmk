@@ -28,7 +28,7 @@ from .config import (
     LOGGER,
 )
 from .credentials import CLIENT_LOCK
-from .hosts import TargetHost
+from .hosts import account_host, TargetHost
 from .labels import AwsResource
 from .sections.aws_lambda import (
     LambdaCloudwatch,
@@ -229,7 +229,7 @@ class AWSSections(abc.ABC):
         # Where the agent output goes. None is sys.stdout at the time of writing.
         self._output = output
         # The host of the labels and exceptions of the account. See AWSConfig.for_account.
-        self._account_host = TargetHost(account_id)
+        self._account_host = account_host(account_id)
         self._session = session
         # None until init_sections runs. boto3 then falls back to the session's own
         # region, which is what happened before the region moved onto the client.

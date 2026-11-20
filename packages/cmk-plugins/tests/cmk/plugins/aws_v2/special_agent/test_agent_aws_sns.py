@@ -32,7 +32,7 @@ from cmk.plugins.aws_v2.special_agent.sections.sns import (
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, SNSListSubscriptionsIB, SNSListTopicsIB
 
-ACCOUNT_HOST = TargetHost("123456789012")
+ACCOUNT_HOST = TargetHost("aws_account_123456789012")
 
 ALL_TOPICS = {
     "TopicName-0 [eu-west-1]",

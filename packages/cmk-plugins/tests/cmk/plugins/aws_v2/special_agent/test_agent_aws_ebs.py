@@ -34,7 +34,7 @@ from .agent_aws_fake_clients import (
     FakeCloudwatchClient,
 )
 
-ACCOUNT_HOST = TargetHost("123456789012")
+ACCOUNT_HOST = TargetHost("aws_account_123456789012")
 
 
 class FakeEC2Client:

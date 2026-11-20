@@ -28,7 +28,7 @@ from cmk.plugins.aws_v2.special_agent.sections.glacier import (
 
 from .agent_aws_fake_clients import GlacierListTagsInstancesIB, GlacierListVaultsIB
 
-ACCOUNT_HOST = TargetHost("123456789012")
+ACCOUNT_HOST = TargetHost("aws_account_123456789012")
 VAULT_HOSTS = [
     TargetHost("aws_glacier_vault_VaultName-0_3ab60b8f"),
     TargetHost("aws_glacier_vault_VaultName-1_d9bec7ab"),

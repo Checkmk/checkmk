@@ -36,7 +36,7 @@ from cmk.plugins.aws_v2.special_agent.sections.s3 import (
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, S3BucketTaggingIB, S3ListBucketsIB
 
-ACCOUNT_HOST = TargetHost("123456789012")
+ACCOUNT_HOST = TargetHost("aws_account_123456789012")
 BUCKET_HOSTS = {
     "Name-0": TargetHost("aws_s3_bucket_Name-0_38ec975c"),
     "Name-1": TargetHost("aws_s3_bucket_Name-1_b382224c"),

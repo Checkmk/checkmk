@@ -34,7 +34,7 @@ from .agent_aws_fake_clients import (
     FakeCloudwatchClient,
 )
 
-ACCOUNT_HOST = TargetHost("123456789012")
+ACCOUNT_HOST = TargetHost("aws_account_123456789012")
 TABLE_HOSTS = {
     "TableName-0": TargetHost("aws_dynamodb_table_TableName-0_d7dffb80"),
     "TableName-1": TargetHost("aws_dynamodb_table_TableName-1_edd21086"),

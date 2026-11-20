@@ -30,7 +30,7 @@ from cmk.plugins.aws_v2.special_agent.sections.ecs import ECS, ECSLimits, ECSSum
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
 
-ACCOUNT_HOST = TargetHost("123456789012")
+ACCOUNT_HOST = TargetHost("aws_account_123456789012")
 
 CLUSTERS_CLIENT_RESPONSE1: Final[Sequence[Mapping[str, object]]] = [
     {

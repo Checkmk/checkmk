@@ -40,7 +40,7 @@ from .agent_aws_fake_clients import (
     FakeServiceQuotasClient,
 )
 
-ACCOUNT_HOST = TargetHost("123456789012")
+ACCOUNT_HOST = TargetHost("aws_account_123456789012")
 
 
 class FakeEC2Client:
@@ -548,7 +548,9 @@ def test_agent_aws_ec2_limits_go_to_the_account_host_of_a_listed_account() -> No
 
     ec2_limits_results = ec2_limits.run().results
 
-    assert [result.piggyback_hostname for result in ec2_limits_results] == ["333333333333"]
+    assert [result.piggyback_hostname for result in ec2_limits_results] == [
+        "aws_account_333333333333"
+    ]
 
 
 @pytest.mark.parametrize(

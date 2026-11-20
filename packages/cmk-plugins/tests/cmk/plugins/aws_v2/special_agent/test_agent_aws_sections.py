@@ -111,7 +111,7 @@ class TestAWSHostLabelSections:
             pytest.param(
                 {},
                 [
-                    "<<<<test-account>>>>",
+                    "<<<<aws_account_test-account>>>>",
                     "<<<labels:sep(0)>>>",
                     (
                         '{"cmk/aws/account": "test-account", "cmk/aws/resource_id": "test-account",'
@@ -125,12 +125,12 @@ class TestAWSHostLabelSections:
                 {
                     ("costs_and_usage", 1606382471.693873, 38582.763184): [
                         AWSSectionResult(
-                            piggyback_hostname=TargetHost("test-account"), content=[{}]
+                            piggyback_hostname=TargetHost("aws_account_test-account"), content=[{}]
                         )
                     ],
                 },
                 [
-                    "<<<<test-account>>>>",
+                    "<<<<aws_account_test-account>>>>",
                     "<<<labels:sep(0)>>>",
                     (
                         '{"cmk/aws/account": "test-account", "cmk/aws/resource_id": "test-account",'
@@ -144,7 +144,7 @@ class TestAWSHostLabelSections:
                 {
                     ("costs_and_usage", 1606382471.693873, 38582.763184): [
                         AWSSectionResult(
-                            piggyback_hostname=TargetHost("test-account"), content=[{}]
+                            piggyback_hostname=TargetHost("aws_account_test-account"), content=[{}]
                         )
                     ],
                     ("ec2", 1606382471.693873, 38582.763184): [
@@ -156,7 +156,7 @@ class TestAWSHostLabelSections:
                     ],
                 },
                 [
-                    "<<<<test-account>>>>",
+                    "<<<<aws_account_test-account>>>>",
                     "<<<labels:sep(0)>>>",
                     (
                         '{"cmk/aws/account": "test-account", "cmk/aws/resource_id": "test-account",'
@@ -179,7 +179,7 @@ class TestAWSHostLabelSections:
                     ],
                 },
                 [
-                    "<<<<test-account>>>>",
+                    "<<<<aws_account_test-account>>>>",
                     "<<<labels:sep(0)>>>",
                     (
                         '{"cmk/aws/account": "test-account", "cmk/aws/resource_id": "test-account",'
@@ -263,7 +263,7 @@ def test_account_host_receives_results_without_a_piggyback_host(
     _account_host_sections()._write_section_results(results)  # noqa: SLF001
 
     assert capsys.readouterr().out.splitlines() == [
-        "<<<<333333333333>>>>",
+        "<<<<aws_account_333333333333>>>>",
         "<<<aws_v2_ec2_limits:cached(1606382471,360)>>>",
         '[{"limit": 1}]',
         "<<<<>>>>",
@@ -287,14 +287,16 @@ def test_account_host_keeps_resource_piggyback_hosts(capsys: pytest.CaptureFixtu
 def test_account_host_gets_its_labels_once(capsys: pytest.CaptureFixture[str]) -> None:
     results: Results = {
         ("ec2_limits", 1606382471.693873, 300.0): [
-            AWSSectionResult(piggyback_hostname=TargetHost("333333333333"), content=[{}])
+            AWSSectionResult(
+                piggyback_hostname=TargetHost("aws_account_333333333333"), content=[{}]
+            )
         ],
     }
 
     _account_host_sections()._write_host_labels(results)  # noqa: SLF001
 
     assert capsys.readouterr().out.splitlines() == [
-        "<<<<333333333333>>>>",
+        "<<<<aws_account_333333333333>>>>",
         "<<<labels:sep(0)>>>",
         (
             '{"cmk/aws/account": "333333333333", "cmk/aws/resource_id": "333333333333",'
@@ -308,7 +310,11 @@ def test_account_host_receives_the_account_labels(capsys: pytest.CaptureFixture[
     _account_host_sections()._write_host_labels({})  # noqa: SLF001
 
     host, header, labels, end = capsys.readouterr().out.splitlines()
-    assert (host, header, end) == ("<<<<333333333333>>>>", "<<<labels:sep(0)>>>", "<<<<>>>>")
+    assert (host, header, end) == (
+        "<<<<aws_account_333333333333>>>>",
+        "<<<labels:sep(0)>>>",
+        "<<<<>>>>",
+    )
     assert json.loads(labels) == {
         "cmk/aws/account": "333333333333",
         "cmk/aws/resource_id": "333333333333",
@@ -325,7 +331,11 @@ def test_run_writes_only_into_the_given_output(capsys: pytest.CaptureFixture[str
 
     assert (capsys.readouterr().out, output.getvalue().splitlines()[:3]) == (
         "",
-        ["<<<<333333333333>>>>", "<<<aws_v2_exceptions>>>", "AWSSectionsGeneric: No exceptions"],
+        [
+            "<<<<aws_account_333333333333>>>>",
+            "<<<aws_v2_exceptions>>>",
+            "AWSSectionsGeneric: No exceptions",
+        ],
     )
 
 
@@ -355,7 +365,7 @@ def test_account_host_gets_the_account_metadata() -> None:
     sections.run()
 
     assert _metadata_by_host(output.getvalue()) == {
-        "test-account": {
+        "aws_account_test-account": {
             "cloud_provider": "AWS",
             "account_id": "test-account",
             "account_name": "production",

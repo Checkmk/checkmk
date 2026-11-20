@@ -39,13 +39,13 @@ DEFAULT_NAMING = HostNaming(
     ec2=NamingConvention.ip_region_instance,
     non_ec2=NonEC2PiggybackTemplate.LONG,
     cloudfront=CloudFrontHostAssignment.account,
-    account="333333333333",
+    account_id="333333333333",
 )
 DOMAIN_HOST_NAMING = HostNaming(
     ec2=NamingConvention.ip_region_instance,
     non_ec2=NonEC2PiggybackTemplate.LONG,
     cloudfront=CloudFrontHostAssignment.origin_domain,
-    account="333333333333",
+    account_id="333333333333",
 )
 
 INSTANCE = {
@@ -272,7 +272,7 @@ def test_cloudfront_distribution_without_origin_goes_to_the_account_host(
         "arn:aws:cloudfront::111122223333:distribution/E2RAYOVSSL6ZM3",
     )
 
-    assert target_host(distribution, DOMAIN_HOST_NAMING) == "333333333333"
+    assert target_host(distribution, DOMAIN_HOST_NAMING) == "aws_account_333333333333"
 
 
 @pytest.mark.parametrize(
@@ -311,10 +311,10 @@ def test_account_data_goes_to_the_account_host(
         ec2=NamingConvention.ip_region_instance,
         non_ec2=NonEC2PiggybackTemplate.LONG,
         cloudfront=cloudfront,
-        account="333333333333",
+        account_id="333333333333",
     )
 
-    assert target_host(resource, naming) == "333333333333"
+    assert target_host(resource, naming) == "aws_account_333333333333"
 
 
 def test_elasticache_node_goes_to_a_host_per_node() -> None:

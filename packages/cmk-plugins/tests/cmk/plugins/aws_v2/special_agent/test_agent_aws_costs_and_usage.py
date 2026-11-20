@@ -16,7 +16,7 @@ from cmk.plugins.aws_v2.special_agent.sections.costs_and_usage import CostsAndUs
 
 from .agent_aws_fake_clients import CEGetCostsAndUsageIB
 
-ACCOUNT_HOST = TargetHost("123456789012")
+ACCOUNT_HOST = TargetHost("aws_account_123456789012")
 
 
 class FakeCEClient:

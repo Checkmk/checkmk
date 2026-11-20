@@ -7,7 +7,7 @@
 
 Every section asks target_host for the host of its results, or ec2_instance_hosts for
 the hosts of EC2 instances. Data about the AWS account or a region as a whole goes to the
-piggyback host of the account, named like the account ID.
+piggyback host of the account, named aws_account_ followed by the account ID.
 Some resources get a piggyback host of their own. Each resource type has its own host
 name function below.
 """
@@ -168,9 +168,9 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost:
     """Decide the host that the data of an AWS resource goes to."""
     match resource:
         case AccountScope():
-            return _account_scope_host(naming.account)
+            return account_host(naming.account_id)
         case EBSAttachment():
-            return _ebs_attachment_host(resource, naming.account)
+            return _ebs_attachment_host(resource, naming.account_id)
         case ClassicLoadBalancer():
             return _classic_load_balancer_host(resource, naming.non_ec2)
         case LoadBalancerV2():
@@ -212,10 +212,10 @@ def ec2_instance_hosts[T: Mapping[str, object]](
             yield host, instance
 
 
-def _account_scope_host(account_host: str | None) -> TargetHost:
-    if account_host is None:
+def account_host(account_id: str | None) -> TargetHost:
+    if account_id is None:
         raise ValueError("The host of account data needs a config scoped to an account")
-    return TargetHost(account_host)
+    return TargetHost(f"aws_account_{account_id}")
 
 
 def _ec2_instance_host(instance: EC2Instance, convention: NamingConvention) -> TargetHost | None:
@@ -239,9 +239,9 @@ def _ec2_instance_host(instance: EC2Instance, convention: NamingConvention) -> T
             assert_never(convention)
 
 
-def _ebs_attachment_host(attachment: EBSAttachment, account_host: str | None) -> TargetHost:
+def _ebs_attachment_host(attachment: EBSAttachment, account_id: str | None) -> TargetHost:
     if attachment.instance_host is None:
-        return _account_scope_host(account_host)
+        return account_host(account_id)
     return attachment.instance_host
 
 
@@ -274,11 +274,11 @@ def _cloudfront_distribution_host(
 ) -> TargetHost:
     match naming.cloudfront:
         case CloudFrontHostAssignment.account:
-            return _account_scope_host(naming.account)
+            return account_host(naming.account_id)
         case CloudFrontHostAssignment.origin_domain:
             if distribution.origin_domain:
                 return TargetHost(distribution.origin_domain)
-            return _account_scope_host(naming.account)
+            return account_host(naming.account_id)
         case CloudFrontHostAssignment.distribution:
             return _hostname_with_hashed_arn(
                 "cloudfront_distribution",

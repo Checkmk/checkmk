@@ -29,6 +29,11 @@ from cmk.testlib.aws_v2.fake_sts import (
 
 ACCOUNTS = ["333333333333", "444444444444"]
 
+
+def _account_host(account: str) -> str:
+    return f"aws_account_{account}"
+
+
 LOGIN_ARGS = [
     "--hostname",
     "aws-org",
@@ -84,7 +89,7 @@ def test_every_account_writes_to_its_own_host(
     }
 
     assert labels == {
-        account: {
+        _account_host(account): {
             "cmk/aws/account": account,
             "cmk/aws/resource_id": account,
             "cmk/aws/entity": "account",
@@ -163,7 +168,7 @@ def _output_with_unreachable_account(
 def test_unreachable_account_leaves_the_others_complete(
     output_with_unreachable_account: dict[str | None, list[str]],
 ) -> None:
-    assert set(output_with_unreachable_account) == {None, *ACCOUNTS}
+    assert set(output_with_unreachable_account) == {None, *map(_account_host, ACCOUNTS)}
 
 
 def test_unreachable_account_is_one_error_in_the_agent_info(
@@ -271,7 +276,7 @@ def test_organization_mode_gives_every_active_account_its_own_host(
 ) -> None:
     hosts = _hosts(fake_sts, monkeypatch, capsys, [*LOGIN_ARGS, "--organization"])
 
-    assert hosts == {None, *ACTIVE_ORGANIZATION_ACCOUNTS}
+    assert hosts == {None, *map(_account_host, ACTIVE_ORGANIZATION_ACCOUNTS)}
 
 
 def test_organization_mode_labels_every_account_host_with_its_name(
@@ -285,7 +290,9 @@ def test_organization_mode_labels_every_account_host_with_its_name(
         for host, lines in _sections_by_host(capsys.readouterr().out).items()
         if host is not None
     }
-    assert names == ORGANIZATION_ACCOUNT_NAMES
+    assert names == {
+        _account_host(account): name for account, name in ORGANIZATION_ACCOUNT_NAMES.items()
+    }
 
 
 def test_excluded_account_of_the_organization_gets_no_host(
@@ -293,7 +300,7 @@ def test_excluded_account_of_the_organization_gets_no_host(
 ) -> None:
     args = [*LOGIN_ARGS, "--organization", "--exclude-account", MANAGEMENT_ACCOUNT]
 
-    assert MANAGEMENT_ACCOUNT not in _hosts(fake_sts, monkeypatch, capsys, args)
+    assert _account_host(MANAGEMENT_ACCOUNT) not in _hosts(fake_sts, monkeypatch, capsys, args)
 
 
 def test_account_list_role_lists_the_accounts_of_the_organization(
@@ -393,7 +400,10 @@ SINGLE_ACCOUNT_ARGS = [
 def test_single_account_gets_its_own_host(
     fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    assert _hosts(fake_sts, monkeypatch, capsys, SINGLE_ACCOUNT_ARGS) == {None, HUB_ACCOUNT}
+    assert _hosts(fake_sts, monkeypatch, capsys, SINGLE_ACCOUNT_ARGS) == {
+        None,
+        _account_host(HUB_ACCOUNT),
+    }
 
 
 def test_single_account_leaves_only_the_agent_info_on_the_rule_host(
@@ -449,6 +459,8 @@ def test_s3_limits_are_written_once_per_account_with_parallel_regions(
     output = _sections_by_host(_run(fake_sts, monkeypatch, capsys, _two_regions_with_s3(4)))
 
     assert {
-        account: sum(line.startswith("<<<aws_v2_s3_limits") for line in output[account])
+        account: sum(
+            line.startswith("<<<aws_v2_s3_limits") for line in output[_account_host(account)]
+        )
         for account in ACCOUNTS
     } == dict.fromkeys(ACCOUNTS, 1)

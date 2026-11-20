@@ -36,7 +36,7 @@ from cmk.plugins.aws_v2.special_agent.sections.elasticache import (
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
 
-ACCOUNT_HOST = TargetHost("123456789012")
+ACCOUNT_HOST = TargetHost("aws_account_123456789012")
 NODE_HOSTS = {
     "node-a": TargetHost("aws_elasticache_cluster_node-a_f3331b24"),
     "node-b": TargetHost("aws_elasticache_cluster_node-b_87b9d66f"),

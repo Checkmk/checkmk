@@ -27,7 +27,7 @@ from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 
 from .agent_aws_fake_clients import FakeCloudwatchClient
 
-ACCOUNT_HOST = TargetHost("123456789012")
+ACCOUNT_HOST = TargetHost("aws_account_123456789012")
 DISTRIBUTION_HOSTS = {
     "E2RAYOVSSL6ZM3": TargetHost("aws_cloudfront_distribution_E2RAYOVSSL6ZM3_b5d89ea6"),
     "EWN6C0UT7HBX0": TargetHost("aws_cloudfront_distribution_EWN6C0UT7HBX0_9d10e123"),

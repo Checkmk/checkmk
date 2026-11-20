@@ -34,7 +34,7 @@ from .agent_aws_fake_clients import (
     WAFV2ListTagsForResourceIB,
 )
 
-ACCOUNT_HOST = TargetHost("123456789012")
+ACCOUNT_HOST = TargetHost("aws_account_123456789012")
 WEB_ACL_HOSTS = {
     "Name-0": TargetHost("aws_wafv2_webacl_Name-0_49b6d4cd"),
     "Name-1": TargetHost("aws_wafv2_webacl_Name-1_d46b8ee2"),

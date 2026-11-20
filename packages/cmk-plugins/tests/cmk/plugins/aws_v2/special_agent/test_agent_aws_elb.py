@@ -39,7 +39,7 @@ from .agent_aws_fake_clients import (
     FakeCloudwatchClient,
 )
 
-ACCOUNT_HOST = TargetHost("123456789012")
+ACCOUNT_HOST = TargetHost("aws_account_123456789012")
 LOAD_BALANCER_HOSTS = {
     "LoadBalancerName-0": TargetHost(
         "aws_elasticloadbalancing_loadbalancer_LoadBalancerName-0_fd0af55f"

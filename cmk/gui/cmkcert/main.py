@@ -15,11 +15,11 @@ import re
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Literal
+from typing import Final, Literal
 
 import cmk.utils.paths
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.version import edition
+from cmk.ccc.version import Edition, edition
 from cmk.crypto.certificate import serial_number_string
 from cmk.crypto.issued_certificates import IssuedCertificatesComponent
 from cmk.utils.certs import (
@@ -41,6 +41,7 @@ from cmk.utils.certs import (
 
 from .cmkcert_rotate import (
     finalize_rotate_site_ca_certificate,
+    request_relay_certificate_rotation,
     rotate_agent_ca_certificate,
     rotate_site_certificate,
     start_rotate_site_ca_certificate,
@@ -48,6 +49,8 @@ from .cmkcert_rotate import (
 
 CertificateType = Literal["site", "site-ca", "agent-ca"]
 IssuingCA = Literal["agent-ca", "relay-ca"]
+
+_RELAY_EDITIONS: Final = frozenset({Edition.ULTIMATE, Edition.ULTIMATEMT, Edition.CLOUD})
 
 
 def _parse_serial_number(value: str) -> int:
@@ -114,10 +117,15 @@ the rotation can be finalized using '%(prog)s site-ca --finalize', which replace
 Site CA certificate with the new one and generates a new site certificate signed by the new Site \
 CA. After the finalization step, changes need to be activated in the GUI again to make use of the new \
 Site CA and site certificates.
+When finalizing, every relay is asked to trust the new Site CA certificate in addition to the ones \
+it already trusts, so the relays have to be reachable during the finalization. If a relay does not \
+confirm this within 120 seconds, the finalization is aborted and the current Site CA certificate is \
+kept.
 In a distributed monitoring setup, the rotation should be run from the central site to ensure \
 that remote sites' trust stores are updated automatically.
 Warning: following the Site CA certificate rotation, all agents will need to be manually \
-re-registered to trust the updated certificate.
+re-registered to trust the updated certificate. It may also break the Kubernetes monitoring in \
+push mode.
 
 'agent-ca' certificate: The agent signing CA certificate can be rotated directly. The current CA \
 is kept alongside the new one, so that already registered agents stay trusted and can renew their \
@@ -297,6 +305,11 @@ def _run_rotate(
                     site_id=site_id,
                     expiry=expiry,
                     key_size=4096,
+                    request_relay_rotation=(
+                        request_relay_certificate_rotation
+                        if edition(omd_root) in _RELAY_EDITIONS
+                        else None
+                    ),
                 )
             else:
                 start_rotate_site_ca_certificate(

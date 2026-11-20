@@ -17,10 +17,11 @@ import os
 import shutil
 import subprocess
 import sys
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
+from typing import Final
 
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
@@ -28,7 +29,8 @@ from cryptography.x509.oid import ExtendedKeyUsageOID
 from dateutil.relativedelta import relativedelta
 
 import cmk.gui.site_config
-from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.config_path import VersionedConfigPath
+from cmk.ccc.site import get_agent_receiver_port, omd_site, SiteId
 from cmk.crypto.certificate import (
     Certificate,
     CertificatePEM,
@@ -57,6 +59,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
+from cmk.relay_protocols import tasks as tasks_protocol
 from cmk.utils.automation_config import RemoteAutomationConfig
 from cmk.utils.certs import (
     agent_root_ca_path,
@@ -66,6 +69,11 @@ from cmk.utils.certs import (
     SiteCA,
 )
 from cmk.utils.security_event import log_security_event
+
+_RELAY_ROTATION_TIMEOUT: Final = 120.0
+
+# Per relay: None once it trusts the new Site CA, otherwise why it does not
+RequestRelayRotation = Callable[[Path, Sequence[str], str], Mapping[str, str | None]]
 
 
 @contextmanager
@@ -150,7 +158,8 @@ def start_rotate_site_ca_certificate(
         if sys.stdout.isatty():
             answer = input(
                 "cmk-cert: Warning: rotating the site CA certificate requires manual re-registration "
-                f"of all agents.\nYou are now rotating {'the local' if is_local_rotation else 'a remote'} "
+                "of all agents. It may also break the Kubernetes monitoring in push mode.\n"
+                f"You are now rotating {'the local' if is_local_rotation else 'a remote'} "
                 "site-ca certificate, do you want to continue? (y/N): "
             )
             if answer.strip().lower() not in ("y", "yes"):
@@ -236,11 +245,72 @@ def start_rotate_site_ca_certificate(
         )
 
 
+def _connected_relay_ids(omd_root: Path) -> list[str]:
+    relays_dir = VersionedConfigPath.make_latest_path(omd_root) / "relays"
+    return sorted(path.name for path in relays_dir.iterdir()) if relays_dir.is_dir() else []
+
+
+def request_relay_certificate_rotation(
+    omd_root: Path, relay_ids: Sequence[str], site_ca_cert: str
+) -> dict[str, str | None]:
+    # Non-free, so only importable once the caller checked the edition ships relays
+    from cmk.relay_fetcher_trigger.relay_client import (  # type: ignore[import-not-found, unused-ignore]
+        Client,
+        ClientConfig,
+    )
+
+    client = Client(
+        ClientConfig(
+            agent_receiver_port=get_agent_receiver_port(omd_root),
+            site_name=omd_site(),
+            omd_root=omd_root,
+        )
+    )
+    failure_reasons: dict[str, str | None] = client.submit_to_relays_and_wait(
+        relay_ids,
+        tasks_protocol.CertRotationTask(additional_ca_cert=site_ca_cert),
+        timeout=_RELAY_ROTATION_TIMEOUT,
+    )
+    return failure_reasons
+
+
+def _rotate_relay_certificates(
+    omd_root: Path,
+    site_ca_cert: str,
+    request_relay_rotation: RequestRelayRotation,
+) -> None:
+    """Let the relays trust the new Site CA, aborting if any of them failed."""
+    # All relays every time: a relay re-registered since an earlier run trusts only the old CA
+    relay_ids = _connected_relay_ids(omd_root)
+    if not relay_ids:
+        return
+
+    sys.stdout.write(
+        "cmk-cert: Rotating the certificates of the relays, waiting up to "
+        f"{_RELAY_ROTATION_TIMEOUT:.0f} seconds for their results...\n"
+    )
+    failure_reasons = request_relay_rotation(omd_root, relay_ids, site_ca_cert)
+    failed = {
+        relay_id: reason for relay_id, reason in failure_reasons.items() if reason is not None
+    }
+
+    if failed:
+        raise ValueError(
+            "Aborting, the certificate rotation failed on the following relays:\n"
+            + "".join(f"  {relay_id}: {reason}\n" for relay_id, reason in failed.items())
+            + "The current Site CA certificate is kept. Run the finalization again to retry "
+            "these relays. Relays that are no longer in use have to be removed and the changes "
+            "activated first."
+        )
+    sys.stdout.write("cmk-cert: All relays had their certificate updated.\n")
+
+
 def finalize_rotate_site_ca_certificate(
     omd_root: Path,
     site_id: SiteId,
     expiry: int | None = None,
     key_size: int = 4096,
+    request_relay_rotation: RequestRelayRotation | None = None,
 ) -> None:
     """
     Finalizes the rotation of the Site CA certificate by promoting the staged certificate.
@@ -249,6 +319,7 @@ def finalize_rotate_site_ca_certificate(
     stored in the temporary staging folder by the stagin function.
     It performs the final step of rotation by replacing the current Site CA certificate
     with the new certificate from the temporary folder.
+    Before that, the relays have to trust the new certificate, otherwise it aborts.
     """
     expiry_ = _days_until_10_years_from_today() if expiry is None else expiry
 
@@ -268,6 +339,13 @@ def finalize_rotate_site_ca_certificate(
         if cmk.gui.site_config.site_is_local(site):
             if not (staged_ca_path := SiteCA.root_ca_path(_scratch_dir(omd_root))).exists():
                 raise ValueError("Aborting, temporary certificate not found")
+
+            if request_relay_rotation is not None:
+                _rotate_relay_certificates(
+                    omd_root,
+                    SiteCA.load(_scratch_dir(omd_root)).root_ca.certificate.dump_pem().str,
+                    request_relay_rotation,
+                )
 
             shutil.move(staged_ca_path, SiteCA.root_ca_path(cert_dir(omd_root)))
             log_security_event(

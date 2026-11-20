@@ -931,7 +931,10 @@ allows = [
   "@crypto",
   "@livestatus_client",
   "@messaging",
+  "@relay_protocols",
   "cmk.gui",
+  # Finalizing a site CA rotation lets the relays trust the new CA.
+  "cmk.relay_fetcher_trigger",
   "cmk.utils",
 ]
 

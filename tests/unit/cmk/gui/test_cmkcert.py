@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Mapping, Sequence
+from contextlib import suppress
 from dataclasses import asdict
 from datetime import date
 from pathlib import Path
@@ -17,6 +19,10 @@ from livestatus import SiteConfigurations
 from cmk.ccc.site import SiteId
 from cmk.crypto.certificate import CertificateRevocationList, CertificateRevocationListPEM
 from cmk.crypto.issued_certificates import IssuedCertificateEntry
+from cmk.gui.cmkcert.cmkcert_rotate import (
+    finalize_rotate_site_ca_certificate,
+    start_rotate_site_ca_certificate,
+)
 from cmk.gui.cmkcert.main import (
     _certificate_path,
     _run_init,
@@ -323,6 +329,81 @@ def test_rotate_site_ca(mocker: MockerFixture, omd_root: Path) -> None:
     )
 
     assert "BEGIN CERTIFICATE" in SiteCA.root_ca_path(cert_dir(omd_root)).read_text()
+
+
+class _FakeRelays:
+    """Replies to the rotation requests with the given failure reasons."""
+
+    def __init__(self, failure_reasons: Mapping[str, str | None]) -> None:
+        self._failure_reasons = failure_reasons
+
+    def __call__(
+        self, _omd_root: Path, relay_ids: Sequence[str], _site_ca_cert: str
+    ) -> dict[str, str | None]:
+        return {relay_id: self._failure_reasons[relay_id] for relay_id in relay_ids}
+
+
+@pytest.fixture(name="staged_site_ca_rotation")
+def fixture_staged_site_ca_rotation(
+    mocker: MockerFixture,
+    omd_root: Path,
+    site_ca: Path,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+) -> None:
+    _mock_site_and_config(mocker)
+    mocker.patch(
+        "cmk.gui.cmkcert.cmkcert_rotate.all_activation_sites",
+        autospec=True,
+        return_value=SiteConfigurations({}),
+    )
+    mocker.patch("cmk.gui.cmkcert.cmkcert_rotate.PendingChanges", autospec=True)
+    mocker.patch("cmk.gui.watolib.config_domains.ConfigDomainCACertificates.save", autospec=True)
+    start_rotate_site_ca_certificate(omd_root=omd_root, site_id=_site_id(), expiry=90)
+    for relay_id in ("relay-1", "relay-2"):
+        (omd_root / "var/check_mk/core/helper_config/latest/relays" / relay_id).mkdir(parents=True)
+
+
+@pytest.mark.usefixtures("staged_site_ca_rotation")
+def test_finalize_site_ca_keeps_the_current_ca_while_a_relay_fails(
+    omd_root: Path, site_ca: Path
+) -> None:
+    current_ca = site_ca.read_text()
+
+    with pytest.raises(ValueError, match="relays:\n  relay-2: no reply within 120 seconds\n"):
+        finalize_rotate_site_ca_certificate(
+            omd_root=omd_root,
+            site_id=_site_id(),
+            request_relay_rotation=_FakeRelays(
+                {"relay-1": None, "relay-2": "no reply within 120 seconds"}
+            ),
+        )
+
+    assert site_ca.read_text() == current_ca
+
+
+@pytest.mark.usefixtures("staged_site_ca_rotation")
+def test_finalize_site_ca_again_rechecks_the_relays_that_passed_before(
+    omd_root: Path, site_ca: Path
+) -> None:
+    current_ca = site_ca.read_text()
+    with suppress(ValueError):
+        finalize_rotate_site_ca_certificate(
+            omd_root=omd_root,
+            site_id=_site_id(),
+            request_relay_rotation=_FakeRelays(
+                {"relay-1": None, "relay-2": "no reply within 120 seconds"}
+            ),
+        )
+
+    with pytest.raises(ValueError, match="relays:\n  relay-1: the CA is not trusted\n"):
+        finalize_rotate_site_ca_certificate(
+            omd_root=omd_root,
+            site_id=_site_id(),
+            request_relay_rotation=_FakeRelays(
+                {"relay-1": "the CA is not trusted", "relay-2": None}
+            ),
+        )
+
+    assert site_ca.read_text() == current_ca
 
 
 def test_rotate_agent_ca(omd_root: Path, agent_ca: Path) -> None:

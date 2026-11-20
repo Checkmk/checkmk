@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
-import datetime
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
@@ -59,7 +58,7 @@ class PngGraph:
     requested_vertical_range: EvaluatedVerticalRange | None
     # None: the site's local zone. An export passes the browser's zone, so that its time
     # axis matches the one of the Vue graph.
-    time_zone: datetime.tzinfo | None
+    time_zone: ZoneInfo | None
     # The graph is fetched with the samples just beyond the range it shows, as the Vue graph
     # is, so that the curves are drawn in from them up to the axes.
     visible_time_range: tuple[int, int]
@@ -151,9 +150,7 @@ def _png_graph_to_json(graph: PngGraph) -> Mapping[str, object]:
             if graph.requested_vertical_range is None
             else asdict(graph.requested_vertical_range)
         ),
-        "time_zone": (
-            None if graph.time_zone is None else ensure_type(graph.time_zone, ZoneInfo).key
-        ),
+        "time_zone": None if graph.time_zone is None else graph.time_zone.key,
         "visible_time_range": graph.visible_time_range,
     }
 

@@ -271,7 +271,13 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
     # Use some random address and port to be able to bind to.
     # NOTE: In case we still run into conflicts, checking for
     # available ports may be required.
-    rand_ip = ".".join(str(_) for _ in [127, 3] + sample(range(1, 255), 2))
+    # Under a rootless daemon, a host-network container (such as the one this
+    # test runs in) shares the daemon's network namespace, where published ports
+    # listen on 127.0.0.1 only, whatever address they are published on.
+    if "name=rootless" in client.info().get("SecurityOptions", []):
+        rand_ip = "127.0.0.1"
+    else:
+        rand_ip = ".".join(str(_) for _ in [127, 3] + sample(range(1, 255), 2))
     rand_port = randint(1024, 65535)
     address = (rand_ip, rand_port)
     address_txt = ":".join(map(str, address))

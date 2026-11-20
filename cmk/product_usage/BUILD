@@ -50,6 +50,8 @@ py_library(
         "//cmk/product_usage",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-ccc:version-info",
+        "//packages/cmk-crash:crash",
         "//packages/cmk-licensing",
     ],
 )

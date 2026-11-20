@@ -1589,6 +1589,7 @@ allows = [
 [components."cmk.product_usage.cli"]
 allows = [
   "@ccc",
+  "@crash",
   "cmk.base",
   "cmk.config",
   "cmk.licensing",

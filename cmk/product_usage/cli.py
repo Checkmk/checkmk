@@ -9,9 +9,13 @@ import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
+from typing import override
 
 from cmk.ccc.version import Edition, edition
+from cmk.ccc.version_info import get_general_version_infos
 from cmk.config.paths import BaseConfigurationMKFiles
+from cmk.crash import ABCCrashReport, CrashReportStore, make_crash_report_base_path
 from cmk.licensing.handler import LicenseState
 from cmk.product_usage.collection import (
     collect_cloud_trial_data,
@@ -64,7 +68,30 @@ def resolve_proxy_config(proxy_setting: ProxySetting) -> ProxyConfig:
     )
 
 
-def main(args: Sequence[str] | None = None) -> int:
+class ProductUsageCrashReport(ABCCrashReport[None]):
+    @classmethod
+    @override
+    def type(cls) -> str:
+        return "product-usage"
+
+
+def create_crash_report(omd_root: Path) -> str:
+    """Store a crash report of the exception being handled and return its crash ID"""
+    crash = ProductUsageCrashReport(
+        crash_report_base_path=make_crash_report_base_path(omd_root),
+        crash_info=ProductUsageCrashReport.make_crash_info(
+            get_general_version_infos(omd_root), None
+        ),
+    )
+    CrashReportStore().save(crash)
+    return crash.ident_to_text()
+
+
+def main(
+    args: Sequence[str] | None = None,
+    *,
+    report_crash: Callable[[], str] = lambda: create_crash_report(paths.omd_root),
+) -> int:
     if args is None:
         args = sys.argv[1:]
     request = parse_args(args)
@@ -148,8 +175,9 @@ def main(args: Sequence[str] | None = None) -> int:
             store_next_run_ts(next_run_fp, next_scheduled_run_at)
 
     except Exception as e:
-        _write_error(request, f"cmk-product-usage: {e}")
-        logger.exception("Unexpected error")
+        crash_id = _report_crash(report_crash, logger)
+        _write_error(request, f"cmk-product-usage: {e} (Crash ID: {crash_id})")
+        logger.exception("Unexpected error (Crash ID: %(crash_id)s)", {"crash_id": crash_id})
         return -1
 
     if upload_error is not None:
@@ -162,9 +190,18 @@ def main(args: Sequence[str] | None = None) -> int:
 
 def _write_error(request: ProductUsageRequest, message: str) -> None:
     # cron mails everything written to stderr. Scheduled runs only log, the admin finds the
-    # errors in the log.
+    # errors in the log and the crash reports.
     if not request.schedule:
         sys.stderr.write(f"{message}\n")
+
+
+def _report_crash(report_crash: Callable[[], str], logger: logging.Logger) -> str:
+    """Create the crash report, which must not hide the exception it reports"""
+    try:
+        return report_crash()
+    except Exception:
+        logger.exception("Could not create a crash report")
+        return "none"
 
 
 def parse_args(args: Sequence[str]) -> ProductUsageRequest:

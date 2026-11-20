@@ -2379,8 +2379,8 @@ async def _collect_virtual_machines_resources(
         try:
             vm_name = nic["properties"]["virtualMachine"]["id"].lower()
 
-            private_ip = nic["properties"]["ipConfigurations"][0]["properties"]["privateIPAddress"]
-            vm_ip_map[vm_name] = private_ip
+            private_ip_address = nic["properties"]["ipConfigurations"][0]["properties"]["privateIPAddress"]
+            vm_ip_map[vm_name] = private_ip_address
         except KeyError, IndexError:
             continue
 

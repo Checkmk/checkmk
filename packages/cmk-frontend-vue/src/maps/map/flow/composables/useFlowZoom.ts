@@ -27,6 +27,7 @@ import { select } from 'd3-selection'
 import { type ZoomTransform, zoom, zoomIdentity } from 'd3-zoom'
 import { type Ref, onUnmounted, ref } from 'vue'
 
+import type { MapMotion } from '@/maps/map/composables/useMapMotion'
 import { NODE_R, firstFinite } from '@/maps/map/flow/geometry'
 import type { FNode } from '@/maps/map/flow/nodes'
 
@@ -59,10 +60,12 @@ export interface FlowZoomOptions {
    * is seen again.
    */
   onDetailChange: () => void
+  /** Told when the view starts and stops moving, by hand or in a fit. */
+  motion: MapMotion
 }
 
 export function useFlowZoom(options: FlowZoomOptions) {
-  const { svgEl, nodes, simulation, onSettled, onDetailChange } = options
+  const { svgEl, nodes, simulation, onSettled, onDetailChange, motion } = options
 
   // Read from the hot-path painters once per frame, so a plain value rather
   // than a ref: the proxy overhead is not worth paying per donut arc.
@@ -75,7 +78,6 @@ export function useFlowZoom(options: FlowZoomOptions) {
   let behaviour: ReturnType<typeof zoom<SVGSVGElement, unknown>> | null = null
   let pending: ZoomTransform | null = null
   let frame: number | null = null
-  let panning = false
   let lowDetail = false
   let hasFitted = false
   let cancelRefiningFit: (() => void) | null = null
@@ -151,10 +153,7 @@ export function useFlowZoom(options: FlowZoomOptions) {
         simulation()?.stop()
       })
       .on('end.freeze', () => {
-        if (panning) {
-          svgEl.value?.classList.remove('maps-flow-canvas__svg--panning')
-          panning = false
-        }
+        motion.settled()
         const running = simulation()
         if (running && running.alpha() > running.alphaMin()) {
           running.restart()
@@ -176,10 +175,7 @@ export function useFlowZoom(options: FlowZoomOptions) {
         // a bare click on a service — which d3-drag never captures — still gets
         // its click event: suppressing hit-testing on mousedown would route the
         // mouseup to the background instead.
-        if (!panning) {
-          panning = true
-          svgEl.value?.classList.add('maps-flow-canvas__svg--panning')
-        }
+        motion.started()
       })
     const area = select(svg)
     area.call(behaviour)

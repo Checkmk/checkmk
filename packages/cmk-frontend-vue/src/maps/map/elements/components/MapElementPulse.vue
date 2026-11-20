@@ -70,6 +70,11 @@ const geometry = computed(() => {
   }
 }
 
+/* See useMapMotion. */
+[data-map-moving] .maps-map-element-pulse {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .maps-map-element-pulse {
     display: none;

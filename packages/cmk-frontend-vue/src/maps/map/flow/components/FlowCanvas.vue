@@ -29,6 +29,7 @@ import { onUnmounted, useId, useTemplateRef, watch } from 'vue'
 import MapMarqueeBox from '@/maps/map/components/MapMarqueeBox.vue'
 import MapZoomResetPill from '@/maps/map/components/MapZoomResetPill.vue'
 import { useD3Cleanup } from '@/maps/map/composables/useD3Cleanup'
+import { useMapMotion } from '@/maps/map/composables/useMapMotion'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
 import { useFlowFilter } from '@/maps/map/flow/composables/useFlowFilter'
 import { isSelectable, type useFlowSelection } from '@/maps/map/flow/composables/useFlowSelection'
@@ -142,6 +143,7 @@ let labelWidths = new Map<string, number>()
 let repaint: (() => void) | null = null
 let attached = false
 
+const root = useTemplateRef<HTMLDivElement>('root')
 const zoom = useFlowZoom({
   svgEl,
   nodes: () => drawn,
@@ -149,7 +151,8 @@ const zoom = useFlowZoom({
   onSettled: refreshAgainstZoom,
   // The nodes that were hidden stopped being positioned while they were; they
   // are put back where they belong before they are seen again.
-  onDetailChange: () => repaint?.()
+  onDetailChange: () => repaint?.(),
+  motion: useMapMotion(() => root.value)
 })
 const displayScale = zoom.displayScale
 const zoomedByHand = zoom.zoomedByHand
@@ -474,7 +477,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="maps-flow-canvas">
+  <div ref="root" class="maps-flow-canvas">
     <svg ref="svg" class="maps-flow-canvas__svg">
       <defs>
         <!-- A soft halo around the worst-affected hosts, so they stand out even
@@ -525,10 +528,10 @@ defineExpose({
   will-change: transform;
 }
 
-/* While a gesture is running, hit-testing is suppressed across the whole
+/* While the view moves, hit-testing is suppressed across the whole
    subtree: without it every pointermove walks thousands of SVG descendants to
-   work out a hover target the operator cannot reach mid-drag anyway. */
-.maps-flow-canvas__svg--panning .maps-flow-canvas__zoom-layer {
+   work out a hover target the operator cannot reach mid-move anyway. */
+[data-map-moving] .maps-flow-canvas__zoom-layer {
   pointer-events: none;
 }
 

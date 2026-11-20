@@ -23,6 +23,7 @@ import { computed, onMounted, onUnmounted, useTemplateRef, watch } from 'vue'
 import ContextMenu from '@/maps/map/components/ContextMenu.vue'
 import HoverMenu from '@/maps/map/components/HoverMenu.vue'
 import MapMarqueeBox from '@/maps/map/components/MapMarqueeBox.vue'
+import { useMapMotion } from '@/maps/map/composables/useMapMotion'
 import { useMapObjectMenus } from '@/maps/map/composables/useMapObjectMenus'
 import { useMapPalette } from '@/maps/map/composables/useMapPalette'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
@@ -123,6 +124,7 @@ const palette = useMapPalette()
 const surface = useTemplateRef<HTMLElement>('surface')
 const container = useTemplateRef<HTMLElement>('container')
 let map: L.Map | null = null
+const motion = useMapMotion(() => surface.value)
 let tiles: L.TileLayer | null = null
 
 /** The stored viewport, where this map has one. */
@@ -407,6 +409,10 @@ onMounted(() => {
   // Lets the selected object's action bar re-anchor as the map moves: a pan
   // shifts the whole marker pane, which no marker's own element sees.
   map.on('move zoom', () => emit('view-changed'))
+  // A pinch that ends between zoom levels snaps with an animation of its own,
+  // which starts no move.
+  map.on('movestart zoomanim', motion.started)
+  map.on('moveend', motion.settled)
   // Shift-drag pulls a selection band in edit mode, so Leaflet's own
   // shift-drag gesture gives way.
   map.boxZoom.disable()

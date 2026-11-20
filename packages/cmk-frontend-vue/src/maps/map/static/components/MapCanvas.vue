@@ -15,12 +15,13 @@ between them.
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, provide, useTemplateRef } from 'vue'
+import { computed, provide, useTemplateRef, watch } from 'vue'
 
 import ContextMenu from '@/maps/map/components/ContextMenu.vue'
 import HoverMenu from '@/maps/map/components/HoverMenu.vue'
 import MapMarqueeBox from '@/maps/map/components/MapMarqueeBox.vue'
 import MapZoomResetPill from '@/maps/map/components/MapZoomResetPill.vue'
+import { useMapMotion } from '@/maps/map/composables/useMapMotion'
 import { useMapObjectMenus } from '@/maps/map/composables/useMapObjectMenus'
 import { useObjectResize } from '@/maps/map/composables/useObjectResize'
 import { useRovingFocus } from '@/maps/map/composables/useRovingFocus'
@@ -196,6 +197,17 @@ const marquee = useCanvasMarqueeSelect({
     swallowNextClick = true
   }
 })
+
+const { moved } = useMapMotion(() => canvas.value)
+watch(viewport.zoom, moved)
+watch(
+  viewport.scroller,
+  (pane, _, onCleanup) => {
+    pane?.addEventListener('scroll', moved, { passive: true })
+    onCleanup(() => pane?.removeEventListener('scroll', moved))
+  },
+  { immediate: true }
+)
 
 const pan = useCanvasPan({
   canvas: () => canvas.value,

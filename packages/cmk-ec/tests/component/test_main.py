@@ -46,8 +46,9 @@ from cmk.ec.settings import create_settings
 
 _RECEIVE_TIMEOUT = 10  # seconds
 _TERMINATE_TIMEOUT = 10  # seconds
-# How long to wait for events beyond the expected ones, so a test sees surplus events, too
-_SURPLUS_EVENTS_TIMEOUT = 0.1  # seconds
+# How long to wait for events beyond the expected ones, so a test sees surplus events, too, and
+# the event server lists the spool directory again meanwhile, see _EVENT_SERVER_DELAY
+_SURPLUS_EVENTS_TIMEOUT = 0.02  # seconds
 # Instead of a second, so tests don't wait that long for spool files to be seen or for restarts
 _EVENT_SERVER_DELAY = 0.01  # seconds
 

@@ -7,16 +7,12 @@ import sys
 import traceback
 
 from cmk.gui.png._drawing import png_drawing
-from cmk.gui.png._wire import (
-    PngGraph,
-    pngs_to_json,
-    PngTexts,
-    request_from_json,
-)
+from cmk.gui.png._wire import PngGraph, PngTexts, request_from_json
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from ._image import render_pngs
 from ._model import PngDrawing, RenderingFailure
+from ._wire import pngs_to_json
 
 
 def _drawing_or_failure(

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
 from zoneinfo import ZoneInfo
 
 from cmk.graphing_engine import (
@@ -25,13 +24,8 @@ from cmk.graphing_engine import (
     Unit,
     VerticalRangeKind,
 )
-from cmk.gui.png import PngGraph, PngOptions, PngTexts, RenderingFailure
-from cmk.gui.png._wire import (
-    pngs_from_json,
-    pngs_to_json,
-    request_from_json,
-    request_to_json,
-)
+from cmk.gui.png import PngGraph, PngOptions, PngTexts
+from cmk.gui.png._wire import request_from_json, request_to_json
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)
@@ -127,12 +121,3 @@ def test_graphs_survive_the_trip_to_the_rendering_process() -> None:
         texts,
         TemperatureUnit.FAHRENHEIT,
     )
-
-
-def test_images_and_failures_survive_the_trip_back_from_the_rendering_process() -> None:
-    results: Sequence[bytes | RenderingFailure] = [
-        b"\x89PNG first",
-        RenderingFailure("ValueError: boom"),
-        b"\x89PNG second",
-    ]
-    assert pngs_from_json(pngs_to_json(results)) == results

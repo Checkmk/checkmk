@@ -6,6 +6,7 @@ py_library(
     srcs = [
         "__init__.py",
         "_model.py",
+        "_wire.py",
     ],
     imports = ["../../../.."],
     visibility = [

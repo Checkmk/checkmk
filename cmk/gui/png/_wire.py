@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import base64
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
-from typing import assert_never
 from zoneinfo import ZoneInfo
 
 from cmk.graphing_engine import (
@@ -26,7 +24,6 @@ from cmk.graphing_engine import (
     VerticalRangeKind,
 )
 from cmk.gui.graphing import ensure_type, unit_from_specification, unit_to_specification
-from cmk.gui.png.renderer import RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 
@@ -161,20 +158,6 @@ def request_to_json(
             "graphs": [_png_graph_to_json(graph) for graph in graphs],
         }
     )
-
-
-def _png_result_to_json(result: bytes | RenderingFailure) -> Mapping[str, str]:
-    match result:
-        case bytes():
-            return {"png": base64.b64encode(result).decode("ascii")}
-        case RenderingFailure():
-            return {"failure": result.message}
-        case other:
-            assert_never(other)
-
-
-def pngs_to_json(results: Sequence[bytes | RenderingFailure]) -> str:
-    return json.dumps([_png_result_to_json(result) for result in results])
 
 
 def _optional_str(raw: object) -> str | None:
@@ -366,14 +349,3 @@ def request_from_json(text: str) -> tuple[Sequence[PngGraph], PngTexts, Temperat
         _texts(fields["texts"]),
         TemperatureUnit(ensure_type(fields["temperature_unit"], str)),
     )
-
-
-def _png_result(raw: object) -> bytes | RenderingFailure:
-    fields = ensure_type(raw, dict)
-    if "failure" in fields:
-        return RenderingFailure(ensure_type(fields["failure"], str))
-    return base64.b64decode(ensure_type(fields["png"], str))
-
-
-def pngs_from_json(text: str) -> Sequence[bytes | RenderingFailure]:
-    return [_png_result(raw) for raw in ensure_type(json.loads(text), list)]

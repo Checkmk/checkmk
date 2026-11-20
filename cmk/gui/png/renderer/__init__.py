@@ -16,6 +16,7 @@ from ._model import (
     TimeAxis,
     VerticalAxis,
 )
+from ._wire import pngs_from_json
 
 __all__ = [
     "Area",
@@ -24,6 +25,7 @@ __all__ = [
     "LegendRow",
     "Line",
     "PngDrawing",
+    "pngs_from_json",
     "Region",
     "RenderingFailure",
     "Rule",

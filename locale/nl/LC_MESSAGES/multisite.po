@@ -6627,6 +6627,10 @@ msgid "Agent Controller deployment"
 msgstr "Inzet van agent-controller"
 
 #, fuzzy
+msgid "Agent Controller only"
+msgstr "Agent controller"
+
+#, fuzzy
 msgid "Agent Controller user"
 msgstr "Agent controller"
 
@@ -11785,6 +11789,10 @@ msgstr ""
 
 msgid "Both conditions must match (defensive)"
 msgstr ""
+
+#, fuzzy
+msgid "Both updaters"
+msgstr "Bit kaart updates"
 
 msgid "Bottom"
 msgstr "Bodem"
@@ -25378,6 +25386,10 @@ msgstr "E.Type"
 
 msgid "E.g. 'project = my_project and result = \"waiting for something\"'"
 msgstr "Bijv. \"project = mijn_project en resultaat = \"wachten op iets\""
+
+#, fuzzy
+msgid "EC2 instance piggyback names"
+msgstr "Piggyback namen"
 
 msgid "EC2 instances may take a few minutes to show up."
 msgstr ""
@@ -42289,6 +42301,14 @@ msgstr "Verouderde inventaris plugins"
 msgid "Legacy run"
 msgstr "Erfenis run"
 
+#, fuzzy
+msgid "Legacy updater installed the package"
+msgstr "Installeer Python altijd met agent"
+
+#, fuzzy
+msgid "Legacy updater only"
+msgstr "Erfenis run"
+
 msgid "Legal"
 msgstr "Wettelijk"
 
@@ -51184,6 +51204,9 @@ msgstr "Niet beperkt tot het tonen van een specifiek object."
 msgid "Not runnable (loaded, but waiting for event)"
 msgstr "Niet runnable (Geladen maar wacht op gebeurtenis)"
 
+msgid "Not running the updater"
+msgstr ""
+
 msgid "Not selected"
 msgstr "Niet geselecteerd"
 
@@ -54872,6 +54895,10 @@ msgstr "Originele tekst"
 
 msgid "Other"
 msgstr "Andere"
+
+#, fuzzy
+msgid "Other (non-EC2) piggyback names"
+msgstr "Piggyback namen"
 
 msgid "Other entities"
 msgstr "Andere entiteiten"
@@ -65284,6 +65311,19 @@ msgstr "Piggyback creatie opties"
 msgid "Select the parent folder"
 msgstr "(selecteer doel map)"
 
+msgid ""
+"Select the piggyback host name template to use for AWS objects that are "
+"<i>not</i> EC2 instances. There are two templates to choose from:<ul>  "
+"<li>    <b>Short:</b> <tt>[object name from AWS]_[unique id]</tt>    "
+"<ul>      <li>example: <b><tt>my-s3-bucket_3f40ba0d</tt></b>    </ul>  </"
+"li>  <li>    <b>Long:</b>     <tt>aws_[object type]_[object name from "
+"AWS]_[unique id]</tt>    <ul>      <li>example: <b><tt>aws_s3_my-s3-"
+"bucket_3f40ba0d</tt></b>    </ul>  </li></ul>The unique id is a truncated "
+"SHA256 of the object's ARN when an ARN is provided by AWS. In all other "
+"cases it is computed internally by Checkmk using the available (permanent) "
+"information about the object."
+msgstr ""
+
 #, fuzzy
 msgid "Select the sections that you want to include in the agent output."
 msgstr "Selecteer het type inhoudselement"
@@ -73096,6 +73136,10 @@ msgstr "Configuratie toestand toevoegen"
 msgid "Telemetry Host and Service configuration"
 msgstr "Regel voor gastheer- en dienstconfiguratie"
 
+#, fuzzy
+msgid "Telemetry custom services and alerts"
+msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
 msgid ""
 "Telemetry data are collected through the OpenTelemetry Collector. Adjust the "
 "Collector configuration to modify data collection."
@@ -74654,7 +74698,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "The agent updater rule set still deploys the legacy updater: %(modes)s."
+msgid "The agent updater rule set deploys the legacy updater: %(modes)s."
 msgstr ""
 
 #, python-brace-format
@@ -76775,13 +76819,30 @@ msgstr ""
 
 #, python-format
 msgid ""
-"The legacy agent updater is deprecated. The Agent Controller updates the "
-"agents itself, so the activation mode <i>Enable agent updates using the "
-"Agent Controller</i> is the only one that does without the legacy updater. "
-"The two other enabling modes still deploy it, either beside the Agent "
-"Controller or on its own. Move the rules of the rule set <a "
-"href=\"%(url)s\">Agent updater (Linux, Windows, Solaris)</a> to the Agent "
-"Controller before the legacy updater is removed."
+"The legacy agent updater will be deprecated in an upcoming Checkmk version. "
+"Its replacement is integrated into the Agent Controller. To use it, set the "
+"activation mode to <i>Enable agent updates using the Agent Controller</i> in "
+"the rule set <a href=\"%(url)s\">Agent updater (Linux, Windows, Solaris)</"
+"a>. We recommend switching before the legacy updater is removed.<br><br>This "
+"item stays OK as long as the legacy updater is supported. It reports what "
+"the rule set configures and what the hosts run, and it will turn to a "
+"warning once the legacy updater is deprecated.<br><br>The counts cover the "
+"hosts whose baked agent enables agent updates, and tell these cases apart:"
+"<ul><li><b>Not running the updater</b>: no contact of either updater counts."
+"</li><li><b>Agent Controller only</b>: the migration of the host is done.</"
+"li><li><b>Both updaters</b>: both updaters are deployed and run in parallel."
+"</li><li><b>Legacy updater only</b>: the host has not been migrated.</"
+"li><li><b>Legacy updater installed the package</b>: the host runs both "
+"updaters, and the agent package it reports as installed is the one the "
+"legacy updater fetched.</li></ul>A contact counts if it is at most %(days)d "
+"days old and the agent the host reports as installed can hold that updater. "
+"A host whose agent was baked for the Agent Controller alone therefore stops "
+"counting as running the legacy updater at once, instead of after %(days)d "
+"days.<br><br>A host counts under the legacy updater only once it reports "
+"that package as installed, which is the update check after the installation. "
+"Until then it counts under both updaters.<br><br>The text above follows the "
+"rule set, the counts follow the baked agents. The two disagree between a "
+"change of a rule and the next bake."
 msgstr ""
 
 msgid ""
@@ -77688,6 +77749,12 @@ msgid ""
 msgstr ""
 "De numerieke JIRA resolutie overgang ID. 11 - 'Te doen', 21 - 'In "
 "uitvoering', 31 - 'Gereed'"
+
+#, python-format
+msgid ""
+"The objects of the map, with what their templates and the global settings "
+"pass on, take more than %(limit)d characters."
+msgstr ""
 
 msgid "The official Checkmk User Guide"
 msgstr "De officiële Checkmk gebruikershandleiding"
@@ -79281,6 +79348,10 @@ msgid ""
 "tt>. Set for custom services that are assigned to hosts via a host name "
 "template."
 msgstr ""
+
+#, fuzzy, python-format
+msgid "The templates of the map pass on more than %(limit)d parameters."
+msgstr "Uw query heeft meer dan %(limit)d resultaten opgeleverd. "
 
 msgid "The temporary file system is mounted"
 msgstr "Het tijdelijke bestandssysteem is aangekoppeld"
@@ -92675,8 +92746,8 @@ msgstr "Gebruik de standaardtemperatuureenheid"
 msgid "Use the default theme"
 msgstr "Gebruik het standaardthema"
 
-#, fuzzy
-msgid "Use the default time range (first configured time range)"
+#, fuzzy, python-format
+msgid "Use the default time range (%(time_range)s)"
 msgstr "Gebruik de standaardtemperatuureenheid"
 
 #, fuzzy
@@ -107999,6 +108070,12 @@ msgstr ""
 msgid "Raw metrics (%{n})"
 msgstr "Metriek"
 
+#, fuzzy
+msgid "Members matching \"%{pattern}\" are not counted."
+msgstr ""
+"iOS versies die overeenkomen met dit patroon zullen worden gerapporteerd als "
+"OK, anders CRIT."
+
 msgid "Summary (depth %{depth})"
 msgstr ""
 
@@ -110020,13 +110097,6 @@ msgid "New host creation"
 msgstr "Host creatie"
 
 #, fuzzy
-msgid ""
-"Some hosts could not be created. Try again, or verify your configuration."
-msgstr ""
-"Dashlet type %s kon niet gevonden worden. Verwijder het alstublieft uit uw "
-"dashboard configuratie."
-
-#, fuzzy
 msgid "No metric selected."
 msgstr "Geen geselecteerd"
 
@@ -110042,6 +110112,13 @@ msgstr "Naam van de aangepaste dienst"
 msgid "Please enter the thresholds of the selected consolidation."
 msgstr ""
 "Gelieve een hostnaam in te stellen voor de herclassificatie van de hoststatus"
+
+msgid "Looking up the services to be created took too long."
+msgstr ""
+
+#, fuzzy
+msgid "The services to be created could not be looked up."
+msgstr "De groep Base DN kon niet worden gevonden."
 
 #, fuzzy
 msgid "The attributes could not be loaded."
@@ -110113,17 +110190,6 @@ msgid "Only the first attributes of each kind are listed."
 msgstr ""
 
 #, fuzzy
-msgid "Services to be created"
-msgstr "Diensten"
-
-msgid "Service:"
-msgstr "Service:"
-
-#, fuzzy
-msgid "Target host:"
-msgstr "Doelen"
-
-#, fuzzy
 msgid "Failed to validate the configuration name. Please try again."
 msgstr "Zijbalk element toevoegen"
 
@@ -110157,6 +110223,63 @@ msgstr "Het sleutelpaar wordt gegenereerd wanneer u opslaat."
 #, fuzzy
 msgid "Could not check whether OpenTelemetry data is enabled on the hosts."
 msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
+msgid "Several series get this name"
+msgstr "Verschillende dienstengroepen"
+
+#, fuzzy
+msgid "Another custom service creates this service"
+msgstr "Aangepaste diensten nota's"
+
+#, fuzzy
+msgid "The host already has this service"
+msgstr "Andere logboeken voor deze dienst"
+
+#, fuzzy
+msgid "Services to be created"
+msgstr "Diensten"
+
+msgid ""
+"Enter a service name and select a host or enter a host name template to see "
+"the services to be created."
+msgstr ""
+
+#, fuzzy
+msgid "Looking up the services to be created…"
+msgstr "Diensten"
+
+msgid ""
+"The metric currently has no series for these hosts. Services are created as "
+"series appear."
+msgstr ""
+
+msgid "Service:"
+msgstr "Service:"
+
+#, fuzzy
+msgid "Target host:"
+msgstr "Doelen"
+
+#, fuzzy
+msgid "(new host)"
+msgstr "(geen hosts)"
+
+#, fuzzy
+msgid "Showing the first %{shown} of %{total} services."
+msgstr "Diensten van down hosts"
+
+msgid ""
+"The metric has more series than are looked up here, so it creates more "
+"services than counted, and their names are checked only when saving."
+msgstr ""
+
+#, fuzzy
+msgid "%{count} more service names clash."
+msgstr "Afgedwongen diensten"
+
+msgid "Series appearing after saving add services that are not shown here."
+msgstr ""
 
 #, fuzzy
 msgid "Enter a host name template to see the hosts it matches."
@@ -112521,10 +112644,10 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The check did not run within %{seconds} second. It will still run as "
+"The check did not finish within %{seconds} second. It will still run as "
 "scheduled, and its result will show once the page refreshes."
 msgid_plural ""
-"The check did not run within %{seconds} seconds. It will still run as "
+"The check did not finish within %{seconds} seconds. It will still run as "
 "scheduled, and its result will show once the page refreshes."
 msgstr[0] ""
 msgstr[1] ""
@@ -112554,12 +112677,22 @@ msgstr ""
 "Geef aan op welk tijdstip een nieuw bestand voor de voorvalgeschiedenis "
 "wordt aangemaakt."
 
+#, fuzzy
+msgid "Waiting for the check of %{host} to finish"
+msgstr "Wachten op andere wissels om online te komen"
+
 msgid "The check of %{host} has run"
 msgstr ""
 
 #, fuzzy
 msgid "Could not reschedule the checks for the selected hosts"
 msgstr "De host/service moet een van de geselecteerde contacten hebben."
+
+msgid "Waiting for the \"Check_MK\" service of %{host} to finish"
+msgstr ""
+
+msgid "Waiting for the check of \"%{service}\" on %{host} to finish"
+msgstr ""
 
 msgid ""
 "The \"Check_MK\" service of %{host} has run, and with it the services it "
@@ -113232,6 +113365,10 @@ msgstr "Filter %s selectie op dienst: "
 #, fuzzy
 msgid "Search this page"
 msgstr "Overeenkomende host labels"
+
+#, fuzzy
+msgid "Could not run the command"
+msgstr "U kunt deze verbinding niet verwijderen."
 
 msgid ""
 "Show only services in a problem state (WARN, CRIT or UNKNOWN) that are "
@@ -114892,6 +115029,13 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Proef vervallen"
+
+#, fuzzy
+#~ msgid ""
+#~ "Some hosts could not be created. Try again, or verify your configuration."
+#~ msgstr ""
+#~ "Dashlet type %s kon niet gevonden worden. Verwijder het alstublieft uit "
+#~ "uw dashboard configuratie."
 
 #, fuzzy
 #~ msgid "Built-in images cannot be overwritten."
@@ -121556,10 +121700,6 @@ msgstr "Proef vervallen"
 
 #~ msgid "Set the maximum and minimum length for the queue size"
 #~ msgstr "Stel de maximale en minimale lengte voor de wachtrijgrootte in"
-
-#, fuzzy
-#~ msgid "Already installed the Checkmk agent?"
-#~ msgstr "Installeer Python altijd met agent"
 
 #, fuzzy
 #~ msgid ""

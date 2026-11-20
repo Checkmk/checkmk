@@ -6341,6 +6341,10 @@ msgstr "エージェントコントローラー接続"
 msgid "Agent Controller deployment"
 msgstr "エージェントコントローラーデプロイ"
 
+#, fuzzy
+msgid "Agent Controller only"
+msgstr "エージェントコントローラー"
+
 msgid "Agent Controller user"
 msgstr "エージェントコントローラーユーザー"
 
@@ -11068,6 +11072,10 @@ msgstr "どちらもホストラベル「%(name)s」を持ち、値は「%(value
 
 msgid "Both conditions must match (defensive)"
 msgstr "両方の条件が一致しなければならない（defensive）"
+
+#, fuzzy
+msgid "Both updaters"
+msgstr "ビットマップの更新"
 
 msgid "Bottom"
 msgstr "ボトム"
@@ -23906,6 +23914,10 @@ msgstr "E.Type"
 
 msgid "E.g. 'project = my_project and result = \"waiting for something\"'"
 msgstr "例 'project = my_project and result = \"何かを待っています\"'"
+
+#, fuzzy
+msgid "EC2 instance piggyback names"
+msgstr "ピギーバック名"
 
 msgid "EC2 instances may take a few minutes to show up."
 msgstr "EC2インスタンスが表示されるまで数分かかる場合があります。"
@@ -39798,6 +39810,14 @@ msgstr "Legact inventory plug-ins（非推奨）"
 msgid "Legacy run"
 msgstr "レガシーラン"
 
+#, fuzzy
+msgid "Legacy updater installed the package"
+msgstr "すでにエージェントはインストール済？"
+
+#, fuzzy
+msgid "Legacy updater only"
+msgstr "レガシーラン"
+
 msgid "Legal"
 msgstr "法的"
 
@@ -48112,6 +48132,9 @@ msgstr "特定のオブジェクトを表示することに限定されません
 msgid "Not runnable (loaded, but waiting for event)"
 msgstr "実行できません(ロードされていますが、イベントを待機しています)"
 
+msgid "Not running the updater"
+msgstr ""
+
 msgid "Not selected"
 msgstr "選択されていない"
 
@@ -51454,6 +51477,10 @@ msgstr "オリジナル名"
 
 msgid "Other"
 msgstr "その他"
+
+#, fuzzy
+msgid "Other (non-EC2) piggyback names"
+msgstr "ピギーバック名"
 
 msgid "Other entities"
 msgstr "その他のエンティティ"
@@ -61255,6 +61282,19 @@ msgstr "このリレーションが指すホストを選択してください。
 msgid "Select the parent folder"
 msgstr "親フォルダを選択"
 
+msgid ""
+"Select the piggyback host name template to use for AWS objects that are "
+"<i>not</i> EC2 instances. There are two templates to choose from:<ul>  "
+"<li>    <b>Short:</b> <tt>[object name from AWS]_[unique id]</tt>    "
+"<ul>      <li>example: <b><tt>my-s3-bucket_3f40ba0d</tt></b>    </ul>  </"
+"li>  <li>    <b>Long:</b>     <tt>aws_[object type]_[object name from "
+"AWS]_[unique id]</tt>    <ul>      <li>example: <b><tt>aws_s3_my-s3-"
+"bucket_3f40ba0d</tt></b>    </ul>  </li></ul>The unique id is a truncated "
+"SHA256 of the object's ARN when an ARN is provided by AWS. In all other "
+"cases it is computed internally by Checkmk using the available (permanent) "
+"information about the object."
+msgstr ""
+
 msgid "Select the sections that you want to include in the agent output."
 msgstr "エージェントの出力に含めたいセクションを選択してください。"
 
@@ -68658,6 +68698,10 @@ msgstr "Telemetry"
 msgid "Telemetry Host and Service configuration"
 msgstr "Telemetryのホストおよびサービス設定"
 
+#, fuzzy
+msgid "Telemetry custom services and alerts"
+msgstr "OpenTelemetry カスタムサービスの管理"
+
 msgid ""
 "Telemetry data are collected through the OpenTelemetry Collector. Adjust the "
 "Collector configuration to modify data collection."
@@ -70157,7 +70201,7 @@ msgstr ""
 "のみ表示されるようになります。"
 
 #, python-format
-msgid "The agent updater rule set still deploys the legacy updater: %(modes)s."
+msgid "The agent updater rule set deploys the legacy updater: %(modes)s."
 msgstr ""
 
 #, python-brace-format
@@ -72326,13 +72370,30 @@ msgstr "メトリックバックエンドの、認可済みアクティブな時
 
 #, python-format
 msgid ""
-"The legacy agent updater is deprecated. The Agent Controller updates the "
-"agents itself, so the activation mode <i>Enable agent updates using the "
-"Agent Controller</i> is the only one that does without the legacy updater. "
-"The two other enabling modes still deploy it, either beside the Agent "
-"Controller or on its own. Move the rules of the rule set <a "
-"href=\"%(url)s\">Agent updater (Linux, Windows, Solaris)</a> to the Agent "
-"Controller before the legacy updater is removed."
+"The legacy agent updater will be deprecated in an upcoming Checkmk version. "
+"Its replacement is integrated into the Agent Controller. To use it, set the "
+"activation mode to <i>Enable agent updates using the Agent Controller</i> in "
+"the rule set <a href=\"%(url)s\">Agent updater (Linux, Windows, Solaris)</"
+"a>. We recommend switching before the legacy updater is removed.<br><br>This "
+"item stays OK as long as the legacy updater is supported. It reports what "
+"the rule set configures and what the hosts run, and it will turn to a "
+"warning once the legacy updater is deprecated.<br><br>The counts cover the "
+"hosts whose baked agent enables agent updates, and tell these cases apart:"
+"<ul><li><b>Not running the updater</b>: no contact of either updater counts."
+"</li><li><b>Agent Controller only</b>: the migration of the host is done.</"
+"li><li><b>Both updaters</b>: both updaters are deployed and run in parallel."
+"</li><li><b>Legacy updater only</b>: the host has not been migrated.</"
+"li><li><b>Legacy updater installed the package</b>: the host runs both "
+"updaters, and the agent package it reports as installed is the one the "
+"legacy updater fetched.</li></ul>A contact counts if it is at most %(days)d "
+"days old and the agent the host reports as installed can hold that updater. "
+"A host whose agent was baked for the Agent Controller alone therefore stops "
+"counting as running the legacy updater at once, instead of after %(days)d "
+"days.<br><br>A host counts under the legacy updater only once it reports "
+"that package as installed, which is the update check after the installation. "
+"Until then it counts under both updaters.<br><br>The text above follows the "
+"rule set, the counts follow the baked agents. The two disagree between a "
+"change of a rule and the next bake."
 msgstr ""
 
 msgid ""
@@ -73262,6 +73323,12 @@ msgid ""
 "The numerical Jira resolution transition ID. 11 - 'To Do', 21 - 'In "
 "progress', 31 - 'Done'"
 msgstr "数値のJIRA解像度遷移ID。11-\"To Do \"、21-\"進行中\"、31-\"完了\""
+
+#, python-format
+msgid ""
+"The objects of the map, with what their templates and the global settings "
+"pass on, take more than %(limit)d characters."
+msgstr ""
 
 msgid "The official Checkmk User Guide"
 msgstr "Checkmk公式ユーザーガイド"
@@ -74893,6 +74960,10 @@ msgid ""
 "tt>. Set for custom services that are assigned to hosts via a host name "
 "template."
 msgstr ""
+
+#, fuzzy, python-format
+msgid "The templates of the map pass on more than %(limit)d parameters."
+msgstr "このマップには、%(limit)dを超えるオブジェクトが含まれています。"
 
 msgid "The temporary file system is mounted"
 msgstr "一時ファイルシステムがマウントされます"
@@ -87375,8 +87446,8 @@ msgstr "デフォルトの温度単位を使用する"
 msgid "Use the default theme"
 msgstr "デフォルトのテーマを使用する"
 
-#, fuzzy
-msgid "Use the default time range (first configured time range)"
+#, fuzzy, python-format
+msgid "Use the default time range (%(time_range)s)"
 msgstr "デフォルトの温度単位を使用する"
 
 #, fuzzy
@@ -102056,6 +102127,11 @@ msgstr "+%{n} 以上 — フィルタを絞り込んで表示する"
 msgid "Raw metrics (%{n})"
 msgstr "メトリックなし: %(e)s"
 
+#, fuzzy
+msgid "Members matching \"%{pattern}\" are not counted."
+msgstr ""
+"これらのパターンのいずれかに一致するインスタンスは、監視対象外となります。"
+
 msgid "Summary (depth %{depth})"
 msgstr "概要 (depth %{depth})"
 
@@ -104073,13 +104149,6 @@ msgstr "作成"
 msgid "New host creation"
 msgstr "ホスト作成"
 
-#, fuzzy
-msgid ""
-"Some hosts could not be created. Try again, or verify your configuration."
-msgstr ""
-"ダッシュレットタイプ %s が見つかりませんでした。ダッシュボード構成から削除し"
-"てください。"
-
 msgid "No metric selected."
 msgstr "メトリックが選択されていません。"
 
@@ -104092,6 +104161,13 @@ msgstr "カスタムサービスをホストに割り当ててください。"
 
 msgid "Please enter the thresholds of the selected consolidation."
 msgstr "選択した集計のしきい値を入力してください。"
+
+msgid "Looking up the services to be created took too long."
+msgstr ""
+
+#, fuzzy
+msgid "The services to be created could not be looked up."
+msgstr "グループベースDNが見つかりませんでした。"
 
 #, fuzzy
 msgid "The attributes could not be loaded."
@@ -104163,16 +104239,6 @@ msgid "Only the first attributes of each kind are listed."
 msgstr ""
 
 #, fuzzy
-msgid "Services to be created"
-msgstr "サービスの状態"
-
-msgid "Service:"
-msgstr "サービス:"
-
-msgid "Target host:"
-msgstr "ターゲットホスト："
-
-#, fuzzy
 msgid "Failed to validate the configuration name. Please try again."
 msgstr "サイト設定の検証に失敗しました。もう一度お試しください。"
 
@@ -104205,6 +104271,62 @@ msgstr "保存するとキーペアが生成されます。"
 #, fuzzy
 msgid "Could not check whether OpenTelemetry data is enabled on the hosts."
 msgstr "OpenTelemetryの設定を保存できませんでした"
+
+#, fuzzy
+msgid "Several series get this name"
+msgstr "複数のサービスグループ"
+
+#, fuzzy
+msgid "Another custom service creates this service"
+msgstr "カスタムサービスノート"
+
+#, fuzzy
+msgid "The host already has this service"
+msgstr "このサービスに関する他のログ"
+
+#, fuzzy
+msgid "Services to be created"
+msgstr "サービスの状態"
+
+msgid ""
+"Enter a service name and select a host or enter a host name template to see "
+"the services to be created."
+msgstr ""
+
+#, fuzzy
+msgid "Looking up the services to be created…"
+msgstr "サービスの状態"
+
+msgid ""
+"The metric currently has no series for these hosts. Services are created as "
+"series appear."
+msgstr ""
+
+msgid "Service:"
+msgstr "サービス:"
+
+msgid "Target host:"
+msgstr "ターゲットホスト："
+
+#, fuzzy
+msgid "(new host)"
+msgstr "(ホストなし)"
+
+#, fuzzy
+msgid "Showing the first %{shown} of %{total} services."
+msgstr "%{total}件中の最大%{shown}件を表示しています。"
+
+msgid ""
+"The metric has more series than are looked up here, so it creates more "
+"services than counted, and their names are checked only when saving."
+msgstr ""
+
+#, fuzzy
+msgid "%{count} more service names clash."
+msgstr "施行されたサービス"
+
+msgid "Series appearing after saving add services that are not shown here."
+msgstr ""
 
 #, fuzzy
 msgid "Enter a host name template to see the hosts it matches."
@@ -106681,10 +106803,10 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The check did not run within %{seconds} second. It will still run as "
+"The check did not finish within %{seconds} second. It will still run as "
 "scheduled, and its result will show once the page refreshes."
 msgid_plural ""
-"The check did not run within %{seconds} seconds. It will still run as "
+"The check did not finish within %{seconds} seconds. It will still run as "
 "scheduled, and its result will show once the page refreshes."
 msgstr[0] ""
 
@@ -106715,12 +106837,23 @@ msgstr ""
 msgid "Enter the number of minutes over which the checks should be spread."
 msgstr "パラメーターを使用する期間を指定します。"
 
+#, fuzzy
+msgid "Waiting for the check of %{host} to finish"
+msgstr "他のスイッチがオンラインになるのを待っています"
+
 msgid "The check of %{host} has run"
 msgstr ""
 
 #, fuzzy
 msgid "Could not reschedule the checks for the selected hosts"
 msgstr "選択したホストのチェックを再スケジュールできませんでした"
+
+msgid "Waiting for the \"Check_MK\" service of %{host} to finish"
+msgstr ""
+
+#, fuzzy
+msgid "Waiting for the check of \"%{service}\" on %{host} to finish"
+msgstr "%{host}上の「%{service}」に関するデータはありません"
 
 msgid ""
 "The \"Check_MK\" service of %{host} has run, and with it the services it "
@@ -107385,6 +107518,10 @@ msgstr "サービスによるフィルタ"
 #, fuzzy
 msgid "Search this page"
 msgstr "ホスト名に一致"
+
+#, fuzzy
+msgid "Could not run the command"
+msgstr "この接続を削除することはできません。"
 
 #, fuzzy
 msgid ""
@@ -109179,6 +109316,13 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "取り上げるトピック"
+
+#, fuzzy
+#~ msgid ""
+#~ "Some hosts could not be created. Try again, or verify your configuration."
+#~ msgstr ""
+#~ "ダッシュレットタイプ %s が見つかりませんでした。ダッシュボード構成から削除"
+#~ "してください。"
 
 #~ msgid "Built-in images cannot be overwritten."
 #~ msgstr "ビルトインの画像は削除できません。"
@@ -111269,9 +111413,6 @@ msgstr "取り上げるトピック"
 #~ msgstr ""
 #~ "ランク付けされたカテゴリは、リングが計測したすべてのトラフィックを網羅して"
 #~ "います。"
-
-#~ msgid "Showing the largest %{shown} of %{total}."
-#~ msgstr "%{total}件中の最大%{shown}件を表示しています。"
 
 #, fuzzy
 #~ msgid "Other applications"
@@ -116797,10 +116938,6 @@ msgstr "取り上げるトピック"
 
 #~ msgid "Set the maximum and minimum length for the queue size"
 #~ msgstr "キューサイズの最大長と最小長を設定します"
-
-#, fuzzy
-#~ msgid "Already installed the Checkmk agent?"
-#~ msgstr "すでにエージェントはインストール済？"
 
 #~ msgid ""
 #~ "This problem might be caused by a missing agent or the firewall settings."

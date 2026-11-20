@@ -5,6 +5,7 @@
 """Test for unwanted files in the python.cab"""
 
 import os
+import re
 from pathlib import Path
 
 _DENIED_BINARIES = {
@@ -15,6 +16,9 @@ _EXPECTED_PRESENT = {
     "python.exe",
     "libcrypto-3.dll",
 }
+# The agent runs the venv, which does not see the base interpreter's
+# site-packages: build tools leaking there would only ship as unused copies.
+_ALLOWED_IN_BASE_SITE_PACKAGES = re.compile(r"^(pip|pip-.+\.dist-info|README\.txt)$", re.IGNORECASE)
 
 
 def test_cab_contents(python_to_test: Path) -> None:
@@ -29,3 +33,16 @@ def test_cab_contents(python_to_test: Path) -> None:
         assert (
             not disallowed
         ), f"We have disallowed binaries {','.join(disallowed)} in {python_name}"
+
+
+def test_base_site_packages_hold_no_build_tools(python_to_test: Path) -> None:
+    for python_name in os.listdir(python_to_test):
+        site_packages = python_to_test / python_name / "Lib" / "site-packages"
+        # A cabinet keeps no empty directories.
+        present = site_packages.iterdir() if site_packages.is_dir() else iter(())
+
+        unexpected = sorted(
+            p.name for p in present if not _ALLOWED_IN_BASE_SITE_PACKAGES.match(p.name)
+        )
+
+        assert not unexpected, f"{python_name} ships {', '.join(unexpected)} in Lib/site-packages"

@@ -19,14 +19,18 @@ from bazel_delta.lint import (
     lint_findings,
     linted_language,
     outcome,
+    owning_targets,
+    OwningRule,
+    OwningTargets,
     PYTHON,
+    Query,
+    query_errors,
     RUST,
     SHELL,
     STARLARK,
     summary_rows,
     Workspace,
 )
-from bazel_delta.targets import OwningRule, OwningTargets, Query
 
 
 def _rule(
@@ -53,6 +57,77 @@ def _fake_query(outputs: Mapping[tuple[str, str], str]) -> Query:
         return outputs.get((expression, output), "")
 
     return query
+
+
+def test_targets_listing_a_file_in_their_srcs_own_it() -> None:
+    query = _fake_query(
+        {
+            ('set("cmk/a.py" "cmk/b.py")', "label"): "//cmk:a.py\n//cmk:b.py\n",
+            (
+                'same_pkg_direct_rdeps(set("//cmk:a.py" "//cmk:b.py"))',
+                "streamed_jsonproto",
+            ): "\n".join(
+                [
+                    _rule("//cmk:lib", ["//cmk:a.py", "//cmk:other.py"]),
+                    _rule("//cmk:data_only", []),
+                    _rule("//cmk:test", ["//cmk:b.py"], kind="py_test", tags=["slow"]),
+                ]
+            ),
+        }
+    )
+    owning = owning_targets(query, ["cmk/a.py", "cmk/b.py"])
+    assert owning.targets == ["//cmk:lib", "//cmk:test"]
+    assert owning.rules == {
+        "cmk/a.py": [OwningRule("py_library", frozenset())],
+        "cmk/b.py": [OwningRule("py_test", frozenset({"slow"}))],
+    }
+
+
+def test_files_in_a_filegroup_are_owned_by_its_users_in_the_package() -> None:
+    query = _fake_query(
+        {
+            ('set("tests/testlib/out.py")', "label"): "//tests/testlib:out.py\n",
+            (
+                'same_pkg_direct_rdeps(set("//tests/testlib:out.py"))',
+                "streamed_jsonproto",
+            ): _rule("//tests/testlib:srcs", ["//tests/testlib:out.py"], kind="filegroup"),
+            (
+                'same_pkg_direct_rdeps(set("//tests/testlib:srcs"))',
+                "streamed_jsonproto",
+            ): "\n".join(
+                [
+                    _rule("//tests/testlib:testlib", ["//tests/testlib:srcs"]),
+                    _rule("//tests/testlib:data", [], kind="filegroup"),
+                ]
+            ),
+        }
+    )
+    owning = owning_targets(query, ["tests/testlib/out.py"])
+    assert owning.targets == ["//tests/testlib:srcs", "//tests/testlib:testlib"]
+    assert owning.rules == {
+        "tests/testlib/out.py": [
+            OwningRule("filegroup", frozenset()),
+            OwningRule("py_library", frozenset()),
+        ]
+    }
+
+
+def test_files_of_the_root_package_are_repo_paths() -> None:
+    query = _fake_query(
+        {
+            ('set("setup.py")', "label"): "//:setup.py\n",
+            ('same_pkg_direct_rdeps(set("//:setup.py"))', "streamed_jsonproto"): _rule(
+                "//:setup", ["//:setup.py"]
+            ),
+        }
+    )
+    assert set(owning_targets(query, ["setup.py"]).rules) == {"setup.py"}
+
+
+def test_files_in_no_package_have_no_targets() -> None:
+    owning = owning_targets(_fake_query({}), ["notes.txt"])
+    assert owning.targets == []
+    assert owning.rules == {}
 
 
 _BUILDIFIER = Buildifier(
@@ -113,20 +188,14 @@ def test_files_without_extension_by_shebang(first_line: str, language: str | Non
 @pytest.mark.parametrize(
     ("rules", "language"),
     [
-        ([OwningRule("//pkg:target", "sh_library", frozenset())], SHELL),
-        ([OwningRule("//pkg:target", "filegroup", frozenset({"python"}))], PYTHON),
-        ([OwningRule("//pkg:target", "filegroup", frozenset())], None),
-        ([OwningRule("//pkg:target", "genrule", frozenset())], None),
-        ([OwningRule("//pkg:target", "py_library", frozenset({"no-lint"}))], None),
-        ([OwningRule("//pkg:target", "rust_library", frozenset({"noclippy"}))], None),
-        ([OwningRule("//pkg:target", "rust_library", frozenset())], RUST),
-        (
-            [
-                OwningRule("//pkg:target", "pkg_files", frozenset()),
-                OwningRule("//pkg:target", "cc_library", frozenset()),
-            ],
-            C_CPP,
-        ),
+        ([OwningRule("sh_library", frozenset())], SHELL),
+        ([OwningRule("filegroup", frozenset({"python"}))], PYTHON),
+        ([OwningRule("filegroup", frozenset())], None),
+        ([OwningRule("genrule", frozenset())], None),
+        ([OwningRule("py_library", frozenset({"no-lint"}))], None),
+        ([OwningRule("rust_library", frozenset({"noclippy"}))], None),
+        ([OwningRule("rust_library", frozenset())], RUST),
+        ([OwningRule("pkg_files", frozenset()), OwningRule("cc_library", frozenset())], C_CPP),
     ],
 )
 def test_language_by_the_kinds_of_the_owning_rules(
@@ -136,14 +205,14 @@ def test_language_by_the_kinds_of_the_owning_rules(
 
 
 def test_summary_counts_linted_untargeted_and_skipped_files() -> None:
-    library = [OwningRule("//pkg:target", "py_library", frozenset())]
+    library = [OwningRule("py_library", frozenset())]
     owning = OwningTargets(
         ["//cmk:lib", "//cmk:data"],
         {
             "cmk/a.py": library,
             "cmk/b.py": library,
-            "cmk/data.json": [OwningRule("//pkg:target", "filegroup", frozenset())],
-            "omd/skel/profile.sh": [OwningRule("//pkg:target", "pkg_files", frozenset())],
+            "cmk/data.json": [OwningRule("filegroup", frozenset())],
+            "omd/skel/profile.sh": [OwningRule("pkg_files", frozenset())],
         },
     )
     files = [
@@ -243,6 +312,62 @@ def test_summary_ends_with_the_lint_outcome(fix: bool, clean: bool, message: str
     assert outcome(fix, clean) == message
 
 
+def test_targets_listing_a_file_in_their_hdrs_own_it() -> None:
+    query = _fake_query(
+        {
+            ('set("src/foo.h")', "label"): "//src:foo.h\n",
+            ('same_pkg_direct_rdeps(set("//src:foo.h"))', "streamed_jsonproto"): _rule(
+                "//src:foo", ["//src:foo.cc"], hdrs=["//src:foo.h"]
+            ),
+        }
+    )
+    owning = owning_targets(query, ["src/foo.h"])
+    assert owning.targets == ["//src:foo"]
+    assert set(owning.rules) == {"src/foo.h"}
+
+
+def test_skipped_files_are_no_query_errors() -> None:
+    stderr = (
+        "ERROR: Skipping 'notes.txt': no such target '//:notes.txt': ...\n"
+        "WARNING: --keep_going specified, ignoring errors. Results may be inaccurate\n"
+    )
+    assert query_errors(stderr) == ""
+
+
+def test_build_files_that_fail_to_load_are_query_errors() -> None:
+    stderr = (
+        "ERROR: /repo/pkg/BUILD:2:1: syntax error at 'newline': expected ,\n"
+        "ERROR: Skipping 'pkg/a.py': no such target '//pkg:a.py': ...\n"
+    )
+    assert (
+        query_errors(stderr) == "ERROR: /repo/pkg/BUILD:2:1: syntax error at 'newline': expected ,"
+    )
+
+
+def test_skipped_files_of_packages_that_fail_to_load_are_query_errors() -> None:
+    stderr = (
+        "ERROR: Skipping 'pkg/a.py': error loading package 'pkg': Label '//nope:x.bzl' is invalid\n"
+        "ERROR: Skipping 'notes.txt': no such target '//:notes.txt': ...\n"
+    )
+    assert query_errors(stderr) == (
+        "ERROR: Skipping 'pkg/a.py': error loading package 'pkg': Label '//nope:x.bzl' is invalid"
+    )
+
+
+def test_files_with_non_ascii_names_have_their_targets() -> None:
+    query = _fake_query(
+        {
+            ('set("doc/café.py")', "label"): "//doc:café.py\n",
+            ('same_pkg_direct_rdeps(set("//doc:café.py"))', "streamed_jsonproto"): _rule(
+                "//doc:doc", ["//doc:café.py"]
+            ),
+        }
+    )
+    owning = owning_targets(query, ["doc/café.py"])
+    assert owning.targets == ["//doc:doc"]
+    assert set(owning.rules) == {"doc/café.py"}
+
+
 class _FakeBranch:
     """A branch whose changed files are all dirty, with git hashes the linters can change."""
 
@@ -296,8 +421,8 @@ def _workspace(
     return Workspace(
         run=branch.run,
         query=query,
-        run_on_terminal=recorded_call,
-        run_merged=recorded_call_captured,
+        call=recorded_call,
+        call_captured=recorded_call_captured,
         which=lambda name: f"/usr/bin/{name}",
         is_file=lambda _file: True,
         read_first_line=lambda _file: "",

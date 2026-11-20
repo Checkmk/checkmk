@@ -7,8 +7,6 @@
 files  prints the branch the changes are compared to and then the changed
        files, each terminated by a NUL byte
 lint   lints the targets of the changed files, run by //:lint and //:lint.check
-mypy   type-checks the targets of the changed files and all that depend on
-       them, run by //:mypy.check
 """
 
 import os
@@ -20,7 +18,6 @@ from pathlib import Path
 from bazel_delta.errors import DeltaError
 from bazel_delta.files import delta_files, existing_files, find_base_branch, run_captured_in
 from bazel_delta.lint import Buildifier, lint_delta, workspace_in
-from bazel_delta.mypy import mypy_delta, mypy_workspace_in
 
 
 def _parse_args(argv: Sequence[str]) -> Namespace:
@@ -51,27 +48,13 @@ def _parse_args(argv: Sequence[str]) -> Namespace:
         help="name pattern buildifier takes",
     )
     lint.add_argument("--delta", action="store_true", help="lint the targets of the changed files")
-    mypy = subcommands.add_parser(
-        "mypy", help="type-check what the changed files can affect", allow_abbrev=False
-    )
-    mypy.add_argument(
-        "--delta", action="store_true", help="type-check what the changed files can affect"
-    )
-    # The other options are Bazel flags for the nested `bazel lint` or `bazel build`,
-    # as those given to `bazel run` don't reach them
+    # The other options are Bazel flags for the nested `bazel lint`, as those
+    # given to `bazel run` don't reach it
     args, bazel_flags = parser.parse_known_args(argv)
     if bazel_flags and args.command == "files":
         parser.error(f"unrecognized arguments: {' '.join(bazel_flags)}")
     args.bazel_flags = bazel_flags
     return args
-
-
-def _require_delta(args: Namespace, target: str, alternative: str) -> None:
-    if not args.delta:
-        sys.exit(
-            "ERROR: only --delta is supported.\n"
-            f"Use 'bazel run {target} -- --delta', or {alternative}."
-        )
 
 
 def _files(workspace: Path) -> int:
@@ -83,11 +66,12 @@ def _files(workspace: Path) -> int:
 
 
 def _lint(workspace: Path, args: Namespace) -> int:
-    _require_delta(
-        args,
-        "//:lint" if args.fix else "//:lint.check",
-        "'bazel lint <targets>' to lint specific targets",
-    )
+    if not args.delta:
+        target = "//:lint" if args.fix else "//:lint.check"
+        sys.exit(
+            "ERROR: only --delta is supported.\n"
+            f"Use 'bazel run {target} -- --delta', or 'bazel lint <targets>' to lint specific targets."
+        )
     # Relative to the runfiles directory, the working directory of `bazel run`
     buildifier = Buildifier(
         args.buildifier.absolute(),
@@ -98,27 +82,12 @@ def _lint(workspace: Path, args: Namespace) -> int:
     return lint_delta(workspace_in(workspace), buildifier, args.fix, args.bazel_flags)
 
 
-def _mypy(workspace: Path, args: Namespace) -> int:
-    _require_delta(
-        args,
-        "//:mypy.check",
-        "'bazel build --config=mypy <targets>' to type-check specific targets",
-    )
-    return mypy_delta(mypy_workspace_in(workspace), args.bazel_flags)
-
-
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     if not (workspace := os.environ.get("BUILD_WORKSPACE_DIRECTORY")):
         sys.exit("ERROR: run it with bazel run")
     try:
-        match args.command:
-            case "lint":
-                return _lint(Path(workspace), args)
-            case "mypy":
-                return _mypy(Path(workspace), args)
-            case _:
-                return _files(Path(workspace))
+        return _lint(Path(workspace), args) if args.command == "lint" else _files(Path(workspace))
     except DeltaError as e:
         sys.exit(f"ERROR: {e}")
 

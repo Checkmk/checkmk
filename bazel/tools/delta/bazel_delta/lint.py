@@ -4,25 +4,25 @@
 
 """`bazel run //:lint -- --delta`: lints the targets of the changed files."""
 
+import json
 import re
 import shutil
 import subprocess
+import tempfile
 from collections import Counter
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from fnmatch import fnmatchcase
 from pathlib import Path
+from typing import NotRequired, TypedDict
 
 from bazel_delta.errors import DeltaError
 from bazel_delta.files import (
     delta_files,
     existing_files,
     find_base_branch,
-    is_file_in,
     run_captured_in,
-    run_on_terminal_in,
     RunCaptured,
-    RunOnTerminal,
 )
 from bazel_delta.summary import (
     changed_files,
@@ -32,13 +32,18 @@ from bazel_delta.summary import (
     print_changed_files,
     print_summary,
 )
-from bazel_delta.targets import owning_targets, OwningRule, OwningTargets, Query, query_in
+
+# Runs `bazel query` on an expression with an --output format and returns its stdout.
+type Query = Callable[[str, str], str]
 
 # Reads the first line of a workspace file, empty if it cannot be read.
 type ReadFirstLine = Callable[[str], str]
 
+# Runs a command in the workspace with its output on the terminal, returns its exit code.
+type Call = Callable[[Sequence[str]], int]
+
 # Runs a command in the workspace, returns its exit code and its stdout and stderr together.
-type RunMerged = Callable[[Sequence[str]], tuple[int, str]]
+type CallCaptured = Callable[[Sequence[str]], tuple[int, str]]
 
 # The summary's languages with their linters: those of `bazel lint` in the order
 # of .aspect/cli/config.yaml, then buildifier.
@@ -98,6 +103,147 @@ _LINTED_RULES = (
 
 # shellcheck takes sh, bash, dash and ksh, also run through env
 _SHELL_SHEBANG = re.compile(r"^#!\s*(\S*/)?(env\s+(-\S+\s+)*)?(ba|da|k)?sh(\s|$)")
+
+_NO_TARGET = re.compile(r"^ERROR: Skipping '.*': no such target '")
+
+
+def query_errors(stderr: str) -> str:
+    """The errors of a `bazel query --keep_going` that exited with 3, other than
+    the skipped files that are no target, such as a package that fails to load."""
+    return "\n".join(
+        line
+        for line in stderr.splitlines()
+        if line.startswith("ERROR: ") and not _NO_TARGET.match(line)
+    )
+
+
+def query_in(workspace: Path) -> Query:
+    def query(expression: str, output: str) -> str:
+        # A query file, as the expression lists every changed file. With
+        # --keep_going, exit code 3 means it left out the files that are no target,
+        # or the packages that fail to load.
+        with tempfile.NamedTemporaryFile("w", suffix=".query") as query_file:
+            query_file.write(expression)
+            query_file.flush()
+            result = subprocess.run(
+                [
+                    "bazel",
+                    "query",
+                    "--keep_going",
+                    f"--output={output}",
+                    f"--query_file={query_file.name}",
+                ],
+                check=False,
+                cwd=workspace,
+                capture_output=True,
+                text=True,
+            )
+        if result.returncode not in (0, 3):
+            raise DeltaError(f"bazel query failed:\n{result.stderr}")
+        if result.returncode == 3 and (errors := query_errors(result.stderr)):
+            raise DeltaError(f"bazel query failed:\n{errors}")
+        return result.stdout
+
+    return query
+
+
+@dataclass(frozen=True)
+class OwningRule:
+    kind: str
+    tags: frozenset[str]
+
+
+@dataclass(frozen=True)
+class OwningTargets:
+    targets: list[str]
+    """The targets that list any of the files in their srcs or hdrs, sorted."""
+    rules: dict[str, list[OwningRule]]
+    """The files those targets list, each with the kinds and tags of the targets listing it."""
+
+
+def _label_path(label: str) -> str:
+    package, name = label.removeprefix("//").split(":", 1)
+    return f"{package}/{name}" if package else name
+
+
+# The parts of a rule in `bazel query --output=streamed_jsonproto` that are read here
+class _Attribute(TypedDict):
+    name: str
+    stringListValue: NotRequired[list[str]]
+
+
+class _Rule(TypedDict):
+    name: str
+    ruleClass: str
+    attribute: NotRequired[list[_Attribute]]
+
+
+def _string_lists(rule: _Rule, *names: str) -> list[str]:
+    return [
+        value
+        for attribute in rule.get("attribute", [])
+        if attribute["name"] in names
+        for value in attribute.get("stringListValue", [])
+    ]
+
+
+def _listed_files(rule: _Rule) -> list[str]:
+    """The srcs and hdrs of the rule. clang-tidy reports findings in the hdrs of
+    the target it lints."""
+    return _string_lists(rule, "srcs", "hdrs")
+
+
+def _rules(streamed_jsonproto: str) -> list[_Rule]:
+    """The rules of a `bazel query --output=streamed_jsonproto`."""
+    return [
+        rule
+        for line in streamed_jsonproto.splitlines()
+        if (rule := json.loads(line).get("rule")) is not None
+    ]
+
+
+def owning_targets(query: Query, files: Sequence[str]) -> OwningTargets:
+    """The targets in the files' packages that list them in their srcs or hdrs,
+    also through a filegroup in srcs, as rules_lint lints the files of those
+    too. Files in no package are left out."""
+    if not files:
+        return OwningTargets([], {})
+    # Without escapes for non-ASCII characters, which bazel query does not decode
+    file_set = " ".join(json.dumps(file, ensure_ascii=False) for file in files)
+    labels = set(query(f"set({file_set})", "label").splitlines())
+    if not labels:
+        return OwningTargets([], {})
+    owners: dict[str, OwningRule] = {}
+    owner_names: dict[str, set[str]] = {}
+
+    def own(rule: _Rule, owned: set[str]) -> None:
+        owners[rule["name"]] = OwningRule(rule["ruleClass"], frozenset(_string_lists(rule, "tags")))
+        for label in owned:
+            owner_names.setdefault(label, set()).add(rule["name"])
+
+    label_set = " ".join(json.dumps(label, ensure_ascii=False) for label in sorted(labels))
+    filegroups: dict[str, set[str]] = {}
+    for rule in _rules(query(f"same_pkg_direct_rdeps(set({label_set}))", "streamed_jsonproto")):
+        if owned := labels.intersection(_listed_files(rule)):
+            own(rule, owned)
+            if rule["ruleClass"] == "filegroup":
+                filegroups[rule["name"]] = owned
+    if filegroups:
+        filegroup_set = " ".join(
+            json.dumps(label, ensure_ascii=False) for label in sorted(filegroups)
+        )
+        for rule in _rules(
+            query(f"same_pkg_direct_rdeps(set({filegroup_set}))", "streamed_jsonproto")
+        ):
+            for filegroup in filegroups.keys() & set(_string_lists(rule, "srcs")):
+                own(rule, filegroups[filegroup])
+    return OwningTargets(
+        sorted(owners),
+        {
+            _label_path(label): [owners[name] for name in sorted(names)]
+            for label, names in owner_names.items()
+        },
+    )
 
 
 def linted_language(rules: Sequence[OwningRule]) -> str | None:
@@ -223,15 +369,18 @@ class Workspace:
 
     run: RunCaptured
     query: Query
-    run_on_terminal: RunOnTerminal
-    run_merged: RunMerged
+    call: Call
+    call_captured: CallCaptured
     which: Callable[[str], str | None]
     is_file: Callable[[str], bool]
     read_first_line: ReadFirstLine
 
 
 def workspace_in(path: Path) -> Workspace:
-    def run_merged(command: Sequence[str]) -> tuple[int, str]:
+    def call(command: Sequence[str]) -> int:
+        return subprocess.run(command, check=False, cwd=path).returncode
+
+    def call_captured(command: Sequence[str]) -> tuple[int, str]:
         result = subprocess.run(
             command,
             check=False,
@@ -241,6 +390,9 @@ def workspace_in(path: Path) -> Workspace:
             text=True,
         )
         return result.returncode, result.stdout
+
+    def is_file(file: str) -> bool:
+        return (path / file).is_file()
 
     def read_first_line(file: str) -> str:
         try:
@@ -252,10 +404,10 @@ def workspace_in(path: Path) -> Workspace:
     return Workspace(
         run=run_captured_in(path),
         query=query_in(path),
-        run_on_terminal=run_on_terminal_in(path),
-        run_merged=run_merged,
+        call=call,
+        call_captured=call_captured,
         which=shutil.which,
-        is_file=is_file_in(path),
+        is_file=is_file,
         read_first_line=read_first_line,
     )
 
@@ -271,7 +423,7 @@ def _bazel_lint(
             "bazelisk not found, which runs 'bazel lint' from within 'bazel run'.\n"
             "See buildscripts/infrastructure/build-nodes/scripts/install-bazel.sh."
         )
-    return workspace.run_on_terminal(bazel_lint_command(targets, fix, bazel_flags)) == 0
+    return workspace.call(bazel_lint_command(targets, fix, bazel_flags)) == 0
 
 
 def _lint_starlark(
@@ -281,9 +433,9 @@ def _lint_starlark(
     fix leaves what it cannot fix unreported, so the check runs after it."""
     if not files:
         return True
-    if fix and workspace.run_on_terminal(buildifier.command(files, fix=True)) != 0:
+    if fix and workspace.call(buildifier.command(files, fix=True)) != 0:
         return False
-    returncode, output = workspace.run_merged(buildifier.command(files, fix=False))
+    returncode, output = workspace.call_captured(buildifier.command(files, fix=False))
     if findings := lint_findings(returncode, output):
         echo(findings)
         return False

@@ -5,7 +5,7 @@
 """The files a --delta option covers."""
 
 import subprocess
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
 from typing import Protocol
@@ -17,10 +17,6 @@ class RunCaptured(Protocol):
     """Runs a command in the workspace and returns its stdout, raises DeltaError if it fails."""
 
     def __call__(self, command: Sequence[str], stdin: str = "") -> str: ...
-
-
-# Runs a command in the workspace with its output on the terminal, returns its exit code.
-type RunOnTerminal = Callable[[Sequence[str]], int]
 
 
 def run_captured_in(workspace: Path) -> RunCaptured:
@@ -100,17 +96,3 @@ def delta_files(run: RunCaptured, base_branch: str) -> dict[str, FileStatus]:
 def existing_files(files: Mapping[str, FileStatus]) -> list[str]:
     """The files that were not deleted."""
     return [file for file, status in files.items() if status is not FileStatus.DELETED]
-
-
-def run_on_terminal_in(workspace: Path) -> RunOnTerminal:
-    def call(command: Sequence[str]) -> int:
-        return subprocess.run(command, check=False, cwd=workspace).returncode
-
-    return call
-
-
-def is_file_in(workspace: Path) -> Callable[[str], bool]:
-    def is_file(file: str) -> bool:
-        return (workspace / file).is_file()
-
-    return is_file

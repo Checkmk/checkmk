@@ -593,11 +593,6 @@ alias(
 )
 
 alias(
-    name = "mypy.check",
-    actual = "//bazel/tools/delta:mypy.check",
-)
-
-alias(
     name = "buildifier",
     actual = "//bazel/tools:buildifier",
 )

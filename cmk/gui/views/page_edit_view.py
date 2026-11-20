@@ -636,6 +636,11 @@ def _raw_filter_name(raw: _RawVSDrilldownFilter) -> FilterName:
     return raw if isinstance(raw, str) else raw[0]
 
 
+class _RawVSInheritedDrilldown(TypedDict):
+    target: VisualName
+    include_context: bool
+
+
 class _RawVSCustomDrilldown(TypedDict):
     target: VisualName
     filters: list[_RawVSDrilldownFilter]
@@ -645,7 +650,7 @@ class _RawVSCustomDrilldown(TypedDict):
 
 type _RawVSLinkSpec = (
     tuple[VisualTypeName, VisualName]
-    | tuple[_InheritedDrilldownChoice, VisualName]
+    | tuple[_InheritedDrilldownChoice, _RawVSInheritedDrilldown]
     | tuple[_CustomDrilldownChoice, _RawVSCustomDrilldown]
 )
 
@@ -657,7 +662,7 @@ class _RawVSColumnSpecOptional(TypedDict, total=False):
 
 def _is_inherited_drilldown(
     link_spec: _RawVSLinkSpec,
-) -> TypeIs[tuple[_InheritedDrilldownChoice, VisualName]]:
+) -> TypeIs[tuple[_InheritedDrilldownChoice, _RawVSInheritedDrilldown]]:
     return link_spec[0] in _INHERITED_DRILLDOWN_TARGETS
 
 
@@ -671,13 +676,13 @@ def _drilldown_link(link_spec: _RawVSLinkSpec | None) -> ContextualLinkEntryConf
     if link_spec is None:
         return None
     if _is_inherited_drilldown(link_spec):
-        target_type, name = _INHERITED_DRILLDOWN_TARGETS[link_spec[0]], link_spec[1]
-        # Like a new inherited link in the wizard, it carries the context and the time range.
+        target_type, inherited = _INHERITED_DRILLDOWN_TARGETS[link_spec[0]], link_spec[1]
+        # The editor offers no time range, so it saves the wizard's default.
         return ContextualLinkEntryConfig(
-            title=name,
-            location=(target_type, name),
+            title=inherited["target"],
+            location=(target_type, inherited["target"]),
             filters=[],
-            include_context=True,
+            include_context=inherited["include_context"],
             include_time_range=True,
             show_filter_form=False,
         )
@@ -703,7 +708,9 @@ def _drilldown_link(link_spec: _RawVSLinkSpec | None) -> ContextualLinkEntryConf
 def _drilldown_link_spec(link: ContextualLinkEntryConfig) -> _RawVSLinkSpec:
     target_type, name, *_owner = link["location"]
     if not link["filters"]:
-        return _INHERITED_DRILLDOWN_CHOICES[target_type], name
+        return _INHERITED_DRILLDOWN_CHOICES[target_type], _RawVSInheritedDrilldown(
+            target=name, include_context=link["include_context"]
+        )
     return _CUSTOM_DRILLDOWN_CHOICES[target_type], _RawVSCustomDrilldown(
         target=name,
         filters=[
@@ -955,7 +962,7 @@ def _drilldown_link_choices(
         (
             choice,
             f"{_DRILLDOWN_TITLES[choice]}:",
-            DropdownChoice(choices=_drilldown_targets(target_type, user_permissions), sorted=True),
+            _inherited_drilldown_valuespec(target_type, user_permissions),
         )
         for choice, target_type in _INHERITED_DRILLDOWN_TARGETS.items()
     ]
@@ -981,6 +988,28 @@ def _drilldown_targets(
         (name, f"{title} ({name})")
         for name, title in dashboard_type.choices(dashboard_type.visuals(), user_permissions)
     ]
+
+
+def _inherited_drilldown_valuespec(
+    target_type: ContextualLinkTargetType, user_permissions: UserPermissions
+) -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "target",
+                DropdownChoice(
+                    title=_("Target page"),
+                    choices=_drilldown_targets(target_type, user_permissions),
+                    sorted=True,
+                ),
+            ),
+            (
+                "include_context",
+                Checkbox(label=_("Include dashboard and widget filters"), default_value=True),
+            ),
+        ],
+        optional_keys=[],
+    )
 
 
 def _custom_drilldown_valuespec(

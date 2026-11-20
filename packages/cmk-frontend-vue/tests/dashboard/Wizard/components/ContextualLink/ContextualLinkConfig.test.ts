@@ -194,12 +194,21 @@ describe('ContextualLinkConfig', () => {
 
     const included = within(screen.getByRole('list')).getAllByRole('listitem')
     expect(included.map((item) => item.textContent?.trim())).toEqual([
-      'Applied dashboard & widget filters',
       'Contextual filter = clicked element'
     ])
   })
 
-  it('lists only the clicked element for an inherited link without the filters', () => {
+  it('includes the dashboard and widget filters of a new inherited link', async () => {
+    renderConfig()
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Toggle Inherited' }))
+
+    expect(
+      screen.getByRole('checkbox', { name: 'Include dashboard & widget filters' })
+    ).toBeChecked()
+  })
+
+  it('opens a stored inherited link without the filters with them unchecked', () => {
     renderConfig(
       HOST_STATISTICS_OPTIONS,
       {},
@@ -207,15 +216,14 @@ describe('ContextualLinkConfig', () => {
         type: 'inherited',
         location: { type: 'views', name: 'allhosts' },
         include_context: false,
-        include_time_range: false,
+        include_time_range: true,
         show_filter_form: false
       }
     )
 
-    const included = within(screen.getByRole('list')).getAllByRole('listitem')
-    expect(included.map((item) => item.textContent?.trim())).toEqual([
-      'Contextual filter = clicked element'
-    ])
+    expect(
+      screen.getByRole('checkbox', { name: 'Include dashboard & widget filters' })
+    ).not.toBeChecked()
   })
 
   it('asks for a key for a label filter only', async () => {

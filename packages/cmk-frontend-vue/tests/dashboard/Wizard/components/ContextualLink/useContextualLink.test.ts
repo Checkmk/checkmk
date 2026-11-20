@@ -56,7 +56,7 @@ describe('useContextualLink', () => {
     expect(handler.contextualLink.value).toEqual({ type: 'none' })
   })
 
-  it('pins the context and the closed filter form of an inherited link', () => {
+  it('carries the filters and pins the closed filter form of a new inherited link', () => {
     const handler = hostStatisticsLink()
 
     handler.mode.value = 'inherited'
@@ -69,6 +69,16 @@ describe('useContextualLink', () => {
       include_time_range: true,
       show_filter_form: false
     })
+  })
+
+  it('leaves the filters out of an inherited link once unchecked', () => {
+    const handler = hostStatisticsLink()
+    handler.mode.value = 'inherited'
+    handler.inheritedTarget.value = LINUX_DASHBOARD
+
+    handler.inheritedIncludeContext.value = false
+
+    expect(handler.contextualLink.value).toMatchObject({ include_context: false })
   })
 
   it('builds a custom link from its entries', () => {

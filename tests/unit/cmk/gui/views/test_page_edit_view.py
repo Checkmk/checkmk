@@ -216,6 +216,26 @@ def test_view_editor_column_spec_with_drilldown_keeps_a_drilldown_apart_from_the
 
 
 @pytest.mark.usefixtures("request_context")
+def test_view_editor_column_spec_with_drilldown_keeps_an_inherited_drilldown_without_the_filters(
+    admin_painter_context: PainterContext,
+) -> None:
+    vs = view_editor_column_spec("columns", "hosts", admin_painter_context, with_drilldown=True)
+    value = {
+        "columns": [
+            ColumnSpec(
+                "host",
+                parameters=PainterParameters(color_choices=[]),
+                column_title="",
+                _column_type="column",
+                column_link=_link(("views", "allhosts"), include_context=False),
+            )
+        ]
+    }
+
+    assert vs.transform_value(value) == value
+
+
+@pytest.mark.usefixtures("request_context")
 def test_view_editor_column_spec_with_drilldown_keeps_a_custom_drilldown(
     admin_painter_context: PainterContext,
 ) -> None:

@@ -179,13 +179,14 @@ function confirmDelete() {
               v-model="handler.inheritedIncludeTimeRange.value"
               :label="_t('Include current time range')"
             />
+            <CmkCheckbox
+              v-model="handler.inheritedIncludeContext.value"
+              :label="_t('Include dashboard & widget filters')"
+            />
           </div>
           <div class="db-contextual-link-config__field">
             <p>{{ _t('Always included in the contextual link') }}</p>
             <ul class="db-contextual-link-config__included">
-              <li v-if="handler.inheritedIncludesContext">
-                {{ _t('Applied dashboard & widget filters') }}
-              </li>
               <li>{{ _t('Contextual filter = clicked element') }}</li>
             </ul>
           </div>

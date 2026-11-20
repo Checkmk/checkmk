@@ -49,7 +49,7 @@ export interface UseContextualLink<C extends LinkedContent> extends UseValidate 
   mode: Ref<ConfigurableMode>
   inheritedTarget: Ref<VisualLocation | null>
   inheritedIncludeTimeRange: Ref<boolean>
-  inheritedIncludesContext: boolean
+  inheritedIncludeContext: Ref<boolean>
   customLinks: Ref<CustomLinkDraft<ContextFilterIdOf<C>>[]>
   addCustomLink: () => void
   removeCustomLink: (index: number) => void
@@ -123,11 +123,9 @@ export function useContextualLink<C extends LinkedContent>(
   const inheritedIncludeTimeRange = ref(
     stored?.type === 'inherited' ? stored.include_time_range : true
   )
-  // Not offered in the editor, so a stored link keeps them and a new one pins them.
-  const inheritedHidden =
-    stored?.type === 'inherited'
-      ? { include_context: stored.include_context, show_filter_form: stored.show_filter_form }
-      : { include_context: true, show_filter_form: false }
+  const inheritedIncludeContext = ref(stored?.type === 'inherited' ? stored.include_context : true)
+  // Not offered in the editor, so a stored link keeps it and a new one pins it.
+  const inheritedShowFilterForm = stored?.type === 'inherited' ? stored.show_filter_form : false
   const customLinks = ref<CustomLinkDraft<F>[]>(
     stored?.type === 'custom'
       ? stored.links.map((link) => ({
@@ -164,9 +162,9 @@ export function useContextualLink<C extends LinkedContent>(
         return {
           type: 'inherited',
           location: inheritedTarget.value,
-          include_context: inheritedHidden.include_context,
+          include_context: inheritedIncludeContext.value,
           include_time_range: inheritedIncludeTimeRange.value,
-          show_filter_form: inheritedHidden.show_filter_form
+          show_filter_form: inheritedShowFilterForm
         }
       case 'custom':
         if (
@@ -290,7 +288,7 @@ export function useContextualLink<C extends LinkedContent>(
     mode,
     inheritedTarget,
     inheritedIncludeTimeRange,
-    inheritedIncludesContext: inheritedHidden.include_context,
+    inheritedIncludeContext,
     customLinks,
     addCustomLink: () => customLinks.value.push(newCustomLink<F>(freeTitle(customLinks.value))),
     removeCustomLink: (index: number) => customLinks.value.splice(index, 1),

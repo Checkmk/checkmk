@@ -3,17 +3,32 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "renderer",
-    srcs = glob(["**/*.py"]),
+    srcs = [
+        "__init__.py",
+        "_model.py",
+    ],
+    imports = ["../../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+)
+
+py_library(
+    name = "process",
+    srcs = [
+        "__main__.py",
+        "_image.py",
+        "_time_axis.py",
+    ],
     imports = ["../../../.."],
     visibility = [
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui/graphing",
+        ":renderer",
         "//cmk/gui/png",
-        "//packages/cmk-graphing-engine",
-        "//packages/cmk-web/cmk/web/utils",
         requirement("matplotlib"),
         requirement("numpy"),
     ],

@@ -3,4 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Empty on purpose: the GUI must not import the renderer, which loads matplotlib.
+from ._model import (
+    Area,
+    AxisLabel,
+    Legend,
+    LegendRow,
+    Line,
+    PngDrawing,
+    Region,
+    Rule,
+    TimeAxis,
+    VerticalAxis,
+)
+
+__all__ = [
+    "Area",
+    "AxisLabel",
+    "Legend",
+    "LegendRow",
+    "Line",
+    "PngDrawing",
+    "Region",
+    "Rule",
+    "TimeAxis",
+    "VerticalAxis",
+]

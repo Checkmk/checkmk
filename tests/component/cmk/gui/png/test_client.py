@@ -4,8 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from collections.abc import Sequence
 
-from cmk.graphing_engine import EvaluatedGraph, TimeRange
+from cmk.graphing_engine import (
+    AutoPrecision,
+    CurveAttributes,
+    DecimalNotation,
+    EvaluatedCurve,
+    EvaluatedGraph,
+    EvaluatedLine,
+    TimeRange,
+    TimeSeries,
+    Unit,
+)
 from cmk.gui.png import PngGraph, PngOptions, PngTexts, render_pngs, RenderingFailure
 from cmk.gui.png._client import _Timeout
 from cmk.gui.utils.temperature_unit import TemperatureUnit
@@ -19,16 +30,19 @@ _TEXTS = PngTexts(
     caption="for %(date_range)s, resolution: %(resolution)s",
 )
 
+_TIME_RANGE = TimeRange(start=0, end=180, step=60)
+_RENDERER = (sys.executable, "-m", "cmk.gui.png.renderer")
 
-def _graph(*, title: str = "Graph") -> PngGraph:
+
+def _graph(*, title: str = "Graph", lines: Sequence[EvaluatedLine] = ()) -> PngGraph:
     return PngGraph(
         graph=EvaluatedGraph(
             name="g",
             title=title,
-            time_range=TimeRange(start=0, end=180, step=60),
+            time_range=_TIME_RANGE,
             vertical_range=None,
             stacks=[],
-            lines=[],
+            lines=lines,
         ),
         options=PngOptions(
             size=(70.0, 16.0),
@@ -51,10 +65,35 @@ def test_the_rendering_process_answers_with_one_image_per_graph() -> None:
         [_graph(), _graph()],
         _TEXTS,
         TemperatureUnit.CELSIUS,
-        command=(sys.executable, "-m", "cmk.gui.png.renderer"),
+        command=_RENDERER,
     )
 
     assert [isinstance(png, bytes) and png[:8] for png in pngs] == [b"\x89PNG\r\n\x1a\n"] * 2
+
+
+def _graph_that_cannot_be_drawn() -> PngGraph:
+    curve = EvaluatedCurve(
+        id="m",
+        attributes=CurveAttributes(
+            title="m",
+            unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
+            color="#000000",
+        ),
+        value=None,
+        time_series=TimeSeries(time_range=_TIME_RANGE, values=[1.0, 2.0, 3.0, 4.0]),
+    )
+    return _graph(lines=[EvaluatedLine(curve=curve, inverse=False)])
+
+
+def test_a_graph_that_cannot_be_drawn_leaves_the_others_their_images() -> None:
+    results = render_pngs(
+        [_graph(), _graph_that_cannot_be_drawn(), _graph()],
+        _TEXTS,
+        TemperatureUnit.CELSIUS,
+        command=_RENDERER,
+    )
+
+    assert [type(result) for result in results] == [bytes, RenderingFailure, bytes]
 
 
 def test_a_failing_rendering_process_fails_every_graph_with_what_it_wrote_to_stderr() -> None:

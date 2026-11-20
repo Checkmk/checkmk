@@ -14,11 +14,13 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/graphing",
+        "//cmk/gui/png/renderer",
         "//cmk/gui/utils",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
         "//packages/cmk-graphing-engine",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("pydantic"),
     ],
 )

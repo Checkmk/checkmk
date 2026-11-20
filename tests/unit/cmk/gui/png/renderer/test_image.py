@@ -3,81 +3,65 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import io
 import re
 import struct
-from zoneinfo import ZoneInfo
+from collections.abc import Sequence
 
 import matplotlib
 import numpy as np
 
-from cmk.graphing_engine import (
-    AutoPrecision,
-    CurveAttributes,
-    DecimalNotation,
-    EvaluatedCurve,
-    EvaluatedGraph,
-    EvaluatedLine,
-    EvaluatedRule,
-    EvaluatedStack,
-    EvaluatedVerticalRange,
-    TimeRange,
-    TimeSeries,
-    Unit,
-    VerticalRangeKind,
-)
-
 matplotlib.use("Agg")
 from matplotlib.figure import Figure
-from matplotlib.image import imread
 
-from cmk.gui.png import compute_png_size_mm
-from cmk.gui.png._size import _MM_PER_INCH
-from cmk.gui.png._wire import PngGraph, PngOptions, PngTexts, RenderingFailure
-from cmk.gui.png.renderer._image import (
-    _agg_renderer,
-    _areas,
-    _DPI,
-    _fit_time_axis,
-    _graph_time_caption,
-    _legend,
-    _mirrored_y_labels,
-    _plot,
-    _rules_in_range,
-    _vertical_range_bounds,
-    _y_range,
-    render_pngs,
+from cmk.gui.png import RenderingFailure
+from cmk.gui.png.renderer import (
+    Area,
+    Legend,
+    LegendRow,
+    Line,
+    PngDrawing,
+    TimeAxis,
+    VerticalAxis,
 )
-from cmk.gui.utils.temperature_unit import TemperatureUnit
-from cmk.web.utils.unit_formatter import DecimalFormatter
+from cmk.gui.png.renderer._image import _agg_renderer, _DPI, _fit_time_axis, _plot, render_pngs
 
-_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
-_TIME_RANGE = TimeRange(start=0, end=180, step=60)
-_VISIBLE_TIME_RANGE = (_TIME_RANGE.start, _TIME_RANGE.end)
-_Y_RANGE = (0.0, 10.0)
+_LEGEND = Legend(
+    height=6.0,
+    header=["Min", "Max", "Average", "Last"],
+    curves=[LegendRow(color="#000000", cells=["m", "1.00", "3.00", "2.00", "3.00"])],
+    rules=[LegendRow(color="#ff0000", cells=["Crit", "", "", "", "2.50"])],
+    regions=[],
+)
 
 
-def _options(*, show_legend: bool) -> PngOptions:
-    return PngOptions(
-        size=(70.0, 16.0),
+def _drawing(
+    *,
+    title: str = "Graph",
+    times: Sequence[int] = (60, 120, 180),
+    x_range: tuple[int, int] = (0, 180),
+    areas: Sequence[Area] = (),
+    lines: Sequence[Line] = (),
+    time_axis: TimeAxis | None = TimeAxis(time_zone=None),
+    legend: Legend | None = None,
+) -> PngDrawing:
+    return PngDrawing(
+        width_inches=7.78,
+        height_inches=1.78 if legend is None else 2.44,
+        plot_height=16.0,
         font_size=8.0,
-        show_title=True,
-        show_legend=show_legend,
-        show_vertical_axis=True,
-        show_time_axis=True,
-        show_graph_time=True,
+        title=title,
+        caption="for 2026-09-28, resolution: 1 min",
+        times=times,
+        x_range=x_range,
+        y_range=(0.0, 3.0),
+        areas=areas,
+        lines=lines,
+        regions=[],
+        rules=[],
+        vertical_axis=VerticalAxis(labels=None),
+        time_axis=time_axis,
+        legend=legend,
     )
-
-
-_OPTIONS = _options(show_legend=True)
-_TEXTS = PngTexts(
-    minimum="Min",
-    maximum="Max",
-    average="Average",
-    last="Last",
-    date_format="%Y-%m-%d",
-    caption="for %(date_range)s, resolution: %(resolution)s",
-)
 
 
 def _size_in_px(png: bytes) -> tuple[int, int]:
@@ -85,745 +69,101 @@ def _size_in_px(png: bytes) -> tuple[int, int]:
     return width, height
 
 
-def _px(size_mm: tuple[float, float]) -> tuple[int, int]:
-    width_mm, height_mm = size_mm
-    return int(width_mm / _MM_PER_INCH * _DPI), int(height_mm / _MM_PER_INCH * _DPI)
+def _px(drawing: PngDrawing) -> tuple[int, int]:
+    return int(drawing.width_inches * _DPI), int(drawing.height_inches * _DPI)
 
 
-def _curve(title: str, values: list[float | None], *, color: str = "#000000") -> EvaluatedCurve:
-    return EvaluatedCurve(
-        id=title,
-        attributes=CurveAttributes(title=title, unit=_UNIT, color=color),
-        value=None,
-        time_series=TimeSeries(time_range=_TIME_RANGE, values=values),
-    )
+def test_an_empty_drawing_becomes_a_png() -> None:
+    (png,) = render_pngs([_drawing()])
 
-
-def test_second_area_stacks_onto_the_first_not_onto_zero() -> None:
-    first = _curve("first", [1.0, 2.0, 3.0])
-    second = _curve("second", [10.0, 20.0, 30.0])
-    stack = EvaluatedStack(members=[first, second], inverse=False)
-
-    areas = list(_areas(stack, [0, 60, 120]))
-
-    assert areas[1].top == [11.0, 22.0, 33.0]
-
-
-def test_mirrored_stack_is_drawn_below_zero() -> None:
-    member = _curve("inverse-member", [5.0, 5.0])
-    stack = EvaluatedStack(members=[member], inverse=True)
-
-    (area,) = _areas(stack, [0, 60])
-
-    assert area.top == [-5.0, -5.0]
-
-
-def test_the_legend_shows_the_curves_own_maxima_not_their_stacked_position() -> None:
-    first = _curve("first", [1.0, 2.0, 3.0])
-    second = _curve("second", [10.0, 20.0, 30.0])
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[first, second], inverse=False)],
-        lines=[],
-    )
-
-    legend = _legend(graph, _TEXTS, None, 6.0)
-
-    assert [row.cells[2] for row in legend.curves] == ["30.00", "3.00"]
-
-
-def test_render_png_produces_bytes_for_an_empty_graph() -> None:
-    graph = EvaluatedGraph(
-        name="g", title="Empty", time_range=_TIME_RANGE, vertical_range=None, stacks=[], lines=[]
-    )
-    (png_bytes,) = render_pngs(
-        [
-            PngGraph(
-                graph=graph,
-                options=_OPTIONS,
-                y_axis_unit=None,
-                requested_vertical_range=None,
-                time_zone=None,
-                visible_time_range=_VISIBLE_TIME_RANGE,
-            )
-        ],
-        _TEXTS,
-        TemperatureUnit.CELSIUS,
-    )
-
-    assert isinstance(png_bytes, bytes) and png_bytes.startswith(b"\x89PNG")
+    assert isinstance(png, bytes) and png.startswith(b"\x89PNG")
 
 
 def test_dollar_signs_in_a_title_are_drawn_as_plain_text() -> None:
-    graph = EvaluatedGraph(
-        name="g",
-        title=r"Share $\frac{1}{$",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[],
-        lines=[],
-    )
-    (png_bytes,) = render_pngs(
-        [
-            PngGraph(
-                graph=graph,
-                options=_OPTIONS,
-                y_axis_unit=None,
-                requested_vertical_range=None,
-                time_zone=None,
-                visible_time_range=_VISIBLE_TIME_RANGE,
-            )
-        ],
-        _TEXTS,
-        TemperatureUnit.CELSIUS,
-    )
+    (png,) = render_pngs([_drawing(title=r"Share $\frac{1}{$")])
 
-    assert isinstance(png_bytes, bytes)
+    assert isinstance(png, bytes)
 
 
-def test_render_png_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> None:
-    curve = _curve("m", [1.0, 2.0, 3.0], color="#123456")
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[curve], inverse=False)],
-        lines=[],
-    )
-    y_axis_unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
+def test_the_image_has_the_size_of_its_drawing_without_a_legend() -> None:
+    drawing = _drawing()
 
-    (png_bytes,) = render_pngs(
-        [
-            PngGraph(
-                graph=graph,
-                options=_OPTIONS,
-                y_axis_unit=y_axis_unit,
-                requested_vertical_range=None,
-                time_zone=None,
-                visible_time_range=_VISIBLE_TIME_RANGE,
-            )
-        ],
-        _TEXTS,
-        TemperatureUnit.CELSIUS,
-    )
+    (png,) = render_pngs([drawing])
 
-    assert isinstance(png_bytes, bytes) and png_bytes.startswith(b"\x89PNG")
+    assert isinstance(png, bytes) and _size_in_px(png) == _px(drawing)
 
 
-def test_the_legend_shows_the_natural_values_of_a_mirrored_curve() -> None:
-    member = _curve("out", [10.0, 20.0, 30.0])
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[member], inverse=True)],
-        lines=[],
-    )
+def test_the_image_has_the_size_of_its_drawing_with_a_legend() -> None:
+    drawing = _drawing(legend=_LEGEND)
 
-    legend = _legend(graph, _TEXTS, None, 6.0)
+    (png,) = render_pngs([drawing])
 
-    assert legend.curves[0].cells == ["out", "10.00", "30.00", "20.00", "30.00"]
+    assert isinstance(png, bytes) and _size_in_px(png) == _px(drawing)
 
 
-def test_mirrored_y_labels_mirrors_positive_text_to_the_negative_side() -> None:
-    formatter = DecimalFormatter(symbol="B", precision_kind="auto", digits=2)
+def test_each_drawing_of_a_batch_gets_its_own_image_in_order() -> None:
+    drawings = [_drawing(legend=_LEGEND), _drawing()]
 
-    labels = _mirrored_y_labels(formatter, (-2000.0, 2000.0), 4.0)
-
-    positive = {label.position: label.text for label in labels if label.position > 0}
-    negative = {label.position: label.text for label in labels if label.position < 0}
-    assert positive
-    for position, text in positive.items():
-        assert negative[-position] == text
-
-
-def test_far_away_rule_is_clipped_and_does_not_stretch_the_axis() -> None:
-    member = _curve("m", [1.0, 2.0, 3.0])
-    far_away_rule = EvaluatedRule(
-        id="crit",
-        attributes=CurveAttributes(title="Crit", unit=_UNIT, color="#ff0000"),
-        value=100000.0,
-        inverse=False,
-    )
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[member], inverse=False)],
-        lines=[],
-        rules=[far_away_rule],
-    )
-
-    lower, upper = _vertical_range_bounds(graph, graph.time_range)
-    limits = _y_range(lower, upper, is_mirrored=False)
-    rules = _rules_in_range(graph.rules, limits)
-
-    assert rules == []
-    assert limits[1] < 100000.0
-
-
-def test_vertical_range_bounds_use_the_stacked_top_not_each_members_own_max() -> None:
-    first = _curve("first", [10.0, 10.0, 10.0])
-    second = _curve("second", [20.0, 20.0, 20.0])
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[first, second], inverse=False)],
-        lines=[],
-    )
-
-    lower, upper = _vertical_range_bounds(graph, graph.time_range)
-
-    assert lower == 0.0
-    assert upper == 30.0
-
-
-def test_a_graph_without_data_keeps_the_range_of_an_empty_plot() -> None:
-    assert _y_range(None, None, is_mirrored=False) == (-0.05, 0.05)
-
-
-def test_a_fixed_range_open_at_the_bottom_ends_at_its_bound_without_data() -> None:
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=EvaluatedVerticalRange(
-            range_kind=VerticalRangeKind.FIXED, lower=None, upper=100.0
-        ),
-        stacks=[],
-        lines=[EvaluatedLine(curve=_curve("m", [None, None, None]), inverse=False)],
-    )
-
-    lower, upper = _vertical_range_bounds(graph, graph.time_range)
-
-    assert _y_range(lower, upper, is_mirrored=False) == (99.0, 100.0)
-
-
-def test_a_fixed_range_open_at_the_bottom_ends_at_its_bound_with_data_at_the_bound() -> None:
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=EvaluatedVerticalRange(
-            range_kind=VerticalRangeKind.FIXED, lower=None, upper=100.0
-        ),
-        stacks=[],
-        lines=[EvaluatedLine(curve=_curve("m", [100.0, 100.0, 100.0]), inverse=False)],
-    )
-
-    lower, upper = _vertical_range_bounds(graph, graph.time_range)
-
-    assert _y_range(lower, upper, is_mirrored=False) == (99.0, 100.0)
-
-
-def test_y_axis_limits_are_symmetric_for_a_mirrored_graph() -> None:
-    assert _y_range(2.0, 30.0, is_mirrored=True) == (-30.0, 30.0)
-
-
-def test_the_image_has_the_size_computed_for_it_without_a_legend() -> None:
-    curve = _curve("m", [1.0, 2.0, 3.0])
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[curve], inverse=False)],
-        lines=[],
-    )
-    options = _options(show_legend=False)
-
-    (png_bytes,) = render_pngs(
-        [
-            PngGraph(
-                graph=graph,
-                options=options,
-                y_axis_unit=_UNIT,
-                requested_vertical_range=None,
-                time_zone=None,
-                visible_time_range=_VISIBLE_TIME_RANGE,
-            )
-        ],
-        _TEXTS,
-        TemperatureUnit.CELSIUS,
-    )
-
-    assert isinstance(png_bytes, bytes) and _size_in_px(png_bytes) == _px(
-        compute_png_size_mm(graph, options)
-    )
-
-
-def test_the_image_has_the_size_computed_for_it_with_a_legend() -> None:
-    curve = _curve("m", [1.0, 2.0, 3.0])
-    rule = EvaluatedRule(
-        id="crit",
-        attributes=CurveAttributes(title="Crit", unit=_UNIT, color="#ff0000"),
-        value=2.5,
-        inverse=False,
-    )
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[curve], inverse=False)],
-        lines=[],
-        rules=[rule],
-    )
-    options = _options(show_legend=True)
-
-    (png_bytes,) = render_pngs(
-        [
-            PngGraph(
-                graph=graph,
-                options=options,
-                y_axis_unit=_UNIT,
-                requested_vertical_range=None,
-                time_zone=None,
-                visible_time_range=_VISIBLE_TIME_RANGE,
-            )
-        ],
-        _TEXTS,
-        TemperatureUnit.CELSIUS,
-    )
-
-    assert isinstance(png_bytes, bytes) and _size_in_px(png_bytes) == _px(
-        compute_png_size_mm(graph, options)
-    )
-
-
-def test_plot_spans_the_full_time_range_despite_a_long_leading_gap() -> None:
-    """Regression test for CMK-38506."""
-    time_range = TimeRange(start=0, end=720, step=60)
-    curve = EvaluatedCurve(
-        id="m",
-        attributes=CurveAttributes(title="m", unit=_UNIT, color="#000000"),
-        value=None,
-        time_series=TimeSeries(time_range=time_range, values=[None] * 10 + [5.0, 6.0]),
-    )
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=time_range,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[curve], inverse=False)],
-        lines=[],
-    )
-
-    fig = Figure()
-    ax = fig.add_subplot(1, 1, 1)
-    _plot(ax, graph, graph.time_range, _Y_RANGE)
-
-    assert ax.get_xlim() == (time_range.start, time_range.end)
-
-
-def test_plot_spans_the_full_time_range_for_an_entirely_empty_curve() -> None:
-    curve = _curve("m", [None, None, None])
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[curve], inverse=False)],
-        lines=[],
-    )
-
-    fig = Figure()
-    ax = fig.add_subplot(1, 1, 1)
-    _plot(ax, graph, graph.time_range, _Y_RANGE)
-
-    assert ax.get_xlim() == (_TIME_RANGE.start, _TIME_RANGE.end)
-
-
-def test_plot_spans_the_time_range_of_a_graph_without_curves() -> None:
-    graph = EvaluatedGraph(
-        name="g", title="Empty", time_range=_TIME_RANGE, vertical_range=None, stacks=[], lines=[]
-    )
-
-    fig = Figure()
-    ax = fig.add_subplot(1, 1, 1)
-    _plot(ax, graph, graph.time_range, _Y_RANGE)
-
-    assert ax.get_xlim() == (_TIME_RANGE.start, _TIME_RANGE.end)
-
-
-def test_time_axis_of_a_multi_day_graph_is_labelled_with_weekday_and_time() -> None:
-    two_days = TimeRange(start=1668426600, end=1668426600 + 2 * 86400, step=3600)
-    curve = EvaluatedCurve(
-        id="m",
-        attributes=CurveAttributes(title="m", unit=_UNIT, color="#000000"),
-        value=None,
-        time_series=TimeSeries(time_range=two_days, values=[1.0] * 48),
-    )
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=two_days,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[curve], inverse=False)],
-        lines=[],
-    )
-    fig = Figure()
-    ax = fig.add_subplot(1, 1, 1)
-    _plot(ax, graph, graph.time_range, _Y_RANGE)
-
-    _fit_time_axis(ax, _agg_renderer(fig), _OPTIONS, None)
-
-    labels = [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
-    assert len(labels) > 2
-    assert all(re.fullmatch(r"\w+ \d{2}:\d{2}", label) for label in labels)
-
-
-def test_values_are_drawn_at_their_bucket_end_like_the_vue_graph() -> None:
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[],
-        lines=[EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=False)],
-    )
-    fig = Figure()
-    ax = fig.add_subplot(1, 1, 1)
-
-    _plot(ax, graph, graph.time_range, _Y_RANGE)
-
-    (line,) = ax.get_lines()
-    assert np.asarray(line.get_xdata()).tolist() == [60, 120, 180]
-
-
-def test_plot_spans_the_visible_range_even_between_samples() -> None:
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[],
-        lines=[EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=False)],
-    )
-    fig = Figure()
-    ax = fig.add_subplot(1, 1, 1)
-
-    _plot(ax, graph, TimeRange(start=90, end=150, step=60), _Y_RANGE)
-
-    assert ax.get_xlim() == (90, 150)
-
-
-def test_neighbours_beyond_the_visible_range_stretch_the_vertical_axis_only_up_to_the_edges() -> (
-    None
-):
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=TimeRange(start=0, end=240, step=60),
-        vertical_range=None,
-        stacks=[],
-        lines=[EvaluatedLine(curve=_curve("m", [100.0, 2.0, 4.0, 100.0]), inverse=False)],
-    )
-
-    # The line crosses the edges halfway between its samples at 60/120 and 180/240.
-    assert _vertical_range_bounds(graph, TimeRange(start=90, end=210, step=60)) == (2.0, 52.0)
-
-
-def _hourly_graph(time_range: TimeRange) -> EvaluatedGraph:
-    curve = EvaluatedCurve(
-        id="m",
-        attributes=CurveAttributes(title="m", unit=_UNIT, color="#000000"),
-        value=None,
-        time_series=TimeSeries(
-            time_range=time_range,
-            values=[1.0] * ((time_range.end - time_range.start) // time_range.step),
-        ),
-    )
-    return EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=time_range,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[curve], inverse=False)],
-        lines=[],
-    )
-
-
-def test_time_axis_is_labelled_in_the_given_time_zone() -> None:
-    # 2026-09-28 10:00 to 14:00 UTC, i.e. 12:00 to 16:00 in Berlin (CEST, UTC+2).
-    graph = _hourly_graph(TimeRange(start=1790589600, end=1790604000, step=600))
-
-    def labels(tz: ZoneInfo) -> list[str]:
-        fig = Figure()
-        ax = fig.add_subplot(1, 1, 1)
-        _plot(ax, graph, graph.time_range, _Y_RANGE)
-        _fit_time_axis(ax, _agg_renderer(fig), _OPTIONS, tz)
-        return [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
-
-    utc_labels = labels(ZoneInfo("UTC"))
-
-    assert utc_labels
-    assert labels(ZoneInfo("Europe/Berlin")) == [
-        f"{int(label[:2]) + 2:02d}{label[2:]}" for label in utc_labels
-    ]
-
-
-def test_graph_time_caption_dates_the_range_in_the_given_time_zone() -> None:
-    # 2026-09-28 23:00 UTC is already 2026-09-29 in Berlin.
-    time_range = TimeRange(start=1790636400, end=1790640000, step=60)
-
-    assert "2026-09-28" in _graph_time_caption(time_range, _TEXTS, ZoneInfo("UTC"))
-    assert "2026-09-29" in _graph_time_caption(time_range, _TEXTS, ZoneInfo("Europe/Berlin"))
-
-
-def _temperature_graph(unit: Unit, values: list[float | None], warning: float) -> EvaluatedGraph:
-    return EvaluatedGraph(
-        name="g",
-        title="Temperature",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[],
-        lines=[
-            EvaluatedLine(
-                curve=EvaluatedCurve(
-                    id="temp",
-                    attributes=CurveAttributes(title="Temperature", unit=unit, color="#123456"),
-                    value=None,
-                    time_series=TimeSeries(time_range=_TIME_RANGE, values=values),
-                ),
-                inverse=False,
-            )
-        ],
-        rules=[
-            EvaluatedRule(
-                id="warn",
-                attributes=CurveAttributes(title="Warning", unit=unit, color="#ffd000"),
-                value=warning,
-                inverse=False,
-            )
-        ],
-    )
-
-
-def test_a_celsius_graph_renders_like_its_fahrenheit_twin_for_a_fahrenheit_user() -> None:
-    celsius = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
-    fahrenheit = Unit(notation=DecimalNotation("°F"), precision=AutoPrecision(2))
-
-    (celsius_png,) = render_pngs(
-        [
-            PngGraph(
-                graph=_temperature_graph(celsius, [0.0, 50.0, 100.0], 80.0),
-                options=_OPTIONS,
-                y_axis_unit=celsius,
-                requested_vertical_range=None,
-                time_zone=None,
-                visible_time_range=_VISIBLE_TIME_RANGE,
-            )
-        ],
-        _TEXTS,
-        TemperatureUnit.FAHRENHEIT,
-    )
-    (fahrenheit_png,) = render_pngs(
-        [
-            PngGraph(
-                graph=_temperature_graph(fahrenheit, [32.0, 122.0, 212.0], 176.0),
-                options=_OPTIONS,
-                y_axis_unit=fahrenheit,
-                requested_vertical_range=None,
-                time_zone=None,
-                visible_time_range=_VISIBLE_TIME_RANGE,
-            )
-        ],
-        _TEXTS,
-        TemperatureUnit.FAHRENHEIT,
-    )
-
-    assert isinstance(celsius_png, bytes) and celsius_png == fahrenheit_png
-
-
-def test_each_graph_of_a_batch_gets_its_own_image_in_order() -> None:
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[_curve("m", [1.0, 2.0, 3.0])], inverse=False)],
-        lines=[],
-    )
-    with_legend = _options(show_legend=True)
-    without_legend = _options(show_legend=False)
-
-    pngs = render_pngs(
-        [
-            PngGraph(
-                graph=graph,
-                options=with_legend,
-                y_axis_unit=None,
-                requested_vertical_range=None,
-                time_zone=None,
-                visible_time_range=_VISIBLE_TIME_RANGE,
-            ),
-            PngGraph(
-                graph=graph,
-                options=without_legend,
-                y_axis_unit=None,
-                requested_vertical_range=None,
-                time_zone=None,
-                visible_time_range=_VISIBLE_TIME_RANGE,
-            ),
-        ],
-        _TEXTS,
-        TemperatureUnit.CELSIUS,
-    )
+    pngs = render_pngs(drawings)
 
     assert [_size_in_px(png) for png in pngs if isinstance(png, bytes)] == [
-        _px(compute_png_size_mm(graph, with_legend)),
-        _px(compute_png_size_mm(graph, without_legend)),
+        _px(drawing) for drawing in drawings
     ]
 
 
-def test_a_requested_vertical_range_is_taken_in_the_users_unit() -> None:
-    celsius = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
-    fahrenheit = Unit(notation=DecimalNotation("°F"), precision=AutoPrecision(2))
-    requested = EvaluatedVerticalRange(range_kind=VerticalRangeKind.FIXED, lower=50.0, upper=100.0)
-    twin = _temperature_graph(fahrenheit, [32.0, 122.0, 212.0], 176.0)
+def test_a_drawing_that_fails_to_render_leaves_the_others_their_images() -> None:
+    broken = _drawing(lines=[Line(color="#000000", values=[1.0, 2.0, 3.0, 4.0])])
 
-    (celsius_png,) = render_pngs(
-        [
-            PngGraph(
-                graph=_temperature_graph(celsius, [0.0, 50.0, 100.0], 80.0),
-                options=_OPTIONS,
-                y_axis_unit=celsius,
-                requested_vertical_range=requested,
-                time_zone=None,
-                visible_time_range=_VISIBLE_TIME_RANGE,
-            )
-        ],
-        _TEXTS,
-        TemperatureUnit.FAHRENHEIT,
-    )
-    (fahrenheit_png,) = render_pngs(
-        [
-            PngGraph(
-                graph=EvaluatedGraph(
-                    name=twin.name,
-                    title=twin.title,
-                    time_range=twin.time_range,
-                    vertical_range=requested,
-                    stacks=twin.stacks,
-                    lines=twin.lines,
-                    rules=twin.rules,
-                    regions=twin.regions,
-                ),
-                options=_OPTIONS,
-                y_axis_unit=fahrenheit,
-                requested_vertical_range=None,
-                time_zone=None,
-                visible_time_range=_VISIBLE_TIME_RANGE,
-            )
-        ],
-        _TEXTS,
-        TemperatureUnit.FAHRENHEIT,
-    )
-
-    assert isinstance(celsius_png, bytes) and celsius_png == fahrenheit_png
-
-
-def test_a_graph_that_fails_to_render_leaves_the_others_their_images() -> None:
-    def png_graph(values: list[float | None]) -> PngGraph:
-        return PngGraph(
-            graph=EvaluatedGraph(
-                name="g",
-                title="Graph",
-                time_range=_TIME_RANGE,
-                vertical_range=None,
-                stacks=[],
-                lines=[EvaluatedLine(curve=_curve("m", values), inverse=False)],
-            ),
-            options=_OPTIONS,
-            y_axis_unit=None,
-            requested_vertical_range=None,
-            time_zone=None,
-            visible_time_range=_VISIBLE_TIME_RANGE,
-        )
-
-    results = render_pngs(
-        [png_graph([1.0, 2.0, 3.0, 4.0]), png_graph([1.0, 2.0, 3.0])],
-        _TEXTS,
-        TemperatureUnit.CELSIUS,
-    )
+    results = render_pngs([broken, _drawing()])
 
     assert [type(result) for result in results] == [RenderingFailure, bytes]
 
 
-def test_a_fixed_range_open_at_the_top_follows_the_data_there() -> None:
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=EvaluatedVerticalRange(
-            range_kind=VerticalRangeKind.FIXED, lower=0.0, upper=None
-        ),
-        stacks=[],
-        lines=[EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=False)],
-    )
+def test_an_area_is_filled_from_its_bottom_up_to_its_top() -> None:
+    area = Area(color="#000000", bottom=[1.0, 2.0, 3.0], top=[11.0, 22.0, 33.0])
+    ax = Figure().add_subplot(1, 1, 1)
 
-    assert _vertical_range_bounds(graph, graph.time_range) == (0.0, 3.0)
+    _plot(ax, _drawing(areas=[area]))
+
+    assert np.isclose(np.asarray(ax.collections[0].get_paths()[0].vertices)[:, 1].max(), 33.0)
 
 
-def test_the_rules_of_a_mirrored_graph_are_drawn() -> None:
-    graph = EvaluatedGraph(
-        name="g",
-        title="",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[],
-        lines=[EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=True)],
-        rules=[
-            EvaluatedRule(
-                id="warn",
-                attributes=CurveAttributes(title="Warn", unit=_UNIT, color="#ff0000"),
-                value=2.0,
-                inverse=True,
-            )
-        ],
-    )
+def test_the_plot_spans_its_x_range_despite_a_long_leading_gap() -> None:
+    """Regression test for CMK-38506."""
+    line = Line(color="#000000", values=[None] * 10 + [5.0, 6.0])
+    ax = Figure().add_subplot(1, 1, 1)
 
-    (png,) = render_pngs(
-        [
-            PngGraph(
-                graph=graph,
-                options=_options(show_legend=False),
-                y_axis_unit=None,
-                requested_vertical_range=None,
-                time_zone=None,
-                visible_time_range=_VISIBLE_TIME_RANGE,
-            )
-        ],
-        _TEXTS,
-        TemperatureUnit.CELSIUS,
-    )
+    _plot(ax, _drawing(times=range(60, 780, 60), x_range=(0, 720), lines=[line]))
 
-    assert isinstance(png, bytes)
-    pixels = imread(io.BytesIO(png))
-    assert bool(((pixels[..., 0] > 0.9) & (pixels[..., 1] < 0.2) & (pixels[..., 2] < 0.2)).any())
+    assert ax.get_xlim() == (0, 720)
 
 
-def test_a_fixed_range_open_at_the_top_keeps_its_bound_without_data() -> None:
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=EvaluatedVerticalRange(
-            range_kind=VerticalRangeKind.FIXED, lower=100.0, upper=None
-        ),
-        stacks=[],
-        lines=[EvaluatedLine(curve=_curve("m", [None, None, None]), inverse=False)],
-    )
+def test_time_axis_of_a_multi_day_graph_is_labelled_with_weekday_and_time() -> None:
+    start = 1668426600
+    fig = Figure()
+    ax = fig.add_subplot(1, 1, 1)
+    _plot(ax, _drawing(times=[], x_range=(start, start + 2 * 86400)))
 
-    lower, upper = _vertical_range_bounds(graph, graph.time_range)
+    _fit_time_axis(ax, _agg_renderer(fig), 8.0, TimeAxis(time_zone=None))
 
-    assert _y_range(lower, upper, is_mirrored=False) == (100.0, 101.0)
+    labels = [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
+    assert len(labels) > 2 and all(re.fullmatch(r"\w+ \d{2}:\d{2}", label) for label in labels)
+
+
+def _time_labels(time_zone: str) -> list[str]:
+    # 2026-09-28 10:00 to 14:00 UTC, i.e. 12:00 to 16:00 in Berlin (CEST, UTC+2).
+    fig = Figure()
+    ax = fig.add_subplot(1, 1, 1)
+    _plot(ax, _drawing(times=[], x_range=(1790589600, 1790604000)))
+    _fit_time_axis(ax, _agg_renderer(fig), 8.0, TimeAxis(time_zone=time_zone))
+    return [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
+
+
+def test_time_axis_is_labelled_in_the_given_time_zone() -> None:
+    utc_labels = _time_labels("UTC")
+
+    berlin_labels = _time_labels("Europe/Berlin")
+
+    assert utc_labels and berlin_labels == [
+        f"{int(label[:2]) + 2:02d}{label[2:]}" for label in utc_labels
+    ]

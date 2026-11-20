@@ -45,6 +45,11 @@ class VerticalAxis:
 
 
 @dataclass(frozen=True, kw_only=True)
+class TimeAxis:
+    time_zone: str | None
+
+
+@dataclass(frozen=True, kw_only=True)
 class LegendRow:
     color: str
     cells: Sequence[str]
@@ -57,3 +62,23 @@ class Legend:
     curves: Sequence[LegendRow]
     rules: Sequence[LegendRow]
     regions: Sequence[LegendRow]
+
+
+@dataclass(frozen=True, kw_only=True)
+class PngDrawing:
+    width_inches: float
+    height_inches: float
+    plot_height: float
+    font_size: float
+    title: str | None
+    caption: str | None
+    times: Sequence[int]
+    x_range: tuple[int, int]
+    y_range: tuple[float, float]
+    areas: Sequence[Area]
+    lines: Sequence[Line]
+    regions: Sequence[Region]
+    rules: Sequence[Rule]
+    vertical_axis: VerticalAxis | None
+    time_axis: TimeAxis | None
+    legend: Legend | None

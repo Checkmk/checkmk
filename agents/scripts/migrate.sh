@@ -7,6 +7,7 @@
 : "${OLD_MK_VARDIR:="/var/lib/check_mk_agent"}"
 : "${AGENT_USER:="cmk-agent"}"
 : "${LEGACY_HOMEDIR:="/var/lib/cmk-agent"}"
+: "${PREVIOUS_INSTALLATION_RECORD:="/run/check-mk-agent.previous-installation"}"
 
 # Linux calls this script with /bin/sh, Solaris with bash. Hence, stick to POSIX sh.
 # The runtime tree is walked with globs rather than with find, because Solaris has no
@@ -149,13 +150,36 @@ _migrate_home() {
     }
 }
 
-# Print the installation directory the agent user was created for, if it is
-# another one than this package installs to.
+# Print the installation directory of the package that this one replaces, if it
+# is another one than this package installs to.
 #
-# The home of the agent user is the only record of that directory. The scripts
-# of the previous package have removed its systemd units and its links in
-# /usr/bin by the time this script runs.
+# The scripts of the previous package have removed its systemd units and its
+# links in /usr/bin by the time this script runs.
 _previous_installdir() {
+    _recorded_installdir || _installdir_of_agent_home
+}
+
+# The pre-install scriptlet of this package saves what the previous package
+# still shows at that point: the targets of its links to the agent under RPM,
+# its file list under DEB. Both name <installdir>/package/bin/check_mk_agent.
+_recorded_installdir() {
+    [ -f "${PREVIOUS_INSTALLATION_RECORD}" ] || return 1
+
+    recorded_installdir="$(sed -n 's|/package/bin/check_mk_agent$||p' "${PREVIOUS_INSTALLATION_RECORD}" | head -n 1)"
+    # A record that outlives this run would name the wrong package next time.
+    rm -f "${PREVIOUS_INSTALLATION_RECORD}"
+
+    case "${recorded_installdir}" in
+        "${MK_INSTALLDIR}") return 1 ;;
+        /*) printf "%s\n" "${recorded_installdir}" ;;
+        *) return 1 ;;
+    esac
+}
+
+# The package creates the agent user with its home in the installation
+# directory. A user that was there before the package has its home elsewhere,
+# and a package without the agent controller has no user.
+_installdir_of_agent_home() {
     agent_homedir="$(getent passwd "${AGENT_USER}" | cut -d: -f6)"
 
     case "${agent_homedir}" in

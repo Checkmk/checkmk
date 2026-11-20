@@ -27,8 +27,9 @@ setUp() {
     LEGACY_HOME="${WORK}/var/lib/cmk-agent"
     STUBS="${WORK}/stubs"
     CALLS="${WORK}/calls"
+    RECORD="${WORK}/run/previous-installation"
 
-    mkdir -p "${OLD_VARDIR}" "${RUNTIME}" "${STUBS}"
+    mkdir -p "${OLD_VARDIR}" "${RUNTIME}" "${STUBS}" "${WORK}/run"
 
     # The classic layout has these, and so does the new one, which is what
     # makes them the interesting case.
@@ -99,6 +100,7 @@ _migrate_with() {
         MK_INSTALLDIR="${INSTALLDIR}" \
         OLD_MK_VARDIR="${OLD_VARDIR}" \
         LEGACY_HOMEDIR="${LEGACY_HOME}" \
+        PREVIOUS_INSTALLATION_RECORD="${RECORD}" \
         "$1" "${TESTEE}"
 }
 
@@ -349,6 +351,114 @@ test_home_outside_an_installation_directory_is_left_alone() {
 
     assertEquals "the files changed" "${before}" "$(_snapshot)"
     assertFalse "a command was called" "[ -s '${CALLS}' ]"
+}
+
+# An agent user that was there before the package. Its home says nothing about
+# the installation directory.
+_agent_user_with_its_own_home() {
+    printf '%s\n' "${WORK}/var/home/monitoring" >"${STUBS}/home"
+}
+
+# What the pre-install scriptlet of an RPM package saves: the targets of the
+# link in /etc/alternatives and of the one in /usr/bin, which the previous
+# package has not removed at that point.
+_record_previous_installation() {
+    printf '%s\n' "${PREVIOUS}/package/bin/check_mk_agent" /etc/alternatives/check_mk_agent >"${RECORD}"
+}
+
+test_runtime_files_are_migrated_for_a_user_with_its_own_home() {
+    # CMK-42087
+    _previous_installation
+    _agent_user_with_its_own_home
+    _record_previous_installation
+
+    _migrate >/dev/null
+
+    assertEquals "content of the registry" '{"push": {}}' \
+        "$(cat "${CONTROLLER}/registered_connections.json")"
+}
+
+test_own_home_of_the_agent_user_is_kept_when_the_installation_directory_changes() {
+    # CMK-42087
+    _previous_installation
+    _agent_user_with_its_own_home
+    _record_previous_installation
+
+    _migrate >/dev/null
+
+    assertEquals "home of the agent user" "${WORK}/var/home/monitoring" "$(cat "${STUBS}/home")"
+}
+
+test_runtime_files_are_migrated_when_the_record_is_a_file_list() {
+    # CMK-42087
+    # What the preinst of a DEB package saves: the output of "dpkg-query -L",
+    # which lists the files of the previous package at that point.
+    _previous_installation
+    _agent_user_with_its_own_home
+    cat >"${RECORD}" <<EOF
+/.
+/opt
+${PREVIOUS}
+${PREVIOUS}/package
+${PREVIOUS}/package/bin
+${PREVIOUS}/package/bin/check_mk_agent
+${PREVIOUS}/package/bin/cmk-agent-ctl
+${PREVIOUS}/package/scripts/migrate.sh
+EOF
+
+    _migrate >/dev/null
+
+    assertEquals "content of the registry" '{"push": {}}' \
+        "$(cat "${CONTROLLER}/registered_connections.json")"
+}
+
+test_runtime_files_are_migrated_without_an_agent_user() {
+    # CMK-42087
+    # A package without the agent controller creates no user.
+    _previous_installation
+    rm "${STUBS}/home"
+    _record_previous_installation
+
+    _migrate >/dev/null
+
+    assertEquals "content of the Python updater's state" "host_secret" \
+        "$(cat "${RUNTIME}/cmk-update-agent/cmk-update-agent.state")"
+}
+
+test_record_of_the_previous_installation_is_removed() {
+    # CMK-42087
+    _previous_installation
+    _record_previous_installation
+
+    _migrate >/dev/null
+
+    assertFalse "the record survived" "[ -e '${RECORD}' ]"
+}
+
+test_stale_home_is_corrected_by_a_package_for_the_same_directory() {
+    # CMK-42087
+    # The home still names the directory that an earlier run could not move it
+    # away from, and the package that replaces the one in this directory
+    # records this directory.
+    _previous_installation
+    printf '%s\n' "${INSTALLDIR}/package/bin/check_mk_agent" >"${RECORD}"
+
+    _migrate >/dev/null
+
+    assertEquals "home of the agent user" "${CONTROLLER}" "$(cat "${STUBS}/home")"
+}
+
+test_runtime_files_are_migrated_when_the_record_names_no_installation_directory() {
+    # CMK-42087
+    # The record is empty when the previous package was removed rather than
+    # replaced: its links are gone, and dpkg lists no files of it.
+    _previous_installation
+    : >"${RECORD}"
+
+    _migrate >/dev/null
+
+    assertEquals "content of the registry" '{"push": {}}' \
+        "$(cat "${CONTROLLER}/registered_connections.json")"
 }
 
 test_hidden_file_is_moved() {

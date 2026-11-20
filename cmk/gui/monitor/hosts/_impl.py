@@ -153,7 +153,7 @@ class LiveStatusHostRepository:
             *_split_filter_lines(filters),
             _build_primary_sort(sorters),
         ]
-        if limit is not None:
+        if limit is not None and _core_sorts_like_gui(sorters):
             extra_headers.append(f"Limit: {limit}")
         wanted = _columns_to_read(fields, sorters)
         if HostOptionalField.NUM_RELATIONS in wanted and visible_relations is None:
@@ -880,8 +880,8 @@ def _build_query_filter(
 
 # The Livestatus column a sort column orders by, or ``None`` when no site's core has one - "site"
 # is merged client-side, "num_relations" counted from the ``_CMK_RELATIONS`` variable, and "folder"
-# is a file rather than the title Setup shows. For those the ``OrderBy`` header merely bounds which
-# rows a ``Limit:`` keeps; the order the user sees is the one ``host_sorter()`` applies afterwards.
+# is a file rather than the title Setup shows. The order the user sees is always the one
+# ``host_sorter()`` applies afterwards; see ``_CORE_SORTS_DIFFERENTLY`` for when a ``Limit:`` is sent.
 _LIVESTATUS_SORT_COLUMNS: Mapping[HostSortColumn, str | None] = {
     HostSortColumn.NAME: "name",
     HostSortColumn.ALIAS: "alias",
@@ -1010,11 +1010,26 @@ def _int_or_none(value: object | None) -> int | None:
     return None if value is None else int(value)  # type: ignore[call-overload]
 
 
-# Sorting by state hits the same limit-window imprecision as folder above: a host that has never
-# been checked is ``HostState.PENDING`` - last in ``host_sorter()``'s ascending order - but its raw
-# ``state`` column reports 0, indistinguishable there from a genuinely OK host. A listing longer
-# than the limit, sorted by state, therefore shows the right rows in the right order only within
-# the window the limit kept.
+# The sort columns the core orders differently from ``host_sorter()``: no column at all (site,
+# relations), a file path instead of the title (folder), a pending host read as UP (state), and
+# only ASCII letters folded to lower case (alias). A ``Limit:`` under such an order would keep the
+# wrong rows, e.g. on a dashboard widget showing the first one, so these rows are all read and the
+# caller cuts after sorting them.
+_CORE_SORTS_DIFFERENTLY: frozenset[HostSortColumn] = frozenset(
+    {
+        HostSortColumn.SITE_ID,
+        HostSortColumn.NUM_RELATIONS,
+        HostSortColumn.FOLDER,
+        HostSortColumn.STATE,
+        HostSortColumn.ALIAS,
+    }
+)
+
+
+def _core_sorts_like_gui(sorters: Sequence[HostSort]) -> bool:
+    return not sorters or sorters[0].column not in _CORE_SORTS_DIFFERENTLY
+
+
 def _build_primary_sort(sorters: Sequence[HostSort]) -> str:
     if not sorters or (column := _LIVESTATUS_SORT_COLUMNS[sorters[0].column]) is None:
         return "OrderBy: name asc"

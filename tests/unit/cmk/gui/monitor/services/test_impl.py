@@ -94,6 +94,24 @@ def test_fetch_orders_by_the_primary_sorter() -> None:
         )
 
 
+def test_fetch_reads_every_row_under_a_state_order_the_core_cannot_cut_by() -> None:
+    # The core reads a pending service as OK, so its cut would keep the wrong rows: no "Limit:".
+    with expect_single_query(
+        f"GET services\nColumns: {_SERVICES_COLUMNS}\n"
+        f"Filter: host_name = {_UNKNOWN_HOSTNAME}\nOrderBy: state desc",
+        match_type="ellipsis",
+    ) as live:
+        repo = LiveStatusHostServicesRepository(connection=live)
+        repo.fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=1,
+            query="",
+            sorters=[ServiceSort(ServiceSortColumn.STATE, ServiceSortDirection.DESC)],
+            filters=ServiceFilter(""),
+            fields=frozenset(),
+        )
+
+
 def test_fetch_filters_by_search_query_on_name_and_summary() -> None:
     with expect_single_query(
         f"GET services\nColumns: {_SERVICES_COLUMNS}\n"

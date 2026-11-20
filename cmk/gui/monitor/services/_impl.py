@@ -323,7 +323,10 @@ def _fetch_services(
 ) -> list[Service]:
     extra_headers = [*_split_filter_lines(filters), _build_primary_sort(sorters)]
 
-    if limit is not None:
+    # The core reads a pending service as OK, ``service_sorter()`` puts it apart, so a ``Limit:``
+    # under a state order would keep the wrong rows: these are all read, and the caller cuts after
+    # sorting them.
+    if limit is not None and not (sorters and sorters[0].column is ServiceSortColumn.STATE):
         extra_headers.append(f"Limit: {limit}")
 
     q = Query(

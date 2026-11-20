@@ -49,7 +49,11 @@ def get_fake_host_services_repository(
     n_services: int = 0,
     names: Sequence[str] | None = None,
     services: Sequence[Service] | None = None,
+    reads_past_limit: bool = False,
 ) -> HostServicesRepository:
+    """``reads_past_limit`` returns every match, as the real repository does under an order the
+    core cannot cut by."""
+
     class HostServicesFakeRepository:
         def __init__(self) -> None:
             if services is not None:
@@ -88,7 +92,9 @@ def get_fake_host_services_repository(
             fields: Set[ServiceOptionalField] = frozenset(),  # noqa: ARG002
         ) -> Sequence[Service]:
             matches = [s for s in self._services if query.lower() in s.name.lower()]
-            return sorted(matches, key=service_sorter(sorters))[:limit]
+            return sorted(matches, key=service_sorter(sorters))[
+                : None if reads_past_limit else limit
+            ]
 
         def count_total(self, hostname: str) -> int:  # noqa: ARG002
             return len(self._services)

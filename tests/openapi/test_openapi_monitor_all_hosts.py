@@ -849,8 +849,8 @@ class TestMonitorHostsFields:
             [
                 "GET hosts",
                 f"Columns: {_host_columns(*_DEFAULT_FIELDS, _NON_DEFAULT_FIELD)}",
+                # The core folds only ASCII letters, so it cannot cut by alias: no "Limit:".
                 "OrderBy: alias asc natural",
-                f"Limit: {_LIMIT}",
             ]
         )
 

@@ -15,6 +15,7 @@ from cmk.gui.monitor.hosts._folder import MonitorFolders
 from cmk.gui.monitor.hosts._impl import (
     _build_primary_sort,
     _build_query_filter,
+    _core_sorts_like_gui,
     _count_relations,
     _LIVESTATUS_SORT_COLUMNS,
     _OPTIONAL_COLUMNS,
@@ -95,6 +96,32 @@ SiteState = Literal["online", "disabled", "down", "unreach", "dead", "waiting"]
 )
 def test_build_primary_sort(sorters: Sequence[HostSort], expected: str) -> None:
     assert _build_primary_sort(sorters) == expected
+
+
+@pytest.mark.parametrize(
+    "column, expected",
+    [
+        pytest.param(HostSortColumn.NAME, True, id="name"),
+        pytest.param(HostSortColumn.LAST_CHECK, True, id="last check"),
+        pytest.param(HostSortColumn.FOLDER, False, id="folder: file path, not title"),
+        pytest.param(HostSortColumn.SITE_ID, False, id="site: no column"),
+        pytest.param(HostSortColumn.NUM_RELATIONS, False, id="relations: no column"),
+        pytest.param(HostSortColumn.STATE, False, id="state: pending read as UP"),
+        pytest.param(HostSortColumn.ALIAS, False, id="alias: ASCII-only case folding"),
+    ],
+)
+def test_core_sorts_like_gui_decides_by_the_first_sorter(
+    column: HostSortColumn, expected: bool
+) -> None:
+    sorters = [
+        HostSort(column, HostSortDirection.ASC),
+        HostSort(HostSortColumn.FOLDER, HostSortDirection.ASC),
+    ]
+    assert _core_sorts_like_gui(sorters) is expected
+
+
+def test_core_sorts_like_gui_for_the_default_order() -> None:
+    assert _core_sorts_like_gui([])
 
 
 def test_every_optional_field_names_the_columns_it_needs() -> None:

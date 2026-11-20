@@ -1271,7 +1271,8 @@ class TestMonitorHostServices:
                 f"Columns: {_SERVICES_COLUMNS}",
                 f"Filter: host_name = {_HOSTNAME}",
                 expected_order_by,
-                f"Limit: {_LIMIT}",
+                # The core reads a pending service as OK, so it cannot cut by state.
+                *([] if expected_order_by.startswith("OrderBy: state") else [f"Limit: {_LIMIT}"]),
             ],
             sites=[_SITE_ID],
         )

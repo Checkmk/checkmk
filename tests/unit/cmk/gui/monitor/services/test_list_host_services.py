@@ -59,6 +59,15 @@ def test_handle_list_services_limit_handling() -> None:
     assert response.meta.total == 10
 
 
+def test_handle_list_services_cuts_what_the_repository_read_past_the_limit() -> None:
+    services_repo = get_fake_host_services_repository(n_services=10, reads_past_limit=True)
+    response = _handle_list_services(
+        services_repo, hostname=KNOWN_HOSTNAME, site_id=_SITE_ID, limit=7
+    )
+
+    assert len(response.services) == 7
+
+
 def test_handle_list_services_without_limit_returns_all() -> None:
     services_repo = get_fake_host_services_repository(n_services=10)
     response = _handle_list_services(

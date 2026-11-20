@@ -415,6 +415,9 @@ def _handle_list_services(
     services = host_services_repo.fetch(
         hostname, limit=limit, query=query, sorters=sorters, filters=filters, fields=fields
     )
+    # A sort the core orders differently reads all matching services, cut here after sorting.
+    if limit is not None:
+        services = services[:limit]
     total_service_count = host_services_repo.count_total(hostname)
     if limit is None:
         matched_service_count = len(services)

@@ -1435,6 +1435,9 @@ allows = [
 ]
 excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 
+[components."cmk.gui.png.renderer"]
+allows = []
+
 [components."cmk.gui"]
 allows = [
   "cmk.config",
@@ -1460,6 +1463,7 @@ allows = [
   "cmk.events.notification_result",
   "cmk.fields",
   "cmk.graphing_engine",
+  "cmk.gui.png.renderer",
   "cmk.gui_plugins.internal",
   "cmk.inventory",
   "cmk.inventory_ui",

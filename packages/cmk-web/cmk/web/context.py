@@ -90,7 +90,7 @@ class ResponseProtocol(Protocol):
 
 
 class UserProtocol(Protocol):
-    def may(self, pname: str) -> bool: ...
+    def may(self, permission_name: str) -> bool: ...
 
 
 class ActionUrlBuilder(Protocol):

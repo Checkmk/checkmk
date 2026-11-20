@@ -11,7 +11,7 @@ MM_PER_INCH = 25.4
 
 
 def ex_to_inches(size_ex: float, font_size_pt: float) -> float:
-    # one "ex" is half the font size in points, and 1 point = 1/72 inch
+    # one "ex" is taken as the font size in points, and 1 point = 1/72 inch
     return size_ex * font_size_pt / 72
 
 

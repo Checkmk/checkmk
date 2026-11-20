@@ -60,13 +60,11 @@ def delete_site_global_setting_v1(
 
     sites = load_configured_sites()
     site_globals = load_site_globals(sites, site_id)
+    global_settings = load_global_settings_of_site(
+        site_id, activation_features_registry[str(edition(paths.omd_root))].load_domain_globals
+    )
     old_value, old_origin = effective_site_value(
-        site_globals,
-        varname,
-        global_settings=load_global_settings_of_site(
-            site_id,
-            activation_features_registry[str(edition(paths.omd_root))].load_domain_globals,
-        ),
+        site_globals, varname, global_settings=global_settings
     )
     if api_context.etag.enabled:
         api_context.etag.verify(site_global_setting_etag(site_id, varname, old_value, old_origin))
@@ -76,6 +74,16 @@ def delete_site_global_setting_v1(
         return
 
     del site_globals[varname]
+    new_value, _new_origin = effective_site_value(
+        site_globals, varname, global_settings=global_settings
+    )
+    diff_text = global_settings_diff_text(
+        config_variable,
+        global_settings_context_of(site_id, api_context, edits_site_specific_value=True),
+        {varname: old_value},
+        {},
+    )
+    settings_of_change = config_variable.domain_settings_of_change(old_value, new_value)
     save_site_setting(site_id, sites, site_globals, api_context)
 
     add_global_settings_change(
@@ -86,12 +94,8 @@ def delete_site_global_setting_v1(
         ),
         sites=[site_id],
         pending_changes=make_pending_changes(api_context),
-        diff_text=global_settings_diff_text(
-            config_variable,
-            global_settings_context_of(site_id, api_context, edits_site_specific_value=True),
-            {varname: old_value},
-            {},
-        ),
+        diff_text=diff_text,
+        domain_settings_of_change=settings_of_change,
     )
 
 

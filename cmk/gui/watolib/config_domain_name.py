@@ -431,6 +431,9 @@ class ConfigVariable:
             [GlobalSettingsContext], Sequence[ConfigVariableHint]
         ] = lambda _context: (),
         always_affects_local_site: bool = False,
+        domain_settings_of_change: Callable[
+            [object, object], DomainSettings
+        ] = lambda _old_value, _new_value: {},
     ) -> None:
         self._group = group
         self._primary_domain_ident = primary_domain.ident()
@@ -442,6 +445,7 @@ class ConfigVariable:
         self._in_global_settings = in_global_settings
         self._hints = hints
         self._always_affects_local_site = always_affects_local_site
+        self._domain_settings_of_change = domain_settings_of_change
         self._idents_of_affected_domains = [self._primary_domain_ident]
 
     def group(self) -> ConfigVariableGroup:
@@ -494,6 +498,15 @@ class ConfigVariable:
 
     def always_affects_local_site(self) -> bool:
         return self._always_affects_local_site
+
+    def domain_settings_of_change(self, old_value: object, new_value: object) -> DomainSettings:
+        """Settings for the affected domains, merged into the domain_settings of the change
+
+        The values belong to the edited layer: an edit of the global value also reaches sites
+        with their own value, which it does not change. Activation hands the settings of every
+        pending change to the domain's get_domain_request, which has to combine them.
+        """
+        return self._domain_settings_of_change(old_value, new_value)
 
     def add_config_domain_affected_by_change(
         self,

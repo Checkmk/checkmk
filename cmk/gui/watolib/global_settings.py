@@ -23,6 +23,7 @@ from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
     ConfigVariable,
+    DomainSettings,
     EVENT_CONSOLE,
     finalize_all_settings_per_site,
     GlobalSettingsContext,
@@ -306,8 +307,12 @@ def add_global_settings_change(
     text: LogMessage,
     sites: Sequence[SiteId] | None,
     pending_changes: PendingChanges,
+    domain_settings_of_change: DomainSettings,
     diff_text: str | None = None,
 ) -> None:
+    """Callers derive domain_settings_of_change from the variable before saving the setting,
+    so that a failing derivation saves nothing. Callers lacking the old or new value pass {}.
+    """
     pending_changes.add(
         Change(
             action_name="edit-configvar",
@@ -317,7 +322,10 @@ def add_global_settings_change(
             force_apache_reload=config_variable.need_apache_reload(),
             domains=[d.ident() for d in config_variable.all_domains()],
             domain_settings={
-                d.ident(): {"need_apache_reload": config_variable.need_apache_reload()}
+                d.ident(): {
+                    **domain_settings_of_change.get(d.ident(), {}),
+                    "need_apache_reload": config_variable.need_apache_reload(),
+                }
                 for d in config_variable.all_domains()
             },
         ),

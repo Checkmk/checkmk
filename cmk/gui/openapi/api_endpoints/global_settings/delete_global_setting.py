@@ -73,6 +73,14 @@ def delete_global_setting_v1(
         return
 
     del settings[varname]
+    new_value, _new_origin = effective_value(settings, varname)
+    diff_text = global_settings_diff_text(
+        config_variable,
+        global_settings_context_of(omd_site(), api_context, edits_site_specific_value=False),
+        {varname: old_value},
+        {},
+    )
+    settings_of_change = config_variable.domain_settings_of_change(old_value, new_value)
     save_global_settings(settings, api_context.config.sites)
 
     add_global_settings_change(
@@ -82,12 +90,8 @@ def delete_global_setting_v1(
         ),
         sites=affected_sites(config_variable),
         pending_changes=make_pending_changes(api_context),
-        diff_text=global_settings_diff_text(
-            config_variable,
-            global_settings_context_of(omd_site(), api_context, edits_site_specific_value=False),
-            {varname: old_value},
-            {},
-        ),
+        diff_text=diff_text,
+        domain_settings_of_change=settings_of_change,
     )
 
 

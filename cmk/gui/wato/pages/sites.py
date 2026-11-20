@@ -2066,6 +2066,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 local_site=omd_site(),
                 user_id=user.id,
             ),
+            domain_settings_of_change={},
         )
 
         flash(

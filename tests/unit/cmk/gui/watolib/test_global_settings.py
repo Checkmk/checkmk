@@ -150,6 +150,7 @@ def _sites_recording_a_site_specific_change(variable: ConfigVariable) -> set[Sit
             store=store,
             hooks=(),
         ),
+        domain_settings_of_change={},
     )
     return store.sites
 

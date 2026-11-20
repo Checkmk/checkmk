@@ -83,6 +83,13 @@ def update_site_global_setting_v1(
         api_context.etag.verify(site_global_setting_etag(site_id, varname, old_value, old_origin))
 
     new_value = value_from_json(form_spec, varname, body.value)
+    diff_text = global_settings_diff_text(
+        config_variable,
+        context,
+        {varname: old_value} if old_origin is GlobalSettingsOrigin.site else {},
+        {varname: new_value},
+    )
+    settings_of_change = config_variable.domain_settings_of_change(old_value, new_value)
     site_globals[varname] = new_value
     save_site_setting(site_id, sites, site_globals, api_context)
 
@@ -94,12 +101,8 @@ def update_site_global_setting_v1(
         ),
         sites=[site_id],
         pending_changes=make_pending_changes(api_context),
-        diff_text=global_settings_diff_text(
-            config_variable,
-            context,
-            {varname: old_value} if old_origin is GlobalSettingsOrigin.site else {},
-            {varname: new_value},
-        ),
+        diff_text=diff_text,
+        domain_settings_of_change=settings_of_change,
     )
 
     spec, json_value = to_json(form_spec, new_value)

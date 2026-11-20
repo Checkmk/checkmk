@@ -7,10 +7,10 @@
 
 import json
 import logging
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
-from typing import override
+from typing import cast, override
 from unittest.mock import ANY
 
 import pytest
@@ -51,8 +51,10 @@ from cmk.gui.watolib.config_domain_name import (
     CA_CERTIFICATES,
     config_variable_registry,
     ConfigVariable,
+    DomainSettings,
     get_config_domain,
     GUI,
+    SerializedSettings,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupUserInterface
@@ -60,7 +62,7 @@ from cmk.gui.watolib.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.gui.watolib.sites import SitesConfigFile
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec, Password
+from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec, Integer, Password
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from tests.testlib.unit.gui.distributed_setup import running_on_a_remote_site
 from tests.testlib.unit.gui.web_test_app import SetConfig
@@ -218,6 +220,7 @@ def _register_variable(
     domain: type[ABCConfigDomain],
     form_spec: FormSpec,
     default: object,
+    domain_settings_of_change: Callable[[object, object], DomainSettings] = lambda _old, _new: {},
 ) -> Iterator[str]:
     defaults = ABCConfigDomain.get_all_default_globals()
     monkeypatch.setattr(
@@ -231,6 +234,7 @@ def _register_variable(
             primary_domain=domain,
             ident=varname,
             form_spec=lambda context: form_spec,  # noqa: ARG005
+            domain_settings_of_change=domain_settings_of_change,
         )
     )
     yield varname
@@ -241,6 +245,42 @@ def _register_variable(
 def fixture_secret_var(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
     yield from _register_variable(
         monkeypatch, "test_secret", ConfigDomainGUI, Password(title=Title("Secret")), None
+    )
+
+
+@pytest.fixture(name="value_change_var")
+def fixture_value_change_var(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
+    yield from _register_variable(
+        monkeypatch,
+        "test_value_change",
+        ConfigDomainGUI,
+        Integer(title=Title("Integer")),
+        1,
+        lambda old_value, new_value: {
+            GUI: cast(SerializedSettings, {"value_change": [old_value, new_value]})
+        },
+    )
+
+
+class _HookFailed(Exception):
+    pass
+
+
+def _fail_on_a_change_to_one(_old_value: object, new_value: object) -> DomainSettings:
+    if new_value == 1:
+        raise _HookFailed
+    return {}
+
+
+@pytest.fixture(name="failing_hook_var")
+def fixture_failing_hook_var(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
+    yield from _register_variable(
+        monkeypatch,
+        "test_failing_hook",
+        ConfigDomainGUI,
+        Integer(title=Title("Integer")),
+        1,
+        _fail_on_a_change_to_one,
     )
 
 
@@ -827,6 +867,91 @@ def test_site_scope_changes_are_scoped_to_that_site(
         f"Changed site-specific configuration variable {INT_VAR} for site {remote_site}."
     ]
     assert _changes_of(LOCAL_SITE) == []
+
+
+def _value_change_of_the_last_change(site_id: str) -> object:
+    return SiteChanges(SiteId(site_id)).read()[-1]["domain_settings"][GUI]["value_change"]
+
+
+def test_an_update_hands_the_value_change_to_the_domain(
+    clients: ClientRegistry, value_change_var: str
+) -> None:
+    clients.GlobalSetting.update(value_change_var, 42)
+
+    assert _value_change_of_the_last_change(LOCAL_SITE) == [1, 42]
+
+
+def test_a_reset_hands_the_value_change_to_the_domain(
+    clients: ClientRegistry, value_change_var: str
+) -> None:
+    clients.GlobalSetting.update(value_change_var, 42)
+
+    clients.GlobalSetting.delete(value_change_var)
+
+    assert _value_change_of_the_last_change(LOCAL_SITE) == [42, 1]
+
+
+def test_a_site_update_hands_the_value_change_to_the_domain(
+    clients: ClientRegistry, remote_site: str, value_change_var: str
+) -> None:
+    clients.GlobalSetting.update_site(remote_site, value_change_var, 7)
+
+    assert _value_change_of_the_last_change(remote_site) == [1, 7]
+
+
+def test_a_site_reset_hands_the_value_change_to_the_domain(
+    clients: ClientRegistry, remote_site: str, value_change_var: str
+) -> None:
+    clients.GlobalSetting.update(value_change_var, 42)
+    clients.GlobalSetting.update_site(remote_site, value_change_var, 7)
+
+    clients.GlobalSetting.delete_site(remote_site, value_change_var)
+
+    assert _value_change_of_the_last_change(remote_site) == [7, 42]
+
+
+def test_a_failing_hook_leaves_an_update_unsaved(
+    clients: ClientRegistry, failing_hook_var: str
+) -> None:
+    clients.GlobalSetting.update(failing_hook_var, 42)
+
+    clients.GlobalSetting.update(failing_hook_var, 1, expect_ok=False).assert_rest_api_crash()
+
+    assert clients.GlobalSetting.get(failing_hook_var).json["value"] == 42
+
+
+def test_a_failing_hook_leaves_a_reset_unsaved(
+    clients: ClientRegistry, failing_hook_var: str
+) -> None:
+    clients.GlobalSetting.update(failing_hook_var, 42)
+
+    clients.GlobalSetting.delete(failing_hook_var, expect_ok=False).assert_rest_api_crash()
+
+    assert clients.GlobalSetting.get(failing_hook_var).json["value"] == 42
+
+
+def test_a_failing_hook_leaves_a_site_update_unsaved(
+    clients: ClientRegistry, remote_site: str, failing_hook_var: str
+) -> None:
+    clients.GlobalSetting.update_site(remote_site, failing_hook_var, 7)
+
+    clients.GlobalSetting.update_site(
+        remote_site, failing_hook_var, 1, expect_ok=False
+    ).assert_rest_api_crash()
+
+    assert clients.GlobalSetting.get_site(remote_site, failing_hook_var).json["value"] == 7
+
+
+def test_a_failing_hook_leaves_a_site_reset_unsaved(
+    clients: ClientRegistry, remote_site: str, failing_hook_var: str
+) -> None:
+    clients.GlobalSetting.update_site(remote_site, failing_hook_var, 7)
+
+    clients.GlobalSetting.delete_site(
+        remote_site, failing_hook_var, expect_ok=False
+    ).assert_rest_api_crash()
+
+    assert clients.GlobalSetting.get_site(remote_site, failing_hook_var).json["value"] == 7
 
 
 def test_site_scope_etags(clients: ClientRegistry, remote_site: str) -> None:

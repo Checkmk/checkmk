@@ -6,6 +6,8 @@
 import json
 import logging
 import uuid
+from collections.abc import Callable
+from pathlib import Path
 from typing import Literal
 from unittest import mock
 from unittest.mock import MagicMock
@@ -250,6 +252,59 @@ def _fail_on_license_read() -> LicenseState:
     pytest.fail("the license state must not be read on non-Cloud editions")
 
 
+def _run_failing_dry_run(monkeypatch: pytest.MonkeyPatch, report_crash: Callable[[], str]) -> int:
+    monkeypatch.setattr(
+        product_usage_cli,
+        "init_logging",
+        MagicMock(return_value=logging.getLogger("cmk.product_usage.test")),
+    )
+    monkeypatch.setattr(product_usage_cli, "is_cloud_trial", MagicMock(return_value=False))
+    monkeypatch.setattr(
+        product_usage_cli, "collect_data", MagicMock(side_effect=RuntimeError("collector broke"))
+    )
+    return product_usage_cli.main(["--dry-run"], report_crash=report_crash)
+
+
+def test_unexpected_error_reports_the_crash_id(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert _run_failing_dry_run(monkeypatch, lambda: "4711") == -1
+
+    assert "Unexpected error (Crash ID: 4711)" in caplog.text
+    assert "(Crash ID: 4711)" in capsys.readouterr().err
+
+
+def test_failing_crash_report_keeps_the_original_error(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    def report_crash() -> str:
+        raise OSError("crash directory not writable")
+
+    assert _run_failing_dry_run(monkeypatch, report_crash) == -1
+
+    last = caplog.records[-1]
+    assert last.getMessage() == "Unexpected error (Crash ID: none)"
+    assert last.exc_info is not None
+    assert isinstance(last.exc_info[1], RuntimeError)
+
+
+def test_create_crash_report_stores_the_handled_exception(tmp_path: Path) -> None:
+    (tmp_path / "etc/omd").mkdir(parents=True)
+    (tmp_path / "etc/omd/site.conf").write_text("CONFIG_CORE='cmc'\n")
+    try:
+        raise RuntimeError("collector broke")
+    except RuntimeError:
+        crash_id = product_usage_cli.create_crash_report(tmp_path)
+
+    crash_info = json.loads(
+        (tmp_path / "var/check_mk/crashes/product-usage" / crash_id / "crash.info").read_text()
+    )
+    assert crash_info["exc_type"] == "RuntimeError"
+    assert crash_info["exc_value"] == "collector broke"
+
+
 def _patch_unreachable_endpoint(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     """Patch the CLI to have nothing to collect and an unreachable endpoint"""
     monkeypatch.setattr(
@@ -289,7 +344,7 @@ def test_cron_with_unreachable_endpoint_logs_only_and_plans_the_next_run(
 ) -> None:
     store_next_run_spy = _patch_unreachable_endpoint(monkeypatch)
 
-    assert product_usage_cli.main(["--cron"]) == 1
+    assert product_usage_cli.main(["--cron"], report_crash=MagicMock()) == 1
 
     assert capsys.readouterr().err == ""
     assert [
@@ -303,12 +358,21 @@ def test_manual_upload_with_unreachable_endpoint_reports_the_error(
 ) -> None:
     _patch_unreachable_endpoint(monkeypatch)
 
-    assert product_usage_cli.main(["--upload"]) == 1
+    assert product_usage_cli.main(["--upload"], report_crash=MagicMock()) == 1
 
     assert capsys.readouterr().err == "cmk-product-usage: Could not connect\n"
 
 
-def test_cron_writes_no_unexpected_error_to_stderr(
+def test_unreachable_endpoint_creates_no_crash_report(monkeypatch: pytest.MonkeyPatch) -> None:
+    _patch_unreachable_endpoint(monkeypatch)
+    report_crash = MagicMock()
+
+    product_usage_cli.main(["--upload"], report_crash=report_crash)
+
+    report_crash.assert_not_called()
+
+
+def test_cron_writes_no_crash_to_stderr(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     _patch_unreachable_endpoint(monkeypatch)
@@ -316,6 +380,6 @@ def test_cron_writes_no_unexpected_error_to_stderr(
         product_usage_cli, "collect_data", MagicMock(side_effect=RuntimeError("collector broke"))
     )
 
-    assert product_usage_cli.main(["--cron"]) == -1
+    assert product_usage_cli.main(["--cron"], report_crash=lambda: "4711") == -1
 
     assert capsys.readouterr().err == ""

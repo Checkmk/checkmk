@@ -4,13 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 import logging
+import time
 from collections.abc import Callable, Generator, Iterator
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pytest
 
+from tests.system.singlesite.linux_test_host import create_linux_test_host
 from tests.testlib.mock_server import MockEndpoint, MockMethod, MockResponse, MockServer
 from tests.testlib.site import Site
+from tests.testlib.web_session import CMKWebSession
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +25,9 @@ PRODUCT_USAGE_DATA_PATH = "var/check_mk/product_usage"
 PRODUCT_USAGE_SITE_ID_PATH = "var/check_mk/product_usage/site_id"
 PRODUCT_USAGE_URL_ENV_VAR = "CMK_PRODUCT_USAGE_URL"
 PRODUCT_USAGE_COMMAND = "cmk-product-usage"
+PRODUCT_USAGE_LOG_PATH = "var/log/product_usage_analytics.log"
+CLOUD_TRIAL_FOLDER = "cloud_trial_folder"
+CLOUD_TRIAL_HOST_WITH_DATA = "cloud-trial-host-with-data"
 
 # The fields that a standalone site with the default configuration sends as null, and why
 NULL_ON_A_DEFAULT_SITE = {
@@ -307,16 +315,15 @@ def test_unsuccessful_https_product_usage_data_transmission(
 
 
 @pytest.mark.skip_if_not_edition("cloud")
-@pytest.mark.usefixtures("default_cfg")
+@pytest.mark.usefixtures("default_cfg", "host_with_data")
 def test_cloud_trial_payload_counts_hosts_with_default_services_only(site: Site) -> None:
-    """A Cloud trial site sends the count of hosts with default services only."""
+    """A Cloud trial site counts the hosts with default services only, not a host with data."""
     run_product_usage_collection(site)
 
-    data = json.loads(get_product_usage_json_content(site))["data"]
+    count = get_cloud_trial_field(site, "count_hosts_default_services_only")
 
-    assert data["count_hosts_default_services_only"] == EXPECTED_HOST_COUNT, (
-        "Each test host has only the default services. A null count means that the collection"
-        " failed, see var/log/product_usage_analytics.log"
+    assert count == EXPECTED_HOST_COUNT, (
+        "Each test host of default_cfg has only the default services, the host with data has more"
     )
 
 
@@ -327,8 +334,132 @@ def test_cloud_trial_payload_carries_the_site_creation_time(site: Site) -> None:
     site sends the time when OMD wrote its instance ID."""
     run_product_usage_collection(site)
 
-    data = json.loads(get_product_usage_json_content(site))["data"]
+    site_created_at = get_cloud_trial_field(site, "site_created_at")
 
-    assert data["site_created_at"] == site.file_timestamp_ms("etc/omd/instance_id") // 1000, (
-        "A null time means that the collection failed, see var/log/product_usage_analytics.log"
+    assert site_created_at == site.file_timestamp_ms("etc/omd/instance_id") // 1000
+
+
+@pytest.mark.skip_if_not_edition("cloud")
+@pytest.mark.usefixtures("default_cfg")
+def test_cloud_trial_site_writes_only_the_cloud_trial_payload(site: Site) -> None:
+    """A Cloud trial site writes the Cloud trial payload instead of the product usage payload."""
+    run_product_usage_collection(site)
+
+    metadata = json.loads(get_product_usage_json_content(site))["metadata"]
+
+    assert metadata["name"] == "cloud_trial_analytics"
+
+
+@pytest.mark.skip_if_not_edition("cloud")
+@pytest.mark.usefixtures("cloud_trial_scenario")
+def test_cloud_trial_payload_counts_the_user_who_logged_in(site: Site) -> None:
+    """The OpenID mock logs in test@test.com, whose address domain is a business domain."""
+    run_product_usage_collection(site)
+
+    count_users = get_cloud_trial_field(site, "count_users")
+
+    assert count_users == {"business": 1, "non_business": 0}
+
+
+@pytest.mark.skip_if_not_edition("cloud")
+def test_cloud_trial_payload_counts_the_session_of_the_login(
+    site: Site, cloud_trial_scenario: CloudTrialScenario
+) -> None:
+    """The login through the OpenID mock starts a new session."""
+    run_product_usage_collection(site)
+
+    sessions = get_cloud_trial_field(site, "sessions")
+
+    assert sessions["count"] > cloud_trial_scenario.session_count_before, sessions
+
+
+@pytest.mark.skip_if_not_edition("cloud")
+def test_cloud_trial_payload_counts_the_config_change_of_the_login_as_interactive(
+    site: Site, cloud_trial_scenario: CloudTrialScenario
+) -> None:
+    """The user who logged in through the OpenID mock changes the configuration."""
+    run_product_usage_collection(site)
+
+    audit_log = get_cloud_trial_field(site, "audit_log")
+
+    assert audit_log["interactive"]["last_entry_at"] >= cloud_trial_scenario.config_changed_at, (
+        audit_log
     )
+
+
+@pytest.mark.skip_if_not_edition("cloud")
+def test_cloud_trial_payload_counts_the_activations_of_the_automation_user_as_automation(
+    site: Site, cloud_trial_scenario: CloudTrialScenario
+) -> None:
+    """The scenario activates its changes through the REST API as the test automation user."""
+    run_product_usage_collection(site)
+
+    audit_log = get_cloud_trial_field(site, "audit_log")
+
+    assert audit_log["automation"]["last_entry_at"] >= cloud_trial_scenario.started_at, audit_log
+
+
+@pytest.fixture(scope="module")
+def cloud_trial_scenario(site: Site) -> CloudTrialScenario:
+    """Act like a Cloud trial user: log in through the OpenID mock of the Cloud test setup,
+    then change the configuration in the same session."""
+    run_product_usage_collection(site)
+    session_count_before = get_cloud_trial_field(site, "sessions")["count"]
+
+    started_at = int(time.time())
+    web = CMKWebSession(site)
+    web.get("index.py", allow_redirect_to_login=True)
+    if web.get_auth_cookie() is None:
+        raise RuntimeError("The login through the OpenID mock set no auth cookie")
+
+    config_changed_at = int(time.time())
+    try:
+        web.post(
+            f"/{site.id}/check_mk/api/1.0/domain-types/folder_config/collections/all",
+            json={"name": CLOUD_TRIAL_FOLDER, "title": CLOUD_TRIAL_FOLDER, "parent": "~"},
+        )
+    finally:
+        # Other tests count the folders, so this one must not outlive the setup.
+        if site.openapi.folders.get(f"/{CLOUD_TRIAL_FOLDER}") is not None:
+            site.openapi.folders.delete(f"/{CLOUD_TRIAL_FOLDER}")
+    site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+    return CloudTrialScenario(
+        session_count_before=session_count_before,
+        started_at=started_at,
+        config_changed_at=config_changed_at,
+    )
+
+
+@dataclass(frozen=True)
+class CloudTrialScenario:
+    session_count_before: int
+    """The number of sessions in the Cloud trial payload before the login."""
+    started_at: int
+    """Unix time in seconds before the scenario acts on the site, which runs on this host."""
+    config_changed_at: int
+    """Unix time in seconds before the logged-in user changes the configuration."""
+
+
+@pytest.fixture
+def host_with_data(request: pytest.FixtureRequest, site: Site) -> None:
+    """A host whose agent delivers data, so it has more than the default services."""
+    create_linux_test_host(request, site, CLOUD_TRIAL_HOST_WITH_DATA)
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion(CLOUD_TRIAL_HOST_WITH_DATA)
+    site.activate_changes_and_wait_for_core_reload()
+
+
+def get_cloud_trial_field(site: Site, field: str) -> Any:
+    """Return a field of the Cloud trial payload; a null field means that its collector failed."""
+    value = json.loads(get_product_usage_json_content(site))["data"][field]
+    assert value is not None, (
+        f"The {field} collector failed, log of the last collection:\n{last_collection_log(site)}"
+    )
+    return value
+
+
+def last_collection_log(site: Site) -> str:
+    """Return the product usage log from the start of the last collection, or all of it."""
+    _before, marker, last_collection = site.read_file(PRODUCT_USAGE_LOG_PATH).rpartition(
+        "Collection starts"
+    )
+    return marker + last_collection

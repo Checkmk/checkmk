@@ -32,3 +32,15 @@ def test_cab_contents(cab_archive: CabArchive) -> None:
     assert not missing, f"We are missing {','.join(missing)} from the cab"
     disallowed = _DENIED_BINARIES & basenames
     assert not disallowed, f"We have disallowed binaries {','.join(disallowed)} in the cab"
+
+
+def test_base_python_has_no_site_packages(cab_archive: CabArchive) -> None:
+    # The agent runs the venv, which does not see the base interpreter's
+    # site-packages: anything there would only ship as an unused second copy.
+    members = {m.replace("\\", "/").lstrip("/") for m in cab_archive}
+
+    base_site_packages = {m for m in members if m.lower().startswith("lib/site-packages/")} - {
+        "Lib/site-packages/README.txt"
+    }
+
+    assert not base_site_packages, f"The base python has {sorted(base_site_packages)[:5]}"

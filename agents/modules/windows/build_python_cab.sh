@@ -8,7 +8,7 @@
 #
 # Usage: build_python_cab.sh --out CAB --cab-lib FILE --python-version 3.14.7
 #            --python-tree DIR --pip-offline BIN --make-exe-wrappers BIN
-#            --pack-cab BIN --pip-requirement PIN --postinstall FILE
+#            --pack-cab BIN --postinstall FILE
 #            [--wheel WHL]... [--requirement PIN]... [--venv-script FILE]...
 #
 # Paths are relative to the exec root, the working directory.
@@ -70,7 +70,6 @@ while [ $# -gt 0 ]; do
         --pip-offline) pip_offline="$2" ;;
         --make-exe-wrappers) make_exe_wrappers="$2" ;;
         --pack-cab) pack_cab="$2" ;;
-        --pip-requirement) pip_requirement="$2" ;;
         --postinstall) postinstall="$2" ;;
         --wheel) wheels+=("$2") ;;
         --requirement) requirements+=("$2") ;;
@@ -92,14 +91,12 @@ source "$cab_lib"
 # 1. A writable copy of the extracted interpreter, and the wheels.
 cab_setup "$python_tree" "${wheels[@]}"
 
-# 2. Give the base interpreter its pip.  pip.msi has an empty File table
-# (the python.org installer bootstraps via a CustomAction msiextract can't
-# replay), so install the pinned pip wheel directly, by name, so pip
-# writes no direct_url.json pointing at build-machine paths.
-"$exec_root/$pip_offline" --wheel-dir "$WHEELDIR" --python-version "$python_version" \
-    --target "$PY_DIR/Lib/site-packages" "$pip_requirement"
+# The base interpreter gets no pip: the agent runs the venv, which does not
+# see the base site-packages, so a pip there would only ship as a second copy.
+# (pip.msi has an empty File table anyway: the python.org installer bootstraps
+# pip via a CustomAction msiextract can't replay.)
 
-# 3. Hand-construct the .venv/ tree the way production's virtualenv laid it
+# 2. Hand-construct the .venv/ tree the way production's virtualenv laid it
 # out.  Scripts/ gets a copy of the interpreter, its runtime DLLs, and the
 # stdlib extension modules (virtualenv mirrored the base DLLs/ payload so
 # the venv works even if DLL search order quirks hide the base copies).
@@ -141,7 +138,7 @@ for f in "${venv_scripts[@]}"; do
     cp "$f" "$VENV/Scripts/$(basename "$f" .tmpl)"
 done
 
-# 4. Install the locked closure into .venv/Lib/site-packages, offline.
+# 3. Install the locked closure into .venv/Lib/site-packages, offline.
 # Every name==version pin is an explicit argument, so each dist-info gets
 # a REQUESTED marker, exactly what the historic pipenv flow produced.
 "$exec_root/$pip_offline" --wheel-dir "$WHEELDIR" --python-version "$python_version" \
@@ -160,18 +157,17 @@ rm -f "$VENV/Lib/site-packages"/pip-*.dist-info/REQUESTED
     --scripts-dir "$VENV/Scripts" \
     --python-major-minor "$py_major_minor" \
     --shebang "$WRAPPER_SHEBANG" \
-    --fixup-records "$VENV/Lib/site-packages" \
-    --fixup-records "$PY_DIR/Lib/site-packages"
+    --fixup-records "$VENV/Lib/site-packages"
 if [ -d "$VENV/Lib/site-packages/bin" ]; then
     find "$VENV/Lib/site-packages/bin" -name '*.py' -exec cp {} "$VENV/Scripts/" \;
     rm -rf "$VENV/Lib/site-packages/bin"
 fi
 
-# 5. Write the production-shape pyvenv.cfg.
+# 4. Write the production-shape pyvenv.cfg.
 printf 'home = %s\nversion_info = %s\ninclude-system-site-packages = false\n' \
     "$PYVENV_HOME" "$python_version" >"$VENV/pyvenv.cfg"
 
-# 6. Strip from the base interpreter what production strips (the union of
+# 5. Strip from the base interpreter what production strips (the union of
 # clean_environment.cmd's phase-1 and phase-2 cleanups).
 for d in "${BASE_LIB_STRIP[@]}"; do
     rm -rf "$PY_DIR/Lib/$d"
@@ -186,9 +182,6 @@ done)
 # clean_environment.cmd also dels DLLs/*.ico and DLLs/*.cat, but production
 # still ships them (the forward-slash del no-ops on cmd.exe): keep them.
 rm -f "$PY_DIR/Lib/turtle.py" 2>/dev/null || true
-# The base pip's entry-point scripts land under bin/; production has no
-# base bin/ (its Scripts/ equivalent is stripped via ROOT_DIR_STRIP above).
-rm -rf "$PY_DIR/Lib/site-packages/bin" 2>/dev/null || true
 
 # Bytecode caches.
 cab_strip_bytecode
@@ -207,12 +200,12 @@ rm -rf "$VENV/Lib/tcl8.6" 2>/dev/null || true
 rm -f "$VENV/Lib/site-packages/PyWin32.chm" 2>/dev/null || true
 rm -f "$VENV/Scripts/pythonw.exe" 2>/dev/null || true
 
-# 7. Drop the agent's postinstall.cmd at the install root.  Production
+# 6. Drop the agent's postinstall.cmd at the install root.  Production
 # ships both postinstall.cmd and pyvenv.cfg with CRLF line endings.
 cp "$exec_root/$postinstall" "$PY_DIR/postinstall.cmd"
 sed -i 's/\r$//; s/$/\r/' "$PY_DIR/postinstall.cmd" "$VENV/pyvenv.cfg"
 
 cab_check_no_build_paths
 
-# 8. Pack into a cabinet via the vendored @cabarchive Python writer.
+# 7. Pack into a cabinet via the vendored @cabarchive Python writer.
 "$exec_root/$pack_cab" --root "$PY_DIR" --out "$exec_root/$out"

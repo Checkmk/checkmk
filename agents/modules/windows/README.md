@@ -161,7 +161,7 @@ python-3.cab
 |-- python3XX.dll            # XX = PYTHON_VERSION_WINDOWS's minor
 |-- DLLs/
 |-- Lib/                     # stdlib (from lib.msi); strip list mirrors clean_environment.cmd history
-|-- Lib/site-packages/pip/   # the pinned pip wheel (replaces the ensurepip bootstrap)
+|-- Lib/site-packages/       # only lib.msi's README.txt: the venv does not see it
 +-- .venv/
     |-- pyvenv.cfg           # 3-liner; home points at C:\ProgramData\checkmk\agent\modules\python-3
     |-- Scripts/             # interpreter + runtime DLL copies, stdlib .pyd mirror,
@@ -193,6 +193,10 @@ these deliberate differences:
   `.venv/Scripts` members with no MSI source and no function
   (`py.exe`/`pyw.exe`/`pyshellext.dll`, `_tkinter.pyd`, `xxlimited*.pyd`,
   `zlib1.dll`).
+- **No pip in the base interpreter.** The historic CAB had pip in both the
+  base `Lib/site-packages` and the venv. Only the venv's is of use (the venv
+  does not see the base site-packages), so the base one is gone, and with it
+  a second copy of pip's vendored certifi, urllib3, requests, ...
 
 ## Why not Wine
 

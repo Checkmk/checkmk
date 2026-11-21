@@ -11,6 +11,17 @@ import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
 
 import { useNavigation } from '@/maps/services/context'
 
+/**
+ * What the search found on a map that can step through it: how many, how many
+ * of those it can bring into view, and which one it showed last.
+ */
+export interface SearchMatches {
+  total: number
+  reachable: number
+  /** Zero-based; null until the operator steps to one. */
+  current: number | null
+}
+
 const props = defineProps<{
   modelValue: string
   placeholder?: TranslatedString
@@ -19,10 +30,44 @@ const props = defineProps<{
   // maps whose canvas fills 100%, e.g. the folder treemap, where a floating
   // overlay would cover data).
   inline?: boolean
+  /** Set by a map that counts its matches and steps through them. */
+  hits?: SearchMatches | undefined
 }>()
-const emit = defineEmits<{ 'update:modelValue': [string] }>()
+const emit = defineEmits<{
+  'update:modelValue': [string]
+  step: [direction: 1 | -1]
+}>()
 
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
+
+const matchesText = computed(() => {
+  const found = props.hits
+  if (!found || !props.modelValue.trim()) {
+    return null
+  }
+  if (found.total === 0) {
+    return _t('No matches')
+  }
+  if (found.current !== null && found.reachable === found.total) {
+    return _t('%{current} of %{total}', { current: found.current + 1, total: found.total })
+  }
+  return _tn('%{n} match', '%{n} matches', found.total, { n: found.total })
+})
+
+const matchesTitle = computed(() =>
+  props.hits && props.hits.reachable < props.hits.total
+    ? _t('Too many matches to show on the map; refine the search')
+    : _t('Enter shows the next match, Shift+Enter the previous one')
+)
+
+function onEnter(event: KeyboardEvent): void {
+  if (!props.hits?.reachable || props.hits.reachable < props.hits.total) {
+    return
+  }
+  event.preventDefault()
+  emit('step', event.shiftKey ? -1 : 1)
+}
+
 const nav = useNavigation()
 
 const operators = computed(() => {
@@ -129,7 +174,15 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
       @focus="syncDropdownFromInput"
       @input="syncDropdownFromInput"
       @keydown.escape.stop="closeDropdown"
+      @keydown.enter="onEnter"
     />
+    <span
+      v-if="matchesText"
+      class="maps-map-search__matches"
+      :title="matchesTitle"
+      aria-live="polite"
+      >{{ matchesText }}</span
+    >
     <button
       v-if="local"
       type="button"
@@ -236,6 +289,13 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 /* We render our own clear button — hide the native one to avoid a duplicate "×". */
 .maps-map-search__input::-webkit-search-cancel-button {
   display: none;
+}
+
+.maps-map-search__matches {
+  flex-shrink: 0;
+  color: var(--font-color-dimmed);
+  font-size: var(--font-size-small);
+  white-space: nowrap;
 }
 
 .maps-map-search__icon-btn {

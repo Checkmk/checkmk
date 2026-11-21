@@ -48,6 +48,9 @@ class TopologyNode(BaseModel):
     current_attempt: int = 0
     max_attempts: int = 0
     services_summary: ServicesSummary | None = None
+    # Services with a problem that nobody acknowledged and that are not in a
+    # downtime.
+    unhandled_service_problems: int = 0
 
 
 class ServiceTiming(BaseModel):

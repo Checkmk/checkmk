@@ -39,6 +39,18 @@ def test_topology_reads_a_never_checked_host_as_pending(monkeypatch: pytest.Monk
     assert host["state"] == "PENDING"
 
 
+def test_topology_reads_the_unhandled_service_problems_of_a_host(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # name, parents, state, has_been_checked, then output .. service counts
+    row: list[object] = ["web01", [], 0, 1, "", "", "", 0, 0, 0, 0, 1, 1, 1, 0, 1, 1]
+    conn = _connection(monkeypatch, [row + [5, 1, 2, 0, 0, 2]])
+
+    [host] = asyncio.run(conn.get_topology())
+
+    assert host["unhandled_service_problems"] == 2
+
+
 def test_host_services_read_a_never_checked_service_as_pending(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

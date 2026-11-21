@@ -57,6 +57,7 @@ class TopologyRow(TypedDict):
     current_attempt: NotRequired[int]
     max_attempts: NotRequired[int]
     services_summary: NotRequired[ServicesSummary | None]
+    unhandled_service_problems: NotRequired[int]
 
 
 def topology_problem_rank(row: TopologyRow) -> int:

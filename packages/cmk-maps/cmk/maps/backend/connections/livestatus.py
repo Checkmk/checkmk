@@ -1032,10 +1032,10 @@ class LivestatusConnection(ConnectionBase):
 
     @override
     async def get_topology(self) -> list[TopologyRow]:
-        # The num_services_* columns are O(1) on the hosts table (the core
-        # maintains them), so the donut summary comes for free in this single
-        # query — no separate Stats round-trip, and multisite-safe because each
-        # row is self-contained per host.
+        # Each num_services_* column counts over the host's services, one pass
+        # each; in exchange the donut summary needs no separate Stats
+        # round-trip, and stays multisite-safe because each row is
+        # self-contained per host.
         tagged = await self._query_with_site(
             "GET hosts\n"
             "Columns: name parents state has_been_checked plugin_output "
@@ -1043,7 +1043,7 @@ class LivestatusConnection(ConnectionBase):
             "state_type current_attempt max_check_attempts last_state_change "
             "notifications_enabled active_checks_enabled "
             "num_services_ok num_services_warn num_services_crit "
-            "num_services_unknown num_services_pending\n"
+            "num_services_unknown num_services_pending num_services_unhandled_problems\n"
         )
         result: list[TopologyRow] = []
         for site_id, r in tagged:
@@ -1078,6 +1078,7 @@ class LivestatusConnection(ConnectionBase):
                 "notifications_enabled": row_bool(r, 15, default=True),
                 "active_checks_enabled": row_bool(r, 16, default=True),
                 "services_summary": _services_summary_from_row(r, 17),
+                "unhandled_service_problems": row_int(r, 22),
             }
             # Federated multisite tags rows with site_id; single-site connections
             # don't, but consumers (FlowMap site umbrella, drawer aggregation)
@@ -1754,10 +1755,9 @@ class LivestatusConnection(ConnectionBase):
         """Return service-state counts per host.
 
         Reads the per-host ``num_services_{ok,warn,crit,unknown,pending}``
-        columns straight from the ``hosts`` table — Livestatus core maintains
-        them as O(1) counters, so this is a single round-trip regardless of
-        host count and multisite-safe (each row is self-contained per host;
-        sites merge by simple row concatenation).
+        columns straight from the ``hosts`` table, so this is a single
+        round-trip regardless of host count and multisite-safe (each row is
+        self-contained per host; sites merge by simple row concatenation).
         """
         if not hostnames:
             return {}

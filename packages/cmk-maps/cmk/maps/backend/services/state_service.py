@@ -1497,6 +1497,7 @@ def _hash_topology_node(n: TopologyNode) -> int:
             n.services_omitted,
             n.services_truncated_count,
             summary,
+            n.unhandled_service_problems,
             services,
         )
     )

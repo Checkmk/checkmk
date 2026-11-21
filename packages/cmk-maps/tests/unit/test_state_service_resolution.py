@@ -1423,6 +1423,16 @@ def test_topology_delta_detects_changed_volatile_field() -> None:
     assert delta.added == [] and delta.removed == []
 
 
+def test_topology_delta_resends_a_host_whose_service_problem_was_acknowledged() -> None:
+    state_service.compute_topology_delta(
+        "b1", None, [_topo_node("h1", unhandled_service_problems=1)]
+    )
+    delta = state_service.compute_topology_delta(
+        "b1", None, [_topo_node("h1", unhandled_service_problems=0)]
+    )
+    assert [n.name for n in delta.changed] == ["h1"]
+
+
 def test_topology_delta_emits_timing_patch_on_recheck_only() -> None:
     # A re-check bumps next_check/last_check/current_attempt but nothing else.
     # That must NOT mark the host as `changed` (would defeat the delta) — it

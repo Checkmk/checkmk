@@ -189,6 +189,7 @@ export function aTopologyNode(
     next_check: null,
     last_state_change: null,
     services_summary: null,
+    unhandled_service_problems: 0,
     ...overrides
   }
 }

@@ -5,7 +5,7 @@ Product usage analytics (`product_usage_analytics`)
 Introduction and goals
 =======================
 
-Checkmk can optionally collect a small set of anonymized usage data -- counts of hosts, services and folders, which check plug-ins are in use, the site's edition and version, and whether the site's Grafana connector is used -- and send it to a Checkmk-hosted analytics endpoint.
+Checkmk can optionally collect a small set of anonymized usage data -- aggregate counts and which features and integrations are in use -- and send it to a Checkmk-hosted analytics endpoint.
 This usage data lets Checkmk see which features and integrations are actually used, to prioritize development.
 The receiving endpoint lives in a separate repository (``checkmk-saas/checkmk-analytics``), outside this checkout, and is reachable from here only as a plain HTTPS endpoint; this document treats it as a black box.
 
@@ -55,7 +55,7 @@ The ``cmk-product-usage`` command-line tool (``cmk.product_usage.cli``) is the s
 A per-site cron job invokes it every 30 minutes, but a collection actually happens only about once every 30 days (7 days on a Cloud trial site) -- see `Collection and transmission`_.
 
 **Collectors.**
-Seven collectors read from Livestatus, the filesystem, and this site's own REST API: check usage (``collectors/checks.py``), site info (``collectors/site_info.py``), a previously recorded Grafana-usage snapshot (``collectors/grafana.py``), which agent updater the hosts run (``collectors/agent_updater.py``), and, on a Cloud trial site only, the audit log entries per actor class (``collectors/audit_log.py``), the user counts (``collectors/users.py``), and the number of hosts with default services only (``collectors/host_services.py``).
+The collectors under ``cmk/product_usage/collectors/`` read from Livestatus, the filesystem, and this site's own REST API.
 
 **Config and consent.**
 The config module reads the site's consent decision and HTTP-proxy setting from ``product_usage_analytics.mk``, a Checkmk global-settings file that a GUI page also reads and writes.
@@ -95,27 +95,12 @@ That schedule is staggered per site: the first run after enabling analytics pick
 Every following run is fixed at 30 days after the previous one, or 7 days on a Cloud site in trial (``create_next_ts``).
 The CLI checks whether a site is a Cloud trial (``is_cloud_trial``) once per run that collects or plans the next run, and uses that one answer for both the payload and the interval: it reads the license state only on Cloud sites, through the commercial Cloud licensing handler, and falls back to the product usage payload and the 30-day interval if that read fails.
 
-**What a due run collects:**
-
-* Site info -- Livestatus host/service counts, a folder count from walking the config directory, edition and version.
-* Per-check usage -- Livestatus's services table, keyed by check command with anything after a ``!`` stripped so check-parameter secrets are never collected.
-* Disabled-service counts -- parsed out of the discovery long-plugin-output's "Service ignored: " lines.
-* The last recorded Grafana-usage snapshot, if any.
-* Which agent updater the hosts run -- the state of the "Agent updater" item of "Analyze configuration" and its five host counts, over the hosts whose baked agent enables agent updates.
-  Only an edition with the Agent Bakery can count this, and only on a central site, and this module ships under the GPL and may not import the bakery.
-  The collector therefore asks the bakery's internal REST endpoint (``domain-types/agent/actions/updater_usage/invoke``) over this site's own REST API, authenticating with the site-internal secret as ``cmk/base/diagnostics.py`` does.
-  The numbers are counted while that request is answered, so nothing is cached or left on disk; it sends no host names.
-  Any other answer than the counts -- no Agent Bakery, a remote site, a release without the endpoint -- leaves the field ``null``.
-* On a Cloud trial site only, the audit log entries per actor class -- interactive users, automation users, and the platform (the Cloud platform's users and the site itself) -- as a count and the time of the newest entry.
-  The collector reads the current and the rotated audit logs and the GUI's user store; it sends no user IDs.
-* On a Cloud trial site only, the number of activated hosts whose only services are ``Check_MK`` and ``Check_MK Discovery``, or that have no services -- hosts that deliver no data yet.
-  The collector reads the services of each host from Livestatus's hosts table, so a host counts only after its changes are activated; it sends no host or service names.
-* On a Cloud trial site only, the number of users of the Cognito login, split into business and non-business by the domain of their email address, which is their user ID.
-  A domain on the collector's free-mail list, or a subdomain of one, is non-business; any other domain is business. No address or domain is sent.
-
+**Collection.**
+A due run calls ``collect_data()``, which runs the collectors and combines their results into the payload.
+The models in ``schema.py`` define every field, and their descriptions are the text of the manifest; this document does not repeat them.
 The result is wrapped in a ``SelfDescribingModel`` envelope (``{"metadata": {version, namespace, name}, "data": {...}}``) and stored as ``var/check_mk/product_usage/product_usage_<timestamp>.json``.
-A Cloud trial site sends ``CloudTrialPayload`` (``cloud_trial_analytics``) instead of ``ProductUsagePayload`` (``product_usage_analytics``): the same data plus trial signals; of these, only the audit log, the user counts, and the number of hosts with default services only are collected so far, the others are still ``null``.
-A trial signal whose collector fails is ``null``: the error goes to ``var/log/product_usage_analytics.log`` and the rest of the payload is sent as usual.
+A Cloud trial site sends ``CloudTrialPayload`` (``cloud_trial_analytics``) instead of ``ProductUsagePayload`` (``product_usage_analytics``): the same data plus the trial signals that ``collect_cloud_trial_data()`` adds.
+A trial signal or a field of a fail-open collector (see `Risks and technical debts`_, item 5) is ``null`` if its collector fails: the error goes to ``var/log/product_usage_analytics.log`` and the rest of the payload is sent as usual.
 
 **Transmission and retry.**
 Transmission uploads every stored file, oldest first, and deletes a file only once its POST gets a successful response, so a failed upload's file survives to be retried.
@@ -130,7 +115,8 @@ This section covers the technical side.
 
 **Code changes.**
 Add the new field to ``ProductUsageData`` in ``cmk/product_usage/schema.py``, gather it in a collector under ``cmk/product_usage/collectors/`` (a new module, or an existing one if it fits), and wire the result into ``collect_data()`` in ``cmk/product_usage/collection.py``.
-A Cloud trial signal goes into ``CloudTrialPayload`` instead and is wired into ``collect_cloud_trial_data()``; catch its collector's errors there, as ``_collect_audit_log()`` does, so that one failing trial signal does not stop the payload.
+A Cloud trial signal goes into ``CloudTrialPayload`` instead and is wired into ``collect_cloud_trial_data()``.
+Catch the new collector's errors where it is wired in, log them, and leave its field ``null``, so that one failing data point does not stop the payload.
 Keep the same sanitization discipline the existing collectors apply -- no hostnames, paths, service instance names, or check-command arguments, per the `Requirements overview`_.
 Every field needs a ``description`` and at least one entry in ``examples``; ``tests/unit/cmk/product_usage/test_manifest.py`` fails otherwise.
 The description is the text admins read on the manifest page, so write it for admins, not developers.
@@ -173,7 +159,7 @@ Use class ``feature`` and component ``wato``, like the other product usage analy
 A collector runs synchronously inside ``cmk-product-usage --cron`` and inside the admin download page request.
 A new collector must finish within a low single-digit number of seconds on a large site.
 Prefer Livestatus queries and data that already exists on disk, and do not call external services.
-The agent updater collector calls this site's own REST API over ``localhost``, which is not an external service but does make it the only collector that needs Apache to be running; take that route only for a data point that a GPL module cannot compute itself.
+A collector that calls this site's own REST API over ``localhost`` does not call an external service, but it needs Apache to be running; take that route only for a data point that a GPL module cannot compute itself.
 The collector sees only the local site; in a distributed setup each site sends its own data.
 Keep additions small: single values (counts, booleans, versions) are fine, and a list or map is fine if its length depends on what Checkmk ships (check plug-ins, rulesets, features), never on the site's configuration (hosts, services, rules, users).
 For orientation, the payload is about 5--30 KB today, almost all of it the per-plug-in ``checks`` map; a new data point should not noticeably change that.
@@ -231,7 +217,8 @@ Risks and technical debts
 5. Collection is not fail-open: ``collect_data()`` calls all collectors in one step, and an exception in any of them aborts the run.
    Nothing is stored or uploaded in that run, including files left over from earlier failed uploads, and the next run is not planned, so every cron run (every 30 minutes) tries again until the error is gone.
    The intended design is fail-open: a failure while gathering one data point must not prevent collecting and sending the others.
-   New collectors are built that way from now on; the agent updater collector is the first one whose errors ``collect_data()`` catches, leaving its field ``null``.
+   New collectors must be built that way: ``collect_data()`` catches their errors and leaves their field ``null``.
+   Not all collectors are built that way yet.
 6. The audit log collector classifies users by rules of thumb.
    The Cloud platform's user IDs are fixed (``api_user``, ``agent_registration``), so the entries of a different registration user for the preconfigured agent count as automation.
    A deleted user counts as interactive only if its ID is an email address, like a Cognito user's ID; otherwise it counts as automation.

@@ -36,8 +36,12 @@ DEFAULT_PARAMS = {
     "active_spot_fleet_requests": DEFAULT_LEVELS,
     "spot_fleet_total_target_capacity": DEFAULT_LEVELS,
     "running_ondemand_instances_total": DEFAULT_LEVELS,
-    "running_ondemand_instances": default_running_ondemand_instances,
-    "running_ondemand_instances_vcpus": default_running_ondemand_instance_families,
+    # Can't use default_running_ondemand_instances because building the ruleset
+    # preview takes too long and times out.
+    "running_ondemand_instances": [],
+    # Can't use default_running_ondemand_instance_families because building the
+    # ruleset preview takes too long and times out.
+    "running_ondemand_instances_vcpus": [],
     "unknown_instance_types_state": int(State.WARN),
 }
 

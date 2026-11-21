@@ -9,6 +9,8 @@ from pathlib import Path
 import pytest
 
 import cmk.product_usage.collectors.user_stats as user_stats_collector
+from cmk.product_usage.collectors.user_store import load_users_with_profiles
+from cmk.product_usage.schema import UsersData
 
 NOW = 1767700800
 DAY = 86400
@@ -28,6 +30,12 @@ def fixture_profile_dir(tmp_path: Path) -> Path:
     return profile_dir
 
 
+def _collect(config_dir: Path, profile_dir: Path) -> UsersData:
+    return user_stats_collector.collect(
+        load_users_with_profiles(config_dir, profile_dir), config_dir, NOW
+    )
+
+
 def _write_users(config_dir: Path, users: Mapping[str, Mapping[str, object]]) -> None:
     (config_dir / "multisite.d" / "wato" / "users.mk").write_text(f"multisite_users = {users!r}\n")
 
@@ -44,7 +52,7 @@ def _write_profile_file(profile_dir: Path, user_id: str, name: str, value: objec
 
 
 def test_collect_without_users_file(config_dir: Path, profile_dir: Path) -> None:
-    data = user_stats_collector.collect(config_dir, profile_dir, NOW)
+    data = _collect(config_dir, profile_dir)
 
     assert data["humans"] == {
         "total": 0,
@@ -67,7 +75,7 @@ def test_collect_separates_automation_users(config_dir: Path, profile_dir: Path)
     # Users created before 2.4 only have the secret
     _write_profile_file(profile_dir, "agent_registration", "automation.secret", "secret")
 
-    data = user_stats_collector.collect(config_dir, profile_dir, NOW)
+    data = _collect(config_dir, profile_dir)
 
     assert (data["humans"]["total"], data["humans"]["by_role"]) == (1, {"admin": 1})
     assert (data["automation"]["total"], data["automation"]["by_role"]) == (
@@ -85,7 +93,7 @@ def test_collect_counts_custom_roles_as_custom(config_dir: Path, profile_dir: Pa
         },
     )
 
-    data = user_stats_collector.collect(config_dir, profile_dir, NOW)
+    data = _collect(config_dir, profile_dir)
 
     assert data["humans"]["by_role"] == {"user": 1, "custom": 1, "guest": 1}
 
@@ -101,7 +109,7 @@ def test_collect_reports_connector_type_not_id(config_dir: Path, profile_dir: Pa
     )
     _write_connections(config_dir, [{"id": "corp_example_com", "type": "ldap"}])
 
-    data = user_stats_collector.collect(config_dir, profile_dir, NOW)
+    data = _collect(config_dir, profile_dir)
 
     assert data["humans"]["by_connector_type"] == {"htpasswd": 1, "ldap": 1, "unknown": 1}
 
@@ -147,6 +155,28 @@ def test_collect_counts_activity_from_sessions_and_logins(
         {"auth_type": "bearer", "timestamp": NOW - 40 * DAY, "remote_address": "127.0.0.1"},
     )
 
-    data = user_stats_collector.collect(config_dir, profile_dir, NOW)
+    data = _collect(config_dir, profile_dir)
 
     assert data["humans"]["active"] == {"24h": 1, "7d": 2, "30d": 3}
+
+
+@pytest.mark.parametrize(
+    "filename",
+    [
+        pytest.param("last_login.mk", id="last login"),
+        pytest.param("session_info.mk", id="sessions"),
+    ],
+)
+def test_collect_counts_user_with_unreadable_activity_as_inactive(
+    config_dir: Path, profile_dir: Path, filename: str
+) -> None:
+    _write_users(config_dir, {"jane": {"roles": ["user"]}})
+    (profile_dir / "jane").mkdir()
+    (profile_dir / "jane" / filename).write_text("{")
+
+    data = _collect(config_dir, profile_dir)
+
+    assert (data["humans"]["total"], data["humans"]["active"]) == (
+        1,
+        {"24h": 0, "7d": 0, "30d": 0},
+    )

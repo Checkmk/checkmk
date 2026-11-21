@@ -125,6 +125,21 @@ def test_existing_automation_user_is_automation(tmp_path: Path) -> None:
     )
 
 
+def test_automation_user_created_before_2_4_is_automation(tmp_path: Path) -> None:
+    write_user_store(tmp_path, {"ansible": {"connector": "htpasswd"}})
+    # Before 2.4, the automation secret was the only indicator of an automation user
+    secret = tmp_path / "web/ansible/automation.secret"
+    secret.parent.mkdir(parents=True)
+    secret.write_text("secret")
+    _write_audit_log(
+        tmp_path / "wato/log/wato_audit.log", [_Entry(user_id="ansible", time=1767790000)]
+    )
+
+    audit_log = _collect(tmp_path)
+
+    assert audit_log.automation == AuditLogActorClass(entries=1, last_entry_at=1767790000)
+
+
 def test_platform_user_is_platform_also_when_it_is_an_automation_user(tmp_path: Path) -> None:
     write_user_store(tmp_path, {"api_user": {"connector": "htpasswd"}})
     _write_automation_user_flag(tmp_path, "api_user")

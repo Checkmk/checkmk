@@ -8,8 +8,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from cmk.ccc import store
-from cmk.product_usage.collectors.user_store import load_users
+from cmk.product_usage.collectors.user_store import is_automation_user, load_users
 from cmk.product_usage.schema import AuditLog, AuditLogActorClass
 
 # The audit log writes this user ID for pseudo users and for actions without a user.
@@ -23,7 +22,7 @@ def collect(
     platform_user_ids: frozenset[str],
 ) -> AuditLog:
     users = frozenset(load_users(default_config_dir))
-    automation_users = frozenset(u for u in users if _is_automation_user(var_dir, u))
+    automation_users = frozenset(u for u in users if is_automation_user(var_dir / "web" / u))
     interactive, automation, platform = _Tally(), _Tally(), _Tally()
     for user_id, time in _read_entries(var_dir / "wato/log"):
         if user_id == _NO_USER or user_id in platform_user_ids:
@@ -78,10 +77,3 @@ def _parse(line: str) -> tuple[str, int] | None:
             return user_id, time
         case _:
             return None
-
-
-def _is_automation_user(var_dir: Path, user_id: str) -> bool:
-    flag = store.load_object_from_file(
-        var_dir / "web" / user_id / "automation_user.mk", default=False
-    )
-    return flag is True

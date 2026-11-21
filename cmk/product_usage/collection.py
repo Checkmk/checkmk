@@ -15,6 +15,7 @@ import cmk.product_usage.collectors.inventory as inventory_collector
 import cmk.product_usage.collectors.site_info as site_info_collector
 import cmk.product_usage.collectors.user_stats as user_stats_collector
 import cmk.product_usage.collectors.users as users_collector
+from cmk.product_usage.collectors.user_store import load_users_with_profiles
 from cmk.product_usage.schema import (
     AuditLog,
     CloudTrialPayload,
@@ -45,7 +46,9 @@ def collect_data(
         cmk_version=site_info.cmk_version,
         os=site_info.os,
         checks=checks_collector.collect(),
-        users=user_stats_collector.collect(default_config_dir, var_dir / "web", now),
+        users=user_stats_collector.collect(
+            load_users_with_profiles(default_config_dir, var_dir / "web"), default_config_dir, now
+        ),
         inventory=inventory_collector.collect(),
         grafana=grafana_collector.collect(var_dir),
     )

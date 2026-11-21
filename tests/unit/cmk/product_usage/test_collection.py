@@ -8,9 +8,10 @@ import uuid
 from pathlib import Path
 
 import pytest
+from pytest_mock import MockerFixture, MockType
 
 from cmk.livestatus_client import MKLivestatusSocketError
-from cmk.product_usage.collection import collect_cloud_trial_data
+from cmk.product_usage.collection import collect_cloud_trial_data, collect_data
 from cmk.product_usage.collectors.host_services import ServicesPerHostReader
 from cmk.product_usage.schema import (
     AuditLog,
@@ -166,6 +167,105 @@ def test_cloud_trial_payload_carries_the_product_usage_data(tmp_path: Path) -> N
 
     assert payload.model_dump(include=set(ProductUsagePayload.model_fields)) == (
         _product_usage_payload().model_dump()
+    )
+
+
+@pytest.fixture(name="mock_checkmk_info")
+def fixture_mock_checkmk_info(mocker: MockerFixture) -> None:
+    """The edition and version, which are read from the installed version tree"""
+    mocker.patch(
+        "cmk.ccc.version_info.get_general_version_infos",
+        return_value={"version": "2.5.0p1", "edition": "pro", "os": "Ubuntu 24.04.3 LTS"},
+    )
+
+
+@pytest.mark.usefixtures("mock_checkmk_info")
+def test_payload_has_no_distributed_monitoring_role_when_the_site_config_is_broken(
+    tmp_path: Path, local_connection: MockType
+) -> None:
+    (tmp_path / "distributed_wato.mk").write_text("is_wato_slave_site = True\n")
+    (tmp_path / "multisite.d").mkdir()
+    (tmp_path / "multisite.d" / "sites.mk").write_text("sites.update({\n")
+
+    payload = _collect_product_usage(tmp_path, local_connection)
+
+    assert payload.distributed_monitoring is None
+    assert (payload.count_hosts, payload.count_services, payload.checks) == (10, 20, {})
+
+
+@pytest.mark.usefixtures("mock_checkmk_info")
+def test_payload_has_no_languages_when_the_locale_dir_is_unreadable(
+    tmp_path: Path, local_connection: MockType
+) -> None:
+    locale_dir = tmp_path / "locale"
+    locale_dir.write_text("")
+
+    payload = _collect_product_usage(tmp_path, local_connection, locale_dir=locale_dir)
+
+    assert payload.languages is None
+    assert (payload.count_hosts, payload.count_services, payload.checks) == (10, 20, {})
+
+
+@pytest.mark.usefixtures("mock_checkmk_info")
+def test_payload_has_no_users_and_no_languages_when_the_user_store_is_corrupt(
+    tmp_path: Path, local_connection: MockType
+) -> None:
+    _write_corrupt_user_store(tmp_path)
+
+    payload = _collect_product_usage(tmp_path, local_connection)
+
+    assert (payload.users, payload.languages) == (None, None)
+    assert (payload.count_hosts, payload.count_services, payload.checks) == (10, 20, {})
+
+
+@pytest.mark.usefixtures("mock_checkmk_info")
+def test_corrupt_user_store_logs_the_error_of_the_users(
+    tmp_path: Path, local_connection: MockType, caplog: pytest.LogCaptureFixture
+) -> None:
+    _write_corrupt_user_store(tmp_path)
+
+    _collect_product_usage(tmp_path, local_connection)
+
+    assert (
+        "ERROR",
+        "Could not read the users, sending no user counts and no languages",
+        True,
+    ) in [
+        (record.levelname, record.getMessage(), record.exc_info is not None)
+        for record in caplog.records
+    ]
+
+
+@pytest.mark.usefixtures("mock_checkmk_info")
+def test_payload_has_no_users_but_languages_when_the_users_cannot_be_counted(
+    tmp_path: Path, local_connection: MockType
+) -> None:
+    write_user_store(tmp_path, {"alice": {"roles": "admin"}})
+
+    payload = _collect_product_usage(tmp_path, local_connection)
+
+    assert payload.users is None
+    assert payload.languages is not None
+
+
+def _collect_product_usage(
+    site_dir: Path, local_connection: MockType, *, locale_dir: Path | None = None
+) -> ProductUsagePayload:
+    """Collect the product usage data of a test site: 10 hosts, 20 services, nothing else
+
+    The four Livestatus answers are the site status, the services, the disabled services
+    and the hosts with inventory data, in the order 'collect_data' asks for them.
+    """
+    local_connection.query.side_effect = [[[10, 20]], [], [], []]
+    (site_dir / "wato").mkdir(parents=True, exist_ok=True)
+
+    return collect_data(
+        site_dir,
+        site_dir,
+        site_dir,
+        site_dir,
+        locale_dir or site_dir / "locale",
+        logging.getLogger(__name__),
     )
 
 

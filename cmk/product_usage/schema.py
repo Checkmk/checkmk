@@ -167,6 +167,82 @@ class InventoryData(pydantic.BaseModel):
     )
 
 
+class DistributedMonitoring(pydantic.BaseModel):
+    is_remote_setup_site: bool = pydantic.Field(
+        description=(
+            "True if the site is a remote site of a distributed monitoring setup that the"
+            " central site configures. Its users and configuration then come from the central"
+            " site. False on standalone and central sites, and on remote sites that are"
+            " connected for monitoring only. A site that was removed from a distributed"
+            " monitoring setup and has not become a central site still reports true."
+        ),
+        examples=[False],
+    )
+
+
+class LanguageCounts(pydantic.BaseModel):
+    count_per_language: dict[str, int] = pydantic.Field(
+        description=(
+            "The number of users per user interface language in use, by language code:"
+            " the language set in the user's profile, or the default language if the profile"
+            ' sets none. Languages that Checkmk does not ship are counted as "custom".'
+        ),
+        examples=[{"de": 3, "en": 2}],
+    )
+    count_with_default_language: int = pydantic.Field(
+        description=(
+            "The number of these users whose profile sets no language, so that they use the"
+            " default language."
+        ),
+        examples=[1],
+    )
+
+
+class UserLanguages(pydantic.BaseModel):
+    active: LanguageCounts = pydantic.Field(
+        description=(
+            "Users who logged in to the user interface or the REST API of this site, or used"
+            " the user interface, in the last 30 days: the users that users.humans.active"
+            " counts for 30 days."
+        ),
+        examples=[{"count_per_language": {"de": 3, "en": 2}, "count_with_default_language": 1}],
+    )
+    inactive: LanguageCounts = pydantic.Field(
+        description=(
+            "Users who did not log in to the user interface or the REST API of this site, nor"
+            " use the user interface, in the last 30 days."
+        ),
+        examples=[{"count_per_language": {"en": 4}, "count_with_default_language": 2}],
+    )
+
+
+class Languages(pydantic.BaseModel):
+    default_language: str = pydantic.Field(
+        description=(
+            "The default language of the user interface, as a language code."
+            ' A language that Checkmk does not ship is reported as "custom".'
+        ),
+        examples=["en"],
+    )
+    users: UserLanguages = pydantic.Field(
+        description=(
+            "The user interface languages in use by interactive users, split into active and"
+            " inactive users. Automation users are not counted."
+            " On a remote site that the central site configures, the users are copied from the"
+            " central site (see distributed_monitoring.is_remote_setup_site)."
+        ),
+        examples=[
+            {
+                "active": {
+                    "count_per_language": {"de": 3, "en": 2},
+                    "count_with_default_language": 1,
+                },
+                "inactive": {"count_per_language": {"en": 4}, "count_with_default_language": 2},
+            }
+        ],
+    )
+
+
 class Metadata(typing.TypedDict):
     version: str
     namespace: str
@@ -224,7 +300,11 @@ class SiteInfo(pydantic.BaseModel):
         examples=[4500],
     )
     count_folders: int = pydantic.Field(
-        description="The number of folders on the site. Names and paths are never collected.",
+        description=(
+            "The number of folders on the site. Names and paths are never collected."
+            " On a remote site that the central site configures, the folders are copied from the"
+            " central site (see distributed_monitoring.is_remote_setup_site)."
+        ),
         examples=[15],
     )
     edition: str = pydantic.Field(
@@ -266,6 +346,8 @@ class ProductUsageData(SiteInfo):
         description=(
             "Counts of the users configured on the site. User names, aliases, email addresses"
             " and other user attributes are never collected."
+            " On a remote site that the central site configures, the users are copied from the"
+            " central site (see distributed_monitoring.is_remote_setup_site)."
         ),
         examples=[
             {
@@ -288,6 +370,30 @@ class ProductUsageData(SiteInfo):
         default=None,
         description="Usage of the HW/SW Inventory.",
         examples=[{"hosts_with_inventory": 150}],
+    )
+    distributed_monitoring: DistributedMonitoring | None = pydantic.Field(
+        default=None,
+        description="The role of the site in a distributed monitoring setup.",
+        examples=[{"is_remote_setup_site": False}],
+    )
+    languages: Languages | None = pydantic.Field(
+        default=None,
+        description=(
+            "The languages of the user interface: the default language of the site and the number"
+            " of active and inactive users per language in use. User names are never collected."
+        ),
+        examples=[
+            {
+                "default_language": "en",
+                "users": {
+                    "active": {
+                        "count_per_language": {"de": 3, "en": 2},
+                        "count_with_default_language": 1,
+                    },
+                    "inactive": {"count_per_language": {"en": 4}, "count_with_default_language": 2},
+                },
+            }
+        ],
     )
     grafana: GrafanaUsageData | None = pydantic.Field(
         default=None,

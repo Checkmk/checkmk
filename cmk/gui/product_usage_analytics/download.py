@@ -29,6 +29,7 @@ class PageDownloadProductUsage(Page):
             paths.check_mk_config_dir,
             paths.default_config_dir,
             paths.omd_root,
+            paths.locale_dir,
             logger,
         )
 

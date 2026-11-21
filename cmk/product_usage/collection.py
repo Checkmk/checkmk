@@ -5,22 +5,28 @@
 
 import logging
 import time
+from collections.abc import Sequence
 from pathlib import Path
 
 import cmk.product_usage.collectors.audit_log as audit_log_collector
 import cmk.product_usage.collectors.checks as checks_collector
+import cmk.product_usage.collectors.distributed_monitoring as distributed_monitoring_collector
 import cmk.product_usage.collectors.grafana as grafana_collector
 import cmk.product_usage.collectors.host_services as host_services_collector
 import cmk.product_usage.collectors.inventory as inventory_collector
+import cmk.product_usage.collectors.languages as languages_collector
 import cmk.product_usage.collectors.site_info as site_info_collector
 import cmk.product_usage.collectors.user_stats as user_stats_collector
 import cmk.product_usage.collectors.users as users_collector
-from cmk.product_usage.collectors.user_store import load_users_with_profiles
+from cmk.product_usage.collectors.user_store import load_users_with_profiles, StoredUser
 from cmk.product_usage.schema import (
     AuditLog,
     CloudTrialPayload,
+    DistributedMonitoring,
+    Languages,
     ProductUsagePayload,
     UserCount,
+    UsersData,
 )
 
 
@@ -29,12 +35,14 @@ def collect_data(
     cmk_config_dir: Path,
     default_config_dir: Path,
     omd_root: Path,
+    locale_dir: Path,
     logger: logging.Logger,
 ) -> ProductUsagePayload:
     logger.info("Collection starts")
 
     now = int(time.time())
     site_info = site_info_collector.collect(cmk_config_dir, var_dir, omd_root)
+    users = _load_users(default_config_dir, var_dir, logger)
 
     return ProductUsagePayload(
         timestamp=now,
@@ -46,12 +54,70 @@ def collect_data(
         cmk_version=site_info.cmk_version,
         os=site_info.os,
         checks=checks_collector.collect(),
-        users=user_stats_collector.collect(
-            load_users_with_profiles(default_config_dir, var_dir / "web"), default_config_dir, now
-        ),
+        users=_collect_users(users, default_config_dir, now, logger),
         inventory=inventory_collector.collect(),
+        distributed_monitoring=_collect_distributed_monitoring(
+            default_config_dir, cmk_config_dir, logger
+        ),
+        languages=_collect_languages(users, default_config_dir, locale_dir, now, logger),
         grafana=grafana_collector.collect(var_dir),
     )
+
+
+def _collect_distributed_monitoring(
+    default_config_dir: Path, cmk_config_dir: Path, logger: logging.Logger
+) -> DistributedMonitoring | None:
+    try:
+        return distributed_monitoring_collector.collect(
+            default_config_dir=default_config_dir, cmk_config_dir=cmk_config_dir
+        )
+    except Exception:
+        logger.exception("Could not determine the distributed monitoring role, sending none")
+        return None
+
+
+def _load_users(
+    default_config_dir: Path, var_dir: Path, logger: logging.Logger
+) -> Sequence[StoredUser] | None:
+    """Read the users once for the user counts and the languages, both are lost if this fails"""
+    try:
+        return load_users_with_profiles(default_config_dir, var_dir / "web")
+    except Exception:
+        logger.exception("Could not read the users, sending no user counts and no languages")
+        return None
+
+
+def _collect_users(
+    users: Sequence[StoredUser] | None,
+    default_config_dir: Path,
+    now: int,
+    logger: logging.Logger,
+) -> UsersData | None:
+    if users is None:
+        return None
+    try:
+        return user_stats_collector.collect(users, default_config_dir, now)
+    except Exception:
+        logger.exception("Could not count the users, sending no user counts")
+        return None
+
+
+def _collect_languages(
+    users: Sequence[StoredUser] | None,
+    default_config_dir: Path,
+    locale_dir: Path,
+    now: int,
+    logger: logging.Logger,
+) -> Languages | None:
+    if users is None:
+        return None
+    try:
+        return languages_collector.collect(
+            users, default_config_dir=default_config_dir, locale_dir=locale_dir, now=now
+        )
+    except Exception:
+        logger.exception("Could not collect the languages, sending no languages")
+        return None
 
 
 def store_data(data: ProductUsagePayload, var_dir: Path) -> None:

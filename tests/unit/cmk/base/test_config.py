@@ -36,7 +36,7 @@ from cmk.base.configlib.servicename import (
 from cmk.base.notify import make_notification_parameters_config
 from cmk.ccc import store
 from cmk.ccc.config_path import VersionedConfigPath
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.version import Edition
 from cmk.checkengine import agent_protocol
@@ -224,6 +224,149 @@ def test_all_active_hosts(monkeypatch: MonkeyPatch) -> None:
         for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
         if config_cache.is_active(hn) and config_cache.is_online(hn)
     } == {HostName("cluster1"), HostName("cluster3"), HostName("real1"), HostName("real3")}
+
+
+def _hostlist_scenario() -> Scenario:
+    ts = Scenario(site_id="site1")
+    ts.add_host(HostName("lan1"))
+    ts.add_host(HostName("lan2"))
+    ts.add_host(HostName("wan1"), tags={TagGroupID("networking"): TagID("wan")})
+    ts.add_host(
+        HostName("wan-test"),
+        tags={TagGroupID("networking"): TagID("wan"), TagGroupID("criticality"): TagID("test")},
+    )
+    return ts
+
+
+def _parse_hostname_list(
+    loading_result: config.LoadingResult,
+    args: Sequence[str],
+    with_clusters: bool = True,
+    with_foreign_hosts: bool = False,
+) -> Sequence[HostName]:
+    return config.parse_hostname_list(
+        loading_result.config_cache,
+        loading_result.hosts_config,
+        loading_result.host_tags,
+        args,
+        with_clusters=with_clusters,
+        with_foreign_hosts=with_foreign_hosts,
+    )
+
+
+def test_parse_hostname_list_keeps_host_names_in_given_order(monkeypatch: MonkeyPatch) -> None:
+    loading_result = _hostlist_scenario().apply(monkeypatch)
+
+    hostlist = _parse_hostname_list(loading_result, ["wan1", "lan1"])
+
+    assert hostlist == [HostName("wan1"), HostName("lan1")]
+
+
+@pytest.mark.parametrize("arg", ["@wan", "wan"])
+def test_parse_hostname_list_selects_hosts_by_tag(monkeypatch: MonkeyPatch, arg: str) -> None:
+    loading_result = _hostlist_scenario().apply(monkeypatch)
+
+    hostlist = _parse_hostname_list(loading_result, [arg])
+
+    assert sorted(hostlist) == [HostName("wan-test"), HostName("wan1")]
+
+
+def test_parse_hostname_list_requires_all_comma_separated_tags(monkeypatch: MonkeyPatch) -> None:
+    loading_result = _hostlist_scenario().apply(monkeypatch)
+
+    hostlist = _parse_hostname_list(loading_result, ["@wan,test"])
+
+    assert hostlist == [HostName("wan-test")]
+
+
+@pytest.mark.parametrize(
+    "arg, expected",
+    [
+        pytest.param("lan", [HostName("lan")], id="host name wins over tag"),
+        pytest.param(
+            "@lan", [HostName("lan"), HostName("lan1"), HostName("lan2")], id="@ forces tag"
+        ),
+    ],
+)
+def test_parse_hostname_list_at_prefix_disambiguates_host_name_and_tag(
+    monkeypatch: MonkeyPatch, arg: str, expected: Sequence[HostName]
+) -> None:
+    ts = _hostlist_scenario()
+    ts.add_host(HostName("lan"))
+    loading_result = ts.apply(monkeypatch)
+
+    hostlist = _parse_hostname_list(loading_result, [arg])
+
+    assert sorted(hostlist) == expected
+
+
+@pytest.mark.parametrize("arg", ["unknown-host", "@dmz"])
+def test_parse_hostname_list_rejects_spec_without_match(monkeypatch: MonkeyPatch, arg: str) -> None:
+    loading_result = _hostlist_scenario().apply(monkeypatch)
+
+    with pytest.raises(MKBailOut, match="does not match any host"):
+        _parse_hostname_list(loading_result, [arg])
+
+
+@pytest.mark.parametrize(
+    "with_clusters, expected",
+    [
+        pytest.param(True, [HostName("cluster1"), HostName("lan1")], id="with clusters"),
+        pytest.param(False, [HostName("lan1")], id="without clusters"),
+    ],
+)
+def test_parse_hostname_list_includes_clusters_on_request(
+    monkeypatch: MonkeyPatch, with_clusters: bool, expected: Sequence[HostName]
+) -> None:
+    ts = Scenario(site_id="site1")
+    ts.add_host(HostName("lan1"))
+    ts.add_cluster(HostName("cluster1"), nodes=[HostName("lan1")])
+    loading_result = ts.apply(monkeypatch)
+
+    hostlist = _parse_hostname_list(loading_result, ["@lan"], with_clusters=with_clusters)
+
+    assert sorted(hostlist) == expected
+
+
+@pytest.mark.parametrize(
+    "with_foreign_hosts, expected",
+    [
+        pytest.param(True, [HostName("foreign"), HostName("local")], id="with foreign hosts"),
+        pytest.param(False, [HostName("local")], id="without foreign hosts"),
+    ],
+)
+def test_parse_hostname_list_includes_other_sites_hosts_on_request(
+    monkeypatch: MonkeyPatch, with_foreign_hosts: bool, expected: Sequence[HostName]
+) -> None:
+    ts = Scenario(site_id="site1")
+    ts.add_host(HostName("local"))
+    ts.add_host(HostName("foreign"), tags={TagGroupID("site"): TagID("site2")})
+    loading_result = ts.apply(monkeypatch)
+
+    hostlist = _parse_hostname_list(loading_result, ["@lan"], with_foreign_hosts=with_foreign_hosts)
+
+    assert sorted(hostlist) == expected
+
+
+def test_parse_hostname_list_skips_offline_hosts(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario(site_id="site1")
+    ts.set_ruleset(
+        "only_hosts",
+        [
+            {
+                "id": "01",
+                "condition": {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("offline")}}},
+                "value": True,
+            },
+        ],
+    )
+    ts.add_host(HostName("online"))
+    ts.add_host(HostName("offline"), tags={TagGroupID("criticality"): TagID("offline")})
+    loading_result = ts.apply(monkeypatch)
+
+    hostlist = _parse_hostname_list(loading_result, ["@lan"])
+
+    assert hostlist == [HostName("online")]
 
 
 @pytest.mark.parametrize(

@@ -75,7 +75,7 @@ import {
   refreshNodes
 } from '@/maps/map/flow/paint'
 import type { HostLayout, MapElement, ServiceLayout, TopologyNode } from '@/maps/types/api'
-import { objectAriaLabel } from '@/maps/utils/objectAria'
+import { objectAriaLabel, stateWordFromToken } from '@/maps/utils/objectAria'
 import { MAX_PULSES } from '@/maps/utils/problemState'
 import { sameValues } from '@/maps/utils/stableRecords'
 import { stateColorVar } from '@/maps/utils/stateColors'
@@ -399,10 +399,18 @@ function render(hits?: Set<string>): void {
     halo: model.hostHalo,
     donutSegments: (node) => node.foldStates ?? (node.topo ? model.donutSegments(node.topo) : []),
     badges: (node) => model.commandMarkers(_t, node),
-    ariaLabel: (node) =>
-      node.nodeType === 'fold'
-        ? foldTitle(node)
-        : objectAriaLabel(_t, model.mapElementFromFNode(node), stateNameOf(node)),
+    ariaLabel: (node) => {
+      if (node.nodeType === 'fold') {
+        return foldTitle(node)
+      }
+      if (node.nodeType === 'site') {
+        return _t('Site %{site}, %{state}', {
+          site: headName(node),
+          state: stateWordFromToken(_t, stateNameOf(node))
+        })
+      }
+      return objectAriaLabel(_t, model.mapElementFromFNode(node), stateNameOf(node))
+    },
     moreLabel: (count) => _tn('+%{n} more', '+%{n} more', count, { n: count }),
     foldLabel
   })

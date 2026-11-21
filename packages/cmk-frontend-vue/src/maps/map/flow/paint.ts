@@ -185,25 +185,12 @@ function drawSiteNode(enter: NodeSelection): void {
     .style('stroke-width', 1.5)
   enter
     .append('text')
-    .attr('class', flowClass.glyph)
-    .attr('text-anchor', 'middle')
-    .attr('dominant-baseline', 'central')
-    .style('font-size', px(9))
-    .attr('font-weight', '600')
-    .style('letter-spacing', '0.08em')
-    .attr('pointer-events', 'none')
-    .attr('y', -8)
-    .style('fill', 'var(--font-color-dimmed)')
-    .text('SITE')
-  enter
-    .append('text')
     .attr('class', flowClass.label)
     .attr('text-anchor', 'middle')
     .attr('dominant-baseline', 'central')
     .style('font-size', px(13))
     .attr('font-weight', '700')
     .attr('pointer-events', 'none')
-    .attr('y', 6)
     .style('fill', 'var(--font-color)')
 }
 
@@ -433,14 +420,14 @@ export function refreshNodes(merge: NodeSelection, visuals: NodeVisuals): void {
     const halo = visuals.halo(node)
     group.style.setProperty(HALO_COLOR_PROPERTY, halo.stroke)
     group.style.setProperty(HALO_WIDTH_PROPERTY, String(halo.width))
-    // The glow hangs on the group too, so the worst hosts stay unmissable even
-    // fitted to screen, where a stroke width collapses to under a screen pixel.
-    if (visuals.isWorst(node)) {
-      group.setAttribute('filter', `url(#${visuals.glowFilter})`)
-    } else {
-      group.removeAttribute('filter')
-    }
   })
+  // The glow keeps the worst hosts unmissable even fitted to screen, where a
+  // stroke width collapses to under a screen pixel. It hangs on the circle and
+  // its ring, not the group, which would blur the host's name too.
+  const glow = (node: FNode): string | null =>
+    visuals.isWorst(node) ? `url(#${visuals.glowFilter})` : null
+  hosts.select('circle').attr('filter', glow)
+  hosts.select(`g.${flowClass.donut}`).attr('filter', glow)
   refreshDonuts(merge.filter(isHostShaped), visuals)
   refreshBadges(merge.filter(isKind('host', 'service')), visuals.badges)
 }

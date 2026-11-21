@@ -300,6 +300,25 @@ def test_parse_hostname_list_at_prefix_disambiguates_host_name_and_tag(
     assert sorted(hostlist) == expected
 
 
+def test_parse_hostname_list_repeats_hosts_matched_by_several_args(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    # Pins current behavior: duplicates are not removed.
+    loading_result = _hostlist_scenario().apply(monkeypatch)
+
+    hostlist = _parse_hostname_list(loading_result, ["lan1", "@lan"])
+
+    assert sorted(hostlist) == [HostName("lan1"), HostName("lan1"), HostName("lan2")]
+
+
+def test_parse_hostname_list_crashes_on_empty_arg(monkeypatch: MonkeyPatch) -> None:
+    # Pins current behavior: the empty string is not handled.
+    loading_result = _hostlist_scenario().apply(monkeypatch)
+
+    with pytest.raises(IndexError):
+        _parse_hostname_list(loading_result, [""])
+
+
 @pytest.mark.parametrize("arg", ["unknown-host", "@dmz"])
 def test_parse_hostname_list_rejects_spec_without_match(monkeypatch: MonkeyPatch, arg: str) -> None:
     loading_result = _hostlist_scenario().apply(monkeypatch)

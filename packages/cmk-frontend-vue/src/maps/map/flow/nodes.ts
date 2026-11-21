@@ -54,8 +54,8 @@ export interface FNode extends SimulationNodeDatum {
   foldSummary?: { hosts: ServicesSummary; services: ServicesSummary }
   /** Every host a folded group holds. */
   foldMembers?: string[]
-  /** The hosts of a folded group that need attention first, a few at most. */
-  foldFirst?: FoldHost[]
+  /** The most urgent hosts of a folded group that need attention, ``PRESSING_LISTED`` at most. */
+  foldPressing?: FoldHost[]
   /**
    * The host's own topology entry, so a hover card can show the same status
    * detail as a static map. Set on host nodes; a service reaches its host's
@@ -108,6 +108,8 @@ export interface FLink extends SimulationLinkDatum<FNode> {
   elbow?: Elbow
   /** In a tree: from a parent other than the one the host hangs under. */
   furtherParent?: boolean
+  /** In a tree: from the ancestor a host hangs under past hosts left out. */
+  skipsHosts?: boolean
 }
 
 /** A badge in a node's corner, saying a command is in force on it. */

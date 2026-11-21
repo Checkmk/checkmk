@@ -31,6 +31,8 @@ import {
   parseFilterTerms
 } from '@/maps/utils/objectFilter'
 
+export const PATH_OPACITY = 0.6
+
 const UNSUPPORTED_FIELDS: ReadonlySet<FilterField> = new Set(['hostgroup', 'servicegroup'])
 
 interface FlowFilterOptions {
@@ -39,10 +41,12 @@ interface FlowFilterOptions {
   needle: () => string
   problemsOnly: () => boolean
   worstServiceState: (node: FNode) => string | null
+  /** The hosts the search names, folded away or not. */
+  found: () => ReadonlySet<string>
 }
 
 export function useFlowFilter(options: FlowFilterOptions) {
-  const { svgEl, needle, problemsOnly, worstServiceState } = options
+  const { svgEl, needle, problemsOnly, worstServiceState, found } = options
 
   // Parsed once per keystroke rather than once per node: the match runs inside
   // three loops over every node the map draws.
@@ -86,6 +90,11 @@ export function useFlowFilter(options: FlowFilterOptions) {
   function matches(node: FNode): boolean {
     if (problemsOnly() && !hasProblem(node)) {
       return false
+    }
+    // A group is what the operator sees of the hits folded into it.
+    if (node.foldMembers && terms.value.length) {
+      const hits = found()
+      return node.foldMembers.some((host) => hits.has(host))
     }
     return matchesFilterTerms(terms.value, (field) => fieldValue(node, field))
   }
@@ -142,13 +151,16 @@ export function useFlowFilter(options: FlowFilterOptions) {
     const area = select(svgEl.value)
     const nodes = `g.${flowClass.node}`
     const links = `path.${flowClass.link}`
-    if (!isActive.value) {
+    const clear = (): void => {
       if (undimmed.value === null) {
         return
       }
       undimmed.value = null
       area.selectAll(`${nodes}, ${links}`).attr('opacity', 1)
       area.selectAll(nodes).style('filter', null)
+    }
+    if (!isActive.value) {
+      clear()
       return
     }
     // Matched once per node, not once per read: each match parses nothing but
@@ -161,13 +173,25 @@ export function useFlowFilter(options: FlowFilterOptions) {
         matched.add(node.id)
       }
     })
+    // A search that names nothing would dim the whole map into the dark
+    // canvas; the search field already says so.
+    if (!matched.size && !problemsOnly()) {
+      clear()
+      return
+    }
     const linkSelection = area.selectAll<SVGPathElement, FLink>(links)
     const shown = terms.value.length ? withPathsUp(matched, linkSelection.data()) : matched
     undimmed.value = shown
+    // The path to a hit is read, but the hit is what was searched for.
     nodeSelection
-      .attr('opacity', (node) => (shown.has(node.id) ? 1 : DIMMED_OPACITY))
+      .attr('opacity', (node) =>
+        matched.has(node.id) ? 1 : shown.has(node.id) ? PATH_OPACITY : DIMMED_OPACITY
+      )
       .style('filter', (node) => (shown.has(node.id) ? null : DIMMED_FILTER))
-      .filter((node) => matched.has(node.id))
+      // Raising re-inserts a node, which would take keyboard focus off it.
+      .filter(function (node) {
+        return matched.has(node.id) && this !== document.activeElement
+      })
       .raise()
     linkSelection.attr('opacity', (link) =>
       shown.has(link.source.id) && shown.has(link.target.id) ? 1 : DIMMED_OPACITY

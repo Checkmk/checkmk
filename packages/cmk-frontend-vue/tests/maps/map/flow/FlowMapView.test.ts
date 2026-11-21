@@ -11,6 +11,7 @@ import { defineComponent, h, ref } from 'vue'
 
 import type { CommandVerb } from '@/maps/api/session'
 import FlowMapView from '@/maps/map/flow/FlowMapView.vue'
+import { LABEL_HIDE_SCALE } from '@/maps/map/flow/paint'
 import type { MapElement, TopologyNode } from '@/maps/types/api'
 import { newMapView } from '@/maps/utils/model'
 
@@ -80,11 +81,11 @@ function openFlowMap(
   services.states.topologyReady.value = true
 }
 
-function renderWithTopology(topology = sampleTopology(), props = baseProps) {
+function renderWithTopology(topology = sampleTopology(), props = baseProps, stubbed = stubs) {
   const services = fakeMapsServices()
   openFlowMap(services, props.config, topology)
   const { global: provided } = provideServices(services)
-  return render(FlowMapView, { props, global: { ...provided, stubs } })
+  return render(FlowMapView, { props, global: { ...provided, stubs: stubbed } })
 }
 
 /** The same map, opened by an operator with the given command permissions. */
@@ -100,14 +101,16 @@ async function renderAsCommander(commands: CommandVerb[] = BULK_COMMANDS) {
 async function pickTwoNodes() {
   // Only the click is dispatched: a full pointer press would also start
   // d3-drag, which reads a view off the event that jsdom does not give it.
-  await fireEvent.click(screen.getByRole('button', { name: 'db-01, Down' }), { shiftKey: true })
-  await fireEvent.click(screen.getByRole('button', { name: 'web-01, Up' }), { shiftKey: true })
+  await fireEvent.click(screen.getByRole('treeitem', { name: 'db-01, Down' }), { shiftKey: true })
+  await fireEvent.click(screen.getByRole('treeitem', { name: 'web-01, Up' }), { shiftKey: true })
 }
 
 // The d3 pipeline renders asynchronously after mount; wait for the host nodes
 // (their accessible names carry the live state) before asserting structure.
 async function waitForNodes() {
-  await waitFor(() => expect(screen.getByRole('button', { name: 'core, Up' })).toBeInTheDocument())
+  await waitFor(() =>
+    expect(screen.getByRole('treeitem', { name: 'core, Up' })).toBeInTheDocument()
+  )
 }
 
 describe('FlowMapView', () => {
@@ -131,6 +134,7 @@ describe('FlowMapView', () => {
   })
 
   afterEach(() => {
+    vi.unstubAllGlobals()
     Reflect.deleteProperty(SVGElement.prototype, 'getBBox')
     Reflect.deleteProperty(SVGSVGElement.prototype, 'width')
     Reflect.deleteProperty(SVGSVGElement.prototype, 'height')
@@ -141,8 +145,8 @@ describe('FlowMapView', () => {
     await waitForNodes()
 
     // Hosts carry their live state in the accessible name.
-    expect(screen.getByRole('button', { name: 'web-01, Up' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'db-01, Down' })).toBeInTheDocument()
+    expect(screen.getByRole('treeitem', { name: 'web-01, Up' })).toBeInTheDocument()
+    expect(screen.getByRole('treeitem', { name: 'db-01, Down' })).toBeInTheDocument()
 
     // Geometry: the node-kind CSS classes and label texts of the d3 structure
     // have no further accessible representation — container-scoped queries.
@@ -165,7 +169,7 @@ describe('FlowMapView', () => {
 
     const pulses = [...container.querySelectorAll<HTMLElement>('.maps-flow-canvas__pulse')]
     expect(pulses.map((pulse) => pulse.dataset['nodeId'])).toEqual(['db-01'])
-    const node = screen.getByRole('button', { name: 'db-01, Down' })
+    const node = screen.getByRole('treeitem', { name: 'db-01, Down' })
     const [x, y] = (node.getAttribute('transform') ?? '').match(/-?[\d.]+/g)!.map(Number)
     expect(pulses[0]!.style.transform).toBe(`translate(${x}px, ${y}px)`)
 
@@ -215,7 +219,7 @@ describe('FlowMapView', () => {
       const user = userEvent.setup()
       const view = renderWithTopology(wideTopology())
       await waitForNodes()
-      screen.getByRole('button', { name: /^30 hosts below core/ }).focus()
+      screen.getByRole('treeitem', { name: /^30 hosts below core/ }).focus()
       await user.keyboard('{Enter}')
       return { user, view }
     }
@@ -226,19 +230,19 @@ describe('FlowMapView', () => {
       await waitFor(() =>
         expect(screen.getByText('Showing 30 hosts below core')).toBeInTheDocument()
       )
-      expect(screen.getByRole('button', { name: /^host-03,/ })).toBeInTheDocument()
-      expect(screen.queryByRole('button', { name: /^\d+ hosts below core/ })).toBeNull()
+      expect(screen.getByRole('treeitem', { name: /^host-03,/ })).toBeInTheDocument()
+      expect(screen.queryByRole('treeitem', { name: /^\d+ hosts below core/ })).toBeNull()
       view.unmount()
     })
 
     it('names on hover the hosts it holds that need attention, and why', async () => {
       const view = renderWithTopology(wideTopology())
       await waitForNodes()
-      const fold = screen.getByRole('button', { name: /^30 hosts below core/ })
+      const fold = screen.getByRole('treeitem', { name: /^30 hosts below core/ })
 
       await fireEvent.mouseEnter(fold)
 
-      expect(await screen.findByText('Unhandled problems')).toBeInTheDocument()
+      expect(await screen.findByText(/hosts? needs? attention$/)).toBeInTheDocument()
       expect(screen.getByText('Hosts below core')).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'host-00, WARN services' })).toBeInTheDocument()
       expect(fold.querySelector('title')).toBeNull()
@@ -265,7 +269,7 @@ describe('FlowMapView', () => {
       const siteLinks = await viewLinks()
       await fireEvent.mouseLeave(view.container.querySelector('g.maps-flow-canvas__node--site')!)
       await waitFor(() => expect(screen.queryByText('Site')).toBeNull())
-      await fireEvent.mouseEnter(screen.getByRole('button', { name: /^30 hosts below core/ }))
+      await fireEvent.mouseEnter(screen.getByRole('treeitem', { name: /^30 hosts below core/ }))
       const groupLinks = await viewLinks()
 
       expect(siteLinks).toEqual(
@@ -305,31 +309,48 @@ describe('FlowMapView', () => {
       ])
       await waitForNodes()
 
-      expect(screen.getByRole('button', { name: /^\d+ hosts below site / })).toBeInTheDocument()
+      expect(screen.getByRole('treeitem', { name: /^\d+ hosts below site / })).toBeInTheDocument()
       view.unmount()
     })
 
     it('keeps its card open while the pointer moves onto it', async () => {
       const view = renderWithTopology(wideTopology())
       await waitForNodes()
-      const fold = screen.getByRole('button', { name: /^30 hosts below core/ })
+      const fold = screen.getByRole('treeitem', { name: /^30 hosts below core/ })
       await fireEvent.mouseEnter(fold)
-      const card = (await screen.findByText('Unhandled problems')).closest('.maps-hover-card')!
+      const card = (await screen.findByText(/hosts? needs? attention$/)).closest(
+        '.maps-hover-card'
+      )!
 
       await fireEvent.mouseLeave(fold)
       await fireEvent.mouseEnter(card)
       await new Promise((resolve) => setTimeout(resolve, 400))
 
-      expect(screen.getByText('Unhandled problems')).toBeInTheDocument()
+      expect(screen.getByText(/hosts? needs? attention$/)).toBeInTheDocument()
       await fireEvent.mouseLeave(card)
-      await waitFor(() => expect(screen.queryByText('Unhandled problems')).toBeNull())
+      await waitFor(() => expect(screen.queryByText(/hosts? needs? attention$/)).toBeNull())
+      view.unmount()
+    })
+
+    it('closes its card on Escape and hands focus back to the group', async () => {
+      const view = renderWithTopology(wideTopology())
+      await waitForNodes()
+      const fold = screen.getByRole('treeitem', { name: /^30 hosts below core/ })
+      await fireEvent.mouseEnter(fold)
+      const host = await screen.findByRole('button', { name: 'host-00, WARN services' })
+
+      host.focus()
+      await fireEvent.keyDown(host, { key: 'Escape' })
+
+      await waitFor(() => expect(screen.queryByText(/hosts? needs? attention$/)).toBeNull())
+      expect(document.activeElement).toBe(fold)
       view.unmount()
     })
 
     it('opens the slide-in of a host its card names', async () => {
       const view = renderWithTopology(wideTopology())
       await waitForNodes()
-      await fireEvent.mouseEnter(screen.getByRole('button', { name: /^30 hosts below core/ }))
+      await fireEvent.mouseEnter(screen.getByRole('treeitem', { name: /^30 hosts below core/ }))
 
       await fireEvent.click(await screen.findByRole('button', { name: 'host-00, WARN services' }))
 
@@ -338,19 +359,19 @@ describe('FlowMapView', () => {
           expect.objectContaining({ type: 'host', host_name: 'host-00' })
         ])
       )
-      expect(screen.queryByText('Unhandled problems')).toBeNull()
+      expect(screen.queryByText(/hosts? needs? attention$/)).toBeNull()
       view.unmount()
     })
 
     it('draws a host its card names on the map when it is picked', async () => {
       const view = renderWithTopology(wideTopology())
       await waitForNodes()
-      await fireEvent.mouseEnter(screen.getByRole('button', { name: /^30 hosts below core/ }))
+      await fireEvent.mouseEnter(screen.getByRole('treeitem', { name: /^30 hosts below core/ }))
 
       await fireEvent.click(await screen.findByRole('button', { name: 'host-00, WARN services' }))
 
-      expect(await screen.findByRole('button', { name: /^host-00,/ })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /^29 hosts below core/ })).toBeInTheDocument()
+      expect(await screen.findByRole('treeitem', { name: /^host-00,/ })).toBeInTheDocument()
+      expect(screen.getByRole('treeitem', { name: /^29 hosts below core/ })).toBeInTheDocument()
       view.unmount()
     })
 
@@ -374,7 +395,7 @@ describe('FlowMapView', () => {
       await waitFor(() => expect(layer.getAttribute('transform')).toBeTruthy())
       await new Promise((resolve) => setTimeout(resolve, 600))
       const before = layer.getAttribute('transform')
-      await fireEvent.mouseEnter(screen.getByRole('button', { name: /^30 hosts below core/ }))
+      await fireEvent.mouseEnter(screen.getByRole('treeitem', { name: /^30 hosts below core/ }))
       await fireEvent.click(await screen.findByRole('button', { name: 'host-00, WARN services' }))
       await waitFor(() => expect(layer.getAttribute('transform')).not.toBe(before))
 
@@ -402,33 +423,120 @@ describe('FlowMapView', () => {
       view.unmount()
     })
 
-    it('hands keyboard focus to the button that folds the group back', async () => {
+    it('hands keyboard focus to the first host the group showed', async () => {
       const { view } = await openTheFold()
 
       await waitFor(() =>
-        expect(document.activeElement).toBe(
-          screen.getByRole('button', { name: 'Collapse the hosts below core' })
-        )
+        expect(document.activeElement?.getAttribute('aria-label')).toMatch(/^host-\d+,/)
       )
       view.unmount()
     })
 
-    it('folds the group back and returns focus to the fold', async () => {
+    it('keeps names readable when it fits a tree, unless asked to fit everything', async () => {
+      const user = userEvent.setup()
+      // Opened down to the host down at its end, too wide for the drawing
+      // area at a zoom names can be read at.
+      const chain = Array.from({ length: 14 }, (_, i) =>
+        aTopologyNode({
+          name: `chain-${i}`,
+          parents: i ? [`chain-${i - 1}`] : [],
+          state: i === 13 ? 'DOWN' : 'UP'
+        })
+      )
+      const view = renderWithTopology([...wideTopology(), ...chain], baseProps, {
+        ...stubs,
+        MapZoomControls: false
+      })
+      await waitForNodes()
+      const scale = () =>
+        Number(
+          /scale\(([\d.]+)\)/.exec(
+            view.container
+              .querySelector('.maps-flow-canvas__zoom-layer')
+              ?.getAttribute('transform') ?? ''
+          )?.[1]
+        )
+      await waitFor(() => expect(scale()).toBeCloseTo(LABEL_HIDE_SCALE))
+
+      await user.click(screen.getByRole('button', { name: 'Fit all objects' }))
+      await waitFor(() => expect(scale()).toBeLessThan(LABEL_HIDE_SCALE - 0.1))
+
+      screen.getByRole('treeitem', { name: /^30 hosts below core/ }).focus()
+      await user.keyboard('{Enter}')
+      await user.click(await screen.findByRole('button', { name: 'Collapse all' }))
+      await waitFor(() => expect(scale()).toBeCloseTo(LABEL_HIDE_SCALE))
+      view.unmount()
+    })
+
+    it('moves the view without motion when the system asks for reduced motion', async () => {
+      vi.stubGlobal('matchMedia', () => ({ matches: true }))
+      const view = renderWithTopology(wideTopology(), baseProps, {
+        ...stubs,
+        MapZoomControls: false
+      })
+      await waitForNodes()
+      const layer = view.container.querySelector('g.maps-flow-canvas__zoom-layer')!
+      const scale = () =>
+        Number(/scale\(([\d.]+)\)/.exec(layer.getAttribute('transform') ?? '')?.[1])
+      await waitFor(() => expect(scale()).toBeGreaterThan(0))
+      const before = scale()
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Zoom in' }))
+
+      expect(scale()).toBeCloseTo(before * 1.4)
+      view.unmount()
+    })
+
+    it('tells assistive technology where each node sits in the tree', async () => {
+      const view = renderWithTopology(wideTopology())
+      await waitForNodes()
+
+      expect(screen.getByRole('tree', { name: 'Parent tree' })).toBeInTheDocument()
+      const site = screen.getByRole('treeitem', { name: /^Site / })
+      const core = screen.getByRole('treeitem', { name: 'core, Up' })
+      const group = screen.getByRole('treeitem', { name: /^30 hosts below core/ })
+      expect([site, core, group].map((node) => node.getAttribute('aria-level'))).toEqual([
+        '1',
+        '2',
+        '3'
+      ])
+      expect(core.getAttribute('aria-expanded')).toBe('true')
+      expect(group.getAttribute('aria-expanded')).toBe('false')
+      expect(group.getAttribute('aria-posinset')).toBe(group.getAttribute('aria-setsize'))
+      view.unmount()
+    })
+
+    it('is a single tab stop, on the site until a node is focused', async () => {
+      const user = userEvent.setup()
+      const view = renderWithTopology(wideTopology())
+      await waitForNodes()
+      const tabStops = () =>
+        [...view.container.querySelectorAll('g.maps-flow-canvas__node[tabindex="0"]')].map((node) =>
+          node.getAttribute('aria-label')
+        )
+      expect(tabStops()).toEqual([expect.stringMatching(/^Site /)])
+
+      screen.getByRole('treeitem', { name: /^30 hosts below core/ }).focus()
+      await user.keyboard('{Enter}')
+
+      await waitFor(() => expect(tabStops()).toEqual([expect.stringMatching(/^host-\d+,/)]))
+      view.unmount()
+    })
+
+    it('folds the group back on Escape and returns focus to the fold', async () => {
       const { user, view } = await openTheFold()
       await waitFor(() =>
-        expect(document.activeElement).toBe(
-          screen.getByRole('button', { name: 'Collapse the hosts below core' })
-        )
+        expect(document.activeElement?.getAttribute('aria-label')).toMatch(/^host-\d+,/)
       )
 
-      await user.keyboard('{Enter}')
+      await user.keyboard('{Escape}')
 
       await waitFor(() =>
         expect(screen.getByText('Collapsed the hosts below core')).toBeInTheDocument()
       )
-      expect(screen.queryByRole('button', { name: /^host-00,/ })).toBeNull()
+      expect(screen.queryByRole('treeitem', { name: /^host-00,/ })).toBeNull()
       expect(document.activeElement).toBe(
-        screen.getByRole('button', { name: /^30 hosts below core/ })
+        screen.getByRole('treeitem', { name: /^30 hosts below core/ })
       )
       view.unmount()
     })
@@ -467,7 +575,7 @@ describe('FlowMapView', () => {
     )
     await waitForNodes()
 
-    const node = screen.getByRole('button', { name: 'db-01, Down' })
+    const node = screen.getByRole('treeitem', { name: 'db-01, Down' })
     node.focus()
     await user.keyboard('{Enter}')
 
@@ -599,7 +707,7 @@ describe('FlowMapView', () => {
       ).toBeInTheDocument()
     )
     expect(container.querySelector('svg.maps-flow-canvas__svg')).not.toBeNull()
-    expect(screen.getByRole('button', { name: 'core, Up' })).toBeInTheDocument()
+    expect(screen.getByRole('treeitem', { name: 'core, Up' })).toBeInTheDocument()
 
     unmount()
     warn.mockRestore()

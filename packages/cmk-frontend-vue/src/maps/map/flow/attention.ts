@@ -7,7 +7,10 @@
  * What a host of a flow map asks of the operator. It orders a tree's siblings
  * and says what a collapsed group holds, so both answer the same question:
  * where to look first. A problem that is acknowledged or in a downtime is
- * handled, and asks for nothing.
+ * handled. A host needs attention for a problem that is not; a host that is
+ * unreachable does not: it is the consequence of a host down above it, which
+ * is what asks to be looked at. It is still an unhandled problem, and counted
+ * where its group's states are.
  */
 import { worstServiceState } from '@/maps/map/flow/geometry'
 import type { TopologyNode } from '@/maps/types/api'
@@ -15,10 +18,10 @@ import type { TopologyNode } from '@/maps/types/api'
 /** Most urgent first. */
 export const ATTENTIONS = [
   'down',
-  'unreachable',
   'critical',
   'unknown',
   'warning',
+  'unreachable',
   'handled',
   'pending',
   'none'
@@ -45,10 +48,10 @@ const SERVICE_ATTENTION = {
 
 const RANK: Record<Attention, number> = {
   down: 7,
-  unreachable: 6,
-  critical: 5,
-  unknown: 4,
-  warning: 3,
+  critical: 6,
+  unknown: 5,
+  warning: 4,
+  unreachable: 3,
   handled: 2,
   pending: 1,
   none: 0
@@ -60,19 +63,31 @@ export function attentionRank(attention: Attention): number {
 }
 
 export function needsAttention(attention: Attention): boolean {
-  return RANK[attention] > RANK.handled
+  return RANK[attention] > RANK.unreachable
 }
 
 const PRESSING = ATTENTIONS.filter(needsAttention)
 
+/** Unhandled, whether or not it needs attention itself. */
+export function isUnhandled(attention: Attention): boolean {
+  return RANK[attention] > RANK.handled
+}
+
+const UNHANDLED = ATTENTIONS.filter(isUnhandled)
+
 /** How many of a group's hosts, counted by what they need, need attention. */
-export function unhandledIn(counts: Partial<Record<Attention, number>> | undefined): number {
+export function pressingIn(counts: Partial<Record<Attention, number>> | undefined): number {
   return PRESSING.reduce((sum, need) => sum + (counts?.[need] ?? 0), 0)
 }
 
 /** The most urgent need of a group's hosts that need attention, or ``none``. */
 export function worstIn(counts: Partial<Record<Attention, number>> | undefined): Attention {
   return PRESSING.find((need) => (counts?.[need] ?? 0) > 0) ?? 'none'
+}
+
+/** The state a group of hosts is drawn in: its most urgent need, unreachable hosts included. */
+export function groupStateIn(counts: Partial<Record<Attention, number>> | undefined): string {
+  return ATTENTION_STATE[UNHANDLED.find((need) => (counts?.[need] ?? 0) > 0) ?? 'none']
 }
 
 export function attentionOf(topo: TopologyNode): Attention {

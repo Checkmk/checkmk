@@ -17,22 +17,38 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
+import MapOverlayButton from '@/maps/map/components/MapOverlayButton.vue'
 import type { ServiceLayout } from '@/maps/types/api'
 
 const { _t } = usei18n()
 
-const props = defineProps<{ modelValue: ServiceLayout }>()
+const props = defineProps<{
+  modelValue: ServiceLayout
+  /** The shapes on offer, where the map cannot draw them all. */
+  layouts?: ServiceLayout[] | undefined
+}>()
 const emit = defineEmits<{ 'update:modelValue': [layout: ServiceLayout] }>()
 
 const open = ref(false)
 
-const options = computed<{ value: ServiceLayout; label: string }[]>(() => [
-  { value: 'off', label: _t('Off') },
-  { value: 'donut', label: _t('Donut') },
-  { value: 'fan', label: _t('Fan') },
-  { value: 'orbit', label: _t('Orbit') },
-  { value: 'row', label: _t('Row') }
-])
+const labels = computed<Record<ServiceLayout, string>>(() => ({
+  off: _t('Off'),
+  donut: _t('Donut'),
+  fan: _t('Fan'),
+  orbit: _t('Orbit'),
+  row: _t('Row')
+}))
+
+const ORDER: ServiceLayout[] = ['off', 'donut', 'fan', 'orbit', 'row']
+
+const options = computed(() =>
+  ORDER.filter((value) => !props.layouts || props.layouts.includes(value)).map((value) => ({
+    value,
+    label: labels.value[value]
+  }))
+)
+
+const shown = computed(() => labels.value[props.modelValue])
 
 function pick(layout: ServiceLayout): void {
   emit('update:modelValue', layout)
@@ -51,29 +67,14 @@ function pick(layout: ServiceLayout): void {
       @click="open = false"
     />
 
-    <button
+    <MapOverlayButton
       class="maps-flow-service-layout-picker__button"
-      :class="
-        props.modelValue !== 'off'
-          ? 'maps-flow-service-layout-picker__button--on'
-          : 'maps-flow-service-layout-picker__button--off'
-      "
-      :aria-expanded="open"
+      :expanded="open"
       aria-haspopup="menu"
       @click="open = !open"
     >
-      {{ _t('Services') }}
-      <svg
-        class="maps-flow-service-layout-picker__caret"
-        :class="open ? 'maps-flow-service-layout-picker__caret--open' : ''"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        stroke-width="2.5"
-      >
-        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-      </svg>
-    </button>
+      {{ _t('Services: %{layout}', { layout: shown }) }}
+    </MapOverlayButton>
 
     <Transition
       enter-from-class="maps-flow-service-layout-picker__menu-enter-from"
@@ -108,10 +109,7 @@ function pick(layout: ServiceLayout): void {
 
 <style scoped>
 .maps-flow-service-layout-picker {
-  position: absolute;
-  right: var(--dimension-8);
-  bottom: var(--dimension-8);
-  z-index: 40;
+  position: relative;
 }
 
 .maps-flow-service-layout-picker__backdrop {
@@ -120,61 +118,25 @@ function pick(layout: ServiceLayout): void {
   z-index: 0;
 }
 
+/* As high as the legend button beside it. */
 .maps-flow-service-layout-picker__button {
   position: relative;
   z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: var(--dimension-3);
   padding: var(--dimension-3) var(--dimension-5);
-  font-size: var(--font-size-normal);
-  font-weight: var(--font-weight-medium);
   line-height: 16px;
-  border-radius: var(--border-radius);
-  transition: all 0.2s;
-}
-
-.maps-flow-service-layout-picker__button--on {
-  color: var(--interactive-accent-subtle);
-  background: color-mix(in srgb, var(--interactive-accent) 15%, transparent);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--interactive-accent) 40%, transparent),
-    var(--maps-shadow-canvas-overlay-high);
-}
-
-.maps-flow-service-layout-picker__button--off {
-  color: var(--font-color-dimmed);
-  background: var(--ux-theme-3);
-  box-shadow:
-    0 0 0 1px var(--default-border-color),
-    var(--maps-shadow-canvas-overlay-high);
-}
-
-.maps-flow-service-layout-picker__button--off:hover {
-  color: var(--font-color);
-  background: var(--ux-theme-3);
+  box-shadow: var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-flow-service-layout-picker__button:focus-visible {
   outline: revert;
 }
 
-.maps-flow-service-layout-picker__caret {
-  width: 10px;
-  height: 10px;
-  transition: transform 0.15s;
-}
-
-.maps-flow-service-layout-picker__caret--open {
-  transform: rotate(180deg);
-}
-
 .maps-flow-service-layout-picker__menu {
   position: absolute;
   right: 0;
   bottom: 100%;
+  left: 0;
   z-index: 10;
-  width: 120px;
   margin-bottom: var(--dimension-4);
   overflow: hidden;
   background: var(--ux-theme-3);

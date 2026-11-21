@@ -11,7 +11,7 @@ them, and which hosts to look at first, each of which opens its slide-in.
 <script setup lang="ts">
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 
 import HoverCard from '@/maps/map/components/HoverCard.vue'
 import HoverCardHeadline from '@/maps/map/components/HoverCardHeadline.vue'
@@ -32,8 +32,14 @@ export interface GroupCardContent {
   summary: { hosts: ServicesSummary; services: ServicesSummary }
   /** What the counts link to in Checkmk's views: a site, or the group's hosts. */
   viewTarget: { site?: string | null; hosts?: string[] }
-  /** The hosts to look at first, a few at most. */
-  first: FoldHost[]
+  /** The hosts that need attention, the most urgent first: some of them, where there are many. */
+  pressing: FoldHost[]
+  /** How many hosts need attention in all. */
+  pressingCount: number
+  /** Why the group's hosts are unreachable, where a host down above them is the cause. */
+  cause?: string | null
+  /** That host, which the cause opens. */
+  causeHost?: string | null
 }
 
 const props = defineProps<{
@@ -48,10 +54,12 @@ const props = defineProps<{
 const emit = defineEmits<{
   'card-enter': []
   'card-leave': []
+  /** Escape in the card: back to the group it belongs to. */
+  back: []
   'select-host': [hostName: string]
 }>()
 
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
 
 const rows = computed(() =>
   [
@@ -68,6 +76,38 @@ const rows = computed(() =>
       )
     }
   ].filter((row) => row.counts.some((entry) => entry.count > 0))
+)
+
+/** How many hosts the card names until the operator asks for all. */
+/**
+ * The cause around the host it names, which is kept on one line: a name broken
+ * at a dash reads as two.
+ */
+const causeParts = computed(() => {
+  const { cause, causeHost } = props.content
+  if (!cause || !causeHost) {
+    return null
+  }
+  const at = cause.indexOf(causeHost)
+  return at < 0
+    ? { before: cause, host: '', after: '' }
+    : {
+        before: cause.slice(0, at),
+        host: causeHost,
+        after: cause.slice(at + causeHost.length)
+      }
+})
+
+const FIRST = 3
+
+const showsAll = ref(false)
+const listed = computed(() =>
+  showsAll.value ? props.content.pressing : props.content.pressing.slice(0, FIRST)
+)
+const more = computed(() => props.content.pressing.length - listed.value.length)
+/** Those the card does not list even in full, which the counts above link to. */
+const unlisted = computed(() =>
+  showsAll.value ? props.content.pressingCount - props.content.pressing.length : 0
 )
 
 const TONE: Partial<Record<Attention, StateCountTone>> = {
@@ -102,12 +142,57 @@ const positionStyle = usePointerOverlayStyle(
   () => ({ x: props.x, y: props.y }),
   () => props.around
 )
+
+/** Focus leaving the card closes it, as the pointer leaving it does. */
+function onFocusOut(event: FocusEvent): void {
+  // No target is focus dropped where it was, such as by a button that went away.
+  const to = event.relatedTarget
+  if (to instanceof Node && !rootEl.value?.contains(to)) {
+    emit('card-leave')
+  }
+}
+
+/** Lists every host, keyboard focus on the first one it adds. */
+async function showAll(): Promise<void> {
+  showsAll.value = true
+  await nextTick()
+  rootEl.value
+    ?.querySelectorAll<HTMLButtonElement>('.maps-flow-group-hover-card__host')
+    [FIRST]?.focus()
+}
+
+defineExpose({
+  /** Moves keyboard focus to the card's first link or button; false if it has none. */
+  focusFirst(): boolean {
+    const first = rootEl.value?.querySelector<HTMLElement>('a[href], button')
+    first?.focus()
+    return Boolean(first)
+  }
+})
 </script>
 
 <template>
-  <div ref="rootEl" class="maps-flow-group-hover-card" :style="positionStyle">
+  <div
+    ref="rootEl"
+    class="maps-flow-group-hover-card"
+    :style="positionStyle"
+    @focusin="emit('card-enter')"
+    @focusout="onFocusOut"
+    @keydown.escape.stop="emit('back')"
+  >
     <HoverCard @card-enter="emit('card-enter')" @card-leave="emit('card-leave')">
       <HoverCardHeadline :name="content.name" :subtitle="content.subtitle" :state="content.state" />
+      <!-- First: it is the one thing an operator looking at this group needs to know. -->
+      <button
+        v-if="causeParts && content.causeHost"
+        type="button"
+        class="maps-flow-group-hover-card__cause"
+        @click="emit('select-host', content.causeHost)"
+      >
+        {{ causeParts.before
+        }}<span class="maps-flow-group-hover-card__cause-host">{{ causeParts.host }}</span
+        >{{ causeParts.after }}
+      </button>
       <MapStateCounts
         v-for="row in rows"
         :key="row.label"
@@ -115,10 +200,18 @@ const positionStyle = usePointerOverlayStyle(
         :label="row.label"
         :counts="row.counts"
       />
-      <div v-if="content.first.length" class="maps-flow-group-hover-card__first">
-        <CmkHeading type="h4">{{ _t('Unhandled problems') }}</CmkHeading>
-        <ul class="maps-flow-group-hover-card__hosts">
-          <li v-for="host in content.first" :key="host.name">
+      <div v-if="content.pressingCount" class="maps-flow-group-hover-card__first">
+        <!-- The count the group's badge shows, which is of hosts, not of services. -->
+        <CmkHeading type="h4">{{
+          _tn('%{n} host needs attention', '%{n} hosts need attention', content.pressingCount, {
+            n: content.pressingCount
+          })
+        }}</CmkHeading>
+        <ul
+          class="maps-flow-group-hover-card__hosts"
+          :class="{ 'maps-flow-group-hover-card__hosts--all': showsAll }"
+        >
+          <li v-for="host in listed" :key="host.name">
             <button
               type="button"
               class="maps-flow-group-hover-card__host"
@@ -136,6 +229,18 @@ const positionStyle = usePointerOverlayStyle(
               <span class="maps-flow-group-hover-card__reason">{{ reason(host.needs) }}</span>
             </button>
           </li>
+          <li v-if="more">
+            <button
+              type="button"
+              class="maps-flow-group-hover-card__host maps-flow-group-hover-card__more"
+              @click="showAll"
+            >
+              {{ _tn('Show %{n} more', 'Show %{n} more', more, { n: more }) }}
+            </button>
+          </li>
+          <li v-if="unlisted" class="maps-flow-group-hover-card__unlisted">
+            {{ _tn('and %{n} more', 'and %{n} more', unlisted, { n: unlisted }) }}
+          </li>
         </ul>
       </div>
     </HoverCard>
@@ -152,8 +257,49 @@ const positionStyle = usePointerOverlayStyle(
 }
 
 .maps-flow-group-hover-card__counts,
+.maps-flow-group-hover-card__cause,
 .maps-flow-group-hover-card__first {
   margin-top: var(--dimension-5);
+}
+
+.maps-flow-group-hover-card__unlisted {
+  padding: var(--dimension-2) var(--dimension-3);
+  color: var(--font-color-dimmed);
+}
+
+.maps-flow-group-hover-card__more {
+  font-size: var(--font-size-small);
+  color: var(--font-color-dimmed);
+}
+
+.maps-flow-group-hover-card__cause {
+  display: block;
+  width: 100%;
+  margin-bottom: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--font-color);
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.maps-flow-group-hover-card__cause-host {
+  white-space: nowrap;
+}
+
+.maps-flow-group-hover-card__cause:focus-visible {
+  outline: revert;
+}
+
+/* All of a large group's hosts scroll inside the card rather than past the screen. */
+.maps-flow-group-hover-card__hosts--all {
+  /* About eight hosts, so the card stays clear of the map's top bar at 800px. */
+  max-height: 168px;
+  overflow-y: auto;
 }
 
 .maps-flow-group-hover-card__hosts {
@@ -216,7 +362,7 @@ const positionStyle = usePointerOverlayStyle(
 .maps-flow-group-hover-card__reason {
   flex-shrink: 0;
   margin-left: auto;
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-normal);
   color: var(--font-color-dimmed);
 }
 </style>

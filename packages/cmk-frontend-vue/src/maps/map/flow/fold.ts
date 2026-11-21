@@ -37,6 +37,49 @@ export interface Folded {
   folds: FoldedHosts[]
 }
 
+/**
+ * The drawn tree without its quiet hosts: each one's drawn children hang under
+ * its nearest ancestor that stays instead. A fold whose hosts are all quiet
+ * goes too; a host that holds a remaining fold stays, the fold says whose
+ * children it holds.
+ */
+export function withoutQuiet(folded: Folded, quiet: (id: string) => boolean): Folded {
+  const folds = folded.folds.filter((fold) => !fold.members.every(quiet))
+  const holdsFold = new Set(folds.map((fold) => fold.parentId))
+  const hung = new Set([...folded.children.values()].flat())
+  const stays = (id: string): boolean => !quiet(id) || holdsFold.has(id)
+  const children = new Map<string, string[]>()
+  // The tops of the tree stay: the site roots, and a host no root reaches,
+  // unless it is quiet and has nothing under it.
+  const visible = new Set(
+    [...folded.visible].filter((id) => !hung.has(id) && (!quiet(id) || folded.children.has(id)))
+  )
+  // Without recursion, as in ``cutOffBy``: a long chain cannot overflow the stack.
+  const staying = (id: string): string[] => {
+    const kept: string[] = []
+    const below = [...(folded.children.get(id) ?? [])].reverse()
+    while (below.length) {
+      const kid = below.pop()!
+      if (stays(kid)) {
+        kept.push(kid)
+      } else {
+        below.push(...[...(folded.children.get(kid) ?? [])].reverse())
+      }
+    }
+    return kept
+  }
+  const queue = [...folded.children.keys()].filter((id) => !hung.has(id))
+  for (let i = 0; i < queue.length; i++) {
+    const kids = staying(queue[i]!)
+    children.set(queue[i]!, kids)
+    for (const kid of kids) {
+      visible.add(kid)
+      queue.push(kid)
+    }
+  }
+  return { visible, children, folds }
+}
+
 /** About as many hosts as stay readable, and cheap to draw and simulate. */
 export const VISIBLE_HOSTS = 250
 /** Fewer hosts than this are drawn rather than folded: the fold would save nothing. */

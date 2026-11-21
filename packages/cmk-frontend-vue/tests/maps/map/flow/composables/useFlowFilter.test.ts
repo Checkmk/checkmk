@@ -7,7 +7,7 @@ import { select } from 'd3-selection'
 import { describe, expect, it } from 'vitest'
 import { ref } from 'vue'
 
-import { useFlowFilter } from '@/maps/map/flow/composables/useFlowFilter'
+import { PATH_OPACITY, useFlowFilter } from '@/maps/map/flow/composables/useFlowFilter'
 import type { FLink, FNode } from '@/maps/map/flow/nodes'
 import { flowClass } from '@/maps/map/flow/paint'
 import { DIMMED_OPACITY } from '@/maps/utils/objectFilter'
@@ -21,13 +21,13 @@ function aNode(id: string, nodeType: FNode['nodeType'] = 'host'): FNode {
 }
 
 /** A site with ``router`` under it, and ``app01`` and ``db01`` under the router. */
-function drawnTree(): SVGSVGElement {
+function drawnTree(intoApp: Partial<FLink> = {}): SVGSVGElement {
   const site = aNode('site:heute', 'site')
   const router = aNode('router')
   const nodes = [site, router, aNode('app01'), aNode('db01')]
   const links: FLink[] = [
     { source: site, target: router, sourceState: 'UP', isServiceLink: false },
-    { source: router, target: nodes[2]!, sourceState: 'UP', isServiceLink: false },
+    { source: router, target: nodes[2]!, sourceState: 'UP', isServiceLink: false, ...intoApp },
     { source: router, target: nodes[3]!, sourceState: 'UP', isServiceLink: false }
   ]
   const svg = document.createElementNS(SVG_NS, 'svg')
@@ -51,15 +51,29 @@ describe('useFlowFilter', () => {
       svgEl: ref(svg),
       needle: () => 'app01',
       problemsOnly: () => false,
-      worstServiceState: () => null
+      worstServiceState: () => null,
+      found: () => new Set()
     })
     filter.apply()
     expect(['site:heute', 'router', 'app01'].map((id) => opacityOf(svg, id))).toEqual([
-      '1',
-      '1',
+      String(PATH_OPACITY),
+      String(PATH_OPACITY),
       '1'
     ])
     expect(opacityOf(svg, 'db01')).toBe(String(DIMMED_OPACITY))
+  })
+
+  it('keeps the path up readable past the hosts a map left out', () => {
+    const svg = drawnTree({ skipsHosts: true })
+    const filter = useFlowFilter({
+      svgEl: ref(svg),
+      needle: () => 'app01',
+      problemsOnly: () => false,
+      worstServiceState: () => null,
+      found: () => new Set()
+    })
+    filter.apply()
+    expect(opacityOf(svg, 'router')).toBe(String(PATH_OPACITY))
   })
 
   it('finds a host by one of its services', () => {
@@ -67,7 +81,8 @@ describe('useFlowFilter', () => {
       svgEl: ref(null),
       needle: () => 's:ntp',
       problemsOnly: () => false,
-      worstServiceState: () => null
+      worstServiceState: () => null,
+      found: () => new Set()
     })
     const topology = [
       aTopologyNode({
@@ -86,5 +101,26 @@ describe('useFlowFilter', () => {
       aTopologyNode({ name: 'db01' })
     ]
     expect([...filter.foundHosts(topology)]).toEqual(['app01'])
+  })
+
+  it('keeps a group readable that holds a host the search names', () => {
+    const svg = document.createElementNS(SVG_NS, 'svg')
+    const group = { ...aNode('fold:router', 'fold'), foldMembers: ['app01', 'db01'] }
+    select(svg)
+      .selectAll('g')
+      .data([group, aNode('web01')])
+      .enter()
+      .append('g')
+      .attr('class', flowClass.node)
+    const filter = useFlowFilter({
+      svgEl: ref(svg),
+      needle: () => 'app*',
+      problemsOnly: () => false,
+      worstServiceState: () => null,
+      found: () => new Set(['app01'])
+    })
+    filter.apply()
+    expect(opacityOf(svg, 'fold:router')).toBe('1')
+    expect(opacityOf(svg, 'web01')).toBe(String(DIMMED_OPACITY))
   })
 })

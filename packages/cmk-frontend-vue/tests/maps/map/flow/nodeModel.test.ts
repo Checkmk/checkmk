@@ -19,7 +19,8 @@ describe('createFlowNodeModel', () => {
         aTopologyNode({ name: 'web-03', state: 'PENDING', site_id: 'mysite' })
       ],
       connectionId: () => 'mysite',
-      worstHostIds: () => new Set()
+      worstHostIds: () => new Set(),
+      cutOff: () => new Map()
     })
     const site: FNode = {
       id: 'site:mysite',
@@ -50,7 +51,8 @@ describe('createFlowNodeModel', () => {
     const model = createFlowNodeModel({
       nodes: () => [topo],
       connectionId: () => null,
-      worstHostIds: () => new Set()
+      worstHostIds: () => new Set(),
+      cutOff: () => new Map()
     })
     const host: FNode = {
       id: 'web-01',
@@ -69,7 +71,8 @@ describe('createFlowNodeModel', () => {
     const model = createFlowNodeModel({
       nodes: () => [topo],
       connectionId: () => null,
-      worstHostIds: () => new Set()
+      worstHostIds: () => new Set(),
+      cutOff: () => new Map()
     })
     const base = { output: '', bfsLevel: 0 }
 

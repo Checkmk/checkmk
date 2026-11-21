@@ -80,6 +80,13 @@ describe('treeLayout', () => {
     expect(y('sw-a')).toBe(y('a1'))
   })
 
+  it('sets a group of hosts further from the host above it than two hosts are', () => {
+    const group = foldNodeId('core')
+    const { at } = layout([['core']], new Map([['core', ['a1', 'a2', group]]]))
+    const y = (id: string) => at.get(id)!.y
+    expect(y(group) - y('a2')).toBeGreaterThan(y('a2') - y('a1'))
+  })
+
   it('keeps a parent where it is when more of its children are drawn', () => {
     const few = layout([['core']], new Map([['core', ['c-0', 'c-1']]]))
     const many = layout(

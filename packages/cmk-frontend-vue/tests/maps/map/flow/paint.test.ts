@@ -16,6 +16,7 @@ import {
   linkKey,
   nodeKindClass,
   positionFoldBacks,
+  refreshHostLabels,
   refreshNodes
 } from '@/maps/map/flow/paint'
 
@@ -23,11 +24,13 @@ const visuals: NodeVisuals = {
   scale: 1,
   showsDonut: () => false,
   glowFilter: 'glow',
-  isWorst: () => false,
+  glows: () => false,
   halo: () => ({ stroke: 'none', width: 0 }),
   donutSegments: () => [],
   badges: () => [],
   ariaLabel: (node) => node.id,
+  siteState: (node) => node.state,
+  upQuiet: false,
   moreLabel: (count) => `+${count} more`,
   foldLabel: (node) => `+${node.moreCount ?? 0} hosts`
 }
@@ -86,6 +89,16 @@ describe('flow paint — a later topology push', () => {
     expect(glyph.textContent).toBe('+25')
     expect(glyph.style.fontSize).toBe('7px')
   })
+
+  it('outlines a site in its state once something on it is in trouble', () => {
+    const root = newRoot()
+    paint(root, [node({ id: 'site', nodeType: 'site', state: 'OK' })])
+    const box = () => root.querySelector<SVGRectElement>(`g.${flowClass.node} rect`)!
+    expect(box().style.stroke).not.toContain('critical')
+
+    paint(root, [node({ id: 'site', nodeType: 'site', state: 'CRITICAL' })])
+    expect(box().style.stroke).toContain('critical')
+  })
 })
 
 describe('flow paint — fold-backs', () => {
@@ -109,6 +122,25 @@ describe('flow paint — fold-backs', () => {
     expect(badges[0]!.getAttribute('aria-expanded')).toBe('true')
     const [, x, y] = /translate\(([-\d.]+),([-\d.]+)\)/.exec(badges[0]!.getAttribute('transform')!)!
     expect([Number(x), Number(y)]).toEqual([head.x! + donutOuterRadius(1), head.y])
+  })
+})
+
+describe('flow paint — a name kept in a tree', () => {
+  /** A host whose name grows to about 20 units in its column: 4 characters in 48 units. */
+  function keptName(scale: number): SVGTextElement {
+    const root = newRoot()
+    paint(root, [node({ id: 'core', nodeType: 'host' })])
+    const nodes = select(root).selectAll<SVGGElement, FNode>(`g.${flowClass.node}`)
+    refreshHostLabels(nodes, scale, { emphasised: () => true, room: () => 48 })
+    return root.querySelector(`text.${flowClass.label}`)!
+  }
+
+  it('stays while its column leaves it readable', () => {
+    expect(keptName(0.5).style.display).toBe('')
+  })
+
+  it('is left out once its column no longer does', () => {
+    expect(keptName(0.3).style.display).toBe('none')
   })
 })
 

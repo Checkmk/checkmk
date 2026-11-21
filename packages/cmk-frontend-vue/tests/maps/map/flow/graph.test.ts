@@ -6,8 +6,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { VISIBLE_HOSTS } from '@/maps/map/flow/fold'
-import { NODE_R } from '@/maps/map/flow/geometry'
-import { createFlowGraph } from '@/maps/map/flow/graph'
+import { NODE_R, cutOffBy } from '@/maps/map/flow/geometry'
+import { createFlowGraph, foldsHosts } from '@/maps/map/flow/graph'
 import type { HostLayout, TopologyNode } from '@/maps/types/api'
 
 import { aTopologyNode } from '../../support/fixtures'
@@ -35,6 +35,7 @@ function build(
     opened: new Map((extra.opened ?? []).map((id) => [id, 1])),
     found: new Set(extra.found ?? []),
     problemsOnly: extra.problemsOnly ?? false,
+    cutOff: cutOffBy(topology),
     picked: extra.picked ?? null,
     hostLayout: extra.hostLayout ?? 'tree'
   })
@@ -62,6 +63,23 @@ const drawnHosts = (built: ReturnType<typeof build>): string[] =>
   built.nodes.filter((node) => node.nodeType === 'host').map((node) => node.id)
 const folds = (built: ReturnType<typeof build>) =>
   built.nodes.filter((node) => node.nodeType === 'fold')
+
+describe('foldsHosts', () => {
+  it('folds a hierarchy drawn as a tree, as the graph then does', () => {
+    expect(foldsHosts(behindRouter(30), 'tree')).toBe(true)
+    expect(build(aGraph(), behindRouter(30)).startsAsTree).toBe(true)
+  })
+
+  it('folds nothing drawn as a network', () => {
+    expect(foldsHosts(behindRouter(30), 'network')).toBe(false)
+  })
+
+  it('folds nothing where most hosts have no parent on the map', () => {
+    const flat = Array.from({ length: 10 }, (_, i) => aTopologyNode({ name: `host-${i}` }))
+    expect(foldsHosts(flat, 'tree')).toBe(false)
+    expect(build(aGraph(), flat).startsAsTree).toBe(false)
+  })
+})
 
 describe('createFlowGraph', () => {
   it('draws hosts whose parents are not on the map as a flat map, without folds', () => {
@@ -149,11 +167,60 @@ describe('createFlowGraph', () => {
   it('draws a host with a service in trouble wherever it hangs while the map shows only problems', () => {
     const topology = behindRouter(30).map((topo) =>
       topo.name === 'host-7'
-        ? { ...topo, services_summary: { ok: 0, warning: 0, critical: 1, unknown: 0, pending: 0 } }
+        ? {
+            ...topo,
+            services_summary: { ok: 0, warning: 0, critical: 1, unknown: 0, pending: 0 },
+            unhandled_service_problems: 1
+          }
         : topo
     )
     expect(drawnHosts(build(aGraph(), topology))).not.toContain('host-7')
     expect(drawnHosts(build(aGraph(), topology, { problemsOnly: true }))).toContain('host-7')
+  })
+
+  it('keeps hosts unreachable through a host down folded while the map shows only problems', () => {
+    const built = build(
+      aGraph(),
+      behindRouter(30, () => 'UNREACHABLE', 'DOWN'),
+      {
+        problemsOnly: true
+      }
+    )
+    expect(drawnHosts(built)).toEqual(['router'])
+  })
+
+  it('leaves out a group without problems while the map shows only problems', () => {
+    expect(folds(build(aGraph(), behindRouter(30)))).toHaveLength(1)
+    expect(folds(build(aGraph(), behindRouter(30), { problemsOnly: true }))).toEqual([])
+  })
+
+  it('hangs a host past the quiet hosts left out under the ancestor that stays', () => {
+    const crit = { ok: 0, warning: 0, critical: 1, unknown: 0, pending: 0 }
+    const topology = [
+      aTopologyNode({ name: 'core', services_summary: crit, unhandled_service_problems: 1 }),
+      ...behindRouter(30, (i) => (i === 7 ? 'DOWN' : 'UP')).map((topo) =>
+        topo.name === 'router' ? { ...topo, parents: ['core'] } : topo
+      )
+    ]
+    const built = build(aGraph(), topology, { problemsOnly: true })
+    const edge = built.links.find(
+      (link) => link.source.id === 'core' && link.target.id === 'host-7'
+    )
+    expect(edge).toMatchObject({ skipsHosts: true })
+    expect(edge?.furtherParent).toBeUndefined()
+  })
+
+  it('draws a picked host without problems while the map shows only problems', () => {
+    expect(
+      drawnHosts(build(aGraph(), behindRouter(30), { problemsOnly: true, picked: 'host-7' }))
+    ).toContain('host-7')
+  })
+
+  it('keeps a host whose problem is handled folded while the map shows only problems', () => {
+    const topology = behindRouter(30).map((topo) =>
+      topo.name === 'host-7' ? { ...topo, state: 'DOWN', acknowledged: true } : topo
+    )
+    expect(drawnHosts(build(aGraph(), topology, { problemsOnly: true }))).not.toContain('host-7')
   })
 
   it('draws none of the hits of a search that names most of the map', () => {
@@ -317,6 +384,26 @@ describe('createFlowGraph', () => {
     expect(built.byId.get('b')!.y!).toBeLessThan(built.byId.get('a')!.y!)
   })
 
+  it('puts the host down that cuts off more hosts first', () => {
+    const behind = (parent: string, count: number): TopologyNode[] =>
+      Array.from({ length: count }, (_, i) =>
+        aTopologyNode({ name: `${parent}-${i}`, parents: [parent], state: 'UNREACHABLE' })
+      )
+    const built = build(
+      aGraph(),
+      [
+        aTopologyNode({ name: 'router' }),
+        aTopologyNode({ name: 'a', parents: ['router'], state: 'DOWN' }),
+        aTopologyNode({ name: 'b', parents: ['router'], state: 'DOWN' }),
+        ...behind('a', 5),
+        ...behind('b', 20)
+      ],
+      { opened: ['router'] }
+    )
+
+    expect(built.byId.get('b')!.y!).toBeLessThan(built.byId.get('a')!.y!)
+  })
+
   it('puts the sibling with a host down further below it before one with more service problems', () => {
     const crit = { ok: 0, warning: 0, critical: 1, unknown: 0, pending: 0 }
     const built = build(
@@ -362,7 +449,7 @@ describe('createFlowGraph', () => {
     expect(fold).toMatchObject({
       state: 'CRITICAL',
       foldAttention: { critical: 1, handled: 2, none: 27 },
-      foldFirst: [{ name: 'host-1', needs: 'critical' }]
+      foldPressing: [{ name: 'host-1', needs: 'critical' }]
     })
   })
 
@@ -424,9 +511,9 @@ describe('createFlowGraph', () => {
       .filter((id) => id !== 'router')
       .sort((a, b) => built.byId.get(a)!.y! - built.byId.get(b)!.y!)
     expect(order).toEqual([
-      'f-unreachable',
       'e-crit',
       'd-warn',
+      'f-unreachable',
       'b-crit-acked',
       'c-down-acked',
       'a-ok'

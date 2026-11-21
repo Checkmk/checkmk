@@ -33,7 +33,7 @@ import type { FNode } from '@/maps/map/flow/nodes'
 
 /** How close a fit gets to the edge of the drawing area. */
 const FIT_PADDING = 64
-const MIN_SCALE = 0.15
+export const MIN_SCALE = 0.15
 const MAX_SCALE = 3
 const STEP = 1.4
 /**
@@ -46,11 +46,27 @@ const DETAIL_SCALE = 0.8
 const FALLBACK_WIDTH = 900
 const FALLBACK_HEIGHT = 600
 
+/** Whether the operator's system asks for motion to be left out. */
+function prefersReducedMotion(): boolean {
+  // Absent in jsdom, so "cannot tell" is "no preference expressed".
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+}
+
 /** A view to return to, as long as the operator has not moved it since. */
 export interface ViewMark {
   transform: ZoomTransform
   handMoves: number
   zoomedByHand: boolean
+}
+
+/**
+ * A view the map leaves for a while, to show something, and returns to once
+ * that is over, unless the operator has moved it since. Leaving twice keeps
+ * the first view.
+ */
+export interface ViewDetour {
+  leave: () => void
+  back: () => void
 }
 
 export interface FlowZoomOptions {
@@ -71,6 +87,8 @@ export interface FlowZoomOptions {
   onTransform: (transform: ZoomTransform) => void
   /** Told when the view starts and stops moving, by hand or in a fit. */
   motion: MapMotion
+  /** The furthest out a fit or focus goes unless told otherwise. */
+  fitFloor: () => number
 }
 
 interface Bounds {
@@ -99,7 +117,8 @@ function viewSize(svg: SVGSVGElement): { x: number; y: number } {
 }
 
 export function useFlowZoom(options: FlowZoomOptions) {
-  const { svgEl, nodes, simulation, onSettled, onDetailChange, onTransform, motion } = options
+  const { svgEl, nodes, simulation, onSettled, onDetailChange, onTransform, motion, fitFloor } =
+    options
 
   // Read from the hot-path painters once per frame, so a plain value rather
   // than a ref: the proxy overhead is not worth paying per donut arc.
@@ -233,9 +252,14 @@ export function useFlowZoom(options: FlowZoomOptions) {
   /**
    * Fits everything that has a place on the map into the drawing area, or only
    * the given nodes, no closer than the map's natural size, so a small map or a
-   * single node is not blown up.
+   * single node is not blown up. Nor further out than ``atLeast``, by default
+   * ``fitFloor``: what does not fit then is shown from its top left.
    */
-  function fitView({ animated = true, only }: { animated?: boolean; only?: FNode[] } = {}): void {
+  function fitView({
+    animated = true,
+    only,
+    atLeast = fitFloor()
+  }: { animated?: boolean; only?: FNode[]; atLeast?: number } = {}): void {
     const svg = svgEl.value
     const box = boundsOf(only ?? nodes(), NODE_R + FIT_PADDING)
     if (!svg || !behaviour || !box) {
@@ -249,10 +273,16 @@ export function useFlowZoom(options: FlowZoomOptions) {
     // fill the screen.
     const k = Math.min(
       1,
-      Math.max(MIN_SCALE, Math.min(size.x / (right - left), size.y / (bottom - top)))
+      Math.max(atLeast, Math.min(size.x / (right - left), size.y / (bottom - top)))
     )
-    const x = size.x / 2 - k * ((left + right) / 2)
-    const y = size.y / 2 - k * ((top + bottom) / 2)
+    // From the top left, its first node ``FIT_PADDING`` clear of the controls
+    // over the map's corner; ``low`` holds that padding at the map's scale.
+    const along = (axis: 'x' | 'y', low: number, high: number): number =>
+      k * (high - low) <= size[axis]
+        ? size[axis] / 2 - k * ((low + high) / 2)
+        : FIT_PADDING - k * (low + FIT_PADDING)
+    const x = along('x', left, right)
+    const y = along('y', top, bottom)
     if (!Number.isFinite(k) || !Number.isFinite(x) || !Number.isFinite(y)) {
       return
     }
@@ -265,23 +295,35 @@ export function useFlowZoom(options: FlowZoomOptions) {
   }
 
   function animateTo(svg: SVGSVGElement, target: ZoomTransform): void {
-    if (behaviour) {
+    if (!behaviour) {
+      return
+    }
+    if (prefersReducedMotion()) {
+      select(svg).interrupt().call(behaviour.transform, target)
+    } else {
       select(svg).transition().duration(400).call(behaviour.transform, target)
     }
   }
 
   function scaleBy(factor: number): void {
     const svg = svgEl.value
-    if (svg && behaviour) {
+    if (!svg || !behaviour) {
+      return
+    }
+    if (prefersReducedMotion()) {
+      select(svg).interrupt().call(behaviour.scaleBy, factor)
+    } else {
       select(svg).transition().duration(200).call(behaviour.scaleBy, factor)
     }
   }
 
   /**
    * Brings all of ``shown`` into the middle of the view, zoomed to fit it, but
-   * no further in than natural size or the zoom the operator had.
+   * no further in than natural size or the zoom the operator had, nor further
+   * out than ``atLeast``, by default ``fitFloor``: what does not fit then is
+   * shown from its top left.
    */
-  function focusOn(shown: FNode[]): void {
+  function focusOn(shown: FNode[], { atLeast = fitFloor() }: { atLeast?: number } = {}): void {
     const svg = svgEl.value
     const group = boundsOf(shown, NODE_R)
     if (!svg || !behaviour || !group) {
@@ -297,10 +339,10 @@ export function useFlowZoom(options: FlowZoomOptions) {
       room('y') / (group.y[1] - group.y[0])
     )
     const now = zoomTransform(svg)
-    const k = Math.max(MIN_SCALE, Math.min(fit, Math.max(now.k, 1)))
+    const k = Math.max(atLeast, Math.min(fit, Math.max(now.k, 1)))
     const along = (axis: 'x' | 'y'): number => {
       const [low, high] = group[axis]
-      return pad[axis][0] + (room(axis) - (high - low) * k) / 2 - low * k
+      return pad[axis][0] + Math.max(0, (room(axis) - (high - low) * k) / 2) - low * k
     }
     animateTo(svg, zoomIdentity.translate(along('x'), along('y')).scale(k))
   }
@@ -321,6 +363,44 @@ export function useFlowZoom(options: FlowZoomOptions) {
     animateTo(svg, mark.transform)
     zoomedByHand.value = mark.zoomedByHand
     return true
+  }
+
+  function detour(): ViewDetour {
+    let mark: ViewMark | null = null
+    return {
+      leave: () => {
+        mark ??= markView()
+      },
+      back: () => {
+        if (mark) {
+          returnTo(mark)
+          mark = null
+        }
+      }
+    }
+  }
+
+  /**
+   * Pans ``node`` into view if any of it is off screen, at the same zoom and
+   * only as far as it takes: the map the operator is reading stays in place.
+   */
+  function bringIntoView(node: FNode): void {
+    const svg = svgEl.value
+    if (!svg || !behaviour) {
+      return
+    }
+    const now = zoomTransform(svg)
+    const size = viewSize(svg)
+    const [sx, sy] = now.apply([finiteOr(node.x), finiteOr(node.y)])
+    const r = NODE_R * now.k
+    // In to FIT_PADDING clear of the edge it is over, as a fit leaves a node.
+    const into = (at: number, extent: number): number =>
+      at < r ? FIT_PADDING - at : at > extent - r ? extent - FIT_PADDING - at : 0
+    const dx = into(sx, size.x)
+    const dy = into(sy, size.y)
+    if (dx || dy) {
+      animateTo(svg, now.translate(dx / now.k, dy / now.k))
+    }
   }
 
   /** Zooms to ``k`` around ``anchor``, which keeps its place on screen. */
@@ -410,9 +490,11 @@ export function useFlowZoom(options: FlowZoomOptions) {
     applyDetail,
     fitView,
     focusOn,
+    bringIntoView,
     zoomAround,
     markView,
     returnTo,
+    detour,
     zoomIn: () => scaleBy(STEP),
     zoomOut: () => scaleBy(1 / STEP),
     claimView,

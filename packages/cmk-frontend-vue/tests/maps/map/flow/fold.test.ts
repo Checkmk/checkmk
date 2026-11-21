@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { foldHierarchy } from '@/maps/map/flow/fold'
+import { type Folded, foldHierarchy, withoutQuiet } from '@/maps/map/flow/fold'
 
 const SITE = 'site'
 
@@ -192,5 +192,32 @@ describe('foldHierarchy', () => {
     tree.hosts.push('p', 'q')
     const { visible } = fold(tree)
     expect(visible.has('p') && visible.has('q')).toBe(true)
+  })
+})
+
+describe('withoutQuiet', () => {
+  // site → a → b → c, and a fold of four hosts under b.
+  const tree = (): Folded => ({
+    visible: new Set(['a', 'b', 'c']),
+    children: new Map([
+      ['site', ['a']],
+      ['a', ['b']],
+      ['b', ['c']]
+    ]),
+    folds: [{ parentId: 'b', members: ['f1', 'f2', 'f3', 'f4'] }]
+  })
+
+  it('hangs a host in trouble under its nearest ancestor that stays', () => {
+    const left = withoutQuiet(tree(), (id) => id !== 'c')
+    expect([...left.visible]).toEqual(['c'])
+    expect(left.children.get('site')).toEqual(['c'])
+    expect(left.folds).toEqual([])
+  })
+
+  it('keeps a quiet host that holds a group with a host in trouble', () => {
+    const left = withoutQuiet(tree(), (id) => id !== 'c' && id !== 'f2')
+    expect(left.children.get('site')).toEqual(['b'])
+    expect(left.children.get('b')).toEqual(['c'])
+    expect(left.folds).toHaveLength(1)
   })
 })

@@ -28,25 +28,26 @@
  * it can be built and exercised outside a component.
  */
 import {
-  ATTENTION_STATE,
   type Attention,
   attentionOf,
   attentionRank,
+  groupStateIn,
+  isUnhandled,
   needsAttention,
-  unhandledIn,
+  pressingIn,
   worstIn
 } from '@/maps/map/flow/attention'
-import { VISIBLE_HOSTS, foldHierarchy } from '@/maps/map/flow/fold'
+import { type Folded, VISIBLE_HOSTS, foldHierarchy, withoutQuiet } from '@/maps/map/flow/fold'
 import {
   type DonutSegment,
   NODE_R,
+  byName,
   fanR,
   finiteOr,
   orbitR,
   problemScoreFromTopo,
   summarizeHosts,
-  svcR,
-  worstServiceState
+  svcR
 } from '@/maps/map/flow/geometry'
 import {
   type Footprint,
@@ -61,6 +62,7 @@ import {
   needsServices,
   preLayoutHosts,
   preLayoutHostsBelowSite,
+  rootsOf,
   rowColumnGuess,
   rowColumns,
   serviceReach,
@@ -92,8 +94,31 @@ const MAX_LAYER_SPACING = 130
 const HOST_ROW = 2 * NODE_R + 30
 /** A further line of a host's name. */
 const LABEL_LINE = 15
+/**
+ * How many of a group's hosts that need attention it lists, the most urgent
+ * first: a card shows that many at most, so a group under a core router does
+ * not rebuild thousands of rows on every update.
+ */
+export const PRESSING_LISTED = 50
+
 /** Room for a folded group's "+N hosts" label. */
 export const FOLD_WIDTH = 90
+
+/**
+ * Whether a map folds its hosts into a tree: not when it is drawn as a network,
+ * nor when most hosts have no parent on it, as there is nothing to fold under.
+ */
+export function foldsHosts(
+  topology: readonly TopologyNode[],
+  hostLayout: HostLayout,
+  flat = mostlyFlat(topology, rootsOf(topology).length)
+): boolean {
+  return hostLayout !== 'network' && !flat
+}
+
+function mostlyFlat(topology: readonly TopologyNode[], rootCount: number): boolean {
+  return topology.length > 0 && rootCount / topology.length >= 0.5
+}
 
 function placed(node: FNode | undefined): node is FNode & Position {
   return !!node && Number.isFinite(node.x) && Number.isFinite(node.y)
@@ -125,6 +150,13 @@ export interface FlowGraph {
   startsAsTree: boolean
   /** In a tree, each site's frame, then each opened host's; empty otherwise. */
   frames: HostFrame[]
+  /**
+   * In a tree, each drawn site, host and fold under its drawn parent, siblings
+   * in the order they are drawn; empty otherwise.
+   */
+  treeChildren: ReadonlyMap<string, readonly string[]>
+  /** In a tree, each drawn node's drawn parent; empty otherwise. */
+  treeParent: ReadonlyMap<string, string>
   vSpacing: number
   /** Whether a host or a group was added or removed since the previous build. */
   structurallyChanged: boolean
@@ -145,6 +177,8 @@ export interface FlowGraphBuild {
   found: ReadonlySet<string>
   /** Whether the map shows only what has a problem, which is then drawn wherever it hangs. */
   problemsOnly: boolean
+  /** For each host down, how many hosts are unreachable because of it. */
+  cutOff: ReadonlyMap<string, number>
   /** The host the operator picked by its name, which is drawn wherever it hangs. */
   picked: string | null
   /** How a parent hierarchy is laid out; a flat map ignores it. */
@@ -211,6 +245,7 @@ export function createFlowGraph({ describeTruncation }: FlowGraphOptions) {
     opened,
     found,
     problemsOnly,
+    cutOff,
     picked,
     hostLayout
   }: FlowGraphBuild): FlowGraph {
@@ -220,14 +255,14 @@ export function createFlowGraph({ describeTruncation }: FlowGraphOptions) {
     const levels = bfsLevels(topology, childrenOf)
     const maxLvl = highest(levels.values())
     const vSpacing = layerSpacing(topology, layout, maxLvl, height)
-    // A host whose parents are not on the map is a root here too.
-    const rootCount = topology.filter((n) => levels.get(n.name) === 0).length
-    const isMostlyFlat = topology.length > 0 && rootCount / topology.length >= 0.5
+    const isMostlyFlat = mostlyFlat(
+      topology,
+      topology.filter((n) => levels.get(n.name) === 0).length
+    )
     const siteOf = (topo: TopologyNode): string => topo.site_id || connectionId
 
-    // --- What a large hierarchy folds away. A flat map has nothing to fold
-    // under, and keeps its severity spiral; a hierarchy drawn as a network
-    // shows every host.
+    // --- What a large hierarchy folds away. A flat map keeps its severity
+    // spiral instead.
     const rootsBySite = new Map<string, string[]>()
     for (const topo of topology) {
       if (levels.get(topo.name) === 0) {
@@ -247,27 +282,35 @@ export function createFlowGraph({ describeTruncation }: FlowGraphOptions) {
     const drawnAnyway: ReadonlySet<string> = problemsOnly
       ? new Set([...asked, ...withProblems(topology)])
       : asked
-    const folded =
-      isMostlyFlat || hostLayout === 'network'
-        ? undefined
-        : foldHierarchy({
-            sites: [...rootsBySite].map(([siteId, roots]) => ({
-              siteRoot: siteNodeId(siteId),
-              roots
-            })),
-            childrenOf,
-            hosts: topology.map((n) => n.name),
-            opened,
-            // Unreachable is the consequence of a host down above it, which is
-            // what is shown; it opens nothing by itself.
-            troubled: new Set(
-              topology.filter((topo) => attentionOf(topo) === 'down').map((topo) => topo.name)
-            ),
-            causes: new Set(
-              topology.filter((topo) => topo.state === 'DOWN').map((topo) => topo.name)
-            ),
-            shownAnyway: drawnAnyway
-          })
+    const hierarchy = foldsHosts(topology, hostLayout, isMostlyFlat)
+      ? foldHierarchy({
+          sites: [...rootsBySite].map(([siteId, roots]) => ({
+            siteRoot: siteNodeId(siteId),
+            roots
+          })),
+          childrenOf,
+          hosts: topology.map((n) => n.name),
+          opened,
+          // Unreachable is the consequence of a host down above it, which is
+          // what is shown; it opens nothing by itself.
+          troubled: new Set(
+            topology.filter((topo) => attentionOf(topo) === 'down').map((topo) => topo.name)
+          ),
+          causes: new Set(
+            topology.filter((topo) => topo.state === 'DOWN').map((topo) => topo.name)
+          ),
+          shownAnyway: drawnAnyway
+        })
+      : undefined
+    // Showing only problems leaves out what asks for nothing and leads to
+    // nothing that does: the hosts in between, and the groups without problems.
+    const quietIn = (shown: Folded): Folded => {
+      const quiet = new Set(
+        topology.filter((topo) => !isUnhandled(attentionOf(topo))).map((topo) => topo.name)
+      )
+      return withoutQuiet(shown, (id) => quiet.has(id) && !drawnAnyway.has(id))
+    }
+    const folded = hierarchy && problemsOnly ? quietIn(hierarchy) : hierarchy
     const shown = folded ? topology.filter((n) => folded.visible.has(n.name)) : topology
     const wasDrawn = lastDrawn
     lastDrawn = folded?.visible ?? new Set()
@@ -358,9 +401,10 @@ export function createFlowGraph({ describeTruncation }: FlowGraphOptions) {
       pressing.sort(
         (a, b) => attentionRank(b.needs) - attentionRank(a.needs) || byName(a.name, b.name)
       )
+      pressing.length = Math.min(pressing.length, PRESSING_LISTED)
       return upsert(foldNodeId(fold.parentId), {
         nodeType: 'fold',
-        state: ATTENTION_STATE[pressing[0]?.needs ?? 'none'],
+        state: groupStateIn(attention),
         output: '',
         bfsLevel: parentTopo ? (levels.get(fold.parentId) ?? 0) + 1 : 0,
         siteId,
@@ -371,7 +415,7 @@ export function createFlowGraph({ describeTruncation }: FlowGraphOptions) {
         foldAttention: attention,
         foldSummary: summarizeHosts(fold.members.flatMap((member) => topoByName.get(member) ?? [])),
         foldMembers: fold.members,
-        foldFirst: pressing.slice(0, FOLD_FIRST)
+        foldPressing: pressing
       })
     })
     nodes.push(...folds)
@@ -418,9 +462,10 @@ export function createFlowGraph({ describeTruncation }: FlowGraphOptions) {
     const drawnChildren = new Map<string, string[]>()
     if (folded) {
       // What needs attention first among siblings, in the order of
-      // ``ATTENTIONS``; among equals, the one with the most urgent need
-      // anywhere below it, drawn or folded, then the one with more below it
-      // that needs attention; and the fold of the rest last.
+      // ``ATTENTIONS``; among equals, the one that cuts off more hosts, then
+      // the one with the most urgent need anywhere below it, drawn or folded,
+      // then the one with more below it that needs attention; and the fold of
+      // the rest last.
       const needOf = new Map<string, Attention>()
       for (const id of folded.visible) {
         const topo = topoByName.get(id)
@@ -435,7 +480,7 @@ export function createFlowGraph({ describeTruncation }: FlowGraphOptions) {
           return known
         }
         const fold = foldUnder.get(id)?.foldAttention
-        const sum = { rank: attentionRank(worstIn(fold)), count: unhandledIn(fold) }
+        const sum = { rank: attentionRank(worstIn(fold)), count: pressingIn(fold) }
         for (const child of folded.children.get(id) ?? []) {
           const pressing = needsAttention(needOf.get(child) ?? 'none')
           const deeper = belowOf(child)
@@ -447,6 +492,7 @@ export function createFlowGraph({ describeTruncation }: FlowGraphOptions) {
       }
       const byUrgency = (a: string, b: string): number =>
         urgency(b) - urgency(a) ||
+        (cutOff.get(b) ?? 0) - (cutOff.get(a) ?? 0) ||
         belowOf(b).rank - belowOf(a).rank ||
         belowOf(b).count - belowOf(a).count ||
         byName(a, b)
@@ -651,7 +697,7 @@ export function createFlowGraph({ describeTruncation }: FlowGraphOptions) {
       source: FNode,
       target: FNode,
       isServiceLink: boolean,
-      furtherParent = false
+      kind: Pick<FLink, 'furtherParent' | 'skipsHosts'> = {}
     ): void => {
       const tied = tree && !isServiceLink && placed(source) && placed(target)
       const elbow = drawnParent.get(target.id) === source.id ? elbows.get(target.id) : undefined
@@ -662,7 +708,7 @@ export function createFlowGraph({ describeTruncation }: FlowGraphOptions) {
         isServiceLink,
         ...(tied ? { restLength: Math.hypot(target.x! - source.x!, target.y! - source.y!) } : {}),
         ...(elbow ? { elbow } : {}),
-        ...(furtherParent ? { furtherParent } : {})
+        ...kind
       })
     }
     for (const topo of shown) {
@@ -670,8 +716,18 @@ export function createFlowGraph({ describeTruncation }: FlowGraphOptions) {
       for (const parent of topo.parents) {
         const source = byId.get(parent)
         if (source && target) {
-          connect(source, target, false, tree && drawnParent.get(target.id) !== source.id)
+          connect(
+            source,
+            target,
+            false,
+            tree && drawnParent.get(target.id) !== source.id ? { furtherParent: true } : {}
+          )
         }
+      }
+      // Hung under an ancestor past hosts left out: a line to it all the same.
+      const above = byId.get(drawnParent.get(topo.name) ?? '')
+      if (target && above?.nodeType === 'host' && !topo.parents.includes(above.id)) {
+        connect(above, target, false, { skipsHosts: true })
       }
     }
     // Site → host. Only the top-level hosts hang off the site; the ones below
@@ -738,6 +794,8 @@ export function createFlowGraph({ describeTruncation }: FlowGraphOptions) {
       maxLvl,
       startsAsTree: tree !== undefined,
       frames,
+      treeChildren: drawnChildren,
+      treeParent: drawnParent,
       vSpacing,
       structurallyChanged
     }
@@ -892,23 +950,16 @@ export function sameSet(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean
 }
 
 /**
- * The hosts a map showing only problems draws wherever they hang: those not up,
- * or with a service in trouble. No more than half the budget, the worst first;
- * the folds' rings still count the rest.
+ * The hosts a map showing only problems draws wherever they hang: those that
+ * need attention. No more than half the budget, the worst first; the folds'
+ * rings still count the rest, handled and unreachable hosts among them.
  */
 function withProblems(topology: readonly TopologyNode[]): string[] {
   return topology
-    .filter((topo) => topo.state !== 'UP' || worstServiceState(topo.services_summary) !== null)
+    .filter((topo) => needsAttention(attentionOf(topo)))
     .sort((a, b) => problemScoreFromTopo(b) - problemScoreFromTopo(a))
     .slice(0, VISIBLE_HOSTS / 2)
     .map((topo) => topo.name)
-}
-
-/** The hosts a fold's hover card names, the ones that need attention first. */
-const FOLD_FIRST = 3
-
-function byName(a: string, b: string): number {
-  return a < b ? -1 : a > b ? 1 : 0
 }
 
 /** A fold's ring: its hosts by what they need, a handled problem quieter than one that is not. */

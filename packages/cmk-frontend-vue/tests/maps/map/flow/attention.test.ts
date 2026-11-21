@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { attentionOf, unhandledIn } from '@/maps/map/flow/attention'
+import { attentionOf, groupStateIn, pressingIn } from '@/maps/map/flow/attention'
 
 import { aTopologyNode } from '../../support/fixtures'
 
@@ -52,8 +52,22 @@ describe('attentionOf', () => {
   })
 })
 
-describe('unhandledIn', () => {
+describe('pressingIn', () => {
   it('counts neither the handled hosts nor the healthy ones', () => {
-    expect(unhandledIn({ down: 1, warning: 2, handled: 5, none: 20 })).toBe(3)
+    expect(pressingIn({ down: 1, warning: 2, handled: 5, none: 20 })).toBe(3)
+  })
+})
+
+describe('groupStateIn', () => {
+  it('draws a group of hosts unreachable in their state, though they ask for nothing', () => {
+    expect(groupStateIn({ unreachable: 4, handled: 1, none: 3 })).toBe('UNREACHABLE')
+  })
+
+  it('draws a group in the state of a host down before that of unreachable ones', () => {
+    expect(groupStateIn({ down: 1, unreachable: 4 })).toBe('DOWN')
+  })
+
+  it('draws a group whose problems are all handled as fine', () => {
+    expect(groupStateIn({ handled: 2, none: 3 })).toBe('OK')
   })
 })

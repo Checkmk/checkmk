@@ -9,15 +9,18 @@ import {
   DONUT_MAX_WIDTH,
   ORBIT_R_MIN,
   SVC_R_MAX,
+  cutOffBy,
   donutOuterRadius,
   fanR,
   finiteOr,
   firstFinite,
+  hostDownAbove,
   orbitR,
   problemScoreFromTopo,
   severityRank,
   showSvcLabel,
-  svcR
+  svcR,
+  worstAffected
 } from '@/maps/map/flow/geometry'
 import type { ServicesSummary, TopologyNode } from '@/maps/types/api'
 
@@ -133,5 +136,65 @@ describe('severityRank', () => {
 
   it('ranks a fully healthy host as 0', () => {
     expect(severityRank(node('UP', summary()))).toBe(0)
+  })
+})
+
+describe('worstAffected', () => {
+  const crit = { ok: 0, warning: 0, critical: 1, unknown: 0, pending: 0 }
+
+  it('puts a host down that cuts others off before one down alone', () => {
+    const topology = [
+      aTopologyNode({ name: 'a-alone', state: 'DOWN', services_summary: crit }),
+      aTopologyNode({ name: 'b-cause', state: 'DOWN' }),
+      aTopologyNode({ name: 'child', state: 'UNREACHABLE', parents: ['b-cause'] }),
+      aTopologyNode({ name: 'grandchild', state: 'UNREACHABLE', parents: ['child'] })
+    ]
+    expect([...worstAffected(topology, 1)]).toEqual(['b-cause'])
+  })
+
+  it('never picks an unreachable host, and picks among equals by name', () => {
+    const topology = [
+      aTopologyNode({ name: 'b', state: 'DOWN' }),
+      aTopologyNode({ name: 'a', state: 'DOWN' }),
+      aTopologyNode({ name: 'cut', state: 'UNREACHABLE' })
+    ]
+    expect([...worstAffected(topology, 3)]).toEqual(['a', 'b'])
+  })
+})
+
+describe('hostDownAbove', () => {
+  const topology = [
+    aTopologyNode({ name: 'core', state: 'DOWN' }),
+    aTopologyNode({ name: 'switch', state: 'UNREACHABLE', parents: ['core'] }),
+    aTopologyNode({ name: 'edge', state: 'UP', parents: ['core'] })
+  ]
+
+  it('finds the host down above unreachable ones', () => {
+    expect(hostDownAbove('switch', topology)).toBe('core')
+    expect(hostDownAbove('core', topology)).toBe('core')
+  })
+
+  it('finds nothing above a host that is up', () => {
+    expect(hostDownAbove('edge', topology)).toBeNull()
+  })
+})
+
+describe('cutOffBy', () => {
+  it('counts a host for the host down behind any of its parents, through a chain', () => {
+    const topology = [
+      aTopologyNode({ name: 'core', state: 'DOWN' }),
+      aTopologyNode({ name: 'link', state: 'UNREACHABLE', parents: ['core'] }),
+      aTopologyNode({ name: 'orphan', state: 'UNREACHABLE', parents: ['gone'] }),
+      aTopologyNode({ name: 'leaf', state: 'UNREACHABLE', parents: ['orphan', 'link'] })
+    ]
+    expect(cutOffBy(topology)).toEqual(new Map([['core', 2]]))
+  })
+
+  it('ends a parent cycle rather than going round', () => {
+    const topology = [
+      aTopologyNode({ name: 'a', state: 'UNREACHABLE', parents: ['b'] }),
+      aTopologyNode({ name: 'b', state: 'UNREACHABLE', parents: ['a'] })
+    ]
+    expect(cutOffBy(topology)).toEqual(new Map())
   })
 })

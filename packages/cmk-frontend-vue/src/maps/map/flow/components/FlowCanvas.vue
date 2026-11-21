@@ -37,13 +37,13 @@ import { useHoverGrace } from '@/maps/map/composables/useHoverGrace'
 import { useMapMotion } from '@/maps/map/composables/useMapMotion'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
 import MapElementPulse from '@/maps/map/elements/components/MapElementPulse.vue'
-import { ATTENTIONS, type Attention } from '@/maps/map/flow/attention'
+import { ATTENTIONS, type Attention, pressingIn } from '@/maps/map/flow/attention'
 import FlowGroupHoverCard, {
   type GroupCardContent
 } from '@/maps/map/flow/components/FlowGroupHoverCard.vue'
 import { useFlowFilter } from '@/maps/map/flow/composables/useFlowFilter'
 import { isSelectable, type useFlowSelection } from '@/maps/map/flow/composables/useFlowSelection'
-import { type ViewMark, useFlowZoom } from '@/maps/map/flow/composables/useFlowZoom'
+import { MIN_SCALE, type ViewMark, useFlowZoom } from '@/maps/map/flow/composables/useFlowZoom'
 import { createFlowSimulation } from '@/maps/map/flow/forces'
 import { finiteOr, nodeRadius, summarizeHosts } from '@/maps/map/flow/geometry'
 import { FOLD_WIDTH, createFlowGraph, sameSet } from '@/maps/map/flow/graph'
@@ -57,6 +57,7 @@ import { KIND_TRAITS, isSiteNodeId } from '@/maps/map/flow/nodeIds'
 import type { createFlowNodeModel } from '@/maps/map/flow/nodeModel'
 import type { FLink, FNode, HostFrame } from '@/maps/map/flow/nodes'
 import {
+  LABEL_HIDE_SCALE,
   drawFoldBacks,
   drawFrames,
   drawLinks,
@@ -70,6 +71,7 @@ import {
   positionLinks,
   positionNodes,
   refreshDonutWidths,
+  refreshFoldAlerts,
   refreshHostLabels,
   refreshLinks,
   refreshNodes
@@ -91,6 +93,11 @@ interface Pulse {
   node: FNode
   color: string
 }
+
+/** Set while the map moves keyboard focus itself, which opens no card. */
+let focusWithoutCard = false
+
+const CURRENT_HIT_CLASS = 'maps-flow-canvas__node--current-hit'
 
 /** Height used before the drawing area has been measured. */
 const FALLBACK_HEIGHT = 600
@@ -121,6 +128,8 @@ const props = defineProps<{
   preview: boolean
   filterNeedle: string
   problemsOnly: boolean
+  /** For each host down, how many hosts are unreachable because of it. */
+  cutOff: ReadonlyMap<string, number>
   /** The host whose slide-in was opened by its name, drawn even when it is collapsed. */
   picked: string | null
   /** Changes when this is a different map, or looks at a different root. */
@@ -164,7 +173,8 @@ const filter = useFlowFilter({
   svgEl,
   needle: () => props.filterNeedle,
   problemsOnly: () => props.problemsOnly,
-  worstServiceState: props.model.worstServiceState
+  worstServiceState: props.model.worstServiceState,
+  found: () => found
 })
 
 const marquee = props.selection.marquee
@@ -179,6 +189,9 @@ let drawn: FNode[] = []
  * in, whose children a later topology push would no longer match.
  */
 let childrenOfDrawn: ReadonlyMap<string, string[]> = new Map()
+/** In a tree, what the arrow keys walk: each drawn node's children, and its parent. */
+let treeChildren: ReadonlyMap<string, readonly string[]> = new Map()
+let treeParent: ReadonlyMap<string, string> = new Map()
 /**
  * The same for what a site drag carries along: a tree's hosts and their
  * services, which are pinned to their host and would otherwise stay behind
@@ -229,6 +242,7 @@ const groupCardGrace = useHoverGrace(() => (groupCard.value = null))
 /** The frame that moves the open card along with its group, if one is due. */
 let following = 0
 onUnmounted(() => cancelAnimationFrame(following))
+const groupCardEl = useTemplateRef<InstanceType<typeof FlowGroupHoverCard>>('groupCardEl')
 /** Repaints everything at its current position — set by each render. */
 let repaint: (() => void) | null = null
 let attached = false
@@ -238,6 +252,9 @@ const zoom = useFlowZoom({
   svgEl,
   nodes: () => drawn,
   simulation: () => simulation,
+  // A tree's fits keep its names readable; what does not fit then is shown
+  // from its top left, where the tree puts what is most urgent.
+  fitFloor: () => (folding ? LABEL_HIDE_SCALE : MIN_SCALE),
   onSettled: refreshAgainstZoom,
   // The nodes that were hidden stopped being positioned while they were; they
   // are put back where they belong before they are seen again.
@@ -269,17 +286,23 @@ function refreshAgainstZoom(): void {
   }
   const nodes = select(svg).selectAll<SVGGElement, FNode>(`g.${flowClass.node}`)
   refreshDonutWidths(svg, zoom.scale())
+  refreshFoldAlerts(svg, zoom.scale())
   refreshHostLabels(
     nodes,
     zoom.scale(),
     folding
       ? {
+          // A group's caption is all that says how many hosts it holds.
+          // A host with hosts drawn under it names what they hang from.
           emphasised: (node) =>
-            props.model.isWorst(node) ||
+            node.nodeType === 'fold' ||
+            (treeChildren.get(node.id)?.length ?? 0) > 0 ||
+            props.model.cutsOff(node) ||
             node.state === 'DOWN' ||
-            !!(node.foldAttention?.down || node.foldAttention?.unreachable) ||
             found.has(node.id) ||
-            opened.value.has(node.id),
+            opened.value.has(node.id) ||
+            // What problems-only leaves on the map is read by name.
+            props.problemsOnly,
           // A name may grow no wider than the room its host takes in a column.
           room: (node) => (node.nodeType === 'host' ? hostColumnWidth(node.id) : FOLD_WIDTH)
         }
@@ -327,6 +350,7 @@ function render(hits?: Set<string>): void {
     opened: opened.value,
     found,
     problemsOnly: props.problemsOnly,
+    cutOff: props.cutOff,
     picked: props.picked,
     hostLayout: props.hostLayout
   })
@@ -339,6 +363,8 @@ function render(hits?: Set<string>): void {
   folding = built.startsAsTree
   reportHits()
   childrenOfDrawn = built.childrenOf
+  treeChildren = built.treeChildren
+  treeParent = built.treeParent
   frames = built.frames
   groupOfSite = new Map(
     built.frames
@@ -388,9 +414,9 @@ function render(hits?: Set<string>): void {
     .append('g')
     .attr('class', nodeKindClass)
     .attr('cursor', cursorFor)
-    .attr('tabindex', 0)
-    .attr('role', 'button')
     .on('keydown', onNodeKeydown)
+    .on('focus', onNodeFocus)
+    .on('blur', onNodeLeave)
     .on('click', onNodeClick)
     .on('contextmenu', onNodeContextMenu)
     .on('mouseenter', onNodeEnter)
@@ -408,7 +434,8 @@ function render(hits?: Set<string>): void {
     showsDonut: (node) =>
       node.nodeType === 'fold' || showsDonut(layout, node.topo?.services_omitted),
     glowFilter,
-    isWorst: model.isWorst,
+    upQuiet: props.problemsOnly,
+    glows: model.cutsOff,
     halo: model.hostHalo,
     donutSegments: (node) => node.foldStates ?? (node.topo ? model.donutSegments(node.topo) : []),
     badges: (node) => model.commandMarkers(_t, node),
@@ -424,6 +451,7 @@ function render(hits?: Set<string>): void {
       }
       return objectAriaLabel(_t, model.mapElementFromFNode(node), stateNameOf(node))
     },
+    siteState: stateNameOf,
     moreLabel: (count) => _tn('+%{n} more', '+%{n} more', count, { n: count }),
     foldLabel
   })
@@ -494,6 +522,8 @@ function render(hits?: Set<string>): void {
   zoom.applyDetail()
   refreshAgainstZoom()
   filter.apply()
+  applyTreeRoles()
+  applyTabIndex()
   refreshPulses()
   selection.apply()
 
@@ -536,7 +566,87 @@ function refreshPulses(): void {
     pulses.value = next
   }
 }
-watch(filter.undimmed, refreshPulses)
+watch(filter.undimmed, () => {
+  applyTabIndex()
+  refreshPulses()
+})
+
+/** A node's siblings in a tree as they are drawn, the sites for a site. */
+function treeSiblings(id: string): readonly string[] {
+  const parent = treeParent.get(id)
+  return parent
+    ? (treeChildren.get(parent) ?? [])
+    : drawn.filter((node) => node.nodeType === 'site').map((site) => site.id)
+}
+
+/**
+ * A tree is a tree to assistive technology too: each node says how deep it
+ * sits, where among its siblings, and whether it is opened, and a screen
+ * reader hands the arrow keys to it. Elsewhere each node is a button.
+ */
+function applyTreeRoles(): void {
+  const svg = svgEl.value
+  if (!svg) {
+    return
+  }
+  const layer = select(svg).select<SVGGElement>(`g.${flowClass.nodes}`)
+  const nodes = layer.selectAll<SVGGElement, FNode>(`g.${flowClass.node}`)
+  if (!treeChildren.size) {
+    layer.attr('role', null).attr('aria-label', null)
+    nodes
+      .attr('role', 'button')
+      .attr('aria-level', null)
+      .attr('aria-setsize', null)
+      .attr('aria-posinset', null)
+      .attr('aria-expanded', null)
+    return
+  }
+  const level = (id: string): number => {
+    let depth = 1
+    for (let parent = treeParent.get(id); parent; parent = treeParent.get(parent)) {
+      depth += 1
+    }
+    return depth
+  }
+  layer.attr('role', 'tree').attr('aria-label', _t('Parent tree'))
+  nodes
+    .attr('role', 'treeitem')
+    .attr('aria-level', (node) => level(node.id))
+    .attr('aria-setsize', (node) => treeSiblings(node.id).length)
+    .attr('aria-posinset', (node) => treeSiblings(node.id).indexOf(node.id) + 1)
+    .attr('aria-expanded', (node) =>
+      node.nodeType === 'fold' ? 'false' : treeChildren.get(node.id)?.length ? 'true' : null
+    )
+}
+
+/** The node a tree's single tab stop is on; null for the first site shown. */
+let tabStop: string | null = null
+
+/**
+ * Which nodes Tab stops at; Tab skips what the filter leaves out. A tree is
+ * one tab stop, as a tree widget is: the arrow keys move within it. The stop
+ * stays on the node last focused, and falls back to the first site while that
+ * node is not drawn or the filter leaves it out.
+ */
+function applyTabIndex(): void {
+  const svg = svgEl.value
+  if (!svg) {
+    return
+  }
+  const shown = filter.undimmed.value
+  const reachable = (node: FNode): boolean => !shown || shown.has(node.id)
+  const nodes = select(svg).selectAll<SVGGElement, FNode>(`g.${flowClass.node}`)
+  if (!treeChildren.size) {
+    nodes.attr('tabindex', (node) => (reachable(node) ? 0 : -1))
+    return
+  }
+  const kept = tabStop === null ? undefined : nodeById.get(tabStop)
+  const stop =
+    kept && reachable(kept)
+      ? kept
+      : (drawn.find((node) => node.nodeType === 'site' && reachable(node)) ?? drawn.find(reachable))
+  nodes.attr('tabindex', (node) => (node.id === stop?.id ? 0 : -1))
+}
 
 /** Below the detail threshold the service nodes are hidden, and so are their pulses. */
 function positionPulses(servicesHidden: boolean): void {
@@ -620,15 +730,67 @@ function cursorFor(node: FNode): string {
 }
 
 function onNodeKeydown(event: KeyboardEvent, node: FNode): void {
+  // The card of a group comes after every node, so Tab would never reach it.
+  if (
+    event.key === 'Tab' &&
+    !event.shiftKey &&
+    groupCard.value?.group === event.currentTarget &&
+    groupCardEl.value?.focusFirst()
+  ) {
+    event.preventDefault()
+    return
+  }
+  const next = neighbourOf(node, event.key)
+  if (next) {
+    event.preventDefault()
+    focusIn(flowClass.node, (candidate: FNode) => candidate.id === next)
+    return
+  }
+  if (event.key === 'Escape') {
+    // The innermost opened group around it folds back.
+    for (let id: string | undefined = node.id; id; id = treeParent.get(id)) {
+      const frame = frames.find((candidate) => candidate.opened && candidate.head.id === id)
+      if (frame) {
+        event.preventDefault()
+        foldBack(frame)
+        return
+      }
+    }
+    return
+  }
   if (event.key !== 'Enter' && event.key !== ' ') {
     return
   }
   event.preventDefault()
   if (node.nodeType === 'fold') {
-    openFold(node)
+    openFold(node, { byKeyboard: true })
     return
   }
   emit('object-click', props.model.mapElementFromFNode(node), node, null)
+}
+
+/**
+ * Where an arrow key goes from ``node`` in a tree: left to its parent, right to
+ * its first child, up and down along its siblings as they are drawn.
+ */
+function neighbourOf(node: FNode, key: string): string | undefined {
+  if (!treeChildren.size) {
+    return undefined
+  }
+  switch (key) {
+    case 'ArrowLeft':
+      return treeParent.get(node.id)
+    case 'ArrowRight':
+      return treeChildren.get(node.id)?.[0]
+    case 'ArrowUp':
+    case 'ArrowDown': {
+      const siblings = treeSiblings(node.id)
+      const at = siblings.indexOf(node.id)
+      return at < 0 ? undefined : siblings[at + (key === 'ArrowUp' ? -1 : 1)]
+    }
+    default:
+      return undefined
+  }
 }
 
 /**
@@ -636,7 +798,7 @@ function onNodeKeydown(event: KeyboardEvent, node: FNode): void {
  * makes room, and the view goes to the opened group, which is what the
  * operator wants to look at next.
  */
-function openFold(node: FNode): void {
+function openFold(node: FNode, { byKeyboard = false } = {}): void {
   const parentId = node.foldParent
   if (!parentId) {
     return
@@ -656,7 +818,9 @@ function openFold(node: FNode): void {
   opened.value = new Map(opened.value).set(parentId, (opened.value.get(parentId) ?? 0) + 1)
   render()
   const members = frames.find((frame) => frame.head.id === parentId)?.members ?? []
-  zoom.focusOn([parent, ...members])
+  // The host above it too, so the opened group keeps its place in the tree.
+  const above = drawn.find((candidate) => candidate.id === treeParent.get(parentId))
+  zoom.focusOn([...(above ? [above] : []), parent, ...members])
   const name = headName(parent)
   const shown = drawn.filter(
     (candidate) => candidate.nodeType === 'host' && !drawnBefore.has(candidate.id)
@@ -675,9 +839,16 @@ function openFold(node: FNode): void {
           shown.length,
           { count: shown.length, name }
         )
-  // Keyboard focus would otherwise fall back to the page with the fold that
-  // held it; it goes to the button that folds the group back.
-  focusIn(flowClass.foldBack, (frame: HostFrame) => frame.head.id === parentId)
+  // Focus would otherwise fall back to the page with the fold that held it,
+  // and Escape would no longer fold back. The keyboard goes on to the first
+  // host the group showed; a click stays on the host the group hangs from.
+  const first = byKeyboard
+    ? (treeChildren.get(parentId)?.find((id) => !drawnBefore.has(id)) ?? parentId)
+    : parentId
+  // No card yet: it would cover the hosts the group just showed.
+  focusWithoutCard = true
+  focusIn(flowClass.node, (candidate: FNode) => candidate.id === first)
+  focusWithoutCard = false
 }
 
 /**
@@ -744,12 +915,23 @@ function reportHits(): void {
 function showHit(id: string): void {
   const node = drawn.find((candidate) => candidate.id === id)
   if (node) {
-    viewBeforeSearch ??= zoom.markView()
+    searchDetour.leave()
     zoom.fitView({ only: [node] })
+  }
+  markHit(id)
+}
+
+/** Rings the hit the search last stepped to, so it stands out among the others. */
+function markHit(id: string | null): void {
+  const svg = svgEl.value
+  if (svg) {
+    select(svg)
+      .selectAll<SVGGElement, FNode>(`g.${flowClass.node}`)
+      .classed(CURRENT_HIT_CLASS, (node) => node.id === id)
   }
 }
 
-/** Folds back everything the operator opened, and shows the whole map again. */
+/** Folds back everything the operator opened, and returns to the view the map opened with. */
 function foldAll(): void {
   opened.value = new Map()
   viewBeforeOpening.clear()
@@ -799,10 +981,33 @@ function onNodeEnter(event: MouseEvent, node: FNode): void {
     return
   }
   hoverMutedAt = null
+  showCard(event.currentTarget as SVGGElement, node)
+}
+
+/**
+ * Keyboard focus brings the node into view and shows the card a pointer would;
+ * focus the map moves itself does neither.
+ */
+function onNodeFocus(event: FocusEvent, node: FNode): void {
+  const group = event.currentTarget as SVGGElement
+  if (tabStop !== node.id) {
+    tabStop = node.id
+    applyTabIndex()
+  }
+  if (focusWithoutCard) {
+    focusWithoutCard = false
+    return
+  }
+  if (group.matches(':focus-visible')) {
+    zoom.bringIntoView(node)
+    showCard(group, node)
+  }
+}
+
+function showCard(group: SVGGElement, node: FNode): void {
   if (props.preview) {
     return
   }
-  const group = event.currentTarget as SVGGElement
   if (node.nodeType === 'fold' || node.nodeType === 'site') {
     emit('object-hover-leave')
     groupCardGrace.cancelClose()
@@ -826,10 +1031,13 @@ function groupCardContent(node: FNode): GroupCardContent {
       state: stateNameOf(node),
       summary: props.model.siteSummary(node.siteId ?? ''),
       viewTarget: { site: node.siteId ?? null },
-      first: []
+      pressing: [],
+      pressingCount: 0
     }
   }
   const parent = node.foldParentName ?? ''
+  const unreachable = node.foldAttention?.unreachable ?? 0
+  const causeHost = unreachable ? props.model.hostDownAbove(node.foldParent ?? '') : null
   return {
     name: foldLabel(node),
     subtitle: isSiteNodeId(node.foldParent ?? '')
@@ -838,15 +1046,35 @@ function groupCardContent(node: FNode): GroupCardContent {
     state: node.state,
     summary: node.foldSummary ?? summarizeHosts([]),
     viewTarget: { hosts: node.foldMembers ?? [] },
-    first: node.foldFirst ?? []
+    pressing: node.foldPressing ?? [],
+    pressingCount: pressingIn(node.foldAttention),
+    cause: causeHost
+      ? _tn(
+          '%{n} host is unreachable because %{parent} is down',
+          '%{n} hosts are unreachable because %{parent} is down',
+          unreachable,
+          { n: unreachable, parent: causeHost }
+        )
+      : null,
+    causeHost
   }
 }
 
-/** Beside the group, like a host's card, so it does not cover it. */
+/** About as wide as a group's card gets, which ``HoverCard`` caps. */
+const GROUP_CARD_WIDTH = 300
+
+/**
+ * Right of the group, away from the parent it hangs from. Without room there,
+ * below it and reaching left, rather than over the parent beside it.
+ */
 function besideGroup(group: SVGGElement): Omit<GroupCard, 'id' | 'content'> {
   const box = group.getBoundingClientRect()
   const around = { left: box.left, top: box.top, right: box.right, bottom: box.bottom }
-  return { group, x: box.right + 8, y: box.top, around }
+  const right = svgEl.value?.getBoundingClientRect().right ?? Infinity
+  if (box.right + 8 + GROUP_CARD_WIDTH <= right) {
+    return { group, x: box.right + 8, y: box.top, around }
+  }
+  return { group, x: box.right, y: box.bottom + 8, around: { ...around, left: box.right } }
 }
 
 /** Keeps the open card at its group while the view moves under it. */
@@ -863,6 +1091,15 @@ function onNodeLeave(): void {
     groupCardGrace.scheduleClose()
   }
   emit('object-hover-leave')
+}
+
+function backToGroup(): void {
+  const group = groupCard.value?.group
+  groupCardGrace.closeNow()
+  // Escape closes the card, which the focus coming back would open again.
+  focusWithoutCard = true
+  group?.focus()
+  focusWithoutCard = false
 }
 
 function onGroupCardSelect(hostName: string): void {
@@ -991,27 +1228,43 @@ watch(
   () => render(),
   { flush: 'post' }
 )
+// In a tree, showing only problems draws hosts from all over the map, so the
+// view fits them; switched off, it returns to where it was, unless the operator
+// has moved it since. Without folding, the filter only dims.
+const problemsDetour = zoom.detour()
+watch(
+  () => props.problemsOnly,
+  (only) => {
+    if (!folding) {
+      return
+    }
+    if (only) {
+      problemsDetour.leave()
+      zoom.fitView()
+    } else {
+      problemsDetour.back()
+    }
+  },
+  { flush: 'post' }
+)
 // A host picked from a list may be collapsed: it is drawn, and brought into
 // view only then, so picking a host already in sight does not move the map.
 // Once it is no longer picked, the view returns to where it was, unless the
 // operator has moved it since.
-let viewBeforePicking: ViewMark | null = null
-let viewBeforeSearch: ViewMark | null = null
+const pickingDetour = zoom.detour()
+const searchDetour = zoom.detour()
 watch(
   () => props.picked,
   (host) => {
     const inSight = drawn.some((node) => node.id === host)
     render()
     if (!host) {
-      if (viewBeforePicking) {
-        zoom.returnTo(viewBeforePicking)
-        viewBeforePicking = null
-      }
+      pickingDetour.back()
       return
     }
     const node = inSight ? undefined : drawn.find((candidate) => candidate.id === host)
     if (node) {
-      viewBeforePicking ??= zoom.markView()
+      pickingDetour.leave()
       zoom.fitView({ only: [node] })
     }
   }
@@ -1019,15 +1272,15 @@ watch(
 
 // A search can name a host that is folded away, which has to be drawn to be
 // found — and, when it names only a few, brought into view, all of them, even
-// those that were drawn already. Once the search is cleared, the view returns
-// to where it was, unless the operator has moved it since.
+// those that were drawn already. Once the search is cleared or finds nothing,
+// the view returns to where it was, unless the operator has moved it since.
 const FOCUS_HITS = 20
 let focusedHits = new Set<string>()
-watch(useDebounceRef(toRef(props, 'filterNeedle')), (needle) => {
+watch(useDebounceRef(toRef(props, 'filterNeedle')), () => {
   const hits = filter.foundHosts(props.topology)
-  if (!needle.trim() && viewBeforeSearch) {
-    zoom.returnTo(viewBeforeSearch)
-    viewBeforeSearch = null
+  markHit(null)
+  if (!hits.size) {
+    searchDetour.back()
   }
   if (!folding) {
     // Everything is drawn already; only the count changes.
@@ -1044,13 +1297,14 @@ watch(useDebounceRef(toRef(props, 'filterNeedle')), (needle) => {
   focusedHits = hits
   const shown = drawn.filter((node) => hits.has(node.id))
   if (shown.length > 0 && shown.length <= FOCUS_HITS) {
-    viewBeforeSearch ??= zoom.markView()
+    searchDetour.leave()
     zoom.fitView({ only: shown })
   }
 })
 
 defineExpose({
-  fitView: () => zoom.fitView(),
+  /** Everything on the map, however small that draws it: what the fit button promises. */
+  fitView: () => zoom.fitView({ atLeast: MIN_SCALE }),
   showHit,
   zoomIn: () => zoom.zoomIn(),
   zoomOut: () => zoom.zoomOut(),
@@ -1094,8 +1348,11 @@ defineExpose({
       </div>
     </div>
 
+    <!-- One card per group, so a list shown in full does not carry over to the next. -->
     <FlowGroupHoverCard
       v-if="groupCard"
+      ref="groupCardEl"
+      :key="groupCard.id"
       :content="groupCard.content"
       :checkmk-url="checkmkUrl"
       :x="groupCard.x"
@@ -1104,6 +1361,7 @@ defineExpose({
       @card-enter="groupCardGrace.cancelClose()"
       @card-leave="groupCardGrace.scheduleClose()"
       @select-host="onGroupCardSelect"
+      @back="backToGroup"
     />
 
     <MapMarqueeBox v-if="marquee.visible.value" :rect="marquee.rect.value" :layer="4" />
@@ -1291,6 +1549,12 @@ defineExpose({
 :deep(.maps-flow-canvas__node--fold > circle) {
   stroke: var(--font-color-dimmed);
   stroke-dasharray: 4 3;
+}
+
+/* Before the selection ring, which wins over it. */
+:deep(.maps-flow-canvas__node--current-hit > circle) {
+  stroke: var(--font-color);
+  stroke-width: 3;
 }
 
 /* Last of the three, so it wins at equal specificity. */

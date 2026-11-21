@@ -21,6 +21,7 @@ import type usei18n from 'cmk-ui-library/lib/i18n'
 import {
   type DonutSegment,
   HEALTHY_HOST_STATES,
+  hostDownAbove,
   summarizeHosts,
   worstServiceState as worstServiceStateOf
 } from '@/maps/map/flow/geometry'
@@ -46,10 +47,12 @@ interface FlowNodeModelOptions {
   connectionId: () => string | null | undefined
   /** The worst-affected hosts, which are drawn with a wider halo. */
   worstHostIds: () => Set<string>
+  /** For each host down, how many hosts are unreachable because of it; these glow. */
+  cutOff: () => ReadonlyMap<string, number>
 }
 
 export function createFlowNodeModel(options: FlowNodeModelOptions) {
-  const { nodes, connectionId, worstHostIds } = options
+  const { nodes, connectionId, worstHostIds, cutOff } = options
 
   function worstServiceState(d: FNode): string | null {
     return worstServiceStateOf(d.topo?.services_summary)
@@ -267,8 +270,8 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
 
   return {
     worstServiceState,
-    /** Whether this host is one of the worst-affected. */
-    isWorst: (d: FNode): boolean => worstHostIds().has(d.id),
+    /** Whether this host is down and others are unreachable because of it. */
+    cutsOff: (d: FNode): boolean => cutOff().has(d.id),
     hostHalo,
     pulses,
     commandMarkers,
@@ -276,6 +279,7 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
     mapElementFromFNode,
     objectStateFromFNode,
     siteSummary,
-    hostStateByName
+    hostStateByName,
+    hostDownAbove: (name: string): string | null => hostDownAbove(name, nodes())
   }
 }

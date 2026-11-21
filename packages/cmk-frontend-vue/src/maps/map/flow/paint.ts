@@ -20,9 +20,10 @@
 import type { Selection } from 'd3-selection'
 import { select } from 'd3-selection'
 
+import { isProblemState } from '@/maps/utils/problemState'
 import { onStateColorVar, stateColorVar } from '@/maps/utils/stateColors'
 
-import { unhandledIn } from './attention'
+import { pressingIn } from './attention'
 import {
   DONUT_MAX_WIDTH,
   type DonutArc,
@@ -85,14 +86,19 @@ const CANVAS_COLOR = 'var(--ux-theme-1)'
 const GLYPH_COLOR = 'rgb(255 255 255 / 90%)'
 const MORE_GLYPH_COLOR = 'rgb(255 255 255 / 95%)'
 const FOLD_FILL = 'var(--ux-theme-3)'
+const UP_QUIET_FILL = 'var(--font-color-dimmed)'
 /** How much of its state colour a tree edge keeps, per theme; set in ``FlowCanvas``. */
 const ELBOW_STATE_SHARE = 'var(--maps-flow-canvas-elbow-share)'
 /** Smallest a highlighted host's name may draw on screen, in pixels. */
 const LABEL_MIN_SCREEN_PX = 11
 /** How far a highlighted host's name may grow against the zoom. */
 const LABEL_MAX_GROWTH = 3
-/** Below this zoom an ordinary name draws too small to read, and is left out. */
-const LABEL_HIDE_SCALE = 0.55
+/** Any name that would read smaller than this on screen, in pixels, is left out. */
+const LABEL_MIN_READABLE_PX = 9
+/** An ordinary name's size, as ``--font-size-normal``. */
+const LABEL_NORMAL_PX = 12
+/** Below this zoom an ordinary name is no longer readable. */
+export const LABEL_HIDE_SCALE = LABEL_MIN_READABLE_PX / LABEL_NORMAL_PX
 /** A character's width in a label, relative to its font size. */
 const LABEL_CHAR_WIDTH = 0.6
 
@@ -100,14 +106,6 @@ const LABEL_CHAR_WIDTH = 0.6
 // inherit; letter-spacing: … }`` beats the SVG attributes.
 function px(size: number): string {
   return `${size}px`
-}
-
-/** A fold's count in its ring: four characters fit at 10px, a fifth needs 9px. */
-function foldCountSize(count: number): string {
-  if (count > 9999) {
-    return '8px'
-  }
-  return count > 999 ? '9px' : '10px'
 }
 
 const SITE_WIDTH = 110
@@ -119,13 +117,20 @@ export interface NodeVisuals {
   scale: number
   /** Whether the donut ring is on show for this host at all. */
   showsDonut: (node: FNode) => boolean
-  /** Id of the filter that lifts the worst-affected hosts out of the map. */
+  /** Id of the filter that lifts the hosts that ``glows`` out of the map. */
   glowFilter: string
-  isWorst: (node: FNode) => boolean
+  glows: (node: FNode) => boolean
   halo: (node: FNode) => { stroke: string; width: number }
   donutSegments: (node: FNode) => DonutSegment[]
   badges: (node: FNode) => CmdMarker[]
   ariaLabel: (node: FNode) => string
+  /** A site's state, aggregated over its hosts and services. */
+  siteState: (node: FNode) => string
+  /**
+   * Whether a host up is drawn grey: where every host shown has a problem, the
+   * green of one up would outshout the ring that says what is wrong with it.
+   */
+  upQuiet: boolean
   /** What the label under a "+N more" stand-in reads, translated. */
   moreLabel: (count: number) => string
   /** What the label under a folded group of hosts reads, translated. */
@@ -138,26 +143,34 @@ const isKind =
     kinds.includes(node.nodeType)
 const isHostShaped = (node: FNode): boolean => KIND_TRAITS[node.nodeType].hostShaped
 
+/**
+ * The number in a fold's corner: its hosts that need attention, or else those
+ * cut off, so a group lost behind a host down is not the quietest on the map.
+ */
+function foldAlertCount(node: FNode): number {
+  return pressingIn(node.foldAttention) || (node.foldAttention?.unreachable ?? 0)
+}
+
 /** Builds the shape of each newly entered node, by kind. */
 export function drawNodes(enter: NodeSelection): void {
   drawSiteNode(enter.filter(isKind('site')))
-  // A folded group looks like a host — it stands where its hosts would — and
-  // reads "+N" where a host reads "H".
+  // A folded group looks like a host — it stands where its hosts would — with
+  // nothing in its middle: the label under it says how many hosts it holds.
   drawHostNode(enter.filter(isHostShaped))
-  const folds = enter.filter(isKind('fold')).attr('aria-expanded', 'false')
+  const folds = enter.filter(isKind('fold'))
   // How many of the hosts a fold holds need attention, in a corner of it: the
   // ring alone says so only in colour, and only to the eye that finds it.
   const alert = folds
     .append('g')
     .attr('class', flowClass.foldAlert)
     .attr('pointer-events', 'none')
-    .attr('transform', `translate(${NODE_R * 0.72},${-NODE_R * 0.72})`)
+    .attr('transform', foldAlertTransform(1))
   alert.append('circle').attr('r', FOLD_ALERT_R).style('stroke', CANVAS_COLOR)
   alert
     .append('text')
     .attr('text-anchor', 'middle')
     .attr('dominant-baseline', 'central')
-    .style('font-size', px(10))
+    .style('font-size', px(FOLD_ALERT_FONT))
     .attr('font-weight', '700')
   drawServiceNode(enter.filter(isKind('service')))
   drawMoreNode(enter.filter(isKind('more')))
@@ -200,6 +213,7 @@ function drawHostNode(enter: NodeSelection): void {
   // Empty for now — the ring's segments are bound on every refresh.
   enter.append('g').attr('class', flowClass.donut).attr('pointer-events', 'none')
   enter
+    .filter(isKind('host'))
     .append('text')
     .attr('class', flowClass.glyph)
     .attr('text-anchor', 'middle')
@@ -322,8 +336,8 @@ function linkStyle(link: FLink): LinkStyle {
   const opacity = link.elbow ? 1 : link.isServiceLink ? 0.3 : 0.45
   // A host's further parents are dashed, as a second reporting line is on an
   // org chart: they matter to whether it is reachable, but the tree is how
-  // it is read.
-  if (link.furtherParent) {
+  // it is read. An edge past hosts left out is dashed too: it is no parent's.
+  if (link.furtherParent || link.skipsHosts) {
     return { opacity, width: 1, dash: '6,4' }
   }
   return link.isServiceLink
@@ -375,11 +389,25 @@ export function refreshLinks(merge: LinkSelection): void {
 export function refreshNodes(merge: NodeSelection, visuals: NodeVisuals): void {
   // The accessible name follows the live state, so it is rewritten every time.
   merge.attr('aria-label', visuals.ariaLabel)
+  // A site's box takes the colour of a problem on it, and stays quiet otherwise.
+  merge
+    .filter(isKind('site'))
+    .select('rect')
+    .style('stroke', (node) => {
+      const state = visuals.siteState(node)
+      return isProblemState(state) ? stateColorVar(state) : SITE_LINK_COLOR
+    })
   // A folded group holds hosts that need no urgent attention, so it is drawn
   // quieter than the hosts around it rather than in their state colour.
   merge
     .select('circle')
-    .style('fill', (node) => (node.nodeType === 'fold' ? FOLD_FILL : stateColorVar(node.state)))
+    .style('fill', (node) =>
+      node.nodeType === 'fold'
+        ? FOLD_FILL
+        : visuals.upQuiet && node.nodeType === 'host' && node.state === 'UP'
+          ? UP_QUIET_FILL
+          : stateColorVar(node.state)
+    )
   merge
     .filter((node) => node.nodeType !== 'host')
     .select(`text.${flowClass.label}`)
@@ -395,19 +423,14 @@ export function refreshNodes(merge: NodeSelection, visuals: NodeVisuals): void {
     .text((line) => line)
   refreshServiceLikeNodes(merge)
   const folds = merge.filter(isKind('fold'))
-  folds
-    .select(`text.${flowClass.glyph}`)
-    .style('font-size', (node) => foldCountSize(node.moreCount ?? 0))
-    .style('fill', 'var(--font-color)')
-    .text((node) => `+${node.moreCount ?? 0}`)
   const alerts = folds.select<SVGGElement>(`g.${flowClass.foldAlert}`)
-  alerts.style('display', (node) => (unhandledIn(node.foldAttention) ? null : 'none'))
+  alerts.style('display', (node) => (foldAlertCount(node) ? null : 'none'))
   alerts.select('circle').style('fill', (node) => stateColorVar(node.state))
   alerts
     .select('text')
     .style('fill', (node) => onStateColorVar(node.state))
     .text((node) => {
-      const count = unhandledIn(node.foldAttention)
+      const count = foldAlertCount(node)
       return count > 99 ? '99+' : String(count)
     })
 
@@ -421,11 +444,11 @@ export function refreshNodes(merge: NodeSelection, visuals: NodeVisuals): void {
     group.style.setProperty(HALO_COLOR_PROPERTY, halo.stroke)
     group.style.setProperty(HALO_WIDTH_PROPERTY, String(halo.width))
   })
-  // The glow keeps the worst hosts unmissable even fitted to screen, where a
-  // stroke width collapses to under a screen pixel. It hangs on the circle and
+  // The glow keeps a host down that cuts others off unmissable even fitted to
+  // screen, where a stroke width collapses to under a screen pixel. It hangs on the circle and
   // its ring, not the group, which would blur the host's name too.
   const glow = (node: FNode): string | null =>
-    visuals.isWorst(node) ? `url(#${visuals.glowFilter})` : null
+    visuals.glows(node) ? `url(#${visuals.glowFilter})` : null
   hosts.select('circle').attr('filter', glow)
   hosts.select(`g.${flowClass.donut}`).attr('filter', glow)
   refreshDonuts(merge.filter(isHostShaped), visuals)
@@ -526,6 +549,22 @@ export function refreshDonutWidths(area: SVGSVGElement, scale: number): void {
     .attr('d', (slice) => arc(slice) ?? '')
 }
 
+/** A fold's number never reads smaller on screen than this, however far out the map is zoomed. */
+const FOLD_ALERT_MIN_FONT = 11
+const FOLD_ALERT_FONT = 10
+
+function foldAlertTransform(scale: number): string {
+  const grow = Math.max(1, FOLD_ALERT_MIN_FONT / (FOLD_ALERT_FONT * scale))
+  return `translate(${NODE_R * 0.72},${-NODE_R * 0.72}) scale(${grow})`
+}
+
+/** Keeps the folds' numbers readable at a new zoom. */
+export function refreshFoldAlerts(area: SVGSVGElement, scale: number): void {
+  select(area)
+    .selectAll<SVGGElement, FNode>(`g.${flowClass.foldAlert}`)
+    .attr('transform', foldAlertTransform(scale))
+}
+
 /**
  * Keeps a host's label just outside its donut ring. The ring's outer radius
  * depends on the zoom, so the offset has to follow: fitted to screen the wide
@@ -544,12 +583,12 @@ export function refreshHostLabels(
     .attr('y', donutOuterRadius(scale) + 5)
   if (!tree) {
     labels.style('font-size', null).style('display', null)
-    nodes.filter(isKind('fold')).select(`text.${flowClass.glyph}`).style('display', null)
     return
   }
   // The hosts that need attention keep a readable name when the tree is fitted
   // to screen. Every other name is left out by then: it could not be read, and
-  // it would only collide with the names that can.
+  // it would only collide with the names that can. A kept name grows no wider
+  // than its column, so zoomed out further it is left out as well.
   const grown = Math.min(LABEL_MAX_GROWTH, Math.max(1, 1 / finiteOr(scale, 1)))
   const size = (node: FNode, label: string): number => {
     const chars =
@@ -559,18 +598,12 @@ export function refreshHostLabels(
     const fits = tree.room(node) / (chars * LABEL_CHAR_WIDTH)
     return Math.max(LABEL_MIN_SCREEN_PX, Math.min(LABEL_MIN_SCREEN_PX * grown, fits))
   }
-  labels
-    .style('font-size', function (node) {
-      return tree.emphasised(node) ? px(size(node, this.textContent ?? '')) : null
-    })
-    .style('display', (node) =>
-      tree.emphasised(node) || scale >= LABEL_HIDE_SCALE ? null : 'none'
-    )
-  // A fold's count is too small to read by then; the names that matter say it.
-  nodes
-    .filter(isKind('fold'))
-    .select(`text.${flowClass.glyph}`)
-    .style('display', () => (scale >= LABEL_HIDE_SCALE ? null : 'none'))
+  labels.each(function (node) {
+    const fontSize = tree.emphasised(node) ? size(node, this.textContent ?? '') : null
+    const readable = (fontSize ?? LABEL_NORMAL_PX) * finiteOr(scale, 1) >= LABEL_MIN_READABLE_PX
+    this.style.fontSize = fontSize === null ? '' : px(fontSize)
+    this.style.display = readable ? '' : 'none'
+  })
 }
 
 /**

@@ -44,17 +44,25 @@ import DetailDrawer from '@/maps/map/detail/DetailDrawer.vue'
 import { useAggregationHint } from '@/maps/map/flow/composables/useAggregationHint'
 import { useFlowSelection } from '@/maps/map/flow/composables/useFlowSelection'
 import { useTopologyFeed } from '@/maps/map/flow/composables/useTopologyFeed'
-import { problemScoreFromTopo } from '@/maps/map/flow/geometry'
+import { cutOffBy, worstAffected } from '@/maps/map/flow/geometry'
+import { foldsHosts } from '@/maps/map/flow/graph'
 import { needsServices } from '@/maps/map/flow/layout'
 import { createFlowNodeModel } from '@/maps/map/flow/nodeModel'
 import type { FNode } from '@/maps/map/flow/nodes'
 import { useAuth, useMapsApis, useStates, useToast } from '@/maps/services/context'
-import type { CommandTarget, MapConfig, MapElement, ObjectState } from '@/maps/types/api'
+import type {
+  CommandTarget,
+  MapConfig,
+  MapElement,
+  ObjectState,
+  ServiceLayout
+} from '@/maps/types/api'
 import { buildCheckmkUrl, openUrl } from '@/maps/utils/mapNavigation'
 import { isProblemState } from '@/maps/utils/problemState'
 
 import FlowBulkActionBar from './components/FlowBulkActionBar.vue'
 import FlowCanvas from './components/FlowCanvas.vue'
+import FlowLegend from './components/FlowLegend.vue'
 import FlowServiceLayoutPicker from './components/FlowServiceLayoutPicker.vue'
 
 /**
@@ -95,6 +103,7 @@ const canvas = useTemplateRef<InstanceType<typeof FlowCanvas>>('canvas')
 
 const connectionId = computed(() => props.config?.connection_id ?? '')
 const flowView = computed(() => (props.config?.view.type === 'flow' ? props.config.view : null))
+const hostLayout = computed(() => flowView.value?.host_layout ?? 'tree')
 /** A map this user may not save still drags; it just remembers nothing. */
 const readonly = computed(() => props.kiosk || props.preview || !props.canEdit)
 /** A surface nobody is operating: a kiosk wall, the settings live preview. */
@@ -113,26 +122,22 @@ const {
   mapName: () => props.config?.name ?? ''
 })
 
-// The worst-affected hosts, given a wider halo and a glow on the map. Only
-// worth doing once there are enough hosts for the problems to hide among them.
+// The worst-affected hosts, given a wider halo on the map. Only worth doing
+// once there are enough hosts for the problems to hide among them.
 const worstHostIds = computed<Set<string>>(() => {
   if (topology.value.length < WORST_FROM) {
     return new Set()
   }
-  return new Set(
-    topology.value
-      .map((topo) => ({ id: topo.name, score: problemScoreFromTopo(topo) }))
-      .filter((scored) => scored.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, WORST_COUNT)
-      .map((scored) => scored.id)
-  )
+  return worstAffected(topology.value, WORST_COUNT, cutOff.value)
 })
+
+const cutOff = computed(() => cutOffBy(topology.value))
 
 const model = createFlowNodeModel({
   nodes: () => topology.value,
   connectionId: () => connectionId.value,
-  worstHostIds: () => worstHostIds.value
+  worstHostIds: () => worstHostIds.value,
+  cutOff: () => cutOff.value
 })
 
 // Owned here rather than in the canvas, like the node model: the bar that acts
@@ -392,10 +397,27 @@ const { dismissed: hintDismissed, dismiss: dismissHint } = useAggregationHint(
   () => auth.user.value?.user_id
 )
 
+/**
+ * A folded tree draws few of its hosts, and the ones the backend sends services
+ * for are mostly not among them: the others are drawn as rings whatever the
+ * shape, so a fan, an orbit or a row would look like Donut there.
+ */
+const servicesShownForFew = computed(
+  () => aggregatedHosts.value.omitted > 0 && foldsHosts(topology.value, hostLayout.value)
+)
+const FOLDED_LAYOUTS: ServiceLayout[] = ['off', 'donut']
+/** The map's choice, or a ring where its shape cannot be drawn; the choice itself is kept. */
+const shownServiceLayout = computed(
+  (): ServiceLayout =>
+    servicesShownForFew.value && !FOLDED_LAYOUTS.includes(serviceLayout.value)
+      ? 'donut'
+      : serviceLayout.value
+)
+
 const showsAggregationHint = computed(
   () =>
     aggregatedHosts.value.omitted > 0 &&
-    needsServices(serviceLayout.value) &&
+    needsServices(shownServiceLayout.value) &&
     (props.preview || !hintDismissed.value)
 )
 
@@ -495,8 +517,8 @@ watch(resetKey, () => {
           :topology="topology"
           :model="model"
           :selection="selection"
-          :layout="serviceLayout"
-          :host-layout="flowView?.host_layout ?? 'tree'"
+          :layout="shownServiceLayout"
+          :host-layout="hostLayout"
           :connection-id="connectionId"
           :saved-positions="flowView?.positions ?? {}"
           :clickable="config.click_action !== 'none'"
@@ -504,6 +526,7 @@ watch(resetKey, () => {
           :preview="preview"
           :filter-needle="filterNeedle"
           :problems-only="problemsOnly"
+          :cut-off="cutOff"
           :picked="drawerHostName"
           :reset-key="resetKey"
           :checkmk-url="checkmkUrl"
@@ -582,7 +605,14 @@ watch(resetKey, () => {
           @clear="selection.clear()"
         />
 
-        <FlowServiceLayoutPicker v-if="!drawerObject && !preview" v-model="serviceLayout" />
+        <div v-if="!drawerObject && !preview" class="maps-flow-map-view__corner">
+          <FlowLegend />
+          <FlowServiceLayoutPicker
+            :model-value="shownServiceLayout"
+            :layouts="servicesShownForFew ? FOLDED_LAYOUTS : undefined"
+            @update:model-value="serviceLayout = $event"
+          />
+        </div>
       </template>
 
       <HoverMenu
@@ -647,6 +677,9 @@ watch(resetKey, () => {
   flex: 1 1 0%;
   overflow: hidden;
   background: var(--ux-theme-1);
+
+  /* What opens over the map sizes itself to it. */
+  container-type: size;
 }
 
 .maps-flow-map-view__loading {
@@ -664,6 +697,15 @@ watch(resetKey, () => {
   z-index: 6;
   max-width: min(60%, 520px);
   transform: translateX(-50%);
+}
+
+.maps-flow-map-view__corner {
+  position: absolute;
+  right: var(--dimension-8);
+  bottom: var(--dimension-8);
+  z-index: 40;
+  display: flex;
+  gap: var(--dimension-4);
 }
 
 .maps-flow-map-view__hint {

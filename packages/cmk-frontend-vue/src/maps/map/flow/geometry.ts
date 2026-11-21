@@ -113,6 +113,114 @@ export function problemScoreFromTopo(n: TopologyNode): number {
   return hostPenalty + s.critical * 4 + s.warning * 2 + s.unknown * 2
 }
 
+/**
+ * For each host down, how many hosts are unreachable because of it: through
+ * any of their parents that are not up, and the unreachable ones above those.
+ * Each host's hosts down are worked out once, so a long chain stays linear.
+ */
+export function cutOffBy(topology: readonly TopologyNode[]): Map<string, number> {
+  const hosts = new Map(topology.map((topo) => [topo.name, topo] as const))
+  const downAbove = new Map<string, ReadonlySet<string>>()
+  const parentsOutOf = (topo: TopologyNode): TopologyNode[] =>
+    topo.parents.flatMap((name) => {
+      const parent = hosts.get(name)
+      return parent && (parent.state === 'DOWN' || parent.state === 'UNREACHABLE') ? [parent] : []
+    })
+  // Depth first without recursion, so a long chain cannot overflow the stack;
+  // a parent cycle is cut where it closes.
+  const resolve = (start: TopologyNode): ReadonlySet<string> => {
+    const entered = new Set<string>()
+    const stack = [start]
+    while (stack.length) {
+      const topo = stack[stack.length - 1]!
+      if (downAbove.has(topo.name)) {
+        stack.pop()
+      } else if (!entered.has(topo.name)) {
+        entered.add(topo.name)
+        for (const parent of parentsOutOf(topo)) {
+          if (parent.state === 'UNREACHABLE' && !entered.has(parent.name)) {
+            stack.push(parent)
+          }
+        }
+      } else {
+        const down = new Set<string>()
+        for (const parent of parentsOutOf(topo)) {
+          if (parent.state === 'DOWN') {
+            down.add(parent.name)
+          } else {
+            downAbove.get(parent.name)?.forEach((host) => down.add(host))
+          }
+        }
+        downAbove.set(topo.name, down)
+        stack.pop()
+      }
+    }
+    return downAbove.get(start.name)!
+  }
+  const cutOff = new Map<string, number>()
+  for (const topo of topology) {
+    if (topo.state === 'UNREACHABLE') {
+      for (const host of resolve(topo)) {
+        cutOff.set(host, (cutOff.get(host) ?? 0) + 1)
+      }
+    }
+  }
+  return cutOff
+}
+
+/**
+ * The host down nearest above ``name``, through parents that are unreachable:
+ * ``name`` itself if it is down. Null where nothing down cuts it off.
+ */
+export function hostDownAbove(name: string, topology: readonly TopologyNode[]): string | null {
+  const hosts = new Map(topology.map((topo) => [topo.name, topo] as const))
+  const seen = new Set([name])
+  for (let level = [name]; level.length; ) {
+    const next: string[] = []
+    for (const id of [...level].sort()) {
+      const topo = hosts.get(id)
+      if (topo?.state === 'DOWN') {
+        return id
+      }
+      if (topo?.state !== 'UNREACHABLE') {
+        continue
+      }
+      for (const parent of topo.parents) {
+        if (!seen.has(parent)) {
+          seen.add(parent)
+          next.push(parent)
+        }
+      }
+    }
+    level = next
+  }
+  return null
+}
+
+/**
+ * The ``count`` hosts worst affected: a host down weighs as much again for each
+ * host unreachable because of it, and an unreachable host, the consequence,
+ * not at all. Among equals, the first by name, so the choice does not flicker.
+ */
+export function worstAffected(
+  topology: readonly TopologyNode[],
+  count: number,
+  cutOff: ReadonlyMap<string, number> = cutOffBy(topology)
+): Set<string> {
+  const score = (topo: TopologyNode): number =>
+    topo.state === 'UNREACHABLE'
+      ? 0
+      : problemScoreFromTopo(topo) * (1 + (cutOff.get(topo.name) ?? 0))
+  return new Set(
+    topology
+      .map((topo) => ({ id: topo.name, score: score(topo) }))
+      .filter((scored) => scored.score > 0)
+      .sort((a, b) => b.score - a.score || byName(a.id, b.id))
+      .slice(0, count)
+      .map((scored) => scored.id)
+  )
+}
+
 /** The worst state any of a host's services is in, or ``null`` when all are fine. */
 export function worstServiceState(
   summary: ServicesSummary | null | undefined
@@ -184,4 +292,9 @@ export function severityRank(n: TopologyNode | undefined): 0 | 1 | 2 {
     return 1
   }
   return 0
+}
+
+/** The order hosts with nothing else between them are drawn and listed in. */
+export function byName(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0
 }

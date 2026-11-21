@@ -106,8 +106,9 @@ export function usePointerOverlayStyle(
   around: () => AnchorRect | null | undefined = () => null
 ): ComputedRef<CSSProperties> {
   const placed = ref<{ left: number; top: number } | null>(null)
+  let flipped: { x: boolean; y: boolean } | null = null
 
-  function place(): void {
+  function place(opens: boolean): void {
     const el = overlay.value
     const p = point()
     if (!el || !p) {
@@ -118,20 +119,30 @@ export function usePointerOverlayStyle(
     const width = el.offsetWidth
     const height = el.offsetHeight
     const a = around()
-    const left =
-      p.x + width > frame.right - EDGE_MARGIN ? (a ? a.left - ANCHOR_GAP : p.x) - width : p.x
-    const top =
-      p.y + height > frame.bottom - EDGE_MARGIN ? (a ? a.top - ANCHOR_GAP : p.y) - height : p.y
+    if (opens || !flipped || !el.matches(':hover')) {
+      flipped = {
+        x: p.x + width > frame.right - EDGE_MARGIN,
+        y: p.y + height > frame.bottom - EDGE_MARGIN
+      }
+    }
+    const left = flipped.x ? (a ? a.left - ANCHOR_GAP : p.x) - width : p.x
+    const top = flipped.y ? (a ? a.top - ANCHOR_GAP : p.y) - height : p.y
     placed.value = {
-      left: Math.max(frame.left + EDGE_MARGIN, left) - frame.left,
-      top: Math.max(frame.top + EDGE_MARGIN, top) - frame.top
+      left:
+        Math.max(frame.left + EDGE_MARGIN, Math.min(frame.right - EDGE_MARGIN - width, left)) -
+        frame.left,
+      top:
+        Math.max(frame.top + EDGE_MARGIN, Math.min(frame.bottom - EDGE_MARGIN - height, top)) -
+        frame.top
     }
   }
 
   // It also grows while it is open -- a menu once its object turns into a
-  // problem, a card once its details arrive -- which the pointer does not see.
-  useResizeObserver(place).observe(overlay)
-  watch([overlay, point, around], place, { flush: 'post', immediate: true })
+  // problem, a card once it lists more -- which the pointer does not see.
+  // Under the pointer it keeps its side and moves only as far as the frame
+  // makes it: on the other side it would leave the pointer, which closes it.
+  useResizeObserver(() => place(false)).observe(overlay)
+  watch([overlay, point, around], () => place(true), { flush: 'post', immediate: true })
 
   return placedStyle(placed)
 }

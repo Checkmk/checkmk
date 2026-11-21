@@ -163,7 +163,11 @@ function stack(blocks: Block[], gap?: number): Block {
   const anchor = blocks[0]?.anchor
   blocks.forEach((block, i) => {
     if (i > 0) {
-      const leaves = block.places.length === 1 && blocks[i - 1]!.places.length === 1
+      // A group of hosts set as close under a host would read as that host's.
+      const leaves =
+        block.places.length === 1 &&
+        blocks[i - 1]!.places.length === 1 &&
+        !isFoldNodeId(block.places[0]![0])
       across += gap ?? (leaves ? LEAF_GAP : BLOCK_GAP)
     }
     places.push(...shifted(block, across, 0))
@@ -628,6 +632,12 @@ export function showsDonut(layout: ServiceLayout, servicesOmitted: boolean | und
   return layout !== 'off' && (servicesOmitted ?? false)
 }
 
+/** The hosts whose parents are all outside ``topoNodes``, which the map treats as roots. */
+export function rootsOf(topoNodes: readonly TopologyNode[]): TopologyNode[] {
+  const names = new Set(topoNodes.map((n) => n.name))
+  return topoNodes.filter((n) => n.parents.every((parent) => !names.has(parent)))
+}
+
 // Loose BFS levels over the parent topology — feeds d3's forceY so layers
 // roughly stack top-down. Hosts whose parents are all outside the visible
 // set count as roots; unreachable leftovers sink to the bottom.
@@ -638,11 +648,8 @@ export function bfsLevels(
   topoNodes: TopologyNode[],
   childrenOf: ReadonlyMap<string, string[]> = childrenByParent(topoNodes)
 ): Map<string, number> {
-  const nameSet = new Set(topoNodes.map((n) => n.name))
   const levels = new Map<string, number>()
-  const roots = topoNodes.filter(
-    (n) => !n.parents.length || n.parents.every((p) => !nameSet.has(p))
-  )
+  const roots = rootsOf(topoNodes)
   const queue: string[] = roots.map((r) => r.name)
   roots.forEach((r) => levels.set(r.name, 0))
   while (queue.length) {

@@ -6,12 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <!--
 How the object is set up and what it sits between: its check, its neighbours in
 the topology, the groups it belongs to and its labels.
-
-A parent or child that is also on this map can be selected there -- following a
-dependency on the map is usually what the operator wanted; the rest are names.
 -->
 <script setup lang="ts">
-import CmkChip from 'cmk-ui-library/components/CmkChip.vue'
 import CmkCode from 'cmk-ui-library/components/CmkCode.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
@@ -22,6 +18,7 @@ import OverviewDetailList from '@/monitoring/shared/components/slide-in/Overview
 import { toNameItems } from '@/monitoring/shared/labels'
 
 import { checkCommandLabel, configRows, labelItems, topologyGroups } from '../contextFacts'
+import DetailHostChips from './DetailHostChips.vue'
 import DetailMetaList from './DetailMetaList.vue'
 
 const props = defineProps<{
@@ -45,8 +42,6 @@ const configFacts = computed(() => rows.value.filter((row) => row.label !== chec
 
 const topology = computed(() => topologyGroups(props.details, _t))
 const labels = computed(() => labelItems(props.details))
-
-const selectable = computed(() => new Set(props.selectableHosts))
 </script>
 
 <template>
@@ -63,18 +58,12 @@ const selectable = computed(() => new Set(props.selectableHosts))
     <OverviewDetailList v-if="topology.length || labels.length" align="start">
       <template v-for="group in topology" :key="group.label">
         <dt>{{ group.label }}</dt>
-        <dd v-if="group.isHostList" class="maps-detail-context-tab__chip-row">
-          <CmkChip
-            v-for="item in group.items"
-            :key="item"
-            size="small"
-            color="info"
-            variant="outline"
-            :as-div="!selectable.has(item)"
-            @click="selectable.has(item) ? emit('select-host', item) : undefined"
-          >
-            {{ item }}
-          </CmkChip>
+        <dd v-if="group.isHostList" class="maps-detail-context-tab__hosts">
+          <DetailHostChips
+            :hosts="group.items"
+            :selectable-hosts="selectableHosts"
+            @select-host="emit('select-host', $event)"
+          />
         </dd>
         <dd v-else>
           <OverviewChips :items="toNameItems(group.items)" />
@@ -105,10 +94,7 @@ const selectable = computed(() => new Set(props.selectableHosts))
   margin: var(--dimension-3) 0 var(--dimension-4);
 }
 
-.maps-detail-context-tab__chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--dimension-3);
+.maps-detail-context-tab__hosts {
   margin: 0;
 }
 </style>

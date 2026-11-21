@@ -13,12 +13,12 @@ import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import { useConnectionOverride } from '@/maps/map/edit/composables/useConnectionOverride'
 import type { ObjectSuggestions } from '@/maps/map/edit/composables/useObjectSuggestions'
-import { filterProblems } from '@/maps/map/edit/filterText'
+import { filterHelp, filterPlaceholder, filterProblems } from '@/maps/map/edit/filterText'
 import { rebindHost } from '@/maps/map/edit/hostBinding'
 import PropertyRow from '@/maps/map/edit/properties/PropertyRow.vue'
 import PropertySection from '@/maps/map/edit/properties/PropertySection.vue'
@@ -143,20 +143,11 @@ const showsRecognizeServices = computed(() => choosesServiceCounting(type.value,
             v-model="form.object_filter"
             :rows="4"
             monospace
-            :placeholder="untranslated('Filter: host_name ~ ^web')"
+            :placeholder="filterPlaceholder(form.object_types)"
           />
         </div>
       </PropertyRow>
-      <!-- One sentence, not five fragments: a translator needs the whole
-           thing to put the words in their language's order. -->
-      <p class="maps-identity-section__note">
-        {{
-          _t(
-            'One or more %{filter} lines, each terminated by a literal %{newline}. Forwarded verbatim to Livestatus against %{query}.',
-            { filter: 'Filter:', newline: '\\n', query: 'GET hosts/services' }
-          )
-        }}
-      </p>
+      <p class="maps-identity-section__note">{{ filterHelp(_t, form.object_types) }}</p>
     </template>
 
     <PropertyRow v-if="showsStateChecks" :label="_t('State')">

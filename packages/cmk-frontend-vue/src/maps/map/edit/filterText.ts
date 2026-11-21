@@ -3,9 +3,29 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { TranslateFn } from '@/maps/utils/dropdownOptions'
+
+type FilteredObjects = 'host' | 'service'
+
+// A line that works as written: the hosts table names a host ``name``.
+function example(objects: FilteredObjects): string {
+  return objects === 'service' ? 'Filter: description ~ ^CPU' : 'Filter: name ~ ^web'
+}
+
+/** The same words wherever a Livestatus filter is set. */
+export function filterPlaceholder(objects: FilteredObjects): TranslatedString {
+  return untranslated(example(objects))
+}
+
+export function filterHelp(_t: TranslateFn, objects: FilteredObjects): TranslatedString {
+  return _t('One %{filter} line per condition, for example %{example}.', {
+    filter: 'Filter:',
+    example: example(objects)
+  })
+}
 
 // The lines the server takes (``normalize_object_filter``); it checks the rest.
 const FILTER_LINE = /^(Filter|And|Or|Negate):/

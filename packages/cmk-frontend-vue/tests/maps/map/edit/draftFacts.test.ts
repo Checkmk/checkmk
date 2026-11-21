@@ -50,7 +50,7 @@ describe('isDraftPlaceable', () => {
   it('treats a whitespace-only livestatus filter as unset', () => {
     expect(isDraftPlaceable(aDraft({ type: 'dyngroup', object_filter: '   ' }))).toBe(false)
     expect(
-      isDraftPlaceable(aDraft({ type: 'dyngroup', object_filter: 'Filter: host_name ~ ^web' }))
+      isDraftPlaceable(aDraft({ type: 'dyngroup', object_filter: 'Filter: name ~ ^web' }))
     ).toBe(true)
   })
 

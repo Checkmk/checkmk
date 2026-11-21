@@ -655,7 +655,7 @@ class MapObjectBinding:
     )
     object_filter: _ObjectFilter | None | ApiOmitted = api_field(
         description="Dyngroup Livestatus filter.",
-        example="Filter: host_name ~ web\n",
+        example="Filter: name ~ ^web\n",
         default_factory=ApiOmitted,
     )
     only_hard_states: bool | ApiOmitted = api_field(

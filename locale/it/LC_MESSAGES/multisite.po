@@ -24851,6 +24851,10 @@ msgstr "Abilitato nell'intervallo di tempo"
 msgid "Enabled permanently"
 msgstr "Abilitato permanentemente"
 
+#, fuzzy
+msgid "Enabled product usage analytics"
+msgstr "Abilitare le notifiche periodiche"
+
 msgid "Enabled sections"
 msgstr "Sezioni abilitate"
 
@@ -55579,6 +55583,10 @@ msgstr "Prodotto"
 
 msgid "Product usage analytics"
 msgstr ""
+
+#, fuzzy
+msgid "Product usage analytics can only be enabled on the central site."
+msgstr "Checkmk può essere configurato solo sul sito centrale dei manager."
 
 #, fuzzy
 msgid "Product usage analytics manifest"
@@ -92270,6 +92278,10 @@ msgstr "Non ti è permesso modificare questa impostazione globale."
 msgid "You are not permitted to edit this rule."
 msgstr "Non ti è permesso l'accesso a questo insieme di regole."
 
+#, fuzzy
+msgid "You are not permitted to enable product usage analytics."
+msgstr "Non ti è permesso eseguire questa azione."
+
 msgid "You are not permitted to perform this action."
 msgstr "Non ti è permesso eseguire questa azione."
 
@@ -96933,6 +96945,10 @@ msgstr ""
 msgid "Toggle %{ title }"
 msgstr "Allineare le voci del registro"
 
+#, fuzzy
+msgid "Copy to clipboard"
+msgstr "Copiare i codici negli appunti"
+
 msgid "Copy to clipboard failed with error: "
 msgstr ""
 
@@ -101040,6 +101056,19 @@ msgstr ""
 msgid "Open in monitoring"
 msgstr "Ricerca in Monitoraggio"
 
+msgid "This link leaves Checkmk"
+msgstr ""
+
+msgid "Make sure this address contains nothing you do not want to share:"
+msgstr ""
+
+#, fuzzy
+msgid "Open in new tab"
+msgstr "Conteggio degli ingressi aperti"
+
+msgid "Image not loaded: %{url}"
+msgstr ""
+
 #, fuzzy
 msgid "Select an AI provider and a model in the global settings."
 msgstr "Questa opzione è stata modificata nelle impostazioni globali."
@@ -101061,6 +101090,21 @@ msgid ""
 msgstr ""
 
 msgid "Digit %{count} of %{total}"
+msgstr ""
+
+msgctxt ""
+"%{link} is a link to the product usage analytics manifest with the text "
+"\"manifest\""
+msgid ""
+"We believe in only receiving data you explicitly choose to share (see %"
+"{link})."
+msgstr ""
+
+msgctxt ""
+"%{link} is a link to the global setting with the text \"global settings\""
+msgid ""
+"You can disable this reminder or change your decision at any time in the %"
+"{link}."
 msgstr ""
 
 #, fuzzy
@@ -101094,9 +101138,9 @@ msgid "We do NOT collect: "
 msgstr "Dimensione dei file di log"
 
 msgid ""
-"any data about users or their behavior (e.g., PII) or possibly sensitive "
-"identifiers about your environment (e.g., hostnames, file paths, service "
-"names)."
+"any data about users or their behavior (e.g., personally identifiable "
+"information) or possibly sensitive identifiers about your environment (e.g., "
+"hostnames, file paths, service names)."
 msgstr ""
 
 #, fuzzy
@@ -101117,19 +101161,28 @@ msgstr ""
 msgid "Product usage analytics is turned off by default. "
 msgstr ""
 
+msgid "manifest"
+msgstr ""
+
+#, fuzzy
+msgid "global settings"
+msgstr "Impostazioni globali"
+
+#, fuzzy
+msgid "Thank you! Product usage analytics is enabled."
+msgstr "Abilitare le notifiche periodiche"
+
+#, fuzzy
+msgid "Activate the pending changes to start the collection."
+msgstr "Attivare le modifiche in sospeso"
+
 msgid ""
-"We believe in only receiving data you explicitly choose to share. You can "
-"enable sharing analytics data any time from global settings. \n"
-"            If you do not wish to be reminded, please manage your "
-"preferences in global settings."
+"Product usage analytics could not be enabled. Please try again or enable it "
+"in global settings."
 msgstr ""
 
 msgid "Remind me again in 30 days"
 msgstr ""
-
-#, fuzzy
-msgid "Manage in global settings"
-msgstr "Modifica dell'impostazione globale"
 
 #, fuzzy
 msgid "Agent communication failed during service discovery"
@@ -102203,6 +102256,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Prova scaduta"
+
+#, fuzzy
+#~ msgid "Manage in global settings"
+#~ msgstr "Modifica dell'impostazione globale"
 
 #, fuzzy
 #~ msgid "No graph of %{label} is available."

@@ -24233,6 +24233,10 @@ msgstr "In Zeitraum aktiv"
 msgid "Enabled permanently"
 msgstr "Dauerhaft aktiv"
 
+#, fuzzy
+msgid "Enabled product usage analytics"
+msgstr "Analyse der Produktnutzung aktivieren"
+
 msgid "Enabled sections"
 msgstr "Aktivierte Sektionen"
 
@@ -53616,6 +53620,12 @@ msgstr "Produkttypen"
 
 msgid "Product usage analytics"
 msgstr "Analyse der Produktnutzung"
+
+#, fuzzy
+msgid "Product usage analytics can only be enabled on the central site."
+msgstr ""
+"Die Relay-Konfiguration kann nur von der Zentralinstanz aus administriert "
+"werden."
 
 msgid "Product usage analytics manifest"
 msgstr "Manifest zur Analyse der Produktnutzung"
@@ -89418,6 +89428,10 @@ msgstr "Sie sind nicht berechtigt, diese globale Einstellung zu editieren."
 msgid "You are not permitted to edit this rule."
 msgstr "Sie sind nicht berechtigt, diese Regel zu bearbeiten."
 
+#, fuzzy
+msgid "You are not permitted to enable product usage analytics."
+msgstr "Sie sind für diese Aktion nicht berechtigt."
+
 msgid "You are not permitted to perform this action."
 msgstr "Sie sind für diese Aktion nicht berechtigt."
 
@@ -94055,6 +94069,10 @@ msgstr "Akkordeon-Element %{item} umschalten"
 msgid "Toggle %{ title }"
 msgstr "%{ title } umschalten"
 
+#, fuzzy
+msgid "Copy to clipboard"
+msgstr "Code in die Zwischenablage kopieren"
+
 msgid "Copy to clipboard failed with error: "
 msgstr "Kopieren in die Zwischenablage fehlgeschlagen mit Fehler: "
 
@@ -97862,6 +97880,19 @@ msgstr ""
 msgid "Open in monitoring"
 msgstr "Symbol im Monitoring"
 
+msgid "This link leaves Checkmk"
+msgstr ""
+
+msgid "Make sure this address contains nothing you do not want to share:"
+msgstr ""
+
+#, fuzzy
+msgid "Open in new tab"
+msgstr "Anzahl offener Eingänge"
+
+msgid "Image not loaded: %{url}"
+msgstr ""
+
 #, fuzzy
 msgid "Select an AI provider and a model in the global settings."
 msgstr "Diese Einstellung wurde in den globalen Einstellungen geändert."
@@ -97885,6 +97916,21 @@ msgstr ""
 #, fuzzy
 msgid "Digit %{count} of %{total}"
 msgstr "%{count} %{label}"
+
+msgctxt ""
+"%{link} is a link to the product usage analytics manifest with the text "
+"\"manifest\""
+msgid ""
+"We believe in only receiving data you explicitly choose to share (see %"
+"{link})."
+msgstr ""
+
+msgctxt ""
+"%{link} is a link to the global setting with the text \"global settings\""
+msgid ""
+"You can disable this reminder or change your decision at any time in the %"
+"{link}."
+msgstr ""
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""
@@ -97921,10 +97967,11 @@ msgstr ""
 msgid "We do NOT collect: "
 msgstr "Wir sammeln NICHT: "
 
+#, fuzzy
 msgid ""
-"any data about users or their behavior (e.g., PII) or possibly sensitive "
-"identifiers about your environment (e.g., hostnames, file paths, service "
-"names)."
+"any data about users or their behavior (e.g., personally identifiable "
+"information) or possibly sensitive identifiers about your environment (e.g., "
+"hostnames, file paths, service names)."
 msgstr ""
 "Daten über Benutzer oder deren Verhalten (z. B. PII) oder potentiell "
 "sensible Identifikatoren über ihre Umgebung (z. B. Host-Namen, Dateipfade, "
@@ -97956,23 +98003,28 @@ msgstr ""
 msgid "Product usage analytics is turned off by default. "
 msgstr "Die Analyse der Produktnutzung ist standardmäßig ausgeschaltet. "
 
-msgid ""
-"We believe in only receiving data you explicitly choose to share. You can "
-"enable sharing analytics data any time from global settings. \n"
-"            If you do not wish to be reminded, please manage your "
-"preferences in global settings."
+msgid "manifest"
 msgstr ""
-"Wir sind davon überzeugt, dass wir nur Daten erhalten sollten, die Sie "
-"ausdrücklich mit uns teilen wollen. Sie können die Freigabe von Analysedaten "
-"jederzeit in den globalen Einstellungen aktivieren. \n"
-"            Wenn Sie keine Erinnerungen erhalten möchten, passen Sie bitte "
-"Ihre Einstellungen in den globalen Einstellungen an."
+
+#, fuzzy
+msgid "global settings"
+msgstr "Globale Einstellungen"
+
+#, fuzzy
+msgid "Thank you! Product usage analytics is enabled."
+msgstr "Manifest zur Analyse der Produktnutzung"
+
+#, fuzzy
+msgid "Activate the pending changes to start the collection."
+msgstr "Ausstehende Änderungen aktivieren"
+
+msgid ""
+"Product usage analytics could not be enabled. Please try again or enable it "
+"in global settings."
+msgstr ""
 
 msgid "Remind me again in 30 days"
 msgstr "Erinnere mich in 30 Tagen noch einmal daran"
-
-msgid "Manage in global settings"
-msgstr "In den globalen Einstellungen verwalten"
 
 msgid "Agent communication failed during service discovery"
 msgstr "Bei der Service-Erkennung schlug die Agentenkommunikation fehl"
@@ -99106,6 +99158,21 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Erkundete Themen"
+
+#~ msgid ""
+#~ "We believe in only receiving data you explicitly choose to share. You can "
+#~ "enable sharing analytics data any time from global settings. \n"
+#~ "            If you do not wish to be reminded, please manage your "
+#~ "preferences in global settings."
+#~ msgstr ""
+#~ "Wir sind davon überzeugt, dass wir nur Daten erhalten sollten, die Sie "
+#~ "ausdrücklich mit uns teilen wollen. Sie können die Freigabe von "
+#~ "Analysedaten jederzeit in den globalen Einstellungen aktivieren. \n"
+#~ "            Wenn Sie keine Erinnerungen erhalten möchten, passen Sie "
+#~ "bitte Ihre Einstellungen in den globalen Einstellungen an."
+
+#~ msgid "Manage in global settings"
+#~ msgstr "In den globalen Einstellungen verwalten"
 
 #, fuzzy
 #~ msgid "No graph of %{label} is available."

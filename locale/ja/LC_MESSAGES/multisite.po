@@ -23641,6 +23641,10 @@ msgstr "時間範囲で有効"
 msgid "Enabled permanently"
 msgstr "永続的に有効"
 
+#, fuzzy
+msgid "Enabled product usage analytics"
+msgstr "製品利用状況の分析を有効にする"
+
 msgid "Enabled sections"
 msgstr "有効なセクション"
 
@@ -52654,6 +52658,10 @@ msgstr "製品"
 
 msgid "Product usage analytics"
 msgstr "製品利用状況分析"
+
+#, fuzzy
+msgid "Product usage analytics can only be enabled on the central site."
+msgstr "Checkmkは、マネージャの中央サイトでのみ設定できます。"
 
 msgid "Product usage analytics manifest"
 msgstr "製品利用状況の分析レポート"
@@ -87594,6 +87602,10 @@ msgstr "このグローバル設定を編集することは許可されていま
 msgid "You are not permitted to edit this rule."
 msgstr "このルールセットにアクセスすることは許可されていません。"
 
+#, fuzzy
+msgid "You are not permitted to enable product usage analytics."
+msgstr "このアクションを実行することは許可されていません。"
+
 msgid "You are not permitted to perform this action."
 msgstr "このアクションを実行することは許可されていません。"
 
@@ -92088,6 +92100,10 @@ msgstr "トグル式アコーディオンアイテムn item%{item}"
 msgid "Toggle %{ title }"
 msgstr "ログエントリを切り替えます"
 
+#, fuzzy
+msgid "Copy to clipboard"
+msgstr "URLをクリップボードにコピー"
+
 msgid "Copy to clipboard failed with error: "
 msgstr "クリップボードへのコピーがエラーで失敗しました： "
 
@@ -96300,6 +96316,19 @@ msgstr ""
 msgid "Open in monitoring"
 msgstr "監視アイコン"
 
+msgid "This link leaves Checkmk"
+msgstr ""
+
+msgid "Make sure this address contains nothing you do not want to share:"
+msgstr ""
+
+#, fuzzy
+msgid "Open in new tab"
+msgstr "オープン入力カウント"
+
+msgid "Image not loaded: %{url}"
+msgstr ""
+
 #, fuzzy
 msgid "Select an AI provider and a model in the global settings."
 msgstr "このオプションは、グローバル設定で変更されています。"
@@ -96323,6 +96352,21 @@ msgstr ""
 #, fuzzy
 msgid "Digit %{count} of %{total}"
 msgstr "%{count} %{ラベル}"
+
+msgctxt ""
+"%{link} is a link to the product usage analytics manifest with the text "
+"\"manifest\""
+msgid ""
+"We believe in only receiving data you explicitly choose to share (see %"
+"{link})."
+msgstr ""
+
+msgctxt ""
+"%{link} is a link to the global setting with the text \"global settings\""
+msgid ""
+"You can disable this reminder or change your decision at any time in the %"
+"{link}."
+msgstr ""
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"
@@ -96358,10 +96402,11 @@ msgstr ""
 msgid "We do NOT collect: "
 msgstr "収集しない内容: "
 
+#, fuzzy
 msgid ""
-"any data about users or their behavior (e.g., PII) or possibly sensitive "
-"identifiers about your environment (e.g., hostnames, file paths, service "
-"names)."
+"any data about users or their behavior (e.g., personally identifiable "
+"information) or possibly sensitive identifiers about your environment (e.g., "
+"hostnames, file paths, service names)."
 msgstr ""
 "ユーザーやその行動に関するデータ（例：個人を特定できる情報PII）や、お客様の環"
 "境に関する機密性高い識別子（例：ホスト名、ファイルパス、サービス名など）。"
@@ -96389,23 +96434,28 @@ msgstr ""
 msgid "Product usage analytics is turned off by default. "
 msgstr "製品利用状況分析。 "
 
-msgid ""
-"We believe in only receiving data you explicitly choose to share. You can "
-"enable sharing analytics data any time from global settings. \n"
-"            If you do not wish to be reminded, please manage your "
-"preferences in global settings."
+msgid "manifest"
 msgstr ""
-"当社は、お客様が明示的に共有を選択されたデータのみを受け取ることを原則として"
-"います。分析データの共有は、いつでもグローバル設定から有効にすることができま"
-"す。\n"
-"リマインダーを受け取りたくない場合は、グローバル設定で設定を変更してくださ"
-"い。"
+
+#, fuzzy
+msgid "global settings"
+msgstr "グローバル設定"
+
+#, fuzzy
+msgid "Thank you! Product usage analytics is enabled."
+msgstr "製品利用状況の分析レポート"
+
+#, fuzzy
+msgid "Activate the pending changes to start the collection."
+msgstr "保留中の変更をアクティブ化する"
+
+msgid ""
+"Product usage analytics could not be enabled. Please try again or enable it "
+"in global settings."
+msgstr ""
 
 msgid "Remind me again in 30 days"
 msgstr "30日後にリマインドする"
-
-msgid "Manage in global settings"
-msgstr "グローバル設定で管理する"
 
 #, fuzzy
 msgid "Agent communication failed during service discovery"
@@ -97588,6 +97638,21 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "試用期間満了"
+
+#~ msgid ""
+#~ "We believe in only receiving data you explicitly choose to share. You can "
+#~ "enable sharing analytics data any time from global settings. \n"
+#~ "            If you do not wish to be reminded, please manage your "
+#~ "preferences in global settings."
+#~ msgstr ""
+#~ "当社は、お客様が明示的に共有を選択されたデータのみを受け取ることを原則とし"
+#~ "ています。分析データの共有は、いつでもグローバル設定から有効にすることがで"
+#~ "きます。\n"
+#~ "リマインダーを受け取りたくない場合は、グローバル設定で設定を変更してくださ"
+#~ "い。"
+
+#~ msgid "Manage in global settings"
+#~ msgstr "グローバル設定で管理する"
 
 #, fuzzy
 #~ msgid "No graph of %{label} is available."

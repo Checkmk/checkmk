@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-11-19 09:09+0000\n"
+"PO-Revision-Date: 2026-11-21 15:29+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -25025,6 +25025,10 @@ msgstr "Ativado no intervalo de tempo"
 
 msgid "Enabled permanently"
 msgstr "Ativado permanentemente"
+
+#, fuzzy
+msgid "Enabled product usage analytics"
+msgstr "Habilitar notificações periódicas"
 
 msgid "Enabled sections"
 msgstr "Seções capacitadas"
@@ -55811,6 +55815,10 @@ msgstr "Produto"
 
 msgid "Product usage analytics"
 msgstr ""
+
+#, fuzzy
+msgid "Product usage analytics can only be enabled on the central site."
+msgstr "O Checkmk só pode ser configurado no sítio central dos gestores."
 
 #, fuzzy
 msgid "Product usage analytics manifest"
@@ -92441,6 +92449,10 @@ msgstr "Você não está autorizado a editar esta configuração global."
 msgid "You are not permitted to edit this rule."
 msgstr "Você não está autorizado a aceder a este conjunto de regras."
 
+#, fuzzy
+msgid "You are not permitted to enable product usage analytics."
+msgstr "Você não está autorizado a realizar esta ação."
+
 msgid "You are not permitted to perform this action."
 msgstr "Você não está autorizado a realizar esta ação."
 
@@ -94915,6 +94927,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -95432,6 +95445,7 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -97068,6 +97082,10 @@ msgstr ""
 #, fuzzy
 msgid "Toggle %{ title }"
 msgstr "Alternar entradas de log"
+
+#, fuzzy
+msgid "Copy to clipboard"
+msgstr "Segredo copiado para a área de transferência"
 
 msgid "Copy to clipboard failed with error: "
 msgstr ""
@@ -101177,6 +101195,19 @@ msgstr ""
 msgid "Open in monitoring"
 msgstr "Pesquisa em Monitorização"
 
+msgid "This link leaves Checkmk"
+msgstr ""
+
+msgid "Make sure this address contains nothing you do not want to share:"
+msgstr ""
+
+#, fuzzy
+msgid "Open in new tab"
+msgstr "Contagem de entrada aberta"
+
+msgid "Image not loaded: %{url}"
+msgstr ""
+
 #, fuzzy
 msgid "Select an AI provider and a model in the global settings."
 msgstr "Esta opção foi modificada em configurações globais."
@@ -101198,6 +101229,21 @@ msgid ""
 msgstr ""
 
 msgid "Digit %{count} of %{total}"
+msgstr ""
+
+msgctxt ""
+"%{link} is a link to the product usage analytics manifest with the text "
+"\"manifest\""
+msgid ""
+"We believe in only receiving data you explicitly choose to share (see %"
+"{link})."
+msgstr ""
+
+msgctxt ""
+"%{link} is a link to the global setting with the text \"global settings\""
+msgid ""
+"You can disable this reminder or change your decision at any time in the %"
+"{link}."
 msgstr ""
 
 #, fuzzy
@@ -101231,9 +101277,9 @@ msgid "We do NOT collect: "
 msgstr "Tamanho dos ficheiros de registo"
 
 msgid ""
-"any data about users or their behavior (e.g., PII) or possibly sensitive "
-"identifiers about your environment (e.g., hostnames, file paths, service "
-"names)."
+"any data about users or their behavior (e.g., personally identifiable "
+"information) or possibly sensitive identifiers about your environment (e.g., "
+"hostnames, file paths, service names)."
 msgstr ""
 
 #, fuzzy
@@ -101254,19 +101300,28 @@ msgstr ""
 msgid "Product usage analytics is turned off by default. "
 msgstr ""
 
+msgid "manifest"
+msgstr ""
+
+#, fuzzy
+msgid "global settings"
+msgstr "Configurações globais"
+
+#, fuzzy
+msgid "Thank you! Product usage analytics is enabled."
+msgstr "Habilitar notificações periódicas"
+
+#, fuzzy
+msgid "Activate the pending changes to start the collection."
+msgstr "Ativar mudanças pendentes"
+
 msgid ""
-"We believe in only receiving data you explicitly choose to share. You can "
-"enable sharing analytics data any time from global settings. \n"
-"            If you do not wish to be reminded, please manage your "
-"preferences in global settings."
+"Product usage analytics could not be enabled. Please try again or enable it "
+"in global settings."
 msgstr ""
 
 msgid "Remind me again in 30 days"
 msgstr ""
-
-#, fuzzy
-msgid "Manage in global settings"
-msgstr "Editar cenário global"
 
 #, fuzzy
 msgid "Agent communication failed during service discovery"
@@ -102341,6 +102396,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "O julgamento expirou"
+
+#, fuzzy
+#~ msgid "Manage in global settings"
+#~ msgstr "Editar cenário global"
 
 #, fuzzy
 #~ msgid "No graph of %{label} is available."

@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, useId, useTemplateRef, watch } from 'vue'
 
 import { useNavigation } from '@/maps/services/context'
 
@@ -55,12 +55,20 @@ const matchesText = computed(() => {
 })
 
 const matchesTitle = computed(() =>
-  props.hits && props.hits.reachable < props.hits.total
-    ? _t('Too many matches to show on the map; refine the search')
-    : _t('Enter shows the next match, Shift+Enter the previous one')
+  props.hits?.total === 0
+    ? _t("Nothing on the map matches; type '/' for the search operators")
+    : props.hits && props.hits.reachable < props.hits.total
+      ? _t('Too many matches to show on the map; refine the search')
+      : _t('Enter shows the next match, Shift+Enter the previous one')
 )
 
 function onEnter(event: KeyboardEvent): void {
+  const picked = dropdownOpen.value ? operators.value[activeOperator.value] : undefined
+  if (picked) {
+    event.preventDefault()
+    applyOperator(picked.prefix)
+    return
+  }
   if (!props.hits?.reachable || props.hits.reachable < props.hits.total) {
     return
   }
@@ -81,20 +89,62 @@ const operators = computed(() => {
   return all.filter((op) => !props.excludePrefixes?.includes(op.prefix))
 })
 
+/** A leading '/' calls up the operators; until one is picked, nothing is searched. */
+function callsOperators(text: string): boolean {
+  return text.trimStart().startsWith('/')
+}
+
+function searchOf(text: string): string {
+  return callsOperators(text) ? '' : text
+}
+
+const typed = ref(props.modelValue)
+watch(
+  () => props.modelValue,
+  (value) => {
+    if (value !== searchOf(typed.value)) {
+      typed.value = value
+    }
+  }
+)
+
 const local = computed({
-  get: () => props.modelValue,
-  set: (v: string) => emit('update:modelValue', v)
+  get: () => typed.value,
+  set: (v: string) => {
+    typed.value = v
+    const search = searchOf(v)
+    if (search !== props.modelValue) {
+      emit('update:modelValue', search)
+    }
+  }
 })
 
 const rootRef = useTemplateRef<HTMLElement>('rootRef')
 const inputRef = useTemplateRef<HTMLInputElement>('inputRef')
 const dropdownOpen = ref(false)
+/** The operator the arrow keys are on, or -1. */
+const activeOperator = ref(-1)
+const operatorListId = useId()
+const operatorId = (index: number): string => `${operatorListId}-${index}`
 
 function openDropdown() {
   dropdownOpen.value = true
 }
 function closeDropdown() {
   dropdownOpen.value = false
+  activeOperator.value = -1
+}
+
+function moveOperator(event: KeyboardEvent, step: 1 | -1): void {
+  if (!dropdownOpen.value) {
+    return
+  }
+  event.preventDefault()
+  const count = operators.value.length
+  if (!count) {
+    return
+  }
+  activeOperator.value = (activeOperator.value + step + count) % count
 }
 function toggleDropdown() {
   if (dropdownOpen.value) {
@@ -106,12 +156,19 @@ function toggleDropdown() {
     inputRef.value?.focus()
   }
 }
-function syncDropdownFromInput() {
-  // Read the live DOM value, not local/modelValue: on @input the v-model
-  // emit hasn't propagated back through the prop yet, so local still holds
-  // the previous keystroke and the "/" dropdown would open one char late.
-  if (inputRef.value?.value.trim().startsWith('/')) {
+function openDropdownOnSlash() {
+  if (callsOperators(inputRef.value?.value ?? '')) {
     openDropdown()
+  }
+}
+function syncDropdownFromInput() {
+  // Read the live DOM value: @input can fire before v-model has written it back.
+  // Once the '/' is gone, the operators are not what the operator is typing.
+  const text = inputRef.value?.value ?? ''
+  if (callsOperators(text)) {
+    openDropdown()
+  } else if (text.trim()) {
+    closeDropdown()
   }
 }
 
@@ -125,7 +182,7 @@ function applyOperator(prefix: string) {
   const current = local.value
   const trimmed = current.trimStart()
   const leadingWs = current.slice(0, current.length - trimmed.length)
-  if (trimmed.startsWith('/')) {
+  if (callsOperators(trimmed)) {
     const rest = trimmed.slice(1).trimStart()
     local.value = `${leadingWs + prefix}:${rest}`
   } else if (trimmed.length === 0) {
@@ -170,15 +227,25 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
       :placeholder="placeholder ?? _t('Search — type \'/\' for operators')"
       type="search"
       class="maps-map-search__input"
+      role="combobox"
+      aria-autocomplete="list"
+      :aria-expanded="dropdownOpen"
+      :aria-controls="dropdownOpen ? operatorListId : undefined"
+      :aria-activedescendant="
+        dropdownOpen && activeOperator >= 0 ? operatorId(activeOperator) : undefined
+      "
       :aria-label="placeholder ?? _t('Search — type \'/\' for operators')"
-      @focus="syncDropdownFromInput"
+      @focus="openDropdownOnSlash"
       @input="syncDropdownFromInput"
       @keydown.escape.stop="closeDropdown"
+      @keydown.down="moveOperator($event, 1)"
+      @keydown.up="moveOperator($event, -1)"
       @keydown.enter="onEnter"
     />
     <span
       v-if="matchesText"
       class="maps-map-search__matches"
+      :class="{ 'maps-map-search__matches--none': hits?.total === 0 }"
       :title="matchesTitle"
       aria-live="polite"
       >{{ matchesText }}</span
@@ -206,16 +273,24 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
     </button>
     <slot name="trailing" />
 
-    <div v-if="dropdownOpen" class="maps-map-search__dropdown" role="listbox" @mousedown.prevent>
-      <div class="maps-map-search__dropdown-title">
+    <div v-if="dropdownOpen" class="maps-map-search__dropdown" @mousedown.prevent>
+      <div :id="`${operatorListId}-title`" class="maps-map-search__dropdown-title">
         {{ _t('Search operators') }}
       </div>
-      <ul class="maps-map-search__operator-list">
+      <ul
+        :id="operatorListId"
+        class="maps-map-search__operator-list"
+        role="listbox"
+        :aria-labelledby="`${operatorListId}-title`"
+      >
         <li
-          v-for="op in operators"
+          v-for="(op, index) in operators"
+          :id="operatorId(index)"
           :key="op.prefix"
           role="option"
           class="maps-map-search__operator"
+          :class="{ 'maps-map-search__operator--active': index === activeOperator }"
+          :aria-selected="index === activeOperator"
           @click="applyOperator(op.prefix)"
         >
           <span class="maps-map-search__operator-tag">{{ op.prefix }}:</span>
@@ -226,7 +301,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
         <CmkIcon name="info-circle" size="small" class="maps-map-search__info-icon" />
         <span>{{
           _t(
-            "Pick one here, or type '/' in the search box. Without a prefix all fields are searched; multiple terms must all match."
+            "Pick one here, or type '/' in the search box. Without a prefix all fields are searched; multiple terms must all match; '*' stands for any characters."
           )
         }}</span>
       </div>
@@ -296,6 +371,12 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   color: var(--font-color-dimmed);
   font-size: var(--font-size-small);
   white-space: nowrap;
+}
+
+/* A search that finds nothing is the one count the operator must not miss. */
+.maps-map-search__matches--none {
+  color: var(--font-color);
+  font-size: var(--font-size-normal);
 }
 
 .maps-map-search__icon-btn {
@@ -368,7 +449,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   color: var(--font-color);
 }
 
-.maps-map-search__operator:hover {
+.maps-map-search__operator:hover,
+.maps-map-search__operator--active {
   background: var(--input-hover-bg-color);
 }
 

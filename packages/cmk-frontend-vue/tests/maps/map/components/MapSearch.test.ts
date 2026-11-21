@@ -16,7 +16,7 @@ function renderSearch(hits: SearchMatches | undefined, modelValue = 'perf') {
     props: { modelValue, hits, onStep: (direction: 1 | -1) => steps.push(direction) },
     global: mapsGlobal()
   })
-  return { steps, input: screen.getByRole('searchbox') }
+  return { steps, input: screen.getByRole('combobox') }
 }
 
 describe('MapSearch', () => {
@@ -52,5 +52,20 @@ describe('MapSearch', () => {
     await fireEvent.keyDown(input, { key: 'Enter' })
     expect(steps).toEqual([])
     expect(screen.getByText('2000 matches')).toBeInTheDocument()
+  })
+
+  it('searches nothing while a leading slash calls up the operators', async () => {
+    const searched: string[] = []
+    render(MapSearch, {
+      props: { modelValue: 'perf', 'onUpdate:modelValue': (value: string) => searched.push(value) },
+      global: mapsGlobal()
+    })
+    const input = screen.getByRole('combobox')
+    await fireEvent.update(input, '/')
+    await fireEvent.update(input, '/perf')
+    await fireEvent.keyDown(input, { key: 'ArrowDown' })
+    await fireEvent.keyDown(input, { key: 'Enter' })
+    expect(searched.filter((value) => value.includes('/'))).toEqual([])
+    expect(searched.at(-1)).toBe('h:perf')
   })
 })

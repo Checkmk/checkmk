@@ -238,6 +238,33 @@ def test_failed_agent_updater_collection_logs_the_error(
     ] == [("ERROR", "Could not collect the agent updater usage, sending no counts", True)]
 
 
+@pytest.mark.usefixtures("mock_checkmk_info", "site_api")
+def test_payload_has_no_distributed_monitoring_role_when_the_site_config_is_broken(
+    tmp_path: Path, local_connection: MockType
+) -> None:
+    (tmp_path / "distributed_wato.mk").write_text("is_wato_slave_site = True\n")
+    (tmp_path / "multisite.d").mkdir()
+    (tmp_path / "multisite.d" / "sites.mk").write_text("sites.update({\n")
+
+    payload = _collect_product_usage(tmp_path, local_connection)
+
+    assert payload.distributed_monitoring is None
+    assert (payload.count_hosts, payload.count_services, payload.checks) == (10, 20, {})
+
+
+@pytest.mark.usefixtures("mock_checkmk_info", "site_api")
+def test_payload_has_no_languages_when_the_locale_dir_is_unreadable(
+    tmp_path: Path, local_connection: MockType
+) -> None:
+    locale_dir = tmp_path / "locale"
+    locale_dir.write_text("")
+
+    payload = _collect_product_usage(tmp_path, local_connection, locale_dir=locale_dir)
+
+    assert payload.languages is None
+    assert (payload.count_hosts, payload.count_services, payload.checks) == (10, 20, {})
+
+
 def _updater_usage_url() -> str:
     """The endpoint the collector asks, built when a test runs rather than at import
 
@@ -247,7 +274,9 @@ def _updater_usage_url() -> str:
     return f"http://localhost:{APACHE_PORT}/{omd_site()}{UPDATER_USAGE_PATH}"
 
 
-def _collect_product_usage(site_dir: Path, local_connection: MockType) -> ProductUsagePayload:
+def _collect_product_usage(
+    site_dir: Path, local_connection: MockType, *, locale_dir: Path | None = None
+) -> ProductUsagePayload:
     """Collect the product usage data of a test site: 10 hosts, 20 services, nothing else
 
     The four Livestatus answers are the site status, the services, the disabled services
@@ -259,7 +288,14 @@ def _collect_product_usage(site_dir: Path, local_connection: MockType) -> Produc
     site_conf.parent.mkdir(parents=True, exist_ok=True)
     site_conf.write_text(f"CONFIG_APACHE_TCP_PORT='{APACHE_PORT}'\n")
 
-    return collect_data(site_dir, site_dir, site_dir, site_dir, logging.getLogger(__name__))
+    return collect_data(
+        site_dir,
+        site_dir,
+        site_dir,
+        site_dir,
+        locale_dir or site_dir / "locale",
+        logging.getLogger(__name__),
+    )
 
 
 def _collect_from_site(

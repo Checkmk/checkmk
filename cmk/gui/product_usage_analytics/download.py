@@ -30,6 +30,7 @@ class PageDownloadProductUsage(Page):
             BaseConfigurationMKFiles.from_omd_root(paths.omd_root).conf_d,
             paths.default_config_dir,
             paths.omd_root,
+            paths.locale_dir,
             logger,
         )
 

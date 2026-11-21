@@ -221,6 +221,16 @@ def test_product_usage_json_counts_active_automation_user(site: Site) -> None:
 
 
 @pytest.mark.usefixtures("default_cfg")
+def test_product_usage_json_reports_standalone_site_languages(site: Site) -> None:
+    """A standalone site with the default configuration uses English"""
+    run_product_usage_collection(site)
+
+    data = json.loads(get_product_usage_json_content(site))["data"]
+    assert data["distributed_monitoring"] == {"is_remote_setup_site": False}
+    assert data["languages"]["default_language"] == "en"
+
+
+@pytest.mark.usefixtures("default_cfg")
 def test_successful_https_product_usage_data_transmission(
     site: Site, mock_https_server: MockServer
 ) -> None:

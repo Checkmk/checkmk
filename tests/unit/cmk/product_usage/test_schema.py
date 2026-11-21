@@ -35,6 +35,14 @@ def _product_usage_data() -> dict[str, object]:
         },
         "timestamp": int(datetime.datetime.now(tz=datetime.UTC).timestamp()),
         "inventory": {"hosts_with_inventory": 4},
+        "distributed_monitoring": {"is_remote_setup_site": False},
+        "languages": {
+            "default_language": "en",
+            "users": {
+                "active": {"count_per_language": {"de": 1}, "count_with_default_language": 0},
+                "inactive": {"count_per_language": {}, "count_with_default_language": 0},
+            },
+        },
         "grafana": {
             "is_used": True,
             "version": "2.3.4",

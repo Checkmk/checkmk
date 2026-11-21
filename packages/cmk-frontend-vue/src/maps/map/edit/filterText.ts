@@ -16,8 +16,15 @@ function example(objects: FilteredObjects): string {
 }
 
 /** The same words wherever a Livestatus filter is set. */
-export function filterPlaceholder(objects: FilteredObjects): TranslatedString {
-  return untranslated(example(objects))
+export function filterPlaceholder(
+  _t: TranslateFn,
+  isGrid: boolean,
+  objects: FilteredObjects
+): TranslatedString {
+  if (!isGrid) {
+    return untranslated(example(objects))
+  }
+  return objects === 'service' ? _t('Empty: all services') : _t('Empty: all hosts')
 }
 
 export function filterHelp(_t: TranslateFn, objects: FilteredObjects): TranslatedString {

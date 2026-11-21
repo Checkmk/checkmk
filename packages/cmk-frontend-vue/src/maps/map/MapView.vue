@@ -32,6 +32,7 @@ import {
 } from 'vue'
 
 import BulkAckModal from '@/maps/map/commands/BulkAckModal.vue'
+import MapGridPill from '@/maps/map/components/MapGridPill.vue'
 import MapKioskExit from '@/maps/map/components/MapKioskExit.vue'
 import MapPlaceholder from '@/maps/map/components/MapPlaceholder.vue'
 import MapProblemsPill, { type ProblemCounts } from '@/maps/map/components/MapProblemsPill.vue'
@@ -58,6 +59,8 @@ import ObjectPropertiesModal, {
 } from '@/maps/map/edit/properties/ObjectPropertiesModal.vue'
 import MapSettingsModal from '@/maps/map/edit/settings/MapSettingsModal.vue'
 import type { SettingsFocus } from '@/maps/map/edit/settings/settingsForm'
+import { useGridMembers } from '@/maps/map/static/composables/useGridMembers'
+import { canAddGrid, mapGrids } from '@/maps/map/static/gridMembers'
 import type WorldMapViewType from '@/maps/map/worldmap/WorldMapView.vue'
 import type { WorldmapViewport } from '@/maps/map/worldmap/geo'
 import type { NavTarget } from '@/maps/services/NavigationService'
@@ -134,13 +137,15 @@ const mapConfigAsRead = computed<MapRead | null>(() => {
     icon_size: cfg.icon_size ?? null,
     rotation_pools: cfg.rotation_pools ?? [],
     view_type: cfg.view.type,
-    object_count: objects.length
+    object_count: objects.length,
+    has_grid: mapGrids(cfg).length > 0
   }
 })
 const isWorldmap = computed(() => mapConfig.value?.view.type === 'worldmap')
 const isFlowmap = computed(() => mapConfig.value?.view.type === 'flow')
 const isRadar = computed(() => mapConfig.value?.view.type === 'radar')
 const isFolderTree = computed(() => mapConfig.value?.view.type === 'foldertree')
+const statesArrived = computed(() => statesStore.lastUpdate.value !== null)
 const liveStatus = computed(() => (mapsStore.error.value ? null : statesStore.liveStatus.value))
 /** Whether the map's own chrome says what is not current; radar and folder tree say it in their own flow. */
 const showsMapState = computed(() => !isPreview.value && !isRadar.value && !isFolderTree.value)
@@ -175,6 +180,17 @@ const checkmkUrl = computed(() => {
 })
 
 const editor = useMapEditor()
+useGridMembers(() => editor.editMode.value)
+
+const gridStates = computed(() =>
+  mapGrids(mapConfig.value)
+    .map((grid) => statesStore.states.value[grid.id])
+    .filter((state) => state !== undefined)
+)
+// Its own state is stale only when there is nothing left to show.
+const gridFailed = computed(() => gridStates.value.some((state) => state.stale))
+const gridTruncated = computed(() => gridStates.value.some((state) => state.grid_truncated))
+const offersObjectGrid = computed(() => canAddGrid(mapConfig.value))
 
 const { rotationCountdown, rotationPaused, stopRotation, scheduleRotation, toggleRotationPause } =
   useMapRotation(mapName, editor.editMode)
@@ -199,9 +215,11 @@ watch(
   [() => editor.selectedObjectId.value, () => geoViewTick.value],
   async ([id]) => {
     await nextTick()
-    selectedObjectEl.value = id
+    const el = id
       ? (root.value?.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"]`) ?? null)
       : null
+    // An object drawn beyond its own box, a grid's frame, names that part.
+    selectedObjectEl.value = el?.querySelector<HTMLElement>('[data-object-anchor]') ?? el
   },
   { immediate: true }
 )
@@ -826,6 +844,11 @@ function closeBulkAckModal(sent: boolean): void {
           :dead-sites="statesStore.deadSites.value"
           :dead-site-hosts="deadSiteHostsOf(mapConfig.view)"
         />
+        <MapGridPill
+          v-if="showsMapState && (gridTruncated || gridFailed)"
+          :failed="gridFailed"
+          :can-edit="canEdit"
+        />
       </template>
     </MapViewTopbar>
 
@@ -910,6 +933,8 @@ function closeBulkAckModal(sent: boolean): void {
         v-model:problems-only="problemsOnly"
         :config="mapConfig"
         :states="statesStore.states.value"
+        :states-arrived="statesArrived"
+        :grid-failed="gridFailed"
         :editor="editor"
         :error="mapsStore.error.value"
         :can-edit="canEdit"
@@ -989,6 +1014,7 @@ function closeBulkAckModal(sent: boolean): void {
         :connection-id="mapConfig?.connection_id ?? ''"
         :keyboard-active="editKeyboardActive"
         :offers-add-object="!isPresentation"
+        :offers-object-grid="offersObjectGrid"
         :offers-snap-grid="!isWorldmap && !isPresentation"
         :beside-inspector="isPresentation && editor.editMode.value"
         @start-placing="onStartPlacing()"

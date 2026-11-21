@@ -20,6 +20,7 @@ import MapPlaceholder from '@/maps/map/components/MapPlaceholder.vue'
 import MapSearch from '@/maps/map/components/MapSearch.vue'
 import ProblemsOnlyToggle from '@/maps/map/components/ProblemsOnlyToggle.vue'
 import type { MapEditor } from '@/maps/map/composables/useMapEditor'
+import { editTargetOf } from '@/maps/map/static/gridMembers'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 
 import { isCentered } from './canvasSpace'
@@ -30,6 +31,10 @@ const { _t } = usei18n()
 const props = defineProps<{
   config: MapConfig
   states: Record<string, ObjectState>
+  /** A map of grids is empty until its first states arrive. */
+  statesArrived: boolean
+  /** The topbar says so; claiming the filter matched nothing would be wrong. */
+  gridFailed: boolean
   editor: MapEditor
   /** Why the map could not be loaded, if it could not. */
   error: string | null
@@ -56,6 +61,24 @@ const emit = defineEmits<{
 const canvas = useTemplateRef<InstanceType<typeof MapCanvas>>('canvas')
 
 const centered = computed(() => isCentered(props.config, props.preview))
+
+const emptyText = computed(() => {
+  if (props.editor.editMode.value) {
+    return null
+  }
+  const grids = props.config.objects.filter((object) => object.type === 'grid').length
+  if (props.config.objects.length > grids) {
+    return null
+  }
+  if (grids === 0) {
+    return props.canEdit
+      ? _t('No objects yet. Use the Edit button at the bottom right to add some.')
+      : _t('This map has no objects yet')
+  }
+  return props.statesArrived && !props.gridFailed
+    ? _t('No hosts or services match the grids on this map.')
+    : null
+})
 
 /**
  * NagVis colors the whole page, so a label hanging past the canvas still sits
@@ -115,8 +138,19 @@ async function onAreaClick(event: MouseEvent): Promise<void> {
   }
 }
 
+// The member had the focus, so its pinned object takes it over.
+async function onObjectPin(member: MapElement): Promise<void> {
+  const pinned = await props.editor.pinGridMember(member.id)
+  if (pinned !== null) {
+    canvas.value?.focusObject(pinned)
+  }
+}
+
 async function onObjectDragEnd(id: string, x: number, y: number): Promise<void> {
-  await props.editor.saveObjectPosition(id, x, y)
+  const saved = await props.editor.saveObjectPosition(id, x, y)
+  if (saved !== id) {
+    canvas.value?.focusObject(saved)
+  }
   void lockCanvasSize()
 }
 
@@ -146,10 +180,14 @@ async function onResizeEnd(id: string, width: number, height: number): Promise<v
   }
 }
 
-/** Double-click opens the object's properties. */
+/** Double-click opens the object's properties, a grid member its grid's. */
 function onObjectDblclick(object: MapElement): void {
-  if (props.editor.editMode.value) {
-    emit('object-properties', object)
+  if (!props.editor.editMode.value) {
+    return
+  }
+  const target = editTargetOf(props.config.objects, object)
+  if (target) {
+    emit('object-properties', target)
   }
 }
 </script>
@@ -179,16 +217,9 @@ function onObjectDblclick(object: MapElement): void {
 
       <!-- Text only: Checkmk's icon set has no glyph for an empty canvas, and a
            borrowed one says nothing the sentence does not. -->
-      <div
-        v-if="config.objects.length === 0 && !editor.editMode.value"
-        class="maps-static-map-view__empty"
-      >
+      <div v-if="emptyText" class="maps-static-map-view__empty">
         <p class="maps-static-map-view__empty-text">
-          {{
-            canEdit
-              ? _t('No objects yet. Use the Edit button at the bottom right to add some.')
-              : _t('This map has no objects yet')
-          }}
+          {{ emptyText }}
         </p>
       </div>
 
@@ -228,6 +259,7 @@ function onObjectDblclick(object: MapElement): void {
               end_ref: null
             })
         "
+        @object-pin="(member) => void onObjectPin(member)"
         @object-drag-end="(id, x, y) => void onObjectDragEnd(id, x, y)"
         @objects-drag-end="(moves) => void onObjectsDragEnd(moves)"
         @marquee-select="(ids, additive) => editor.selectObjects(ids, additive)"

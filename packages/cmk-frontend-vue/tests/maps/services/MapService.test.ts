@@ -838,3 +838,51 @@ describe('MapService.loadAutoObjects()', () => {
     expect(store.currentMap.value!.objects).toEqual([])
   })
 })
+
+describe('MapService.showGridMembers()', () => {
+  function serviceShowing(objects: MapConfig['objects']): MapService {
+    const store = new MapService(new MapConfigApi(), { fetchAutoObjects: vi.fn() })
+    store.currentMap.value = aMap({ name: 'net', objects })
+    return store
+  }
+
+  const ids = (store: MapService) => store.currentMap.value!.objects.map((object) => object.id)
+
+  it('replaces the members it showed before and keeps the placed objects', () => {
+    const store = serviceShowing([anObject({ id: 'core', type: 'host' })])
+
+    store.showGridMembers('net', [anObject({ id: 'auto:grid:g:a', type: 'host' })])
+    store.showGridMembers('net', [anObject({ id: 'auto:grid:g:b', type: 'host' })])
+
+    expect(ids(store)).toEqual(['core', 'auto:grid:g:b'])
+  })
+
+  it('keeps the objects of the map when the same members are shown again', () => {
+    const store = serviceShowing([anObject({ id: 'core', type: 'host' })])
+    const members = [anObject({ id: 'auto:grid:g:a', type: 'host' })]
+    store.showGridMembers('net', members)
+    const objects = store.currentMap.value!.objects
+
+    store.showGridMembers('net', [...members])
+
+    expect(store.currentMap.value!.objects).toBe(objects)
+  })
+
+  it('leaves a map that was switched to meanwhile alone', () => {
+    const store = serviceShowing([])
+
+    store.showGridMembers('other', [anObject({ id: 'auto:grid:g:a', type: 'host' })])
+
+    expect(ids(store)).toEqual([])
+  })
+
+  it('survives the worldmap hosts being reloaded', async () => {
+    const store = new MapService(new MapConfigApi(), { fetchAutoObjects: vi.fn() })
+    store.currentMap.value = aMap({ name: 'net', objects: [] })
+    store.showGridMembers('net', [anObject({ id: 'auto:grid:g:a', type: 'host' })])
+
+    await store.loadAutoObjects('net', true)
+
+    expect(ids(store)).toEqual(['auto:grid:g:a'])
+  })
+})

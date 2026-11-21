@@ -7,6 +7,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   formFromObject,
+  gridOrderChoice,
+  gridSortAndOrder,
   updatesFromForm,
   weatherColorNeedsMetric
 } from '@/maps/map/edit/properties/objectForm'
@@ -56,6 +58,17 @@ describe('formFromObject', () => {
 })
 
 describe('updatesFromForm', () => {
+  it('keeps the layout of a grid within what the map can save', () => {
+    const grid = obj({ type: 'grid' })
+    const form = { ...formOf(grid), grid_per_row: 5000, grid_offset_x: -40, grid_offset_y: 12.6 }
+
+    expect(updatesFromForm(form, grid, 'static')).toMatchObject({
+      grid_per_row: 1000,
+      grid_offset_x: 0,
+      grid_offset_y: 13
+    })
+  })
+
   it('sends only the fields the object type carries', () => {
     const object = obj({ type: 'host', host_name: 'web01' })
     const updates = updatesFromForm(formOf(object), object, 'static')
@@ -110,6 +123,14 @@ describe('updatesFromForm', () => {
     expect(updatesFromForm(formOf(services), services, 'static')).not.toHaveProperty(
       'recognize_services'
     )
+  })
+
+  it('stops a grid switched to services from counting services', () => {
+    const grid = obj({ type: 'grid', object_types: 'host', recognize_services: true })
+    const form = formOf(grid)
+    form.object_types = 'service'
+
+    expect(updatesFromForm(form, grid, 'static')).toMatchObject({ recognize_services: false })
   })
 
   it('drops member patterns once the line shows what takes none', () => {
@@ -289,5 +310,20 @@ describe('weatherColorNeedsMetric', () => {
     form.line_weather_color = true
 
     expect(weatherColorNeedsMetric(form, object)).toBe(false)
+  })
+})
+
+describe('the order of a grid', () => {
+  it.each([
+    ['name', { grid_sort: 'name', grid_order: 'asc' }],
+    ['state', { grid_sort: 'state', grid_order: 'asc' }],
+    ['state_desc', { grid_sort: 'state', grid_order: 'desc' }]
+  ] as const)('stores %s as the sort and order NagVis knows', (choice, stored) => {
+    expect(gridSortAndOrder(choice)).toEqual(stored)
+    expect(gridOrderChoice(stored)).toBe(choice)
+  })
+
+  it('reads an order by name as by name, whichever way it is turned', () => {
+    expect(gridOrderChoice({ grid_sort: 'name', grid_order: 'desc' })).toBe('name')
   })
 })

@@ -12,7 +12,7 @@ import type { TranslateFn } from '@/maps/utils/dropdownOptions'
 
 /**
  * Whether the draft object names something the map can show yet: a host needs a
- * hostname, a service needs both, a line or a textbox needs nothing at all,
+ * hostname, a service needs both, a line, a textbox or a grid needs nothing at all,
  * and a filter has to be one the server takes.
  * Objects that carry only geometry are placeable the moment their type is
  * picked.
@@ -34,6 +34,8 @@ export function isDraftPlaceable(draft: NewObjectDraft): boolean {
       return !!draft.aggregation_id
     case 'image':
       return !!draft.image_src
+    case 'grid':
+      return isFilterWellFormed(draft.object_filter)
     case 'line':
     case 'textbox':
     case 'graph':

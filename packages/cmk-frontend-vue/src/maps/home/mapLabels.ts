@@ -91,5 +91,5 @@ export function hasManagementFlags(map: MapRead): boolean {
  * number that would be wrong the moment it is rendered.
  */
 export function hasDynamicContent(map: MapRead): boolean {
-  return ['flow', 'radar', 'worldmap'].includes(map.view.type)
+  return ['flow', 'radar', 'worldmap'].includes(map.view.type) || !!map.has_grid
 }

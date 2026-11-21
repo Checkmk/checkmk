@@ -35,6 +35,7 @@ import { useCanvasMarqueeSelect } from '@/maps/map/static/composables/useCanvasM
 import { useCanvasObjectDrag } from '@/maps/map/static/composables/useCanvasObjectDrag'
 import { useCanvasPan } from '@/maps/map/static/composables/useCanvasPan'
 import { CANVAS_SCALE, useCanvasViewport } from '@/maps/map/static/composables/useCanvasViewport'
+import { editTargetOf } from '@/maps/map/static/gridMembers'
 import { useSettings } from '@/maps/services/context'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 import { objectDisplayName } from '@/maps/utils/dropdownOptions'
@@ -86,6 +87,7 @@ const emit = defineEmits<{
   'object-duplicate': [object: MapElement]
   'object-straighten': [object: MapElement]
   'object-detach': [object: MapElement]
+  'object-pin': [object: MapElement]
   'line-drag-start': [event: MouseEvent, object: MapElement, mode: LineDragMode]
   'canvas-click': [event: MouseEvent]
   'marquee-select': [ids: string[], additive: boolean]
@@ -223,21 +225,35 @@ const menus = useMapObjectMenus({
   preview: () => props.preview === true
 })
 
-/** Hand a context-menu action its object, closing the menu first. */
-function withContextObject(act: (object: MapElement) => void): void {
-  const object = menus.context.object
+function editTarget(object: MapElement | null): MapElement | null {
+  return object && editTargetOf(props.config.objects, object)
+}
+
+/**
+ * Hand a context-menu action its object, closing the menu first: by default
+ * what an edit changes, so a grid member's grid.
+ */
+function withContextObject(
+  act: (object: MapElement) => void,
+  target: (object: MapElement | null) => MapElement | null = editTarget
+): void {
+  const object = target(menus.context.object)
   menus.close()
   if (object) {
     act(object)
   }
 }
 
+// The member itself: pinning is what a grid member does on its own.
+function onContextPin(): void {
+  withContextObject(
+    (member) => emit('object-pin', member),
+    (object) => object
+  )
+}
+
 function onContextProperties(): void {
-  const { object } = menus.context
-  menus.close()
-  if (object) {
-    emit('object-properties', object)
-  }
+  withContextObject((object) => emit('object-properties', object))
 }
 
 const layout = useCanvasLayout({
@@ -387,6 +403,7 @@ function lineDragCoords(id: string): { dragCoords?: (typeof props.lineDragPositi
 
 defineExpose({
   getCanvasEl: () => canvas.value,
+  focusObject: roving.focusObject,
   getMapPosition: viewport.mapPositionOf,
   resetZoom: viewport.resetZoom,
   getNativeSize: () => ({ w: extents.width.value, h: extents.height.value }),
@@ -507,7 +524,7 @@ defineExpose({
       :x="menus.context.x"
       :y="menus.context.y"
       :checkmk-url="checkmkUrl ?? null"
-      :show-edit="isAdmin && editMode"
+      :show-edit="isAdmin && editMode && editTarget(menus.context.object) !== null"
       :edit-mode="editMode"
       :template="menus.contextTemplate.value"
       @close="menus.close()"
@@ -516,6 +533,7 @@ defineExpose({
       @delete="withContextObject((object) => emit('object-delete', object))"
       @straighten="withContextObject((object) => emit('object-straighten', object))"
       @detach="withContextObject((object) => emit('object-detach', object))"
+      @pin="onContextPin"
     />
   </div>
 </template>

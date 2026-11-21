@@ -28,6 +28,7 @@ const props = defineProps<{
   connectionId: string
   /** Presentation maps place elements on their slides, not via this panel. */
   offersAddObject: boolean
+  offersObjectGrid: boolean
   /** A geo map snaps to coordinates, so it has no grid to snap to. */
   offersSnapGrid: boolean
   /** False while a dialog over the map owns the keyboard. */
@@ -127,6 +128,7 @@ const snapEntries = computed<MapEditMenuEntry[]>(() =>
           v-model:draft="editor.draft"
           :placing="editor.placing.value"
           :connection-id="connectionId"
+          :offers-object-grid="offersObjectGrid"
           @start-placing="emit('start-placing')"
           @cancel-add="dismissAddPanel"
         />
@@ -166,8 +168,8 @@ const snapEntries = computed<MapEditMenuEntry[]>(() =>
         :class="
           snapActive ? 'maps-map-edit-tools__button--active' : 'maps-map-edit-tools__button--idle'
         "
-        :title="_t('Grid')"
-        :aria-label="_t('Grid')"
+        :title="_t('Snap to grid')"
+        :aria-label="_t('Snap to grid')"
         :aria-expanded="snapMenuOpen"
         aria-haspopup="menu"
         @click="snapMenuOpen = !snapMenuOpen"
@@ -182,7 +184,7 @@ const snapEntries = computed<MapEditMenuEntry[]>(() =>
       >
         <MapEditMenu
           v-if="snapMenuOpen"
-          :label="_t('Grid')"
+          :label="_t('Snap to grid')"
           :entries="snapEntries"
           choice
           @pick="pickSnapGrid(Number($event))"

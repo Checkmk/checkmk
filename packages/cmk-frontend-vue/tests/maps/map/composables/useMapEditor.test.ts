@@ -8,8 +8,10 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 
 import { type MapEditor, useMapEditor } from '@/maps/map/composables/useMapEditor'
+import { GRID_MAX_PER_MAP } from '@/maps/map/static/gridMembers'
 import type { MapConfig, MapElement } from '@/maps/types/api'
 
+import { aMap } from '../../support/fixtures'
 import { fakeMapsServices, runWithServices } from '../../support/services'
 
 function makeObject(o: Partial<MapElement> & { id: string; type: string }): MapElement {
@@ -312,5 +314,134 @@ describe('useMapEditor — geo coordinates', () => {
 
     const clone = services.maps.currentMap.value.objects[1]!
     expect([clone.lat, clone.lng]).toEqual([51.05, 52.35])
+  })
+})
+
+describe('useMapEditor — grid members', () => {
+  function editorOn(objects: MapElement[]) {
+    const services = fakeMapsServices()
+    services.maps.currentMap.value = aMap({ objects })
+    const editor = runWithServices(services, () => useMapEditor())
+    editor.toggleEditMode()
+    return { editor, services, objects: () => services.maps.currentMap.value!.objects }
+  }
+
+  const grid = () => makeObject({ id: 'g', type: 'grid', x: 20, y: 700 })
+  const gridMember = () =>
+    makeObject({
+      id: 'auto:grid:g:web',
+      type: 'host',
+      host_name: 'web',
+      grid_id: 'g',
+      x: 20,
+      y: 700
+    })
+
+  it('selects the grid for a member, by click or by marquee', () => {
+    const { editor } = editorOn([grid(), gridMember(), makeObject({ id: 'core', type: 'host' })])
+
+    editor.selectObject('auto:grid:g:web')
+    expect(editor.selectedIds.value).toEqual(['g'])
+
+    editor.selectObjects(['auto:grid:g:web', 'g', 'core'])
+    expect(editor.selectedIds.value).toEqual(['g', 'core'])
+  })
+
+  it('still selects the hosts a world map adds, so they can be bundled', () => {
+    const { editor } = editorOn([makeObject({ id: 'auto:db01', type: 'host' })])
+
+    editor.selectObject('auto:db01')
+
+    expect(editor.selectedIds.value).toEqual(['auto:db01'])
+  })
+
+  it('pins a dropped member as an object of the map, out of its grid', async () => {
+    const { editor, objects } = editorOn([grid(), gridMember()])
+
+    await editor.saveObjectPosition('auto:grid:g:web', 300, 200)
+
+    const pinned = objects()[1]
+    expect(pinned).toMatchObject({ type: 'host', host_name: 'web', grid_id: 'g', x: 300, y: 200 })
+    expect(pinned!.id).toMatch(/^host_/)
+  })
+
+  it('pins a member beside its grid without a drag', async () => {
+    const { editor, objects } = editorOn([grid(), gridMember()])
+
+    await editor.pinGridMember('auto:grid:g:web')
+
+    expect(objects()[1]).toMatchObject({ host_name: 'web', grid_id: 'g', x: 50, y: 700 })
+  })
+
+  it('lets go of what was pinned out of a deleted grid', async () => {
+    const { editor, objects } = editorOn([
+      grid(),
+      makeObject({ id: 'pinned', type: 'host', host_name: 'web', grid_id: 'g' })
+    ])
+
+    editor.selectObject('g')
+    await editor.deleteAllSelected()
+
+    expect(objects().map((o) => [o.id, o.grid_id])).toEqual([['pinned', null]])
+  })
+
+  it('puts a duplicated grid below the original, clear of other grids', async () => {
+    const { editor, objects } = editorOn([
+      grid(),
+      gridMember(),
+      makeObject({ id: 'h', type: 'grid', x: 40, y: 760 })
+    ])
+
+    editor.selectObject('g')
+    await editor.duplicateSelected()
+
+    expect(objects().at(-1)).toMatchObject({ x: 50, y: 820 })
+  })
+
+  const fullOfGrids = () =>
+    Array.from({ length: GRID_MAX_PER_MAP }, (_, i) =>
+      makeObject({ id: `g${i}`, type: 'grid', x: 20, y: 100 * i })
+    )
+
+  it('refuses to duplicate a grid on a map that has as many as it takes', async () => {
+    const { editor, services, objects } = editorOn(fullOfGrids())
+
+    editor.selectObject('g0')
+    await editor.duplicateSelected()
+
+    expect(objects()).toHaveLength(GRID_MAX_PER_MAP)
+    expect(services.toasts.toasts.value.at(-1)).toMatchObject({
+      type: 'error',
+      message: `A map takes at most ${GRID_MAX_PER_MAP} grids.`
+    })
+  })
+
+  it('refuses to place a grid on a map that has as many as it takes', async () => {
+    const { editor, objects } = editorOn(fullOfGrids())
+
+    editor.draft.type = 'grid'
+    editor.startPlacing()
+    await editor.placeAt(120, 80)
+
+    expect(objects()).toHaveLength(GRID_MAX_PER_MAP)
+  })
+
+  it('takes a pin back on undo', async () => {
+    const { editor, services, objects } = editorOn([grid(), gridMember()])
+    await editor.saveObjectPosition('auto:grid:g:web', 300, 200)
+
+    services.toasts.toasts.value.at(-1)!.action!.onClick()
+
+    expect(objects().map((o) => o.id)).toEqual(['g'])
+  })
+
+  it('leaves a pin alone on undo once the map is no longer edited', async () => {
+    const { editor, services, objects } = editorOn([grid(), gridMember()])
+    await editor.saveObjectPosition('auto:grid:g:web', 300, 200)
+    editor.toggleEditMode()
+
+    services.toasts.toasts.value.at(-1)!.action!.onClick()
+
+    expect(objects()).toHaveLength(2)
   })
 })

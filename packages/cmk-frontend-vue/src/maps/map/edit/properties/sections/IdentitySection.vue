@@ -18,7 +18,12 @@ import { computed } from 'vue'
 
 import { useConnectionOverride } from '@/maps/map/edit/composables/useConnectionOverride'
 import type { ObjectSuggestions } from '@/maps/map/edit/composables/useObjectSuggestions'
-import { filterHelp, filterPlaceholder, filterProblems } from '@/maps/map/edit/filterText'
+import {
+  filterHelp,
+  filterPlaceholder,
+  filterProblems,
+  hasFilterLines
+} from '@/maps/map/edit/filterText'
 import { rebindHost } from '@/maps/map/edit/hostBinding'
 import PropertyRow from '@/maps/map/edit/properties/PropertyRow.vue'
 import PropertySection from '@/maps/map/edit/properties/PropertySection.vue'
@@ -33,7 +38,7 @@ import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
 import MapsTextArea from '@/maps/shared/components/MapsTextArea.vue'
 import { noAggregationsHint } from '@/maps/shared/suggestions'
-import type { MapElement, MonitoredObjectType } from '@/maps/types/api'
+import type { MapElement, MonitoredObjectType, ObjectState } from '@/maps/types/api'
 import { dyngroupTypeOptions, lineObjectTypeOptions } from '@/maps/utils/dropdownOptions'
 
 const props = defineProps<{
@@ -41,6 +46,7 @@ const props = defineProps<{
   suggestions: ObjectSuggestions
   /** The map's connection, which the object reads from unless it overrides it. */
   mapConnectionId: string
+  state?: ObjectState | undefined
 }>()
 
 const form = defineModel<ObjectForm>('form', { required: true })
@@ -63,6 +69,26 @@ const isLine = computed(() => props.object.type === 'line')
 const type = computed(() => boundTypeOf(form.value, props.object))
 /** Only an expanded aggregation draws the lines down to its subtree. */
 const showsSubtreeLines = computed(() => !isLine.value && form.value.expand_depth > 0)
+
+// A grid with a filter is stale mostly where Livestatus refused it, which the
+// line check cannot tell: a regular expression or a column it does not know.
+// A site that does not answer leaves it stale too, which the hint allows for.
+const filterMessages = computed(() => {
+  const problems = filterProblems(_t, form.value.object_filter)
+  const refused =
+    type.value === 'grid' &&
+    props.state?.stale === true &&
+    hasFilterLines(form.value.object_filter) &&
+    form.value.object_filter === props.object.object_filter
+  return refused
+    ? [
+        ...problems,
+        _t(
+          'Livestatus could not read the objects this filter matches. If the site answers, check its regular expressions and column names.'
+        )
+      ]
+    : problems
+})
 
 const showsStateChecks = computed(() => hasStateOptions(type.value))
 const showsRecognizeServices = computed(() => choosesServiceCounting(type.value, form.value))
@@ -124,7 +150,7 @@ const showsRecognizeServices = computed(() => choosesServiceCounting(type.value,
       </PropertyRow>
     </template>
 
-    <template v-if="type === 'dyngroup'">
+    <template v-if="type === 'dyngroup' || type === 'grid'">
       <PropertyRow :label="_t('Filter on')">
         <CmkDropdown
           floating
@@ -137,13 +163,13 @@ const showsRecognizeServices = computed(() => choosesServiceCounting(type.value,
       </PropertyRow>
       <PropertyRow v-slot="{ id }" labels-control :label="_t('Livestatus filter')" tall>
         <div class="maps-identity-section__filter">
-          <CmkInlineValidation :validation="filterProblems(_t, form.object_filter)" />
+          <CmkInlineValidation :validation="filterMessages" />
           <MapsTextArea
             :id="id"
             v-model="form.object_filter"
             :rows="4"
             monospace
-            :placeholder="filterPlaceholder(form.object_types)"
+            :placeholder="filterPlaceholder(_t, type === 'grid', form.object_types)"
           />
         </div>
       </PropertyRow>

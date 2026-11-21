@@ -22,6 +22,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
 
+import { gridIdOfMember } from '@/maps/api/wire'
 import { objectIdOf } from '@/maps/map/composables/useRovingFocus'
 import type { MapElement } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
@@ -60,7 +61,7 @@ function coversAnotherObject(rect: AnchorRect): boolean {
   return [rect.left + 1, (rect.left + rect.right) / 2, rect.right - 1].some((x) =>
     document.elementsFromPoint(x, y).some((el) => {
       const id = objectIdOf(el)
-      return id !== null && id !== props.object.id
+      return id !== null && id !== props.object.id && gridIdOfMember(id) !== props.object.id
     })
   )
 }

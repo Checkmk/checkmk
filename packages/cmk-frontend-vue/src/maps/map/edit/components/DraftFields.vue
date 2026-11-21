@@ -119,7 +119,7 @@ const dyngroupTypeSuggestions = computed(() => ({
     />
   </template>
 
-  <template v-else-if="draft.type === 'dyngroup'">
+  <template v-else-if="draft.type === 'dyngroup' || draft.type === 'grid'">
     <EditField :label="_t('Filter on')">
       <CmkDropdown
         floating
@@ -135,14 +135,14 @@ const dyngroupTypeSuggestions = computed(() => ({
       labels-control
       :label="_t('Livestatus filter')"
       :help="filterHelp(_t, draft.object_types)"
-      required
+      :required="draft.type === 'dyngroup'"
     >
       <CmkInlineValidation :validation="filterProblems(_t, draft.object_filter)" />
       <MapsTextArea
         :id="id"
         v-model="draft.object_filter"
         monospace
-        :placeholder="filterPlaceholder(draft.object_types)"
+        :placeholder="filterPlaceholder(_t, draft.type === 'grid', draft.object_types)"
       />
     </EditField>
   </template>

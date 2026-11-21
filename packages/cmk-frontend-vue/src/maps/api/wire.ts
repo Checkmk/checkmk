@@ -50,6 +50,20 @@ export function isAutoObjectId(id: string): boolean {
   return id.startsWith(AUTO_OBJECT_ID_PREFIX)
 }
 
+// What a grid adds (state_service.grid_member_id): rebuilt from the states on
+// every update, never persisted either.
+const GRID_MEMBER_ID_PREFIX = `${AUTO_OBJECT_ID_PREFIX}grid:`
+
+export function isGridMemberId(id: string): boolean {
+  return id.startsWith(GRID_MEMBER_ID_PREFIX)
+}
+
+/** The grid a member's id names; a grid's own id carries no colon. */
+export function gridIdOfMember(id: string): string | null {
+  const end = id.indexOf(':', GRID_MEMBER_ID_PREFIX.length)
+  return isGridMemberId(id) && end > 0 ? id.slice(GRID_MEMBER_ID_PREFIX.length, end) : null
+}
+
 // Result of dropping the ``undefined`` members: each key becomes optional and its
 // value type loses ``undefined``, so the result satisfies the wire's
 // ``exactOptionalPropertyTypes`` optional fields (present ⇒ not ``undefined``).
@@ -234,9 +248,9 @@ function viewToWire(view: MapView): MapViewWire {
 // extras: the ``site`` object type and each object's ``site_id`` are client
 // constructs the daemon's map schema doesn't model, so they must not be
 // persisted. Drop the ``site`` objects (never present at runtime — the daemon
-// can't resolve them) and the transient ``auto:*`` worldmap hosts, then convert
-// each remaining flat object (and the view) to the nested wire shape the REST
-// API expects. ``site_id`` is dropped by ``objectToWire`` (not a wire field).
+// can't resolve them) and the transient ``auto:*`` objects (worldmap hosts, grid
+// members), then convert each remaining flat object (and the view) to the nested
+// wire shape the REST API expects. ``site_id`` is dropped by ``objectToWire`` (not a wire field).
 export function toWireConfig(map: MapConfig): MapConfigWire {
   return {
     // The API requires the fields the daemon's model defaults, so they are
@@ -316,6 +330,7 @@ export function mapListObjectToRead(obj: MapListObjectWire): MapRead {
     view_type: s.view_type,
     view: viewFromWire(s.view),
     object_count: s.object_count,
+    has_grid: s.has_grid,
     icon_size: s.icon_size ?? null,
     rotation_interval: s.rotation_interval ?? 0,
     rotation_pools: s.rotation_pools ?? [],
@@ -363,8 +378,8 @@ export function mapRequestBody(
 /**
  * The map as the daemon takes it: the same flat shape, minus what only the
  * client knows about. The synthetic ``site`` nodes of a flow map and the
- * transient ``auto:*`` worldmap hosts have no meaning there — the daemon
- * resolves both itself.
+ * transient ``auto:*`` objects (worldmap hosts, grid members) have no meaning
+ * there — the daemon resolves them itself.
  */
 export function daemonConfig(map: MapConfig): DaemonSchemas['MapConfig'] {
   return {

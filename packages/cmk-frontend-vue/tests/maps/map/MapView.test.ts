@@ -19,7 +19,7 @@ import type {
   MapView
 } from '@/maps/types/api'
 
-import { aMap, aMapAccess, anObject, newMapView } from '../support/fixtures'
+import { aMap, aMapAccess, aState, anObject, newMapView } from '../support/fixtures'
 import { aSession, fakeMapsServices, fullCapabilities, provideServices } from '../support/services'
 
 // connectToMap opens an EventSource; jsdom has none. A minimal stand-in keeps the
@@ -215,6 +215,77 @@ describe('MapView – the area around a static map', () => {
   it('keeps the theme around a map in the default renderer', async () => {
     const area = await renderedArea({ render_mode: 'default' })
     expect(area.style.backgroundColor).toBe('')
+  })
+})
+
+describe('MapView – a map of grids without objects', () => {
+  const emptyText = 'No hosts or services match the grids on this map.'
+
+  beforeEach(() => {
+    services = fakeMapsServices()
+    vi.stubGlobal('EventSource', FakeEventSource)
+    services.nav.replace({ view: 'map', name: 'map1' })
+    opensMap(newMapView('static'), { objects: [anObject({ id: 'g', type: 'grid' })] })
+  })
+
+  it('says nothing before the states arrive', async () => {
+    renderMap()
+    await expectOnlyRenderer('renderer-static')
+
+    expect(screen.queryByText(emptyText)).toBeNull()
+    expect(screen.queryByText(/No objects yet/)).toBeNull()
+  })
+
+  it('says the grids add nothing once the states arrived', async () => {
+    renderMap()
+    await expectOnlyRenderer('renderer-static')
+
+    services.states.lastUpdate.value = 1
+
+    expect(await screen.findByText(emptyText)).toBeInTheDocument()
+  })
+
+  it('says a grid failed rather than that it adds nothing', async () => {
+    // Only who may edit the map is sent to the editor.
+    openMapPage()
+    services = fakeMapsServices()
+    services.nav.replace({ view: 'map', name: 'map1' })
+    opensMap(newMapView('static'), { objects: [anObject({ id: 'g', type: 'grid' })] })
+    renderMap()
+    await expectOnlyRenderer('renderer-static')
+
+    services.states.states.value = {
+      g: aState({ object_id: 'g', type: 'grid', state: 'PENDING', stale: true })
+    }
+    services.states.lastUpdate.value = 1
+
+    expect(
+      await screen.findByRole('status', {
+        name: 'Livestatus could not read the objects a grid of this map adds. The editor shows which grid it is.'
+      })
+    ).toHaveTextContent('Grid failed')
+    expect(screen.queryByText(emptyText)).toBeNull()
+  })
+
+  it('sends no one to the editor who cannot open it', async () => {
+    opensMap(
+      newMapView('static'),
+      { objects: [anObject({ id: 'g', type: 'grid' })] },
+      { can_edit: false }
+    )
+    renderMap()
+    await expectOnlyRenderer('renderer-static')
+
+    services.states.states.value = {
+      g: aState({ object_id: 'g', type: 'grid', state: 'PENDING', stale: true })
+    }
+    services.states.lastUpdate.value = 1
+
+    expect(
+      await screen.findByRole('status', {
+        name: 'Livestatus could not read the objects a grid of this map adds.'
+      })
+    ).toBeInTheDocument()
   })
 })
 

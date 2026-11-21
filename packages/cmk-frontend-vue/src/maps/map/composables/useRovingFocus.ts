@@ -24,6 +24,8 @@ export interface RovingFocus {
   onKeydown: (event: KeyboardEvent) => void
   /** Keeps the tab stop on the object last focused, by keyboard or pointer. */
   onFocusin: (event: FocusEvent) => void
+  /** Puts the focus on an object, once it is rendered. */
+  focusObject: (id: string) => void
 }
 
 /** The map object an element belongs to, a line's SVG included. */
@@ -132,5 +134,12 @@ export function useRovingFocus(source: {
     }
   }
 
-  return { isTabStop: (id) => tabStop.value === id, onKeydown, onFocusin }
+  function focusObject(id: string): void {
+    const object = source.objects().find((candidate) => candidate.id === id)
+    if (object) {
+      void focus(object)
+    }
+  }
+
+  return { isTabStop: (id) => tabStop.value === id, onKeydown, onFocusin, focusObject }
 }

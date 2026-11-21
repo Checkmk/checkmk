@@ -48,4 +48,46 @@ describe('ContextMenu', () => {
 
     expect(await screen.findByRole('menuitem', { name: 'State of service' })).toBeInTheDocument()
   })
+
+  it('pins a grid member out of its grid while editing', async () => {
+    let pins = 0
+    render(ContextMenu, {
+      props: {
+        object: anObject({
+          id: 'auto:grid:g:web',
+          type: 'host',
+          host_name: 'web',
+          grid_id: 'g'
+        }),
+        x: 0,
+        y: 0,
+        checkmkUrl: CHECKMK_URL,
+        showEdit: true,
+        onPin: () => {
+          pins += 1
+        }
+      }
+    })
+
+    const pin = await screen.findByRole('menuitem', { name: 'Pin out of the grid' })
+    pin.click()
+
+    expect(pins).toBe(1)
+  })
+
+  it('names the grid in the entries that act on the grid of a member', async () => {
+    render(ContextMenu, {
+      props: {
+        object: anObject({ id: 'auto:grid:g:web', type: 'host', host_name: 'web', grid_id: 'g' }),
+        x: 0,
+        y: 0,
+        checkmkUrl: CHECKMK_URL,
+        showEdit: true
+      }
+    })
+
+    for (const name of ['Edit grid properties', 'Duplicate grid', 'Delete grid']) {
+      expect(await screen.findByRole('menuitem', { name })).toBeInTheDocument()
+    }
+  })
 })

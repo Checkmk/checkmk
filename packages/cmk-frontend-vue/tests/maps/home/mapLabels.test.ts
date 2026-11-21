@@ -23,6 +23,10 @@ describe('hasDynamicContent', () => {
     }
   })
 
+  it('is true for a static map a grid adds objects to', () => {
+    expect(hasDynamicContent(aListedMap({ has_grid: true }))).toBe(true)
+  })
+
   it('does not treat a built-in map as dynamic', () => {
     // Not editable is a different question: the shipped NOC wall is a
     // presentation map with hand-placed elements, and it has a count to show

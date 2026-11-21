@@ -181,6 +181,8 @@ export interface MapRead {
   view_type: string
   view: MapView
   object_count: number
+  // A grid adds objects the count leaves out.
+  has_grid?: boolean
   rotation_interval: number
   rotation_pools: string[]
   version?: number

@@ -82,8 +82,11 @@ export function useCanvasLayout(source: {
     return previous !== undefined && sameValues(previous, shown) ? previous : shown
   })
 
+  // Outside the editor only a grid's members stand for it.
   const placedObjects = computed(() =>
-    shownObjects.value.filter((object) => object.type !== 'line')
+    shownObjects.value.filter(
+      (object) => object.type !== 'line' && (object.type !== 'grid' || source.editMode())
+    )
   )
 
   const lineLayers = computed((): LineLayer[] => {

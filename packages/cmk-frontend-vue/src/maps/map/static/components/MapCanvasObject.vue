@@ -13,16 +13,21 @@ by. What it contains is ``MapElement``'s business.
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, useTemplateRef } from 'vue'
+import { computed, ref, useTemplateRef } from 'vue'
 
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
 import MapElement from '@/maps/map/elements/MapElement.vue'
 import { objectIconSize } from '@/maps/map/objectIconSize'
+import { gridMembersOf } from '@/maps/map/static/gridMembers'
+import { gridCaption } from '@/maps/map/static/gridSummary'
 import type { MapConfig, MapElement as MapObject, ObjectState } from '@/maps/types/api'
 import { anchorRectOf } from '@/maps/utils/anchorRect'
 import { objectAriaLabel } from '@/maps/utils/objectAria'
 
-const { _t } = usei18n()
+import MapGridFrame from './MapGridFrame.vue'
+
+const i18n = usei18n()
+const { _t } = i18n
 
 const props = defineProps<{
   object: MapObject
@@ -70,6 +75,23 @@ const iconSize = computed(() =>
 
 const state = computed(() => props.states[props.object.id])
 
+const isGrid = computed(() => props.object.type === 'grid')
+// A grid's box is its first slot; its frame shows the focus instead.
+const gridFocused = ref(false)
+function onFocus(): void {
+  gridFocused.value = isGrid.value && root.value?.matches(':focus-visible') === true
+}
+
+const gridMembers = computed(() =>
+  isGrid.value ? gridMembersOf(props.config.objects, props.object.id) : []
+)
+
+const ariaLabel = computed(() =>
+  isGrid.value
+    ? gridCaption(i18n, props.object, state.value, gridMembers.value.length)
+    : objectAriaLabel(_t, props.object, state.value?.state, state.value?.stale)
+)
+
 function onKeydown(event: KeyboardEvent): void {
   if (event.key !== 'Enter' && event.key !== ' ') {
     return
@@ -85,21 +107,34 @@ function onKeydown(event: KeyboardEvent): void {
     class="maps-map-canvas-object"
     :class="{
       'maps-map-canvas-object--bind-target': bindTarget,
-      'maps-map-canvas-object--selected': editMode && selected
+      'maps-map-canvas-object--selected': editMode && selected && !isGrid,
+      'maps-map-canvas-object--grid': isGrid
     }"
     :data-object-id="object.id"
     :style="boxStyle"
     :tabindex="!preview && tabStop ? 0 : -1"
     role="button"
-    :aria-label="objectAriaLabel(_t, object, state?.state, state?.stale)"
+    :aria-label="ariaLabel"
     @pointerdown="emit('pointer-down', $event)"
     @dragstart.prevent
     @click.stop="emit('activate', $event)"
     @dblclick.stop="emit('double-click', $event)"
     @keydown="onKeydown"
+    @focus="onFocus"
+    @blur="gridFocused = false"
     @contextmenu.prevent="emit('context-menu', $event)"
   >
+    <MapGridFrame
+      v-if="isGrid"
+      :grid="object"
+      :members="gridMembers"
+      :state="state"
+      :icon-size="iconSize"
+      :selected="selected"
+      :focused="gridFocused"
+    />
     <MapElement
+      v-else
       :object="object"
       :state="state"
       :icon-size="iconSize"
@@ -125,6 +160,10 @@ function onKeydown(event: KeyboardEvent): void {
 .maps-map-canvas-object:focus-visible {
   outline: revert;
   outline-offset: 2px;
+}
+
+.maps-map-canvas-object--grid:focus-visible {
+  outline: none;
 }
 
 /* The object a line being dragged would bind to on release. */

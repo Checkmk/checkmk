@@ -20,10 +20,15 @@ const t: TranslateFn = (msg) => untranslated(msg)
 
 describe('placeableObjectTypes', () => {
   it('lists all object types including graph', () => {
-    const names = placeableObjectTypes(t).map((o) => o.name)
+    const names = placeableObjectTypes(t, true).map((o) => o.name)
     expect(names).toContain('graph')
     expect(names).toContain('host')
     expect(names).toContain('line')
+    expect(names).toContain('grid')
+  })
+
+  it('leaves out the grid where the map takes none', () => {
+    expect(placeableObjectTypes(t, false).map((o) => o.name)).not.toContain('grid')
   })
 })
 

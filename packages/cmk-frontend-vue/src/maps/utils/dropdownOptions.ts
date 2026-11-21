@@ -18,6 +18,7 @@ import { labelText } from '@/maps/utils/template'
  * translating a dynamic key itself.
  */
 export type TranslateFn = ReturnType<typeof usei18n>['_t']
+export type PluralTranslateFn = ReturnType<typeof usei18n>['_tn']
 
 // Maps backend ``name`` → translated title. The backend ships english
 // titles too (used for FormSpec dropdowns where translations don't run),
@@ -105,9 +106,13 @@ export function objectCaption(
   return mapElementCaption(object, labelText(object, state)) ?? objectTypeLabel(object.type, _t)
 }
 
-/** The types the add-object panel offers, in the order it offers them. */
+/**
+ * The types the add-object panel offers, in the order it offers them. Only a
+ * static map lays out a grid.
+ */
 export function placeableObjectTypes(
-  _t: TranslateFn
+  _t: TranslateFn,
+  withGrid: boolean
 ): { name: ObjectType; title: TranslatedString }[] {
   const placeable: ObjectType[] = [
     'host',
@@ -120,7 +125,8 @@ export function placeableObjectTypes(
     'line',
     'textbox',
     'image',
-    'graph'
+    'graph',
+    ...(withGrid ? (['grid'] as const) : [])
   ]
   return placeable.map((name) => ({ name, title: objectTypeLabel(name, _t) }))
 }

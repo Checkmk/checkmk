@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { GRID_MEMBER_LIMIT, GRID_OFFSET_MAX, gridLayout } from '@/maps/map/static/gridMembers'
 import type {
   LinePerfdataLabel,
   MapElement,
@@ -41,6 +42,11 @@ export interface ObjectForm {
   object_types: 'host' | 'service'
   object_filter: string
   expand_depth: number
+  grid_per_row: number
+  grid_offset_x: number
+  grid_offset_y: number
+  grid_sort: 'name' | 'state'
+  grid_order: 'asc' | 'desc'
   line_style: string | null
   line_color: string | null
   line_color_border: string | null
@@ -113,7 +119,8 @@ const STATEFUL_TYPES: ReadonlySet<ObjectType> = new Set([
   'service',
   'hostgroup',
   'servicegroup',
-  'dyngroup'
+  'dyngroup',
+  'grid'
 ])
 
 /** Whether an object bound to `bound` offers the hard-state option. */
@@ -123,19 +130,30 @@ export function hasStateOptions(bound: ObjectType): boolean {
 
 /**
  * Whether the object may count its hosts' services: a host, a host group,
- * and a dynamic group of hosts.
+ * and a dynamic group or a grid of hosts.
  */
 export function choosesServiceCounting(bound: ObjectType, form: ObjectForm): boolean {
   return (
     bound === 'host' ||
     bound === 'hostgroup' ||
-    (bound === 'dyngroup' && form.object_types !== 'service')
+    ((bound === 'dyngroup' || bound === 'grid') && form.object_types !== 'service')
   )
 }
 
 /** What the object stands for: a line, the object type it shows the state of. */
 export function boundTypeOf(form: ObjectForm, object: MapElement): ObjectType {
   return object.type === 'line' ? form.line_object_type : object.type
+}
+
+function gridFormFields(object: MapElement) {
+  const layout = gridLayout(object)
+  return {
+    grid_per_row: layout.perRow,
+    grid_offset_x: layout.offsetX,
+    grid_offset_y: layout.offsetY,
+    grid_sort: layout.sort,
+    grid_order: layout.order
+  }
 }
 
 /** The object as the form sees it. */
@@ -150,6 +168,7 @@ export function formFromObject(object: MapElement, defaults: ObjectFormDefaults)
     object_types: object.object_types ?? 'host',
     object_filter: object.object_filter ?? '',
     expand_depth: object.expand_depth ?? 0,
+    ...gridFormFields(object),
     line_style: object.line_style ?? null,
     line_color: object.line_color ?? null,
     line_color_border: object.line_color_border ?? null,
@@ -206,6 +225,35 @@ export function formFromObject(object: MapElement, defaults: ObjectFormDefaults)
     z: object.z ?? defaults.z,
     x2: object.x2 ?? object.x + LINE_DEFAULT_LENGTH,
     y2: object.y2 ?? object.y
+  }
+}
+
+const GRID_ORDER_CHOICES = ['name', 'state', 'state_desc'] as const
+/**
+ * How a grid orders its objects, as one choice: NagVis' dynmap_order turns
+ * only a sort by state around.
+ */
+export type GridOrderChoice = (typeof GRID_ORDER_CHOICES)[number]
+
+export function isGridOrderChoice(value: string): value is GridOrderChoice {
+  return (GRID_ORDER_CHOICES as readonly string[]).includes(value)
+}
+
+export function gridOrderChoice(
+  form: Pick<ObjectForm, 'grid_sort' | 'grid_order'>
+): GridOrderChoice {
+  if (form.grid_sort !== 'state') {
+    return 'name'
+  }
+  return form.grid_order === 'desc' ? 'state_desc' : 'state'
+}
+
+export function gridSortAndOrder(
+  choice: GridOrderChoice
+): Pick<ObjectForm, 'grid_sort' | 'grid_order'> {
+  return {
+    grid_sort: choice === 'name' ? 'name' : 'state',
+    grid_order: choice === 'state_desc' ? 'desc' : 'asc'
   }
 }
 
@@ -286,7 +334,7 @@ export function updatesFromForm(
   // its description reopens as the service it was meant to be.
   const bound = boundTypeOf(form, object)
   // A pattern kept elsewhere would do nothing, then apply again on switching back.
-  if (!leavesOutMembers(bound)) {
+  if (!leavesOutMembers(bound, form.object_types)) {
     Object.assign(updates, { exclude_members: null, exclude_member_states: null })
   }
   if (type === 'line') {
@@ -312,6 +360,9 @@ export function updatesFromForm(
   }
   if (choosesServiceCounting(bound, form)) {
     updates.recognize_services = form.recognize_services
+  } else if (bound === 'grid') {
+    // A grid of services refuses to count services.
+    updates.recognize_services = false
   }
   if (bound === 'service') {
     updates.service_description = form.service_description || null
@@ -332,9 +383,22 @@ export function updatesFromForm(
   if (type === 'aggregation') {
     updates.expand_depth = numberOr(form.expand_depth, object.expand_depth ?? 0)
   }
-  if (bound === 'dyngroup') {
+  if (bound === 'dyngroup' || bound === 'grid') {
     updates.object_types = form.object_types
     updates.object_filter = form.object_filter || null
+  }
+  if (type === 'grid') {
+    // Out of range, the whole map would no longer save.
+    const clamp = (value: number, low: number, high: number) =>
+      Math.min(high, Math.max(low, Math.round(value)))
+    const layout = gridLayout(object)
+    Object.assign(updates, {
+      grid_per_row: clamp(numberOr(form.grid_per_row, layout.perRow), 1, GRID_MEMBER_LIMIT),
+      grid_offset_x: clamp(numberOr(form.grid_offset_x, layout.offsetX), 0, GRID_OFFSET_MAX),
+      grid_offset_y: clamp(numberOr(form.grid_offset_y, layout.offsetY), 0, GRID_OFFSET_MAX),
+      grid_sort: form.grid_sort,
+      grid_order: form.grid_order
+    })
   }
 
   if (type === 'line') {

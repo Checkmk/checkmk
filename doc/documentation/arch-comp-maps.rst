@@ -923,9 +923,12 @@ pinned out of its grid is left out of it; a host placed elsewhere on the map
 stays in the grid, and one two grids match is in both. If Livestatus fails, the
 last members show stale, those of a site that stopped answering for as long as
 it is gone; a filter Livestatus refuses is held back for every viewer, any
-other failure only for the viewer it happened to. A link to a map with grids
-counts each whole filter through a dynamic group; with member patterns, which a
-dynamic group cannot apply, it counts the members the map shows.
+other failure only for the viewer it happened to. The SPA lays the members out
+from the grid's position and never saves them; the editor draws the grid as a
+frame, and dragging a member, or pinning it from its context menu, makes it an
+ordinary object that names its grid. A link to a map with grids counts each
+whole filter through a dynamic group; with member patterns, which a dynamic
+group cannot apply, it counts the members the map shows.
 
 Handling untrusted input
 ------------------------

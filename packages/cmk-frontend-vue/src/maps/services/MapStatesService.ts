@@ -23,6 +23,7 @@ import type { ConnectionsApi } from '@/maps/api/connections'
 import type { SignedBytes } from '@/maps/api/mapConfig'
 import type { MapStatesApi, RadarOverride, ViewPreview } from '@/maps/api/mapStates'
 import type { MonitoringObjectsApi } from '@/maps/api/monitoringObjects'
+import { isGridMemberId } from '@/maps/api/wire'
 import type { MapService } from '@/maps/services/MapService'
 import type { MapsAuthService } from '@/maps/services/MapsAuthService'
 import type {
@@ -83,7 +84,21 @@ function notificationName(obj: ObjectState): string {
   return obj.service_description ? `${obj.host_name} / ${obj.service_description}` : obj.host_name
 }
 
+/**
+ * Whether the metrics of ``obj`` are kept over time, for a graph on the map to
+ * draw. Not a grid's members, which no graph shows: a grid holds up to a
+ * thousand, whose histories would fill the tab on a wall display.
+ */
+function recordsHistory(obj: ObjectState): obj is ObjectState & { perf_data: string } {
+  return Boolean(obj.perf_data) && !isGridMemberId(obj.object_id)
+}
+
 function notifyStateChange(obj: ObjectState, prev: ObjectState | undefined) {
+  // A grid's members come and go with its filter: one that joins in trouble is
+  // no change of state, and a grid of hundreds would raise as many.
+  if (!prev && isGridMemberId(obj.object_id)) {
+    return
+  }
   maybeNotify(notificationName(obj), obj.state, prev?.state)
 }
 
@@ -580,7 +595,7 @@ export class MapStatesService {
         notifyStateChange(s, this.states.value[s.object_id])
       }
       newStates[s.object_id] = s
-      if (s.perf_data) {
+      if (recordsHistory(s)) {
         this.recordMetricValues(s.object_id, s.perf_data, ts)
       }
     }
@@ -870,7 +885,7 @@ export class MapStatesService {
         notifyStateChange(s, this.states.value[s.object_id])
       }
       this.states.value[s.object_id] = s
-      if (s.perf_data) {
+      if (recordsHistory(s)) {
         this.recordMetricValues(s.object_id, s.perf_data, msg.states.generated_at)
       }
     }

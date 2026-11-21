@@ -38,6 +38,7 @@ import { placeableObjectTypes } from '@/maps/utils/dropdownOptions'
 const props = defineProps<{
   placing: boolean
   connectionId: string
+  offersObjectGrid: boolean
 }>()
 
 // The shared reactive draft owned by useMapEditor. A model rather than a prop:
@@ -53,7 +54,7 @@ const { _t } = usei18n()
 
 const objectTypeOptions = computed(() => ({
   type: 'filtered' as const,
-  suggestions: placeableObjectTypes(_t)
+  suggestions: placeableObjectTypes(_t, props.offersObjectGrid)
 }))
 
 const suggestions = useObjectSuggestions({

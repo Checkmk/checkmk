@@ -33,6 +33,7 @@ function renderTools(selection: string[], keyboardActive = true) {
       editor,
       connectionId: 'test',
       offersAddObject: true,
+      offersObjectGrid: true,
       offersSnapGrid: true,
       keyboardActive,
       besideInspector: false
@@ -191,17 +192,17 @@ describe('MapEditTools – the add-object panel', () => {
 describe('MapEditTools – reaching the snap-grid menu by keyboard', () => {
   it('puts the menu after its button, so Tab walks into it', async () => {
     renderTools([])
-    const button = screen.getByRole('button', { name: 'Grid' })
+    const button = screen.getByRole('button', { name: 'Snap to grid' })
 
     await userEvent.click(button)
 
-    const menu = await screen.findByRole('menu', { name: 'Grid' })
+    const menu = await screen.findByRole('menu', { name: 'Snap to grid' })
     expect(button.compareDocumentPosition(menu) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('moves the focus into the menu on open and back to the button on Escape', async () => {
     renderTools([])
-    const button = screen.getByRole('button', { name: 'Grid' })
+    const button = screen.getByRole('button', { name: 'Snap to grid' })
 
     await userEvent.click(button)
     const items = await screen.findAllByRole('menuitemradio')

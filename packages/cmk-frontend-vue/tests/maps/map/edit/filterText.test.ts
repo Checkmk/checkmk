@@ -20,13 +20,17 @@ const t: TranslateFn = (message: string, args: Parameters<TranslateFn>[1] = {}) 
 
 describe('filterText', () => {
   it('gives an example that names a host by the column of the hosts table', () => {
-    expect(filterPlaceholder('host')).toBe('Filter: name ~ ^web')
+    expect(filterPlaceholder(t, false, 'host')).toBe('Filter: name ~ ^web')
     expect(filterHelp(t, 'host')).toBe(
       'One Filter: line per condition, for example Filter: name ~ ^web.'
     )
   })
 
   it('gives an example of a service by its description', () => {
-    expect(filterPlaceholder('service')).toBe('Filter: description ~ ^CPU')
+    expect(filterPlaceholder(t, false, 'service')).toBe('Filter: description ~ ^CPU')
+  })
+
+  it('says what a grid without a filter adds instead of giving an example', () => {
+    expect(filterPlaceholder(t, true, 'service')).toBe('Empty: all services')
   })
 })

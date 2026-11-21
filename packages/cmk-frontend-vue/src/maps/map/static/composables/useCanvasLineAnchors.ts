@@ -85,8 +85,8 @@ export function useCanvasLineAnchors(source: {
   // the lines aim again, so the canvas is not redrawn on every refresh.
   const lastMeasured = new Map<string, MeasuredBox | null>()
   const iconsMoved = ref(0)
-  // The same ids keep the same array: the map's objects are replaced on
-  // changes that move no line end.
+  // The same ids keep the same array: a grid replaces the map's objects on
+  // every change of its members, which moves no line end.
   const boundIds = computed<string[]>((previous) => {
     const ids = [
       ...new Set(

@@ -11,7 +11,7 @@ import { defineComponent, h, nextTick, ref } from 'vue'
 import ObjectPropertiesModal from '@/maps/map/edit/properties/ObjectPropertiesModal.vue'
 import type { MapElement, ObjectType } from '@/maps/types/api'
 
-import { anObject } from '../../../support/fixtures'
+import { aState, anObject } from '../../../support/fixtures'
 import { mapsGlobal } from '../../../support/services'
 
 // Stand-in for the confirmation popup: the real MapsConfirmDialog renders through
@@ -265,6 +265,18 @@ describe('ObjectPropertiesModal – save payload', () => {
 
     expect(emitted().save).toBeUndefined()
     expect(screen.getByText(/Start each line with/)).toBeInTheDocument()
+  })
+
+  it('says at the filter that Livestatus refused it for a failed grid', () => {
+    renderModal(obj({ type: 'grid', object_filter: 'Filter: name ~ ([' }), {
+      state: aState({ object_id: 'o', type: 'grid', state: 'PENDING', stale: true })
+    })
+
+    expect(
+      screen.getByText(
+        'Livestatus could not read the objects this filter matches. If the site answers, check its regular expressions and column names.'
+      )
+    ).toBeInTheDocument()
   })
 
   it('saves a line whose filter from an earlier type no longer shows', async () => {

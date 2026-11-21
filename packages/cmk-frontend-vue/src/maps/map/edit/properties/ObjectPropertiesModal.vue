@@ -43,6 +43,7 @@ import AppearanceSection from '@/maps/map/edit/properties/sections/AppearanceSec
 import FilterSection from '@/maps/map/edit/properties/sections/FilterSection.vue'
 import GraphEmbedSection from '@/maps/map/edit/properties/sections/GraphEmbedSection.vue'
 import GraphSourceSection from '@/maps/map/edit/properties/sections/GraphSourceSection.vue'
+import GridSection from '@/maps/map/edit/properties/sections/GridSection.vue'
 import IdentitySection from '@/maps/map/edit/properties/sections/IdentitySection.vue'
 import LabelSection from '@/maps/map/edit/properties/sections/LabelSection.vue'
 import LineSection from '@/maps/map/edit/properties/sections/LineSection.vue'
@@ -245,7 +246,9 @@ const stateful = computed(() => {
 })
 const showsIdentity = computed(() => !['textbox', 'graph', 'image'].includes(objectType.value))
 const showsAppearance = computed(() => !['line', 'textbox', 'graph'].includes(objectType.value))
-const showsFilter = computed(() => leavesOutMembers(boundType.value))
+const showsFilter = computed(() => leavesOutMembers(boundType.value, form.value.object_types))
+// A grid's members link and hover as the objects they are.
+const showsLinks = computed(() => objectType.value !== 'grid')
 
 const saving = ref(false)
 const formError = ref('')
@@ -270,8 +273,9 @@ useEscapeClose(() => {
 
 function save(): void {
   formError.value = ''
-  // Said at the filter already, which only a dynamic group shows.
-  if (boundType.value === 'dyngroup' && !isFilterWellFormed(form.value.object_filter)) {
+  // Said at the filter already, which only these types show.
+  const filtered = boundType.value === 'dyngroup' || boundType.value === 'grid'
+  if (filtered && !isFilterWellFormed(form.value.object_filter)) {
     return
   }
   if (weatherColorNeedsMetric(form.value, props.object)) {
@@ -336,8 +340,10 @@ function onConfirmDelete(): void {
           :object="object"
           :suggestions="suggestions"
           :map-connection-id="props.connectionId"
+          :state="state"
         />
         <TextboxSection v-if="objectType === 'textbox'" v-model:form="form" />
+        <GridSection v-if="objectType === 'grid'" v-model:form="form" />
         <template v-if="objectType === 'graph'">
           <GraphSourceSection
             v-model:form="form"
@@ -366,9 +372,13 @@ function onConfirmDelete(): void {
           :map-icon-size="mapIconSize"
           :stateful="stateful"
         />
-        <LinkSection v-model:form="form" :auto-url="autoUrl" />
-        <FilterSection v-if="showsFilter" v-model:form="form" :is-host="boundType === 'host'" />
-        <TemplatesSection v-model:form="form" :stateful="stateful" />
+        <LinkSection v-if="showsLinks" v-model:form="form" :auto-url="autoUrl" />
+        <FilterSection
+          v-if="showsFilter"
+          v-model:form="form"
+          :is-host="boundType === 'host' || boundType === 'grid'"
+        />
+        <TemplatesSection v-if="showsLinks" v-model:form="form" :stateful="stateful" />
       </CmkScrollContainer>
 
       <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />

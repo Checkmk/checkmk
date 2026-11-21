@@ -6,15 +6,26 @@
 /**
  * Map edit-mode state: drag & drop, line editing, object selection, placing new objects.
  */
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 import { computed, onScopeDispose, reactive, ref, toRaw, watch } from 'vue'
 
+import { gridIdOfMember, isGridMemberId } from '@/maps/api/wire'
 import { isDraftPlaceable } from '@/maps/map/edit/draftFacts'
+import {
+  GRID_MAX_PER_MAP,
+  canAddGrid,
+  editTargetOf,
+  gridExtent,
+  gridLayout,
+  gridMembersOf,
+  mapGrids
+} from '@/maps/map/static/gridMembers'
 import { roundCoordinate } from '@/maps/map/worldmap/coordinates'
-import { useMaps, useSettings } from '@/maps/services/context'
+import { useMaps, useSettings, useToast } from '@/maps/services/context'
 import type { MapElement, ObjectType } from '@/maps/types/api'
 import { newMapElement } from '@/maps/utils/model'
-import { getEffectiveObjectType } from '@/maps/utils/naming'
+import { getEffectiveObjectType, getMapElementIdentifier } from '@/maps/utils/naming'
 
 export interface NewObjectDraft {
   type: ObjectType | ''
@@ -57,6 +68,8 @@ export function useMapEditor() {
   // (canvas clicks, menu actions), and ``inject`` only sees a provider while a
   // component is setting up.
   const settingsStore = useSettings()
+  const toast = useToast()
+  const { _t } = usei18n()
 
   const editMode = ref(false)
   function toggleEditMode() {
@@ -70,10 +83,17 @@ export function useMapEditor() {
   // `selectedObjectId` is the primary selection (action-bar anchor, props
   // modal); `selectedIds` is the full multi-selection. Additive clicks
   // (Shift/Ctrl) toggle membership; a plain click collapses back to one.
+  // A grid member stands for its grid: any edit to the member would be lost.
   const selectedObjectId = ref<string | null>(null)
   const selectedIds = ref<string[]>([])
   const selectedCount = computed(() => selectedIds.value.length)
-  function selectObject(id: string | null, additive = false) {
+
+  function editableId(id: string): string {
+    return gridIdOfMember(id) ?? id
+  }
+
+  function selectObject(selected: string | null, additive = false) {
+    const id = selected === null ? null : editableId(selected)
     if (id === null) {
       selectedIds.value = []
       selectedObjectId.value = null
@@ -96,7 +116,8 @@ export function useMapEditor() {
   // Marquee selection: replace (or extend, when additive) the selection with a
   // set of ids in one shot.
   function selectObjects(ids: string[], additive = false) {
-    const merged = additive ? [...new Set([...selectedIds.value, ...ids])] : ids
+    const own = [...new Set(ids.map(editableId))]
+    const merged = additive ? [...new Set([...selectedIds.value, ...own])] : own
     selectedIds.value = merged
     selectedObjectId.value = merged.at(-1) ?? null
   }
@@ -149,6 +170,10 @@ export function useMapEditor() {
 
   function _clearDanglingRefs(removedIds: string[]) {
     for (const o of mapsStore.currentMap.value?.objects ?? []) {
+      // A later grid of the same id would leave the host out for no visible reason.
+      if (o.grid_id && removedIds.includes(o.grid_id)) {
+        o.grid_id = null
+      }
       if (o.start_ref && removedIds.includes(o.start_ref)) {
         o.start_ref = null
       }
@@ -314,12 +339,46 @@ export function useMapEditor() {
     _canvasNative = null
   })
 
-  async function saveObjectPosition(id: string, x: number, y: number) {
+  // Dropping a grid member pins it: it becomes an object of the map's own, and
+  // its grid leaves it out from then on.
+  function _pinGridMember(id: string): string {
     const objects = mapsStore.currentMap.value?.objects ?? []
+    const index = objects.findIndex((o) => o.id === id)
+    if (index < 0) {
+      return id
+    }
+    const member = objects[index]!
+    const pinned = { ...member, id: `${member.type}_${randomId()}` }
+    objects.splice(index, 1, pinned)
+    const mapName = mapsStore.currentMap.value!.name
+    toast.success(
+      _t('Pinned %{name} out of the grid', { name: getMapElementIdentifier(member) ?? '' }),
+      {
+        label: _t('Undo'),
+        onClick: () => {
+          const current = mapsStore.currentMap.value
+          // Left meanwhile, the undo would change another map or one no longer edited.
+          if (current?.name !== mapName || !editMode.value) {
+            return
+          }
+          current.objects = current.objects.filter((o) => o.id !== pinned.id)
+          mapsStore.scheduleSave()
+        }
+      }
+    )
+    return pinned.id
+  }
+
+  /** Saves where an object was dropped; a grid member is pinned, under a new id it returns. */
+  async function saveObjectPosition(dropped: string, x: number, y: number): Promise<string> {
+    const id = isGridMemberId(dropped) ? _pinGridMember(dropped) : dropped
+    const objects = mapsStore.currentMap.value?.objects ?? []
+    const obj = objects.find((o) => o.id === id)
     // Nudge to free spot if the drop lands on top of another object — otherwise
     // they overlap pixel-perfect and the lower one becomes invisible.
-    const adjusted = _avoidOverlap(id, x, y, objects)
-    const obj = objects.find((o) => o.id === id)
+    const adjusted =
+      // A grid starts where its first member sits.
+      obj?.type === 'grid' ? { x: _snap(x), y: _snap(y) } : _avoidOverlap(id, x, y, objects)
     if (obj) {
       obj.x = adjusted.x
       obj.y = adjusted.y
@@ -328,6 +387,22 @@ export function useMapEditor() {
     if (_onDragSaved) {
       _onDragSaved(id)
     }
+    return id
+  }
+
+  /**
+   * Pins a member beside its grid, for whoever does not drag it out, and
+   * returns the id the pinned object has from then on.
+   */
+  async function pinGridMember(id: string): Promise<string | null> {
+    const objects = mapsStore.currentMap.value?.objects ?? []
+    const member = objects.find((o) => o.id === id)
+    const grid = member && editTargetOf(objects, member)
+    if (!member || !grid || grid === member) {
+      return null
+    }
+    // A column past the grid's last.
+    return saveObjectPosition(id, grid.x + _gridBox(grid).width, member.y)
   }
 
   // Group drag: persist each moved object at its exact position. No overlap
@@ -380,6 +455,7 @@ export function useMapEditor() {
         (o) =>
           o.id !== id &&
           o.type !== 'line' &&
+          !isGridMemberId(o.id) &&
           Math.abs(o.x - x) < COLLISION_RADIUS &&
           Math.abs(o.y - y) < COLLISION_RADIUS
       )
@@ -443,7 +519,7 @@ export function useMapEditor() {
     let best: MapElement | null = null
     let bestDist = LINE_BIND_RADIUS
     for (const o of objects) {
-      if (o.id === lineId || o.type === 'line') {
+      if (o.id === lineId || o.type === 'line' || o.type === 'grid' || isGridMemberId(o.id)) {
         continue
       }
       const d = Math.hypot(o.x - x, o.y - y)
@@ -623,14 +699,17 @@ export function useMapEditor() {
       map_name: draft.map_name || null,
       map_title: linkedMapTitle(draft.map_name),
       aggregation_id: draft.aggregation_id || null,
-      object_types: draft.type === 'dyngroup' ? draft.object_types : null,
-      object_filter: draft.type === 'dyngroup' ? draft.object_filter || null : null,
+      object_types: draft.type === 'dyngroup' || draft.type === 'grid' ? draft.object_types : null,
+      object_filter:
+        draft.type === 'dyngroup' || draft.type === 'grid' ? draft.object_filter || null : null,
       // A host with failing services is not fine, so a new host shows them, as
       // a NagVis host does by default.
-      recognize_services: draft.type === 'host',
+      recognize_services:
+        draft.type === 'host' || (draft.type === 'grid' && draft.object_types === 'host'),
       ...(draft.expand_depth ? { expand_depth: draft.expand_depth } : {}),
       label: {
-        show: s.label_show,
+        // As in NagVis, a grid's members show no label until asked to.
+        show: draft.type === 'grid' ? false : s.label_show,
         text: draft.label_text || null,
         x: 0,
         y: 0,
@@ -654,16 +733,27 @@ export function useMapEditor() {
     return `${draft.type}_${randomId()}`
   }
 
+  function _mayAdd(type: string): boolean {
+    if (type === 'grid' && !canAddGrid(mapsStore.currentMap.value)) {
+      toast.error(_t('A map takes at most %{n} grids.', { n: GRID_MAX_PER_MAP }))
+      return false
+    }
+    return true
+  }
+
   async function placeAt(x: number, y: number) {
     if (!placing.value || !draft.type) {
       return
     }
     placing.value = false
+    if (!_mayAdd(draft.type)) {
+      return
+    }
     const s = settingsStore.settings.value
     const id = _newDraftId()
     const existing = mapsStore.currentMap.value?.objects ?? []
     const placePos =
-      draft.type === 'line'
+      draft.type === 'line' || draft.type === 'grid'
         ? { x: _snap(Math.round(x)), y: _snap(Math.round(y)) }
         : _avoidOverlap(id, Math.round(x), Math.round(y), existing)
     const base = _draftToObject(id)
@@ -796,12 +886,15 @@ export function useMapEditor() {
     if (!src) {
       return
     }
+    if (!_mayAdd(src.type)) {
+      return
+    }
     const newId = `${src.type}_${randomId()}`
     const clone: MapElement = {
       ...JSON.parse(JSON.stringify(src)),
       id: newId,
       x: _snap(src.x + 30),
-      y: _snap(src.y + 30)
+      y: _snap(src.type === 'grid' ? _freeGridY(src, src.x + 30) : src.y + 30)
     }
     if (clone.x2 !== undefined && clone.x2 !== null) {
       clone.x2 = (clone.x2 as number) + 30
@@ -825,6 +918,43 @@ export function useMapEditor() {
     mapsStore.currentMap.value?.objects.push(clone)
     mapsStore.scheduleSave()
     selectObject(newId)
+  }
+
+  /**
+   * Where a grid's members reach, a slot past the last in each direction, in
+   * map coordinates as its slots are: an icon's size is in screen pixels, which
+   * a scaled canvas does not share.
+   */
+  function _gridBox(grid: MapElement): { width: number; height: number } {
+    const objects = mapsStore.currentMap.value?.objects ?? []
+    const span = gridExtent(grid, gridMembersOf(objects, grid.id), 0)
+    const layout = gridLayout(grid)
+    return { width: span.width + layout.offsetX, height: span.height + layout.offsetY }
+  }
+
+  // Below the original and clear of every grid, a row apart, so no members
+  // cover others.
+  function _freeGridY(src: MapElement, x: number): number {
+    const box = _gridBox(src)
+    const gap = gridLayout(src).offsetY
+    const grids = mapGrids(mapsStore.currentMap.value)
+    let y = src.y + box.height + gap
+    for (let moved = true; moved; ) {
+      moved = false
+      for (const grid of grids) {
+        const other = _gridBox(grid)
+        if (
+          x < grid.x + other.width &&
+          grid.x < x + box.width &&
+          y < grid.y + other.height &&
+          grid.y < y + box.height
+        ) {
+          y = grid.y + other.height + gap
+          moved = true
+        }
+      }
+    }
+    return y
   }
 
   async function bundleSelected(name: string, kind: 'static' | 'location') {
@@ -937,6 +1067,7 @@ export function useMapEditor() {
     setDragSavedCallback,
     lineDragPositions,
     saveObjectPosition,
+    pinGridMember,
     saveObjectPositions,
     ensureCanvasSize,
     startLineDrag,

@@ -6,11 +6,11 @@
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { type Ref, type ShallowRef, reactive, ref, shallowRef } from 'vue'
+import { type Ref, type ShallowRef, reactive, ref, shallowRef, toRaw } from 'vue'
 
 import type { MapConfigApi, SignedBytes, SignedMap } from '@/maps/api/mapConfig'
 import type { MapStatesApi } from '@/maps/api/mapStates'
-import { isAutoObjectId } from '@/maps/api/wire'
+import { isAutoObjectId, isGridMemberId } from '@/maps/api/wire'
 import { isConflict, saveFailureText } from '@/maps/shared/errorText'
 import type {
   CfgImport,
@@ -18,6 +18,7 @@ import type {
   MapAccess,
   MapBulkDeleteResult,
   MapConfig,
+  MapElement,
   MapEnvelope,
   MapRead,
   RenderMode,
@@ -36,8 +37,12 @@ const SAVE_DEBOUNCE_MS = 400
 const SHOW_SAVED_DELAY_MS = 2000
 const SHOW_SAVED_SPREAD_MS = 1000
 
-function withoutAutoObjects(objects: MapConfig['objects']): MapConfig['objects'] {
-  return objects.filter((object) => !isAutoObjectId(object.id))
+function isWorldmapAutoObject(object: MapElement): boolean {
+  return isAutoObjectId(object.id) && !isGridMemberId(object.id)
+}
+
+function withoutWorldmapAutoObjects(objects: MapConfig['objects']): MapConfig['objects'] {
+  return objects.filter((object) => !isWorldmapAutoObject(object))
 }
 
 /**
@@ -323,8 +328,8 @@ export class MapService {
     }
     if (!hasAutoSource(current.view)) {
       // Left alone without any: a new array would redraw the canvas for nothing.
-      if (current.objects.some((object) => isAutoObjectId(object.id))) {
-        current.objects = withoutAutoObjects(current.objects)
+      if (current.objects.some(isWorldmapAutoObject)) {
+        current.objects = withoutWorldmapAutoObjects(current.objects)
       }
       this.autoObjects.value = 'none'
       return
@@ -340,7 +345,7 @@ export class MapService {
       if (map?.name !== name) {
         return
       }
-      map.objects = [...withoutAutoObjects(map.objects), ...auto]
+      map.objects = [...withoutWorldmapAutoObjects(map.objects), ...auto]
       this.autoObjects.value = 'loaded'
     } catch (error: unknown) {
       if (this.currentMap.value?.name === name) {
@@ -348,6 +353,26 @@ export class MapService {
       }
       throw error
     }
+  }
+
+  /**
+   * Puts the objects the grids of a static map add into the open map, in place
+   * of the ones shown so far. Like the auto-source hosts they are never saved.
+   */
+  public showGridMembers(name: string, members: MapElement[]): void {
+    const map = this.currentMap.value
+    if (map?.name !== name) {
+      return
+    }
+    const shown = map.objects.filter((object) => isGridMemberId(object.id))
+    // The same members, in the same order, would only make every object render again.
+    if (
+      shown.length === members.length &&
+      shown.every((object, i) => toRaw(object) === toRaw(members[i]))
+    ) {
+      return
+    }
+    map.objects = [...map.objects.filter((object) => !isGridMemberId(object.id)), ...members]
   }
 
   /**

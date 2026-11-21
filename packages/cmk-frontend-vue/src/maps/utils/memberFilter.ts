@@ -5,9 +5,17 @@
  */
 import type { MapElement, ObjectType } from '@/maps/types/api'
 
-/** Where the daemon leaves out members as NagVis does. */
-export function leavesOutMembers(type: ObjectType): boolean {
-  return type === 'host' || type === 'hostgroup' || type === 'servicegroup'
+/** Where the daemon leaves out members as NagVis does; a grid's apply to its hosts. */
+export function leavesOutMembers(
+  type: ObjectType,
+  objectTypes: MapElement['object_types'] | undefined
+): boolean {
+  return (
+    type === 'host' ||
+    type === 'hostgroup' ||
+    type === 'servicegroup' ||
+    (type === 'grid' && objectTypes !== 'service')
+  )
 }
 
 /**
@@ -15,7 +23,7 @@ export function leavesOutMembers(type: ObjectType): boolean {
  * daemon's ``_state_exclusion`` picks it: the one for the state wins.
  */
 export function stateExclusion(object: MapElement): string | null {
-  if (!leavesOutMembers(object.type)) {
+  if (!leavesOutMembers(object.type, object.object_types)) {
     return null
   }
   return object.exclude_member_states || object.exclude_members || null

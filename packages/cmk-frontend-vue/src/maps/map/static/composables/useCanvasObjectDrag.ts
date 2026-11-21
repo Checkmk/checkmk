@@ -9,7 +9,8 @@
  * The dragged position is held locally and only handed back on release, so a
  * drag does not put the whole map through the store on every pointer move. The
  * grabbed object's neighbours in a multi-selection move with it by the same
- * delta, and a grid snaps the result.
+ * delta, and a grid snaps the result. A dragged grid's members follow it on
+ * screen and are laid out again from where the grid lands.
  *
  * The drag only counts as one once the pointer has travelled a few pixels:
  * below that it is a click, and treating it as a move would make every
@@ -17,6 +18,7 @@
  */
 import { type Reactive, reactive, ref } from 'vue'
 
+import { gridMembersOf } from '@/maps/map/static/gridMembers'
 import type { MapElement } from '@/maps/types/api'
 import { type GroupMember, applyGroupDelta, collectGroupMembers } from '@/maps/utils/groupDrag'
 
@@ -59,6 +61,8 @@ export function useCanvasObjectDrag(source: {
   let originX = 0
   let originY = 0
   let group: GroupMember[] = []
+  // The group and the members of the grids among what moves.
+  let moving: GroupMember[] = []
 
   function begin(event: PointerEvent, object: MapElement): void {
     const canvas = source.canvas()
@@ -79,7 +83,18 @@ export function useCanvasObjectDrag(source: {
       object.x,
       object.y
     ])
-    for (const member of group) {
+    const objects = source.objects()
+    const grids = new Set(objects.filter((o) => o.type === 'grid').map((o) => o.id))
+    const followers = [object.id, ...group.map((member) => member.id)]
+      .filter((id) => grids.has(id))
+      .flatMap((gridId) =>
+        gridMembersOf(objects, gridId).map((member) => ({
+          id: member.id,
+          init: [member.x, member.y] as [number, number]
+        }))
+      )
+    moving = [...group, ...followers]
+    for (const member of moving) {
       positions[member.id] = { x: member.init[0], y: member.init[1] }
     }
   }
@@ -111,11 +126,9 @@ export function useCanvasObjectDrag(source: {
       source.onDragStart(id)
     }
     positions[id] = { x, y }
-    if (group.length) {
-      const shifted = applyGroupDelta(group, [x - originX, y - originY], 0)
-      for (const [memberId, [memberX, memberY]] of shifted) {
-        positions[memberId] = { x: memberX, y: memberY }
-      }
+    const shifted = applyGroupDelta(moving, [x - originX, y - originY], 0)
+    for (const [memberId, [memberX, memberY]] of shifted) {
+      positions[memberId] = { x: memberX, y: memberY }
     }
     return true
   }
@@ -125,7 +138,12 @@ export function useCanvasObjectDrag(source: {
     draggingId.value = null
     pointerId = null
     const members = group
+    // The grids' members are laid out again from where their grids land.
+    for (const follower of moving.slice(group.length)) {
+      delete positions[follower.id]
+    }
     group = []
+    moving = []
     if (!id) {
       return null
     }

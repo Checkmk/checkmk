@@ -78,6 +78,12 @@ def test_transmitted_payload_conforms_to_manifest(grafana: GrafanaUsageData | No
     jsonschema.validate(document, build_manifest())
 
 
+def test_payload_without_the_optional_fields_conforms_to_manifest() -> None:
+    payload = _payload(None).model_copy(update={"os": None, "users": None, "inventory": None})
+
+    jsonschema.validate(json.loads(payload.model_dump_with_metadata_json()), build_manifest())
+
+
 def test_payload_with_foreign_metadata_violates_manifest() -> None:
     document = json.loads(_payload(None).model_dump_with_metadata_json())
     document["metadata"]["version"] = "v0"

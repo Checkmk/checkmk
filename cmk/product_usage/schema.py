@@ -238,7 +238,8 @@ class SiteInfo(pydantic.BaseModel):
         ),
         examples=["2.5.0-2026.01.06"],
     )
-    os: str = pydantic.Field(
+    os: str | None = pydantic.Field(
+        default=None,
         description=(
             "The operating system the site is running on, as reported by the OS release files."
             " This is the same value that is reported with the license usage."
@@ -260,7 +261,8 @@ class ProductUsageData(SiteInfo):
         ),
         examples=[{"check_mk-df": {"count": 400, "count_hosts": 56, "count_disabled": 15}}],
     )
-    users: UsersData = pydantic.Field(
+    users: UsersData | None = pydantic.Field(
+        default=None,
         description=(
             "Counts of the users configured on the site. User names, aliases, email addresses"
             " and other user attributes are never collected."
@@ -282,7 +284,8 @@ class ProductUsageData(SiteInfo):
             }
         ],
     )
-    inventory: InventoryData = pydantic.Field(
+    inventory: InventoryData | None = pydantic.Field(
+        default=None,
         description="Usage of the HW/SW Inventory.",
         examples=[{"hosts_with_inventory": 150}],
     )

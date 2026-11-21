@@ -75,8 +75,16 @@ function maybeNotify(name: string, state: string, prevState: string | undefined)
   new Notification(`Maps: ${state}`, { body: name, tag: name })
 }
 
+// A generated object's id says nothing to the operator; what it stands for does.
+function notificationName(obj: ObjectState): string {
+  if (!obj.host_name) {
+    return obj.object_id
+  }
+  return obj.service_description ? `${obj.host_name} / ${obj.service_description}` : obj.host_name
+}
+
 function notifyStateChange(obj: ObjectState, prev: ObjectState | undefined) {
-  maybeNotify(obj.object_id, obj.state, prev?.state)
+  maybeNotify(notificationName(obj), obj.state, prev?.state)
 }
 
 function collectFolderHostStates(node: FolderTreeNode, out: Map<string, string>) {

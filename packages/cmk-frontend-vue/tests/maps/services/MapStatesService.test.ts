@@ -302,6 +302,57 @@ describe('MapStatesService — topology update', () => {
   })
 })
 
+describe('MapStatesService — browser notifications', () => {
+  const shown: string[] = []
+  beforeEach(() => {
+    shown.length = 0
+    FakeEventSource.instances = []
+    vi.stubGlobal('EventSource', FakeEventSource)
+    vi.stubGlobal(
+      'Notification',
+      class {
+        static permission = 'granted'
+        constructor(_title: string, options: { body: string }) {
+          shown.push(options.body)
+        }
+      }
+    )
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('names the host and service of an object that turns bad, not its id', async () => {
+    const ok = aState({
+      object_id: 'o1',
+      type: 'service',
+      state: 'OK',
+      host_name: 'web-01',
+      service_description: 'CPU'
+    })
+    const store = newService(
+      aMap({ name: 'm' }),
+      {},
+      {
+        register: vi.fn().mockResolvedValue({ ...emptyStates, map_name: 'm', states: [ok] })
+      }
+    )
+    store.notificationsEnabled.value = true
+    await store.connectToMap('m')
+
+    FakeEventSource.instances[0]!.emit('state_update', {
+      type: 'state_update',
+      map: 'm',
+      full: false,
+      removed_ids: [],
+      timing: [],
+      states: { ...emptyStates, map_name: 'm', states: [{ ...ok, state: 'CRITICAL' }] }
+    })
+
+    expect(shown).toEqual(['web-01 / CPU'])
+  })
+})
+
 describe('MapStatesService — stream URL', () => {
   beforeEach(() => {
     FakeEventSource.instances = []

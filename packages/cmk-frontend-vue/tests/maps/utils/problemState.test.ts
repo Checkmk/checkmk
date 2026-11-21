@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { STATEFUL_OBJECT_TYPES, isProblemState } from '@/maps/utils/problemState'
+import { STATEFUL_OBJECT_TYPES, callsForPulse, isProblemState } from '@/maps/utils/problemState'
 
 describe('isProblemState', () => {
   it('treats DOWN/UNREACHABLE/CRITICAL/WARNING/UNKNOWN as problems under "any"', () => {
@@ -33,6 +33,20 @@ describe('isProblemState', () => {
     expect(isProblemState(null)).toBe(false)
     expect(isProblemState(undefined)).toBe(false)
     expect(isProblemState(null, 'critical')).toBe(false)
+  })
+})
+
+describe('callsForPulse', () => {
+  it('asks for attention for a critical problem nobody has taken on', () => {
+    expect(callsForPulse({ state: 'DOWN' })).toBe(true)
+    expect(callsForPulse({ state: 'CRITICAL', acknowledged: false, in_downtime: false })).toBe(true)
+  })
+
+  it('leaves a handled or a lesser problem still', () => {
+    expect(callsForPulse({ state: 'DOWN', acknowledged: true })).toBe(false)
+    expect(callsForPulse({ state: 'UNREACHABLE', in_downtime: true })).toBe(false)
+    expect(callsForPulse({ state: 'WARNING' })).toBe(false)
+    expect(callsForPulse(undefined)).toBe(false)
   })
 })
 

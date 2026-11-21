@@ -67,6 +67,8 @@ export interface FlowZoomOptions {
    * is seen again.
    */
   onDetailChange: () => void
+  /** Called with each transform written, for a layer drawn outside the zoomed one. */
+  onTransform: (transform: ZoomTransform) => void
   /** Told when the view starts and stops moving, by hand or in a fit. */
   motion: MapMotion
 }
@@ -97,7 +99,7 @@ function viewSize(svg: SVGSVGElement): { x: number; y: number } {
 }
 
 export function useFlowZoom(options: FlowZoomOptions) {
-  const { svgEl, nodes, simulation, onSettled, onDetailChange, motion } = options
+  const { svgEl, nodes, simulation, onSettled, onDetailChange, onTransform, motion } = options
 
   // Read from the hot-path painters once per frame, so a plain value rather
   // than a ref: the proxy overhead is not worth paying per donut arc.
@@ -153,6 +155,7 @@ export function useFlowZoom(options: FlowZoomOptions) {
     select(svg)
       .select<SVGGElement>('.maps-flow-canvas__zoom-layer')
       .attr('transform', transform.toString())
+    onTransform(transform)
     scale = transform.k
     displayScale.value = transform.k
     const nowLow = transform.k < DETAIL_SCALE

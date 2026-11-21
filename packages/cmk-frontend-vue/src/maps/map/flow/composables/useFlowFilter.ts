@@ -16,7 +16,7 @@
  * nodes are only ever hosts and services, so a group term could never match.
  */
 import { select } from 'd3-selection'
-import { type Ref, computed, watch } from 'vue'
+import { type Ref, computed, shallowRef, watch } from 'vue'
 
 import { HEALTHY_HOST_STATES } from '@/maps/map/flow/geometry'
 import { KIND_TRAITS, serviceNameOf, serviceNodeId } from '@/maps/map/flow/nodeIds'
@@ -128,9 +128,12 @@ export function useFlowFilter(options: FlowFilterOptions) {
     )
   }
 
-  // Whether the dimming is currently written into the DOM, so an inactive
-  // filter clears it once instead of on every render.
-  let dimmed = false
+  /**
+   * The nodes the filter leaves undimmed, or null while it is off, which is
+   * also whether the dimming is written into the DOM: an inactive filter
+   * clears it once instead of on every render.
+   */
+  const undimmed = shallowRef<ReadonlySet<string> | null>(null)
 
   function apply(): void {
     if (!svgEl.value) {
@@ -140,15 +143,14 @@ export function useFlowFilter(options: FlowFilterOptions) {
     const nodes = `g.${flowClass.node}`
     const links = `path.${flowClass.link}`
     if (!isActive.value) {
-      if (!dimmed) {
+      if (undimmed.value === null) {
         return
       }
-      dimmed = false
+      undimmed.value = null
       area.selectAll(`${nodes}, ${links}`).attr('opacity', 1)
       area.selectAll(nodes).style('filter', null)
       return
     }
-    dimmed = true
     // Matched once per node, not once per read: each match parses nothing but
     // it does allocate a string per field per term, and the three node
     // callbacks and the link callback below would each ask again.
@@ -161,6 +163,7 @@ export function useFlowFilter(options: FlowFilterOptions) {
     })
     const linkSelection = area.selectAll<SVGPathElement, FLink>(links)
     const shown = terms.value.length ? withPathsUp(matched, linkSelection.data()) : matched
+    undimmed.value = shown
     nodeSelection
       .attr('opacity', (node) => (shown.has(node.id) ? 1 : DIMMED_OPACITY))
       .style('filter', (node) => (shown.has(node.id) ? null : DIMMED_FILTER))
@@ -196,5 +199,5 @@ export function useFlowFilter(options: FlowFilterOptions) {
 
   watch([terms, problemsOnly], () => apply())
 
-  return { apply, foundHosts }
+  return { apply, foundHosts, undimmed }
 }

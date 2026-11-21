@@ -36,6 +36,7 @@ import { useD3Cleanup } from '@/maps/map/composables/useD3Cleanup'
 import { useHoverGrace } from '@/maps/map/composables/useHoverGrace'
 import { useMapMotion } from '@/maps/map/composables/useMapMotion'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
+import MapElementPulse from '@/maps/map/elements/components/MapElementPulse.vue'
 import { ATTENTIONS, type Attention } from '@/maps/map/flow/attention'
 import FlowGroupHoverCard, {
   type GroupCardContent
@@ -44,7 +45,7 @@ import { useFlowFilter } from '@/maps/map/flow/composables/useFlowFilter'
 import { isSelectable, type useFlowSelection } from '@/maps/map/flow/composables/useFlowSelection'
 import { type ViewMark, useFlowZoom } from '@/maps/map/flow/composables/useFlowZoom'
 import { createFlowSimulation } from '@/maps/map/flow/forces'
-import { finiteOr, summarizeHosts } from '@/maps/map/flow/geometry'
+import { finiteOr, nodeRadius, summarizeHosts } from '@/maps/map/flow/geometry'
 import { FOLD_WIDTH, createFlowGraph, sameSet } from '@/maps/map/flow/graph'
 import {
   hostColumnWidth,
@@ -75,11 +76,20 @@ import {
 } from '@/maps/map/flow/paint'
 import type { HostLayout, MapElement, ServiceLayout, TopologyNode } from '@/maps/types/api'
 import { objectAriaLabel } from '@/maps/utils/objectAria'
+import { MAX_PULSES } from '@/maps/utils/problemState'
+import { sameValues } from '@/maps/utils/stableRecords'
+import { stateColorVar } from '@/maps/utils/stateColors'
 
 /** Where a node was put, in the map's own coordinates. */
 interface Position {
   x: number
   y: number
+}
+
+/** Mirrors ``MapElementPulse`` on a static map. */
+interface Pulse {
+  node: FNode
+  color: string
 }
 
 /** Height used before the drawing area has been measured. */
@@ -141,7 +151,9 @@ const svgEl = useTemplateRef<SVGSVGElement>('svg')
 useD3Cleanup(svgEl)
 // Per instance, so two flow maps on one page cannot reference each other's.
 const glowFilter = `maps-flow-glow-${useId()}`
-/** The nodes of the most recent build by id. */
+const pulseLayer = useTemplateRef<HTMLDivElement>('pulseLayer')
+const pulses = shallowRef<Pulse[]>([])
+/** The nodes of the most recent build by id, which each tick moves the pulses to. */
 let nodeById: ReadonlyMap<string, FNode> = new Map()
 
 const graph = createFlowGraph({
@@ -226,6 +238,11 @@ const zoom = useFlowZoom({
   // The nodes that were hidden stopped being positioned while they were; they
   // are put back where they belong before they are seen again.
   onDetailChange: () => repaint?.(),
+  onTransform: (transform) => {
+    if (pulseLayer.value) {
+      pulseLayer.value.style.transform = `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`
+    }
+  },
   motion: useMapMotion(() => root.value)
 })
 const displayScale = zoom.displayScale
@@ -424,6 +441,7 @@ function render(hits?: Set<string>): void {
       positionNodes(visibleNodes, zoom.scale())
       positionFrames(frameSelection, noServices)
       positionFoldBacks(foldBacks, zoom.scale())
+      positionPulses(true)
       return
     }
     place()
@@ -431,6 +449,7 @@ function render(hits?: Set<string>): void {
     positionNodes(all, zoom.scale())
     positionFrames(frameSelection, built.servicesByHost)
     positionFoldBacks(foldBacks, zoom.scale())
+    positionPulses(false)
   }
   repaint = tick
 
@@ -454,6 +473,7 @@ function render(hits?: Set<string>): void {
   zoom.applyDetail()
   refreshAgainstZoom()
   filter.apply()
+  refreshPulses()
   selection.apply()
 
   const firstPaint = zoom.isFirstPaint()
@@ -479,6 +499,36 @@ function render(hits?: Set<string>): void {
     zoom.fitFirstPaint(simulation, needsServices(layout) ? FIT_TICKS_WITH_SERVICES : FIT_TICKS)
   }
 }
+
+/** A dimmed node does not pulse: the filter has said it is not what to look at. */
+function refreshPulses(): void {
+  const undimmed = filter.undimmed.value
+  const pulsing = drawn.filter(
+    (node) => props.model.pulses(node) && (!undimmed || undimmed.has(node.id))
+  )
+  const next = (pulsing.length > MAX_PULSES ? [] : pulsing).map((node) => ({
+    node,
+    color: stateColorVar(node.state)
+  }))
+  const before = pulses.value
+  if (next.length !== before.length || next.some((pulse, i) => !sameValues(pulse, before[i]!))) {
+    pulses.value = next
+  }
+}
+watch(filter.undimmed, refreshPulses)
+
+/** Below the detail threshold the service nodes are hidden, and so are their pulses. */
+function positionPulses(servicesHidden: boolean): void {
+  for (const box of pulseLayer.value?.querySelectorAll<HTMLElement>('[data-node-id]') ?? []) {
+    const node = nodeById.get(box.dataset['nodeId'] ?? '')
+    if (node && !(servicesHidden && node.nodeType === 'service')) {
+      box.style.transform = `translate(${finiteOr(node.x)}px, ${finiteOr(node.y)}px)`
+    }
+  }
+}
+
+// A pulse that has just appeared is put where its node is.
+watch(pulses, () => positionPulses(zoom.lowDetail()), { flush: 'post' })
 
 /** What the operator calls the site or host a group hangs from. */
 function headName(node: FNode): string {
@@ -1002,6 +1052,18 @@ defineExpose({
       </g>
     </svg>
 
+    <div ref="pulseLayer" class="maps-flow-canvas__pulses">
+      <div
+        v-for="pulse in pulses"
+        :key="pulse.node.id"
+        class="maps-flow-canvas__pulse"
+        :class="{ 'maps-flow-canvas__pulse--service': pulse.node.nodeType === 'service' }"
+        :data-node-id="pulse.node.id"
+      >
+        <MapElementPulse :icon-size="2 * nodeRadius(pulse.node)" :color="pulse.color" />
+      </div>
+    </div>
+
     <FlowGroupHoverCard
       v-if="groupCard"
       :content="groupCard.content"
@@ -1062,6 +1124,29 @@ defineExpose({
    every host and service ring at every step of the gesture. */
 .maps-flow-canvas__zoom-layer {
   will-change: transform;
+}
+
+/* The pulses sit above the drawing rather than in it: animated on layers of
+   their own, they never make the browser rasterize the zoomed drawing again.
+   The layer takes the zoom transform the drawing takes, so a pulse stays on
+   its node. */
+.maps-flow-canvas__pulses {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.maps-flow-canvas__pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Below the detail threshold the service nodes are hidden, and so are their pulses. */
+.maps-flow-canvas__svg--low-detail ~ .maps-flow-canvas__pulses .maps-flow-canvas__pulse--service {
+  display: none;
 }
 
 /* While the view moves, hit-testing is suppressed across the whole

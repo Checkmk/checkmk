@@ -16,6 +16,7 @@
  */
 import { arc as d3arc, pie as d3pie } from 'd3-shape'
 
+import type { FNode } from '@/maps/map/flow/nodes'
 import type { ServicesSummary, TopologyNode } from '@/maps/types/api'
 
 export const NODE_R = 18
@@ -40,6 +41,11 @@ export function svcR(N: number): number {
     return 7
   }
   return 6
+}
+
+/** How big a host or service node is drawn. */
+export function nodeRadius(node: FNode): number {
+  return node.nodeType === 'service' ? svcR(node.svcTotalCount ?? 1) : NODE_R
 }
 
 // Scale orbit radius up so service circles don't overlap.

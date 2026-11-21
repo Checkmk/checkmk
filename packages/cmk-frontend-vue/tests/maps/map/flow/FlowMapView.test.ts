@@ -159,6 +159,19 @@ describe('FlowMapView', () => {
     unmount()
   })
 
+  it('pulses a host in trouble where it is drawn', async () => {
+    const { container, unmount } = renderWithTopology()
+    await waitForNodes()
+
+    const pulses = [...container.querySelectorAll<HTMLElement>('.maps-flow-canvas__pulse')]
+    expect(pulses.map((pulse) => pulse.dataset['nodeId'])).toEqual(['db-01'])
+    const node = screen.getByRole('button', { name: 'db-01, Down' })
+    const [x, y] = (node.getAttribute('transform') ?? '').match(/-?[\d.]+/g)!.map(Number)
+    expect(pulses[0]!.style.transform).toBe(`translate(${x}px, ${y}px)`)
+
+    unmount()
+  })
+
   it('counts the service problems of a host down once, as the host down', async () => {
     const topology = sampleTopology()
     topology[2]!.services_summary = { ok: 0, warning: 0, critical: 1, unknown: 0, pending: 0 }

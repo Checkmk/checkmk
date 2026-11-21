@@ -18,7 +18,7 @@ import { computed, ref } from 'vue'
 import { useUtilizationRing } from '@/maps/map/elements/composables/useUtilizationRing'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 import { imageAssetUrl } from '@/maps/utils/assetUrl'
-import { isProblemState } from '@/maps/utils/problemState'
+import { callsForPulse } from '@/maps/utils/problemState'
 import { stateColorVar } from '@/maps/utils/stateColors'
 
 import AggregationSubtree from './AggregationSubtree.vue'
@@ -63,14 +63,7 @@ const stateful = computed(
   () => props.object.type !== 'image' && !UNLIT_STATES.has(props.state?.state ?? 'PENDING')
 )
 
-/** A handled problem stays still: its badge already says someone is on it. */
-const pulsing = computed(
-  () =>
-    stateful.value &&
-    isProblemState(props.state?.state, 'critical') &&
-    !props.state?.acknowledged &&
-    !props.state?.in_downtime
-)
+const pulsing = computed(() => stateful.value && callsForPulse(props.state))
 
 const stateColor = computed(() => stateColorVar(props.state?.state))
 

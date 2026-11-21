@@ -27,6 +27,22 @@ export function isProblemState(
 }
 
 /**
+ * Whether an object's state calls for the attention pulse: a critical problem
+ * nobody has taken on yet. A handled one stays still, since its badge already
+ * says someone is on it.
+ */
+export function callsForPulse(
+  state: { state: string; acknowledged?: boolean | null; in_downtime?: boolean | null } | undefined
+): boolean {
+  return (
+    state !== undefined &&
+    isProblemState(state.state, 'critical') &&
+    !state.acknowledged &&
+    !state.in_downtime
+  )
+}
+
+/**
  * Beyond this many, nothing pulses: on a map that draws every host, an outage
  * would animate thousands, which costs the browser and singles out none.
  */

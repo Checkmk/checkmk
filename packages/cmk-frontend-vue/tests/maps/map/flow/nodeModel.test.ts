@@ -63,4 +63,36 @@ describe('createFlowNodeModel', () => {
 
     expect(model.worstServiceState(host)).toBe('UNKNOWN')
   })
+
+  it('stills the pulse of a service someone has acknowledged, not that of its host', () => {
+    const topo = aTopologyNode({ name: 'web-01', state: 'DOWN' })
+    const model = createFlowNodeModel({
+      nodes: () => [topo],
+      connectionId: () => null,
+      worstHostIds: () => new Set()
+    })
+    const base = { output: '', bfsLevel: 0 }
+
+    expect(model.pulses({ ...base, id: 'web-01', state: 'DOWN', nodeType: 'host', topo })).toBe(
+      true
+    )
+    expect(
+      model.pulses({
+        ...base,
+        id: 'web-01;CPU',
+        state: 'CRITICAL',
+        nodeType: 'service',
+        hostId: 'web-01',
+        svc: {
+          name: 'CPU',
+          state: 'CRITICAL',
+          output: '',
+          acknowledged: true,
+          in_downtime: false,
+          notifications_enabled: true
+        },
+        parentTopo: topo
+      })
+    ).toBe(false)
+  })
 })

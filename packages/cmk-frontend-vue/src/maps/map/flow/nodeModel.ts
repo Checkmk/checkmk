@@ -28,6 +28,7 @@ import { serviceNameOf } from '@/maps/map/flow/nodeIds'
 import type { CmdMarker, FNode } from '@/maps/map/flow/nodes'
 import type { MapElement, ObjectState, TopologyNode } from '@/maps/types/api'
 import { newObjectState } from '@/maps/utils/model'
+import { callsForPulse } from '@/maps/utils/problemState'
 import { ACKNOWLEDGED_COLOR, DOWNTIME_COLOR, stateColorVar } from '@/maps/utils/stateColors'
 
 /**
@@ -66,6 +67,12 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
       return { stroke: HALO_DEFAULT_STROKE, width: 1.5 }
     }
     return { stroke: stateColorVar(worst), width: isTopK ? 4 : 2.5 }
+  }
+
+  /** Whether a host or service node pulses, by the same rule as an object on a static map. */
+  function pulses(d: FNode): boolean {
+    const src = d.nodeType === 'service' ? d.svc : d.topo
+    return src !== undefined && callsForPulse({ ...src, state: d.state })
   }
 
   // Command-state markers shown on a node, mirroring the static map's badges:
@@ -263,6 +270,7 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
     /** Whether this host is one of the worst-affected. */
     isWorst: (d: FNode): boolean => worstHostIds().has(d.id),
     hostHalo,
+    pulses,
     commandMarkers,
     donutSegments,
     mapElementFromFNode,

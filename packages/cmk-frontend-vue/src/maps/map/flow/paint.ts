@@ -33,6 +33,7 @@ import {
   donutPie,
   finiteOr,
   foldArc,
+  nodeRadius,
   showSvcLabel,
   svcR
 } from './geometry'
@@ -483,7 +484,7 @@ function refreshBadges(merge: NodeSelection, badges: (node: FNode) => CmdMarker[
       // The common case by far: no command is in force on this node.
       return
     }
-    const radius = node.nodeType === 'service' ? svcR(node.svcTotalCount ?? 1) : NODE_R
+    const radius = nodeRadius(node)
     const badgeR = Math.max(4, radius * 0.34)
     const bound = select(group)
       .selectAll<SVGGElement, CmdMarker>(`g.${flowClass.badge}`)

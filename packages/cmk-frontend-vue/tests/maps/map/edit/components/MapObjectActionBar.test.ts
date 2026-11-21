@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import MapObjectActionBar from '@/maps/map/edit/components/MapObjectActionBar.vue'
@@ -20,6 +20,17 @@ import { anObject } from '../../../support/fixtures'
 const FRAME = { left: 74, top: 0, right: 874, bottom: 700 }
 const BAR = { width: 200, height: 40 }
 
+// What lies under a point of the screen, which jsdom does not know either.
+let underPoint: (x: number, y: number) => Element[] = () => []
+
+beforeEach(() => {
+  underPoint = () => []
+  Object.defineProperty(document, 'elementsFromPoint', {
+    configurable: true,
+    value: (x: number, y: number) => underPoint(x, y)
+  })
+})
+
 function renderBar(anchor: AnchorRect) {
   return render(MapObjectActionBar, {
     props: {
@@ -32,13 +43,17 @@ function renderBar(anchor: AnchorRect) {
   })
 }
 
-async function renderAbove(anchor: AnchorRect): Promise<CSSStyleDeclaration> {
+function measureInFrame(): void {
   const frame = document.createElement('div')
   frame.getBoundingClientRect = () =>
     ({ ...FRAME, width: FRAME.right - FRAME.left, height: FRAME.bottom - FRAME.top }) as DOMRect
   vi.spyOn(HTMLElement.prototype, 'offsetParent', 'get').mockReturnValue(frame)
   vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(BAR.width)
   vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(BAR.height)
+}
+
+async function renderAbove(anchor: AnchorRect): Promise<CSSStyleDeclaration> {
+  measureInFrame()
   const { container } = renderBar(anchor)
   await nextTick()
   return container.querySelector<HTMLElement>('.maps-map-object-action-bar')!.style
@@ -59,6 +74,46 @@ describe('MapObjectActionBar placement', () => {
 
     // 70 (object bottom) + 8 (gap).
     expect(style.top).toBe('78px')
+  })
+
+  it('sits below the object where above it would cover another one', async () => {
+    const other = document.createElement('div')
+    other.dataset['objectId'] = 'h2'
+    underPoint = (_x, y) => (y < 200 ? [other] : [])
+
+    const style = await renderAbove({ left: 300, right: 340, top: 200, bottom: 240 })
+
+    // 240 (object bottom) + 8 (gap).
+    expect(style.top).toBe('248px')
+  })
+
+  it('keeps its side while its object is dragged, and looks again once it rests', async () => {
+    vi.useFakeTimers()
+    const other = document.createElement('div')
+    other.dataset['objectId'] = 'h2'
+    const lookedAt: number[] = []
+    underPoint = (_x, y) => {
+      lookedAt.push(y)
+      return y < 300 ? [other] : []
+    }
+    measureInFrame()
+    const at = (top: number): AnchorRect => ({ left: 300, right: 340, top, bottom: top + 40 })
+    const { container, rerender } = renderBar(at(400))
+    await nextTick()
+    const bar = container.querySelector<HTMLElement>('.maps-map-object-action-bar')!
+    lookedAt.length = 0
+
+    await rerender({ anchor: at(300) })
+    await nextTick()
+    expect(lookedAt).toEqual([])
+    // 300 (object top) - 8 (gap) - 40 (bar height): above, as before the drag.
+    expect(bar.style.top).toBe('252px')
+
+    vi.advanceTimersByTime(150)
+    await nextTick()
+    // 340 (object bottom) + 8 (gap): above would now cover the other object.
+    expect(bar.style.top).toBe('348px')
+    vi.useRealTimers()
   })
 
   it('stays clear of the sidebar for an object at the right edge', async () => {

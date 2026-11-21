@@ -22,6 +22,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
 
+import { objectIdOf } from '@/maps/map/composables/useRovingFocus'
 import type { MapElement } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
@@ -53,7 +54,18 @@ const emit = defineEmits<{ act: [action: MapObjectAction] }>()
 const { _t, _tn } = usei18n()
 
 const barEl = ref<HTMLElement | null>(null)
-const barStyle = useAnchorOverlayStyle(barEl, () => props.anchor)
+// Over another object, the bar would hide what the operator arranges it against.
+function coversAnotherObject(rect: AnchorRect): boolean {
+  const y = (rect.top + rect.bottom) / 2
+  return [rect.left + 1, (rect.left + rect.right) / 2, rect.right - 1].some((x) =>
+    document.elementsFromPoint(x, y).some((el) => {
+      const id = objectIdOf(el)
+      return id !== null && id !== props.object.id
+    })
+  )
+}
+
+const barStyle = useAnchorOverlayStyle(barEl, () => props.anchor, coversAnotherObject)
 
 const isSingle = computed(() => props.selectedCount <= 1)
 /** A line bound to an object follows it, and can be freed again. */

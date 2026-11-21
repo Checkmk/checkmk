@@ -4,7 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { type CSSProperties, type ComputedRef, type Ref, computed, ref, watch } from 'vue'
+import {
+  type CSSProperties,
+  type ComputedRef,
+  type Ref,
+  computed,
+  onScopeDispose,
+  ref,
+  watch
+} from 'vue'
 
 import type { AnchorRect } from '@/maps/utils/anchorRect'
 
@@ -13,6 +21,9 @@ const EDGE_MARGIN = 8
 
 /** Room between an overlay and the object it belongs to. */
 const ANCHOR_GAP = 8
+
+/** How long an anchor rests before an overlay asks again what it would cover. */
+const SETTLE_MS = 150
 
 /** A fixed overlay's frame, in viewport coordinates. */
 export interface OverlayFrame {
@@ -127,17 +138,29 @@ export function usePointerOverlayStyle(
 
 /**
  * ``left``/``top`` for a fixed overlay centred above an object given in
- * viewport coordinates. Without room above it goes below, and it is kept
+ * viewport coordinates. Without room above, or where it would cover what
+ * ``covers`` says matters and below would not, it goes below, and it is kept
  * inside the frame sideways. While the object is out of the frame altogether
  * the overlay is not shown: it would offer to act on something out of sight.
+ *
+ * While the object moves at its size, as when it is dragged, the overlay keeps
+ * its side and asks ``covers`` again only once the object rests: asking on
+ * every frame costs hit tests, and the overlay would jump past each object on
+ * the way.
  */
 export function useAnchorOverlayStyle(
   overlay: Readonly<Ref<HTMLElement | null>>,
-  anchor: () => AnchorRect | null | undefined
+  anchor: () => AnchorRect | null | undefined,
+  covers: (rect: AnchorRect) => boolean = () => false
 ): ComputedRef<CSSProperties> {
   const placed = ref<{ left: number; top: number } | null>(null)
+  let above: boolean | null = null
+  let lastSize = ''
+  let settle: ReturnType<typeof setTimeout> | undefined
+  onScopeDispose(() => clearTimeout(settle))
 
-  function place(): void {
+  function place(decides: boolean): void {
+    clearTimeout(settle)
     const el = overlay.value
     const a = anchor()
     if (!el || !a) {
@@ -156,19 +179,33 @@ export function useAnchorOverlayStyle(
     }
     const width = el.offsetWidth
     const height = el.offsetHeight
-    const above = a.top - ANCHOR_GAP - height
-    const top = above >= frame.top + EDGE_MARGIN ? above : a.bottom + ANCHOR_GAP
     const centred = (a.left + a.right) / 2 - width / 2
     const left = Math.max(
       frame.left + EDGE_MARGIN,
       Math.min(centred, frame.right - EDGE_MARGIN - width)
     )
+    const at = (top: number): AnchorRect => ({
+      left,
+      top,
+      right: left + width,
+      bottom: top + height
+    })
+    const topAbove = a.top - ANCHOR_GAP - height
+    const topBelow = a.bottom + ANCHOR_GAP
+    const size = `${a.right - a.left}x${a.bottom - a.top}x${width}x${height}`
+    if (decides || above === null || size !== lastSize) {
+      above = !(covers(at(topAbove)) && !covers(at(topBelow)))
+    } else {
+      settle = setTimeout(() => place(true), SETTLE_MS)
+    }
+    lastSize = size
+    const top = above && topAbove >= frame.top + EDGE_MARGIN ? topAbove : topBelow
     placed.value = { left: left - frame.left, top: top - frame.top }
   }
 
   // The overlay's width changes with what it offers, which the anchor does not see.
-  useResizeObserver(place).observe(overlay)
-  watch([overlay, anchor], place, { flush: 'post', immediate: true })
+  useResizeObserver(() => place(true)).observe(overlay)
+  watch([overlay, anchor], () => place(false), { flush: 'post', immediate: true })
 
   return placedStyle(placed)
 }

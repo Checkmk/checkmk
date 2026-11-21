@@ -26,9 +26,10 @@ export interface RovingFocus {
   onFocusin: (event: FocusEvent) => void
 }
 
-function objectIdOf(target: EventTarget | null): string | null {
+/** The map object an element belongs to, a line's SVG included. */
+export function objectIdOf(target: EventTarget | null): string | null {
   const element =
-    target instanceof HTMLElement ? target.closest<HTMLElement>('[data-object-id]') : null
+    target instanceof Element ? target.closest<HTMLElement | SVGElement>('[data-object-id]') : null
   return element?.dataset['objectId'] ?? null
 }
 

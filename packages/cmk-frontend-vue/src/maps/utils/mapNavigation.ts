@@ -287,8 +287,8 @@ export function buildServiceStateViewUrl(
 
 /**
  * Checkmk allhosts view of a site or a set of hosts, filtered to one host
- * state — the target of clickable HOST state pills/chips on dyngroups and
- * sites.
+ * state — the target of clickable HOST state pills/chips on dyngroups, sites
+ * and a flow map's groups.
  */
 export function buildHostStateViewUrl(
   checkmkUrl: string | null,

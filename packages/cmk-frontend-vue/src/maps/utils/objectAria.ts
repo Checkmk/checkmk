@@ -80,6 +80,8 @@ export function stateWordFromToken(_t: TranslateFn, token: string): string {
  */
 export function stateShortWordFromToken(_t: TranslateFn, token: string): TranslatedString {
   switch (token) {
+    case 'DOWN':
+      return _t('DOWN')
     case 'CRITICAL':
       return _t('CRIT')
     case 'WARNING':

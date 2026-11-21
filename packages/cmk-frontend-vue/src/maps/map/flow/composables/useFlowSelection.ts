@@ -18,6 +18,7 @@ import { select } from 'd3-selection'
 import { type Ref, computed, ref } from 'vue'
 
 import { useMarquee } from '@/maps/map/composables/useMarquee'
+import { KIND_TRAITS } from '@/maps/map/flow/nodeIds'
 import type { FNode } from '@/maps/map/flow/nodes'
 import { flowClass } from '@/maps/map/flow/paint'
 import type { MapElement } from '@/maps/types/api'
@@ -32,7 +33,7 @@ const SELECTED = `${flowClass.node}--selected`
  * neither a shift-click nor a band pulled over it.
  */
 export function isSelectable(node: FNode): boolean {
-  return node.nodeType !== 'site'
+  return KIND_TRAITS[node.nodeType].monitored
 }
 
 interface FlowSelectionOptions {

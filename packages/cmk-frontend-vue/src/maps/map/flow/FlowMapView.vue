@@ -35,7 +35,7 @@ import ContextMenu from '@/maps/map/components/ContextMenu.vue'
 import HoverMenu from '@/maps/map/components/HoverMenu.vue'
 import MapPlaceholder from '@/maps/map/components/MapPlaceholder.vue'
 import type { ProblemCounts } from '@/maps/map/components/MapProblemsPill.vue'
-import MapSearch from '@/maps/map/components/MapSearch.vue'
+import MapSearch, { type SearchMatches } from '@/maps/map/components/MapSearch.vue'
 import MapZoomControls from '@/maps/map/components/MapZoomControls.vue'
 import ProblemsOnlyToggle from '@/maps/map/components/ProblemsOnlyToggle.vue'
 import { useMapObjectMenus } from '@/maps/map/composables/useMapObjectMenus'
@@ -336,15 +336,26 @@ async function onBulkForceCheck(): Promise<void> {
 //
 // With the services switched off there is no per-host sign of a service
 // problem, so a map full of them still shows nothing but green dots. The
-// counts are aggregated here and shown in the topbar instead. Unknown is
-// counted in the total — an unknown-only map should still say something — but
-// only the more actionable two are named.
+// counts are aggregated here and shown in the topbar instead. The hosts down
+// or unreachable come first: that is an outage, which no service count shows.
+// Services of a host down or unreachable are not counted: their failures
+// follow from the outage, which Checkmk's unhandled problems leave out too.
 const problems = computed<ProblemCounts>(() => {
+  let down = 0
+  let unreachable = 0
   let critical = 0
   let warning = 0
   let unknown = 0
   let hostsWithProblems = 0
   for (const topo of topology.value) {
+    if (topo.state === 'DOWN') {
+      down += 1
+    } else if (topo.state === 'UNREACHABLE') {
+      unreachable += 1
+    }
+    if (topo.state === 'DOWN' || topo.state === 'UNREACHABLE') {
+      continue
+    }
     const summary = topo.services_summary
     if (!summary) {
       continue
@@ -356,7 +367,14 @@ const problems = computed<ProblemCounts>(() => {
     warning += summary.warning
     unknown += summary.unknown
   }
-  return { critical, warning, hostsWithProblems, total: critical + warning + unknown }
+  return {
+    down,
+    unreachable,
+    critical,
+    warning,
+    unknown,
+    hostsWithProblems
+  }
 })
 
 watch(problems, (value) => emit('update:problems', value), { immediate: true })
@@ -384,6 +402,9 @@ const showsAggregationHint = computed(
 // The hosts this map draws, so a parent or child in the slide-in's topology
 // section can be a jump onto the map rather than only a link into Checkmk.
 const selectableHosts = computed(() => topology.value.map((topo) => topo.name))
+const hostsUp = computed(
+  () => new Set(topology.value.filter((topo) => topo.state === 'UP').map((topo) => topo.name))
+)
 
 /**
  * A jump from the slide-in's topology section. A flow map's nodes are not map
@@ -397,6 +418,27 @@ function onSelectHost(hostName: string): void {
   drawerNode.value = null
   drawerHostName.value = hostName
   closeMenus()
+}
+
+// --- Stepping through what the search found.
+const searchHits = ref<{ total: number; drawn: string[] }>({ total: 0, drawn: [] })
+const hitIndex = ref<number | null>(null)
+watch(searchHits, () => (hitIndex.value = null))
+
+const searchMatches = computed<SearchMatches>(() => ({
+  total: searchHits.value.total,
+  reachable: searchHits.value.drawn.length,
+  current: hitIndex.value
+}))
+
+function stepHit(direction: 1 | -1): void {
+  const hits = searchHits.value.drawn
+  if (!hits.length) {
+    return
+  }
+  const from = hitIndex.value ?? (direction === 1 ? -1 : 0)
+  hitIndex.value = (from + direction + hits.length) % hits.length
+  canvas.value?.showHit(hits[hitIndex.value]!)
 }
 
 /** Changes when this is a different map, or looks at a different root. */
@@ -454,6 +496,7 @@ watch(resetKey, () => {
           :model="model"
           :selection="selection"
           :layout="serviceLayout"
+          :host-layout="flowView?.host_layout ?? 'tree'"
           :connection-id="connectionId"
           :saved-positions="flowView?.positions ?? {}"
           :clickable="config.click_action !== 'none'"
@@ -461,12 +504,16 @@ watch(resetKey, () => {
           :preview="preview"
           :filter-needle="filterNeedle"
           :problems-only="problemsOnly"
+          :picked="drawerHostName"
           :reset-key="resetKey"
+          :checkmk-url="checkmkUrl"
           @object-click="onObjectClick"
           @object-context="onObjectContext"
           @object-hover="onObjectHover"
           @object-hover-leave="menus.hover.scheduleClose()"
+          @select-host="onSelectHost"
           @positions-changed="persist({ positions: $event })"
+          @search-hits="searchHits = $event"
         />
 
         <div v-if="topologyError && !preview" class="maps-flow-map-view__stale">
@@ -481,7 +528,9 @@ watch(resetKey, () => {
           v-if="!drawerObject && !preview"
           :model-value="filterNeedle"
           :exclude-prefixes="['hg', 'sg']"
+          :hits="searchMatches"
           @update:model-value="emit('update:filterNeedle', $event)"
+          @step="stepHit"
         >
           <template #trailing>
             <ProblemsOnlyToggle
@@ -567,6 +616,7 @@ watch(resetKey, () => {
         :checkmk-url="checkmkUrl"
         :connection-id="connectionId"
         :selectable-hosts="selectableHosts"
+        :hosts-up="hostsUp"
         :unattended="unattended"
         @close="closeDetail"
         @select-host="onSelectHost"

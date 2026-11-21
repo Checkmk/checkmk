@@ -52,6 +52,7 @@ _FLOW_MAP: dict[str, object] = {
         "child_layers": 2,
         "positions": {"srv1": {"x": 1.0, "y": 2.0}},
         "service_layout": "donut",
+        "host_layout": "network",
     },
     "objects": [
         {

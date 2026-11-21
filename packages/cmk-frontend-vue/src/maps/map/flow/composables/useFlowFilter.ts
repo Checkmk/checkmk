@@ -9,7 +9,8 @@
  * Non-matching nodes are dimmed and desaturated rather than removed, and the
  * matches are raised above them. Removing them would change the graph, which
  * would restart the force simulation and rearrange the whole map on every
- * keystroke — the operator would lose the picture they were reading.
+ * keystroke — the operator would lose the picture they were reading. Only a
+ * hit folded away is worth that: the map then draws it, once typing pauses.
  *
  * The group operators the other map types accept are dropped: a flow map's
  * nodes are only ever hosts and services, so a group term could never match.
@@ -18,9 +19,10 @@ import { select } from 'd3-selection'
 import { type Ref, computed, watch } from 'vue'
 
 import { HEALTHY_HOST_STATES } from '@/maps/map/flow/geometry'
-import { serviceNameOf } from '@/maps/map/flow/nodeIds'
+import { KIND_TRAITS, serviceNameOf, serviceNodeId } from '@/maps/map/flow/nodeIds'
 import type { FLink, FNode } from '@/maps/map/flow/nodes'
 import { flowClass } from '@/maps/map/flow/paint'
+import type { TopologyNode } from '@/maps/types/api'
 import {
   DIMMED_FILTER,
   DIMMED_OPACITY,
@@ -50,7 +52,7 @@ export function useFlowFilter(options: FlowFilterOptions) {
   const isActive = computed(() => problemsOnly() || terms.value.length > 0)
 
   function hasProblem(node: FNode): boolean {
-    if (node.nodeType === 'host') {
+    if (KIND_TRAITS[node.nodeType].hostShaped) {
       return !HEALTHY_HOST_STATES.has(node.state) || worstServiceState(node) !== null
     }
     return node.state !== 'OK' && node.state !== 'PENDING'
@@ -88,6 +90,44 @@ export function useFlowFilter(options: FlowFilterOptions) {
     return matchesFilterTerms(terms.value, (field) => fieldValue(node, field))
   }
 
+  /**
+   * The hosts the search names, itself or by one of its services, so a map that
+   * folds hosts away can draw them.
+   */
+  function foundHosts(topology: readonly TopologyNode[]): Set<string> {
+    if (!terms.value.length) {
+      return new Set()
+    }
+    const named = (node: FNode): boolean =>
+      matchesFilterTerms(terms.value, (field) => fieldValue(node, field))
+    return new Set(
+      topology
+        .filter(
+          (topo) =>
+            named({
+              id: topo.name,
+              nodeType: 'host',
+              state: topo.state,
+              output: '',
+              bfsLevel: 0,
+              topo
+            }) ||
+            (topo.services ?? []).some((service) =>
+              named({
+                id: serviceNodeId(topo.name, service.name),
+                nodeType: 'service',
+                hostId: topo.name,
+                state: service.state,
+                output: '',
+                bfsLevel: 0,
+                parentTopo: topo
+              })
+            )
+        )
+        .map((topo) => topo.name)
+    )
+  }
+
   // Whether the dimming is currently written into the DOM, so an inactive
   // filter clears it once instead of on every render.
   let dimmed = false
@@ -98,7 +138,7 @@ export function useFlowFilter(options: FlowFilterOptions) {
     }
     const area = select(svgEl.value)
     const nodes = `g.${flowClass.node}`
-    const links = `line.${flowClass.link}`
+    const links = `path.${flowClass.link}`
     if (!isActive.value) {
       if (!dimmed) {
         return
@@ -119,19 +159,42 @@ export function useFlowFilter(options: FlowFilterOptions) {
         matched.add(node.id)
       }
     })
+    const linkSelection = area.selectAll<SVGPathElement, FLink>(links)
+    const shown = terms.value.length ? withPathsUp(matched, linkSelection.data()) : matched
     nodeSelection
-      .attr('opacity', (node) => (matched.has(node.id) ? 1 : DIMMED_OPACITY))
-      .style('filter', (node) => (matched.has(node.id) ? null : DIMMED_FILTER))
+      .attr('opacity', (node) => (shown.has(node.id) ? 1 : DIMMED_OPACITY))
+      .style('filter', (node) => (shown.has(node.id) ? null : DIMMED_FILTER))
       .filter((node) => matched.has(node.id))
       .raise()
-    area
-      .selectAll<SVGLineElement, FLink>(links)
-      .attr('opacity', (link) =>
-        matched.has(link.source.id) && matched.has(link.target.id) ? 1 : DIMMED_OPACITY
-      )
+    linkSelection.attr('opacity', (link) =>
+      shown.has(link.source.id) && shown.has(link.target.id) ? 1 : DIMMED_OPACITY
+    )
+  }
+
+  /**
+   * The hits and what they hang from, up to their site: a host found is read
+   * by where it sits, which a dimmed path would hide.
+   */
+  function withPathsUp(matched: ReadonlySet<string>, drawnLinks: FLink[]): Set<string> {
+    const parentOf = new Map<string, string>()
+    for (const link of drawnLinks) {
+      // The tree's own parent, not a further one: the path is read as drawn.
+      if (!link.isServiceLink && !link.furtherParent) {
+        parentOf.set(link.target.id, link.source.id)
+      }
+    }
+    const shown = new Set(matched)
+    for (const id of matched) {
+      let parent = parentOf.get(id)
+      while (parent !== undefined && !shown.has(parent)) {
+        shown.add(parent)
+        parent = parentOf.get(parent)
+      }
+    }
+    return shown
   }
 
   watch([terms, problemsOnly], () => apply())
 
-  return { apply }
+  return { apply, foundHosts }
 }

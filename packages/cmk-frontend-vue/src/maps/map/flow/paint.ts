@@ -20,8 +20,9 @@
 import type { Selection } from 'd3-selection'
 import { select } from 'd3-selection'
 
-import { stateColorVar } from '@/maps/utils/stateColors'
+import { onStateColorVar, stateColorVar } from '@/maps/utils/stateColors'
 
+import { unhandledIn } from './attention'
 import {
   DONUT_MAX_WIDTH,
   type DonutArc,
@@ -31,12 +32,13 @@ import {
   donutOuterRadius,
   donutPie,
   finiteOr,
+  foldArc,
   showSvcLabel,
   svcR
 } from './geometry'
-import { rowSpacingFallback, siteScaleForZoom } from './layout'
-import { serviceNameOf } from './nodeIds'
-import type { CmdMarker, FLink, FNode } from './nodes'
+import { hostColumnWidth, hostLabelLines, rowSpacingFallback, siteScaleForZoom } from './layout'
+import { KIND_TRAITS, serviceNameOf } from './nodeIds'
+import type { CmdMarker, FLink, FNode, HostFrame } from './nodes'
 
 /**
  * The classes the drawn parts carry. Shared, because the search, the selection
@@ -44,6 +46,10 @@ import type { CmdMarker, FLink, FNode } from './nodes'
  */
 export const flowClass = {
   zoomLayer: 'maps-flow-canvas__zoom-layer',
+  frames: 'maps-flow-canvas__frames',
+  frame: 'maps-flow-canvas__frame',
+  foldBacks: 'maps-flow-canvas__fold-backs',
+  foldBack: 'maps-flow-canvas__fold-back',
   links: 'maps-flow-canvas__links',
   nodes: 'maps-flow-canvas__nodes',
   link: 'maps-flow-canvas__link',
@@ -53,7 +59,8 @@ export const flowClass = {
   glyph: 'maps-flow-canvas__glyph',
   label: 'maps-flow-canvas__label',
   badges: 'maps-flow-canvas__badges',
-  badge: 'maps-flow-canvas__badge'
+  badge: 'maps-flow-canvas__badge',
+  foldAlert: 'maps-flow-canvas__fold-alert'
 } as const
 
 /** A node kind as a class modifier, so the stylesheet can single one out. */
@@ -62,15 +69,45 @@ export function nodeKindClass(node: FNode): string {
 }
 
 export type NodeSelection = Selection<SVGGElement, FNode, SVGGElement, unknown>
-export type LinkSelection = Selection<SVGLineElement, FLink, SVGGElement, unknown>
+export type LinkSelection = Selection<SVGPathElement, FLink, SVGGElement, unknown>
+export type FrameSelection = Selection<SVGGElement, HostFrame, SVGGElement, unknown>
 
 /** What the stylesheet reads a host's halo from — see ``FlowCanvas``. */
 const HALO_COLOR_PROPERTY = '--maps-flow-canvas-halo'
 const HALO_WIDTH_PROPERTY = '--maps-flow-canvas-halo-width'
+const FOLD_ALERT_R = 9
+
 /** A site link carries no state of its own, so it takes the muted text colour. */
 const SITE_LINK_COLOR = 'var(--font-color-dimmed)'
+/** What the flow map is drawn on. */
+const CANVAS_COLOR = 'var(--ux-theme-1)'
 const GLYPH_COLOR = 'rgb(255 255 255 / 90%)'
 const MORE_GLYPH_COLOR = 'rgb(255 255 255 / 95%)'
+const FOLD_FILL = 'var(--ux-theme-3)'
+/** How much of its state colour a tree edge keeps, per theme; set in ``FlowCanvas``. */
+const ELBOW_STATE_SHARE = 'var(--maps-flow-canvas-elbow-share)'
+/** Smallest a highlighted host's name may draw on screen, in pixels. */
+const LABEL_MIN_SCREEN_PX = 11
+/** How far a highlighted host's name may grow against the zoom. */
+const LABEL_MAX_GROWTH = 3
+/** Below this zoom an ordinary name draws too small to read, and is left out. */
+const LABEL_HIDE_SCALE = 0.55
+/** A character's width in a label, relative to its font size. */
+const LABEL_CHAR_WIDTH = 0.6
+
+// Font size and letter spacing have to be styles: the theme's ``* { font-size:
+// inherit; letter-spacing: … }`` beats the SVG attributes.
+function px(size: number): string {
+  return `${size}px`
+}
+
+/** A fold's count in its ring: four characters fit at 10px, a fifth needs 9px. */
+function foldCountSize(count: number): string {
+  if (count > 9999) {
+    return '8px'
+  }
+  return count > 999 ? '9px' : '10px'
+}
 
 const SITE_WIDTH = 110
 const SITE_HEIGHT = 36
@@ -90,17 +127,37 @@ export interface NodeVisuals {
   ariaLabel: (node: FNode) => string
   /** What the label under a "+N more" stand-in reads, translated. */
   moreLabel: (count: number) => string
+  /** What the label under a folded group of hosts reads, translated. */
+  foldLabel: (node: FNode) => string
 }
 
 const isKind =
   (...kinds: FNode['nodeType'][]) =>
   (node: FNode): boolean =>
     kinds.includes(node.nodeType)
+const isHostShaped = (node: FNode): boolean => KIND_TRAITS[node.nodeType].hostShaped
 
 /** Builds the shape of each newly entered node, by kind. */
 export function drawNodes(enter: NodeSelection): void {
   drawSiteNode(enter.filter(isKind('site')))
-  drawHostNode(enter.filter(isKind('host')))
+  // A folded group looks like a host — it stands where its hosts would — and
+  // reads "+N" where a host reads "H".
+  drawHostNode(enter.filter(isHostShaped))
+  const folds = enter.filter(isKind('fold')).attr('aria-expanded', 'false')
+  // How many of the hosts a fold holds need attention, in a corner of it: the
+  // ring alone says so only in colour, and only to the eye that finds it.
+  const alert = folds
+    .append('g')
+    .attr('class', flowClass.foldAlert)
+    .attr('pointer-events', 'none')
+    .attr('transform', `translate(${NODE_R * 0.72},${-NODE_R * 0.72})`)
+  alert.append('circle').attr('r', FOLD_ALERT_R).style('stroke', CANVAS_COLOR)
+  alert
+    .append('text')
+    .attr('text-anchor', 'middle')
+    .attr('dominant-baseline', 'central')
+    .style('font-size', px(10))
+    .attr('font-weight', '700')
   drawServiceNode(enter.filter(isKind('service')))
   drawMoreNode(enter.filter(isKind('more')))
   // The command badges are appended last, so they sit over the node they
@@ -130,9 +187,9 @@ function drawSiteNode(enter: NodeSelection): void {
     .attr('class', flowClass.glyph)
     .attr('text-anchor', 'middle')
     .attr('dominant-baseline', 'central')
-    .attr('font-size', 9)
+    .style('font-size', px(9))
     .attr('font-weight', '600')
-    .attr('letter-spacing', '0.08em')
+    .style('letter-spacing', '0.08em')
     .attr('pointer-events', 'none')
     .attr('y', -8)
     .style('fill', 'var(--font-color-dimmed)')
@@ -142,7 +199,7 @@ function drawSiteNode(enter: NodeSelection): void {
     .attr('class', flowClass.label)
     .attr('text-anchor', 'middle')
     .attr('dominant-baseline', 'central')
-    .attr('font-size', 13)
+    .style('font-size', px(13))
     .attr('font-weight', '700')
     .attr('pointer-events', 'none')
     .attr('y', 6)
@@ -159,7 +216,7 @@ function drawHostNode(enter: NodeSelection): void {
     .attr('class', flowClass.glyph)
     .attr('text-anchor', 'middle')
     .attr('dominant-baseline', 'central')
-    .attr('font-size', 11)
+    .style('font-size', px(11))
     .attr('font-weight', '700')
     .attr('pointer-events', 'none')
     .style('fill', GLYPH_COLOR)
@@ -169,7 +226,6 @@ function drawHostNode(enter: NodeSelection): void {
     .attr('class', flowClass.label)
     .attr('text-anchor', 'middle')
     .attr('dominant-baseline', 'hanging')
-    .attr('font-size', 11)
     .attr('font-weight', '500')
     .attr('pointer-events', 'none')
     // Refined against the current zoom by ``refreshHostLabels``; the widest
@@ -185,19 +241,19 @@ function drawHostNode(enter: NodeSelection): void {
  */
 interface GlyphSpec {
   text: (node: FNode) => string
-  size: (node: FNode) => number
+  size: (node: FNode) => string
   color: string
 }
 
 const SERVICE_GLYPH: GlyphSpec = {
   text: () => 'S',
-  size: (node) => (svcR(node.svcTotalCount ?? 1) <= 7 ? 6 : 8),
+  size: (node) => (svcR(node.svcTotalCount ?? 1) <= 7 ? '6px' : '8px'),
   color: GLYPH_COLOR
 }
 
 const MORE_GLYPH: GlyphSpec = {
   text: (node) => `+${node.moreCount ?? 0}`,
-  size: (node) => (svcR(node.svcTotalCount ?? 1) <= 7 ? 7 : 9),
+  size: (node) => (svcR(node.svcTotalCount ?? 1) <= 7 ? '7px' : '9px'),
   color: MORE_GLYPH_COLOR
 }
 
@@ -224,7 +280,7 @@ function drawServiceLikeNode(enter: NodeSelection, glyph: GlyphSpec): void {
     .attr('class', flowClass.label)
     .attr('text-anchor', 'middle')
     .attr('dominant-baseline', 'hanging')
-    .attr('font-size', 9)
+    .style('font-size', 'var(--font-size-small)')
     .attr('font-weight', '400')
     .attr('pointer-events', 'none')
     .style('fill', 'var(--font-color)')
@@ -255,59 +311,117 @@ function refreshServiceLikeNodes(merge: NodeSelection): void {
   merge
     .filter(isKind('service'))
     .select(`text.${flowClass.glyph}`)
-    .attr('font-size', SERVICE_GLYPH.size)
+    .style('font-size', SERVICE_GLYPH.size)
     .text(SERVICE_GLYPH.text)
   merge
     .filter(isKind('more'))
     .select(`text.${flowClass.glyph}`)
-    .attr('font-size', MORE_GLYPH.size)
+    .style('font-size', MORE_GLYPH.size)
     .text(MORE_GLYPH.text)
 }
 
+interface LinkStyle {
+  opacity: number
+  width: number
+  dash: string | null
+}
+
+/** Everything about how an edge is drawn but its colour, which follows its source's state. */
+function linkStyle(link: FLink): LinkStyle {
+  if (isFromSite(link)) {
+    return { opacity: 0.55, width: 1, dash: '2,3' }
+  }
+  const opacity = link.elbow ? 1 : link.isServiceLink ? 0.3 : 0.45
+  // A host's further parents are dashed, as a second reporting line is on an
+  // org chart: they matter to whether it is reachable, but the tree is how
+  // it is read.
+  if (link.furtherParent) {
+    return { opacity, width: 1, dash: '6,4' }
+  }
+  return link.isServiceLink
+    ? { opacity, width: 1, dash: '3,3' }
+    : { opacity, width: 1.5, dash: null }
+}
+
 /**
- * How an edge is drawn. Everything but the colour is decided by what the edge
- * connects, which cannot change while the edge exists — the data join is keyed
- * on both ends — so it is written once here, on entry.
+ * Joins an edge to its path by its ends and its style, so an edge drawn
+ * differently after a push, as a further parent's say, gets a fresh path.
  */
+export function linkKey(link: FLink): string {
+  const { opacity, width, dash } = linkStyle(link)
+  return `${link.source.id}→${link.target.id} ${opacity} ${width} ${dash}`
+}
+
+/** How an edge is drawn but its colour, written once: ``linkKey`` joins on it. */
 export function drawLinks(enter: LinkSelection): void {
   enter
+    .attr('fill', 'none')
     .attr('class', (link) =>
       link.isServiceLink ? `${flowClass.link} ${flowClass.serviceLink}` : flowClass.link
     )
-    .attr('stroke-opacity', (link) => {
-      if (isFromSite(link)) {
-        return 0.55
+    .each(function (link) {
+      const { opacity, width, dash } = linkStyle(link)
+      this.setAttribute('stroke-opacity', String(opacity))
+      this.setAttribute('stroke-width', String(width))
+      if (dash !== null) {
+        this.setAttribute('stroke-dasharray', dash)
       }
-      return link.isServiceLink ? 0.3 : 0.45
-    })
-    .attr('stroke-width', (link) => {
-      if (isFromSite(link)) {
-        return 1
-      }
-      return link.isServiceLink ? 1 : 1.5
-    })
-    .attr('stroke-dasharray', (link) => {
-      if (isFromSite(link)) {
-        return '2,3'
-      }
-      return link.isServiceLink ? '3,3' : null
     })
 }
 
 /** The one thing about an edge that a topology push can have changed. */
 export function refreshLinks(merge: LinkSelection): void {
-  merge.style('stroke', (link) =>
-    isFromSite(link) ? SITE_LINK_COLOR : stateColorVar(link.source.state)
-  )
+  merge.style('stroke', (link) => {
+    if (isFromSite(link)) {
+      return SITE_LINK_COLOR
+    }
+    // A parent's tree edges overlap where they share a line; a translucent
+    // stroke would turn that line solid, so they are opaque and dimmed instead.
+    return link.elbow
+      ? `color-mix(in srgb, ${stateColorVar(link.source.state)} ${ELBOW_STATE_SHARE}, ${CANVAS_COLOR})`
+      : stateColorVar(link.source.state)
+  })
 }
 
 /** Writes everything a topology push can have changed about the nodes. */
 export function refreshNodes(merge: NodeSelection, visuals: NodeVisuals): void {
   // The accessible name follows the live state, so it is rewritten every time.
   merge.attr('aria-label', visuals.ariaLabel)
-  merge.select('circle').style('fill', (node) => stateColorVar(node.state))
-  merge.select(`text.${flowClass.label}`).text((node) => labelOf(node, visuals.moreLabel))
+  // A folded group holds hosts that need no urgent attention, so it is drawn
+  // quieter than the hosts around it rather than in their state colour.
+  merge
+    .select('circle')
+    .style('fill', (node) => (node.nodeType === 'fold' ? FOLD_FILL : stateColorVar(node.state)))
+  merge
+    .filter((node) => node.nodeType !== 'host')
+    .select(`text.${flowClass.label}`)
+    .text((node) => labelOf(node, visuals))
+  merge
+    .filter(isKind('host'))
+    .select<SVGTextElement>(`text.${flowClass.label}`)
+    .selectAll('tspan')
+    .data((node) => hostLabelLines(node.id))
+    .join('tspan')
+    .attr('x', 0)
+    .attr('dy', (_, index) => (index ? '1.2em' : null))
+    .text((line) => line)
   refreshServiceLikeNodes(merge)
+  const folds = merge.filter(isKind('fold'))
+  folds
+    .select(`text.${flowClass.glyph}`)
+    .style('font-size', (node) => foldCountSize(node.moreCount ?? 0))
+    .style('fill', 'var(--font-color)')
+    .text((node) => `+${node.moreCount ?? 0}`)
+  const alerts = folds.select<SVGGElement>(`g.${flowClass.foldAlert}`)
+  alerts.style('display', (node) => (unhandledIn(node.foldAttention) ? null : 'none'))
+  alerts.select('circle').style('fill', (node) => stateColorVar(node.state))
+  alerts
+    .select('text')
+    .style('fill', (node) => onStateColorVar(node.state))
+    .text((node) => {
+      const count = unhandledIn(node.foldAttention)
+      return count > 99 ? '99+' : String(count)
+    })
 
   const hosts = merge.filter(isKind('host'))
   hosts.each(function (node) {
@@ -326,7 +440,7 @@ export function refreshNodes(merge: NodeSelection, visuals: NodeVisuals): void {
       group.removeAttribute('filter')
     }
   })
-  refreshDonuts(hosts, visuals)
+  refreshDonuts(merge.filter(isHostShaped), visuals)
   refreshBadges(merge.filter(isKind('host', 'service')), visuals.badges)
 }
 
@@ -336,8 +450,9 @@ export function refreshNodes(merge: NodeSelection, visuals: NodeVisuals): void {
  * has just stopped qualifying.
  */
 function refreshDonuts(hosts: NodeSelection, visuals: NodeVisuals): void {
-  const arc = buildDonutArc(visuals.scale)
+  const hostArc = buildDonutArc(visuals.scale)
   hosts.each(function (node) {
+    const arc = node.nodeType === 'fold' ? foldArc : hostArc
     const arcs = donutPie(visuals.showsDonut(node) ? visuals.donutSegments(node) : [])
     const group = (this as SVGGElement).querySelector<SVGGElement>(`g.${flowClass.donut}`)
     if (!group || (arcs.length === 0 && group.childElementCount === 0)) {
@@ -393,7 +508,7 @@ function refreshBadges(merge: NodeSelection, badges: (node: FNode) => CmdMarker[
       .style('fill', (marker) => marker.fill)
     all
       .select('text')
-      .attr('font-size', badgeR * 1.3)
+      .style('font-size', px(badgeR * 1.3))
       .style('fill', (marker) => marker.fg)
       .text((marker) => marker.glyph)
     all.select('title').text((marker) => marker.title)
@@ -419,7 +534,7 @@ function badgeOffset(corner: CmdMarker['corner'], radius: number): [number, numb
 export function refreshDonutWidths(area: SVGSVGElement, scale: number): void {
   const arc = buildDonutArc(scale)
   select(area)
-    .selectAll<SVGPathElement, DonutArc>(`g.${flowClass.donut} path`)
+    .selectAll<SVGPathElement, DonutArc>(`g.${flowClass.node}--host g.${flowClass.donut} path`)
     .attr('d', (slice) => arc(slice) ?? '')
 }
 
@@ -429,9 +544,45 @@ export function refreshDonutWidths(area: SVGSVGElement, scale: number): void {
  * ring would otherwise overlap the name, and zoomed in the name would sit
  * needlessly far away.
  */
-export function refreshHostLabels(nodes: NodeSelection, scale: number): void {
-  const y = donutOuterRadius(scale) + 5
-  nodes.filter(isKind('host')).select(`text.${flowClass.label}`).attr('y', y)
+export function refreshHostLabels(
+  nodes: NodeSelection,
+  scale: number,
+  /** In a tree: which names stay readable, and how wide each may grow. */
+  tree?: { emphasised: (node: FNode) => boolean; room: (node: FNode) => number }
+): void {
+  const labels = nodes
+    .filter(isHostShaped)
+    .select<SVGTextElement>(`text.${flowClass.label}`)
+    .attr('y', donutOuterRadius(scale) + 5)
+  if (!tree) {
+    labels.style('font-size', null).style('display', null)
+    nodes.filter(isKind('fold')).select(`text.${flowClass.glyph}`).style('display', null)
+    return
+  }
+  // The hosts that need attention keep a readable name when the tree is fitted
+  // to screen. Every other name is left out by then: it could not be read, and
+  // it would only collide with the names that can.
+  const grown = Math.min(LABEL_MAX_GROWTH, Math.max(1, 1 / finiteOr(scale, 1)))
+  const size = (node: FNode, label: string): number => {
+    const chars =
+      node.nodeType === 'host'
+        ? Math.max(...hostLabelLines(node.id).map((line) => line.length))
+        : label.length
+    const fits = tree.room(node) / (chars * LABEL_CHAR_WIDTH)
+    return Math.max(LABEL_MIN_SCREEN_PX, Math.min(LABEL_MIN_SCREEN_PX * grown, fits))
+  }
+  labels
+    .style('font-size', function (node) {
+      return tree.emphasised(node) ? px(size(node, this.textContent ?? '')) : null
+    })
+    .style('display', (node) =>
+      tree.emphasised(node) || scale >= LABEL_HIDE_SCALE ? null : 'none'
+    )
+  // A fold's count is too small to read by then; the names that matter say it.
+  nodes
+    .filter(isKind('fold'))
+    .select(`text.${flowClass.glyph}`)
+    .style('display', () => (scale >= LABEL_HIDE_SCALE ? null : 'none'))
 }
 
 /**
@@ -451,12 +602,150 @@ export function positionNodes(nodes: NodeSelection, scale: number): void {
   })
 }
 
+/** Room around a host's centre that its frame leaves: the ring, and the label below. */
+const FRAME_PAD_SIDE = NODE_R * 3
+const FRAME_PAD_BOTTOM = NODE_R * 3 + 16
+/** How far an opened group's frame sits inside the site frame around it. */
+const FRAME_INSET = 12
+/**
+ * Binds the frames, behind the edges. A site's box sits on its frame's top
+ * edge, so the frame reads as the site's.
+ */
+export function drawFrames(layer: SVGGElement, frames: HostFrame[]): FrameSelection {
+  const groups = select(layer)
+    .selectAll<SVGGElement, HostFrame>(`g.${flowClass.frame}`)
+    .data(frames, (frame) => `${frame.head.id}|${frame.opened}`)
+  groups.exit().remove()
+  const entered = groups
+    .enter()
+    .append('g')
+    .attr('class', (frame) =>
+      frame.opened ? `${flowClass.frame} ${flowClass.frame}--opened` : flowClass.frame
+    )
+  entered.append('rect').attr('rx', 16)
+  return entered.merge(groups)
+}
+
+/** A fold-back badge: small enough to sit on its head's edge, a hit area around it big enough to aim at. */
+const FOLD_BACK_R = 9
+const FOLD_BACK_HIT_R = 12
+/** How far the badge grows against the zoom: no further than its head does. */
+const FOLD_BACK_MAX_SCALE = 1.5
+
+/**
+ * Binds a "−" badge on the head of each group the operator opened, which folds
+ * the group back. A tree's open state belongs to the parent, as in a mind map or
+ * a file tree: the badge sits on the head's edge where its children's edges
+ * leave, and is part of the head rather than a node of its own.
+ */
+export function drawFoldBacks(
+  layer: SVGGElement,
+  frames: HostFrame[],
+  foldBack: { label: (frame: HostFrame) => string; onFold: (frame: HostFrame) => void }
+): FrameSelection {
+  const badges = select(layer)
+    .selectAll<SVGGElement, HostFrame>(`g.${flowClass.foldBack}`)
+    .data(
+      frames.filter((frame) => frame.opened),
+      (frame) => frame.head.id
+    )
+  badges.exit().remove()
+  const entered = badges
+    .enter()
+    .append('g')
+    .attr('class', flowClass.foldBack)
+    .attr('role', 'button')
+    .attr('tabindex', 0)
+    .attr('aria-expanded', 'true')
+    .on('click', (event: MouseEvent, frame) => {
+      event.stopPropagation()
+      foldBack.onFold(frame)
+    })
+    .on('keydown', (event: KeyboardEvent, frame) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        foldBack.onFold(frame)
+      }
+    })
+  entered.append('title')
+  entered.append('circle').attr('class', `${flowClass.foldBack}-hit`).attr('r', FOLD_BACK_HIT_R)
+  entered.append('circle').attr('r', FOLD_BACK_R)
+  entered
+    .append('path')
+    .attr('d', `M${-FOLD_BACK_R / 2},0H${FOLD_BACK_R / 2}`)
+    .attr('pointer-events', 'none')
+  const all = entered.merge(badges)
+  all.attr('aria-label', foldBack.label)
+  all.select('title').text(foldBack.label)
+  return all
+}
+
+/** Puts each fold-back badge on the right edge of its head: a host's ring, or a site's box. */
+export function positionFoldBacks(badges: FrameSelection, scale: number): void {
+  const badgeScale = Math.min(FOLD_BACK_MAX_SCALE, siteScaleForZoom(scale))
+  const edge = (head: FNode): number =>
+    head.nodeType === 'site' ? (SITE_WIDTH / 2) * siteScaleForZoom(scale) : donutOuterRadius(scale)
+  badges.attr(
+    'transform',
+    ({ head }) =>
+      `translate(${finiteOr(head.x) + edge(head)},${finiteOr(head.y)}) scale(${badgeScale})`
+  )
+}
+
+/**
+ * Fits each frame around its head and members. Runs per frame, so it reads
+ * the positions as they are; a few hundred comparisons per frame.
+ */
+export function positionFrames(
+  frames: FrameSelection,
+  servicesByHost: ReadonlyMap<string, FNode[]>
+): void {
+  frames.each(function ({ head, members }) {
+    const inset = head.nodeType === 'site' ? 0 : FRAME_INSET
+    const top = finiteOr(head.y) - (head.nodeType === 'site' ? 0 : NODE_R + FRAME_INSET)
+    let left = finiteOr(head.x)
+    let right = left
+    let bottom = top
+    const include = (node: FNode, side: number, below: number): void => {
+      const x = finiteOr(node.x)
+      const y = finiteOr(node.y)
+      left = Math.min(left, x - side)
+      right = Math.max(right, x + side)
+      bottom = Math.max(bottom, y + below)
+    }
+    for (const member of head.nodeType === 'site' ? members : [head, ...members]) {
+      // Wide enough for the label, and for a grid's edges, which run beside it.
+      const side =
+        member.nodeType === 'host'
+          ? Math.max(FRAME_PAD_SIDE, hostColumnWidth(member.id) / 2 + 2 * FRAME_INSET)
+          : FRAME_PAD_SIDE
+      include(member, side - inset, FRAME_PAD_BOTTOM - inset)
+      for (const service of servicesByHost.get(member.id) ?? []) {
+        include(service, NODE_R * 2, NODE_R * 2)
+      }
+    }
+    const frame = select(this)
+    frame
+      .select('rect')
+      .attr('x', left)
+      .attr('y', top)
+      .attr('width', right - left)
+      .attr('height', bottom - top)
+  })
+}
+
 export function positionLinks(links: LinkSelection): void {
-  links
-    .attr('x1', (link) => finiteOr(link.source.x))
-    .attr('y1', (link) => finiteOr(link.source.y))
-    .attr('x2', (link) => finiteOr(link.target.x))
-    .attr('y2', (link) => finiteOr(link.target.y))
+  links.attr('d', (link) => {
+    const sx = finiteOr(link.source.x)
+    const sy = finiteOr(link.source.y)
+    const tx = finiteOr(link.target.x)
+    const ty = finiteOr(link.target.y)
+    if (!link.elbow) {
+      return `M${sx},${sy}L${tx},${ty}`
+    }
+    const { drop, aside, rise, reach } = link.elbow
+    return `M${sx},${sy}H${sx + drop - rise}V${ty + aside}H${tx - reach}V${ty}H${tx}`
+  })
 }
 
 /**
@@ -502,10 +791,12 @@ function isFromSite(link: FLink): boolean {
   return link.source.nodeType === 'site'
 }
 
-function labelOf(node: FNode, moreLabel: (count: number) => string): string {
+function labelOf(node: FNode, visuals: NodeVisuals): string {
   switch (node.nodeType) {
     case 'more':
-      return moreLabel(node.moreCount ?? 0)
+      return visuals.moreLabel(node.moreCount ?? 0)
+    case 'fold':
+      return visuals.foldLabel(node)
     case 'service':
       return serviceNameOf(node.id)
     case 'site':

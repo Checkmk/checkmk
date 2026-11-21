@@ -10,6 +10,7 @@ import type {
   FlowView,
   FolderTreeView,
   GeoView,
+  HostLayout,
   MapConfig,
   MapRead,
   RadarView
@@ -153,6 +154,9 @@ export function flowViewData(map: MapRead): Record<string, unknown> {
   if (view?.root) {
     data.root = view.root
   }
+  if (view) {
+    data.host_layout = view.host_layout
+  }
   for (const key of [
     'child_layers',
     'parent_layers',
@@ -165,6 +169,29 @@ export function flowViewData(map: MapRead): Record<string, unknown> {
     }
   }
   return data
+}
+
+function hostLayoutOf(value: unknown): HostLayout {
+  if (value === 'tree' || value === 'network') {
+    return value
+  }
+  throw new Error(`Not a host layout: ${String(value)}`)
+}
+
+/**
+ * A flow view from the form, with what the running map wrote into the stored
+ * one: its service layout, and where the operator put the hosts — unless the
+ * host layout changes, in which those places mean nothing.
+ */
+export function withStoredFlowFields(
+  view: Record<string, unknown>,
+  stored: FlowView | null
+): Record<string, unknown> {
+  return {
+    ...view,
+    service_layout: stored?.service_layout ?? null,
+    positions: stored && stored.host_layout === view.host_layout ? stored.positions : {}
+  }
 }
 
 /**
@@ -208,6 +235,7 @@ export function viewFromForm(
         top_affected_hosts: (flowView.top_affected_hosts as number | null | undefined) ?? null,
         max_services_per_host:
           (flowView.max_services_per_host as number | null | undefined) ?? null,
+        host_layout: hostLayoutOf(flowView.host_layout),
         problems_only: form.problems_only
       }
     case 'foldertree':

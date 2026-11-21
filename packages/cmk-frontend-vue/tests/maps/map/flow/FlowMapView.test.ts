@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { FakeResizeObserver, useFakeResizeObserver } from 'cmk-ui-library/vitest.resize-observer'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, ref } from 'vue'
+import { defineComponent, h, ref } from 'vue'
 
 import type { CommandVerb } from '@/maps/api/session'
 import FlowMapView from '@/maps/map/flow/FlowMapView.vue'
@@ -66,21 +66,25 @@ const baseProps = {
   canEdit: true,
   kiosk: false,
   preview: false,
-  checkmkUrl: null,
+  checkmkUrl: null as string | null,
   filterNeedle: ''
 }
 
-function openFlowMap(services: ReturnType<typeof fakeMapsServices>, config = baseProps.config) {
+function openFlowMap(
+  services: ReturnType<typeof fakeMapsServices>,
+  config = baseProps.config,
+  topology = sampleTopology()
+) {
   services.maps.currentMap.value = config
-  services.states.topology.value = sampleTopology()
+  services.states.topology.value = topology
   services.states.topologyReady.value = true
 }
 
-function renderWithTopology() {
+function renderWithTopology(topology = sampleTopology(), props = baseProps) {
   const services = fakeMapsServices()
-  openFlowMap(services)
+  openFlowMap(services, props.config, topology)
   const { global: provided } = provideServices(services)
-  return render(FlowMapView, { props: baseProps, global: { ...provided, stubs } })
+  return render(FlowMapView, { props, global: { ...provided, stubs } })
 }
 
 /** The same map, opened by an operator with the given command permissions. */
@@ -155,14 +159,266 @@ describe('FlowMapView', () => {
     unmount()
   })
 
-  it('draws parent-child links and site links as lines', async () => {
+  it('counts the service problems of a host down once, as the host down', async () => {
+    const topology = sampleTopology()
+    topology[2]!.services_summary = { ok: 0, warning: 0, critical: 1, unknown: 0, pending: 0 }
+    const { emitted, unmount } = renderWithTopology(topology)
+    await waitForNodes()
+
+    expect(emitted('update:problems')!.at(-1)).toEqual([
+      { down: 1, unreachable: 0, critical: 1, warning: 0, unknown: 0, hostsWithProblems: 1 }
+    ])
+
+    unmount()
+  })
+
+  it('draws the parent tree as links, from the site to the top of its tree', async () => {
     const { container, unmount } = renderWithTopology()
     await waitForNodes()
 
-    // 2 parent→child links (core→web-01, core→db-01) + 1 site→root link.
-    expect(container.querySelectorAll('line.maps-flow-canvas__link')).toHaveLength(3)
+    // site→core, core→web-01 and core→db-01.
+    expect(container.querySelectorAll('path.maps-flow-canvas__link')).toHaveLength(3)
 
     unmount()
+  })
+
+  describe('a group of hosts folded under their parent', () => {
+    // More children than a parent shows before folding them; three carry a
+    // warning, which opens nothing on its own.
+    const wideTopology = (): TopologyNode[] => [
+      aTopologyNode({ name: 'core', state: 'UP' }),
+      ...Array.from({ length: 30 }, (_, i) =>
+        aTopologyNode({
+          name: `host-${String(i).padStart(2, '0')}`,
+          parents: ['core'],
+          state: 'UP',
+          services_summary: { ok: 1, warning: i < 3 ? 1 : 0, critical: 0, unknown: 0, pending: 0 },
+          unhandled_service_problems: i < 3 ? 1 : 0
+        })
+      )
+    ]
+
+    async function openTheFold() {
+      const user = userEvent.setup()
+      const view = renderWithTopology(wideTopology())
+      await waitForNodes()
+      screen.getByRole('button', { name: /^30 hosts below core/ }).focus()
+      await user.keyboard('{Enter}')
+      return { user, view }
+    }
+
+    it('opens to all the hosts it holds, those with problems first', async () => {
+      const { view } = await openTheFold()
+
+      await waitFor(() =>
+        expect(screen.getByText('Showing 30 hosts below core')).toBeInTheDocument()
+      )
+      expect(screen.getByRole('button', { name: /^host-03,/ })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /^\d+ hosts below core/ })).toBeNull()
+      view.unmount()
+    })
+
+    it('names on hover the hosts it holds that need attention, and why', async () => {
+      const view = renderWithTopology(wideTopology())
+      await waitForNodes()
+      const fold = screen.getByRole('button', { name: /^30 hosts below core/ })
+
+      await fireEvent.mouseEnter(fold)
+
+      expect(await screen.findByText('Unhandled problems')).toBeInTheDocument()
+      expect(screen.getByText('Hosts below core')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'host-00, WARN services' })).toBeInTheDocument()
+      expect(fold.querySelector('title')).toBeNull()
+      view.unmount()
+    })
+
+    it('links the counts on a site card and a group card into Checkmk views', async () => {
+      const view = renderWithTopology(wideTopology(), {
+        ...baseProps,
+        checkmkUrl: 'http://h/SITE/check_mk/'
+      })
+      await waitForNodes()
+      const viewLinks = async (): Promise<string[]> => {
+        const card = (await screen.findByText(/^(Site|Hosts below core)$/)).closest(
+          '.maps-hover-card'
+        )!
+        // The view's own query sits encoded in the start_url of the link.
+        return [...card.querySelectorAll('a[href]')].map((link) =>
+          decodeURIComponent(decodeURIComponent(link.getAttribute('href')!))
+        )
+      }
+
+      await fireEvent.mouseEnter(view.container.querySelector('g.maps-flow-canvas__node--site')!)
+      const siteLinks = await viewLinks()
+      await fireEvent.mouseLeave(view.container.querySelector('g.maps-flow-canvas__node--site')!)
+      await waitFor(() => expect(screen.queryByText('Site')).toBeNull())
+      await fireEvent.mouseEnter(screen.getByRole('button', { name: /^30 hosts below core/ }))
+      const groupLinks = await viewLinks()
+
+      expect(siteLinks).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('_active=hoststate;site'),
+          expect.stringContaining('_active=svcstate;site')
+        ])
+      )
+      expect(groupLinks).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('_active=hoststate;hostregex'),
+          expect.stringContaining('host_regex=^(host-00|')
+        ])
+      )
+      view.unmount()
+    })
+
+    it('counts on hover the hosts of a site and their services', async () => {
+      const view = renderWithTopology(wideTopology())
+      await waitForNodes()
+
+      const site = view.container.querySelector('g.maps-flow-canvas__node--site')!
+
+      await fireEvent.mouseEnter(site)
+
+      const card = (await screen.findByText('Site')).closest('.maps-hover-card')!
+      expect(card).toHaveTextContent('UP: 31')
+      expect(card).toHaveTextContent('WARN: 3')
+      expect(site.querySelector('title')).toBeNull()
+      view.unmount()
+    })
+
+    it('names the hosts a site gathers by the site they are below', async () => {
+      const view = renderWithTopology([
+        ...wideTopology(),
+        ...Array.from({ length: 10 }, (_, i) => aTopologyNode({ name: `top-${i}`, state: 'UP' }))
+      ])
+      await waitForNodes()
+
+      expect(screen.getByRole('button', { name: /^\d+ hosts below site / })).toBeInTheDocument()
+      view.unmount()
+    })
+
+    it('keeps its card open while the pointer moves onto it', async () => {
+      const view = renderWithTopology(wideTopology())
+      await waitForNodes()
+      const fold = screen.getByRole('button', { name: /^30 hosts below core/ })
+      await fireEvent.mouseEnter(fold)
+      const card = (await screen.findByText('Unhandled problems')).closest('.maps-hover-card')!
+
+      await fireEvent.mouseLeave(fold)
+      await fireEvent.mouseEnter(card)
+      await new Promise((resolve) => setTimeout(resolve, 400))
+
+      expect(screen.getByText('Unhandled problems')).toBeInTheDocument()
+      await fireEvent.mouseLeave(card)
+      await waitFor(() => expect(screen.queryByText('Unhandled problems')).toBeNull())
+      view.unmount()
+    })
+
+    it('opens the slide-in of a host its card names', async () => {
+      const view = renderWithTopology(wideTopology())
+      await waitForNodes()
+      await fireEvent.mouseEnter(screen.getByRole('button', { name: /^30 hosts below core/ }))
+
+      await fireEvent.click(await screen.findByRole('button', { name: 'host-00, WARN services' }))
+
+      await waitFor(() =>
+        expect(view.emitted('drawer-object')?.at(-1)).toEqual([
+          expect.objectContaining({ type: 'host', host_name: 'host-00' })
+        ])
+      )
+      expect(screen.queryByText('Unhandled problems')).toBeNull()
+      view.unmount()
+    })
+
+    it('draws a host its card names on the map when it is picked', async () => {
+      const view = renderWithTopology(wideTopology())
+      await waitForNodes()
+      await fireEvent.mouseEnter(screen.getByRole('button', { name: /^30 hosts below core/ }))
+
+      await fireEvent.click(await screen.findByRole('button', { name: 'host-00, WARN services' }))
+
+      expect(await screen.findByRole('button', { name: /^host-00,/ })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /^29 hosts below core/ })).toBeInTheDocument()
+      view.unmount()
+    })
+
+    it('returns the view to where it was once the picked host is closed', async () => {
+      const services = fakeMapsServices()
+      openFlowMap(services, baseProps.config, wideTopology())
+      const { global: provided } = provideServices(services)
+      const closableDrawer = defineComponent({
+        emits: ['close'],
+        setup:
+          (_, { emit }) =>
+          () =>
+            h('button', { onClick: () => emit('close') }, 'Close')
+      })
+      const view = render(FlowMapView, {
+        props: baseProps,
+        global: { ...provided, stubs: { ...stubs, DetailDrawer: closableDrawer } }
+      })
+      await waitForNodes()
+      const layer = view.container.querySelector('g.maps-flow-canvas__zoom-layer')!
+      await waitFor(() => expect(layer.getAttribute('transform')).toBeTruthy())
+      await new Promise((resolve) => setTimeout(resolve, 600))
+      const before = layer.getAttribute('transform')
+      await fireEvent.mouseEnter(screen.getByRole('button', { name: /^30 hosts below core/ }))
+      await fireEvent.click(await screen.findByRole('button', { name: 'host-00, WARN services' }))
+      await waitFor(() => expect(layer.getAttribute('transform')).not.toBe(before))
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+
+      await waitFor(() => expect(layer.getAttribute('transform')).toBe(before), { timeout: 3000 })
+      view.unmount()
+    })
+
+    it('returns the view to where it was once the search is cleared', async () => {
+      const view = renderWithTopology(wideTopology())
+      await waitForNodes()
+      const layer = view.container.querySelector('g.maps-flow-canvas__zoom-layer')!
+      await waitFor(() => expect(layer.getAttribute('transform')).toBeTruthy())
+      await new Promise((resolve) => setTimeout(resolve, 600))
+      const before = layer.getAttribute('transform')
+      await view.rerender({ filterNeedle: 'host-17' })
+      await waitFor(() => expect(layer.getAttribute('transform')).not.toBe(before), {
+        timeout: 3000
+      })
+
+      await view.rerender({ filterNeedle: '' })
+
+      await waitFor(() => expect(layer.getAttribute('transform')).toBe(before), { timeout: 3000 })
+      view.unmount()
+    })
+
+    it('hands keyboard focus to the button that folds the group back', async () => {
+      const { view } = await openTheFold()
+
+      await waitFor(() =>
+        expect(document.activeElement).toBe(
+          screen.getByRole('button', { name: 'Collapse the hosts below core' })
+        )
+      )
+      view.unmount()
+    })
+
+    it('folds the group back and returns focus to the fold', async () => {
+      const { user, view } = await openTheFold()
+      await waitFor(() =>
+        expect(document.activeElement).toBe(
+          screen.getByRole('button', { name: 'Collapse the hosts below core' })
+        )
+      )
+
+      await user.keyboard('{Enter}')
+
+      await waitFor(() =>
+        expect(screen.getByText('Collapsed the hosts below core')).toBeInTheDocument()
+      )
+      expect(screen.queryByRole('button', { name: /^host-00,/ })).toBeNull()
+      expect(document.activeElement).toBe(
+        screen.getByRole('button', { name: /^30 hosts below core/ })
+      )
+      view.unmount()
+    })
   })
 
   it('renders donut ring segments from the services_summary in donut layout', async () => {

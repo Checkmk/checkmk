@@ -295,8 +295,8 @@ def map_metadata_spec(
 _TOPOLOGY = MapsDictGroup(
     title=Title("Hosts & Layer"),
     help_text=Help(
-        "Which slice of the host graph this Flow map renders, and how "
-        "many service rows are drawn per host."
+        "Which hosts this flow map shows, how they are arranged, and how "
+        "many services are drawn per host."
     ),
 )
 
@@ -311,6 +311,25 @@ def flow_view_spec() -> Dictionary:
     return Dictionary(
         title=Title("Hosts & Layer"),
         elements={
+            "host_layout": DictElement(
+                required=True,
+                group=_TOPOLOGY,
+                parameter_form=SingleChoice(
+                    title=Title("Host layout"),
+                    help_text=Help(
+                        "How the hosts are arranged. Tree runs from each site to "
+                        "the right, shows hosts with problems first and collapses "
+                        "large groups into one node. Network draws every host, "
+                        "placed by its links to its parents, as OrbVis did. A map "
+                        "without parent relations looks the same in both."
+                    ),
+                    elements=[
+                        SingleChoiceElement(name="tree", title=Title("Tree")),
+                        SingleChoiceElement(name="network", title=Title("Network")),
+                    ],
+                    prefill=DefaultValue("tree"),
+                ),
+            ),
             "root": DictElement(
                 group=_TOPOLOGY,
                 parameter_form=String(

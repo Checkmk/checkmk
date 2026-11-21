@@ -524,6 +524,12 @@ class MapFlowView:
     service_layout: Literal["off", "donut", "fan", "orbit", "row"] | None | ApiOmitted = api_field(
         description="Service-node layout.", example="donut", default_factory=ApiOmitted
     )
+    host_layout: Literal["tree", "network"] | ApiOmitted = api_field(
+        description="How a parent hierarchy is drawn: a collapsible tree, or a network of "
+        "every host.",
+        example="tree",
+        default_factory=ApiOmitted,
+    )
     problems_only: bool | ApiOmitted = api_field(
         description="Show only objects with problems.", example=False, default_factory=ApiOmitted
     )

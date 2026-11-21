@@ -18,17 +18,17 @@
  */
 import type usei18n from 'cmk-ui-library/lib/i18n'
 
-import { type DonutSegment, HEALTHY_HOST_STATES } from '@/maps/map/flow/geometry'
+import {
+  type DonutSegment,
+  HEALTHY_HOST_STATES,
+  summarizeHosts,
+  worstServiceState as worstServiceStateOf
+} from '@/maps/map/flow/geometry'
 import { serviceNameOf } from '@/maps/map/flow/nodeIds'
 import type { CmdMarker, FNode } from '@/maps/map/flow/nodes'
-import type { MapElement, ObjectState, ServicesSummary, TopologyNode } from '@/maps/types/api'
+import type { MapElement, ObjectState, TopologyNode } from '@/maps/types/api'
 import { newObjectState } from '@/maps/utils/model'
-import {
-  ACKNOWLEDGED_COLOR,
-  DOWNTIME_COLOR,
-  stateColorVar,
-  stateRank
-} from '@/maps/utils/stateColors'
+import { ACKNOWLEDGED_COLOR, DOWNTIME_COLOR, stateColorVar } from '@/maps/utils/stateColors'
 
 /**
  * The ``_t`` a component hands to a helper. Gettext extraction only sees literal
@@ -51,17 +51,7 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
   const { nodes, connectionId, worstHostIds } = options
 
   function worstServiceState(d: FNode): string | null {
-    const s = d.topo?.services_summary
-    if (!s) {
-      return null
-    }
-    const problems: [string, number][] = [
-      ['CRITICAL', s.critical],
-      ['WARNING', s.warning],
-      ['UNKNOWN', s.unknown]
-    ]
-    const present = problems.filter(([, count]) => count > 0).map(([state]) => state)
-    return present.sort((a, b) => stateRank(b) - stateRank(a))[0] ?? null
+    return worstServiceStateOf(d.topo?.services_summary)
   }
 
   function hostHalo(d: FNode): { stroke: string; width: number } {
@@ -167,45 +157,14 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
     } as MapElement
   }
 
-  function siteHostsAggregate(siteId: string): {
-    hostCount: number
-    hosts: ServicesSummary
-    summary: ServicesSummary
-  } {
-    let hostCount = 0
-    // Host states in a group's service slots, as the daemon counts them.
-    const hosts = { ok: 0, warning: 0, critical: 0, unknown: 0, pending: 0 }
-    const summary = { ok: 0, warning: 0, critical: 0, unknown: 0, pending: 0 }
-    for (const n of nodes()) {
-      const sid = n.site_id || connectionId()
-      if (sid !== siteId) {
-        continue
-      }
-      hostCount++
-      if (n.state === 'UP') {
-        hosts.ok++
-      } else if (n.state === 'DOWN') {
-        hosts.critical++
-      } else if (n.state === 'UNREACHABLE') {
-        hosts.unknown++
-      } else if (n.state === 'PENDING') {
-        hosts.pending++
-      }
-      const s = n.services_summary
-      if (s) {
-        summary.ok += s.ok
-        summary.warning += s.warning
-        summary.critical += s.critical
-        summary.unknown += s.unknown
-        summary.pending += s.pending
-      }
-    }
-    return { hostCount, hosts, summary }
+  /** A site's hosts and their services by state. */
+  function siteSummary(siteId: string): ReturnType<typeof summarizeHosts> {
+    return summarizeHosts(nodes().filter((n) => (n.site_id || connectionId()) === siteId))
   }
 
   function objectStateFromFNode(d: FNode): ObjectState {
     if (d.nodeType === 'site') {
-      const { hostCount, hosts, summary } = siteHostsAggregate(d.siteId ?? '')
+      const { hostCount, hosts, services: summary } = siteSummary(d.siteId ?? '')
       // Site state aggregation rules:
       // - DOWN: every host on this site is DOWN/UNREACHABLE (site itself is offline)
       // - CRITICAL: at least one host is DOWN/UNREACHABLE OR has critical services
@@ -308,6 +267,7 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
     donutSegments,
     mapElementFromFNode,
     objectStateFromFNode,
+    siteSummary,
     hostStateByName
   }
 }

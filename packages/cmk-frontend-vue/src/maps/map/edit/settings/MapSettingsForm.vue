@@ -26,6 +26,7 @@ import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import FormEdit from '@/form/FormEdit.vue'
@@ -48,7 +49,8 @@ import {
   metadataFormData,
   metadataOverridesFrom,
   previewPatch,
-  viewFromForm
+  viewFromForm,
+  withStoredFlowFields
 } from '@/maps/map/edit/settings/settingsForm'
 import { useMapAccess } from '@/maps/map/edit/settings/useMapAccess'
 import { useSettingsPreview } from '@/maps/map/edit/settings/useSettingsPreview'
@@ -56,7 +58,7 @@ import { useStagedBackgroundImage } from '@/maps/map/edit/settings/useStagedBack
 import { useMaps, useMapsApis, useNavigation, useToast } from '@/maps/services/context'
 import MapsConfirmDialog from '@/maps/shared/components/MapsConfirmDialog.vue'
 import MapsUnsavedChangesDialog from '@/maps/shared/components/MapsUnsavedChangesDialog.vue'
-import { isConflict } from '@/maps/shared/errorText'
+import { errorText, isConflict } from '@/maps/shared/errorText'
 import type { MapRead, MapView } from '@/maps/types/api'
 import { asFormSpecSchema } from '@/maps/utils/formSpec'
 import { describeFieldProblems, toFormValidation } from '@/maps/utils/formValidation'
@@ -167,10 +169,43 @@ function togglePreview(): void {
 // from matching the parent map's zoom.
 const viewEdited = ref(false)
 
+// The preview takes the flow fields as they are stored: a choice in the form
+// carries an id only the form spec on the server maps back to its value, so
+// they are parsed there, while the preview is on show.
+const flowViewPreview = ref<Record<string, unknown>>(flowViewData(props.map))
+let flowViewParse = 0
+// Said once until a parse succeeds: each edit would otherwise stack another toast.
+let previewFailed = false
+const parseFlowViewForPreview = useDebounceFn(() => {
+  const parse = ++flowViewParse
+  void formSchemas
+    .parse('flow_view', flowViewFormSpecData.value)
+    .then((result) => {
+      if (parse === flowViewParse && !result.validation) {
+        previewFailed = false
+        flowViewPreview.value = result.data
+      }
+    })
+    .catch((e: unknown) => {
+      if (parse === flowViewParse && !previewFailed) {
+        previewFailed = true
+        toast.error(errorText(e, _t('Could not update the preview')))
+      }
+    })
+}, 300)
+watch(
+  [flowViewFormSpecData, showPreview],
+  () => {
+    if (mapType.value === 'flow' && showPreview.value) {
+      parseFlowViewForPreview()
+    }
+  },
+  { deep: true }
+)
+
 const preview = useSettingsPreview({
   mapName: () => props.map.name,
-  patch: () =>
-    previewPatch(form.value, formSpecData.value, flowViewFormSpecData.value, props.map.alias),
+  patch: () => previewPatch(form.value, formSpecData.value, flowViewPreview.value, props.map.alias),
   backgroundImage: () =>
     background.removed.value
       ? null
@@ -180,7 +215,7 @@ const preview = useSettingsPreview({
   isGeoMap: () => mapType.value === 'geo'
 })
 
-watch([form, formSpecData, flowViewFormSpecData], preview.schedule, { deep: true })
+watch([form, formSpecData, flowViewPreview], preview.schedule, { deep: true })
 watch([background.previewUrl, background.removed], preview.postBackground)
 
 watch(
@@ -340,8 +375,7 @@ async function viewToSave(flowValues: Record<string, unknown>): Promise<Record<s
     return view
   }
   const fresh = await mapsStore.getMap(props.map.name)
-  const flow = fresh.view?.type === 'flow' ? fresh.view : null
-  return { ...view, service_layout: flow?.service_layout ?? null, positions: flow?.positions ?? {} }
+  return withStoredFlowFields(view, fresh.view?.type === 'flow' ? fresh.view : null)
 }
 
 /**
@@ -568,7 +602,11 @@ onMounted(async () => {
   initialSnapshot.value = baseline()
 })
 
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  // A parse still under way answers a dialog no longer there.
+  flowViewParse++
+})
 </script>
 
 <template>

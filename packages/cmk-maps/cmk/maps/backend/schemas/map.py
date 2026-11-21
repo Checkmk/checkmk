@@ -207,6 +207,9 @@ class FlowView(BaseModel):
     positions: dict[str, FlowNodePosition] = Field(default={}, max_length=FLOW_POSITIONS_MAX)
     # Service-node layout chosen by the operator. None = use UI default.
     service_layout: Literal["off", "donut", "fan", "orbit", "row"] | None = None
+    # How a parent hierarchy is drawn: a tree that collapses large groups, or a
+    # network of every host placed by its links, as OrbVis drew it.
+    host_layout: Literal["tree", "network"] = "tree"
     problems_only: bool = False
 
 

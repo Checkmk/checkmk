@@ -50,6 +50,7 @@ export type LinePerfdataLabel = Daemon['MapElement']['line_perfdata_label']
 export type MonitoredObjectType = NonNullable<Daemon['MapElement']['line_object_type']>
 
 export type ServiceLayout = NonNullable<Daemon['FlowView']['service_layout']>
+export type HostLayout = Daemon['FlowView']['host_layout']
 
 // The views a map can carry. The daemon holds the map in the shape the SPA edits
 // it in, so these come from its schema, not from the REST API's nested one.

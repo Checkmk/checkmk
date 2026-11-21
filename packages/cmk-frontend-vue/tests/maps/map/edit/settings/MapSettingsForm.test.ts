@@ -151,7 +151,9 @@ function renderModal(map: MapRead = makeMap()) {
       ...provided,
       stubs: {
         MapsConfirmDialog: confirmDialogStub,
-        MapsUnsavedChangesDialog: unsavedChangesDialogStub
+        MapsUnsavedChangesDialog: unsavedChangesDialogStub,
+        // The preview draws a whole map; what feeds it is observed here.
+        MapSettingsPreview: true
       }
     }
   })
@@ -196,6 +198,24 @@ describe('MapSettingsForm – rendering', () => {
     await renderReady()
     expect(footerButton('Close')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+  })
+})
+
+describe('MapSettingsForm – preview', () => {
+  it('says so when the flow settings cannot be shown in the preview', async () => {
+    vi.mocked(services.apis.formSchemas.parse).mockRejectedValue(new Error('Server unreachable'))
+    const user = userEvent.setup()
+    // A flow map has its view's form besides the map's own.
+    renderModal(makeMap({ view_type: 'flow', view: newMapView('flow') }))
+    await screen.findAllByRole('button', { name: 'stub-edit-alias' })
+
+    await user.click(footerButton('Show preview'))
+
+    await waitFor(() =>
+      expect(services.toasts.toasts.value).toMatchObject([
+        { type: 'error', message: 'Server unreachable' }
+      ])
+    )
   })
 })
 

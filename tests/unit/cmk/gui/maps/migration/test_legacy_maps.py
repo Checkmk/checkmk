@@ -352,6 +352,14 @@ def test_weathermap_line_style_is_split_up(admin: UserId) -> None:
     assert obj["line_weather_color"] is True
 
 
+def test_a_flow_map_keeps_its_network_layout(admin: UserId) -> None:
+    map_spec = _complete_map(view={"type": "flow", "positions": {}})
+
+    view = _view(_migrated(admin, "flow", map_spec).config.map_spec)
+
+    assert view["host_layout"] == "network"
+
+
 _DYNGROUP = {"type": "dyngroup", "object_filter": "Filter: name ~ ^web\n"}
 
 

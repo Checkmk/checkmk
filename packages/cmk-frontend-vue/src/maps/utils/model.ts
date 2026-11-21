@@ -157,7 +157,7 @@ export function newMapView(mapType: string): MapView {
     case 'radar':
       return { type: 'radar', filter: 'hostgroup', filter_value: '', problems_only: false }
     case 'flow':
-      return { type: 'flow', positions: {}, problems_only: false }
+      return { type: 'flow', positions: {}, host_layout: 'tree', problems_only: false }
     case 'foldertree':
       return {
         type: 'foldertree',

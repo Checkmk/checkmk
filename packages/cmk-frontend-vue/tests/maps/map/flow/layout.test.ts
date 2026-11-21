@@ -9,16 +9,21 @@ import {
   type LayoutNode,
   type PinnableNode,
   bfsLevels,
+  elbowsOf,
+  freeCellBeside,
+  hostColumnWidth,
+  hostLabelLines,
   layoutR,
   needsServices,
   placeServiceNodes,
-  preLayoutHosts,
   preLayoutHostsBelowSite,
   rankBySeverity,
   rowColumns,
   rowSpacingFallback,
-  siteScaleForZoom
+  siteScaleForZoom,
+  treeLayout
 } from '@/maps/map/flow/layout'
+import { foldNodeId } from '@/maps/map/flow/nodeIds'
 import type { TopologyNode } from '@/maps/types/api'
 
 function topo(name: string, state = 'UP', parents: string[] = []): TopologyNode {
@@ -47,28 +52,178 @@ describe('rankBySeverity', () => {
   })
 })
 
-describe('preLayoutHosts', () => {
-  it('places the worst host nearest the center of the spiral', () => {
-    const hosts = [host('healthy-1'), host('healthy-2'), host('crit', 'DOWN')]
-    preLayoutHosts(hosts)
-    const dist = (h: LayoutNode) => Math.hypot(h.x ?? 0, h.y ?? 0)
-    const crit = hosts.find((h) => h.id === 'crit')!
-    for (const h of hosts) {
-      if (h !== crit) {
-        expect(dist(crit)).toBeLessThan(dist(h))
-      }
+describe('treeLayout', () => {
+  const children = new Map([
+    ['core', ['sw-a', 'sw-b']],
+    ['sw-a', ['a1', 'a2']],
+    ['sw-b', ['b1']]
+  ])
+  const layout = (
+    rootGroups: string[][],
+    childrenOf: ReadonlyMap<string, readonly string[]>,
+    hosts: string[] = []
+  ) =>
+    treeLayout({
+      rootGroups,
+      childrenOf,
+      hosts,
+      footprint: (id) => ({ width: hostColumnWidth(id), height: 56 })
+    })
+
+  it('starts each subtree below its siblings, a parent beside its first child', () => {
+    const { at } = layout([['core']], children)
+    const y = (id: string) => at.get(id)!.y
+    expect(y('a1')).toBeLessThan(y('a2'))
+    expect(y('a2')).toBeLessThan(y('b1'))
+    expect(at.get('sw-a')!.x).toBeLessThan(at.get('a1')!.x)
+    expect(y('core')).toBe(y('sw-a'))
+    expect(y('sw-a')).toBe(y('a1'))
+  })
+
+  it('keeps a parent where it is when more of its children are drawn', () => {
+    const few = layout([['core']], new Map([['core', ['c-0', 'c-1']]]))
+    const many = layout(
+      [['core']],
+      new Map([['core', Array.from({ length: 30 }, (_, i) => `c-${i}`)]])
+    )
+    expect(many.at.get('core')).toEqual(few.at.get('core'))
+  })
+
+  it("wraps a site's many top hosts into columns, below its trees", () => {
+    const lone = Array.from({ length: 100 }, (_, i) => `lone-${i}`)
+    const { at } = layout([['core', ...lone]], children)
+    const columns = new Set(lone.map((id) => at.get(id)!.x))
+    expect(columns.size).toBeGreaterThan(1)
+    expect(Math.min(...lone.map((id) => at.get(id)!.y))).toBeGreaterThan(at.get('b1')!.y)
+  })
+
+  it('leaves each column room for its widest label', () => {
+    const wide = new Map([['core', ['a-host-with-a-long-name']]])
+    const hosts = ['core', 'a-host-with-a-long-name']
+    const { at } = layout([['core']], wide, hosts)
+    expect(at.get('a-host-with-a-long-name')!.x - at.get('core')!.x).toBeGreaterThan(
+      hostColumnWidth('a-host-with-a-long-name')
+    )
+  })
+
+  it('wraps many leaves under one parent into a grid wider than tall', () => {
+    const leaves = Array.from({ length: 100 }, (_, i) => `leaf-${String(i).padStart(3, '0')}`)
+    const { at } = layout([['core']], new Map([['core', leaves]]))
+    const xs = leaves.map((leaf) => at.get(leaf)!.x)
+    const ys = leaves.map((leaf) => at.get(leaf)!.y)
+    expect(new Set(xs).size).toBeGreaterThan(1)
+    expect(Math.max(...ys) - Math.min(...ys)).toBeLessThan(100 * 56)
+  })
+
+  it('fills a grid row by row, its columns closer than the levels of the tree', () => {
+    const leaves = Array.from({ length: 30 }, (_, i) => `leaf-${String(i).padStart(2, '0')}`)
+    const { at } = layout([['core']], new Map([['core', leaves]]))
+    const first = at.get('leaf-00')!
+    const second = at.get('leaf-01')!
+    expect(second.y).toBe(first.y)
+    expect(second.x - first.x).toBeLessThan(first.x - at.get('core')!.x)
+  })
+
+  it('starts a grid that comes first a row below its parent', () => {
+    const leaves = Array.from({ length: 30 }, (_, i) => `leaf-${String(i).padStart(2, '0')}`)
+    const { at } = layout([['core']], new Map([['core', leaves]]))
+    expect(at.get('leaf-00')!.y - at.get('core')!.y).toBeGreaterThanOrEqual(56)
+  })
+
+  it('wraps many hosts that hold only a fold into a grid, each fold beside its host', () => {
+    const hosts = Array.from({ length: 30 }, (_, i) => `sw-${String(i).padStart(2, '0')}`)
+    const childrenOf = new Map([
+      ['core', hosts],
+      ...hosts.map((id): [string, string[]] => [id, [foldNodeId(id)]])
+    ])
+    const { at, reach } = layout([['core']], childrenOf)
+    const [first, second] = [at.get('sw-00')!, at.get('sw-01')!]
+    const fold = at.get(foldNodeId('sw-00'))!
+    expect([second.y, fold.y]).toEqual([first.y, first.y])
+    expect(first.x < fold.x && fold.x < second.x).toBe(true)
+    // The edge to the second comes down between the first's fold and its own name.
+    const down = second.x - reach.get('sw-01')!
+    expect(down).toBeGreaterThan(fold.x + hostColumnWidth(foldNodeId('sw-00')) / 2)
+    expect(down).toBeLessThan(second.x - hostColumnWidth('sw-01') / 2)
+  })
+
+  it('keeps a host opened in a grid in its column, its hosts below its row', () => {
+    const hosts = Array.from({ length: 30 }, (_, i) => `sw-${String(i).padStart(2, '0')}`)
+    const holding = (open: boolean) =>
+      new Map([
+        ['core', hosts],
+        ...hosts.map((id): [string, string[]] => [
+          id,
+          open && id === 'sw-04' ? ['srv-1', 'srv-2'] : [foldNodeId(id)]
+        ])
+      ])
+    const before = layout([['core']], holding(false)).at
+    const { at } = treeLayout({
+      rootGroups: [['core']],
+      childrenOf: holding(true),
+      hosts: [],
+      opened: new Set(['sw-04']),
+      footprint: (id) => ({ width: hostColumnWidth(id), height: 56 })
+    })
+    expect(at.get('sw-04')!.x).toBe(before.get('sw-04')!.x)
+    expect(at.get('sw-04')!.y).toBeGreaterThan(before.get('sw-04')!.y)
+    expect(at.get('sw-05')).toEqual(before.get('sw-05'))
+    expect(at.get('srv-2')!.y).toBeLessThan(at.get('sw-06')!.y)
+  })
+
+  it('puts a grid where its first leaf comes among the subtrees', () => {
+    const leaves = Array.from({ length: 20 }, (_, i) => `leaf-${String(i).padStart(2, '0')}`)
+    const { at } = layout(
+      [['core']],
+      new Map([
+        ['core', ['sw-a', 'leaf-00', 'sw-b', ...leaves.slice(1)]],
+        ['sw-a', ['a1']],
+        ['sw-b', ['b1']]
+      ])
+    )
+    expect(at.get('sw-a')!.y).toBeLessThan(at.get('leaf-00')!.y)
+    expect(at.get('leaf-19')!.y).toBeLessThan(at.get('sw-b')!.y)
+  })
+
+  it('puts each group of roots below the previous one, its site beside its first tree', () => {
+    const { at, groupAt } = layout([['core'], ['site-b-root']], children)
+    const coreTree = ['core', 'sw-a', 'sw-b', 'a1', 'a2', 'b1'].map((id) => at.get(id)!.y)
+    const other = at.get('site-b-root')!
+    expect(other.y).toBeGreaterThan(Math.max(...coreTree))
+    expect(groupAt[1]).toEqual(other)
+    expect(groupAt[0]).toEqual(at.get('core'))
+  })
+
+  it('moves only what is below a tree when it grows', () => {
+    const roots = Array.from({ length: 10 }, (_, i) => `root-${i}`)
+    const before = layout([roots], new Map())
+    const after = layout(
+      [roots],
+      new Map([['root-5', Array.from({ length: 6 }, (_, i) => `child-${i}`)]])
+    )
+    for (const root of roots.slice(0, 6)) {
+      expect(after.at.get(root)).toEqual(before.at.get(root))
     }
+    expect(after.at.get('root-6')!.y).toBeGreaterThan(before.at.get('root-6')!.y)
   })
 
-  it('assigns distinct positions (no pixel-perfect overlap)', () => {
-    const hosts = Array.from({ length: 50 }, (_, i) => host(`h${i}`))
-    preLayoutHosts(hosts)
-    const keys = new Set(hosts.map((h) => `${Math.round(h.x!)}:${Math.round(h.y!)}`))
-    expect(keys.size).toBe(50)
+  it('starts a host with two parents once, under the first', () => {
+    const twoParents = new Map([
+      ['p1', ['shared']],
+      ['p2', ['shared']]
+    ])
+    const { at } = layout([['p1', 'p2']], twoParents)
+    expect(at.get('shared')!.y).toBeCloseTo(at.get('p1')!.y)
   })
 
-  it('is a no-op for an empty list', () => {
-    expect(() => preLayoutHosts([])).not.toThrow()
+  it('places a host on a parent cycle once, outside the trees', () => {
+    const cycle = new Map([
+      ['p', ['q']],
+      ['q', ['p']]
+    ])
+    const { at, groupAt } = layout([['root']], cycle, ['root', 'p', 'q'])
+    expect([...at.keys()].sort()).toEqual(['p', 'q', 'root'])
+    expect(groupAt).toHaveLength(1)
   })
 })
 
@@ -216,5 +371,115 @@ describe('placeServiceNodes', () => {
       rowSpacings: new Map()
     })
     expect(orphans.every((node) => node.fx === undefined)).toBe(true)
+  })
+})
+
+describe('freeCellBeside', () => {
+  const cells = (rows: number, count: number) =>
+    Array.from({ length: count }, (_, i) => ({
+      x: Math.floor(i / rows) * 100,
+      y: (i % rows) * 80
+    }))
+
+  it('takes the place a sibling left in the grid', () => {
+    const siblings = cells(4, 10).filter((cell) => cell.x !== 100 || cell.y !== 160)
+    expect(freeCellBeside(siblings, 60)).toEqual({ x: 100, y: 160 })
+  })
+
+  it('reads hosts a little off their places, as collide leaves them, as the same grid', () => {
+    const siblings = cells(4, 10)
+      .filter((cell) => cell.x !== 100 || cell.y !== 160)
+      .map((cell, i) => ({ x: cell.x - (i % 2), y: cell.y + (i % 3) * 1.5 }))
+    const free = freeCellBeside(siblings, 60)!
+    expect(free.x).toBeCloseTo(100, -1)
+    expect(free.y).toBeCloseTo(160, -1)
+  })
+
+  it('fills a grid row by row', () => {
+    const siblings = cells(4, 8).filter(
+      (cell) => !(cell.x === 100 && cell.y === 240) && !(cell.x === 0 && cell.y === 240)
+    )
+    expect(freeCellBeside(siblings, 60)).toEqual({ x: 0, y: 240 })
+  })
+
+  it('starts a new row below a full grid', () => {
+    expect(freeCellBeside(cells(4, 8), 60)).toEqual({ x: 0, y: 320 })
+  })
+
+  it('goes below the last sibling in a single column', () => {
+    expect(freeCellBeside(cells(8, 3), 60)?.x).toBe(0)
+    expect(freeCellBeside(cells(8, 3), 60)!.y).toBeGreaterThan(160)
+  })
+})
+
+describe('hostLabelLines', () => {
+  it('draws a name that fits a column on one line', () => {
+    expect(hostLabelLines('sw-core-01.demo.checkmk.com')).toEqual(['sw-core-01.demo.checkmk.com'])
+  })
+
+  it('breaks a domain name after the host’s own part', () => {
+    expect(hostLabelLines('storage-netapp-01.demo.checkmk.com')).toEqual([
+      'storage-netapp-01.',
+      'demo.checkmk.com'
+    ])
+  })
+
+  it('breaks a long name after one of its parts, keeping all of it', () => {
+    const name = 'internal-clb-demo-cmk-919536368.eu-central-1.elb.amazonaws.com'
+    const lines = hostLabelLines(name)
+    expect(lines).toEqual(['internal-clb-demo-cmk-919536368.', 'eu-central-1.elb.amazonaws.com'])
+    for (const line of lines) {
+      expect(line.length * 7 + 12).toBeLessThanOrEqual(hostColumnWidth(name))
+    }
+  })
+})
+
+describe('elbowsOf', () => {
+  it('runs the edges of a column right of its parent at right angles', () => {
+    const elbows = elbowsOf({ x: 0, y: 0 }, [{ id: 'a', x: 200, y: 0 }], 66)
+    expect(elbows.get('a')).toMatchObject({ drop: 200, rise: 100, reach: 100 })
+  })
+
+  it('comes down to a child further along a grid where the layout says', () => {
+    const children = [
+      { id: 'a', x: 200, y: 0 },
+      { id: 'b', x: 500, y: 0 }
+    ]
+    const elbows = elbowsOf({ x: 0, y: 0 }, children, 66, new Map([['b', 60]]))
+    expect(elbows.get('b')?.reach).toBe(60)
+    expect(elbows.get('a')?.reach).toBe(elbows.get('a')?.rise)
+  })
+
+  it("runs the edges to a grid's further columns along its parent's row", () => {
+    const children = [
+      { id: 'a', x: 200, y: 66 },
+      { id: 'b', x: 500, y: 66 }
+    ]
+    const b = elbowsOf({ x: 0, y: 0 }, children, 66).get('b')!
+    expect(66 + b.aside).toBe(0)
+  })
+
+  it('runs them just above the grid when a subtree comes before it', () => {
+    const children = [
+      { id: 'sub', x: 200, y: 0 },
+      { id: 'a', x: 200, y: 200 },
+      { id: 'b', x: 500, y: 200 }
+    ]
+    const b = elbowsOf({ x: 0, y: 0 }, children, 66).get('b')!
+    expect(200 + b.aside).toBeGreaterThan(0)
+    expect(200 + b.aside).toBeLessThan(200)
+  })
+
+  it('draws a straight edge to a child moved behind its parent, elbows to the others', () => {
+    const elbows = elbowsOf(
+      { x: 200, y: 0 },
+      [
+        { id: 'moved', x: 100, y: 0 },
+        { id: 'a', x: 400, y: 0 }
+      ],
+      66
+    )
+    expect([...elbows.keys()]).toEqual(['a'])
+    expect(elbows.get('a')?.drop).toBe(200)
   })
 })

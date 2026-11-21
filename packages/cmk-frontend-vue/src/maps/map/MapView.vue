@@ -698,10 +698,12 @@ async function onStartPlacing() {
 }
 
 const FLOW_PROBLEMS_DEFAULT: ProblemCounts = {
+  down: 0,
+  unreachable: 0,
   critical: 0,
   warning: 0,
-  hostsWithProblems: 0,
-  total: 0
+  unknown: 0,
+  hostsWithProblems: 0
 }
 const flowProblems = ref<ProblemCounts>({ ...FLOW_PROBLEMS_DEFAULT })
 const flowDrawerObject = ref<MapElement | null>(null)
@@ -856,7 +858,7 @@ function closeBulkAckModal(sent: boolean): void {
         <CmkBreadcrumb :items="breadcrumbItems" />
       </template>
       <template #status>
-        <MapProblemsPill v-if="isFlowmap && flowProblems.total > 0" :problems="flowProblems" />
+        <MapProblemsPill v-if="isFlowmap" :problems="flowProblems" />
         <MapSitesPill
           v-if="showsMapState && mapConfig && statesStore.deadSites.value.length"
           :dead-sites="statesStore.deadSites.value"

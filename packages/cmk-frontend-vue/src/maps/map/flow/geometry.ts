@@ -16,7 +16,7 @@
  */
 import { arc as d3arc, pie as d3pie } from 'd3-shape'
 
-import type { TopologyNode } from '@/maps/types/api'
+import type { ServicesSummary, TopologyNode } from '@/maps/types/api'
 
 export const NODE_R = 18
 export const SVC_R_MAX = 11 // service node radius at low service count
@@ -85,6 +85,13 @@ export type DonutArc = { startAngle: number; endAngle: number }
 export function buildDonutArc(zoomK: number) {
   return d3arc<DonutArc>().innerRadius(DONUT_INNER).outerRadius(donutOuterRadius(zoomK))
 }
+/**
+ * A folded group's ring: a thin line of the states it holds, so the group reads
+ * as several hosts without its share of warnings outshouting a host that is down.
+ */
+export const foldArc = d3arc<DonutArc>()
+  .innerRadius(NODE_R + 2)
+  .outerRadius(NODE_R + 5)
 export const donutPie = d3pie<DonutSegment>()
   .sort(null)
   .value((d) => d.value)
@@ -98,6 +105,55 @@ export function problemScoreFromTopo(n: TopologyNode): number {
     return hostPenalty
   }
   return hostPenalty + s.critical * 4 + s.warning * 2 + s.unknown * 2
+}
+
+/** The worst state any of a host's services is in, or ``null`` when all are fine. */
+export function worstServiceState(
+  summary: ServicesSummary | null | undefined
+): 'CRITICAL' | 'UNKNOWN' | 'WARNING' | null {
+  if (summary?.critical) {
+    return 'CRITICAL'
+  }
+  if (summary?.unknown) {
+    return 'UNKNOWN'
+  }
+  return summary?.warning ? 'WARNING' : null
+}
+
+/**
+ * A group of hosts summed up as the daemon sums a group: its hosts' states in
+ * the service slots (UP as ok, DOWN as critical, UNREACHABLE as unknown), and
+ * its hosts' services.
+ */
+export function summarizeHosts(topos: Iterable<TopologyNode>): {
+  hostCount: number
+  hosts: ServicesSummary
+  services: ServicesSummary
+} {
+  let hostCount = 0
+  const hosts = { ok: 0, warning: 0, critical: 0, unknown: 0, pending: 0 }
+  const services = { ok: 0, warning: 0, critical: 0, unknown: 0, pending: 0 }
+  for (const n of topos) {
+    hostCount++
+    if (n.state === 'UP') {
+      hosts.ok++
+    } else if (n.state === 'DOWN') {
+      hosts.critical++
+    } else if (n.state === 'UNREACHABLE') {
+      hosts.unknown++
+    } else if (n.state === 'PENDING') {
+      hosts.pending++
+    }
+    const s = n.services_summary
+    if (s) {
+      services.ok += s.ok
+      services.warning += s.warning
+      services.critical += s.critical
+      services.unknown += s.unknown
+      services.pending += s.pending
+    }
+  }
+  return { hostCount, hosts, services }
 }
 
 // Severity rank: 2 = critical/down, 1 = warn/unknown, 0 = ok.

@@ -215,6 +215,7 @@ def legacy_map_to_spec(
     _translate_legacy_keys(spec)
     _drop_images_that_name_no_file(spec)
     _count_bundle_services(spec)
+    _keep_network_flow(spec)
     _drop_member_patterns(spec)
     _retarget_connections(spec, foreign)
     _convert_css_colors(spec)
@@ -366,6 +367,13 @@ def _count_bundle_services(spec: dict[str, object]) -> None:
     for obj in objects:
         if isinstance(obj, dict) and obj.get("type") == "dyngroup" and obj.get("bundle_kind"):
             obj["recognize_services"] = True
+
+
+def _keep_network_flow(spec: dict[str, object]) -> None:
+    """Draw a board's flow map as OrbVis did, which its users know it by."""
+    view = spec.get("view")
+    if isinstance(view, dict) and view.get("type") == "flow":
+        view["host_layout"] = "network"
 
 
 def _drop_member_patterns(spec: dict[str, object]) -> None:

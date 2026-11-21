@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 
+import MapOverlayButton from '@/maps/map/components/MapOverlayButton.vue'
+
 const { _t } = usei18n()
 
 defineProps<{
@@ -18,16 +20,15 @@ defineEmits<{ reset: [] }>()
 
 <template>
   <Teleport to="#app">
-    <button
+    <MapOverlayButton
       v-if="visible"
-      type="button"
       class="maps-map-zoom-reset-pill"
       :style="offset"
       :title="_t('Reset to fit')"
       @click="$emit('reset')"
     >
       {{ Math.round(zoom * 100) }}% {{ untranslated('↺') }}
-    </button>
+    </MapOverlayButton>
   </Teleport>
 </template>
 
@@ -36,21 +37,5 @@ defineEmits<{ reset: [] }>()
   position: fixed;
   bottom: var(--dimension-5);
   left: var(--dimension-5);
-  z-index: 6;
-  padding: var(--dimension-4) var(--dimension-5);
-  border-radius: var(--border-radius);
-
-  /* Teleported out of the map view, so it cannot inherit the map's overlay
-     surface and names the tooltip surface that one stands for. */
-  background: var(--default-tooltip-background-color);
-  border: 1px solid var(--default-border-color);
-  color: var(--font-color);
-  font-size: var(--font-size-normal);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-}
-
-.maps-map-zoom-reset-pill:hover {
-  border-color: var(--interactive-accent);
 }
 </style>

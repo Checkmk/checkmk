@@ -16,6 +16,10 @@
  * so the anchor that holds it wins. With services on show, the rings around the
  * worst hosts are wide, so the anchor gives way and lets collide push
  * neighbours aside. Hence the ``needsServices`` branch in nearly all of them.
+ *
+ * A parent tree is the exception: its layout already left each host the room
+ * its ring takes, so in every service layout the anchor holds it and the
+ * springs rest at the lengths it drew.
  */
 import {
   type Simulation,
@@ -27,8 +31,9 @@ import {
   forceY
 } from 'd3-force'
 
-import { NODE_R, svcR } from '@/maps/map/flow/geometry'
-import { layoutR, needsServices, rowColumns, showsDonut } from '@/maps/map/flow/layout'
+import { NODE_R } from '@/maps/map/flow/geometry'
+import { layoutR, needsServices, serviceReach, showsDonut } from '@/maps/map/flow/layout'
+import { KIND_TRAITS } from '@/maps/map/flow/nodeIds'
 import type { FLink, FNode } from '@/maps/map/flow/nodes'
 import type { ServiceLayout } from '@/maps/types/api'
 
@@ -41,6 +46,8 @@ export interface FlowForcesOptions {
   layout: ServiceLayout
   /** Deepest BFS level in the topology; 0 means it is flat. */
   maxLvl: number
+  /** Whether the hosts started along their parent tree, which then holds them. */
+  startsAsTree: boolean
   /** Vertical gap between BFS layers. */
   vSpacing: number
   /** Where the pre-layout put each host — what the anchor pulls back towards. */
@@ -70,6 +77,7 @@ export function createFlowSimulation(options: FlowForcesOptions): Simulation<FNo
     servicesByHost,
     layout,
     maxLvl,
+    startsAsTree,
     vSpacing,
     anchorX,
     anchorY,
@@ -80,10 +88,10 @@ export function createFlowSimulation(options: FlowForcesOptions): Simulation<FNo
 
   /** How hard a host is held at its pre-layout slot. */
   const anchorStrength = (node: FNode): number => {
-    if (node.nodeType !== 'host') {
+    if (!KIND_TRAITS[node.nodeType].hostShaped) {
       return 0
     }
-    if (!withServices) {
+    if (startsAsTree || !withServices) {
       return ANCHOR_STRENGTH
     }
     // A host that actually draws a service ring is left free, so charge and
@@ -97,7 +105,7 @@ export function createFlowSimulation(options: FlowForcesOptions): Simulation<FNo
         'link',
         forceLink<FNode, FLink>(springLinks)
           .id((d) => d.id)
-          .distance((link) => linkDistance(link, layout, serviceCount))
+          .distance((link) => link.restLength ?? linkDistance(link, layout, serviceCount))
           .strength((link) => (isSiteLink(link) ? SITE_LINK_STRENGTH : HOST_LINK_STRENGTH))
       )
       .force(
@@ -109,19 +117,14 @@ export function createFlowSimulation(options: FlowForcesOptions): Simulation<FNo
           // On a flat map without service rings the severity spiral already
           // spreads the hosts evenly; all-to-all repulsion would only beat the
           // anchor and flatten the rings into a wide ellipse.
-          if (maxLvl === 0 && !withServices) {
+          if (startsAsTree || (maxLvl === 0 && !withServices)) {
             return 0
           }
           const N = serviceCount(node.id)
           return N > 0 ? -Math.max(700, layoutR(layout, N) * 9) : -600
         })
       )
-      .force(
-        'center',
-        forceX<FNode>((node) =>
-          node.nodeType === 'host' ? (anchorX.get(node.id) ?? 0) : 0
-        ).strength(anchorStrength)
-      )
+      .force('center', forceX<FNode>((node) => anchorX.get(node.id) ?? 0).strength(anchorStrength))
       .force(
         'collide',
         forceCollide<FNode>((node) =>
@@ -133,12 +136,10 @@ export function createFlowSimulation(options: FlowForcesOptions): Simulation<FNo
         // A real hierarchy keeps the layered look; a flat topology holds each
         // host at its severity slot instead, so the pre-layout survives.
         maxLvl > 0
-          ? forceY<FNode>((node) => (node.bfsLevel - maxLvl / 2) * vSpacing).strength((node) =>
-              node.nodeType === 'service' ? 0 : LAYER_STRENGTH
-            )
-          : forceY<FNode>((node) =>
-              node.nodeType === 'host' ? (anchorY.get(node.id) ?? 0) : 0
-            ).strength(anchorStrength)
+          ? forceY<FNode>((node) =>
+              startsAsTree ? (anchorY.get(node.id) ?? 0) : (node.bfsLevel - maxLvl / 2) * vSpacing
+            ).strength((node) => (node.nodeType === 'service' ? 0 : LAYER_STRENGTH))
+          : forceY<FNode>((node) => anchorY.get(node.id) ?? 0).strength(anchorStrength)
       )
       // A flat map starts close to its steady state, so it can cool fast. A real
       // hierarchy needs time to settle its layers, and service-aware layouts need
@@ -192,8 +193,5 @@ function collideRadius(
     // the same rule that decides whether it is drawn at all.
     return showsDonut(layout, node.topo?.services_omitted) ? NODE_R + 14 : NODE_R + 10
   }
-  if (layout === 'fan' || layout === 'orbit') {
-    return layoutR(layout, N) + svcR(N) + 35
-  }
-  return (rowColumns(N) / 2) * (rowSpacings.get(node.id) ?? 60) + svcR(N) + 20
+  return serviceReach(layout, N, rowSpacings.get(node.id) ?? 60)
 }

@@ -14,9 +14,10 @@ import {
   metadataFormData,
   metadataOverridesFrom,
   previewPatch,
-  viewFromForm
+  viewFromForm,
+  withStoredFlowFields
 } from '@/maps/map/edit/settings/settingsForm'
-import type { MapRead, MapView } from '@/maps/types/api'
+import type { FlowView, HostLayout, MapRead, MapView } from '@/maps/types/api'
 
 import { newMapView } from '../../../support/fixtures'
 
@@ -133,12 +134,20 @@ describe('viewFromForm', () => {
 
   it('reads a flow view out of its own FormSpec bag', () => {
     const form = formFromMap(aMapRead({ view_type: 'flow', view: newMapView('flow') }), null)
-    expect(viewFromForm(form, { root: '  web01  ', child_layers: 2 })).toMatchObject({
+    expect(
+      viewFromForm(form, { root: '  web01  ', child_layers: 2, host_layout: 'network' })
+    ).toMatchObject({
       type: 'flow',
       root: 'web01',
       child_layers: 2,
-      parent_layers: null
+      parent_layers: null,
+      host_layout: 'network'
     })
+  })
+
+  it('refuses a host layout the form spec did not resolve', () => {
+    const form = formFromMap(aMapRead({ view_type: 'flow', view: newMapView('flow') }), null)
+    expect(() => viewFromForm(form, { host_layout: '9f86d081' })).toThrow()
   })
 
   it('gives a static map nothing but its problems filter', () => {
@@ -154,9 +163,34 @@ describe('viewFromForm', () => {
       const view = { ...newMapView(type), problems_only: true } as MapView
       const form = formFromMap(aMapRead({ view_type: type, view }), null)
       expect(form.problems_only).toBe(true)
-      expect(viewFromForm(form, {})).toMatchObject({ type, problems_only: true })
+      expect(viewFromForm(form, { host_layout: 'tree' })).toMatchObject({
+        type,
+        problems_only: true
+      })
     }
   )
+})
+
+describe('withStoredFlowFields', () => {
+  const stored = (hostLayout: HostLayout): FlowView => ({
+    type: 'flow',
+    host_layout: hostLayout,
+    service_layout: 'donut',
+    positions: { web01: { x: 1, y: 2 } },
+    problems_only: false
+  })
+
+  it('keeps where the operator put the hosts in the same host layout', () => {
+    expect(withStoredFlowFields({ host_layout: 'tree' }, stored('tree'))).toEqual({
+      host_layout: 'tree',
+      service_layout: 'donut',
+      positions: { web01: { x: 1, y: 2 } }
+    })
+  })
+
+  it('drops where the operator put the hosts when the host layout changes', () => {
+    expect(withStoredFlowFields({ host_layout: 'tree' }, stored('network')).positions).toEqual({})
+  })
 })
 
 describe('flowViewData', () => {
@@ -165,7 +199,7 @@ describe('flowViewData', () => {
       view_type: 'flow',
       view: { ...newMapView('flow'), root: 'web01', child_layers: null } as MapView
     })
-    expect(flowViewData(map)).toEqual({ root: 'web01' })
+    expect(flowViewData(map)).toEqual({ root: 'web01', host_layout: 'tree' })
   })
 })
 

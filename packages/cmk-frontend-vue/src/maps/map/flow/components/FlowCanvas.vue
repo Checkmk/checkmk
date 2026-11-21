@@ -219,12 +219,16 @@ let folding = false
 interface GroupCard {
   id: string
   content: GroupCardContent
+  group: SVGGElement
   x: number
   y: number
   around: HoverAnchorRect
 }
 const groupCard = shallowRef<GroupCard | null>(null)
 const groupCardGrace = useHoverGrace(() => (groupCard.value = null))
+/** The frame that moves the open card along with its group, if one is due. */
+let following = 0
+onUnmounted(() => cancelAnimationFrame(following))
 /** Repaints everything at its current position — set by each render. */
 let repaint: (() => void) | null = null
 let attached = false
@@ -239,6 +243,15 @@ const zoom = useFlowZoom({
   // are put back where they belong before they are seen again.
   onDetailChange: () => repaint?.(),
   onTransform: (transform) => {
+    // Once a frame at most: measuring the group forces a layout of the map.
+    if (groupCard.value && !following) {
+      following = requestAnimationFrame(() => {
+        following = 0
+        if (groupCard.value) {
+          followGroup(groupCard.value)
+        }
+      })
+    }
     if (pulseLayer.value) {
       pulseLayer.value.style.transform = `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`
     }
@@ -833,7 +846,16 @@ function groupCardContent(node: FNode): GroupCardContent {
 function besideGroup(group: SVGGElement): Omit<GroupCard, 'id' | 'content'> {
   const box = group.getBoundingClientRect()
   const around = { left: box.left, top: box.top, right: box.right, bottom: box.bottom }
-  return { x: box.right + 8, y: box.top, around }
+  return { group, x: box.right + 8, y: box.top, around }
+}
+
+/** Keeps the open card at its group while the view moves under it. */
+function followGroup(card: GroupCard): void {
+  if (!card.group.isConnected) {
+    groupCardGrace.closeNow()
+    return
+  }
+  groupCard.value = { ...card, ...besideGroup(card.group) }
 }
 
 function onNodeLeave(): void {

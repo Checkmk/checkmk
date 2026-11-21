@@ -15,10 +15,11 @@
  * caption shifts the icon up inside its stack — the anchor point and the
  * visible icon are not the same place.
  */
-import { type Ref, type ShallowRef } from 'vue'
+import { type Ref, type ShallowRef, computed, nextTick, ref, watch } from 'vue'
 
 import { type IconSizes, objectIconSize } from '@/maps/map/objectIconSize'
-import type { MapConfig, MapElement } from '@/maps/types/api'
+import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
+import { sameValues, stableRecords } from '@/maps/utils/stableRecords'
 
 /** The box a line aims at: centre plus half-extents, in map units. */
 interface Footprint {
@@ -28,12 +29,17 @@ interface Footprint {
   halfY: number
 }
 
+/** A rendered icon's offset from its object's anchor, plus its half-extents. */
+type MeasuredBox = Omit<Footprint, 'x' | 'y'> & { offX: number; offY: number }
+
 /** Where a line with a free end aims when the other end is bound. */
 const FREE_END_OFFSET = 50
 
+type BoundCoords = { x?: number; y?: number; x2?: number; y2?: number }
+
 export interface CanvasLineAnchors {
   /** The bound endpoints of a line, if it has any. */
-  boundCoordsFor: (line: MapElement) => { x?: number; y?: number; x2?: number; y2?: number }
+  boundCoordsFor: (line: MapElement) => BoundCoords
 }
 
 /**
@@ -64,6 +70,7 @@ export function objectIcon(root: ParentNode, id: string): HTMLElement | null {
 export function useCanvasLineAnchors(source: {
   canvas: Readonly<ShallowRef<HTMLElement | null>>
   config: () => MapConfig
+  states: () => Readonly<Record<string, ObjectState>>
   dragPositions: () => Record<string, { x: number; y: number }>
   iconSizes: () => IconSizes
   toMapCoords: (offsetX: number, offsetY: number, rect: DOMRect) => { x: number; y: number }
@@ -73,6 +80,80 @@ export function useCanvasLineAnchors(source: {
   /** The NagVis-compatible renderer, which anchors top-left, not centred. */
   classic: () => boolean
 }): CanvasLineAnchors {
+  // A new state can move a bound object's icon, such as by a wider caption,
+  // or leave it in place, such as with new perf data. Only a moved icon makes
+  // the lines aim again, so the canvas is not redrawn on every refresh.
+  const lastMeasured = new Map<string, MeasuredBox | null>()
+  const iconsMoved = ref(0)
+  // The same ids keep the same array: the map's objects are replaced on
+  // changes that move no line end.
+  const boundIds = computed<string[]>((previous) => {
+    const ids = [
+      ...new Set(
+        source
+          .config()
+          .objects.flatMap((object) =>
+            object.type === 'line' ? [object.start_ref, object.end_ref] : []
+          )
+          .filter((id): id is string => !!id)
+      )
+    ]
+    return previous && sameValues(previous, ids) ? previous : ids
+  })
+  watch(
+    () => new Map(boundIds.value.map((id) => [id, source.states()[id]] as const)),
+    (now, before) => {
+      for (const [id, state] of now) {
+        if (state !== before.get(id) && moved(id)) {
+          iconsMoved.value++
+          return
+        }
+      }
+    },
+    { flush: 'post' }
+  )
+  // A changed map can move a bound icon, such as by a new caption, a new icon
+  // size or an object added with its line. Compared as text, so a grid
+  // replacing its members' objects measures nothing.
+  const boundObjects = computed(() => {
+    const ids = new Set(boundIds.value)
+    return JSON.stringify([
+      source.iconSizes(),
+      source.config().objects.filter((object) => ids.has(object.id))
+    ])
+  })
+  watch(
+    boundObjects,
+    () => {
+      if (boundIds.value.some((id) => moved(id))) {
+        iconsMoved.value++
+      }
+    },
+    { flush: 'post' }
+  )
+
+  // An object drawn after the canvas, such as when edit mode or "problems
+  // only" shows it, is measured once it is there.
+  const unmounted = new Set<string>()
+  function measureOnceMounted(id: string): void {
+    if (unmounted.size === 0) {
+      void nextTick(() => {
+        const ids = [...unmounted]
+        unmounted.clear()
+        if (ids.some((candidate) => measuredBox(candidate))) {
+          iconsMoved.value++
+        }
+      })
+    }
+    unmounted.add(id)
+  }
+
+  function moved(id: string): boolean {
+    const before = lastMeasured.get(id) ?? null
+    const now = measuredBox(id)
+    return before && now ? !sameValues(before, now) : before !== now
+  }
+
   function positionOf(id: string): { x: number; y: number } | null {
     const dragged = source.dragPositions()[id]
     if (dragged) {
@@ -87,9 +168,7 @@ export function useCanvasLineAnchors(source: {
    * read off the DOM. The offset is layout-stable, so a dragged object's lines
    * follow it without a frame of lag.
    */
-  function measuredBox(
-    id: string
-  ): (Omit<Footprint, 'x' | 'y'> & { offX: number; offY: number }) | null {
+  function measuredBox(id: string): MeasuredBox | null {
     const canvas = source.canvas.value
     if (!canvas) {
       return null
@@ -131,9 +210,12 @@ export function useCanvasLineAnchors(source: {
     if (!position) {
       return null
     }
-    // Read the canvas size so the measurement re-runs on mount and on resize.
+    // Read so the measurement re-runs on mount, on resize and once a bound
+    // icon moved.
     void source.displaySize.value
+    void iconsMoved.value
     const measured = measuredBox(id)
+    lastMeasured.set(id, measured)
     if (measured) {
       return {
         x: position.x + measured.offX,
@@ -143,6 +225,7 @@ export function useCanvasLineAnchors(source: {
       }
     }
     // Nothing rendered yet: fall back to the size the object will render at.
+    measureOnceMounted(id)
     const object = source.config().objects.find((candidate) => candidate.id === id)
     if (!object) {
       return null
@@ -156,12 +239,14 @@ export function useCanvasLineAnchors(source: {
     return { x: position.x, y: position.y, halfX: size / 2 / sx, halfY: size / 2 / sy }
   }
 
-  function boundCoordsFor(line: MapElement): {
-    x?: number
-    y?: number
-    x2?: number
-    y2?: number
-  } {
+  // So redrawing the canvas does not redraw every line.
+  const stableCoords = stableRecords<MapElement, BoundCoords>()
+
+  function boundCoordsFor(line: MapElement): BoundCoords {
+    return stableCoords(line, freshBoundCoords(line))
+  }
+
+  function freshBoundCoords(line: MapElement): BoundCoords {
     const start = line.start_ref ? footprintOf(line.start_ref) : null
     const end = line.end_ref ? footprintOf(line.end_ref) : null
     const bent =
@@ -169,7 +254,7 @@ export function useCanvasLineAnchors(source: {
       line.mid_x !== undefined &&
       line.mid_y !== null &&
       line.mid_y !== undefined
-    const bound: { x?: number; y?: number; x2?: number; y2?: number } = {}
+    const bound: BoundCoords = {}
     // A bend is what both ends aim at; without one, each end aims at the other
     // end — the opposite object's centre, or its free coordinate.
     if (start) {

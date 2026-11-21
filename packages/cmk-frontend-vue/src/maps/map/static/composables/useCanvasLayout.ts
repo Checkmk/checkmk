@@ -15,6 +15,7 @@ import { type ComputedRef, computed } from 'vue'
 
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 import { dimmedStyle, objectMatchesFilter, problemObjects } from '@/maps/utils/objectFilter'
+import { sameValues, stableRecords } from '@/maps/utils/stableRecords'
 
 /** Stacking order of the object under the pointer, above everything placed. */
 const DRAGGED_Z = 100
@@ -24,6 +25,8 @@ const DRAGGED_Z = 100
  * while a filter is on.
  */
 const MATCH_Z = 49
+
+type Style = Record<string, string | number | undefined>
 
 /** One SVG layer of lines, drawn at a single stacking order. */
 export interface LineLayer {
@@ -39,8 +42,8 @@ export interface CanvasLayout {
   /** Whether a search is narrowing the map. */
   filtering: ComputedRef<boolean>
   matches: (object: MapElement) => boolean
-  objectStyle: (object: MapElement) => Record<string, string | number | undefined>
-  lineStyle: (line: MapElement) => Record<string, string | number | undefined>
+  objectStyle: (object: MapElement) => Style
+  lineStyle: (line: MapElement) => Style
 }
 
 export function useCanvasLayout(source: {
@@ -67,11 +70,17 @@ export function useCanvasLayout(source: {
 
   // "Only problems" means what it says; the editor still shows everything. Left
   // out rather than hidden, so keyboard focus cannot land on what is not shown.
-  const shownObjects = computed(() => {
+  // The same list while the same objects are shown: a state update would
+  // otherwise redraw the canvas even where no object comes or goes.
+  const shownObjects = computed((previous?: MapElement[]) => {
     const objects = source.config().objects
-    return source.editMode()
+    const shown = source.editMode()
       ? objects
       : problemObjects(objects, source.problemsOnly(), source.states())
+    if (shown === objects) {
+      return objects
+    }
+    return previous !== undefined && sameValues(previous, shown) ? previous : shown
   })
 
   const placedObjects = computed(() =>
@@ -117,7 +126,14 @@ export function useCanvasLayout(source: {
     return source.config().click_action !== 'none' ? 'pointer' : 'default'
   }
 
-  function objectStyle(object: MapElement): Record<string, string | number | undefined> {
+  // So redrawing the canvas does not redraw every object.
+  const stableStyle = stableRecords<MapElement, Style>()
+
+  function objectStyle(object: MapElement): Style {
+    return stableStyle(object, freshStyle(object))
+  }
+
+  function freshStyle(object: MapElement): Style {
     const position = source.dragPositions()[object.id] ?? { x: object.x, y: object.y }
     const width = source.width() || 1
     const height = source.height() || 1
@@ -137,7 +153,7 @@ export function useCanvasLayout(source: {
     }
   }
 
-  function lineStyle(line: MapElement): Record<string, string | number | undefined> {
+  function lineStyle(line: MapElement): Style {
     // The layer above is click-through so empty areas do not block the objects
     // below; the painted line has to take its own clicks back.
     return { pointerEvents: 'auto', ...dimming(line) }

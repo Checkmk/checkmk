@@ -17,7 +17,8 @@ import { labelText } from '@/maps/utils/template'
 
 const props = defineProps<{
   object: MapElement
-  state: ObjectState | undefined
+  /** All the map's states: the line reads its own, so a change redraws only it. */
+  states: Readonly<Record<string, ObjectState>>
   editMode: boolean
   dragCoords?: {
     x: number
@@ -135,8 +136,10 @@ const handle2 = computed(() =>
   )
 )
 
-const caption = computed(() => labelText(props.object, props.state))
-const lineColor = computed(() => props.object.line_color ?? stateColorVar(props.state?.state))
+const state = computed(() => props.states[props.object.id])
+
+const caption = computed(() => labelText(props.object, state.value))
+const lineColor = computed(() => props.object.line_color ?? stateColorVar(state.value?.state))
 const lineColorBorder = computed(() => props.object.line_color_border ?? null)
 
 const isDashed = computed(() => props.object.line_style === 'dashed')
@@ -354,7 +357,7 @@ function _labelBoxWidth(label: string): number {
 // labels (which can be enabled independently).
 const gradientId = computed(() => `wm-grad-${props.object.id}`)
 
-const wmMetrics = computed(() => parsePerfData(props.state?.perf_data ?? ''))
+const wmMetrics = computed(() => parsePerfData(state.value?.perf_data ?? ''))
 const wmMetricIn = computed(() =>
   getMetric(wmMetrics.value, props.object.weathermap_metric ?? undefined)
 )
@@ -410,8 +413,8 @@ const lineBinding = {
   connectionId: () => props.connectionId,
   hostName: () => props.object.host_name,
   serviceDescription: () => props.object.service_description,
-  perfData: () => props.state?.perf_data,
-  checkCommand: () => props.state?.check_command,
+  perfData: () => state.value?.perf_data,
+  checkCommand: () => state.value?.check_command,
   enabled: () => showsPerfdataLabels.value
 }
 const cmkPerfData = usePerfometer(lineBinding)

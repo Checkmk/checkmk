@@ -26,7 +26,8 @@ const { _t } = usei18n()
 
 const props = defineProps<{
   object: MapObject
-  state: ObjectState | undefined
+  /** All the map's states: the object reads its own, so a change redraws only it. */
+  states: Readonly<Record<string, ObjectState>>
   config: MapConfig
   /** Icon size to use when neither object nor map names one. */
   fallbackIconSize: number
@@ -66,6 +67,8 @@ const iconSize = computed(() =>
     fallback: props.fallbackIconSize
   })
 )
+
+const state = computed(() => props.states[props.object.id])
 
 function onKeydown(event: KeyboardEvent): void {
   if (event.key !== 'Enter' && event.key !== ' ') {

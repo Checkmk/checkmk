@@ -265,6 +265,7 @@ const roving = useRovingFocus({
 const anchors = useCanvasLineAnchors({
   canvas,
   config: () => props.config,
+  states: () => props.states,
   dragPositions: () => drag.positions,
   iconSizes: () => iconSizes.value,
   toMapCoords: viewport.toMapCoords,
@@ -436,7 +437,7 @@ defineExpose({
       <g v-for="line in layer.lines" :key="line.id" :style="layout.lineStyle(line)">
         <MapLine
           :object="line"
-          :state="states[line.id]"
+          :states="states"
           :edit-mode="editMode"
           v-bind="lineDragCoords(line.id)"
           :bound-coords="anchors.boundCoordsFor(line)"
@@ -455,7 +456,7 @@ defineExpose({
       v-for="object in layout.placedObjects.value"
       :key="object.id"
       :object="object"
-      :state="states[object.id]"
+      :states="states"
       :config="config"
       :fallback-icon-size="iconSizes.fallback"
       :icon-size-override="iconSizeOverride"

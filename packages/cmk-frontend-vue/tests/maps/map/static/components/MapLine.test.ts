@@ -47,7 +47,7 @@ const noState: ObjectState = aState({
 function renderLine(object: MapElement, editMode = false): Element {
   const { container } = render(MapLine, {
     global: mapsGlobal(),
-    props: { object, state: noState, editMode }
+    props: { object, states: { [object.id]: noState }, editMode }
   })
   return container
 }

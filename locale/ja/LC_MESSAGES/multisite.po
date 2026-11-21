@@ -14887,15 +14887,16 @@ msgstr ""
 "ションを選択してください。実際のドキュメントのサイズがしきい値を上回ったり下"
 "回ったりすると、WARNが表示されます。"
 
+#, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a unit is allowed to be in a "
-"'reloading' state"
-msgstr "ユニットが[リロード]状態にあることを許可する時間レベル(秒)を選択します"
+"Choose time levels for which a unit is allowed to be in a 'deactivating' "
+"state"
+msgstr "サービスが[起動]状態にあることを許可する時間レベルを選択します"
 
+#, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a unti is allowed to be in an "
-"'deactivating' state"
-msgstr "ユニットが[停止]状態にあることを許可する時間レベル(秒)を選択します"
+"Choose time levels for which a unit is allowed to be in a 'reloading' state"
+msgstr "サービスが[起動]状態にあることを許可する時間レベルを選択します"
 
 msgid ""
 "Choose time levels for which a unit is allowed to be in an 'activating' state"
@@ -16605,22 +16606,6 @@ msgstr ""
 "状態を検出から除外したりできます。条件のみが指定されているルールを保存するこ"
 "とは許可されておらず、エラーが発生することに注意してください。その理由は、そ"
 "のようなルールは効果がないからです。"
-
-msgid ""
-"Configure the discovery of single systemd services. To be discovered, a "
-"service must match at least one description condition, one name condition "
-"and one state condition, if configured. To simply discover all systemd "
-"services, do not configure any restrictions. Note that independently of this "
-"rule set, some systemd service units which are used by the Checkmk agent "
-"('check-mk-agent@...') will never be discovered because they appear and "
-"disappear frequently."
-msgstr ""
-"単一の systemd サービスの検出を設定します。発見されるには、サービスが少なくと"
-"も1つの説明条件、名前条件、状態条件（設定されている場合）にマッチする必要があ"
-"ります。単純に全ての systemd サービスを検出するには、何も制限を設定しないでく"
-"ださい。このルールセットとは関係なく、Checkmk エージェント ('check-mk-"
-"agent@...') が使用するいくつかの systemd サービスユニットは、頻繁に現れたり消"
-"えたりするため、決して発見されないことに注意してください。"
 
 msgid ""
 "Configure the discovery of single systemd units (sockets or services). To be "
@@ -27601,6 +27586,10 @@ msgstr ""
 "構成されたディレクトリへの書き込みに失敗しました。ターゲットディレクトリは書"
 "き込み可能である必要があります。"
 
+#, fuzzy
+msgid "Failed units that are disabled will be considered critical"
+msgstr "故障したユニットで動作不能になったものを重大な問題として扱う"
+
 msgid "Failed!"
 msgstr "失敗しました！"
 
@@ -37989,6 +37978,10 @@ msgstr "無効な正規表現: %(e)s"
 msgid "Invalid regular expression: %(exception)s"
 msgstr "無効な正規表現: %(exception)s"
 
+#, fuzzy, python-format
+msgid "Invalid regular expression: %(pattern)s"
+msgstr "無効な正規表現: %(e)s"
+
 #, python-format
 msgid "Invalid regular expression: %(value)s"
 msgstr "無効な正規表現: %(value)s"
@@ -45548,9 +45541,6 @@ msgstr "監視サーバーのアドレス"
 msgid "Monitoring state"
 msgstr "モニター状態"
 
-msgid "Monitoring state for any other service state"
-msgstr "その他のサービス状態の監視状態"
-
 msgid "Monitoring state for any other unit state"
 msgstr "他のユニット状態の監視状態"
 
@@ -45593,10 +45583,8 @@ msgid ""
 "code)"
 msgstr "コンテナの終了に失敗した場合の監視状態（終了コードが0でない場合）"
 
-msgid "Monitoring state if a monitored service is not found at all."
-msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
-
-msgid "Monitoring state if a monitored unit is not found at all."
+#, fuzzy
+msgid "Monitoring state if a monitored unit is not found at all"
 msgstr "監視対象ユニットが全く見つからない場合の監視状態。"
 
 msgid "Monitoring state if admin state changed"
@@ -45628,15 +45616,6 @@ msgstr "ポートが使用不能になった場合の監視状態"
 
 msgid "Monitoring state if power supply is not \"powering\""
 msgstr "電源が \"通電 \"していない場合の監視状態"
-
-msgid "Monitoring state if service is active"
-msgstr "サービスがアクティブかどうかの状態の監視"
-
-msgid "Monitoring state if service is failed"
-msgstr "サービスが失敗した場合の状態の監視"
-
-msgid "Monitoring state if service is inactive"
-msgstr "サービスが非アクティブ場合、状態を監視する"
 
 msgid "Monitoring state if smoke is detected"
 msgstr "煙が検出された場合の監視状態"
@@ -47569,9 +47548,6 @@ msgstr "%(name)s' という名前で定義されたレポートはありませ�
 
 msgid "No response from update thread"
 msgstr "更新スレッドからの応答がありません"
-
-msgid "No restrictions (discover all systemd service units)"
-msgstr "制限なし（すべてのsystemdサービスユニットを検出）"
 
 msgid "No restrictions (discover all units)"
 msgstr "制限なし（全ユニットを発見）"
@@ -50545,14 +50521,15 @@ msgstr "オプション サービスグループの選択"
 msgid "Optional variable prefix"
 msgstr "オプションの変数プレフィックス"
 
+#, fuzzy, python-format
 msgid ""
 "Optional. A template that identifies the OpenTelemetry data belonging to "
-"this host, using the macros <tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, "
-"<tt>$SCOPE_ATTR.&lt;key&gt;$</tt> and <tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt> "
-"(the value of an OpenTelemetry resource, instrumentation scope or data point "
-"attribute respectively). At fetch time the template is rendered for each "
-"attribute combination in the data and a host receives the series whose "
-"rendered name equals its own host name. Example: "
+"this host, using the macros <tt>%(resource)s</tt>, <tt>%(scope)s</tt> and "
+"<tt>%(data_point)s</tt> (the value of an OpenTelemetry resource, "
+"instrumentation scope or data point attribute respectively). At fetch time "
+"the template is rendered for each attribute combination in the data and a "
+"host receives the series whose rendered name equals its own host name. "
+"Example: "
 "<tt>deployment_$RESOURCE_ATTR.k8s.namespace.name$_$RESOURCE_ATTR.k8s.deployment.name$</"
 "tt> collects the data for a host named <tt>deployment_production_nginx</tt>. "
 "A single bare macro like <tt>$RESOURCE_ATTR.service.name$</tt> simply "
@@ -58654,9 +58631,6 @@ msgstr "監視タグによる制限"
 msgid "Restrict by name"
 msgstr "名前による制限"
 
-msgid "Restrict by service unit name"
-msgstr "サービスユニット名で制限"
-
 msgid "Restrict by state"
 msgstr "状態による制限"
 
@@ -58730,12 +58704,6 @@ msgstr "次のキーを制限"
 
 msgid "Restrict the length of the lines"
 msgstr "行の長さを制限する"
-
-msgid "Restrict the systemd services by description."
-msgstr "説明によるsystemdサービスを制限。"
-
-msgid "Restrict the systemd services by unit name."
-msgstr "systemd サービスをユニット名で制限します。"
 
 msgid "Restrict the systemd units by description."
 msgstr "systemdのユニットを説明で制限する。"
@@ -68168,12 +68136,6 @@ msgstr "Systemdシングルサービス"
 msgid "Systemd single service discovery"
 msgstr "Systemdシングルサービスディスカバリー"
 
-msgid "Systemd single services"
-msgstr "Systemdシングルサービス"
-
-msgid "Systemd single services discovery"
-msgstr "Systemdシングルサービスディスカバリー"
-
 msgid "Systemd single socket"
 msgstr "Systemdシングルソケット"
 
@@ -72275,6 +72237,10 @@ msgstr "キー/証明書はすでに存在します (キー: %(key_id)s、 説�
 msgid "The key file is invalid or the password is wrong."
 msgstr "キーファイルが無効です、またはパスワードが間違っています。"
 
+#, fuzzy
+msgid "The key must not be empty or contain a colon."
+msgstr "ラベルキーにはコロンを含めてはなりません。"
+
 msgid ""
 "The key size is provided as an integer and needs to match exactly the value "
 "in the certificate."
@@ -72374,26 +72340,16 @@ msgid ""
 "Its replacement is integrated into the Agent Controller. To use it, set the "
 "activation mode to <i>Enable agent updates using the Agent Controller</i> in "
 "the rule set <a href=\"%(url)s\">Agent updater (Linux, Windows, Solaris)</"
-"a>. We recommend switching before the legacy updater is removed.<br><br>This "
-"item stays OK as long as the legacy updater is supported. It reports what "
-"the rule set configures and what the hosts run, and it will turn to a "
-"warning once the legacy updater is deprecated.<br><br>The counts cover the "
-"hosts whose baked agent enables agent updates, and tell these cases apart:"
-"<ul><li><b>Not running the updater</b>: no contact of either updater counts."
-"</li><li><b>Agent Controller only</b>: the migration of the host is done.</"
-"li><li><b>Both updaters</b>: both updaters are deployed and run in parallel."
-"</li><li><b>Legacy updater only</b>: the host has not been migrated.</"
-"li><li><b>Legacy updater installed the package</b>: the host runs both "
-"updaters, and the agent package it reports as installed is the one the "
-"legacy updater fetched.</li></ul>A contact counts if it is at most %(days)d "
-"days old and the agent the host reports as installed can hold that updater. "
-"A host whose agent was baked for the Agent Controller alone therefore stops "
-"counting as running the legacy updater at once, instead of after %(days)d "
-"days.<br><br>A host counts under the legacy updater only once it reports "
-"that package as installed, which is the update check after the installation. "
-"Until then it counts under both updaters.<br><br>The text above follows the "
-"rule set, the counts follow the baked agents. The two disagree between a "
-"change of a rule and the next bake."
+"a>. We recommend switching before the legacy updater is removed.<br><br>The "
+"counters cover the hosts whose baked agent enables agent updates:"
+"<ul><li><b>Not running the updater</b>: neither updater has contacted the "
+"site in the last %(days)d days.</li><li><b>Agent Controller only</b>: the "
+"host uses only the Agent Controller updater.</li><li><b>Legacy updater only</"
+"b>: the host uses only the legacy updater.</li><li><b>Both updaters</b>: the "
+"host uses both the Agent Controller updater and the legacy updater.</"
+"li><li><b>Legacy updater installed the package</b>: the host uses both "
+"updaters, and its current agent package was installed by the legacy updater."
+"</li></ul>A host counts in one case only."
 msgstr ""
 
 msgid ""
@@ -74953,12 +74909,12 @@ msgid "The telemetry metrics snapin shows the number of custom metrics"
 msgstr ""
 "メトリクスバックエンドスナップインには、カスタムメトリクスの数が表示されます"
 
+#, python-format
 msgid ""
 "The template the host names of this service's OpenTelemetry data are "
-"computed from, using the macros <tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, "
-"<tt>$SCOPE_ATTR.&lt;key&gt;$</tt> and <tt>$DATA_POINT_ATTR.&lt;key&gt;$</"
-"tt>. Set for custom services that are assigned to hosts via a host name "
-"template."
+"computed from, using the macros <tt>%(resource)s</tt>, <tt>%(scope)s</tt> "
+"and <tt>%(data_point)s</tt>. Set for custom services that are assigned to "
+"hosts via a host name template."
 msgstr ""
 
 #, fuzzy, python-format
@@ -79844,13 +79800,6 @@ msgid ""
 msgstr ""
 "このルールセットは、Systemd サービスの概要にのみ適用され、個々のサービスには"
 "適用されません。"
-
-msgid ""
-"This rule set only applies when individual systemd services are discovered. "
-"The user needs to configure this option in the discovery section."
-msgstr ""
-"このルールセットは、個々のSystemdサービスが検出された場合にのみ適用されます。"
-"ユーザーは、検出セクションでこのオプションを構成する必要があります。"
 
 msgid ""
 "This rule set only applies when individual systemd units are discovered. The "
@@ -91761,6 +91710,14 @@ msgstr ""
 "ServiceNowでは、様々なタイプの管理課題を作成することができます。現在サポート"
 "されているのは、インシデント管理とケース管理です。"
 
+msgid ""
+"With an explicit match, the pattern must equal the whole text. With a "
+"regular expression match, the pattern is a regular expression that is "
+"matched from the beginning. Add a trailing <tt>$</tt> to match the whole "
+"text. Read more about [regexes|regular expression matching in Checkmk] in "
+"our User Guide."
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "With authentication type set to 'OAuth2' the option '%(option)s' must be "
@@ -95449,6 +95406,10 @@ msgstr "すべてを期待する"
 msgid "explicit host labels"
 msgstr "明示的なホストラベル"
 
+#, fuzzy
+msgid "failed"
+msgstr "失敗しました"
+
 msgid "fault"
 msgstr "障害"
 
@@ -97399,6 +97360,10 @@ msgstr "値を削除する"
 msgid "At most %{count} values can be selected"
 msgstr "選択されていない"
 
+#, fuzzy
+msgid "Copy to clipboard"
+msgstr "URLをクリップボードにコピー"
+
 msgid "Copied to clipboard"
 msgstr "クリップボードにコピー"
 
@@ -98638,12 +98603,12 @@ msgid "Redirect to the default page defined by Checkmk."
 msgstr ""
 
 #, fuzzy
-msgid "Always included in the contextual link"
-msgstr "少なくとも1つの連絡先グループを追加してください。"
+msgid "Include dashboard & widget filters"
+msgstr "ダッシュボードにフォルダー %{n} を準備しました"
 
 #, fuzzy
-msgid "Applied dashboard & widget filters"
-msgstr "ダッシュボードにフォルダー %{n} を準備しました"
+msgid "Always included in the contextual link"
+msgstr "少なくとも1つの連絡先グループを追加してください。"
 
 #, fuzzy
 msgid "Contextual filter = clicked element"
@@ -98664,10 +98629,6 @@ msgstr "アップリンク名"
 #, fuzzy
 msgid "e.g. host details"
 msgstr "BIホストの詳細"
-
-#, fuzzy
-msgid "Include dashboard & widget filters"
-msgstr "ダッシュボードにフォルダー %{n} を準備しました"
 
 #, fuzzy
 msgid "Include filter context of clicked element"
@@ -100143,10 +100104,6 @@ msgid ""
 msgstr ""
 "この設定では明示的な値が使用され、工場出荷時の設定およびグローバル設定の値が"
 "上書きされます。"
-
-#, fuzzy
-msgid "Copy to clipboard"
-msgstr "URLをクリップボードにコピー"
 
 msgid "Current setting"
 msgstr "現在の設定"
@@ -102335,6 +102292,9 @@ msgstr "デバイスタイプを選択します"
 msgid "Place on map"
 msgstr "クローン"
 
+msgid "Start each line with %{headers}."
+msgstr ""
+
 msgid "Pick a metric — weather coloring needs one to colorize the line."
 msgstr ""
 "ラインの自動色分け（Weather Coloring）を行うには、基準にするメトリック（指"
@@ -104288,6 +104248,10 @@ msgstr "このサービスに関する他のログ"
 msgid "Services to be created"
 msgstr "サービスの状態"
 
+#, fuzzy
+msgid "Updating…"
+msgstr "読み込んでいます…"
+
 msgid ""
 "Enter a service name and select a host or enter a host name template to see "
 "the services to be created."
@@ -104309,8 +104273,25 @@ msgid "Target host:"
 msgstr "ターゲットホスト："
 
 #, fuzzy
-msgid "(new host)"
-msgstr "(ホストなし)"
+msgid "To be created"
+msgstr " | 作成"
+
+#, fuzzy
+msgid "Existing"
+msgstr "テスト"
+
+#, fuzzy
+msgid "Folder:"
+msgstr "フォルダ"
+
+#, fuzzy
+msgid "Folder of %{host}"
+msgstr "フォルダ: %s"
+
+msgid ""
+"The folders you may create hosts in could not be looked up, so new hosts go "
+"to the Main folder. Saving fails if you may not create hosts there."
+msgstr ""
 
 #, fuzzy
 msgid "Showing the first %{shown} of %{total} services."
@@ -104326,6 +104307,45 @@ msgid "%{count} more service names clash."
 msgstr "施行されたサービス"
 
 msgid "Series appearing after saving add services that are not shown here."
+msgstr ""
+
+#, fuzzy
+msgid "%{n} more new host is created in"
+msgid_plural "%{n} more new hosts are created in"
+msgstr[0] "ホスト作成"
+
+#, fuzzy
+msgid "%{n} new host is created in"
+msgid_plural "%{n} new hosts are created in"
+msgstr[0] "ホスト作成"
+
+#, fuzzy
+msgid "Several folders"
+msgstr "サービスフォルダ"
+
+#, fuzzy
+msgid "Folder of the other new hosts"
+msgstr "散らばった点の色"
+
+msgid ""
+"You may not create hosts: you lack the permission \"Add & remove hosts\". "
+"Saving is refused while the template resolves to new hosts."
+msgstr ""
+
+msgid ""
+"You may not create hosts in any folder: you have neither \"Write access to "
+"all hosts and folders\" nor membership in a contact group permitted on a "
+"folder. Saving is refused while the template resolves to new hosts."
+msgstr ""
+
+msgid ""
+"You may not create hosts in any folder: the hosts are locked in every folder "
+"you may write to. Saving is refused while the template resolves to new hosts."
+msgstr ""
+
+msgid ""
+"You may not create hosts in any folder. Saving is refused while the template "
+"resolves to new hosts."
 msgstr ""
 
 #, fuzzy
@@ -104346,7 +104366,7 @@ msgid "Target hosts:"
 msgstr "ターゲットホスト："
 
 #, fuzzy
-msgid "New hosts, created in the Main folder on saving:"
+msgid "New hosts, created on saving:"
 msgstr "各フォルダに作成するホスト"
 
 msgid ""
@@ -107613,7 +107633,9 @@ msgstr ""
 #, fuzzy
 msgctxt ""
 "%{link} is a link to the global setting with the text \"global settings\""
-msgid "You can change your decision at any time in %{link}."
+msgid ""
+"You can disable this reminder or change your decision at any time in the %"
+"{link}."
 msgstr "この設定は、プロフィール設定からいつでも変更できます。"
 
 msgid "Help us improve Checkmk with product usage analytics"
@@ -107650,10 +107672,11 @@ msgstr ""
 msgid "We do NOT collect: "
 msgstr "収集しない内容: "
 
+#, fuzzy
 msgid ""
-"any data about users or their behavior (e.g., PII) or possibly sensitive "
-"identifiers about your environment (e.g., hostnames, file paths, service "
-"names)."
+"any data about users or their behavior (e.g., personally identifiable "
+"information) or possibly sensitive identifiers about your environment (e.g., "
+"hostnames, file paths, service names)."
 msgstr ""
 "ユーザーやその行動に関するデータ（例：個人を特定できる情報PII）や、お客様の環"
 "境に関する機密性高い識別子（例：ホスト名、ファイルパス、サービス名など）。"
@@ -109316,6 +109339,82 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "取り上げるトピック"
+
+#~ msgid ""
+#~ "Choose time levels (in seconds) for which a unit is allowed to be in a "
+#~ "'reloading' state"
+#~ msgstr ""
+#~ "ユニットが[リロード]状態にあることを許可する時間レベル(秒)を選択します"
+
+#~ msgid ""
+#~ "Choose time levels (in seconds) for which a unti is allowed to be in an "
+#~ "'deactivating' state"
+#~ msgstr "ユニットが[停止]状態にあることを許可する時間レベル(秒)を選択します"
+
+#~ msgid ""
+#~ "Configure the discovery of single systemd services. To be discovered, a "
+#~ "service must match at least one description condition, one name condition "
+#~ "and one state condition, if configured. To simply discover all systemd "
+#~ "services, do not configure any restrictions. Note that independently of "
+#~ "this rule set, some systemd service units which are used by the Checkmk "
+#~ "agent ('check-mk-agent@...') will never be discovered because they appear "
+#~ "and disappear frequently."
+#~ msgstr ""
+#~ "単一の systemd サービスの検出を設定します。発見されるには、サービスが少な"
+#~ "くとも1つの説明条件、名前条件、状態条件（設定されている場合）にマッチする"
+#~ "必要があります。単純に全ての systemd サービスを検出するには、何も制限を設"
+#~ "定しないでください。このルールセットとは関係なく、Checkmk エージェント "
+#~ "('check-mk-agent@...') が使用するいくつかの systemd サービスユニットは、頻"
+#~ "繁に現れたり消えたりするため、決して発見されないことに注意してください。"
+
+#~ msgid "Monitoring state for any other service state"
+#~ msgstr "その他のサービス状態の監視状態"
+
+#~ msgid "Monitoring state if a monitored service is not found at all."
+#~ msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
+
+#~ msgid "Monitoring state if service is active"
+#~ msgstr "サービスがアクティブかどうかの状態の監視"
+
+#~ msgid "Monitoring state if service is failed"
+#~ msgstr "サービスが失敗した場合の状態の監視"
+
+#~ msgid "Monitoring state if service is inactive"
+#~ msgstr "サービスが非アクティブ場合、状態を監視する"
+
+#~ msgid "No restrictions (discover all systemd service units)"
+#~ msgstr "制限なし（すべてのsystemdサービスユニットを検出）"
+
+#~ msgid "Restrict by service unit name"
+#~ msgstr "サービスユニット名で制限"
+
+#~ msgid "Restrict the systemd services by description."
+#~ msgstr "説明によるsystemdサービスを制限。"
+
+#~ msgid "Restrict the systemd services by unit name."
+#~ msgstr "systemd サービスをユニット名で制限します。"
+
+#~ msgid "Systemd single services"
+#~ msgstr "Systemdシングルサービス"
+
+#~ msgid "Systemd single services discovery"
+#~ msgstr "Systemdシングルサービスディスカバリー"
+
+#~ msgid ""
+#~ "This rule set only applies when individual systemd services are "
+#~ "discovered. The user needs to configure this option in the discovery "
+#~ "section."
+#~ msgstr ""
+#~ "このルールセットは、個々のSystemdサービスが検出された場合にのみ適用されま"
+#~ "す。ユーザーは、検出セクションでこのオプションを構成する必要があります。"
+
+#, fuzzy
+#~ msgid "Applied dashboard & widget filters"
+#~ msgstr "ダッシュボードにフォルダー %{n} を準備しました"
+
+#, fuzzy
+#~ msgid "(new host)"
+#~ msgstr "(ホストなし)"
 
 #, fuzzy
 #~ msgid ""
@@ -112511,9 +112610,6 @@ msgstr "取り上げるトピック"
 #~ msgid "no commands"
 #~ msgstr "コマンドなし"
 
-#~ msgid " | created"
-#~ msgstr " | 作成"
-
 #~ msgid "The offset in s at which a WARNING state is triggered."
 #~ msgstr "WARNING状態がトリガーされる秒単位のオフセット。"
 
@@ -114273,10 +114369,6 @@ msgstr "取り上げるトピック"
 #~ msgstr "%s / %s の %s をフェッチしています"
 
 #, python-format
-#~ msgid "Folder: %s"
-#~ msgstr "フォルダ: %s"
-
-#, python-format
 #~ msgid "From %s until %s (%s) %s"
 #~ msgstr "%s から %s (%s) %sまで"
 
@@ -115116,10 +115208,6 @@ msgstr "取り上げるトピック"
 #, fuzzy
 #~ msgid "newly created"
 #~ msgstr "作成されたファイル"
-
-#, fuzzy
-#~ msgid "existing"
-#~ msgstr "テスト"
 
 #, fuzzy
 #~ msgid "Event Console resource attribute"

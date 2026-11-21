@@ -4,28 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Count the users of the site
 
-The GUI owns the user database, but this package must not import it. The few files read here are
-therefore read directly:
+Besides the user store (see user_store), this reads
+etc/check_mk/multisite.d/wato/user_connections.mk for the type of each connection.
 
-- etc/check_mk/multisite.d/wato/users.mk: roles and connection ID of each user
-- etc/check_mk/multisite.d/wato/user_connections.mk: the type of each connection
-- var/check_mk/web/<user>/automation_user.mk, automation.secret: automation user flag
-- var/check_mk/web/<user>/session_info.mk: last activity of the GUI sessions
-- var/check_mk/web/<user>/last_login.mk: last request authenticated by a header (REST API,
-  basic auth, ...). This is written for automation users on every request.
-
-Only counts leave this module. User IDs, role names of custom roles and connection IDs are not
-part of the result.
+Only counts leave this module. Role names of custom roles and connection IDs are not part of the
+result.
 """
 
-import ast
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import NamedTuple
 
 from cmk.ccc.store import load_from_mk_file
-from cmk.product_usage.collectors.user_store import load_users
+from cmk.product_usage.collectors.user_store import StoredUser
 from cmk.product_usage.schema import ActiveUsers, UserGroupData, UsersData
 
 # Mirrors cmk.gui.config.builtin_role_ids
@@ -40,8 +32,7 @@ _BUILTIN_CONNECTION_TYPES: Mapping[str, str] = {
 _DAY = 86400
 
 
-def collect(default_config_dir: Path, profile_dir: Path, now: int) -> UsersData:
-    users = load_users(default_config_dir)
+def collect(users: Iterable[StoredUser], default_config_dir: Path, now: int) -> UsersData:
     connections: list[Mapping[str, object]] = load_from_mk_file(
         default_config_dir / "multisite.d" / "wato" / "user_connections.mk",
         key="user_connections",
@@ -55,14 +46,15 @@ def collect(default_config_dir: Path, profile_dir: Path, now: int) -> UsersData:
 
     humans: list[_UserInfo] = []
     automation: list[_UserInfo] = []
-    for user_id, user in users.items():
-        user_dir = profile_dir / user_id
+    for user in users:
         info = _UserInfo(
-            roles=_roles(user),
-            connector_type=connection_types.get(str(user.get("connector", "htpasswd")), "unknown"),
-            last_seen=_last_seen(user_dir),
+            roles=_roles(user.attributes),
+            connector_type=connection_types.get(
+                str(user.attributes.get("connector", "htpasswd")), "unknown"
+            ),
+            last_seen=user.last_seen,
         )
-        (automation if _is_automation_user(user_dir) else humans).append(info)
+        (automation if user.is_automation else humans).append(info)
 
     return UsersData(
         humans=_group_data(humans, now),
@@ -100,38 +92,3 @@ def _group_data(users: list[_UserInfo], now: int) -> UserGroupData:
 
 def _count_active(users: Iterable[_UserInfo], since: int) -> int:
     return sum(1 for user in users if user.last_seen >= since)
-
-
-def _is_automation_user(user_dir: Path) -> bool:
-    # Same check as cmk.gui.userdb.store: the automation_user.mk file was added with 2.4, before
-    # that the automation secret was the only indicator.
-    return (user_dir / "automation.secret").is_file() or _read_literal(
-        user_dir / "automation_user.mk"
-    ) is True
-
-
-def _last_seen(user_dir: Path) -> int:
-    """Most recent activity of the user, like cmk.gui.userdb.get_last_seen"""
-    timestamps = [0]
-
-    session_infos = _read_literal(user_dir / "session_info.mk")
-    if isinstance(session_infos, dict):
-        timestamps.extend(
-            int(session["last_activity"])
-            for session in session_infos.values()
-            if isinstance(session, dict) and "last_activity" in session
-        )
-
-    last_login = _read_literal(user_dir / "last_login.mk")
-    if isinstance(last_login, dict) and "timestamp" in last_login:
-        timestamps.append(int(last_login["timestamp"]))
-
-    return max(timestamps)
-
-
-def _read_literal(path: Path) -> object:
-    try:
-        content = path.read_text(encoding="utf-8").strip()
-    except FileNotFoundError:
-        return None
-    return ast.literal_eval(content) if content else None

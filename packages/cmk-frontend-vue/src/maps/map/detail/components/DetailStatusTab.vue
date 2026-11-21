@@ -19,6 +19,7 @@ import type { MapElement, ObjectDetails, ObjectState } from '@/maps/types/api'
 import { stateExclusion } from '@/maps/utils/memberFilter'
 
 import { checkInfoRows, identityRows, stateModifiers } from '../statusFacts'
+import DetailHostChips from './DetailHostChips.vue'
 import DetailMetaList from './DetailMetaList.vue'
 import DetailStateBadges from './DetailStateBadges.vue'
 
@@ -34,7 +35,13 @@ const props = defineProps<{
   serviceChips: MapStateCount[]
   /** Ticks once a second so the ageing labels move on their own. */
   nowMs: number
+  /** Host names on this map, which a parent named here can therefore lead to. */
+  selectableHosts: string[]
+  /** Hosts known to be up: no parent the host is cut off through. */
+  hostsUp?: ReadonlySet<string> | undefined
 }>()
+
+const emit = defineEmits<{ 'select-host': [hostName: string] }>()
 
 const { _t } = usei18n()
 
@@ -42,6 +49,14 @@ const modifiers = computed(() => stateModifiers(props.state, props.details))
 
 const uncounted = computed(() =>
   props.hostChips.length || props.serviceChips.length ? stateExclusion(props.object) : null
+)
+
+// An unreachable host's own output says little: what to look at is the parent
+// that cut it off.
+const reachedThrough = computed(() =>
+  props.state.state === 'UNREACHABLE'
+    ? (props.details?.parents ?? []).filter((parent) => !props.hostsUp?.has(parent))
+    : []
 )
 
 const facts = computed(() => [
@@ -55,6 +70,15 @@ const facts = computed(() => [
     <DetailStateBadges :modifiers="modifiers" />
 
     <pre v-if="state.output" class="maps-detail-status-tab__output">{{ state.output }}</pre>
+
+    <div v-if="reachedThrough.length" class="maps-detail-status-tab__reached-through">
+      <span>{{ _t('Unreachable through') }}</span>
+      <DetailHostChips
+        :hosts="reachedThrough"
+        :selectable-hosts="selectableHosts"
+        @select-host="emit('select-host', $event)"
+      />
+    </div>
 
     <MapStateCounts v-if="hostChips.length" :counts="hostChips" :label="_t('Hosts')" />
     <MapStateCounts v-if="serviceChips.length" :counts="serviceChips" :label="_t('Services')" />
@@ -88,6 +112,13 @@ const facts = computed(() => [
   overflow: auto;
   white-space: pre-wrap;
   max-height: 180px;
+}
+
+.maps-detail-status-tab__reached-through {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dimension-3);
 }
 
 .maps-detail-status-tab__uncounted {

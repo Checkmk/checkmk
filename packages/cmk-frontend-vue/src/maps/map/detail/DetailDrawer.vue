@@ -67,6 +67,8 @@ const props = defineProps<{
    * followed on the map; the others are only names.
    */
   selectableHosts?: string[]
+  /** Hosts on this map known to be up, which an unreachable host is not cut off through. */
+  hostsUp?: ReadonlySet<string> | undefined
   /**
    * Whether this drawer is on a surface nobody is operating -- a kiosk wall, the
    * settings live preview. Not whether the map's definition can be edited: a
@@ -346,6 +348,9 @@ const accentStyle = computed(() => ({
                 :host-chips="hostChips"
                 :service-chips="serviceChips"
                 :now-ms="nowMs"
+                :selectable-hosts="selectableHosts ?? []"
+                :hosts-up="hostsUp"
+                @select-host="emit('select-host', $event)"
               >
                 <template #aggregation>
                   <DetailAggregationSection

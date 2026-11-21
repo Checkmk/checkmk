@@ -1262,9 +1262,10 @@ class LivestatusConnection(ConnectionBase):
         # or, with an unbalanced ``(``/``+``, make Livestatus reject the query.
         # Livestatus combines bare Filter lines with AND by default; each bare term
         # collapses its two columns with ``Or: 2`` first, then a trailing ``And:``
-        # ANDs all the resulting conditions together.
+        # ANDs all the resulting conditions together. A ``*`` stands for any run of
+        # characters, as in the map search.
         def _rx(needle: str) -> str:
-            return re.escape(lqencode(needle))
+            return ".*".join(re.escape(lqencode(part)) for part in needle.split("*"))
 
         filters = ""
         for t in service_terms:

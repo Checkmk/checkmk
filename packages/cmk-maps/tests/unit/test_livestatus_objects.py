@@ -81,3 +81,12 @@ def test_service_search_drops_a_line_break_from_a_term(monkeypatch: pytest.Monke
     )
 
     assert "Filter: description ~~ cpu\n" in queries[0]
+
+
+def test_service_search_takes_a_star_for_any_characters(monkeypatch: pytest.MonkeyPatch) -> None:
+    queries: list[str] = []
+    conn = _connection(monkeypatch, [], queries)
+
+    asyncio.run(conn.search_services(host_terms=[], service_terms=["c*(u"], any_terms=[], limit=10))
+
+    assert "Filter: description ~~ c.*\\(u\n" in queries[0]

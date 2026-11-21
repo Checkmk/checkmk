@@ -16,7 +16,8 @@ import {
   type FilterField,
   type FilterTerm,
   matchesFilterTerms,
-  parseFilterTerms
+  parseFilterTerms,
+  termMatches
 } from '@/maps/utils/objectFilter'
 import { type ProblemSeverity, isProblemState } from '@/maps/utils/problemState'
 
@@ -62,8 +63,7 @@ function hostNameMatches(hostName: string, terms: FilterTerm[]): boolean {
   if (terms.length === 0) {
     return true
   }
-  const name = hostName.toLowerCase()
-  return terms.every((term) => term.field === 'service' || name.includes(term.needle))
+  return terms.every((term) => term.field === 'service' || termMatches(term, hostName))
 }
 
 // Whether a host shows under the active query. With a service-scoped term the
@@ -100,8 +100,7 @@ function folderNameMatches(folderName: string, terms: FilterTerm[]): boolean {
   if (terms.length === 0) {
     return false
   }
-  const name = folderName.toLowerCase()
-  return terms.every((term) => term.field === 'any' && name.includes(term.needle))
+  return terms.every((term) => term.field === 'any' && termMatches(term, folderName))
 }
 
 /** Whether a node is itself a full query hit, so its whole subtree counts as

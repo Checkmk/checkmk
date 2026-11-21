@@ -35,6 +35,27 @@ const PREFIX_MAP: Record<string, FilterField> = {
 export interface FilterTerm {
   field: FilterField
   needle: string
+  /** For a needle with ``*`` in it, which stands for any run of characters: the parts between. */
+  parts?: string[]
+}
+
+function termOf(field: FilterField, needle: string): FilterTerm {
+  return needle.includes('*')
+    ? { field, needle, parts: needle.split('*').filter(Boolean) }
+    : { field, needle }
+}
+
+/** Whether ``parts`` occur in ``value`` in this order, in linear time whatever the stars. */
+function holdsInOrder(value: string, parts: readonly string[]): boolean {
+  let from = 0
+  for (const part of parts) {
+    const at = value.indexOf(part, from)
+    if (at < 0) {
+      return false
+    }
+    from = at + part.length
+  }
+  return true
 }
 
 const PREFIX_KEYS = Object.keys(PREFIX_MAP).join('|')
@@ -56,11 +77,11 @@ export function parseFilterTerms(query: string): FilterTerm[] {
       const value = raw.slice(colon + 1)
       const field = PREFIX_MAP[prefix]
       if (field && value) {
-        terms.push({ field, needle: value.toLowerCase() })
+        terms.push(termOf(field, value.toLowerCase()))
         continue
       }
     }
-    terms.push({ field: 'any', needle: raw.toLowerCase() })
+    terms.push(termOf('any', raw.toLowerCase()))
   }
   return terms
 }
@@ -77,9 +98,13 @@ export function matchesFilterTerms(
   if (terms.length === 0) {
     return true
   }
-  return terms.every(({ field, needle }) =>
-    getValues(field).some((v) => v.toLowerCase().includes(needle))
-  )
+  return terms.every((term) => getValues(term.field).some((value) => termMatches(term, value)))
+}
+
+/** Whether ``value`` holds what ``term`` asks for, regardless of case. */
+export function termMatches(term: FilterTerm, value: string): boolean {
+  const lower = value.toLowerCase()
+  return term.parts ? holdsInOrder(lower, term.parts) : lower.includes(term.needle)
 }
 
 function mapElementFieldValue(obj: MapElement, field: FilterField): string[] {

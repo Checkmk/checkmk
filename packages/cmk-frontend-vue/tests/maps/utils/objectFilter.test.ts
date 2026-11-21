@@ -23,6 +23,11 @@ function obj(over: Partial<MapElement>): MapElement {
 }
 
 describe('objectMatchesFilter', () => {
+  it("takes '*' for any run of characters, and the rest literally", () => {
+    expect(objectMatchesFilter(obj({ host_name: 'perf-00812' }), 'perf-0*2')).toBe(true)
+    expect(objectMatchesFilter(obj({ host_name: 'perf-00812' }), 'perf.0*')).toBe(false)
+  })
+
   it('treats empty needle as a wildcard match', () => {
     expect(objectMatchesFilter(obj({}), '')).toBe(true)
     expect(objectMatchesFilter(obj({}), '   ')).toBe(true)

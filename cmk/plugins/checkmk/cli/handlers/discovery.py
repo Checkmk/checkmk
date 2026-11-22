@@ -73,6 +73,7 @@ from ._exit_code import state_exit_code
 from ._file_cache import make_file_cache_options
 from ._snmp_fetcher import snmp_fetcher_config, snmp_section_selection
 from .agent_based import extract_plugin_selection, load_checks, PluginSelectionError
+from .host_selection import monitored_hosts
 
 
 def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:
@@ -380,12 +381,17 @@ def _discover(request: DiscoverRequest, *, omd_root: Path, debug: bool) -> bool:
         error_handler=config.handle_ip_lookup_failure,
     )
 
-    hostnames = config.parse_hostname_list(config_cache, hosts_config, host_tags, request.hosts)
-    if hostnames:
+    hostnames: Sequence[HostName]
+    if request.hosts:
+        hostnames = config.expand_host_specs(
+            monitored_hosts(hosts_config, config_cache), request.hosts, host_tags
+        )
         # In case of discovery with host restriction, do not use the cache
         # file by default as -I and -II are used for debugging.
         file_cache_options = FileCacheOptions(disabled=True, use_outdated=False)
     else:
+        # No hosts specified: _preprocess_hostnames defaults to all hosts.
+        hostnames = ()
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
         file_cache_options = FileCacheOptions(disabled=False, use_outdated=True)

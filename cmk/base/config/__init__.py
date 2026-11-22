@@ -9,6 +9,7 @@ from ._impl import CheckmkCheckParameters as CheckmkCheckParameters
 from ._impl import ConfigCache as ConfigCache
 from ._impl import CoreObjectsConfig as CoreObjectsConfig
 from ._impl import EnforcedServicesTable as EnforcedServicesTable
+from ._impl import expand_host_specs as expand_host_specs
 from ._impl import FilterMode as FilterMode
 from ._impl import get_relay_id as get_relay_id
 from ._impl import get_ssc_host_config as get_ssc_host_config
@@ -31,7 +32,6 @@ from ._impl import make_parser_config as make_parser_config
 from ._impl import make_ruleset_matcher as make_ruleset_matcher
 from ._impl import ObjectAttributes as ObjectAttributes
 from ._impl import ObjectMacros as ObjectMacros
-from ._impl import parse_hostname_list as parse_hostname_list
 from ._impl import perform_post_config_loading_actions as perform_post_config_loading_actions
 from ._impl import ResolvedHostCheckCommand as ResolvedHostCheckCommand
 from ._impl import SERVICE_RETRY_INTERVAL as SERVICE_RETRY_INTERVAL

@@ -14,6 +14,8 @@ py_cmk_test(
         "//cmk/plugins/checkmk/cli/handlers",
         "//packages/cmk-plugin-apis:automations",
         "//packages/cmk-plugin-apis:cli",
+        "//packages/cmk-ruleset-matcher",
+        "//tests/testlib/unit",
         "//tests/unit:conftest",
         requirement("pytest-random-order"),
     ],

@@ -720,37 +720,14 @@ class HostSelectionError(Exception):
     """A host name or tag specification does not match any host"""
 
 
-def parse_hostname_list(
-    config_cache: ConfigCache,
-    hosts_config: Hosts,
-    host_tags: HostTags,
-    args: Sequence[str],
-    with_clusters: bool = True,
-    with_foreign_hosts: bool = False,
-) -> Sequence[HostName]:
-    if with_foreign_hosts:
-        valid_hosts = set(hosts_config.hosts)
-    else:
-        valid_hosts = {
-            hn
-            for hn in hosts_config.hosts
-            if config_cache.is_active(hn) and config_cache.is_online(hn)
-        }
-
-    if with_clusters:
-        valid_hosts = valid_hosts.union(
-            hn
-            for hn in hosts_config.clusters
-            # Inconsistent with `with_foreign_hosts` above.
-            if config_cache.is_active(hn) and config_cache.is_online(hn)
-        )
-
-    return _expand_host_specs(valid_hosts, args, host_tags)
-
-
-def _expand_host_specs(
+def expand_host_specs(
     valid_hosts: Collection[HostName], host_specs: Iterable[str], host_tags: HostTags
 ) -> Sequence[HostName]:
+    """Allow to specify hosts by name or by tags.
+
+    Returns a subset of 'valid_hosts', and raises `HostSelectionError` for a spec that does not
+    match anything.
+    """
     hostlist = list[HostName]()
     for arg in host_specs:
         if arg in valid_hosts:

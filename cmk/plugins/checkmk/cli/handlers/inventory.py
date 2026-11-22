@@ -60,6 +60,7 @@ from cmk.utils.log import console, section
 from ._file_cache import make_file_cache_options
 from ._snmp_fetcher import snmp_fetcher_config, snmp_section_selection
 from .agent_based import extract_plugin_selection, load_checks, PluginSelectionError
+from .host_selection import monitored_hosts
 
 
 class _Inventorize(Protocol):
@@ -99,20 +100,14 @@ def _inventorize(request: InventoryRequest, *, omd_root: Path, debug: bool) -> N
         error_handler=config.handle_ip_lookup_failure,
     )
 
+    valid_hosts = monitored_hosts(hosts_config, config_cache)
+    hostnames: Sequence[HostName]
     if request.hosts:
-        hostnames = config.parse_hostname_list(
-            config_cache, hosts_config, host_tags, request.hosts, with_clusters=True
-        )
+        hostnames = config.expand_host_specs(valid_hosts, request.hosts, host_tags)
         console.verbose(f"Doing HW/SW Inventory on: {', '.join(hostnames)}")
     else:
-        # No hosts specified: do all hosts and force caching
-        hostnames = sorted(
-            {
-                hn
-                for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
-                if config_cache.is_active(hn) and config_cache.is_online(hn)
-            }
-        )
+        # No hosts specified: do all hosts
+        hostnames = sorted(valid_hosts)
         console.verbose("Doing HW/SW Inventory on all hosts")
 
     with (

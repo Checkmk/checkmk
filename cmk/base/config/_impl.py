@@ -1803,21 +1803,15 @@ class ConfigCache:
     def is_tcp(self, host_name: HostName) -> bool:
         return self.computed_datasources(host_name).is_tcp
 
-    def _is_only_host(self, host_name: HostName) -> bool:
+    def is_online(self, host_name: HostName) -> bool:
+        # Returns False if host_name is associated with this site,
+        # but has been removed by the "only_hosts" rule. Normally these
+        # are the hosts which have the tag "offline".
         if self._loaded_config.only_hosts is None:
             return True
         return self.ruleset_matcher.get_host_bool_value(
             host_name, self._loaded_config.only_hosts, self.label_manager.labels_of_host
         )
-
-    def is_offline(self, host_name: HostName) -> bool:
-        # Returns True if host_name is associated with this site,
-        # but has been removed by the "only_hosts" rule. Normally these
-        # are the hosts which have the tag "offline".
-        return not self.is_online(host_name)
-
-    def is_online(self, host_name: HostName) -> bool:
-        return self._is_only_host(host_name)
 
     def is_active(self, host_name: HostName) -> bool:
         """Return True if host is active, else False."""

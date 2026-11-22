@@ -124,7 +124,7 @@ def _list_all_hosts_with_tags(
 
     if "offline" in tags:
         hostnames = filter(
-            lambda hn: config_cache.is_active(hn) and config_cache.is_offline(hn),
+            lambda hn: config_cache.is_active(hn) and not config_cache.is_online(hn),
             itertools.chain(hosts_config.hosts, hosts_config.clusters),
         )
     else:

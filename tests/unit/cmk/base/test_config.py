@@ -99,7 +99,7 @@ def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:
     assert not [
         hn
         for hn in loading_result.hosts_config.hosts
-        if config_cache.is_active(hn) and config_cache.is_offline(hn)
+        if config_cache.is_active(hn) and not config_cache.is_online(hn)
     ]
 
 
@@ -126,7 +126,7 @@ def test_all_offline_hosts_with_wato_default_config(monkeypatch: MonkeyPatch) ->
     assert [
         hn
         for hn in loading_result.hosts_config.hosts
-        if config_cache.is_active(hn) and config_cache.is_offline(hn)
+        if config_cache.is_active(hn) and not config_cache.is_online(hn)
     ] == ["blub1"]
 
 
@@ -155,7 +155,7 @@ def test_all_configured_offline_hosts(monkeypatch: MonkeyPatch) -> None:
     assert [
         hn
         for hn in loading_result.hosts_config.hosts
-        if config_cache.is_active(hn) and config_cache.is_offline(hn)
+        if config_cache.is_active(hn) and not config_cache.is_online(hn)
     ] == ["blub1"]
 
 

@@ -3,8 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
+import pytest
+
 from cmk.ccc.hostaddress import HostName
 from cmk.ruleset_matcher.tags import (
+    expand_host_specs,
+    HostSelectionError,
     HostTags,
     hosttags_match_taglist,
     TagConfigSpec,
@@ -149,3 +155,77 @@ def test_hosttags_match_taglist_negate() -> None:
         [TagID("no-agent"), TagID("test")], [TagID("no-agent"), TagID("!test")]
     )
     assert hosttags_match_taglist([TagID("no-agent")], [TagID("no-agent"), TagID("!test")])
+
+
+_HOST_TAGS = {
+    HostName("lan1"): [TagID("lan")],
+    HostName("lan2"): [TagID("lan")],
+    HostName("wan1"): [TagID("wan")],
+    HostName("wan-test"): [TagID("wan"), TagID("test")],
+}
+
+
+def _expand_host_specs(
+    host_specs: Sequence[str],
+    host_tags: Mapping[HostName, Sequence[TagID]] = _HOST_TAGS,
+) -> Sequence[HostName]:
+    return expand_host_specs(
+        host_specs,
+        choose_from=host_tags.keys(),
+        host_tags=HostTags(host_tags_sequences=host_tags, host_tags_maps={}, site_id="site1"),
+    )
+
+
+def test_expand_host_specs_keeps_host_names_in_given_order() -> None:
+    assert _expand_host_specs(["wan1", "lan1"]) == [HostName("wan1"), HostName("lan1")]
+
+
+@pytest.mark.parametrize("arg", ["@wan", "wan"])
+def test_expand_host_specs_selects_hosts_by_tag(arg: str) -> None:
+    assert sorted(_expand_host_specs([arg])) == [HostName("wan-test"), HostName("wan1")]
+
+
+def test_expand_host_specs_requires_all_comma_separated_tags() -> None:
+    assert _expand_host_specs(["@wan,test"]) == [HostName("wan-test")]
+
+
+@pytest.mark.parametrize(
+    "arg, expected",
+    [
+        pytest.param("lan", [HostName("lan")], id="host name wins over tag"),
+        pytest.param(
+            "@lan", [HostName("lan"), HostName("lan1"), HostName("lan2")], id="@ forces tag"
+        ),
+    ],
+)
+def test_expand_host_specs_at_prefix_disambiguates_host_name_and_tag(
+    arg: str, expected: Sequence[HostName]
+) -> None:
+    host_tags = {**_HOST_TAGS, HostName("lan"): [TagID("lan")]}
+
+    assert sorted(_expand_host_specs([arg], host_tags)) == expected
+
+
+def test_expand_host_specs_repeats_hosts_matched_by_several_args() -> None:
+    # Pins current behavior: duplicates are not removed.
+    assert sorted(_expand_host_specs(["lan1", "@lan"])) == [
+        HostName("lan1"),
+        HostName("lan1"),
+        HostName("lan2"),
+    ]
+
+
+@pytest.mark.parametrize("arg", ["unknown-host", "@dmz", ""])
+def test_expand_host_specs_rejects_spec_without_match(arg: str) -> None:
+    with pytest.raises(HostSelectionError, match="does not match any host"):
+        _expand_host_specs([arg])
+
+
+def test_expand_host_specs_only_returns_valid_hosts() -> None:
+    hostlist = expand_host_specs(
+        ["@lan"],
+        choose_from=[HostName("lan1")],
+        host_tags=HostTags(host_tags_sequences=_HOST_TAGS, host_tags_maps={}, site_id="site1"),
+    )
+
+    assert hostlist == [HostName("lan1")]

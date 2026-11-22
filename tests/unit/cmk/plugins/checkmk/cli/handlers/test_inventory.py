@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from cmk.base.config import HostSelectionError
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.plugins.checkmk.cli.handlers.agent_based import PluginSelectionError
@@ -17,6 +16,7 @@ from cmk.plugins.checkmk.cli.handlers.inventory import (
 )
 from cmk.plugins.checkmk.cli.inventory import InventoryRequest
 from cmk.plugins.checkmk.cli.options import FetchRequest, FileCacheRequest, PluginSelectionRequest
+from cmk.ruleset_matcher.tags import HostSelectionError
 
 from ._context import context, OMD_ROOT
 

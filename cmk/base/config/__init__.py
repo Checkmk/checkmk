@@ -9,7 +9,6 @@ from ._impl import CheckmkCheckParameters as CheckmkCheckParameters
 from ._impl import ConfigCache as ConfigCache
 from ._impl import CoreObjectsConfig as CoreObjectsConfig
 from ._impl import EnforcedServicesTable as EnforcedServicesTable
-from ._impl import expand_host_specs as expand_host_specs
 from ._impl import FilterMode as FilterMode
 from ._impl import get_relay_id as get_relay_id
 from ._impl import get_ssc_host_config as get_ssc_host_config
@@ -17,7 +16,6 @@ from ._impl import handle_ip_lookup_failure as handle_ip_lookup_failure
 from ._impl import HOST_CHECK_INTERVAL as HOST_CHECK_INTERVAL
 from ._impl import HostCheckTable as HostCheckTable
 from ._impl import HostgroupName as HostgroupName
-from ._impl import HostSelectionError as HostSelectionError
 from ._impl import IgnoredActiveServices as IgnoredActiveServices
 from ._impl import iter_skipped_services_warnings as iter_skipped_services_warnings
 from ._impl import load as load

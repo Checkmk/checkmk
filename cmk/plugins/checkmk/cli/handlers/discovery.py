@@ -65,6 +65,7 @@ from cmk.plugins.checkmk.cli.discovery import (
     DiscoverRequest,
 )
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
+from cmk.ruleset_matcher.tags import expand_host_specs, HostSelectionError
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
 from cmk.utils.log import console
@@ -383,8 +384,10 @@ def _discover(request: DiscoverRequest, *, omd_root: Path, debug: bool) -> bool:
 
     hostnames: Sequence[HostName]
     if request.hosts:
-        hostnames = config.expand_host_specs(
-            monitored_hosts(hosts_config, config_cache), request.hosts, host_tags
+        hostnames = expand_host_specs(
+            request.hosts,
+            choose_from=monitored_hosts(hosts_config, config_cache),
+            host_tags=host_tags,
         )
         # In case of discovery with host restriction, do not use the cache
         # file by default as -I and -II are used for debugging.
@@ -553,7 +556,7 @@ class _DiscoverCommand:
             succeeded = self.discover(
                 request, omd_root=context.omd_root, debug=context.global_options.debug
             )
-        except (config.HostSelectionError, MKGeneralException, PluginSelectionError) as e:
+        except (HostSelectionError, MKGeneralException, PluginSelectionError) as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

@@ -169,6 +169,7 @@ allows = [
   "cmk.base.automations.states",
   "cmk.base.config",
   "cmk.discover_plugins",
+  "cmk.ruleset_matcher.tags",
   "cmk.utils.log.console",
   "cmk.utils.password_store",
   "cmk.utils.paths",

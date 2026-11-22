@@ -52,6 +52,7 @@ from cmk.plugins.checkmk.cli.inventory import (
 )
 from cmk.plugins.checkmk.cli.options import FetchRequest
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
+from cmk.ruleset_matcher.tags import expand_host_specs, HostSelectionError
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
 from cmk.utils.everythingtype import EVERYTHING
@@ -103,7 +104,7 @@ def _inventorize(request: InventoryRequest, *, omd_root: Path, debug: bool) -> N
     valid_hosts = monitored_hosts(hosts_config, config_cache)
     hostnames: Sequence[HostName]
     if request.hosts:
-        hostnames = config.expand_host_specs(valid_hosts, request.hosts, host_tags)
+        hostnames = expand_host_specs(request.hosts, choose_from=valid_hosts, host_tags=host_tags)
         console.verbose(f"Doing HW/SW Inventory on: {', '.join(hostnames)}")
     else:
         # No hosts specified: do all hosts
@@ -271,7 +272,7 @@ class _InventoryCommand:
     def run(self, context: CLIContext, request: InventoryRequest) -> CLIExitCode:
         try:
             self.inventorize(request, omd_root=context.omd_root, debug=context.global_options.debug)
-        except (config.HostSelectionError, MKGeneralException, PluginSelectionError) as e:
+        except (HostSelectionError, MKGeneralException, PluginSelectionError) as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:
                 raise

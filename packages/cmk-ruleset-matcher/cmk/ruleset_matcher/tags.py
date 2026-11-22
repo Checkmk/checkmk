@@ -10,7 +10,7 @@
 
 import contextlib
 import re
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from typing import Final, NamedTuple, NewType, NotRequired, override, Self, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -1017,3 +1017,40 @@ def _parse_negated(pattern: str) -> tuple[bool, str]:
         negate = False
 
     return negate, pattern
+
+
+class HostSelectionError(Exception):
+    """A host name or tag specification does not match any host"""
+
+
+def expand_host_specs(
+    host_specs: Iterable[str],
+    *,
+    choose_from: Collection[HostName],
+    host_tags: HostTags,
+) -> Sequence[HostName]:
+    """Allow to specify hosts by name or by tags.
+
+    Returns a subset of 'choose_from', and raises `HostSelectionError` for a spec that does not
+    match anything.
+    """
+    hostlist = list[HostName]()
+    for arg in host_specs:
+        if arg in choose_from:
+            hostlist.append(HostName(arg))
+            continue
+
+        specs = arg.removeprefix("@")
+        tags = [TagID(t) for t in specs.split(",")]
+
+        if matched := [
+            hn for hn in choose_from if hosttags_match_taglist(host_tags.tag_list(hn), tags)
+        ]:
+            hostlist.extend(matched)
+            continue
+
+        raise HostSelectionError(
+            f"Host name or tag specification {specs!r} does not match any host."
+        )
+
+    return hostlist

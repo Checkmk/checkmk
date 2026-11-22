@@ -68,7 +68,7 @@ from cmk.piggyback import backend as piggyback_backend
 from cmk.plugins.checkmk.server_side_calls import cmk_inv as active_check_cmk_inv_module
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher, RulesetMatcher, RuleSpec
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
-from cmk.ruleset_matcher.tags import HostTags, TagGroupID, TagID
+from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
 from cmk.utils import host_storage, password_store
 from cmk.utils.ip_lookup import IPStackConfig, make_lookup_ip_address
@@ -194,80 +194,6 @@ def test_all_configured_hosts(monkeypatch: MonkeyPatch) -> None:
         HostName("real2"),
         HostName("real3"),
     }
-
-
-_HOST_TAGS = {
-    HostName("lan1"): [TagID("lan")],
-    HostName("lan2"): [TagID("lan")],
-    HostName("wan1"): [TagID("wan")],
-    HostName("wan-test"): [TagID("wan"), TagID("test")],
-}
-
-
-def _expand_host_specs(
-    host_specs: Sequence[str],
-    host_tags: Mapping[HostName, Sequence[TagID]] = _HOST_TAGS,
-) -> Sequence[HostName]:
-    return config.expand_host_specs(
-        host_tags.keys(),
-        host_specs,
-        HostTags(host_tags_sequences=host_tags, host_tags_maps={}, site_id="site1"),
-    )
-
-
-def test_expand_host_specs_keeps_host_names_in_given_order() -> None:
-    assert _expand_host_specs(["wan1", "lan1"]) == [HostName("wan1"), HostName("lan1")]
-
-
-@pytest.mark.parametrize("arg", ["@wan", "wan"])
-def test_expand_host_specs_selects_hosts_by_tag(arg: str) -> None:
-    assert sorted(_expand_host_specs([arg])) == [HostName("wan-test"), HostName("wan1")]
-
-
-def test_expand_host_specs_requires_all_comma_separated_tags() -> None:
-    assert _expand_host_specs(["@wan,test"]) == [HostName("wan-test")]
-
-
-@pytest.mark.parametrize(
-    "arg, expected",
-    [
-        pytest.param("lan", [HostName("lan")], id="host name wins over tag"),
-        pytest.param(
-            "@lan", [HostName("lan"), HostName("lan1"), HostName("lan2")], id="@ forces tag"
-        ),
-    ],
-)
-def test_expand_host_specs_at_prefix_disambiguates_host_name_and_tag(
-    arg: str, expected: Sequence[HostName]
-) -> None:
-    host_tags = {**_HOST_TAGS, HostName("lan"): [TagID("lan")]}
-
-    assert sorted(_expand_host_specs([arg], host_tags)) == expected
-
-
-def test_expand_host_specs_repeats_hosts_matched_by_several_args() -> None:
-    # Pins current behavior: duplicates are not removed.
-    assert sorted(_expand_host_specs(["lan1", "@lan"])) == [
-        HostName("lan1"),
-        HostName("lan1"),
-        HostName("lan2"),
-    ]
-
-
-@pytest.mark.parametrize("arg", ["unknown-host", "@dmz", ""])
-def test_expand_host_specs_rejects_spec_without_match(arg: str) -> None:
-    with pytest.raises(config.HostSelectionError, match="does not match any host"):
-        _expand_host_specs([arg])
-
-
-def test_expand_host_specs_only_returns_valid_hosts() -> None:
-    hostlist = config.expand_host_specs(
-        [HostName("lan1")],
-        ["@lan"],
-        HostTags(host_tags_sequences=_HOST_TAGS, host_tags_maps={}, site_id="site1"),
-    )
-
-    assert hostlist == [HostName("lan1")]
 
 
 @pytest.mark.parametrize(

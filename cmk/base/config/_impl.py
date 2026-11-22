@@ -104,7 +104,13 @@ from cmk.ruleset_matcher.matcher import (
     SingleServiceRulesetMatcher,
     SingleServiceRulesetMatcherFirstParsed,
 )
-from cmk.ruleset_matcher.tags import ComputedDataSources, HostTags, TagGroupID, TagID
+from cmk.ruleset_matcher.tags import (
+    ComputedDataSources,
+    HostTags,
+    hosttags_match_taglist,
+    TagGroupID,
+    TagID,
+)
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend import (
     ActiveCheck,
@@ -738,9 +744,7 @@ def expand_host_specs(
         tags = [TagID(t) for t in specs.split(",")]
 
         if matched := [
-            hn
-            for hn in valid_hosts
-            if tuple_rulesets.hosttags_match_taglist(host_tags.tag_list(hn), tags)
+            hn for hn in valid_hosts if hosttags_match_taglist(host_tags.tag_list(hn), tags)
         ]:
             hostlist.extend(matched)
             continue
@@ -821,7 +825,7 @@ class ServiceDependsOn:
                 raise MKGeneralException(
                     "Invalid entry '%r' in service dependencies: must have 3 or 4 entries" % entry
                 )
-            if tuple_rulesets.hosttags_match_taglist(
+            if hosttags_match_taglist(
                 self.tag_list(hostname), tags
             ) and tuple_rulesets.in_extraconf_hostlist(hostlist, hostname, debug=self.debug):
                 for pattern in patternlist:

@@ -6,6 +6,7 @@
 from cmk.ccc.hostaddress import HostName
 from cmk.ruleset_matcher.tags import (
     HostTags,
+    hosttags_match_taglist,
     TagConfigSpec,
     TagGroupID,
     TagID,
@@ -123,3 +124,28 @@ def test_tags_of_host() -> None:
 
     assert host_tags.tags(xyz_host) == xyz_tags
     assert host_tags.tags(test_host) == test_host_tags
+
+
+def test_hosttags_match_taglist() -> None:
+    assert hosttags_match_taglist([TagID("no-agent")], [TagID("no-agent")])
+    assert hosttags_match_taglist([TagID("no-agent"), TagID("test")], [TagID("no-agent")])
+    assert hosttags_match_taglist(
+        [TagID("no-agent"), TagID("test")], [TagID("no-agent"), TagID("test")]
+    )
+
+
+def test_hosttags_match_taglist_not_matching() -> None:
+    assert not hosttags_match_taglist([TagID("no-agent")], [TagID("test")])
+    assert not hosttags_match_taglist(
+        [TagID("tag"), TagID("no-agent"), TagID("test2")], [TagID("test")]
+    )
+    assert not hosttags_match_taglist(
+        [TagID("no-agent"), TagID("test")], [TagID("test"), TagID("tag3")]
+    )
+
+
+def test_hosttags_match_taglist_negate() -> None:
+    assert not hosttags_match_taglist(
+        [TagID("no-agent"), TagID("test")], [TagID("no-agent"), TagID("!test")]
+    )
+    assert hosttags_match_taglist([TagID("no-agent")], [TagID("no-agent"), TagID("!test")])

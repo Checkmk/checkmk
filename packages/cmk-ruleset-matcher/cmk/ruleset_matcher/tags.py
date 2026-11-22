@@ -980,3 +980,40 @@ def _get_tag_to_group_map(tag_config: TagConfig) -> Mapping[TagID, TagGroupID]:
             if grouped_tag.id is not None:
                 tag_id_to_tag_group_id_map[grouped_tag.id] = tag_group.id
     return tag_id_to_tag_group_id_map
+
+
+def hosttags_match_taglist(hosttags: Sequence[TagID], required_tags: Iterable[TagID]) -> bool:
+    """Check if a host fulfills the requirements of a tag list.
+
+    The host must have all tags in the list, except
+    for those negated with '!'. Those the host must *not* have!
+    A trailing + means a prefix match."""
+    for tag in required_tags:
+        negate, tag_str = _parse_negated(tag)
+        if tag_str and tag_str[-1] == "+":
+            tag_prefix = TagID(tag_str[:-1])
+            matches = False
+            for t in hosttags:
+                if t.startswith(tag_prefix):
+                    matches = True
+                    break
+
+        else:
+            matches = TagID(tag_str) in hosttags
+
+        if matches == negate:
+            return False
+
+    return True
+
+
+def _parse_negated(pattern: str) -> tuple[bool, str]:
+    # Allow negation of pattern with prefix '!'
+    try:
+        negate = pattern[0] == "!"
+        if negate:
+            pattern = pattern[1:]
+    except IndexError:
+        negate = False
+
+    return negate, pattern

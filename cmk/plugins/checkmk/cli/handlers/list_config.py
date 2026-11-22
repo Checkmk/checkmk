@@ -33,8 +33,7 @@ from cmk.plugins.checkmk.cli.list_config import (
     ListHostsRequest,
 )
 from cmk.plugins.checkmk.cli.output import write_stdout
-from cmk.ruleset_matcher.tags import HostTags, TagID
-from cmk.ruleset_matcher.tuple_rulesets import hosttags_match_taglist
+from cmk.ruleset_matcher.tags import HostTags, hosttags_match_taglist, TagID
 from cmk.server_side_calls_backend import (
     load_active_checks,
 )

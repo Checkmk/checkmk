@@ -21,7 +21,6 @@ from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.ruleset_matcher.tuple_rulesets import (
     ALL_HOSTS,
     get_rule_options,
-    hosttags_match_taglist,
     in_extraconf_hostlist,
     in_extraconf_servicelist,
 )
@@ -535,31 +534,6 @@ def test_get_rule_options_empty_options() -> None:
 def test_get_rule_options_missing_options() -> None:
     entry: tuple[str, list[str], list[str]] = ("all", [], ALL_HOSTS)
     assert get_rule_options(entry) == (entry, {})
-
-
-def test_hosttags_match_taglist() -> None:
-    assert hosttags_match_taglist([TagID("no-agent")], [TagID("no-agent")])
-    assert hosttags_match_taglist([TagID("no-agent"), TagID("test")], [TagID("no-agent")])
-    assert hosttags_match_taglist(
-        [TagID("no-agent"), TagID("test")], [TagID("no-agent"), TagID("test")]
-    )
-
-
-def test_hosttags_match_taglist_not_matching() -> None:
-    assert not hosttags_match_taglist([TagID("no-agent")], [TagID("test")])
-    assert not hosttags_match_taglist(
-        [TagID("tag"), TagID("no-agent"), TagID("test2")], [TagID("test")]
-    )
-    assert not hosttags_match_taglist(
-        [TagID("no-agent"), TagID("test")], [TagID("test"), TagID("tag3")]
-    )
-
-
-def test_hosttags_match_taglist_negate() -> None:
-    assert not hosttags_match_taglist(
-        [TagID("no-agent"), TagID("test")], [TagID("no-agent"), TagID("!test")]
-    )
-    assert hosttags_match_taglist([TagID("no-agent")], [TagID("no-agent"), TagID("!test")])
 
 
 @pytest.mark.parametrize(

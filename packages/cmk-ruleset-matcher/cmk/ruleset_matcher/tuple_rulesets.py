@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from re import Pattern
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -116,31 +116,6 @@ def in_extraconf_servicelist(service_patterns: list[str], service: str) -> bool:
         return optimized_pattern.match(service) is not None
 
     return False
-
-
-def hosttags_match_taglist(hosttags: Sequence[TagID], required_tags: Iterable[TagID]) -> bool:
-    """Check if a host fulfills the requirements of a tag list.
-
-    The host must have all tags in the list, except
-    for those negated with '!'. Those the host must *not* have!
-    A trailing + means a prefix match."""
-    for tag in required_tags:
-        negate, tag_str = _parse_negated(tag)
-        if tag_str and tag_str[-1] == "+":
-            tag_prefix = TagID(tag_str[:-1])
-            matches = False
-            for t in hosttags:
-                if t.startswith(tag_prefix):
-                    matches = True
-                    break
-
-        else:
-            matches = TagID(tag_str) in hosttags
-
-        if matches == negate:
-            return False
-
-    return True
 
 
 def convert_pattern_list(patterns: list[str]) -> Pattern[str] | None:

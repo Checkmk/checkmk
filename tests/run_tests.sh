@@ -332,15 +332,9 @@ test-system-otel() {
         --session-timeout 1800
 }
 
-test-system-azure-ultimate() {
+test-system-azure() {
     EDITION=ultimate _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/ultimate/azure/" \
-        --session-timeout 1800
-}
-
-test-system-azure-ultimate() {
-    EDITION=ultimate _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/ultimate/azure_extended/" \
         --session-timeout 1800
 }
 

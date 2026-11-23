@@ -274,8 +274,7 @@ describe('GlobalTimePicker', () => {
     const view = renderControlledPicker(rollingRange(4 * 3600), 'condensed')
     await openFlyout(view.container)
 
-    await fireEvent.click(screen.getByRole('radio', { name: 'Today' }))
-    await fireEvent.click(screen.getByRole('button', { name: 'Apply' }))
+    await fireEvent.click(screen.getByRole('button', { name: 'Today' }))
 
     expect(view.currentModel().from.hour).toBe(0)
     expect(screen.queryByRole('dialog')).toBeNull()

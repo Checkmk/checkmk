@@ -296,41 +296,64 @@ describe('CmkTimeRangePicker — quick range presets', () => {
       }
     )
 
-  const presetRadio = (view: PickerView) => view.getByRole('radio', { name: 'This week' })
+  const presetButton = (view: PickerView) => view.getByRole('button', { name: 'This week' })
 
-  test('picking a preset stages its range and Apply commits it', async () => {
+  test('clicking a preset applies its range and closes the flyout', async () => {
     const view = renderWithPreset()
     await openFlyout(view)
 
-    await fireEvent.click(presetRadio(view))
-    await fireEvent.click(applyButton(view))
+    await fireEvent.click(presetButton(view))
+    await nextTick()
 
     const committed = lastValue(view.updates)!
     expect(committed.from.toString()).toBe(THIS_WEEK.getRange().from.toString())
     expect(committed.to.toString()).toBe(THIS_WEEK.getRange().to.toString())
+    expect(view.currentOpen()).toBe(false)
   })
 
-  test('the applied preset is still selected when the flyout is reopened', async () => {
-    const view = renderWithPreset()
+  test('with Save ticked, clicking a preset runs the save handler', async () => {
+    const saveHandler = vi.fn(() => true)
+    const view = renderPicker(
+      { from: berlin(2026, 3, 2, 8, 0), to: berlin(2026, 3, 3, 9, 0) },
+      { presets: [THIS_WEEK], saveMode: true, saveHandler }
+    )
     await openFlyout(view)
-    await fireEvent.click(presetRadio(view))
-    await fireEvent.click(applyButton(view))
+    await fireEvent.click(view.getByRole('checkbox'))
+
+    await fireEvent.click(presetButton(view))
     await nextTick()
 
-    await openFlyout(view)
-
-    expect(presetRadio(view)).toBeChecked()
+    expect(saveHandler).toHaveBeenCalledOnce()
   })
 
-  test('editing an endpoint by hand moves the selection to Custom', async () => {
-    const view = renderWithPreset()
+  test('a second preset click during a pending save does not change the saved range', async () => {
+    const LAST_WEEK: RangePreset = {
+      id: 'last-week',
+      label: untranslated('Last week'),
+      getRange: () => ({ from: berlin(2026, 3, 2, 0, 0), to: berlin(2026, 3, 8, 23, 59) })
+    }
+    let finishSave: (ok: boolean) => void = () => {}
+    const saveHandler = vi.fn(
+      () =>
+        new Promise<boolean>((resolve) => {
+          finishSave = resolve
+        })
+    )
+    const view = renderPicker(
+      { from: berlin(2026, 2, 2, 8, 0), to: berlin(2026, 2, 3, 9, 0) },
+      { presets: [THIS_WEEK, LAST_WEEK], saveMode: true, saveHandler }
+    )
     await openFlyout(view)
-    await fireEvent.click(presetRadio(view))
+    await fireEvent.click(view.getByRole('checkbox'))
 
-    await setDate(view, 'From', 2026, 3, 11)
+    await fireEvent.click(view.getByRole('button', { name: 'This week' }))
+    await fireEvent.click(view.getByRole('button', { name: 'Last week' }))
+    finishSave(true)
+    await nextTick()
+    await nextTick()
 
-    expect(presetRadio(view)).not.toBeChecked()
-    expect(view.getByRole('radio', { name: 'Custom' })).toBeChecked()
+    expect(saveHandler).toHaveBeenCalledOnce()
+    expect(lastValue(view.updates)!.from.toString()).toBe(THIS_WEEK.getRange().from.toString())
   })
 })
 

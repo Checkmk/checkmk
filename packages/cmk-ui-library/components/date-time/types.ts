@@ -7,10 +7,8 @@ import type { CalendarDate, ZonedDateTime } from '@internationalized/date'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 /**
- * A quick-select range offered by `CmkTimeRangePicker`. `getRange` must be pure and cheap: it runs
- * on every staged range change, to decide which preset that range spells. A range ending "now"
- * therefore matches only while its minute holds. `id` must be stable and must not be `'custom'` —
- * that id is reserved for the auto-appended "Custom" (manual range) entry.
+ * A quick-select range offered by `CmkTimeRangePicker`. Clicking it applies the range returned by
+ * `getRange` at that moment and closes the picker. `id` must be stable and unique among the presets.
  */
 export interface RangePreset {
   id: string
@@ -229,10 +227,7 @@ export interface CmkTimeRangePickerProps<
   /** IANA timezone of the server; the displayed server time is derived from the browser
    * clock in that zone (and ticks while the flyout is open). */
   serverTimeZone?: string | undefined
-  /**
-   * Quick-select ranges shown as a single-choice list beside the calendars. When provided, a
-   * "Custom" entry is appended automatically and selected whenever the range is edited by hand.
-   */
+  /** Quick-select ranges shown as buttons beside the calendar; a click applies one directly. */
   presets?: RangePreset[] | undefined
   /** Render the trigger non-interactive and prevent the flyout from opening. */
   disabled?: boolean

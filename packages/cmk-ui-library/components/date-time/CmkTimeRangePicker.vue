@@ -4,10 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts" generic="Nullable extends boolean = false">
+import CmkButton from 'cmk-ui-library/components/CmkButton'
 import type { TriggerAria } from 'cmk-ui-library/components/CmkFlyout'
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
-import { CmkRadioButton, CmkRadioGroup } from 'cmk-ui-library/components/user-input/CmkRadioButton'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import {
@@ -19,7 +19,6 @@ import {
   useTemplateRef
 } from 'vue'
 
-import CmkTimePicker from './CmkTimePicker.vue'
 import {
   formatTime,
   instantToParts,
@@ -34,21 +33,20 @@ import DateCalendar from './private/calendar/DateCalendar.vue'
 import type { CalendarSelection } from './private/calendar/types'
 import CmkTimeRangeDisplay from './private/display/CmkTimeRangeDisplay.vue'
 import HorizontalRule from './private/display/HorizontalRule.vue'
-import StackLayout from './private/display/StackLayout.vue'
 import TimeZoneInfo from './private/display/TimeZoneInfo.vue'
 import DateTimeFlyout from './private/flyout/DateTimeFlyout.vue'
 import DateTimeInputRow from './private/input/DateTimeInputRow.vue'
+import { presetDraft } from './rangePresets'
 import type {
   CmkTimeRangePickerProps,
   DateTimeParts,
   DateTimeRange,
   DateTimeSaveSlots,
   RangeDraft,
-  ResolvedDateTimeSettings,
-  TimeValue
+  RangePreset,
+  ResolvedDateTimeSettings
 } from './types'
 import { useDateTimeDraft } from './useDateTimeDraft'
-import { useRangePresets } from './useRangePresets'
 import { useResolvedDateTimeSettings } from './useResolvedDateTimeSettings'
 
 type RangeModel = Nullable extends false ? DateTimeRange : DateTimeRange | null
@@ -156,19 +154,6 @@ const fields = reactive({
   to: draftField('to')
 })
 
-/** A writable view of one endpoint's time, for the standalone Start/End time pickers (which edit
- *  only the time half of an endpoint the From/To rows also drive). */
-function draftTime(key: 'from' | 'to') {
-  return computed<TimeValue | null>({
-    get: () => draft.value[key].time,
-    set: (time) => {
-      draft.value = { ...draft.value, [key]: { ...draft.value[key], time } }
-    }
-  })
-}
-const fromTime = draftTime('from')
-const toTime = draftTime('to')
-
 const pendingRange = computed<CalendarSelection>({
   get: () => ({ start: draft.value.from.date, end: draft.value.to.date }),
   set: (selection) => {
@@ -177,12 +162,6 @@ const pendingRange = computed<CalendarSelection>({
       to: { ...draft.value.to, date: selection.end }
     }
   }
-})
-
-const { selectedPreset, CUSTOM_PRESET_ID } = useRangePresets({
-  presets: () => props.presets,
-  draft,
-  timeZone: () => settings.timeZone
 })
 
 /** Polite live-region text announcing an auto-swap; voiced by a `CmkVisuallyHidden` in the flyout. */
@@ -223,6 +202,14 @@ function swapIfNeeded(): void {
 function confirm(): Promise<void> {
   swapIfNeeded()
   return confirmDraft()
+}
+
+function applyPreset(preset: RangePreset): Promise<void> {
+  if (pendingSave.value) {
+    return Promise.resolve()
+  }
+  draft.value = presetDraft(preset, settings.timeZone)
+  return confirm()
 }
 
 function onInputAreaFocusOut(event: FocusEvent): void {
@@ -301,92 +288,83 @@ async function toggleTrigger(): Promise<void> {
             :disabled="props.disabled"
           >
             <CmkTimeRangeDisplay :from="fields.from" :to="fields.to" :settings="settings" />
+            <CmkMultitoneIcon
+              name="user-interface"
+              primary-color="font"
+              size="medium"
+              aria-hidden="true"
+            />
           </button>
         </slot>
       </div>
       <CmkVisuallyHidden :text="swapMessage" live="polite" />
     </template>
 
-    <StackLayout direction="column">
-      <div
-        class="cmk-time-range-picker__inputs"
-        role="group"
-        :aria-label="_t('Time range')"
-        @focusout="onInputAreaFocusOut"
-      >
-        <DateTimeInputRow
-          v-model="fields.from"
-          :label="_t('From')"
-          :show-icon="false"
-          :date-format="settings.dateFormat"
-          :month-names="settings.monthNamesLong"
-          :hour-cycle="settings.hourCycle"
-          :weekday-names="settings.weekdayNamesShort"
-          :date-aria-label="_t('From date')"
-          :time-aria-label="_t('From time')"
-          @commit="confirm"
-        />
-        <DateTimeInputRow
-          v-model="fields.to"
-          :label="_t('To')"
-          :show-icon="false"
-          :date-format="settings.dateFormat"
-          :month-names="settings.monthNamesLong"
-          :hour-cycle="settings.hourCycle"
-          :weekday-names="settings.weekdayNamesShort"
-          :date-aria-label="_t('To date')"
-          :time-aria-label="_t('To time')"
-          @commit="confirm"
-        />
+    <div class="cmk-time-range-picker__body">
+      <div class="cmk-time-range-picker__start">
+        <div
+          class="cmk-time-range-picker__inputs"
+          role="group"
+          :aria-label="_t('Time range')"
+          @focusout="onInputAreaFocusOut"
+        >
+          <DateTimeInputRow
+            v-model="fields.from"
+            :label="_t('From')"
+            :date-format="settings.dateFormat"
+            :month-names="settings.monthNamesLong"
+            :hour-cycle="settings.hourCycle"
+            :date-aria-label="_t('From date')"
+            :time-aria-label="_t('From time')"
+            :time-selector-label="_t('Choose start time')"
+            @commit="confirm"
+          />
+          <DateTimeInputRow
+            v-model="fields.to"
+            :label="_t('To')"
+            :date-format="settings.dateFormat"
+            :month-names="settings.monthNamesLong"
+            :hour-cycle="settings.hourCycle"
+            :date-aria-label="_t('To date')"
+            :time-aria-label="_t('To time')"
+            :time-selector-label="_t('Choose end time')"
+            @commit="confirm"
+          />
+        </div>
+        <div
+          v-if="presets && presets.length"
+          class="cmk-time-range-picker__presets"
+          role="group"
+          :aria-label="_t('Quick range presets')"
+        >
+          <CmkButton
+            v-for="preset in presets"
+            :key="preset.id"
+            size="small"
+            :disabled="pendingSave"
+            @click="applyPreset(preset)"
+          >
+            {{ preset.label }}
+          </CmkButton>
+        </div>
       </div>
-
-      <HorizontalRule />
 
       <DateCalendar
         ref="calendar"
         v-model:selection="pendingRange"
+        class="cmk-time-range-picker__calendar"
         mode="range"
-        :grids="2"
         :settings="settings"
-      >
-        <template v-if="presets && presets.length" #aside>
-          <CmkRadioGroup v-model="selectedPreset" :label="_t('Quick range presets')">
-            <CmkRadioButton
-              v-for="preset in presets"
-              :key="preset.id"
-              :value="preset.id"
-              :label="preset.label"
-            />
-            <CmkRadioButton :value="CUSTOM_PRESET_ID" :label="_t('Custom')" />
-          </CmkRadioGroup>
-        </template>
-      </DateCalendar>
+      />
 
-      <HorizontalRule />
+      <HorizontalRule class="cmk-time-range-picker__rule" />
 
-      <div class="cmk-time-range-picker__times" @focusout="onInputAreaFocusOut">
-        <div class="cmk-time-range-picker__time">
-          <CmkLabel>{{ _t('Start time') }}</CmkLabel>
-          <CmkTimePicker
-            v-model="fromTime"
-            nullable
-            :settings="{ hourCycle: settings.hourCycle }"
-          />
-        </div>
-        <span class="cmk-time-range-picker__time-dash" aria-hidden="true">
-          {{ untranslated('—') }}
-        </span>
-        <div class="cmk-time-range-picker__time">
-          <CmkLabel>{{ _t('End time') }}</CmkLabel>
-          <CmkTimePicker v-model="toTime" nullable :settings="{ hourCycle: settings.hourCycle }" />
-        </div>
-        <TimeZoneInfo
-          class="cmk-time-range-picker__zones"
-          :settings="settings"
-          :server-time-zone="serverTimeZone"
-        />
-      </div>
-    </StackLayout>
+      <TimeZoneInfo
+        class="cmk-time-range-picker__zones"
+        :settings="settings"
+        :server-time-zone="serverTimeZone"
+      />
+    </div>
 
     <template #save>
       <slot name="save" />
@@ -397,19 +375,15 @@ async function toggleTrigger(): Promise<void> {
 <style scoped>
 .cmk-time-range-picker__trigger {
   border: 1px solid transparent;
-  border-radius: var(--border-radius);
+  border-radius: var(--dimension-3);
   cursor: pointer;
-}
-
-.cmk-time-range-picker__trigger:not(.cmk-time-range-picker__trigger--disabled):hover {
-  background: var(--input-hover-bg-color);
 }
 
 .cmk-time-range-picker__trigger:not(
     .cmk-time-range-picker__trigger--open,
     .cmk-time-range-picker__trigger--disabled
   ):hover {
-  border-color: var(--cmk-flyout-popup-border-color, var(--default-form-element-border-color));
+  background: var(--background-hover-wash);
 }
 
 .cmk-time-range-picker__trigger--open {
@@ -429,11 +403,13 @@ async function toggleTrigger(): Promise<void> {
    (Enter/Space → click bubbles to the trigger area's `toggleTrigger`) and a focus ring. */
 .cmk-time-range-picker__trigger-button {
   box-sizing: border-box;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-5);
   width: 100%;
-  padding: var(--dimension-7);
+  padding: var(--dimension-4) var(--dimension-5) var(--dimension-3);
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: var(--dimension-3);
   background: none;
   font: inherit;
   color: inherit;
@@ -445,35 +421,48 @@ async function toggleTrigger(): Promise<void> {
   outline: revert;
 }
 
+.cmk-time-range-picker__body {
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  align-items: start;
+  column-gap: var(--dimension-4);
+  padding: var(--dimension-7) var(--dimension-7) 0 var(--dimension-5);
+}
+
+.cmk-time-range-picker__start {
+  display: grid;
+  grid-column: 1 / 3;
+  grid-template-columns: subgrid;
+  row-gap: var(--dimension-8);
+}
+
 .cmk-time-range-picker__inputs {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  row-gap: var(--dimension-4);
+}
+
+.cmk-time-range-picker__presets {
   display: flex;
-  align-items: center;
-  gap: var(--dimension-6);
+  grid-column: 2;
+  flex-direction: column;
+  align-items: start;
+  gap: var(--dimension-4);
 }
 
-.cmk-time-range-picker__times {
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-rows: auto auto auto;
-  justify-content: start;
-  align-items: center;
-  gap: var(--dimension-4) var(--dimension-6);
+.cmk-time-range-picker__calendar {
+  margin-left: calc(var(--dimension-10) - var(--dimension-4));
 }
 
-.cmk-time-range-picker__time {
-  display: grid;
-  grid-template-rows: subgrid;
-  grid-row: span 3;
-  place-items: center start;
+.cmk-time-range-picker__body > .cmk-time-range-picker__rule {
+  grid-column: 1 / -1;
+  width: auto;
+  margin: var(--dimension-7) calc(-1 * var(--dimension-7)) 0 calc(-1 * var(--dimension-5));
 }
 
 .cmk-time-range-picker__zones {
-  grid-row: span 3;
-  align-self: start;
-}
-
-.cmk-time-range-picker__time-dash {
-  grid-row: 2;
-  color: var(--font-color);
+  grid-column: 2 / -1;
+  padding: var(--dimension-5) 0;
 }
 </style>

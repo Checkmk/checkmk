@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { CalendarDate } from '@internationalized/date'
 import type { TriggerAria } from 'cmk-ui-library/components/CmkFlyout'
+import type { CmkMultitoneIconNames } from 'cmk-ui-library/components/CmkIcon'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, useTemplateRef } from 'vue'
@@ -25,8 +26,14 @@ const props = withDefaults(
     monthNames: TranslatedString[]
     /** Resolved 12h/24h display cycle (e.g. `settings.hourCycle` from the resolver). */
     hourCycle: HourCycle
-    /** Show the leading calendar icon. Fields inside a flyout render without icons. */
+    /** Show the icon. Fields inside a flyout render without icons unless they trigger a popup. */
     showIcon?: boolean
+    /** The icon; defaults to the calendar. */
+    icon?: CmkMultitoneIconNames | undefined
+    /** Place the icon before (default) or after the field. */
+    iconPosition?: 'start' | 'end' | undefined
+    /** Accessible name for the icon trigger button; defaults to "Open calendar". */
+    iconLabel?: TranslatedString | undefined
     /** Render the field non-interactive and dimmed. */
     disabled?: boolean
     /** Accessible name for the date field; defaults to "Date". */
@@ -120,12 +127,13 @@ defineExpose({ focusTriggerButton: () => fieldBoxRef.value?.focusTriggerButton()
 <template>
   <FieldBox
     ref="fieldBoxRef"
-    :icon="props.showIcon ? 'user-interface' : undefined"
+    :icon="props.showIcon ? (props.icon ?? 'user-interface') : undefined"
+    :icon-position="props.iconPosition"
     :disabled="props.disabled"
     :open="props.open"
     :as-trigger="props.asTrigger"
     :trigger-aria="props.triggerAria"
-    :icon-label="_t('Open calendar')"
+    :icon-label="props.iconLabel ?? _t('Open calendar')"
     @open="emit('open')"
     @toggle="emit('toggle')"
   >

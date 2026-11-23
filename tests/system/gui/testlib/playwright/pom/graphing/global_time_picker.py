@@ -103,11 +103,10 @@ class GlobalTimePicker:
         return self.root.get_by_role("dialog")
 
     def select_quick_range(self, name: str) -> None:
-        """Apply one of the flyout's quick ranges, e.g. "Today"."""
+        """Apply one of the flyout's quick ranges, e.g. "Today"; a click applies and closes."""
         logger.info("Selecting the quick range '%s'", name)
         self.trigger.click()
-        self.flyout.get_by_role("radio", name=name, exact=True).click()
-        self.flyout.get_by_role("button", name="Apply", exact=True).click()
+        self.flyout.get_by_role("button", name=name, exact=True).click()
         expect(self.flyout).to_be_hidden()
 
     def apply_custom_range(self, start: PickerMoment, end: PickerMoment) -> None:

@@ -4,13 +4,13 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CalendarDate } from '@internationalized/date'
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, within } from '@testing-library/vue'
 import DateTimeInputRow from 'cmk-ui-library/components/date-time/private/input/DateTimeInputRow.vue'
 import type { DateTimePartsDraft } from 'cmk-ui-library/components/date-time/types'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { describe, expect, test } from 'vitest'
 
-import { DMY, MONTH_NAMES_EN, WEEKDAY_NAMES_SHORT_EN } from '../../dateTimeTestFixtures'
+import { DMY, MONTH_NAMES_EN } from '../../dateTimeTestFixtures'
 
 const renderRow = (modelValue: DateTimePartsDraft) =>
   render(DateTimeInputRow, {
@@ -19,7 +19,7 @@ const renderRow = (modelValue: DateTimePartsDraft) =>
       dateFormat: DMY,
       monthNames: MONTH_NAMES_EN,
       hourCycle: 24,
-      weekdayNames: WEEKDAY_NAMES_SHORT_EN,
+      timeSelectorLabel: 'Choose start time' as TranslatedString,
       modelValue
     }
   })
@@ -48,23 +48,16 @@ describe('DateTimeInputRow', () => {
     expect(label).toHaveAttribute('aria-hidden', 'true')
   })
 
-  test('weekday is shown to sighted users only', () => {
-    // 2026-06-10 is a Wednesday.
-    renderRow({
-      date: new CalendarDate(2026, 6, 10),
-      time: null
-    })
-    // The abbreviation is shown visually (aria-hidden), distinct from the equally aria-hidden width
-    // ghosts that hold every short name — the ghost class is the only way to single it out.
-    expect(screen.getByText('Wed', { ignore: '.cmk-ghost-width__ghost' })).toBeInTheDocument()
-    // The weekday is a sighted convenience: nothing weekday-related is exposed to assistive tech
-    // (the date field's spinbutton segments already speak the full date).
-    expect(screen.queryByText('Wednesday')).not.toBeInTheDocument()
-  })
+  test('the clock button picks the time and keeps the date', async () => {
+    const date = new CalendarDate(2026, 6, 10)
+    const view = renderRow({ date, time: { hour: 8, minute: 5 } })
 
-  test('no weekday with null date', () => {
-    renderRow({ date: null, time: { hour: 8, minute: 5 } })
-    expect(screen.queryByText('Wed', { ignore: '.cmk-ghost-width__ghost' })).not.toBeInTheDocument()
-    expect(screen.queryByText('Wednesday')).not.toBeInTheDocument()
+    await fireEvent.click(view.getByRole('button', { name: 'Choose start time' }))
+    const hours = within(view.getByRole('listbox', { name: 'Hour' }))
+    await fireEvent.click(hours.getByRole('option', { name: '17' }))
+    await fireEvent.click(view.getByRole('button', { name: 'Apply' }))
+
+    expect(view.emitted('update:modelValue')).toEqual([[{ date, time: { hour: 17, minute: 5 } }]])
+    expect(view.queryByRole('listbox', { name: 'Hour' })).toBeNull()
   })
 })

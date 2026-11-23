@@ -11,8 +11,10 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useTemplateRef } from 'vue'
 
 const props = defineProps<{
-  /** Optional leading CmkMultitoneIcon name. */
+  /** Optional CmkMultitoneIcon name. */
   icon?: CmkMultitoneIconNames | undefined
+  /** Place the icon before (default) or after the field content. */
+  iconPosition?: 'start' | 'end' | undefined
   /** Dim the box and show the not-allowed cursor across the whole field. */
   disabled?: boolean
   /** Square the bottom into a popup opening directly below. */
@@ -53,14 +55,18 @@ defineExpose({ focusTriggerButton: () => triggerButtonRef.value?.focus() })
 <template>
   <span
     class="cmk-field-box"
-    :class="{ 'cmk-field-box--disabled': disabled, 'cmk-field-box--open': open }"
+    :class="{
+      'cmk-field-box--disabled': disabled,
+      'cmk-field-box--open': open,
+      'cmk-field-box--icon-end': iconPosition === 'end'
+    }"
     @click="onBoxClick"
   >
     <button
       v-if="asTrigger && icon"
       ref="triggerButtonRef"
       type="button"
-      class="cmk-field-box__trigger"
+      class="cmk-field-box__icon cmk-field-box__trigger"
       :aria-label="iconLabel"
       :disabled="disabled"
       v-bind="triggerAria"
@@ -70,6 +76,7 @@ defineExpose({ focusTriggerButton: () => triggerButtonRef.value?.focus() })
     </button>
     <CmkMultitoneIcon
       v-else-if="icon"
+      class="cmk-field-box__icon"
       :name="icon"
       primary-color="font"
       size="small"
@@ -106,6 +113,10 @@ body[data-theme='modern-dark'] .cmk-field-box {
   border-bottom-color: transparent;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
+}
+
+.cmk-field-box--icon-end > .cmk-field-box__icon {
+  order: 1;
 }
 
 .cmk-field-box__trigger {

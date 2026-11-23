@@ -43,8 +43,8 @@ def test_reschedule_icon_reschedules_by_click_action() -> None:
         arguments={
             "site": "heute",
             "host": "my host",
-            "service": "Back\\\\slash",
-            "wait_svc": "Back\\\\slash",
+            "service": "Back\\slash",
+            "wait_svc": "Back\\slash",
         },
     )
 

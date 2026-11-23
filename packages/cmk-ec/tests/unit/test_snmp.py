@@ -231,7 +231,11 @@ def test_pysnmp_debug_messages_are_logged_when_debugging(
 
     parser.parse(v2c_trap([]), ("192.0.2.1", 162))
 
-    assert "receiveMessage: msgVersion 1, msg decoded" in caplog.messages
+    assert (
+        logger.name,
+        logging.DEBUG,
+        "receiveMessage: msgVersion 1, msg decoded",
+    ) in caplog.record_tuples
 
 
 def test_pysnmp_debugging_follows_the_log_level(

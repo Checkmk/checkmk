@@ -38,6 +38,11 @@ def main_precompile(args: argparse.Namespace) -> None:
     )
     current_version = Version.from_str(__version__)
 
+    def _set_version(werk: Werk) -> Werk:
+        if werk.version is None:
+            return werk.model_copy(update={"version": __version__})
+        return werk
+
     def _filter(werk: Werk) -> bool:
         if filter_by_edition is not None and werk.edition != filter_by_edition:
             return False
@@ -46,7 +51,7 @@ def main_precompile(args: argparse.Namespace) -> None:
             return False
         return True
 
-    werks = {werk.id: werk for werk in werks_list if _filter(werk)}
+    werks = {werk.id: werk for werk in map(_set_version, werks_list) if _filter(werk)}
 
     write_precompiled_werks(args.destination, werks)
 

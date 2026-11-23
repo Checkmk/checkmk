@@ -591,6 +591,9 @@ def test_requests_leave_no_pysnmp_state_behind(
     # PySNMP's security models keep the state of each request for its response.
     security_models = parser.snmp_engine.security_models.values()
     assert all(model._cache.is_empty() for model in security_models)  # type: ignore[no-untyped-call]  # noqa: SLF001
+    # Its message processing models keep it, too.
+    for message_processing in parser.snmp_engine.message_processing_subsystems.values():
+        assert not vars(message_processing._cache)["_Cache__stateReferenceIndex"]  # noqa: SLF001
 
 
 @pytest.mark.parametrize(

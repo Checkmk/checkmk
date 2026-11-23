@@ -1,4 +1,4 @@
-title: Moxa IOLogik: Register Check
+title: Moxa ioLogik: Registers
 agents: snmp
 catalog: hw/network/moxa
 license: GPLv2

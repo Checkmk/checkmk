@@ -558,6 +558,28 @@ def test_dropped_traps_show_names_with_control_characters_in_hex(
     assert dropped in caplog.messages
 
 
+@pytest.mark.parametrize(
+    "community, shown",
+    [
+        pytest.param("x" * 64, "x" * 64, id="64-bytes"),
+        pytest.param("x" * 65, "x" * 64 + "...", id="65-bytes"),
+        pytest.param("\n" * 65, "0x" + "0a" * 64 + "...", id="65-bytes-in-hex"),
+    ],
+)
+def test_dropped_traps_show_at_most_64_bytes_of_a_community(
+    parser: SNMPTrapParser,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+    community: str,
+    shown: str,
+) -> None:
+    logger.setLevel(VERBOSE)
+
+    parser.parse(v2c_trap([], community=community), ("192.0.2.1", 162))
+
+    assert f"Trap (v2c) dropped from 192.0.2.1: Unknown community ({shown})" in caplog.messages
+
+
 def request(version: int, pdu_type: str, *, community: str = "public") -> bytes:
     """An SNMPv1/v2c request, by default from "public", which the default configuration accepts"""
     proto = api.PROTOCOL_MODULES[version]

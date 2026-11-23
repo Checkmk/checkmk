@@ -76,9 +76,15 @@ def _snmp_version(security_model: int) -> str:
     return "v2c" if security_model == 2 else f"v{security_model}"
 
 
+# SNMPv3 user names have at most 32 bytes, but a community can fill a whole message.
+_MAX_NAME_BYTES = 64
+
+
 def _printable(name: object) -> str:
-    """Hex unless printable ASCII, so senders can't fake log lines"""
-    return str(pysnmp.proto.rfc1902.OctetString(name).prettyPrint())
+    """Hex unless printable ASCII, so senders can't fake log lines, and at most _MAX_NAME_BYTES"""
+    octets = bytes(pysnmp.proto.rfc1902.OctetString(name))
+    shown = str(pysnmp.proto.rfc1902.OctetString(octets[:_MAX_NAME_BYTES]).prettyPrint())
+    return shown if len(octets) <= _MAX_NAME_BYTES else f"{shown}..."
 
 
 class SNMPTrapParser:

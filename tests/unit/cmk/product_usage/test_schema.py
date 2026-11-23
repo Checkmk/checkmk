@@ -111,15 +111,3 @@ def test_cloud_trial_payload_carries_the_count_of_hosts_with_default_services_on
     json_payload = CloudTrialPayload.model_validate(payload).model_dump_with_metadata_json()
 
     assert json.loads(json_payload)["data"]["count_hosts_default_services_only"] == 2
-
-
-def test_cloud_trial_payload_carries_sessions_with_start_and_last_activity() -> None:
-    sessions = [
-        {"started_at": 1767789000, "last_activity": 1767790000},
-        {"started_at": 1767800000, "last_activity": 1767801000},
-    ]
-    payload = {**_product_usage_data(), "sessions": sessions}
-
-    json_payload = CloudTrialPayload.model_validate(payload).model_dump_with_metadata_json()
-
-    assert json.loads(json_payload)["data"]["sessions"] == sessions

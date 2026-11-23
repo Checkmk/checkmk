@@ -55,7 +55,7 @@ The ``cmk-product-usage`` command-line tool (``cmk.product_usage.cli``) is the s
 A per-site cron job invokes it every 30 minutes, but a collection actually happens only about once every 30 days (7 days on a Cloud trial site) -- see `Collection and transmission`_.
 
 **Collectors.**
-Eight collectors read from Livestatus, the filesystem, and this site's own REST API: check usage (``collectors/checks.py``), site info (``collectors/site_info.py``), a previously recorded Grafana-usage snapshot (``collectors/grafana.py``), which agent updater the hosts run (``collectors/agent_updater.py``), and, on a Cloud trial site only, the audit log entries per actor class (``collectors/audit_log.py``), the user counts (``collectors/users.py``), the number of hosts with default services only (``collectors/host_services.py``), and the stored login sessions (``collectors/sessions.py``).
+Seven collectors read from Livestatus, the filesystem, and this site's own REST API: check usage (``collectors/checks.py``), site info (``collectors/site_info.py``), a previously recorded Grafana-usage snapshot (``collectors/grafana.py``), which agent updater the hosts run (``collectors/agent_updater.py``), and, on a Cloud trial site only, the audit log entries per actor class (``collectors/audit_log.py``), the user counts (``collectors/users.py``), and the number of hosts with default services only (``collectors/host_services.py``).
 
 **Config and consent.**
 The config module reads the site's consent decision and HTTP-proxy setting from ``product_usage_analytics.mk``, a Checkmk global-settings file that a GUI page also reads and writes.
@@ -112,11 +112,9 @@ The CLI checks whether a site is a Cloud trial (``is_cloud_trial``) once per run
   The collector reads the services of each host from Livestatus's hosts table, so a host counts only after its changes are activated; it sends no host or service names.
 * On a Cloud trial site only, the number of users of the Cognito login, split into business and non-business by the domain of their email address, which is their user ID.
   A domain on the collector's free-mail list, or a subdomain of one, is non-business; any other domain is business. No address or domain is sent.
-* On a Cloud trial site only, every stored login session with its start and its last activity time.
-  The collector reads the GUI's session files (``var/check_mk/web/<user>/session_info.mk``); it sends no user IDs and no session IDs, and sorts the sessions by time so that the order does not tell which ones belong to the same user.
 
 The result is wrapped in a ``SelfDescribingModel`` envelope (``{"metadata": {version, namespace, name}, "data": {...}}``) and stored as ``var/check_mk/product_usage/product_usage_<timestamp>.json``.
-A Cloud trial site sends ``CloudTrialPayload`` (``cloud_trial_analytics``) instead of ``ProductUsagePayload`` (``product_usage_analytics``): the same data plus trial signals; of these, only the audit log, the user counts, the number of hosts with default services only, and the sessions are collected so far, the others are still ``null``.
+A Cloud trial site sends ``CloudTrialPayload`` (``cloud_trial_analytics``) instead of ``ProductUsagePayload`` (``product_usage_analytics``): the same data plus trial signals; of these, only the audit log, the user counts, and the number of hosts with default services only are collected so far, the others are still ``null``.
 A trial signal whose collector fails is ``null``: the error goes to ``var/log/product_usage_analytics.log`` and the rest of the payload is sent as usual.
 
 **Transmission and retry.**
@@ -242,15 +240,6 @@ Risks and technical debts
    In a cluster, the clustered services belong to the cluster host, so a node whose services are all clustered counts although it delivers data.
 8. The user counts include every Cognito user who has ever signed in: the site keeps users that are removed from the tenant, and a user whose email address changes is counted twice.
    The free-mail list is a copy of cloudmk's list plus the major providers it lacks, and nothing keeps the two in sync; a free-mail domain missing from the list counts as business, so the business count is an upper bound.
-9. The sessions are a snapshot of the GUI's session store, not a login history.
-   The store is pruned only when a user's session is saved: it then keeps that user's 20 most recent sessions and drops those idle for more than 7 days.
-   A busy user's sessions can therefore be gone before the weekly run sends them, while those of a user who has not come back stay in the store, and are sent, beyond 7 days.
-   Logged-out sessions are sent too.
-   With the global setting "Limit login to single session at a time" enabled, each login removes the user's earlier sessions, so at most one session per user is stored.
-   Deleting a user keeps its sessions in the store: they are still sent until the cleanup of abandoned profiles removes the profile, 30 days after its last change.
-   A session that is still in the store at the next run is sent again; the payload has no session ID, so the receiver can match the two only by their start time.
-   The store also holds sessions that a non-automation user opened with basic auth or web server authentication; a client that does not return the session cookie opens a new one with every request.
-   The payload does not tell these from interactive logins.
 
 See Also
 ========

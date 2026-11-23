@@ -22,7 +22,6 @@ from cmk.product_usage.schema import (
     CloudTrialPayload,
     InventoryData,
     ProductUsagePayload,
-    Session,
     UserCount,
 )
 from tests.unit.cmk.product_usage.user_store import write_user_store
@@ -177,35 +176,6 @@ def test_failed_count_of_hosts_with_default_services_only_logs_the_error(
     assert [record.levelname for record in caplog.records] == ["ERROR"]
 
 
-def test_cloud_trial_payload_carries_the_sessions_of_the_site(tmp_path: Path) -> None:
-    _write_session(
-        tmp_path, user_id="jane@acme.com", started_at=1767789000, last_activity=1767790000
-    )
-
-    payload = _collect_from_site(tmp_path)
-
-    assert payload.sessions == [Session(started_at=1767789000, last_activity=1767790000)]
-
-
-def test_cloud_trial_payload_has_no_sessions_when_their_collection_fails(tmp_path: Path) -> None:
-    complete_payload = _collect_from_site(tmp_path)
-    _write_corrupt_session_store(tmp_path, user_id="jane@acme.com")
-
-    payload = _collect_from_site(tmp_path)
-
-    assert payload == complete_payload.model_copy(update={"sessions": None})
-
-
-def test_failed_sessions_collection_logs_the_error(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
-) -> None:
-    _write_corrupt_session_store(tmp_path, user_id="jane@acme.com")
-
-    _collect_from_site(tmp_path)
-
-    assert [record.levelname for record in caplog.records] == ["ERROR"]
-
-
 def test_cloud_trial_payload_carries_the_product_usage_data(tmp_path: Path) -> None:
     payload = _collect_from_site(tmp_path)
 
@@ -352,18 +322,3 @@ def _write_corrupt_user_store(default_config_dir: Path) -> None:
 
 def _raise_livestatus_error() -> list[list[str]]:
     raise MKLivestatusSocketError("connection refused")
-
-
-def _write_session(var_dir: Path, *, user_id: str, started_at: int, last_activity: int) -> None:
-    """Write a shortened session: the collector reads only the start and the last activity"""
-    path = var_dir / "web" / user_id / "session_info.mk"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        repr({"sid-1": {"started_at": started_at, "last_activity": last_activity}}) + "\n"
-    )
-
-
-def _write_corrupt_session_store(var_dir: Path, *, user_id: str) -> None:
-    path = var_dir / "web" / user_id / "session_info.mk"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("{'sid-1': {")

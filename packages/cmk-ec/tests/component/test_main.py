@@ -648,6 +648,34 @@ def test_entry_other_than_a_regular_file_in_the_spool_directory_is_warned_about_
     )
 
 
+@pytest.mark.parametrize("make_entry", _ENTRIES_OTHER_THAN_REGULAR_FILES)
+def test_entry_other_than_a_regular_file_coming_back_to_the_spool_directory_is_warned_about_again(
+    event_console: _EventConsole,
+    caplog: pytest.LogCaptureFixture,
+    make_entry: Callable[[Path], object],
+) -> None:
+    settings, event_status = event_console
+    spool_dir = settings.paths.spool_dir.value
+    spool_dir.mkdir(parents=True)
+    entry = spool_dir / "entry"
+    make_entry(entry)
+    _add_spool_file(spool_dir, b"first\n", name="first")
+    if _texts_of_events(event_status, 1) != ["first"]:
+        pytest.fail("the event server doesn't take the first spool file")
+    # Hidden, so gone for the listing which finds the second spool file
+    entry.rename(spool_dir / ".entry")
+    _add_spool_file(spool_dir, b"second\n", name="second")
+    if _texts_of_events(event_status, 2) != ["first", "second"]:
+        pytest.fail("the event server doesn't take the second spool file")
+
+    (spool_dir / ".entry").rename(entry)
+    _add_spool_file(spool_dir, b"third\n", name="third")
+    texts = _texts_of_events(event_status, 3)
+
+    warning = f"Skipping {entry} in the spool directory while it leads to no regular file"
+    assert (texts, _logged_warnings(caplog)) == (["first", "second", "third"], [warning, warning])
+
+
 def _eventually(condition: Callable[[], bool]) -> bool:
     """Waits until the condition holds, or until a timeout, and returns whether it holds"""
     deadline = time.monotonic() + _RECEIVE_TIMEOUT

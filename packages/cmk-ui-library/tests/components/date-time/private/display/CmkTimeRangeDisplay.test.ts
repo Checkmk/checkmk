@@ -5,16 +5,12 @@
  */
 import { CalendarDate } from '@internationalized/date'
 import { render } from '@testing-library/vue'
-import {
-  formatDate,
-  formatTime,
-  timeZoneRegionLabel
-} from 'cmk-ui-library/components/date-time/dateTimeUtils'
+import { formatDate, formatTime } from 'cmk-ui-library/components/date-time/dateTimeUtils'
 import CmkTimeRangeDisplay from 'cmk-ui-library/components/date-time/private/display/CmkTimeRangeDisplay.vue'
 import type { DateTimePartsDraft, HourCycle } from 'cmk-ui-library/components/date-time/types'
 import { describe, expect, test } from 'vitest'
 
-import { TZ_BERLIN, YMD, makeSettings } from '../../dateTimeTestFixtures'
+import { YMD, makeSettings } from '../../dateTimeTestFixtures'
 
 const buildSettings = (hourCycle: HourCycle) => makeSettings({ hourCycle, dateFormat: YMD })
 
@@ -52,17 +48,6 @@ describe('CmkTimeRangeDisplay', () => {
     )
     // The set From date drops out, leaving three empty halves.
     expect(getAllByLabelText('not set')).toHaveLength(3)
-  })
-
-  test('the timezone reads with a "Timezone:" prefix and the region name', () => {
-    const settings = makeSettings({ timeZone: TZ_BERLIN })
-    const { getByText } = render(CmkTimeRangeDisplay, {
-      props: { from: EMPTY, to: EMPTY, settings }
-    })
-    // Offset is DST-dependent (no fixed instant here), so assert the stable region prefix only.
-    expect(
-      getByText(new RegExp(`^Timezone: ${timeZoneRegionLabel(TZ_BERLIN)},`))
-    ).toBeInTheDocument()
   })
 
   test('dateText value → formatDate(...)', () => {

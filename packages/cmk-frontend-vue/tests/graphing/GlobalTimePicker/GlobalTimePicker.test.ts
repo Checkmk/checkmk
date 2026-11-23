@@ -216,12 +216,6 @@ describe('GlobalTimePicker', () => {
     expect(triggerText(container)).toMatch(pattern)
   })
 
-  test('the trigger names its timezone and states the offset against UTC', () => {
-    renderPicker(rangeOfSeconds(99))
-    // The badge itself is aria-hidden; this is the text assistive tech is given instead.
-    expect(screen.getByText(/^Timezone: /)).toHaveTextContent(/UTC/)
-  })
-
   // 24-hour whatever the locale is, so no meridiem segment and no AM/PM in the summary.
   test.each(['de-DE', 'en-US'])('the %s time input names its two segments', async (locale) => {
     mockLocale(locale)

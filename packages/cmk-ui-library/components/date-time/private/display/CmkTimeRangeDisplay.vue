@@ -12,7 +12,6 @@ import { computed } from 'vue'
 
 import { formatDate, formatTime } from '../../dateTimeUtils'
 import type { DateTimePartsDraft, ResolvedDateTimeSettings, TimeValue } from '../../types'
-import TimeZoneTag from './TimeZoneTag.vue'
 
 const props = defineProps<{
   /** Range start; each half is rendered as "—" while empty. */
@@ -47,11 +46,6 @@ const timeWidthVariants = computed(() =>
 
 <template>
   <div class="cmk-time-range-display">
-    <TimeZoneTag
-      class="cmk-time-range-display__zone"
-      :time-zone="props.settings.timeZone"
-      :accessible-label="_t('Timezone')"
-    />
     <span>{{ _t('From') }}</span>
     <span :aria-label="emptyName(props.from.date)">
       <b>{{ dateText(props.from.date) }}</b>
@@ -72,8 +66,7 @@ const timeWidthVariants = computed(() =>
 </template>
 
 <style scoped>
-/* Columns: label | date | divider | time. The timezone badge sits above the date column and may
-   extend into the time columns. */
+/* Columns: label | date | divider | time. */
 .cmk-time-range-display {
   display: grid;
   grid-template-columns: repeat(4, max-content);
@@ -81,12 +74,6 @@ const timeWidthVariants = computed(() =>
   gap: var(--dimension-2) var(--dimension-4);
   color: var(--font-color);
   font-variant-numeric: tabular-nums;
-}
-
-.cmk-time-range-display__zone {
-  grid-column: 2 / 5;
-  justify-self: start;
-  margin-bottom: var(--dimension-2);
 }
 
 .cmk-time-range-display__divider {

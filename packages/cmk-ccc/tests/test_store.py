@@ -845,10 +845,15 @@ def _map_in_threads(function: Callable[[int], None]) -> None:
 
 def test_blocking_context_manager_from_multiple_threads(test_file: Path) -> None:
     acquired = []
+    looked_for_a_waiter: list[int] = []
 
     def acquire(_n: int) -> None:
         with store.locked(test_file):
             acquired.append(1)
+            # Threads rarely overlap here, so the first one stays until another one waits.
+            if not looked_for_a_waiter:
+                looked_for_a_waiter.append(1)
+                _wait_for_waiting_lock(test_file)
             assert len(acquired) == 1
             acquired.pop()
 

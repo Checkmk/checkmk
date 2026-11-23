@@ -1,4 +1,4 @@
-title: Output Power
+title: UPS: Output Power
 agents: snmp
 catalog: hw/power/generic
 license: GPLv2

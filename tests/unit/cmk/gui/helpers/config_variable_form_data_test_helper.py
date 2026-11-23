@@ -179,10 +179,16 @@ class EditionDependentDefault:
         return value
 
 
+_DATA_BACKEND_LOGGING = {"general": 30, "schema": 30, "sql": False, "reads": False}
+
 FACTORY_DEFAULTS_NORMALIZED_BY_LOAD: Mapping[str, object] = {
     "data_backend": EditionDependentDefault(
         community={},
-        ultimate={"features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"}},
+        pro={"logging": _DATA_BACKEND_LOGGING},
+        ultimate={
+            "features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"},
+            "logging": _DATA_BACKEND_LOGGING,
+        },
     ),
     "notification_spooling": "local",
     "site_opentelemetry_collector_delta_to_cumulative_processor": {
@@ -1333,7 +1339,11 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
     },
     "data_backend": EditionDependentDefault(
         community={},
-        ultimate={"features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"}},
+        pro={"logging": _DATA_BACKEND_LOGGING},
+        ultimate={
+            "features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"},
+            "logging": _DATA_BACKEND_LOGGING,
+        },
     ),
     "mkeventd_notify_remotehost": None,
     "mkeventd_service_levels": [],
@@ -2289,19 +2299,23 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
                         "https_port": 8443,
                         "relative_memory_limit_percentage": 50.0,
                     },
+                    "logging": _DATA_BACKEND_LOGGING,
                 },
             ),
             CaseMigrates(
                 "unlicensed-routing-deleted",
                 {"features": {"telemetry": "central"}, "address_seen_by_central": "10.0.0.2"},
-                {},
+                {"logging": _DATA_BACKEND_LOGGING},
             ),
         ],
         ultimate=[
             CaseMigrates(
                 "legacy-disabled",
                 ("disabled", None),
-                {"features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"}},
+                {
+                    "features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"},
+                    "logging": _DATA_BACKEND_LOGGING,
+                },
             ),
             CaseMigrates(
                 "legacy-enabled",
@@ -2320,6 +2334,7 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
                         "https_port": 8443,
                         "relative_memory_limit_percentage": 50.0,
                     },
+                    "logging": _DATA_BACKEND_LOGGING,
                 },
             ),
             CaseFail(
@@ -2331,6 +2346,7 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
                 {
                     "features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"},
                     "address_seen_by_central": "10.0.0.2",
+                    "logging": _DATA_BACKEND_LOGGING,
                 },
             ),
             CasePass(
@@ -2342,6 +2358,7 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
                         "https_port": 8443,
                         "relative_memory_limit_percentage": 50.0,
                     },
+                    "logging": _DATA_BACKEND_LOGGING,
                 },
             ),
             CaseFail(

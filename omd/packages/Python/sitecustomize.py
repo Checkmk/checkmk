@@ -20,8 +20,8 @@ if omd_root:
 
     # Block the import of modules that are not licensed for the current edition.
     # See doc/documentation/arch-comp-licensing-feature-filter.rst for the rationale.
+    from cmk.ccc.import_filter import files_for_disabled_features, install
     from cmk.ccc.version import edition
-    from cmk.licensing.basics.finder import files_for_disabled_features, install
     from cmk.licensing.basics.options import get_license_options
 
     sys.meta_path[:] = install(

@@ -118,7 +118,7 @@ Where it is installed
 ``omd/packages/Python/sitecustomize.py`` is installed into ``lib/python3.X/`` of the OMD Python (see ``omd/packages/Python/BUILD.Python.bazel``) and is therefore executed by **every** interpreter start in a site: the GUI's WSGI workers, ``cmk``, cron jobs, the agent receiver, ``omd`` in site context, ad-hoc ``python3`` in a site shell.
 The filter is only installed when ``OMD_ROOT`` is set; as root (``omd`` outside a site) nothing is filtered.
 
-Because ``sitecustomize.py`` runs before anything else, its imports must stay minimal: ``cmk.licensing.basics`` is the only allowed dependency.
+Because ``sitecustomize.py`` runs before anything else, its imports must stay minimal: ``cmk.ccc.import_filter`` and ``cmk.licensing.basics`` (pinned by ``sitecustomize_deps_test``).
 Anything imported here is imported by every Python process in the site, and cannot itself be license-gated.
 
 Do not confuse this file with the ``sitecustomize.py`` that the root ``BUILD`` generates for the *development venv*: that one only prepends the repository's ``packages/*`` to ``sys.path`` and installs no filter.
@@ -127,8 +127,8 @@ In a Git checkout nothing is blocked.
 Interfaces
 ----------
 
-* ``cmk.licensing.basics.finder.install(meta_path, blocked)`` and ``files_for_disabled_features(disabled)`` -- used once, by ``sitecustomize.py``, which also decides the disabled options.
-* ``cmk.licensing.basics.finder.blocked_files()`` -- the files hidden by the filter installed in this process (empty if there is none), realpath-normalized, for code that walks the file system instead of importing: the man-page catalog in ``cmk --man`` / ``cmk -M`` (``cmk/plugins/checkmk/cli``) and the Setup check catalog (``cmk/gui/wato/pages/check_catalog.py``) pass it as ``blocked_paths`` to ``cmk.utils.man_pages``. Any new file-system based discovery of license-gated content must do the same, otherwise the GUI advertises checks the site cannot run.
+* ``cmk.ccc.import_filter.install(meta_path, blocked)`` and ``files_for_disabled_features(disabled)`` -- used once, by ``sitecustomize.py``, which also decides the disabled options.
+* ``cmk.ccc.import_filter.blocked_files()`` -- the files hidden by the filter installed in this process (empty if there is none), realpath-normalized, for code that walks the file system instead of importing: the man-page catalog in ``cmk --man`` / ``cmk -M`` (``cmk/plugins/checkmk/cli``) and the Setup check catalog (``cmk/gui/wato/pages/check_catalog.py``) pass it as ``blocked_paths`` to ``cmk.utils.man_pages``. Any new file-system based discovery of license-gated content must do the same, otherwise the GUI advertises checks the site cannot run.
 * ``cmk.licensing.registry.is_option_enabled(omd_root, option)`` and ``get_license_options(...)`` -- the *runtime* counterpart for code that is shared between features and must branch on a flag (REST API schema restrictions, GUI fields, ``cmk.gui.main_modules.register``, the agent receiver's relay switch).
   Use these when a module is imported in all editions but only part of its behavior is licensed.
 
@@ -179,7 +179,7 @@ To check what is blocked:
 .. code-block:: python
 
     # run as the site user, e.g. via ``python3 -`` in a site shell
-    from cmk.licensing.basics.finder import blocked_files
+    from cmk.ccc.import_filter import blocked_files
 
     for path in sorted(blocked_files()):
         print(path)

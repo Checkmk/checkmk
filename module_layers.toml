@@ -229,12 +229,11 @@ allows = [
   "cmk.checkengine",
   "cmk.checkengine.fetchers",
   # The "cmk" commands (cli) drive the whole base: automations, man pages
-  # (feature filter), plug-in discovery, profiling and tracing.
+  # (import filter), plug-in discovery, profiling and tracing.
   "cmk.automations",
   "cmk.config",
   "cmk.discover_plugins",
   "cmk.inventory",
-  "cmk.licensing.basics.finder",
   "cmk.piggyback",
   "cmk.profiling",
   "cmk.relay_fetcher_trigger",

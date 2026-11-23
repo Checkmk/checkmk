@@ -10,11 +10,11 @@ from pathlib import Path
 from typing import Protocol
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.import_filter import blocked_files
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.discover_plugins import discover_families, PluginGroup
-from cmk.licensing.basics.finder import blocked_files
 from cmk.plugins.checkmk.cli.man_pages import (
     cli_command_browse_man,
     cli_command_man,

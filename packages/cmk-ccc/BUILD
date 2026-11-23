@@ -19,6 +19,13 @@ py_library(
 )
 
 py_library(
+    name = "import-filter",
+    srcs = ["cmk/ccc/import_filter.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "inotify",
     srcs = ["cmk/ccc/inotify.py"],
     imports = ["."],
@@ -227,6 +234,7 @@ _ALL = [
     "exceptions",
     "hostaddress",
     "i18n",
+    "import-filter",
     "inotify",
     "jsontype",
     "log",
@@ -261,6 +269,7 @@ py_cmk_test(
         "exceptions",
         "general-version-infos",
         "hostaddress",
+        "import-filter",
         "inotify",
         "log",
         "observer",

@@ -13,7 +13,7 @@ from typing import override
 
 import pytest
 
-from cmk.licensing.basics import finder
+from cmk.ccc import import_filter as finder
 
 
 class _FakeDistribution(PathDistribution):

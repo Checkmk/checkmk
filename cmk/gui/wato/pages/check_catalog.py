@@ -17,6 +17,7 @@ import re
 from collections.abc import Collection, Mapping, Sequence
 from typing import Any, overload, override, TypedDict, Union
 
+from cmk.ccc.import_filter import blocked_files
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
@@ -47,7 +48,6 @@ from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
-from cmk.licensing.basics.finder import blocked_files
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils import man_pages

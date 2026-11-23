@@ -292,6 +292,7 @@ py_library(
         "sitecustomize.py",
     ],
     deps = [
+        "//packages/cmk-ccc:import-filter",
         "//packages/cmk-ccc:version",
         "//packages/cmk-licensing/cmk/licensing/basics",
     ],
@@ -307,6 +308,7 @@ _SITECUSTOMIZE_DEPS = [
     "//omd/packages/Python:sitecustomize_py",
     "//packages/cmk-ccc:exceptions",
     "//packages/cmk-ccc:i18n",
+    "//packages/cmk-ccc:import-filter",
     "//packages/cmk-ccc:store",
     "//packages/cmk-ccc:version",
     "//packages/cmk-crypto:cmk-crypto",

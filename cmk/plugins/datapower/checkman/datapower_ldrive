@@ -1,4 +1,4 @@
-title: IBM Datapower: Logical Drives
+title: IBM DataPower: Logical Drives
 agents: snmp
 catalog: hw/network/ibm
 license: GPLv2

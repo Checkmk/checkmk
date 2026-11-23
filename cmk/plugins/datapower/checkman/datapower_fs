@@ -1,4 +1,4 @@
-title: IBM Datapower: Filesystems
+title: IBM DataPower: Filesystems
 agents: snmp
 catalog: hw/network/ibm
 license: GPLv2

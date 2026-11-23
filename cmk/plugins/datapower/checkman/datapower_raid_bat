@@ -1,4 +1,4 @@
-title: IBM Datapower: Raid Battery
+title: IBM DataPower: RAID Battery
 agents: snmp
 catalog: hw/network/ibm
 license: GPLv2

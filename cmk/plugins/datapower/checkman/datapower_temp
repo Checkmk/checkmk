@@ -1,4 +1,4 @@
-title: IBM Datapower: Temperature Sensors
+title: IBM DataPower: Temperature Sensors
 agents: snmp
 catalog: hw/network/ibm
 license: GPLv2

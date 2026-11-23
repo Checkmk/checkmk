@@ -302,8 +302,7 @@ test('names the hosts the template matches below the tabs', () => {
         matching_hosts: ['pod-cart', 'pod-search'],
         unmatched_host_names: [],
         hidden_match_count: 0,
-        truncated: false,
-        creatable_folders: [{ path: '/', title: 'Main' }]
+        truncated: false
       }
     }
   })
@@ -334,8 +333,7 @@ test('tells that saving enables OpenTelemetry data on the hosts the template mat
         matching_hosts: ['pod-cart', 'pod-search'],
         unmatched_host_names: [],
         hidden_match_count: 0,
-        truncated: false,
-        creatable_folders: [{ path: '/', title: 'Main' }]
+        truncated: false
       }
     }
   })

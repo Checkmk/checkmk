@@ -105,8 +105,7 @@ const server = useMswServer(
       matching_hosts: ['cart'],
       unmatched_host_names: [],
       hidden_match_count: 0,
-      truncated: false,
-      creatable_folders: [{ path: '/', title: 'Main' }]
+      truncated: false
     })
   ),
   http.post(GRAPH_DATA_URL, () =>
@@ -369,8 +368,7 @@ function serveResolution(unmatchedHostNames: string[]): void {
         matching_hosts: [],
         unmatched_host_names: unmatchedHostNames,
         hidden_match_count: 0,
-        truncated: false,
-        creatable_folders: [{ path: '/', title: 'Main' }]
+        truncated: false
       })
     )
   )

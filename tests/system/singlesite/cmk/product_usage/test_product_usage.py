@@ -22,6 +22,13 @@ PRODUCT_USAGE_SITE_ID_PATH = "var/check_mk/product_usage/site_id"
 PRODUCT_USAGE_URL_ENV_VAR = "CMK_PRODUCT_USAGE_URL"
 PRODUCT_USAGE_COMMAND = "cmk-product-usage"
 
+# The fields that a standalone site with the default configuration sends as null, and why
+NULL_ON_A_DEFAULT_SITE = {
+    "grafana": "the site is not connected to the Grafana plug-in",
+    "site_created_at": "the Cloud trial payload does not collect it yet",
+    "sessions": "the Cloud trial payload does not collect it yet",
+}
+
 
 @pytest.fixture(scope="module")
 def default_cfg(site: Site) -> Generator[None]:
@@ -228,6 +235,25 @@ def test_product_usage_json_reports_standalone_site_languages(site: Site) -> Non
     data = json.loads(get_product_usage_json_content(site))["data"]
     assert data["distributed_monitoring"] == {"is_remote_setup_site": False}
     assert data["languages"]["default_language"] == "en"
+
+
+@pytest.mark.usefixtures("default_cfg")
+def test_product_usage_json_has_a_value_for_every_field_the_site_can_collect(site: Site) -> None:
+    """A collector that fails sends its field as null instead of failing the collection
+
+    The collection then succeeds and only the null field shows the failure.
+    """
+    run_product_usage_collection(site)
+
+    data = json.loads(get_product_usage_json_content(site))["data"]
+    may_be_null = set(NULL_ON_A_DEFAULT_SITE)
+    if site.edition.is_community_edition():
+        may_be_null.add("agent_updater")  # Only the Agent Bakery can count the agent updaters
+
+    null_fields = sorted(name for name, value in data.items() if value is None)
+    assert [name for name in null_fields if name not in may_be_null] == [], (
+        "A collector failed, see var/log/product_usage_analytics.log"
+    )
 
 
 @pytest.mark.usefixtures("default_cfg")

@@ -196,7 +196,7 @@ class RescheduleIcon(Icon):
             txt = _("Reschedule check")
 
             if what == "service":
-                servicedesc = row["service_description"].replace("\\", "\\\\")
+                servicedesc = row["service_description"]
                 wait_svc = servicedesc
 
                 # Use 'Check_MK' service for cmk based services

@@ -130,6 +130,20 @@ def test_cloud_trial_payload_carries_the_count_of_hosts_with_default_services_on
     assert json.loads(json_payload)["data"]["count_hosts_default_services_only"] == 2
 
 
+def test_cloud_trial_payload_carries_session_statistics() -> None:
+    sessions = {
+        "count": 4,
+        "average_duration": 1800.0,
+        "median_duration": 1200.0,
+        "stddev_duration": 1800.0,
+    }
+    payload = {**_product_usage_data(), "sessions": sessions}
+
+    json_payload = CloudTrialPayload.model_validate(payload).model_dump_with_metadata_json()
+
+    assert json.loads(json_payload)["data"]["sessions"] == sessions
+
+
 def test_cloud_trial_payload_carries_the_site_creation_time() -> None:
     payload = {**_product_usage_data(), "site_created_at": 1767700800}
 

@@ -117,6 +117,34 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
     assert remaining == [11112, 11113]
 
 
+def test_list_shows_the_current_version_of_a_werk_without_version(tmp_path: Path) -> None:
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
+    (repo_path / ".werks/11111.md").write_text(
+        """[//]: # (werk v2)
+# some_title
+
+key        | value
+---------- | ---
+date       | 2026-07-23T08:04:44.815279+00:00
+class      | fix
+edition    | cre
+component  | ccc
+level      | 1
+compatible | yes
+
+Some description.
+"""
+    )
+
+    os.chdir(repo_path)
+    result = subprocess.run(
+        ["python", "-m", "cmk.werks", "list"], capture_output=True, text=True, check=True
+    )
+
+    assert "0.1.0" in result.stdout
+
+
 def test_create_werk_logs_the_consumed_id(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()

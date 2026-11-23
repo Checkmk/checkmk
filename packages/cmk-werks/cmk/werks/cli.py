@@ -457,6 +457,7 @@ def load_werk(werk_path: Path) -> Werk:
     parsed = parse_werk(
         file_content=werk_path.read_text(encoding="utf-8"), file_name=werk_path.name
     )
+    parsed.metadata.setdefault("version", get_config().current_version)
 
     werk = Werk(
         path=werk_path,

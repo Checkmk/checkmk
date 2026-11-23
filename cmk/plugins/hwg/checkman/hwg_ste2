@@ -1,4 +1,4 @@
-title: STE2 Ethernet Thermometer: Temperature
+title: HWg-STE2: Temperature
 agents: snmp
 catalog: hw/environment/hwg
 license: GPLv2

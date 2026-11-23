@@ -1,4 +1,4 @@
-title: WuT Web-Thermograph: Air Pressure
+title: W&T: Web-Thermograph Air Pressure
 agents: snmp
 catalog: hw/environment/wut
 license: GPLv2

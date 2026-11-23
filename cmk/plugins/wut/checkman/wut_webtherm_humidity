@@ -1,4 +1,4 @@
-title: WuT Web-Thermograph: Humidity
+title: W&T: Web-Thermograph Humidity
 agents: snmp
 catalog: hw/environment/wut
 license: GPLv2

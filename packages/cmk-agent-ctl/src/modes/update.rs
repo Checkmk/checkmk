@@ -17,7 +17,6 @@ use crate::updater::{
     SignatureCheck, Spooled, Updater, WritableUpdater,
 };
 use crate::{agent_receiver_api, misc, setup};
-#[cfg(unix)]
 use anyhow::anyhow;
 use anyhow::Result as AnyhowResult;
 use log::warn;
@@ -153,10 +152,12 @@ fn run_cycle(
     match &fetched {
         FetchOutcome::NotPossible(_) | FetchOutcome::Superseded => {}
         FetchOutcome::UpToDate(_) | FetchOutcome::NoPackage => updater.clear_last_error()?,
-        FetchOutcome::SourceUnavailable { reason, .. } => match reason {
+        FetchOutcome::SourceUnavailable { site_id, reason } => match reason {
             NoAgentUpdates::CommunityEdition => updater.record_source_unavailable(*reason)?,
             // A license can come back while nobody touches the host.
-            NoAgentUpdates::NotLicensed => {}
+            NoAgentUpdates::NotLicensed => {
+                updater.record_error(&anyhow!(report_source_unavailable(site_id, *reason)))?
+            }
         },
         #[cfg(unix)]
         FetchOutcome::Due(installation) => installation_outcome(installation)?,
@@ -1381,6 +1382,24 @@ mod tests {
             assert!(licensed.is_ok(), "{licensed:?}");
             assert_eq!(first_unlicensed_then_licensed.reported_errors().len(), 2);
             assert_eq!(host.state().source.unwrap().no_agent_updates, None);
+        }
+
+        /// CMK-41723 AC3
+        #[test]
+        fn test_a_site_without_the_license_is_recorded_as_the_last_error() {
+            let host = Host::new();
+            let unlicensed = ScriptedApi::new(vec![Err(ApiError::stating_no_agent_updates(
+                "not_licensed",
+            ))]);
+
+            let cycle = host.cycle(&unlicensed);
+
+            assert!(cycle.is_ok(), "{cycle:?}");
+            let error = host.state().last_error.unwrap_or_default();
+            assert!(
+                error.contains("server/site: The license of this site does not include"),
+                "{error:?}"
+            );
         }
 
         /// TC-AU-025: a removed TLS registration is refused with 403

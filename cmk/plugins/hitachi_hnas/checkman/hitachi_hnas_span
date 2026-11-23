@@ -1,4 +1,4 @@
-title: Hitachi HNAS: Usage of Spans (Storage Pools)
+title: Hitachi HNAS: Span Usage
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

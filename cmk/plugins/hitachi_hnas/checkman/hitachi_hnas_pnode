@@ -1,4 +1,4 @@
-title: Hitachi HNAS: Status of Physical Nodes (PNodes)
+title: Hitachi HNAS: Physical Nodes
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Hitachi HUS DKC: Hardware State
+title: Hitachi HUS: DKC Hardware State
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

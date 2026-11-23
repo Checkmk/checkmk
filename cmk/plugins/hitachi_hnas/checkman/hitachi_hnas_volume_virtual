@@ -1,4 +1,4 @@
-title: Hitachi HNAS: Usage and Status of Virtual Volumes
+title: Hitachi HNAS: Virtual Volume Usage and Status
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

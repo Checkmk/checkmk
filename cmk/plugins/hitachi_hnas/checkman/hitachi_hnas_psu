@@ -1,4 +1,4 @@
-title: Hitachi HNAS: Status of Power Supplies (PSUs)
+title: Hitachi HNAS: Power Supplies
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

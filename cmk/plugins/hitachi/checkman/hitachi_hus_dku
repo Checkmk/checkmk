@@ -1,4 +1,4 @@
-title: Hitachi HUS DKU: Hardware State
+title: Hitachi HUS: DKU Hardware State
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

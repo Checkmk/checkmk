@@ -1,4 +1,4 @@
-title: Hitachi HNAS: Status of Virtual Nodes (VNodes or EVS)
+title: Hitachi HNAS: Virtual Nodes
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

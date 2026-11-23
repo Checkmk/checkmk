@@ -1,4 +1,4 @@
-title: Hitachi HNAS: FibreChannel Interfaces
+title: Hitachi HNAS: Fibre Channel Interfaces
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

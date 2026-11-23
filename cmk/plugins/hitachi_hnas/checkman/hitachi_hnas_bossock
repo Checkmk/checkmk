@@ -1,4 +1,4 @@
-title: Hitachi HNAS: Number of Bossock Fibers
+title: Hitachi HNAS: Bossock Fibers
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

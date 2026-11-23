@@ -1,4 +1,4 @@
-title: Hitachi HNAS: Status and Measured Value of Temperature Sensors
+title: Hitachi HNAS: Temperature Sensors
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

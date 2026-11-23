@@ -1,4 +1,4 @@
-title: Hitachi HNAS: Utilization of Field Programmable Gate Arrays (FPGAs)
+title: Hitachi HNAS: FPGA Utilization
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

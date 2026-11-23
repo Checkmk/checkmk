@@ -1,4 +1,4 @@
-title: Hitachi HNAS: Status and Speed of Fans
+title: Hitachi HNAS: Fan Status and Speed
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

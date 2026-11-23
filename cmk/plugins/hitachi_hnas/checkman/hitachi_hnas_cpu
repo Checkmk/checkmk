@@ -1,4 +1,4 @@
-title: Hitachi HNAS: CPU Utilization of PNodes
+title: Hitachi HNAS: PNode CPU Utilization
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

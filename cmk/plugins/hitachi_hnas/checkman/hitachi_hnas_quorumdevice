@@ -1,4 +1,4 @@
-title: Hitachi HNAS: Status of Quorum Device
+title: Hitachi HNAS: Quorum Device
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPLv2

@@ -121,11 +121,10 @@ def test_a_failed_discovery_exits_one() -> None:
 @pytest.mark.parametrize(
     "error",
     [
-        MKGeneralException("Cannot load the configuration"),
-        HostSelectionError("No such host"),
-        PluginSelectionError("Unknown plug-in"),
+        pytest.param(MKGeneralException("Cannot load the configuration"), id="config-not-loadable"),
+        pytest.param(HostSelectionError("No such host"), id="unknown-host"),
+        pytest.param(PluginSelectionError("Unknown plug-in"), id="unknown-plugin"),
     ],
-    ids=lambda e: type(e).__name__,
 )
 def test_an_aborted_discovery_exits_three(error: Exception) -> None:
     assert (

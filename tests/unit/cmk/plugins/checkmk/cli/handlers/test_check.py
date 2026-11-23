@@ -82,8 +82,10 @@ def test_the_check_exits_with_the_monitoring_meaning_of_the_hosts_state(
 
 @pytest.mark.parametrize(
     "error",
-    [MKGeneralException("Unknown host"), PluginSelectionError("Unknown plug-in")],
-    ids=lambda e: type(e).__name__,
+    [
+        pytest.param(MKGeneralException("Unknown host"), id="unknown-host"),
+        pytest.param(PluginSelectionError("Unknown plug-in"), id="unknown-plugin"),
+    ],
 )
 def test_a_failed_check_exits_three(error: Exception) -> None:
     check_host = _FakeCheckHost(error=error)

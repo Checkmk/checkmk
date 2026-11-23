@@ -42,8 +42,10 @@ def test_the_core_is_configured_for_the_requested_hosts() -> None:
 
 @pytest.mark.parametrize(
     "error",
-    [_FAILURE, CoreActivationError("Cannot restart the core")],
-    ids=lambda e: type(e).__name__,
+    [
+        pytest.param(_FAILURE, id="config-not-loadable"),
+        pytest.param(CoreActivationError("Cannot restart the core"), id="core-not-restartable"),
+    ],
 )
 def test_a_failed_core_configuration_exits_three(error: Exception) -> None:
     assert (

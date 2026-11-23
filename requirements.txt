@@ -5443,6 +5443,7 @@ requests==2.34.2 \
     --hash=sha256:f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-ai-router/requirements.in
     #   -r non-free/packages/cmk-core-helpers/requirements.in
     #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-dcd/requirements.in
@@ -5510,6 +5511,7 @@ responses==0.26.3 \
     --hash=sha256:74474f799334ac4f37d93b6437ecc3bb1bb5c77a8d31780a338643be2dce0af8 \
     --hash=sha256:b0c11ca8131b8b227b8d5108e6ed39772222bd5aab030ed430e8f99057c4c409
     # via
+    #   -r non-free/packages/cmk-ai-router/dev-requirements.in
     #   -r packages/cmk-notification-plugins/dev-requirements.in
     #   -r packages/cmk-plugins/dev-requirements.in
     #   -r tests/dev-requirements.in
@@ -6532,6 +6534,7 @@ urllib3==2.8.0 \
     # via
     #   -r agents/plugins/dev-requirements.in
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-ai-router/requirements.in
     #   -r non-free/packages/cmk-core-helpers/requirements.in
     #   -r packages/cmk-notification-plugins/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
@@ -6554,6 +6557,7 @@ urllib3[zstd]==2.8.0 \
     # via
     #   -r agents/plugins/dev-requirements.in
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-ai-router/requirements.in
     #   -r non-free/packages/cmk-core-helpers/requirements.in
     #   -r packages/cmk-notification-plugins/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in

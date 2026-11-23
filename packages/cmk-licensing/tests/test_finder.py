@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 from collections.abc import Sequence
 from importlib.machinery import ModuleSpec
 from importlib.metadata import EntryPoint, EntryPoints, PackagePath, PathDistribution
@@ -169,3 +170,21 @@ def test_installed_filter_passes_namespace_packages() -> None:
     (wrapped,) = finder.install([_StaticFinder(None)], {"/site/blocked.py"})
 
     assert wrapped.find_spec("mod0", None) is not None
+
+
+def test_blocked_files_are_empty_without_filter(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(sys, "meta_path", [_StaticFinder()])
+
+    assert finder.blocked_files() == frozenset()
+
+
+def test_blocked_files_reports_the_installed_filter(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    (tmp_path / "real.py").touch()
+    (tmp_path / "link.py").symlink_to(tmp_path / "real.py")
+    monkeypatch.setattr(
+        sys, "meta_path", finder.install([_StaticFinder()], {str(tmp_path / "link.py")})
+    )
+
+    assert finder.blocked_files() == {str(tmp_path / "real.py")}

@@ -14,14 +14,13 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.discover_plugins import discover_families, PluginGroup
-from cmk.licensing.basics.finder import blocked_feature_files
+from cmk.licensing.basics.finder import blocked_files
 from cmk.plugins.checkmk.cli.man_pages import (
     cli_command_browse_man,
     cli_command_man,
     ManRequest,
 )
 from cmk.utils import man_pages
-from cmk.utils.paths import omd_root
 
 
 class _ManPagePaths(Protocol):
@@ -39,7 +38,7 @@ def _man_page_paths(*, debug: bool) -> Mapping[str, Path]:
     return man_pages.make_man_page_path_map(
         discover_families(raise_errors=debug),
         PluginGroup.CHECKMAN.value,
-        blocked_paths=blocked_feature_files(omd_root),
+        blocked_paths=blocked_files(),
     )
 
 
@@ -96,7 +95,7 @@ def _browse_man_pages(*, debug: bool) -> None:
         man_pages.load_man_page_catalog(
             discover_families(raise_errors=debug),
             PluginGroup.CHECKMAN.value,
-            blocked_paths=blocked_feature_files(omd_root),
+            blocked_paths=blocked_files(),
             debug=debug,
         )
     )

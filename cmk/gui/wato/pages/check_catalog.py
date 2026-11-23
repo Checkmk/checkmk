@@ -47,10 +47,10 @@ from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
-from cmk.licensing.basics.finder import blocked_feature_files
+from cmk.licensing.basics.finder import blocked_files
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1.form_specs import FormSpec
-from cmk.utils import man_pages, paths
+from cmk.utils import man_pages
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
@@ -105,7 +105,7 @@ class ModeCheckPlugins(WatoMode):
         self._manpages = _get_check_catalog(
             discover_families(raise_errors=False),
             only_path=(),
-            blocked_paths=blocked_feature_files(paths.omd_root),
+            blocked_paths=blocked_files(),
         )
         self._titles = man_pages.CATALOG_TITLES
 
@@ -170,7 +170,7 @@ class ModeCheckPluginSearch(WatoMode):
         self._manpages = _get_check_catalog(
             discover_families(raise_errors=False),
             only_path=(),
-            blocked_paths=blocked_feature_files(paths.omd_root),
+            blocked_paths=blocked_files(),
         )
         self._titles = man_pages.CATALOG_TITLES
 
@@ -295,7 +295,7 @@ class ModeCheckPluginTopic(WatoMode):
         self._manpages = _get_check_catalog(
             discover_families(raise_errors=False),
             self._path,
-            blocked_paths=blocked_feature_files(paths.omd_root),
+            blocked_paths=blocked_files(),
         )
         self._titles = man_pages.CATALOG_TITLES
 
@@ -590,7 +590,7 @@ class ModeCheckManPage(WatoMode):
         man_page_paths = man_pages.make_man_page_path_map(
             discover_families(raise_errors=False),
             PluginGroup.CHECKMAN.value,
-            blocked_paths=blocked_feature_files(paths.omd_root),
+            blocked_paths=blocked_files(),
         )
 
         try:

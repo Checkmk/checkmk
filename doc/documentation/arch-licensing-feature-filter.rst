@@ -72,10 +72,10 @@ White-box overall system
 
     [import cmk.bakery] as imp
     [check_catalog / cmk --man] as catalog
-    [blocked_feature_files()] as blocked
+    [blocked_files()] as blocked
     imp ..> finder : find_spec()
     catalog ..> blocked : same file set,\nby path
-    blocked --> files : wraps
+    blocked ..> finder : reads the installed\nblock list
 
 The mechanism has three parts:
 
@@ -128,7 +128,7 @@ Interfaces
 ----------
 
 * ``cmk.licensing.basics.finder.install(meta_path, blocked)`` and ``files_for_disabled_features(disabled)`` -- used once, by ``sitecustomize.py``, which also decides the disabled options.
-* ``cmk.licensing.basics.finder.blocked_feature_files(omd_root)`` -- the same file set, realpath-normalized, for code that walks the file system instead of importing: the man-page catalog in ``cmk --man`` / ``cmk -M`` (``cmk/plugins/checkmk/cli``) and the Setup check catalog (``cmk/gui/wato/pages/check_catalog.py``) pass it as ``blocked_paths`` to ``cmk.utils.man_pages``. Any new file-system based discovery of license-gated content must do the same, otherwise the GUI advertises checks the site cannot run.
+* ``cmk.licensing.basics.finder.blocked_files()`` -- the files hidden by the filter installed in this process (empty if there is none), realpath-normalized, for code that walks the file system instead of importing: the man-page catalog in ``cmk --man`` / ``cmk -M`` (``cmk/plugins/checkmk/cli``) and the Setup check catalog (``cmk/gui/wato/pages/check_catalog.py``) pass it as ``blocked_paths`` to ``cmk.utils.man_pages``. Any new file-system based discovery of license-gated content must do the same, otherwise the GUI advertises checks the site cannot run.
 * ``cmk.licensing.registry.is_option_enabled(omd_root, option)`` and ``get_license_options(...)`` -- the *runtime* counterpart for code that is shared between features and must branch on a flag (REST API schema restrictions, GUI fields, ``cmk.gui.main_modules.register``, the agent receiver's relay switch).
   Use these when a module is imported in all editions but only part of its behavior is licensed.
 
@@ -168,7 +168,7 @@ Semantics worth knowing
   It exists to make the *default* behavior of a site correct and consistent, not to protect the code.
 * **Edition detection falls back to Community.**
   ``cmk.ccc.version.edition`` returns ``COMMUNITY`` when no ``omd version`` can be read (Git checkout, doctests, spec generation).
-  In such contexts everything would be blocked; ``sitecustomize`` is not active there, but code calling ``blocked_feature_files`` directly should keep that in mind.
+  In such contexts the filter is not installed, so nothing is blocked.
 
 Debugging
 ---------
@@ -179,12 +179,9 @@ To check what is blocked:
 .. code-block:: python
 
     # run as the site user, e.g. via ``python3 -`` in a site shell
-    import os
-    from pathlib import Path
+    from cmk.licensing.basics.finder import blocked_files
 
-    from cmk.licensing.basics.finder import blocked_feature_files
-
-    for path in sorted(blocked_feature_files(Path(os.environ["OMD_ROOT"]))):
+    for path in sorted(blocked_files()):
         print(path)
 
 ``python3 -S`` starts an interpreter without ``sitecustomize`` (and hence without the filter or the ``local/lib/python3`` path) for comparison.

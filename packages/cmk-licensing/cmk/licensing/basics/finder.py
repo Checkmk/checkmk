@@ -9,16 +9,13 @@ and the wheel tagging convention (``cmk.features.<option>`` entry-point groups).
 """
 
 import os
+import sys
 from collections.abc import Collection, Iterable, Sequence
+from functools import cached_property
 from importlib.machinery import ModuleSpec
 from importlib.metadata import Distribution, distributions
-from pathlib import Path
 from types import ModuleType
-from typing import Protocol
-
-from cmk.ccc.version import edition
-
-from .options import get_license_options
+from typing import Final, Protocol
 
 _GROUP_PREFIX = "cmk.features."
 _DISTRIBUTION_PREFIX = "cmk-"
@@ -35,16 +32,37 @@ def install(meta_path: Iterable[FinderP], blocked: Collection[str]) -> list[Find
 
     Use it as ``sys.meta_path[:] = install(sys.meta_path, ...)``.
     """
-    blocked_set = frozenset(blocked)
-    return [_FeatureFilterFinder(finder, blocked_set) for finder in meta_path]
+    block_list = _BlockList(frozenset(blocked))
+    return [_FeatureFilterFinder(finder, block_list) for finder in meta_path]
+
+
+def blocked_files() -> frozenset[str]:
+    """Realpath-normalized files hidden by the filter installed in ``sys.meta_path``.
+
+    For code that discovers files on disk instead of importing them (e.g. man pages).
+    Empty if no filter is installed, consistent with what is importable.
+    """
+    for finder in sys.meta_path:
+        if isinstance(finder, _FeatureFilterFinder):
+            return finder.block_list.real_paths
+    return frozenset()
+
+
+class _BlockList:
+    def __init__(self, origins: frozenset[str]) -> None:
+        self.origins: Final = origins
+
+    @cached_property
+    def real_paths(self) -> frozenset[str]:
+        return frozenset(os.path.realpath(p) for p in self.origins)
 
 
 class _FeatureFilterFinder:
     """Meta path finder that wraps another one and filters out modules based on their origin."""
 
-    def __init__(self, wrapped: FinderP, blocked: frozenset[str]) -> None:
+    def __init__(self, wrapped: FinderP, block_list: _BlockList) -> None:
         self._wrapped = wrapped
-        self._blocked = blocked
+        self.block_list: Final = block_list
         # It is not enough to implement `find_spec`.
         # While that is the documented interface,
         # implementing just that will break `importlib.metadata.version` (for instance).
@@ -61,7 +79,7 @@ class _FeatureFilterFinder:
             # than one package (e.g. `cmk.plugins`), and they don't contain actual
             # functionality. Only block once we're down to loading an actual file.
             return spec
-        if spec.origin in self._blocked:
+        if spec.origin in self.block_list.origins:
             return None  # note: raising here would fail during plugin discovery.
         return spec
 
@@ -80,17 +98,6 @@ def files_for_disabled_features(disabled_features: set[str]) -> set[str]:
         if (tags := _tags_of(dist)) and tags.issubset(disabled_features)
         for file in (dist.files or ())
     }
-
-
-def blocked_feature_files(omd_root: Path) -> frozenset[str]:
-    """Realpath-normalized files belonging to features disabled by the current license.
-
-    Convenience wrapper around `files_for_disabled_features` for callers (e.g. the man-page
-    catalog) that need to exclude license-gated files by path — consistent with the import
-    filter above.
-    """
-    disabled = get_license_options(omd_root, edition(omd_root)).disabled()
-    return frozenset(os.path.realpath(p) for p in files_for_disabled_features(disabled))
 
 
 def _tags_of(dist: Distribution) -> set[str]:

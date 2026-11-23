@@ -12,7 +12,7 @@ from typing import IO
 from pydantic import RootModel, TypeAdapter
 
 from cmk.ccc.i18n import _
-from cmk.ccc.version import parse_check_mk_version
+from cmk.ccc.version import __version__, parse_check_mk_version
 from cmk.werks import load_werk
 from cmk.werks.models import Class, Compatibility, Edition, EditionV3, Werk, WerkV1
 
@@ -50,6 +50,8 @@ def load_precompiled_werks_file(path: Path) -> dict[int, Werk]:
 def get_sort_key_by_version_and_component(
     translator: "WerkTranslator", werk: Werk
 ) -> tuple[str | int, ...]:
+    if werk.version is None:
+        raise ValueError(f"Werk {werk.id} has no version")
     return (
         -parse_check_mk_version(werk.version),
         translator.translate_component(werk.component),
@@ -210,3 +212,10 @@ def write_werk_as_text(f: IO[str], werk: Werk) -> None:
 
     if werk.compatible == Compatibility.NOT_COMPATIBLE:
         f.write("            NOTE: Please refer to the migration notes!\n")
+
+
+def resolve_version(version: str | None) -> str:
+    # a Werk without version is not released yet, it ships with the release built from this code
+    if version is not None:
+        return version
+    return __version__

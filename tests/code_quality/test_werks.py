@@ -87,6 +87,8 @@ def test_werk_versions(precompiled_werks: None) -> None:
     parsed_version = cmk_version.Version.from_str(cmk_version.__version__)
 
     for werk_id, werk in cmk.utils.werks.load().items():
+        if werk.version is None:
+            continue
         parsed_werk_version = cmk_version.Version.from_str(werk.version)
 
         assert parsed_werk_version <= parsed_version, (

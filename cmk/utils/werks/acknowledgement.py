@@ -22,7 +22,9 @@ UNACKNOWLEDGED_WERKS_JSON = Path(cmk.utils.paths.var_dir, "unacknowledged_werks.
 
 
 def is_acknowledged(werk: Werk, acknowledged_werk_ids: set[int]) -> bool:
-    return werk.id in acknowledged_werk_ids or version_is_pre_127(werk.version)
+    return werk.id in acknowledged_werk_ids or (
+        werk.version is not None and version_is_pre_127(werk.version)
+    )
 
 
 def load_acknowledgements() -> set[int]:

@@ -83,7 +83,7 @@ class WerkV2Base(BaseModel):
 class Werk(WerkV2Base):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    version: str
+    version: str | None
 
     @classmethod
     def from_json(cls, data: dict[str, object]) -> Werk:

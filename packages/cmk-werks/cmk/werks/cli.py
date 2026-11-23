@@ -38,7 +38,7 @@ from .format import format_as_werk_v1, format_as_werk_v2
 from .id_log import get_werk_id_logger
 from .models import EditionV3
 from .parse import parse_werk_v3, WERK_V3_START, WerkV2ParseResult, WerkV3ParseResult
-from .utils import edition_v3_to_v2
+from .utils import edition_v3_to_v2, resolve_version
 
 
 class Stash(BaseModel):
@@ -604,7 +604,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
     # in one class are orred. Multiple types are anded.
 
     werks: list[Werk] = list(load_werks().values())
-    versions = sorted({werk.content.metadata["version"] for werk in werks})
+    versions = sorted({resolve_version(werk.content.metadata["version"]) for werk in werks})
 
     filters: dict[str, list[str]] = {}
 

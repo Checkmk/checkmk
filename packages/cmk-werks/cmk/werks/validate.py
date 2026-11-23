@@ -48,7 +48,7 @@ def main(
                     f"Component {werk.component!r} not defined in config.\n"
                     f"Available values: {choices_component!r}"
                 )
-            if not version_regex.match(werk.version):
+            if werk.version is not None and not version_regex.match(werk.version):
                 raise ValueError(f"Version {werk.version!r} is not valid")
 
         except Exception as e:

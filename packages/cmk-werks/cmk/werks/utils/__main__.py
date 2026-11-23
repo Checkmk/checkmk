@@ -14,6 +14,7 @@ from cmk.werks.models import Edition, Werk
 from . import (
     load_precompiled_werks_file,
     load_raw_files,
+    resolve_version,
     write_as_text,
     write_precompiled_werks,
 )
@@ -40,7 +41,7 @@ def main_precompile(args: argparse.Namespace) -> None:
         if filter_by_edition is not None and werk.edition != filter_by_edition:
             return False
         # only include werks of this major version:
-        if Version.from_str(werk.version).base != current_version.base:
+        if Version.from_str(resolve_version(werk.version)).base != current_version.base:
             return False
         return True
 

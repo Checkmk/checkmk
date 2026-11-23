@@ -453,7 +453,8 @@ test('names the hosts the template matches below the tabs', () => {
         unmatched_host_names: [],
         hidden_match_count: 0,
         truncated: false,
-        creatable_folders: [{ path: '/', title: 'Main' }]
+        creatable_folders: [{ path: '/', title: 'Main' }],
+        host_creation_refusal: null
       }
     }
   })
@@ -485,7 +486,8 @@ test('tells that saving enables OpenTelemetry data on the hosts the template mat
         unmatched_host_names: [],
         hidden_match_count: 0,
         truncated: false,
-        creatable_folders: [{ path: '/', title: 'Main' }]
+        creatable_folders: [{ path: '/', title: 'Main' }],
+        host_creation_refusal: null
       }
     }
   })

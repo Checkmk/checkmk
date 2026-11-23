@@ -1,4 +1,4 @@
-title: Casa CMTS: Fan Health Status
+title: Casa CMTS: Fans
 agents: snmp
 catalog: hw/network/casa
 license: GPLv2

@@ -182,21 +182,22 @@ class AgentUpdaterData(pydantic.BaseModel):
         description="The number of hosts that use the Agent Controller updater only.",
         examples=[97],
     )
-    count_hosts_both: int = pydantic.Field(
-        description=(
-            "The number of hosts that use both the Agent Controller updater"
-            " and the legacy agent updater."
-        ),
-        examples=[12],
-    )
     count_hosts_legacy_only: int = pydantic.Field(
         description="The number of hosts that use the legacy agent updater only.",
         examples=[5],
     )
-    count_hosts_legacy_installed_package: int = pydantic.Field(
+    count_hosts_both_installed_by_controller: int = pydantic.Field(
         description=(
             "The number of hosts that use both updaters and whose currently installed agent"
-            " package was installed by the legacy agent updater."
+            " package the legacy agent updater did not install. A host whose installer the"
+            " site cannot name is counted here as well."
+        ),
+        examples=[12],
+    )
+    count_hosts_both_installed_by_legacy: int = pydantic.Field(
+        description=(
+            "The number of hosts that use both updaters and whose currently installed agent"
+            " package the legacy agent updater installed."
         ),
         examples=[1],
     )
@@ -342,9 +343,9 @@ class ProductUsageData(SiteInfo):
                 "state": "ok",
                 "count_hosts_no_updater": 3,
                 "count_hosts_controller_only": 97,
-                "count_hosts_both": 12,
                 "count_hosts_legacy_only": 5,
-                "count_hosts_legacy_installed_package": 1,
+                "count_hosts_both_installed_by_controller": 12,
+                "count_hosts_both_installed_by_legacy": 1,
             }
         ],
     )

@@ -25,9 +25,9 @@ COUNTS = {
     "state": "ok",
     "count_hosts_no_updater": 3,
     "count_hosts_controller_only": 97,
-    "count_hosts_both": 12,
     "count_hosts_legacy_only": 5,
-    "count_hosts_legacy_installed_package": 1,
+    "count_hosts_both_installed_by_controller": 12,
+    "count_hosts_both_installed_by_legacy": 1,
 }
 
 
@@ -42,9 +42,9 @@ def test_the_counts_of_the_site_are_collected(
         state="ok",
         count_hosts_no_updater=3,
         count_hosts_controller_only=97,
-        count_hosts_both=12,
         count_hosts_legacy_only=5,
-        count_hosts_legacy_installed_package=1,
+        count_hosts_both_installed_by_controller=12,
+        count_hosts_both_installed_by_legacy=1,
     )
 
 

@@ -51,6 +51,8 @@ _TERMINATE_TIMEOUT = 10  # seconds
 _SURPLUS_EVENTS_TIMEOUT = 0.02  # seconds
 # Instead of a second, so tests don't wait that long for spool files to be seen or for restarts
 _EVENT_SERVER_DELAY = 0.01  # seconds
+# How often to look whether something happened, well below _EVENT_SERVER_DELAY
+_POLL_INTERVAL = 0.001  # seconds
 
 _MATCHING_ALL = ec.Rule(
     id="all",
@@ -213,7 +215,7 @@ def _texts_of_events(event_status: EventStatus, count: int) -> list[str]:
     """
     deadline = time.monotonic() + _RECEIVE_TIMEOUT
     while len(_event_texts(event_status)) < count and time.monotonic() < deadline:
-        time.sleep(0.01)
+        time.sleep(_POLL_INTERVAL)
     time.sleep(_SURPLUS_EVENTS_TIMEOUT)
     return _event_texts(event_status)
 
@@ -554,7 +556,7 @@ def _wait_until_logged(caplog: pytest.LogCaptureFixture, beginning: str) -> None
     deadline = time.monotonic() + _RECEIVE_TIMEOUT
     while not any(message.startswith(beginning) for message in caplog.messages):
         assert time.monotonic() < deadline, f"nothing logged beginning with {beginning!r}"
-        time.sleep(0.01)
+        time.sleep(_POLL_INTERVAL)
 
 
 def _release(fifo: Path) -> None:
@@ -576,7 +578,7 @@ def _open_once_read(fifo: Path) -> int:
         except OSError as e:
             if e.errno != errno.ENXIO or time.monotonic() >= deadline:
                 raise
-            time.sleep(0.01)
+            time.sleep(_POLL_INTERVAL)
 
 
 def _add_spool_file(
@@ -643,7 +645,7 @@ def _eventually(condition: Callable[[], bool]) -> bool:
     while not condition():
         if time.monotonic() > deadline:
             return False
-        time.sleep(0.01)
+        time.sleep(_POLL_INTERVAL)
     return True
 
 

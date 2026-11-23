@@ -24,6 +24,8 @@ import pytest
 _GENEROUS_DELIVERY_TIMEOUT_MS = 60_000
 # Not 0, so that mkevent tries again or waits for room in a full pipe, unless it gets there late
 _SHORT_DELIVERY_TIMEOUT_MS = 10
+# How often to look whether something happened
+_POLL_INTERVAL = 0.001  # seconds
 
 
 def _run_mkevent(
@@ -104,7 +106,7 @@ def _wait_until_opened(pid: int, path: Path) -> None:
     while not _has_opened(pid, path):
         assert _process_state(pid) != "Z", f"process {pid} exited"
         assert time.monotonic() < deadline, f"process {pid} didn't open {path}"
-        time.sleep(0.01)
+        time.sleep(_POLL_INTERVAL)
 
 
 def _has_opened(pid: int, path: Path) -> bool:
@@ -125,7 +127,7 @@ def _wait_until_sleeping(pid: int) -> None:
     while (state := _process_state(pid)) != "S":
         assert state != "Z", f"process {pid} exited"
         assert time.monotonic() < deadline, f"process {pid} didn't sleep"
-        time.sleep(0.01)
+        time.sleep(_POLL_INTERVAL)
 
 
 def _process_state(pid: int) -> str:

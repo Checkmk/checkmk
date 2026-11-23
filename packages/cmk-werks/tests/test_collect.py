@@ -138,6 +138,23 @@ def test_an_innovation_branch_counts_for_its_release(
     assert collected["1234"]["versions"] == {"2.4.0": "2.4.0i1"}
 
 
+def test_a_v2_werk_without_version_is_released_with_its_branch(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    repo = _init_repo(tmp_path / "repo")
+    commit = _commit(
+        repo,
+        {
+            "defines.make": "VERSION := 2.4.0p44\n",
+            ".werks/1234.md": werk_text(werk_format="v2", version=None, edition="cre"),
+        },
+    )
+
+    collected = _collect(capsys, "cmk", repo, {"2.4.0": commit})
+
+    assert collected["1234"]["versions"] == {"2.4.0": "2.4.0p44"}
+
+
 def test_only_the_release_branches_of_origin_are_collected(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

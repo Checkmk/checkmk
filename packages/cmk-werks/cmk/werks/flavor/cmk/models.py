@@ -104,7 +104,7 @@ class WerkV3(WerkV3Base):
 class WerkV2(WerkV2Base):
     model_config = ConfigDict(extra="forbid", validate_by_name=True)
 
-    version: str
+    version: str | None = None
 
     @classmethod
     def from_json(cls, data: dict[str, object]) -> WerkV2:

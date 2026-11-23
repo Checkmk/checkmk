@@ -1,4 +1,4 @@
-title: Inotify: Monitor File System Operations
+title: Linux: File System Operations via inotify
 agents: linux
 catalog: os/files
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Collects Basic Hardware Infos Using DMI on Linux Hosts
+title: Linux: DMI Hardware Information
 agents: linux
 catalog: os/hardware
 license: GPLv2

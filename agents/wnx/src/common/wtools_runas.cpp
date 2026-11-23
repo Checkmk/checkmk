@@ -742,8 +742,10 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
 
     auto [domain, user] = GetDomainUser(settings.user);
 
+    // The password is a credential and must not reach the log. Whether one is
+    // set is the only part of it a trace needs.
     XLOG::t("U:{} D:{} P:{} bP:{} Env:{} WD:{}", wtools::ToUtf8(user),
-            wtools::ToUtf8(domain), wtools::ToUtf8(settings.password),
+            wtools::ToUtf8(domain), settings.password.empty() ? "null" : "set",
             settings.dont_load_profile,
             environment != nullptr ? "true" : "null",
             starting_dir.empty() ? "null" : wtools::ToUtf8(starting_dir));

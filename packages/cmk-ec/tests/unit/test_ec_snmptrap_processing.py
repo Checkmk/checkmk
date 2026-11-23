@@ -11,6 +11,8 @@ import pytest
 from pyasn1.codec.ber import encoder
 from pysnmp.proto.api import v1
 
+from cmk.ec.config import Config
+from cmk.ec.history_file import FileHistory
 from cmk.ec.main import EventServer
 
 
@@ -107,6 +109,22 @@ def test_dropped_trap_comes_with_a_traceback_only_when_debugging(
 def test_traps_are_ignored_without_a_trap_endpoint(
     event_server: EventServer, caplog: pytest.LogCaptureFixture
 ) -> None:
+    caplog.set_level(logging.DEBUG, logger="cmk.mkeventd.EventServer")
+
+    events = list(
+        event_server.create_events_from_trap(_snmpv1_trap(generic_trap=0), ("192.0.2.1", 162))
+    )
+
+    assert (events, caplog.messages) == ([], [])
+
+
+def test_traps_are_ignored_without_a_trap_endpoint_after_a_reload(
+    event_server: EventServer,
+    config: Config,
+    history: FileHistory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    event_server.reload_configuration(config, history)
     caplog.set_level(logging.DEBUG, logger="cmk.mkeventd.EventServer")
 
     events = list(

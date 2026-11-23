@@ -51,8 +51,7 @@ const server = useMswServer(
       unmatched_host_names: [],
       hidden_match_count: 0,
       truncated: false,
-      creatable_folders: [{ path: '/', title: 'Main' }],
-      host_creation_refusal: null
+      creatable_folders: [{ path: '/', title: 'Main' }]
     })
   ),
   http.post(RESOLVE_SERVICES_URL, () =>
@@ -240,8 +239,7 @@ test('a host name template that resolves only to new hosts can be saved', async 
         unmatched_host_names: ['pod-cart'],
         hidden_match_count: 0,
         truncated: false,
-        creatable_folders: [{ path: '/', title: 'Main' }],
-        host_creation_refusal: null
+        creatable_folders: [{ path: '/', title: 'Main' }]
       })
     )
   )
@@ -263,8 +261,7 @@ test('a new host is looked up and created in the folder chosen for it', async ()
         creatable_folders: [
           { path: '/', title: 'Main' },
           { path: '/k8s/shop', title: 'Main / K8s / Shop' }
-        ],
-        host_creation_refusal: null
+        ]
       })
     ),
     http.post(RESOLVE_SERVICES_URL, async ({ request }) => {
@@ -306,8 +303,7 @@ test('choosing a folder keeps the services and the folder choice shown while loo
         creatable_folders: [
           { path: '/', title: 'Main' },
           { path: '/k8s/shop', title: 'Main / K8s / Shop' }
-        ],
-        host_creation_refusal: null
+        ]
       })
     ),
     http.post(RESOLVE_SERVICES_URL, async () => {
@@ -345,8 +341,7 @@ test('a refused new host keeps the dialog open and says why', async () => {
         unmatched_host_names: ['pod-cart'],
         hidden_match_count: 0,
         truncated: false,
-        creatable_folders: [{ path: '/', title: 'Main' }],
-        host_creation_refusal: null
+        creatable_folders: [{ path: '/', title: 'Main' }]
       })
     ),
     http.post(CREATE_URL, () =>
@@ -401,8 +396,7 @@ test('a service name that clashes cannot be saved', async () => {
         unmatched_host_names: ['pod-cart'],
         hidden_match_count: 0,
         truncated: false,
-        creatable_folders: [{ path: '/', title: 'Main' }],
-        host_creation_refusal: null
+        creatable_folders: [{ path: '/', title: 'Main' }]
       })
     )
   )

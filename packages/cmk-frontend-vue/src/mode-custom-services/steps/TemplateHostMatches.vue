@@ -6,9 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import type { HostNameTemplateResolution } from '../definition'
 import type { OpenTelemetryData } from '../openTelemetryData'
 import type { TemplatePreview } from '../templatePreview'
 import OpenTelemetryDataNotice from './OpenTelemetryDataNotice.vue'
@@ -19,29 +17,6 @@ const { preview, opentelemetryData = { status: 'idle' } } = defineProps<{
   preview: TemplatePreview
   opentelemetryData?: OpenTelemetryData
 }>()
-
-function hostCreationRefused(
-  refusal: HostNameTemplateResolution['host_creation_refusal']
-): TranslatedString {
-  switch (refusal) {
-    case 'missing_permission':
-      return _t(
-        'You may not create hosts: you lack the permission "Add & remove hosts". Saving is refused while the template resolves to new hosts.'
-      )
-    case 'no_write_access':
-      return _t(
-        'You may not create hosts in any folder: you have neither "Write access to all hosts and folders" nor membership in a contact group permitted on a folder. Saving is refused while the template resolves to new hosts.'
-      )
-    case 'hosts_locked':
-      return _t(
-        'You may not create hosts in any folder: the hosts are locked in every folder you may write to. Saving is refused while the template resolves to new hosts.'
-      )
-    default:
-      return _t(
-        'You may not create hosts in any folder. Saving is refused while the template resolves to new hosts.'
-      )
-  }
-}
 </script>
 
 <template>
@@ -93,7 +68,11 @@ function hostCreationRefused(
         "
         size="small"
         variant="warning"
-        :text="hostCreationRefused(preview.resolution.host_creation_refusal)"
+        :text="
+          _t(
+            'You may not create hosts in any folder. Saving is refused while the template resolves to new hosts.'
+          )
+        "
       />
       <CmkAlert
         v-if="preview.resolution.hidden_match_count > 0"

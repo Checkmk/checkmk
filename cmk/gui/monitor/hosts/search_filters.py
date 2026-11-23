@@ -42,6 +42,7 @@ from cmk.gui.search.spec import (
     prefix_of,
     PrefixedSearch,
     Term,
+    UnprefixedSearch,
     UnsupportedSearchError,
 )
 from cmk.ruleset_matcher.tags import TagConfig
@@ -87,6 +88,20 @@ def host_search_filter(
         for node in conditions
     ]
     return nodes[0] if len(nodes) == 1 else AndNode(type="and", children=nodes)
+
+
+def text_search_filters(spec: UnprefixedSearch) -> Sequence[FilterNode]:
+    """The filters a query without prefix is tried as, in this order
+
+    Like the classic quicksearch: host name, alias and address, as ``h:``, ``al:`` and ``ad:``
+    filter them, then the folder title, which the Folder column filters by and which is no pattern.
+    """
+    return [
+        _contains("name", [HostName(spec.pattern)]),
+        _contains("alias", [HostAlias(spec.pattern)]),
+        _contains("address", [HostAddress(spec.pattern)]),
+        FolderCondition(type="condition", field="folder", op="contains", value=spec.text),
+    ]
 
 
 def _condition(clause: Sequence[Term], folders: Callable[[], Mapping[str, str]]) -> FilterNode:

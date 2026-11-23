@@ -14,9 +14,11 @@ from cmk.gui.config import active_config
 from cmk.gui.monitor.hosts._api._filters import SiteScopedFilter
 from cmk.gui.monitor.hosts._api._list_hosts import _handle_list_hosts
 from cmk.gui.monitor.hosts._models import HostOptionalField
-from cmk.gui.monitor.hosts.table import HostTable, InvalidFilterError, MonitorFolders
+from cmk.gui.monitor.hosts._table_catalog import DEFAULT_HOST_SORT
+from cmk.gui.monitor.hosts.table import FilterNode, HostTable, InvalidFilterError, MonitorFolders
 from cmk.gui.monitor.shared import (
     AndNode,
+    FILTER_NODE,
     HostState,
     IconSource,
     NumericCondition,
@@ -414,35 +416,50 @@ def _listed_host(name: str, *, alias: str = "", address: str = "") -> dict[str, 
     }
 
 
-def _only_host_named(
-    mock_livestatus: MockLiveStatusConnection, hosts: list[dict[str, object]], search: str
-) -> str | None:
+def _first_hosts_named(
+    mock_livestatus: MockLiveStatusConnection,
+    hosts: list[dict[str, object]],
+    filter_node: FilterNode,
+) -> list[str]:
     mock_livestatus.add_table("hosts", hosts)
-    mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
     mock_livestatus.expect_query(["GET hosts"], match_type="loose")
-    mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
     with mock_livestatus:
-        host = _host_table().only_host(query=search, filter_node=None)
-    return None if host is None else host.name
+        return [host.name for host in _host_table().first_hosts(filter_node)]
 
 
-def test_only_host_is_the_single_host_the_search_finds(
+def test_first_hosts_are_at_most_two(mock_livestatus: MockLiveStatusConnection) -> None:
+    assert _first_hosts_named(
+        mock_livestatus,
+        [_listed_host("web01"), _listed_host("web02"), _listed_host("web03")],
+        StringCondition(type="condition", field="name", op="contains", value="web"),
+    ) == ["web01", "web02"]
+
+
+def test_first_hosts_are_the_first_hosts_all_hosts_lists_for_the_filter(
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-    assert (
-        _only_host_named(mock_livestatus, [_listed_host("web01"), _listed_host("db01")], "web")
-        == "web01"
+    # list() is what the endpoint All hosts loads from answers with.
+    twin = StringCondition(type="condition", field="alias", op="contains", value="twin")
+    mock_livestatus.add_table(
+        "hosts",
+        [
+            _listed_host("web01", alias="Alpha twin"),
+            _listed_host("web02", alias="Beta twin"),
+            _listed_host("db01"),
+        ],
     )
+    mock_livestatus.expect_query(["GET hosts"], match_type="loose")
+    mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
+    mock_livestatus.expect_query(["GET hosts"], match_type="loose")
+    table = _host_table()
+    with mock_livestatus:
+        first = [host.name for host in table.first_hosts(twin)]
+        listed = table.list(
+            limit=None,
+            query="",
+            sorters=DEFAULT_HOST_SORT,
+            scoped_filter=table.parse_filter(FILTER_NODE.dump_json(twin).decode()),
+            fields=frozenset(),
+        )
 
-
-@pytest.mark.parametrize(
-    "other_host",
-    [
-        pytest.param(_listed_host("proxy01", alias="web proxy"), id="by-alias"),
-        pytest.param(_listed_host("proxy01", address="web.example.com"), id="by-address"),
-    ],
-)
-def test_only_host_is_none_when_the_search_finds_another_host_by_a_searched_column(
-    mock_livestatus: MockLiveStatusConnection, other_host: dict[str, object]
-) -> None:
-    assert _only_host_named(mock_livestatus, [_listed_host("web01"), other_host], "web") is None
+    assert first == [host.name for host in listed.hosts][:2] == ["web01", "web02"]

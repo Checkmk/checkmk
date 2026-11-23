@@ -5,7 +5,8 @@
 
 """The ``monitor_search.py`` page opens a global search query on the monitoring page for it
 
-* A query without prefix goes to the search box of All hosts.
+* A query without prefix goes to the column filter of the first of host name, alias, address and
+  folder title that finds hosts, else to the search box of All hosts.
 * A query with host prefixes goes to the column filters of All hosts.
 * Either opens Services of host with its host panel instead when it finds a single host.
 * A query with service prefixes goes to the column filters of All services.
@@ -14,6 +15,6 @@ An invalid query goes to the search box of All hosts as typed. One no page can f
 goes to the legacy search ``search_open.py`` and is logged by its prefixes and the reason.
 """
 
-from ._page import FoundHost, MonitorRouterPage, OnlyHost, route
+from ._page import FirstHosts, FoundHost, MonitorRouterPage, route
 
-__all__ = ["FoundHost", "MonitorRouterPage", "OnlyHost", "route"]
+__all__ = ["FirstHosts", "FoundHost", "MonitorRouterPage", "route"]

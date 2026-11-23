@@ -103,15 +103,18 @@ Interfaces
     nothing itself, but parses a query of the global search with
     ``cmk.gui.search.spec`` and redirects to the monitoring page that can
     show it, with the query turned into the page's filters. A query without
-    prefix and an invalid one go to the search box of "All hosts" as typed.
+    prefix is tried in the order of the classic quicksearch as a filter on
+    host name, alias, address and folder title; the first that finds hosts
+    is opened, or the search box of "All hosts" when none does. An invalid
+    query goes to the search box as typed.
     One that no page can filter on yet goes to the legacy search of the
     classic views (``search_open.py``) and is logged by its prefixes and the
     reason, not by its values; this keeps ``search_open.py`` needed as a
     fallback until the pages can filter on every prefix. Before it redirects
     a host search (with or without prefix), it asks Livestatus through
-    ``HostTable.only_host`` of ``cmk.gui.monitor.hosts.table`` whether
-    "All hosts" would list a single host for it; if so, it opens "Services
-    of host" for that host with the host panel open instead.
+    ``HostTable.first_hosts`` of ``cmk.gui.monitor.hosts.table`` how many
+    hosts "All hosts" would list for it; for a single host, it opens
+    "Services of host" for that host with the host panel open instead.
 
 * Internal REST endpoints below ``/monitor/`` (see the *Checkmk Internal*
   documentation of the REST API).
@@ -119,8 +122,8 @@ Interfaces
   consumers that query hosts, such as the dashboards, the PDF reports and
   the router ``monitor_search``. Other components use only this module, not
   the package internals. It offers ``HostTable`` (with ``list``,
-  ``parse_filter`` and ``only_host``, the single host a listing finds, if
-  any), ``FilterNode``, the filter tree ``only_host`` takes,
+  ``parse_filter`` and ``first_hosts``, the first two hosts a filter
+  finds), ``FilterNode``, the filter tree ``first_hosts`` takes,
   ``MonitorFolders``, the column catalogs ``ALL_HOSTS_TABLE`` and
   ``HOST_TABLE``, ``HostEntry``,
   ``HOST_LISTING`` (which validates a request body of the internal REST

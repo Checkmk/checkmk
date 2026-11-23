@@ -40,7 +40,7 @@ from cmk.web.utils import permission_verification as permissions
 from .._customer import customer_resolver
 from .._exceptions import InvalidFilterError
 from .._folder import MonitorFolders
-from .._impl import LiveStatusHostRepository, SEARCHED_FIELDS
+from .._impl import LiveStatusHostRepository
 from .._models import (
     Host,
     HostFilter,
@@ -485,16 +485,8 @@ class HostTable:
         scoped_filter: SiteScopedFilter | None,
         fields: Set[HostOptionalField],
     ) -> HostsResponse:
-        if scoped_filter is None:
-            filters, site_ids = None, None
-        else:
-            filters, site_ids = scoped_filter.node, scoped_filter.site_scope(self._site_ids)
-
-        host_repo = LiveStatusHostRepository(
-            connection=sites.live(),
-            folders=self._folders,
-            sites=self._sites,
-        )
+        site_ids = None if scoped_filter is None else scoped_filter.site_scope(self._site_ids)
+        host_repo = self._repository()
 
         # NOTE: we never want this value scoped by the selected sites. It should always get full
         # count. As a temporary solution, we are querying count here and passing the result to the
@@ -529,29 +521,44 @@ class HostTable:
                 limit=limit,
                 query=query,
                 sorters=sorters,
-                filters=(
-                    HostFilter("")
-                    if filters is None
-                    else parse_as_livestatus_filter(filters, setup_folders=self._folders.titles)
-                ),
+                filters=self._livestatus_filter(scoped_filter),
                 fields=fields,
                 site_ids=site_ids,
                 customer_of=self._customer_of,
                 visible_relations=visible_relations,
             )
 
-    def only_host(self, *, query: str, filter_node: FilterNode | None) -> HostEntry | None:
-        """The host All hosts would list alone for the search box and the filter, else None."""
-        response = self.list(
-            limit=2,
-            query=query,
-            sorters=DEFAULT_HOST_SORT,
-            scoped_filter=(
-                None if filter_node is None else scope_filter_to_sites(filter_node, self._site_ids)
-            ),
-            fields=SEARCHED_FIELDS,
+    def first_hosts(self, filter_node: FilterNode) -> Sequence[HostEntry]:
+        """Up to two of the hosts All hosts lists for the filter, enough to tell none, one and
+        several apart."""
+        scoped_filter = scope_filter_to_sites(filter_node, self._site_ids)
+        if (site_ids := scoped_filter.site_scope(self._site_ids)) == []:
+            return []
+        host_repo = self._repository()
+        with sites.only_sites(site_ids):
+            hosts = host_repo.fetch(
+                limit=2,
+                query="",
+                sorters=DEFAULT_HOST_SORT,
+                filters=self._livestatus_filter(scoped_filter),
+                fields=frozenset(),
+                visible_relations=None,
+            )
+        # Livestatus caps each site, the merge may hold more.
+        return [
+            HostEntry.from_domain(host, frozenset(), self._customer_of(host.site_id))
+            for host in hosts[:2]
+        ]
+
+    def _repository(self) -> LiveStatusHostRepository:
+        return LiveStatusHostRepository(
+            connection=sites.live(), folders=self._folders, sites=self._sites
         )
-        return response.hosts[0] if response.meta.matched == 1 and response.hosts else None
+
+    def _livestatus_filter(self, scoped_filter: SiteScopedFilter | None) -> HostFilter:
+        if scoped_filter is None or scoped_filter.node is None:
+            return HostFilter("")
+        return parse_as_livestatus_filter(scoped_filter.node, setup_folders=self._folders.titles)
 
     def rows(
         self, *, columns: Sequence[str], sort: Sequence[str], limit: int, context: VisualContext

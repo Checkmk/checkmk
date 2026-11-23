@@ -5,7 +5,8 @@
 
 import json
 import logging
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from typing import Literal
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
@@ -16,9 +17,9 @@ from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.http import Request
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.monitor.hosts.table import FilterNode
-from cmk.gui.monitor.router import FoundHost, MonitorRouterPage, OnlyHost, route
+from cmk.gui.monitor.router import FirstHosts, FoundHost, MonitorRouterPage, route
 from cmk.gui.monitor.setup_folders import SetupFolders, SetupFoldersConfig
-from cmk.gui.monitor.shared import StringCondition
+from cmk.gui.monitor.shared import FILTER_NODE, FolderCondition, StringCondition
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
@@ -31,8 +32,8 @@ def _no_folders() -> Mapping[str, str]:
     raise AssertionError("the query names no folder")
 
 
-def _no_host(_filter_node: FilterNode | None, _search: str) -> FoundHost | None:
-    return None
+def _no_host(_filter_node: FilterNode) -> Sequence[FoundHost]:
+    return []
 
 
 def _unused_setup_folders(_config: SetupFoldersConfig, _user: LoggedInUser) -> SetupFolders:
@@ -213,20 +214,75 @@ class _UnusedSession:
         raise AssertionError("the page has no use for the session")
 
 
-def _only(host: FoundHost, filter_node: FilterNode | None, search: str) -> OnlyHost:
-    def only_host(asked_node: FilterNode | None, asked_search: str) -> FoundHost | None:
-        return host if (asked_node, asked_search) == (filter_node, search) else None
+def _finding(hosts: Sequence[FoundHost], filter_node: FilterNode) -> FirstHosts:
+    def first_hosts(asked_node: FilterNode) -> Sequence[FoundHost]:
+        return hosts if asked_node == filter_node else []
 
-    return only_host
+    return first_hosts
 
 
-def test_query_without_prefix_finding_one_host_goes_to_its_services() -> None:
+def _contains(field: Literal["name", "alias", "address"], value: str) -> StringCondition:
+    return StringCondition(type="condition", field=field, op="contains", value=value)
+
+
+def _folder_contains(value: str) -> FolderCondition:
+    return FolderCondition(type="condition", field="folder", op="contains", value=value)
+
+
+@pytest.mark.parametrize(
+    "filter_node",
+    [
+        pytest.param(_contains("name", "twin"), id="name"),
+        pytest.param(_contains("alias", "twin"), id="alias"),
+        pytest.param(_contains("address", "twin"), id="address"),
+        pytest.param(_folder_contains("twin"), id="folder"),
+    ],
+)
+def test_query_without_prefix_finding_hosts_by_a_field_goes_to_the_filter_it_counted(
+    filter_node: FilterNode,
+) -> None:
+    several = [FoundHost(name="web01", site_id="local"), FoundHost(name="web02", site_id="local")]
+
+    parts = urlsplit(
+        route(
+            Request(create_environ()),
+            "twin",
+            TagConfig(),
+            _no_folders,
+            _finding(several, filter_node),
+        )
+    )
+
+    assert parts.path == "monitor_all_hosts.py"
+    assert {name: json.loads(value) for name, [value] in parse_qs(parts.query).items()} == {
+        "filter": FILTER_NODE.dump_python(filter_node, mode="json")
+    }
+
+
+def test_query_without_prefix_tries_the_fields_in_the_order_of_the_classic_search() -> None:
+    asked: list[FilterNode] = []
+
+    def first_hosts(filter_node: FilterNode) -> Sequence[FoundHost]:
+        asked.append(filter_node)
+        return []
+
+    route(Request(create_environ()), "web*", TagConfig(), _no_folders, first_hosts)
+
+    assert asked == [
+        _contains("name", "web.*"),
+        _contains("alias", "web.*"),
+        _contains("address", "web.*"),
+        _folder_contains("web*"),
+    ]
+
+
+def test_query_without_prefix_finding_one_host_only_by_alias_goes_to_its_services() -> None:
     url = route(
         Request(create_environ()),
-        "web01",
+        "Alpha twin",
         TagConfig(),
         _no_folders,
-        _only(FoundHost(name="web01", site_id="remote"), None, "web01"),
+        _finding([FoundHost(name="web01", site_id="remote")], _contains("alias", "Alpha twin")),
     )
 
     parts = urlsplit(url)
@@ -241,11 +297,7 @@ def test_host_query_finding_one_host_goes_to_its_services() -> None:
         "h:web01",
         TagConfig(),
         _no_folders,
-        _only(
-            FoundHost(name="web01", site_id="local"),
-            StringCondition(type="condition", field="name", op="contains", value="web01"),
-            "",
-        ),
+        _finding([FoundHost(name="web01", site_id="local")], _contains("name", "web01")),
     )
 
     parts = urlsplit(url)
@@ -263,7 +315,7 @@ def test_host_query_finding_one_host_goes_to_its_services() -> None:
     ],
 )
 def test_query_that_is_no_host_search_does_not_look_for_a_single_host(query: str) -> None:
-    def unused(_filter_node: FilterNode | None, _search: str) -> FoundHost | None:
+    def unused(_filter_node: FilterNode) -> Sequence[FoundHost]:
         raise AssertionError("not a host search")
 
     route(Request(create_environ()), query, TagConfig(), _no_folders, unused)

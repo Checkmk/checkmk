@@ -2416,7 +2416,7 @@ allows = ["@ccc", "cmk.gui", "cmk.utils.log", "cmk.utils.paths"]
 allows = ["cmk.schema_manager"]
 
 [file_dependencies."omd/packages/Python/sitecustomize.py"]
-allows = ["cmk.licensing.basics"]
+allows = ["@ccc", "cmk.licensing.basics"]
 
 [file_dependencies."omd/non-free/packages/licensing/cmk-license-email-notification.py"]
 allows = ["cmk.licensing.nonfree", "cmk.utils"]

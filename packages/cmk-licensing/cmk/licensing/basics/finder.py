@@ -9,7 +9,7 @@ and the wheel tagging convention (``cmk.features.<option>`` entry-point groups).
 """
 
 import os
-from collections.abc import Iterable, Sequence
+from collections.abc import Collection, Iterable, Sequence
 from importlib.machinery import ModuleSpec
 from importlib.metadata import Distribution, distributions
 from pathlib import Path
@@ -30,16 +30,19 @@ class FinderP(Protocol):
     ) -> ModuleSpec | None: ...
 
 
-def apply_feature_filter(omd_root: Path, meta_path_finders: Iterable[FinderP]) -> Sequence[FinderP]:
-    license_options = get_license_options(omd_root, edition(omd_root))
-    blocked = files_for_disabled_features(license_options.disabled())
-    return [_FeatureFilterFinder(mpf, blocked) for mpf in meta_path_finders]
+def install(meta_path: Iterable[FinderP], blocked: Collection[str]) -> list[FinderP]:
+    """Wrap every finder so that it does not find modules located in ``blocked``.
+
+    Use it as ``sys.meta_path[:] = install(sys.meta_path, ...)``.
+    """
+    blocked_set = frozenset(blocked)
+    return [_FeatureFilterFinder(finder, blocked_set) for finder in meta_path]
 
 
 class _FeatureFilterFinder:
     """Meta path finder that wraps another one and filters out modules based on their origin."""
 
-    def __init__(self, wrapped: FinderP, blocked: set[str]) -> None:
+    def __init__(self, wrapped: FinderP, blocked: frozenset[str]) -> None:
         self._wrapped = wrapped
         self._blocked = blocked
         # It is not enough to implement `find_spec`.

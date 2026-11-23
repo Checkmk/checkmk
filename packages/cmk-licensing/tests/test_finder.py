@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+from importlib.machinery import ModuleSpec
 from importlib.metadata import EntryPoint, EntryPoints, PackagePath, PathDistribution
 from pathlib import Path
+from types import ModuleType
 from typing import override
 
 import pytest
@@ -130,3 +133,39 @@ def test_missing_files_is_tolerated(fake_distributions: list[_FakeDistribution])
         ]
     )
     assert list(finder.files_for_disabled_features({"bakery"})) == ["/site/good.py"]
+
+
+class _StaticFinder:
+    def __init__(self, *origins: str | None) -> None:
+        self._specs = {
+            f"mod{i}": ModuleSpec(f"mod{i}", None, origin=origin)
+            for i, origin in enumerate(origins)
+        }
+
+    def find_spec(
+        self, fullname: str, path: Sequence[str] | None, target: ModuleType | None = None
+    ) -> ModuleSpec | None:
+        del path, target
+        return self._specs.get(fullname)
+
+
+def test_installed_filter_hides_blocked_modules() -> None:
+    (wrapped,) = finder.install(
+        [_StaticFinder("/site/open.py", "/site/blocked.py")], {"/site/blocked.py"}
+    )
+
+    assert wrapped.find_spec("mod1", None) is None
+
+
+def test_installed_filter_finds_open_modules() -> None:
+    (wrapped,) = finder.install(
+        [_StaticFinder("/site/open.py", "/site/blocked.py")], {"/site/blocked.py"}
+    )
+
+    assert wrapped.find_spec("mod0", None) is not None
+
+
+def test_installed_filter_passes_namespace_packages() -> None:
+    (wrapped,) = finder.install([_StaticFinder(None)], {"/site/blocked.py"})
+
+    assert wrapped.find_spec("mod0", None) is not None

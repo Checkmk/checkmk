@@ -59,13 +59,13 @@ White-box overall system
 
     package "Site start-up (every python process)" {
         [sitecustomize.py] as sc
-        [apply_feature_filter()] as apply
+        [install()] as apply
         [get_license_options()] as opts
         [files_for_disabled_features()] as files
         [_FeatureFilterFinder\n(one per sys.meta_path entry)] as finder
         sc --> apply
-        apply --> opts : edition(omd_root)\n(+ license, later)
-        apply --> files : disabled option names
+        sc --> opts : edition(omd_root)\n(+ license, later)
+        sc --> files : disabled option names
         files --> distinfo : importlib.metadata.distributions()
         apply --> finder : sys.meta_path[:] = [...]
     }
@@ -127,7 +127,7 @@ In a Git checkout nothing is blocked.
 Interfaces
 ----------
 
-* ``cmk.licensing.basics.finder.apply_feature_filter(omd_root, meta_path)`` -- used once, by ``sitecustomize.py``.
+* ``cmk.licensing.basics.finder.install(meta_path, blocked)`` and ``files_for_disabled_features(disabled)`` -- used once, by ``sitecustomize.py``, which also decides the disabled options.
 * ``cmk.licensing.basics.finder.blocked_feature_files(omd_root)`` -- the same file set, realpath-normalized, for code that walks the file system instead of importing: the man-page catalog in ``cmk --man`` / ``cmk -M`` (``cmk/plugins/checkmk/cli``) and the Setup check catalog (``cmk/gui/wato/pages/check_catalog.py``) pass it as ``blocked_paths`` to ``cmk.utils.man_pages``. Any new file-system based discovery of license-gated content must do the same, otherwise the GUI advertises checks the site cannot run.
 * ``cmk.licensing.registry.is_option_enabled(omd_root, option)`` and ``get_license_options(...)`` -- the *runtime* counterpart for code that is shared between features and must branch on a flag (REST API schema restrictions, GUI fields, ``cmk.gui.main_modules.register``, the agent receiver's relay switch).
   Use these when a module is imported in all editions but only part of its behavior is licensed.

@@ -291,7 +291,10 @@ py_library(
     srcs = [
         "sitecustomize.py",
     ],
-    deps = ["//packages/cmk-licensing/cmk/licensing/basics"],
+    deps = [
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-licensing/cmk/licensing/basics",
+    ],
 )
 
 # sitecustomize.py runs on startup of every site Python process, so its

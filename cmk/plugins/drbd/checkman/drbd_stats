@@ -1,4 +1,4 @@
-title: DR:BD Devices: Counter Statistics
+title: DRBD: Counter Statistics
 agents: linux
 catalog: os/storage
 license: GPLv2

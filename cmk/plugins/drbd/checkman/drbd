@@ -1,4 +1,4 @@
-title: General State of DR:BD Devices
+title: DRBD: General State
 agents: linux
 catalog: os/storage
 license: GPLv2

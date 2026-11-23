@@ -480,9 +480,9 @@ def save_werk(werk: Werk, werk_version: WerkVersion, destination: Path | None = 
     save_last_werkid(werk.id)
 
 
-def change_werk_version(werk_path: Path, new_version: str, werk_version: WerkVersion) -> None:
+def remove_werk_version(werk_path: Path, werk_version: WerkVersion) -> None:
     werk = load_werk(werk_path)
-    werk.content.metadata["version"] = new_version
+    werk.content.metadata.pop("version")
     save_werk(werk, werk_version)
     git_add(werk)
 
@@ -1095,7 +1095,6 @@ def main_new(args: argparse.Namespace) -> None:
 
     # this is the metadata format of werkv1
     metadata["date"] = str(int(time.time()))
-    metadata["version"] = get_config().current_version
     metadata["title"] = get_input("Title")
     if metadata["title"] == "":
         sys.stderr.write("Cancelled.\n")
@@ -1377,8 +1376,8 @@ def werk_cherry_pick(
         # Adapt V3 werks to V2 format if necessary (e.g., when picking from master to 2.4)
         adapt_werk_for_target_branch(found_werk_path.source)
 
-        # Find werks that have been cherry-picked and change their version
-        # to our current checkmk version.
+        # Werks that have been cherry-picked ship with the next release of this branch,
+        # so they must not have a version.
 
         # maybe we need to adapt the filename:
         if found_werk_path.source.suffix != found_werk_path.destination.suffix:
@@ -1386,11 +1385,11 @@ def werk_cherry_pick(
             werk = load_werk(found_werk_path.source)
             git_move(found_werk_path.source, found_werk_path.destination)
             save_werk(werk, werk_version, found_werk_path.destination)
-            # git add will be executed by change_werk_version
+            # git add will be executed by remove_werk_version
 
-        # Change the werk's version before checking the pick return code.
-        # Otherwise the dev may forget to change the version
-        change_werk_version(found_werk_path.destination, get_config().current_version, werk_version)
+        # Remove the werk's version before checking the pick return code.
+        # Otherwise the dev may forget to remove the version
+        remove_werk_version(found_werk_path.destination, werk_version)
         log.info(
             "launcher:%(launcher)s, action:pick, werk ID:%(werk_id)s, werk file:%(werk_file)s",
             {
@@ -1400,8 +1399,8 @@ def werk_cherry_pick(
             },
         )
         sys.stdout.write(
-            f"Changed version of werk {found_werk_path.destination} "
-            f"to {get_config().current_version}.\n"
+            f"Removed the version of Werk {found_werk_path.destination}, "
+            "it gets the version of the release it ships with.\n"
         )
 
     if pick.returncode:

@@ -145,6 +145,55 @@ Some description.
     assert "0.1.0" in result.stdout
 
 
+def test_create_werk_omits_the_version(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    prepare_reserved_ids(home, [11111])
+
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
+
+    with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
+        os.chdir(repo_path)
+        create_werk(title="some_title")
+
+    assert "version" not in (repo_path / ".werks/11111.md").read_text()
+
+
+def test_pick_removes_the_version(tmp_path: Path) -> None:
+    repo_path = tmp_path / "repo"
+    repo = initialize_werks_project(repo_path, first_free=11_111)
+    target_branch = repo.active_branch
+    repo.git.checkout("-b", "other")
+    (repo_path / ".werks/11111.md").write_text(
+        """[//]: # (werk v2)
+# some_title
+
+key        | value
+---------- | ---
+date       | 2026-07-23T08:04:44.815279+00:00
+version    | 2.5.0p3
+class      | fix
+edition    | cre
+component  | ccc
+level      | 1
+compatible | yes
+
+Some description.
+"""
+    )
+    repo.index.add([".werks/11111.md"])
+    picked_commit = repo.index.commit("11111 some_title")
+    target_branch.checkout()
+
+    with mock.patch.dict(os.environ, {"HOME": str(tmp_path / "home")}):
+        os.chdir(repo_path)
+        subprocess.run(["python", "-m", "cmk.werks", "pick", picked_commit.hexsha], check=True)
+
+    assert "version" not in (repo_path / ".werks/11111.md").read_text()
+    assert latest_commit_subject(repo_path) == "11111 some_title"
+
+
 def test_create_werk_logs_the_consumed_id(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()

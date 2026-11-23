@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import assert_never, NamedTuple, Self
+from typing import NamedTuple, Self
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -31,17 +31,6 @@ class SNMPCondition(StrEnum):
     DEGRADED = "degraded"
     FAILED = "failed"
 
-    def to_state(self) -> State:
-        match self:
-            case SNMPCondition.OK:
-                return State.OK
-            case SNMPCondition.OTHER | SNMPCondition.DEGRADED:
-                return State.WARN
-            case SNMPCondition.FAILED:
-                return State.CRIT
-            case _:
-                assert_never("Unsupported Enum value")
-
 
 class SNMPState(StrEnum):
     OTHER = "other"
@@ -63,39 +52,6 @@ class SNMPState(StrEnum):
     QUISCED = "quisced"
     UPDATING = "updating"
     QUALIFIED = "qualified"
-
-    def to_state(self) -> State:
-        match self:
-            case (
-                SNMPState.OK
-                | SNMPState.ENABLED
-                | SNMPState.DISABLED
-                | SNMPState.STANDBY_SPARE
-                | SNMPState.STARTING
-                | SNMPState.DEFERRING
-                | SNMPState.QUISCED
-                | SNMPState.QUALIFIED
-            ):
-                return State.OK
-            case (
-                SNMPState.OTHER
-                | SNMPState.CACHE_MODULE_MISSING
-                | SNMPState.STANDBY_OFFLINE
-                | SNMPState.IN_TEST
-                | SNMPState.UPDATING
-            ):
-                return State.WARN
-            case (
-                SNMPState.GENERAL_FAILURE
-                | SNMPState.CABLE_PROBLEM
-                | SNMPState.POWERED_OFF
-                | SNMPState.DEGRADED
-                | SNMPState.ABSENT
-                | SNMPState.UNAVAILABLE
-            ):
-                return State.CRIT
-            case _:
-                assert_never("Unsupported Enum value")
 
 
 class Role(StrEnum):
@@ -176,6 +132,37 @@ PARSER_STATE_MAP: Mapping[StateNumber, SNMPState] = {
 }
 
 
+_CONDITION_STATES: Mapping[SNMPCondition, State] = {
+    SNMPCondition.OTHER: State.WARN,
+    SNMPCondition.OK: State.OK,
+    SNMPCondition.DEGRADED: State.WARN,
+    SNMPCondition.FAILED: State.CRIT,
+}
+
+
+_BOARD_STATUS_STATES: Mapping[SNMPState, State] = {
+    SNMPState.OTHER: State.WARN,
+    SNMPState.OK: State.OK,
+    SNMPState.GENERAL_FAILURE: State.CRIT,
+    SNMPState.CABLE_PROBLEM: State.CRIT,
+    SNMPState.POWERED_OFF: State.CRIT,
+    SNMPState.CACHE_MODULE_MISSING: State.WARN,
+    SNMPState.DEGRADED: State.CRIT,
+    SNMPState.ENABLED: State.OK,
+    SNMPState.DISABLED: State.OK,
+    SNMPState.STANDBY_OFFLINE: State.WARN,
+    SNMPState.STANDBY_SPARE: State.OK,
+    SNMPState.IN_TEST: State.WARN,
+    SNMPState.STARTING: State.OK,
+    SNMPState.ABSENT: State.CRIT,
+    SNMPState.UNAVAILABLE: State.CRIT,
+    SNMPState.DEFERRING: State.OK,
+    SNMPState.QUISCED: State.OK,
+    SNMPState.UPDATING: State.WARN,
+    SNMPState.QUALIFIED: State.OK,
+}
+
+
 OTHER_STATE_DESCRIPTION = (
     "The instrument agent does not recognize the status of the controller. "
     "You may need to upgrade the instrument agent."
@@ -196,12 +183,15 @@ def check_hp_proliant_da_cntlr(item: ControllerID, section: ParsedSection) -> Ch
         yield Result(state=State.UNKNOWN, summary="Controller not found in SNMP data")
         return
 
-    for label, value in (
-        ("Condition", controller.cond),
-        ("Board-Condition", controller.b_cond),
-        ("Board-Status", controller.b_status),
-    ):
-        yield Result(state=value.to_state(), summary=f"{label}: {value}")
+    yield Result(state=_CONDITION_STATES[controller.cond], summary=f"Condition: {controller.cond}")
+    yield Result(
+        state=_CONDITION_STATES[controller.b_cond],
+        summary=f"Board-Condition: {controller.b_cond}",
+    )
+    yield Result(
+        state=_BOARD_STATUS_STATES[controller.b_status],
+        summary=f"Board-Status: {controller.b_status}",
+    )
 
     yield Result(
         state=State.OK,

@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cerrno>
 #include <charconv>
 #include <chrono>
@@ -285,12 +286,16 @@ OpenedPipe open_event_pipe(const std::string &path, Deadline deadline,
                             ? ExitCode::permanent_error
                             : ExitCode::temporary_error);
         }
-        if (std::chrono::steady_clock::now() >= deadline) {
+        const auto now = std::chrono::steady_clock::now();
+        if (now >= deadline) {
             return fail("Nobody read it within " + seconds_text(timeout) +
                             ". Is the Event Console running?",
                         ExitCode::temporary_error);
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds{100});
+        // Trying again every 100 ms, but not past the deadline, so that it
+        // gives up on time
+        std::this_thread::sleep_until(
+            std::min(now + std::chrono::milliseconds{100}, deadline));
     }
 }
 

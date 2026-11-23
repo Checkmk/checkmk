@@ -59,17 +59,18 @@ def test_mkevent_check_query_perf(event_status: EventStatus, status_server: Stat
         b"Filter: event_phase in open ack\n"
     )
 
-    before = time.time()
+    # CPU time, as the query may wait much longer for a CPU under load
+    before = time.thread_time()
 
     status_server.handle_client(s, True, "127.0.0.1")
 
-    duration = time.time() - before
+    cpu_time = time.thread_time() - before
 
     response = s.get_response()
     assert len(response) == 2
     assert "event_id" in response[0]
 
-    assert duration < 0.2
+    assert cpu_time < 0.2
 
 
 @pytest.mark.parametrize(

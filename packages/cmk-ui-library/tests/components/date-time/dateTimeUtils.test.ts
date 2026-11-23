@@ -149,17 +149,17 @@ describe('timeZoneShortLabel', () => {
       name: 'standard time',
       tz: TZ_BERLIN,
       at: WINTER,
-      expected: 'CET (UTC+1)'
+      expected: 'CET, UTC+1'
     },
     {
       name: 'DST summer time',
       tz: TZ_BERLIN,
       at: new Date('2024-07-15T12:00:00Z'),
-      expected: 'CEST (UTC+2)'
+      expected: 'CEST, UTC+2'
     },
     { name: 'zero offset', tz: TZ_UTC, at: NOW, expected: 'UTC' },
     { name: 'zero offset, GMT only', tz: TZ_LONDON, at: WINTER, expected: 'UTC' },
-    { name: 'zero offset with abbreviation', tz: TZ_LISBON, at: WINTER, expected: 'WET (UTC)' },
+    { name: 'zero offset with abbreviation', tz: TZ_LISBON, at: WINTER, expected: 'WET, UTC' },
     { name: 'no English abbreviation → offset only', tz: TZ_TOKYO, at: NOW, expected: 'UTC+9' }
   ])('$name', ({ tz, at, expected }) => {
     expect(timeZoneShortLabel(tz, at)).toBe(expected)
@@ -177,7 +177,7 @@ describe('timeZoneShortLabel', () => {
           part.type === 'timeZoneName' && part.value === 'GMT+0' ? { ...part, value: 'GMT' } : part
         )
     })
-    expect(timeZoneShortLabel(TZ_LISBON, WINTER)).toBe('WET (UTC)')
+    expect(timeZoneShortLabel(TZ_LISBON, WINTER)).toBe('WET, UTC')
   })
 })
 

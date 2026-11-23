@@ -3,8 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, within } from '@testing-library/vue'
-import { timeZoneRegionLabel } from 'cmk-ui-library/components/date-time/dateTimeUtils'
+import { render } from '@testing-library/vue'
 import TimeZoneInfo from 'cmk-ui-library/components/date-time/private/display/TimeZoneInfo.vue'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { nextTick } from 'vue'
@@ -18,8 +17,7 @@ const renderInfo = (serverTimeZone?: string) =>
     props: { settings: SETTINGS, ...(serverTimeZone ? { serverTimeZone } : {}) }
   })
 
-const entryOf = (view: ReturnType<typeof renderInfo>, label: string) =>
-  view.getByText(label).closest<HTMLElement>('.cmk-time-zone-info__entry')!
+const serverLine = (view: ReturnType<typeof renderInfo>) => view.getByText(/^Server time: /)
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -31,35 +29,30 @@ afterEach(() => {
 })
 
 describe('TimeZoneInfo', () => {
-  test('the displayed zone is named by its region, spoken only through the badge', () => {
+  test('the displayed zone reads as region plus abbreviation and offset', () => {
+    // 2026-06-10 is summer time in Berlin.
     const view = renderInfo()
-    const entry = entryOf(view, 'Timezone:')
-
-    expect(entry.querySelector('.cmk-tag')).toHaveAttribute('aria-hidden', 'true')
-    expect(within(entry).getByText(timeZoneRegionLabel(TZ_BERLIN))).toHaveAttribute(
-      'aria-hidden',
-      'true'
-    )
+    expect(view.getByText('Timezone: Europe, Berlin (CEST, UTC+2)')).toBeInTheDocument()
   })
 
   test('the server readout is the current instant in the server zone', () => {
     // 2026-06-10T10:00:00Z is 2026-06-10 19:00 in Tokyo (UTC+9). ISO date + 24h time.
     const view = renderInfo(TZ_TOKYO)
-    expect(entryOf(view, 'Current server time:').textContent).toContain('2026-06-10, 19:00')
+    expect(serverLine(view)).toHaveTextContent('Server time: 2026-06-10, 19:00 (UTC+9)')
   })
 
   test('the server readout is an em dash without a server zone', () => {
     const view = renderInfo()
-    expect(entryOf(view, 'Current server time:').textContent).toContain('—')
+    expect(serverLine(view)).toHaveTextContent('Server time: —')
   })
 
   test('the server readout follows the clock while it is shown', async () => {
     const view = renderInfo(TZ_UTC)
-    expect(entryOf(view, 'Current server time:').textContent).toContain('2026-06-10, 10:00')
+    expect(serverLine(view)).toHaveTextContent('2026-06-10, 10:00')
 
     await vi.advanceTimersByTimeAsync(60_100)
     await nextTick()
 
-    expect(entryOf(view, 'Current server time:').textContent).toContain('2026-06-10, 10:01')
+    expect(serverLine(view)).toHaveTextContent('2026-06-10, 10:01')
   })
 })

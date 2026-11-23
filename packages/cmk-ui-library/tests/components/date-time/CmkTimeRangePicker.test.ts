@@ -272,17 +272,12 @@ describe('CmkTimeRangePicker — ordering', () => {
     expect(await view.findByText(/^Range reordered: start .+, end .+$/)).toBeInTheDocument()
   })
 
-  test('the inputs form a labeled "Time range" group and the footer zone is not double-spoken', async () => {
+  test('the inputs form a labeled "Time range" group', async () => {
     const view = renderPicker({ from: berlin(2026, 3, 9, 8, 0), to: berlin(2026, 3, 10, 9, 0) })
     await openFlyout(view)
 
     // The From/To rows are grouped so assistive tech is oriented on entry.
     expect(view.getByRole('group', { name: 'Time range' })).toBeInTheDocument()
-
-    // The TimeZoneTag's hidden text voices the zone, the visible elements should be hidden
-    const zone = view.getByText('Timezone:').closest<HTMLElement>('.cmk-time-zone-info__entry')!
-    expect(zone.querySelector('.cmk-tag')).toHaveAttribute('aria-hidden', 'true')
-    expect(within(zone).getByText('Europe, Berlin')).toHaveAttribute('aria-hidden', 'true')
   })
 })
 
@@ -418,10 +413,7 @@ describe('CmkTimeRangePicker — server time readout', () => {
     vi.setSystemTime(new Date('2026-06-10T10:00:00Z'))
     const view = renderPicker({ from: berlin(2026, 3, 9, 8, 0), to: berlin(2026, 3, 10, 9, 0) })
     await openFlyout(view)
-    const serverBlock = view
-      .getByText('Current server time:')
-      .closest<HTMLElement>('.cmk-time-zone-info__entry')!
-    expect(serverBlock.textContent).toContain('—')
+    expect(view.getByText('Server time: —')).toBeInTheDocument()
   })
 })
 

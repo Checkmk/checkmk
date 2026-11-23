@@ -121,7 +121,7 @@ function timeZoneAbbreviation(timeZone: string, at: Date): string {
 }
 
 /**
- * Compact timezone label like `CEST (UTC+2)`: the English abbreviation plus the UTC offset, both
+ * Compact timezone label like `CEST, UTC+2`: the English abbreviation plus the UTC offset, both
  * at the given instant (offsets are DST-dependent). Zones without an abbreviation render as just
  * the offset (e.g. `UTC+9`), and a zero offset as just `UTC`.
  */
@@ -130,7 +130,7 @@ export function timeZoneShortLabel(timeZone: string, at: Date): string {
   const offset =
     timeZoneNamePart(timeZone, at, 'shortOffset', 'en-US').replace(/^GMT(?:\+0$)?/, 'UTC') || 'UTC'
   const abbreviation = timeZoneAbbreviation(timeZone, at)
-  return abbreviation ? `${abbreviation} (${offset})` : offset
+  return abbreviation ? `${abbreviation}, ${offset}` : offset
 }
 
 /** Human-friendly rendering of an IANA timezone id: `Europe/Berlin` → `Europe, Berlin`. An empty

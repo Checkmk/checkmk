@@ -5,15 +5,19 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { fromDate as instantToZoned } from '@internationalized/date'
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
-import { formatDate, formatTime, timeZoneRegionLabel, zonedToParts } from '../../dateTimeUtils'
+import {
+  formatDate,
+  formatTime,
+  timeZoneRegionLabel,
+  timeZoneShortLabel,
+  zonedToParts
+} from '../../dateTimeUtils'
 import type { ResolvedDateTimeSettings } from '../../types'
 import { useNowTicker } from '../../useNowTicker'
-import TimeZoneTag from './TimeZoneTag.vue'
 
 const props = defineProps<{
   /** Resolved display settings; supplies the displayed timezone and the readout's formats. */
@@ -26,52 +30,41 @@ const { _t } = usei18n()
 
 const now = useNowTicker()
 
-const regionLabel = computed(() => timeZoneRegionLabel(props.settings.timeZone))
+const timeZoneText = computed(() =>
+  _t('Timezone: %{region} (%{zone})', {
+    region: timeZoneRegionLabel(props.settings.timeZone),
+    zone: timeZoneShortLabel(props.settings.timeZone, now.value)
+  })
+)
 
 const serverTimeText = computed(() => {
   if (!props.serverTimeZone) {
-    return null
+    return _t('Server time: %{time}', { time: '—' })
   }
   const parts = zonedToParts(instantToZoned(now.value, props.serverTimeZone))
-  return `${formatDate(parts.date, props.settings.dateFormat)}, ${formatTime(parts.time, props.settings.hourCycle)}`
+  return _t('Server time: %{date}, %{time} (%{zone})', {
+    date: formatDate(parts.date, props.settings.dateFormat),
+    time: formatTime(parts.time, props.settings.hourCycle),
+    zone: timeZoneShortLabel(props.serverTimeZone, now.value)
+  })
 })
 </script>
 
 <template>
   <div class="cmk-time-zone-info">
-    <div class="cmk-time-zone-info__entry">
-      <CmkLabel>{{ _t('Timezone:') }}</CmkLabel>
-      <TimeZoneTag :time-zone="settings.timeZone" :at="now" />
-      <CmkParagraph aria-hidden="true">{{ untranslated(regionLabel) }}</CmkParagraph>
-    </div>
-    <div class="cmk-time-zone-info__entry">
-      <CmkLabel>{{ _t('Current server time:') }}</CmkLabel>
-      <TimeZoneTag v-if="serverTimeZone" :time-zone="serverTimeZone" :at="now" />
-      <CmkParagraph>{{
-        serverTimeText !== null ? untranslated(serverTimeText) : untranslated('—')
-      }}</CmkParagraph>
-    </div>
+    <CmkParagraph class="cmk-time-zone-info__line">{{ timeZoneText }}</CmkParagraph>
+    <CmkParagraph class="cmk-time-zone-info__line">{{ serverTimeText }}</CmkParagraph>
   </div>
 </template>
 
 <style scoped>
 .cmk-time-zone-info {
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-rows: auto auto auto;
-  justify-content: start;
-  align-items: center;
-  gap: var(--dimension-4) var(--dimension-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-3);
 }
 
-.cmk-time-zone-info__entry {
-  display: grid;
-  grid-template-rows: subgrid;
-  grid-row: span 3;
-  place-items: center start;
-}
-
-.cmk-time-zone-info__entry > :last-child {
-  grid-row: 3;
+.cmk-time-zone-info .cmk-time-zone-info__line {
+  color: var(--font-color-secondary);
 }
 </style>

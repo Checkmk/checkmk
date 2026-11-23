@@ -10,9 +10,8 @@ import {
   setLocalTimeZone,
   toZoned
 } from '@internationalized/date'
-import { fireEvent, within } from '@testing-library/vue'
+import { fireEvent } from '@testing-library/vue'
 import CmkDateTimePicker from 'cmk-ui-library/components/date-time/CmkDateTimePicker.vue'
-import { timeZoneRegionLabel } from 'cmk-ui-library/components/date-time/dateTimeUtils'
 import type { DateTimePickerSettings } from 'cmk-ui-library/components/date-time/types'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { nextTick } from 'vue'
@@ -152,9 +151,8 @@ describe('CmkDateTimePicker — timezone readouts', () => {
     })
     await openCalendar(view)
 
-    const zone = view.getByText('Timezone:').closest<HTMLElement>('.cmk-time-zone-info__entry')!
-    expect(within(zone).getByText(timeZoneRegionLabel(TZ_BERLIN))).toBeInTheDocument()
+    expect(view.getByText('Timezone: Europe, Berlin (CEST, UTC+2)')).toBeInTheDocument()
     // 2026-06-10T10:00:00Z is 2026-06-10 19:00 in Tokyo (UTC+9). ISO date + 24h time.
-    expect(view.container.textContent).toContain('2026-06-10, 19:00')
+    expect(view.getByText('Server time: 2026-06-10, 19:00 (UTC+9)')).toBeInTheDocument()
   })
 })

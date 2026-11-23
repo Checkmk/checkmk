@@ -22,6 +22,7 @@ import pysnmp.proto.rfc1155  # type: ignore[import-untyped]
 import pysnmp.proto.rfc1902  # type: ignore[import-untyped]
 import pysnmp.proto.rfc3411  # type: ignore[import-untyped]
 import pysnmp.proto.secmod.cache  # type: ignore[import-untyped]
+import pysnmp.proto.secmod.rfc3414.service  # type: ignore[import-untyped]
 import pysnmp.smi.builder  # type: ignore[import-untyped]
 import pysnmp.smi.error  # type: ignore[import-untyped]
 import pysnmp.smi.rfc1902  # type: ignore[import-untyped]
@@ -279,12 +280,14 @@ class SNMPTrapParser:
             bool(variables["authProtocol"] != pysnmp.entity.config.usmNoAuthProtocol),
         )
 
-    def _snmpv3_trap_rejection(self, security_level: int) -> str | None:
+    def _snmpv3_trap_rejection(self, security_level: int, message: bytes) -> str | None:
         """Why we drop an SNMPv3 trap PySNMP has accepted, if we do"""
         match self._snmpv3_user:
             case None | (b"", _):  # PySNMP's discovery user, accepting any engine ID
                 return "Unknown credentials (msgUserName: )"
             case (user, True) if security_level == 1:  # noAuthNoPriv
+                return f"Authentication missing (msgUserName: {_printable(user)})"
+            case (user, True) if not _has_digest(message):  # PySNMP 6 doesn't check empty ones.
                 return f"Authentication missing (msgUserName: {_printable(user)})"
         return None
 
@@ -301,7 +304,9 @@ class SNMPTrapParser:
         ipaddress: str = self.snmp_engine.getUserContext("sender_address")[0]
         message = snmp_engine.observer.getExecutionContext("rfc3412.receiveMessage:request")
         if int(message["securityModel"]) == 3 and (
-            reason := self._snmpv3_trap_rejection(int(message["securityLevel"]))
+            reason := self._snmpv3_trap_rejection(
+                int(message["securityLevel"]), message["wholeMsg"]
+            )
         ):
             self._logger.log(
                 VERBOSE,
@@ -566,6 +571,18 @@ class SNMPTrapTranslator:
             if all(c >= " " or c == "\r" for c in scrub_string(text)):
                 return str(oid), text
         return str(oid), value.prettyPrint()
+
+
+def _has_digest(message: bytes) -> bool:
+    """Whether the SNMPv3 message carries authentication parameters"""
+    decoded, _ = pyasn1.codec.ber.decoder.decode(
+        message, asn1Spec=pysnmp.proto.mpmod.rfc3412.SNMPv3Message()
+    )
+    security_parameters, _ = pyasn1.codec.ber.decoder.decode(
+        decoded["msgSecurityParameters"],
+        asn1Spec=pysnmp.proto.secmod.rfc3414.service.UsmSecurityParameters(),
+    )
+    return bool(security_parameters["msgAuthenticationParameters"])
 
 
 def trap_error_text(error: Exception) -> str:

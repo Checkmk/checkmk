@@ -11,7 +11,7 @@ import pysnmp.debug  # type: ignore[import-untyped]
 import pysnmp.entity.config  # type: ignore[import-untyped]
 import pysnmp.entity.engine  # type: ignore[import-untyped]
 import pytest
-from pyasn1.codec.ber import encoder
+from pyasn1.codec.ber import decoder, encoder
 from pysnmp.proto import api, rfc1155, rfc3411  # type: ignore[import-untyped]
 from pysnmp.proto.mpmod.rfc3412 import SNMPv3Message  # type: ignore[import-untyped]
 from pysnmp.proto.rfc1902 import (  # type: ignore[import-untyped]
@@ -432,14 +432,23 @@ class CapturingTransportDispatcher:
 SENDER_ENGINE_ID = "80001f8803525400123456"
 
 
-def v3_trap(user: str, *, auth_key: str | None = None) -> bytes:
-    """An SNMPv3 trap of the given user from SENDER_ENGINE_ID, authenticated via SHA with a key"""
+def v3_trap(user: str, *, auth_key: str | None = None, priv_key: str | None = None) -> bytes:
+    """An SNMPv3 trap of the given user from SENDER_ENGINE_ID, via SHA and AES with the keys"""
     sender = pysnmp.entity.engine.SnmpEngine(snmpEngineID=OctetString(hexValue=SENDER_ENGINE_ID))
     if auth_key is None:
         pysnmp.entity.config.addV3User(sender, user)
-    else:
+    elif priv_key is None:
         pysnmp.entity.config.addV3User(
             sender, user, pysnmp.entity.config.usmHMACSHAAuthProtocol, auth_key
+        )
+    else:
+        pysnmp.entity.config.addV3User(
+            sender,
+            user,
+            pysnmp.entity.config.usmHMACSHAAuthProtocol,
+            auth_key,
+            pysnmp.entity.config.usmAesCfb128Protocol,
+            priv_key,
         )
     transport_dispatcher = CapturingTransportDispatcher()
     sender.transportDispatcher = transport_dispatcher
@@ -453,7 +462,7 @@ def v3_trap(user: str, *, auth_key: str | None = None) -> bytes:
         messageProcessingModel=3,
         securityModel=3,
         securityName=OctetString(user),
-        securityLevel=1 if auth_key is None else 2,
+        securityLevel=1 if auth_key is None else 2 if priv_key is None else 3,
         contextEngineId=sender.snmpEngineID,
         contextName=b"",
         pduVersion=1,
@@ -805,4 +814,68 @@ def test_snmpv3_trap_of_the_empty_user_is_dropped(
     assert (result, [m for m in caplog.messages if " dropped from " in m]) == (
         None,
         ["Trap (v3) dropped from 192.0.2.1: Unknown credentials (msgUserName: )"],
+    )
+
+
+@pytest.mark.parametrize(
+    "credentials",
+    [
+        pytest.param(("authNoPriv", "sha", "harry", "right-key"), id="authNoPriv"),
+        pytest.param(("authPriv", "sha", "harry", "right-key", "AES", "priv-key"), id="authPriv"),
+    ],
+)
+def test_snmpv3_trap_with_an_empty_digest_is_dropped(
+    make_parser: MakeParser,
+    config: Config,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+    credentials: SNMPCredentials,
+) -> None:
+    parser = make_parser(snmpv3_config(config, credentials))
+    logger.setLevel(VERBOSE)
+    # Flagged authNoPriv, but without authentication parameters, i.e. forged without the key
+    trap = v3_message(
+        "SNMPv2TrapPDU",
+        engine_id=bytes.fromhex(SENDER_ENGINE_ID),
+        user=b"harry",
+        auth_flag=True,
+    )
+
+    result = parser.parse(trap, ("192.0.2.1", 162))
+
+    assert (result, [m for m in caplog.messages if " dropped from " in m]) == (
+        None,
+        ["Trap (v3) dropped from 192.0.2.1: Authentication missing (msgUserName: harry)"],
+    )
+
+
+def without_digest(message: bytes) -> bytes:
+    """The SNMPv3 message with empty authentication parameters, as forged without the key"""
+    decoded, _ = decoder.decode(message, asn1Spec=SNMPv3Message())
+    security_parameters, _ = decoder.decode(
+        decoded["msgSecurityParameters"], asn1Spec=UsmSecurityParameters()
+    )
+    security_parameters["msgAuthenticationParameters"] = b""
+    decoded["msgSecurityParameters"] = encoder.encode(security_parameters)
+    return bytes(encoder.encode(decoded))
+
+
+def test_authpriv_trap_without_its_digest_is_dropped(
+    make_parser: MakeParser,
+    config: Config,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    credentials: SNMPCredentials = ("authPriv", "sha", "harry", "right-key", "AES", "priv-key")
+    parser = make_parser(snmpv3_config(config, credentials))
+    logger.setLevel(VERBOSE)
+    trap = v3_trap("harry", auth_key="right-key", priv_key="priv-key")
+
+    accepted = [
+        parser.parse(m, ("192.0.2.1", 162)) is not None for m in (trap, without_digest(trap))
+    ]
+
+    assert (accepted, [m for m in caplog.messages if " dropped from " in m]) == (
+        [True, False],
+        ["Trap (v3) dropped from 192.0.2.1: Authentication missing (msgUserName: harry)"],
     )

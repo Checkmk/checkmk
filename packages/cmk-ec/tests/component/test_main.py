@@ -1041,6 +1041,8 @@ def test_spool_file_which_cannot_be_removed_is_not_processed(
         ) as process,
     ):
         try:
+            # Only once it sleeps, as starting up, e.g. loading libraries, opens files for a moment
+            _wait_until_sleeping(process.pid)
             spool_dir.symlink_to(f"/proc/{process.pid}/fd")
             ignored = _logged(caplog, f"Cannot process spool file {spool_dir / '0'}, ignoring it")
         finally:
@@ -1048,6 +1050,19 @@ def test_spool_file_which_cannot_be_removed_is_not_processed(
 
     assert ignored
     assert _event_texts(event_status) == []
+
+
+def _wait_until_sleeping(pid: int) -> None:
+    deadline = time.monotonic() + _RECEIVE_TIMEOUT
+    while (state := _process_state(pid)) != "S":
+        assert state != "Z", f"process {pid} exited"
+        assert time.monotonic() < deadline, f"process {pid} didn't sleep"
+        time.sleep(_POLL_INTERVAL)
+
+
+def _process_state(pid: int) -> str:
+    # The state follows the command name in parentheses, see proc_pid_stat(5).
+    return Path(f"/proc/{pid}/stat").read_text().rpartition(")")[2].split()[0]
 
 
 def _add_spool_files_at_once(spool_dir: Path, *contents: bytes) -> None:

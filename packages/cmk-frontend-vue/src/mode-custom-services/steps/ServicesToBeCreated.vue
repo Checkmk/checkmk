@@ -13,7 +13,7 @@ import type { ServicesPreview } from '../servicesPreview'
 
 const { _t } = usei18n()
 
-// More clashes are only counted, the list flags every one of them
+// More clashes are only counted; the list flags those among the services it shows
 const CLASHES_EXPLAINED = 3
 
 const { preview } = defineProps<{ preview: ServicesPreview }>()

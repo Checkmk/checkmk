@@ -1,4 +1,4 @@
-title: GEIST Watchdog: Temperature Sensor
+title: Geist Watchdog: Temperature
 agents: snmp
 catalog: hw/environment/geist
 license: GPLv2

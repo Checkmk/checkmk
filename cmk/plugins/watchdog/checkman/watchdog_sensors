@@ -1,4 +1,4 @@
-title: GEIST Watchdog: Status
+title: Geist Watchdog: Status
 agents: snmp
 catalog: hw/network/geist
 license: GPLv2

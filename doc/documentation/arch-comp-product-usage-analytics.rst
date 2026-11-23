@@ -227,6 +227,16 @@ Risks and technical debts
    In a cluster, the clustered services belong to the cluster host, so a node whose services are all clustered counts although it delivers data.
 8. The user counts include every Cognito user who has ever signed in: the site keeps users that are removed from the tenant, and a user whose email address changes is counted twice.
    The free-mail list is a copy of cloudmk's list plus the major providers it lacks, and nothing keeps the two in sync; a free-mail domain missing from the list counts as business, so the business count is an upper bound.
+9. The session statistics come from the GUI's session store, not from a login history.
+   The store keeps a user's 20 most recent sessions whenever it saves one, so the oldest sessions of a user with more than 20 in a week are not counted.
+   A session counts in the run whose 7-day window holds its start, so scheduled runs never count it twice, but they can miss it: a run starts at the first cron tick after it is due, or later if the site was down, so its window begins after the previous one ended.
+   A session still open at the collection counts with its duration so far, and a manual run counts sessions that a scheduled run counts too.
+   Logged-out sessions count too.
+   With the global setting "Limit login to single session at a time" enabled, each login removes the user's earlier sessions, so at most one session per user is counted.
+   The store also holds sessions that a non-automation user opened with basic auth or web server authentication; a client that does not return the session cookie opens a new one with every request.
+   The statistics do not tell these from interactive logins.
+   The GUI takes both timestamps of a session from the wall clock, so a clock that steps back during a session makes its duration negative.
+   If that turns the average or the median negative, the endpoint rejects the upload with a successful response, and the site deletes it.
 
 See Also
 ========

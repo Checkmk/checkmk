@@ -508,6 +508,31 @@ class UserCount(pydantic.BaseModel):
     )
 
 
+class SessionStats(pydantic.BaseModel):
+    count: int = pydantic.Field(
+        description="The number of login sessions that started in the 7 days before the collection.",
+        examples=[4],
+    )
+    average_duration: float | None = pydantic.Field(
+        description=(
+            "The average session duration in seconds, from the start to the last activity;"
+            " null without sessions."
+        ),
+        examples=[1800.0],
+    )
+    median_duration: float | None = pydantic.Field(
+        description="The median session duration in seconds; null without sessions.",
+        examples=[1200.0],
+    )
+    stddev_duration: float | None = pydantic.Field(
+        description=(
+            "The population standard deviation of the session durations in seconds;"
+            " null without sessions."
+        ),
+        examples=[1800.0],
+    )
+
+
 class CloudTrialPayload(ProductUsagePayload):
     metadata: typing.ClassVar[Metadata] = {
         "version": "v1",
@@ -529,13 +554,20 @@ class CloudTrialPayload(ProductUsagePayload):
         ),
         examples=[{"business": 2, "non_business": 1}],
     )
-    sessions: None = pydantic.Field(
+    sessions: SessionStats | None = pydantic.Field(
         default=None,
         description=(
-            "Every stored login session with its start and last activity timestamps."
-            " Sessions are not attributed to a user."
+            "The number and the duration statistics of the login sessions that started in the"
+            " 7 days before the collection. No session timestamps and no users are collected."
         ),
-        examples=[None],
+        examples=[
+            {
+                "count": 4,
+                "average_duration": 1800.0,
+                "median_duration": 1200.0,
+                "stddev_duration": 1800.0,
+            }
+        ],
     )
     audit_log: AuditLog | None = pydantic.Field(
         default=None,

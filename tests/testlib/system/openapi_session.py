@@ -2444,7 +2444,7 @@ class DataBackendAPI(BaseAPI):
     ) -> None:
         response = self.session.patch(
             "domain-types/data_backend/actions/update_feature_locations/invoke",
-            api_version=APIVersion.INTERNAL,
+            api_version=APIVersion.UNSTABLE,
             json={
                 "site_id": site_id,
                 "features": features,

@@ -483,7 +483,12 @@ def test_view_want_checkboxes(view: View) -> None:
     assert view.want_checkboxes is True
 
 
-@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")
+@pytest.mark.usefixtures(
+    "suppress_license_expiry_header",
+    "patch_theme",
+    "suppress_license_banner",
+    "disable_post_auth_gates",
+)
 def test_view_page(
     logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
 ) -> None:

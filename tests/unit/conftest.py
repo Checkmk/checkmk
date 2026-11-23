@@ -562,3 +562,11 @@ def fixture_suppress_license_expiry_header(monkeypatch_module: pytest.MonkeyPatc
 def fixture_suppress_license_banner(monkeypatch_module: pytest.MonkeyPatch) -> None:
     """Don't check if message about license expiration should be shown"""
     monkeypatch_module.setattr("cmk.gui.htmllib.top_heading.show_license_banner", lambda x: None)
+
+
+@pytest.fixture(name="disable_post_auth_gates")
+def fixture_disable_post_auth_gates(monkeypatch_module: pytest.MonkeyPatch) -> None:
+    """Do not execute any of the post-auth redirect gates"""
+    monkeypatch_module.setattr(
+        "cmk.gui.wsgi.applications.utils.post_auth_gate_redirect_url", lambda x, y: None
+    )

@@ -30,6 +30,10 @@ function withSortedKeys(value: unknown): unknown {
   return value
 }
 
+export function requestKey(request: unknown): string {
+  return JSON.stringify(withSortedKeys(request))
+}
+
 /**
  * Looks up the request ``getRequest`` returns, and again whenever it changes. Changes are
  * debounced, a superseded lookup is aborted and its answer dropped, and a lookup that takes longer
@@ -93,9 +97,7 @@ export function useDebouncedLookup<Request, Result>(
     }, debounceMs)
   }
 
-  // A serialized key with sorted keys, so an equal request in a new object or another key order
-  // does not ask again
-  watch(() => JSON.stringify(withSortedKeys(getRequest())), schedule, { immediate: true })
+  watch(() => requestKey(getRequest()), schedule, { immediate: true })
   onScopeDispose(cancel)
 
   return state

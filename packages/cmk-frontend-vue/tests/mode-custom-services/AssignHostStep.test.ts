@@ -172,7 +172,10 @@ test('lists the services to be created below the tabs', () => {
   expect(screen.getByRole('tabpanel').contains(service)).toBe(false)
 })
 
-function appending(allAttributes: boolean, dataPointKeys: string[] = []): ServicesPreview {
+function appending(
+  allAttributes: boolean,
+  dataPointKeys: string[] = []
+): Extract<ServicesPreview, { status: 'resolved' }> {
   return {
     status: 'resolved',
     services: {
@@ -309,6 +312,18 @@ test('keeps telling what is appended while the services are looked up again', as
   })
 
   preview.value = { status: 'loading' }
+  await nextTick()
+
+  expect(screen.getByText('+ http.route')).toBeTruthy()
+})
+
+test('keeps telling what is appended while the services are looked up for a chosen folder', async () => {
+  const { services } = appending(false, ['http.route'])
+  const { preview } = renderStep('HTTP duration', null, {
+    servicesPreview: { status: 'resolved', services }
+  })
+
+  preview.value = { status: 'refreshing', services }
   await nextTick()
 
   expect(screen.getByText('+ http.route')).toBeTruthy()

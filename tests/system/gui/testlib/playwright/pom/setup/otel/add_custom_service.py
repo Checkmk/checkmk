@@ -128,8 +128,11 @@ class CustomServiceWizard(CmkPage):
 
     @property
     def new_hosts(self) -> Locator:
-        """The host names of no configured host, which saving creates in the Main folder."""
-        return self._labelled_value("New hosts, created in the Main folder on saving:")
+        """The host names of no configured host, which saving creates.
+
+        They go to the Main folder unless another folder is chosen for them.
+        """
+        return self._labelled_value("New hosts, created on saving:")
 
     def _labelled_value(self, label: str) -> Locator:
         return self.active_step.locator("span", has_text=label).locator("strong")

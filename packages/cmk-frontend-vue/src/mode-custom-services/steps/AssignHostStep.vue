@@ -28,6 +28,7 @@ import {
   appendedAttributesOfGrouping,
   templateMacro
 } from '../definition'
+import type { CreatableFolder, NewHostFolders } from '../newHostFolders'
 import { useOpenTelemetryData } from '../openTelemetryData'
 import type { ServicesPreview } from '../servicesPreview'
 import type { TemplatePreview } from '../templatePreview'
@@ -45,7 +46,8 @@ const {
   appendSeriesAttributes,
   templatePreview,
   servicesPreview,
-  templateErrors = []
+  templateErrors = [],
+  newHostFolders = {}
 } = defineProps<{
   metricName: string | null
   attributeFilter: AttributeFilter | undefined
@@ -55,6 +57,11 @@ const {
   templatePreview: TemplatePreview
   servicesPreview: ServicesPreview
   templateErrors?: string[]
+  newHostFolders?: NewHostFolders
+}>()
+
+const emit = defineEmits<{
+  chooseFolder: [hostNames: string[], folder: string]
 }>()
 
 const serviceName = defineModel<string>('serviceName', { required: true })
@@ -113,6 +120,10 @@ function insertMacro(macro: string): void {
   hostNameTemplate.value = `${hostNameTemplate.value ?? ''}${macro}`
 }
 
+const creatableFolders = computed<CreatableFolder[]>(() =>
+  templatePreview.status === 'resolved' ? templatePreview.resolution.creatable_folders : []
+)
+
 type AppendedAttributes = ServicesToCreate['appended_attributes']
 
 // What the names append is known once the services resolve. Kept while the next lookup runs, so
@@ -121,7 +132,7 @@ const appended = ref<AppendedAttributes | null>(null)
 watch(
   () => servicesPreview,
   (preview) => {
-    if (preview.status === 'resolved') {
+    if (preview.status === 'resolved' || preview.status === 'refreshing') {
       appended.value = preview.services.appended_attributes
     } else if (preview.status !== 'loading') {
       appended.value = null
@@ -357,7 +368,13 @@ const templateFieldId = useId()
     </div>
 
     <div class="mode-custom-services-assign-host-step__preview">
-      <ServicesToBeCreated :preview="servicesPreview" />
+      <ServicesToBeCreated
+        :preview="servicesPreview"
+        :folders="creatableFolders"
+        :new-host-folders="newHostFolders"
+        :folders-not-looked-up="templatePreview.status === 'failed'"
+        @choose-folder="(hostNames, folder) => emit('chooseFolder', hostNames, folder)"
+      />
       <OpenTelemetryDataNotice
         v-if="assignmentMode === 'manual' && hostName"
         :data="openTelemetryData"

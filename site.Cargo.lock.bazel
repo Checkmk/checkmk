@@ -1,5 +1,5 @@
 {
-  "checksum": "ae3e6fb9e8fc9cb5f8dfd17feb74a98c92d1974dc01d01aa1d98c179864bf85d",
+  "checksum": "50ab70861c1b6527fcfff536ba82e23549569fdce490505b121061b9f7d5daa0",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -3236,6 +3236,7 @@
             "color",
             "default",
             "derive",
+            "env",
             "error-context",
             "help",
             "std",
@@ -3304,6 +3305,7 @@
         "crate_features": {
           "common": [
             "color",
+            "env",
             "error-context",
             "help",
             "std",

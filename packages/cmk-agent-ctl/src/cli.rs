@@ -4,7 +4,7 @@
 
 #[cfg(windows)]
 use super::types;
-use super::{site_spec, version};
+use super::{constants, site_spec, version};
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
@@ -163,9 +163,12 @@ pub struct RegisterAuthOpts {
     pub user: Option<String>,
 
     /// Password for API user. Can also be entered interactively.
+    // Without hide_env_values, the help shows the value of the variable.
     #[arg(
         long,
         short = 'P',
+        env = constants::ENV_REGISTRATION_PASSWORD,
+        hide_env_values = true,
         conflicts_with = "one_time_token",
         requires = "user"
     )]
@@ -183,7 +186,13 @@ pub struct RegisterNewAuthOpts {
     pub user: String,
 
     /// Password for API user. Can also be entered interactively.
-    #[arg(long, short = 'P')]
+    // Without hide_env_values, the help shows the value of the variable.
+    #[arg(
+        long,
+        short = 'P',
+        env = constants::ENV_REGISTRATION_PASSWORD,
+        hide_env_values = true
+    )]
     pub password: Option<String>,
 }
 

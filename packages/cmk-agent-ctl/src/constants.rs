@@ -34,6 +34,9 @@ pub const ENV_LOG_TO_FILE: &str = "CMK_AGENT_CTL_LOG_TO_FILE";
 pub const WIN_AGENT_HOME_DIR: &str = "\\checkmk\\agent";
 
 // ENV VARS
+/// Carries the password of the registration modes. Unlike the command line, the
+/// environment of a process is not readable by other users.
+pub const ENV_REGISTRATION_PASSWORD: &str = "CMK_AGENT_CTL_REGISTRATION_PASSWORD";
 pub const ENV_HOME_DIR: &str = "DEBUG_HOME_DIR";
 pub const ENV_MAX_CONNECTIONS: &str = "DEBUG_MAX_CONNECTIONS";
 pub const ENV_CONNECTION_TIMEOUT: &str = "DEBUG_CONNECTION_TIMEOUT";

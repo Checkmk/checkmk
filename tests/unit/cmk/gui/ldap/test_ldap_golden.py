@@ -29,6 +29,7 @@ from pytest_mock import MockerFixture
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
+from cmk.gui import hooks
 from cmk.gui.config import active_config
 from cmk.gui.ldap_integration.ldap_connector import (
     _sync_ldap_user,
@@ -307,6 +308,54 @@ def test_do_sync(mocker: MockerFixture, set_config: SetConfig) -> None:
     assert users_to_save[UserId("alice@LDAP_SUFFIX")]["connector"] == connector.id, (
         "LDAP user clashing with a foreign user is created under the suffix"
     )
+
+
+@pytest.fixture(name="announced_deletions")
+def fixture_announced_deletions() -> Iterator[list[Sequence[UserId]]]:
+    announced: list[Sequence[UserId]] = []
+    hooks.register_builtin("users-deleted", announced.append)
+    yield announced
+    hooks.unregister("users-deleted", announced.append)
+
+
+@pytest.mark.usefixtures("request_context", "connection_configured")
+def test_sync_announces_the_users_it_removed(
+    mocker: MockerFixture, set_config: SetConfig, announced_deletions: list[Sequence[UserId]]
+) -> None:
+    connector = LDAPUserConnector(_test_config)
+    mocker.patch.object(connector, "get_users", return_value={})
+
+    with set_config(ldap_quarantine_period=None):
+        connector.do_sync(
+            add_to_changelog=True,
+            only_username=None,
+            user_attributes=get_user_attributes([]),
+            load_users_func=lambda lock=False: {UserId("bob"): UserSpec(connector=connector.id)},  # noqa: ARG005
+            save_users_func=lambda *_args, **_kwargs: None,
+            default_user_profile={},
+        )
+
+    assert announced_deletions == [[UserId("bob")]]
+
+
+@pytest.mark.usefixtures("request_context", "connection_configured")
+def test_sync_does_not_announce_quarantined_users_as_deleted(
+    mocker: MockerFixture, set_config: SetConfig, announced_deletions: list[Sequence[UserId]]
+) -> None:
+    connector = LDAPUserConnector(_test_config)
+    mocker.patch.object(connector, "get_users", return_value={})
+
+    with set_config(ldap_quarantine_period=30 * 86400):
+        connector.do_sync(
+            add_to_changelog=True,
+            only_username=None,
+            user_attributes=get_user_attributes([]),
+            load_users_func=lambda lock=False: {UserId("bob"): UserSpec(connector=connector.id)},  # noqa: ARG005
+            save_users_func=lambda *_args, **_kwargs: None,
+            default_user_profile={},
+        )
+
+    assert announced_deletions == []
 
 
 @pytest.mark.usefixtures("request_context")

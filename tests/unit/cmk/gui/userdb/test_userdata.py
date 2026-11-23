@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from typing import cast
 
@@ -13,6 +13,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.events.notify_types import EventRule
+from cmk.gui import hooks
 from cmk.gui.type_defs import (
     LastLoginInfo,
     QuarantineInfo,
@@ -232,6 +233,31 @@ def test_delete_users_removes_only_the_requested_users() -> None:
     remaining = load_users()
     assert drop not in remaining
     assert keep in remaining
+
+
+@pytest.fixture(name="announced_deletions")
+def fixture_announced_deletions() -> Iterator[list[Sequence[UserId]]]:
+    announced: list[Sequence[UserId]] = []
+    hooks.register_builtin("users-deleted", announced.append)
+    yield announced
+    hooks.unregister("users-deleted", announced.append)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_delete_users_announces_the_deleted_users(
+    announced_deletions: list[Sequence[UserId]],
+) -> None:
+    keep, drop = UserId("keep"), UserId("drop")
+    _seed_users(
+        {
+            keep: UserSpec({"alias": "Keep Me", "roles": []}),
+            drop: UserSpec({"alias": "Drop Me", "roles": []}),
+        }
+    )
+
+    _user_db().delete_users([drop])
+
+    assert announced_deletions == [[drop]]
 
 
 @pytest.mark.usefixtures("request_context")

@@ -6,6 +6,7 @@
 from datetime import datetime
 
 from cmk.ccc.user import UserId
+from cmk.gui import hooks
 from cmk.gui.config import active_config, Config
 from cmk.gui.log import logger
 from cmk.gui.type_defs import Users
@@ -66,6 +67,7 @@ def expire_quarantined_users(now: datetime, retention: int | None) -> None:
         call_users_saved_hook=True,
         changed_users=expired,
     )
+    hooks.call("users-deleted", expired)
 
 
 def _expired_quarantined_users(users: Users, now: int, retention: int) -> list[UserId]:

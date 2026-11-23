@@ -15,6 +15,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.events.notify_types import DisabledNotificationsOptions, EventRule
+from cmk.gui import hooks
 from cmk.gui.type_defs import (
     LastLoginInfo,
     QuarantineInfo,
@@ -494,4 +495,5 @@ class UserDB:
             call_users_saved_hook=True,
             changed_users=list(deleted),
         )
+        hooks.call("users-deleted", list(deleted))
         return deleted

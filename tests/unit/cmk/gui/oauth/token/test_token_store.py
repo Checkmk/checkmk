@@ -815,3 +815,75 @@ def test_revoke_any_grants_ends_grants_of_every_user(store: TokenStore) -> None:
     assert store.get_refresh_token(own.refresh) is None
     assert store.get_refresh_token(other.refresh) is None
     assert store.get_refresh_token(kept.refresh) is not None
+
+
+# TokenStore.revoke_grants_of_users
+
+
+def test_revoking_the_grants_of_users_ends_their_refresh_and_access_tokens(
+    store: TokenStore,
+) -> None:
+    deleted = _start_grant(store, user_id=UserId("deleted"))
+
+    store.revoke_grants_of_users([UserId("deleted")])
+
+    assert store.get_refresh_token(deleted.refresh) is None
+    assert store.get_by_token(deleted.access) is None
+
+
+def test_revoking_the_grants_of_users_keeps_the_grants_of_other_users(
+    store: TokenStore,
+) -> None:
+    kept = _start_grant(store)
+    _start_grant(store, user_id=UserId("deleted"))
+
+    store.revoke_grants_of_users([UserId("deleted")])
+
+    assert store.get_refresh_token(kept.refresh) is not None
+
+
+def test_revoking_the_grants_of_users_returns_how_many_ended(store: TokenStore) -> None:
+    _start_grant(store, user_id=UserId("deleted"))
+    _start_grant(store, user_id=UserId("deleted"))
+    _start_grant(store)
+
+    ended = store.revoke_grants_of_users([UserId("deleted")])
+
+    assert ended == 2
+
+
+# TokenStore.revoke_grants_of_users_not_in
+
+
+def test_revoking_for_users_not_given_ends_their_refresh_and_access_tokens(
+    store: TokenStore,
+) -> None:
+    removed = _start_grant(store, user_id=UserId("removed"))
+
+    store.revoke_grants_of_users_not_in([_USER])
+
+    assert store.get_refresh_token(removed.refresh) is None
+    assert store.get_by_token(removed.access) is None
+
+
+def test_revoking_for_users_not_given_keeps_the_grants_of_the_given_users(
+    store: TokenStore,
+) -> None:
+    kept = _start_grant(store)
+    _start_grant(store, user_id=UserId("removed"))
+
+    store.revoke_grants_of_users_not_in([_USER])
+
+    assert store.get_refresh_token(kept.refresh) is not None
+
+
+def test_revoking_for_users_not_given_returns_the_users_whose_grants_ended(
+    store: TokenStore,
+) -> None:
+    _start_grant(store, user_id=UserId("removed"))
+    _delegate(store, user_id=UserId("also-removed"))
+    _start_grant(store)
+
+    revoked = store.revoke_grants_of_users_not_in([_USER])
+
+    assert revoked == {"removed", "also-removed"}

@@ -302,6 +302,7 @@ class SyncUsersResult:
     has_changed_passwords: bool = False
     profiles_to_synchronize: dict[UserId, UserSpec] = field(default_factory=dict)
     security_events: list[UserManagementEvent] = field(default_factory=list)
+    deleted_users: list[UserId] = field(default_factory=list)
 
 
 def _is_saml_connector(connector_id: str | None) -> bool:
@@ -1956,6 +1957,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         sync_users_result: SyncUsersResult,
     ) -> None:
         del users[user_id]  # remove the user
+        sync_users_result.deleted_users.append(user_id)
         sync_users_result.changes.append(
             _("LDAP [%(connection_id)s]: Removed user %(user_id)s")
             % {"connection_id": self.id, "user_id": user_id}
@@ -2088,6 +2090,8 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 True,
                 changed_users=[only_username] if only_username else "all",
             )
+            if sync_users_result.deleted_users:
+                hooks.call("users-deleted", sync_users_result.deleted_users)
         else:
             release_users_lock()
 

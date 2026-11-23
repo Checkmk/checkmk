@@ -1203,6 +1203,7 @@ allows = [
   "cmk.gui.exceptions",
   "cmk.gui.form_specs",
   "cmk.gui.header",
+  "cmk.gui.hooks",
   "cmk.gui.htmllib",
   "cmk.gui.http",
   "cmk.gui.i18n",

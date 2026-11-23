@@ -153,7 +153,10 @@ class SNMPTrapParser:
     ) -> tuple[Iterable[tuple[str, str]], str] | None:
         """Let PySNMP parse the given trap data. The _handle_snmptrap() callback below collects the result."""
         self._logger.log(
-            VERBOSE, "Trap received from %s:%d. Checking for acceptance now.", sender_address
+            VERBOSE,
+            "Trap received from %s:%d. Checking for acceptance now.",
+            sender_address[0],
+            sender_address[1],
         )
         self._varbinds_and_ipaddress = None
         self.snmp_engine.setUserContext(sender_address=sender_address)

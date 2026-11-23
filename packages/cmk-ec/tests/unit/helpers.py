@@ -263,12 +263,12 @@ def activate_config(settings: Settings, config_text: str) -> None:
 
 def wait_until_bytes_in_pipe(fd: int, count: int) -> None:
     deadline = time.monotonic() + 30
-    while _bytes_in_pipe(fd) < count:
+    while bytes_in_pipe(fd) < count:
         assert time.monotonic() < deadline, f"pipe didn't get {count} bytes"
         time.sleep(0.01)
 
 
-def _bytes_in_pipe(fd: int) -> int:
+def bytes_in_pipe(fd: int) -> int:
     buffer = array.array("i", [0])
     fcntl.ioctl(fd, termios.FIONREAD, buffer)
     return buffer[0]

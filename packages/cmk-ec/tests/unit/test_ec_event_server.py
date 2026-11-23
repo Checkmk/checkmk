@@ -30,6 +30,7 @@ from cmk.ec.main import (
 )
 
 from .helpers import (
+    bytes_in_pipe,
     new_event,
     new_rule,
     process_message,
@@ -562,6 +563,30 @@ class _ClockStandingStill:
         return math.inf
 
 
+class _ClockStartingOnceRead:
+    """
+    A clock standing still until the event pipe has been read empty, then running, but jumping past
+    any timeout after 30 s of real time, so that a failing test doesn't hang
+    """
+
+    def __init__(self, writer: int) -> None:
+        self._writer = writer
+        self._real_deadline = time.monotonic() + 30
+        self._start: float | None = None
+        self.jumped = False
+
+    def __call__(self) -> float:
+        now = time.monotonic()
+        if now >= self._real_deadline:
+            self.jumped = True
+            return math.inf
+        if self._start is None:
+            if bytes_in_pipe(self._writer):
+                return 0.0
+            self._start = now
+        return now - self._start
+
+
 class _HistoryFailingFor(RecordingHistory):
     """Fails to record anything about the events with the given text"""
 
@@ -706,7 +731,7 @@ def test_start_of_a_message_whose_rest_doesnt_arrive_is_dropped_with_a_warning(
         os.write(writer, b"incomplete")
 
         # With a clock standing still, only the idle writer can end the wait.
-        event_server.close_pipe(timeout=1.0, idle_timeout=0.1, clock=_ClockStandingStill())
+        event_server.close_pipe(timeout=1.0, idle_timeout=0.01, clock=_ClockStandingStill())
     finally:
         os.close(writer)
 
@@ -725,13 +750,15 @@ def test_waiting_for_the_rest_of_a_message_until_the_timeout_is_no_idle_writer(
         os.write(writer, b"incomplete")
 
         # Without an idle timeout, only the timeout can cut the wait for the rest short.
-        event_server.close_pipe(timeout=0.1, idle_timeout=math.inf)
+        clock = _ClockStartingOnceRead(writer)
+        event_server.close_pipe(timeout=0.01, idle_timeout=math.inf, clock=clock)
     finally:
         os.close(writer)
 
-    assert caplog.messages == [
-        "Processing the event pipe on stopping took too long, dropping the 10 bytes left"
-    ]
+    assert (caplog.messages, clock.jumped) == (
+        ["Processing the event pipe on stopping took too long, dropping the 10 bytes left"],
+        False,
+    )
 
 
 def test_start_of_a_message_whose_writer_closed_the_event_pipe_is_dropped_with_a_warning(
@@ -760,7 +787,7 @@ def test_idle_writer_keeping_closed_event_pipe_open_doesnt_hold_up_closing(
     # With a clock standing still, only the idle writer can end the wait.
     clock = _ClockStandingStill()
     try:
-        event_server.close_pipe(timeout=1.0, idle_timeout=0.1, clock=clock)
+        event_server.close_pipe(timeout=1.0, idle_timeout=0.01, clock=clock)
 
         # Without a reader, writing to a pipe fails.
         with pytest.raises(BrokenPipeError):

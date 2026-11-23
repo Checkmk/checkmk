@@ -1,4 +1,4 @@
-title: Bosch Video over IP: Power over Ethernet Power Consumption
+title: Bosch Video over IP: PoE Power Consumption
 agents: snmp
 catalog: hw/environment/bosch
 license: GPLv2

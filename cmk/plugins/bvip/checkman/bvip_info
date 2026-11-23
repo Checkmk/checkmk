@@ -1,4 +1,4 @@
-title: Bosch Video over IP: Unit Name and Unit ID
+title: Bosch Video over IP: Unit Name and ID
 agents: snmp
 catalog: hw/environment/bosch
 license: GPLv2

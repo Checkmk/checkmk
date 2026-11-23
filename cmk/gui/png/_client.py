@@ -5,18 +5,28 @@
 
 import subprocess
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Final
 
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from ._wire import PngGraph, pngs_from_json, PngTexts, RenderingFailure, request_to_json
 
+
+@dataclass(frozen=True)
+class _Timeout:
+    base_seconds: float
+    per_graph_seconds: float
+
+    def for_graphs(self, count: int) -> float:
+        return self.base_seconds + self.per_graph_seconds * count
+
+
 _COMMAND: Final = ("cmk-render-png-graphs",)
 # The process spends a few seconds importing matplotlib and well under one per graph. The limits
 # leave a loaded site ample room, but release the request or report job that waits for it when
 # the renderer hangs.
-_TIMEOUT_BASE_SECONDS: Final = 60
-_TIMEOUT_PER_GRAPH_SECONDS: Final = 5
+_TIMEOUT: Final = _Timeout(base_seconds=60, per_graph_seconds=5)
 
 
 def _all_failed(graphs: Sequence[PngGraph], message: str) -> Sequence[RenderingFailure]:
@@ -29,29 +39,38 @@ def render_pngs(
     temperature_unit: TemperatureUnit,
     *,
     command: Sequence[str] = _COMMAND,
+    timeout: _Timeout = _TIMEOUT,
 ) -> Sequence[bytes | RenderingFailure]:
     """One result per graph, in the order of the graphs. A graph that fails to render yields a
     RenderingFailure, so that the other graphs still get their images."""
     if not graphs:
         return []
-    timeout = _TIMEOUT_BASE_SECONDS + _TIMEOUT_PER_GRAPH_SECONDS * len(graphs)
+    seconds = timeout.for_graphs(len(graphs))
     try:
         rendering = subprocess.run(
             [*command],
             input=request_to_json(graphs, texts, temperature_unit).encode(),
             capture_output=True,
             check=False,
-            timeout=timeout,
+            timeout=seconds,
         )
     except subprocess.TimeoutExpired:
         return _all_failed(
             graphs,
-            f"{' '.join(command)} did not render {len(graphs)} graphs within {timeout} seconds",
+            f"{' '.join(command)} did not render {len(graphs)} graphs within {seconds} seconds",
         )
-    if rendering.returncode:
-        return _all_failed(
-            graphs, f"{' '.join(command)} failed: {rendering.stderr.decode(errors='replace')}"
-        )
-    results = pngs_from_json(rendering.stdout.decode())
-    missing = RenderingFailure(f"{' '.join(command)} answered no image for this graph")
-    return [*results[: len(graphs)], *[missing] * (len(graphs) - len(results))]
+    results = [] if rendering.returncode else pngs_from_json(rendering.stdout.decode())
+    if len(graphs) > 1:
+        return [
+            *results[: len(graphs)],
+            *(
+                render_pngs([graph], texts, temperature_unit, command=command, timeout=timeout)[0]
+                for graph in graphs[len(results) :]
+            ),
+        ]
+    missing = RenderingFailure(
+        f"{' '.join(command)} failed: {rendering.stderr.decode(errors='replace')}"
+        if rendering.returncode
+        else f"{' '.join(command)} answered no image for this graph"
+    )
+    return results[:1] or [missing]

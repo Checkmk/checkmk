@@ -7,6 +7,7 @@ import sys
 
 from cmk.graphing_engine import EvaluatedGraph, TimeRange
 from cmk.gui.png import PngGraph, PngOptions, PngTexts, render_pngs, RenderingFailure
+from cmk.gui.png._client import _Timeout
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 _TEXTS = PngTexts(
@@ -19,11 +20,11 @@ _TEXTS = PngTexts(
 )
 
 
-def _graph() -> PngGraph:
+def _graph(*, title: str = "Graph") -> PngGraph:
     return PngGraph(
         graph=EvaluatedGraph(
             name="g",
-            title="Graph",
+            title=title,
             time_range=TimeRange(start=0, end=180, step=60),
             vertical_range=None,
             stacks=[],
@@ -64,6 +65,40 @@ def test_a_failing_rendering_process_fails_every_graph_with_what_it_wrote_to_std
     assert results == [RenderingFailure(f"{' '.join(command)} failed: boom")] * 2
 
 
+def test_a_graph_that_crashes_the_rendering_process_leaves_the_others_their_images() -> None:
+    crashing_on_a_title = (
+        sys.executable,
+        "-c",
+        "import sys; sys.exit(1) if 'Crash' in sys.stdin.read() else print('[{\"png\": \"\"}]')",
+    )
+
+    results = render_pngs(
+        [_graph(title="Crash"), _graph()],
+        _TEXTS,
+        TemperatureUnit.CELSIUS,
+        command=crashing_on_a_title,
+    )
+
+    assert [type(result) for result in results] == [RenderingFailure, bytes]
+
+
+def test_a_hanging_rendering_process_fails_every_graph_without_rendering_them_alone() -> None:
+    command = (sys.executable, "-c", "import time; time.sleep(60)")
+
+    results = render_pngs(
+        [_graph(), _graph()],
+        _TEXTS,
+        TemperatureUnit.CELSIUS,
+        command=command,
+        timeout=_Timeout(base_seconds=0, per_graph_seconds=0.25),
+    )
+
+    assert (
+        results
+        == [RenderingFailure(f"{' '.join(command)} did not render 2 graphs within 0.5 seconds")] * 2
+    )
+
+
 def test_no_rendering_process_starts_for_no_graphs() -> None:
     results = render_pngs(
         [], _TEXTS, TemperatureUnit.CELSIUS, command=(sys.executable, "-c", "print('no answer')")
@@ -72,12 +107,45 @@ def test_no_rendering_process_starts_for_no_graphs() -> None:
     assert results == []
 
 
-def test_a_graph_missing_from_the_answer_fails_while_the_others_keep_their_images() -> None:
-    command = (sys.executable, "-c", 'print(\'[{"png": ""}]\')')
+def test_a_graph_missing_from_a_joint_answer_is_rendered_alone() -> None:
+    answering_one_image = (sys.executable, "-c", 'print(\'[{"png": ""}]\')')
 
-    results = render_pngs([_graph(), _graph()], _TEXTS, TemperatureUnit.CELSIUS, command=command)
+    results = render_pngs(
+        [_graph(), _graph()], _TEXTS, TemperatureUnit.CELSIUS, command=answering_one_image
+    )
+
+    assert results == [b"", b""]
+
+
+def test_a_failure_the_rendering_process_answers_is_not_rendered_again() -> None:
+    failing_together_rendering_alone = (
+        sys.executable,
+        "-c",
+        """\
+import sys
+request = sys.stdin.read()
+if "First" in request and "Second" in request:
+    print('[{"failure": "boom"}, {"failure": "boom"}]')
+else:
+    print('[{"png": ""}]')
+""",
+    )
+
+    results = render_pngs(
+        [_graph(title="First"), _graph(title="Second")],
+        _TEXTS,
+        TemperatureUnit.CELSIUS,
+        command=failing_together_rendering_alone,
+    )
+
+    assert results == [RenderingFailure("boom")] * 2
+
+
+def test_a_graph_missing_from_its_own_answer_fails() -> None:
+    answering_no_image = (sys.executable, "-c", "print('[]')")
+
+    results = render_pngs([_graph()], _TEXTS, TemperatureUnit.CELSIUS, command=answering_no_image)
 
     assert results == [
-        b"",
-        RenderingFailure(f"{' '.join(command)} answered no image for this graph"),
+        RenderingFailure(f"{' '.join(answering_no_image)} answered no image for this graph")
     ]

@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import CmkBadge from 'cmk-ui-library/components/CmkBadge.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
@@ -82,10 +83,12 @@ const services = computed(() => (preview.status === 'resolved' ? preview.service
           <span class="mode-custom-services-services-to-be-created__key">{{
             _t('Target host:')
           }}</span>
-          <span
-            >{{ service.host_name }}
-            <template v-if="service.new_host">{{ _t('(new host)') }}</template></span
-          >
+          <div class="mode-custom-services-services-to-be-created__host">
+            {{ service.host_name }}
+            <CmkBadge size="small" :color="service.new_host ? 'success' : 'default'">{{
+              service.new_host ? _t('To be created') : _t('Existing')
+            }}</CmkBadge>
+          </div>
           <span
             v-if="clashLabel(service.clash)"
             class="mode-custom-services-services-to-be-created__clash"
@@ -149,6 +152,7 @@ const services = computed(() => (preview.status === 'resolved' ? preview.service
 .mode-custom-services-services-to-be-created__item {
   display: grid;
   grid-template-columns: max-content max-content 1fr;
+  align-items: center;
   gap: var(--dimension-2) var(--dimension-4);
   padding: var(--dimension-4);
 
@@ -163,11 +167,18 @@ const services = computed(() => (preview.status === 'resolved' ? preview.service
 
 .mode-custom-services-services-to-be-created__number {
   grid-row: span 2;
+  align-self: start;
   font-family: monospace;
 }
 
 .mode-custom-services-services-to-be-created__key {
   color: var(--font-color-dimmed);
+}
+
+.mode-custom-services-services-to-be-created__host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .mode-custom-services-services-to-be-created__name {

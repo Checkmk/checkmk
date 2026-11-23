@@ -7,6 +7,7 @@ import functools
 import tempfile
 from pathlib import Path
 
+import jinja2
 import lark
 import pysmi.parser.lark_parser
 import pytest
@@ -14,6 +15,7 @@ import pytest
 
 def pytest_configure(config: pytest.Config) -> None:
     _cache_pysmi_parser_tables(config)
+    _cache_pysmi_templates(config)
 
 
 def _cache_pysmi_parser_tables(config: pytest.Config) -> None:
@@ -28,4 +30,22 @@ def _cache_pysmi_parser_tables(config: pytest.Config) -> None:
         pysmi.parser.lark_parser,
         "Lark",
         functools.partial(lark.Lark, cache=str(Path(cache_dir.name) / "smi.lark")),
+    )
+
+
+def _cache_pysmi_templates(config: pytest.Config) -> None:
+    """pysmi compiles the jinja2 templates of its code generator for every MIB, which takes about
+    60 ms each time. Let jinja2 cache the compiled templates in a directory for the session, so that
+    every environment is still a new one. The cache ignores the options of an environment, but
+    all environments are pysmi's, with the same options."""
+    cache_dir = tempfile.TemporaryDirectory()
+    config.add_cleanup(cache_dir.cleanup)
+    patch = pytest.MonkeyPatch()
+    config.add_cleanup(patch.undo)
+    patch.setattr(
+        jinja2,
+        "Environment",
+        functools.partial(
+            jinja2.Environment, bytecode_cache=jinja2.FileSystemBytecodeCache(cache_dir.name)
+        ),
     )

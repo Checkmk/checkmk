@@ -184,6 +184,7 @@ py_cmk_test(
         ":cmk-ec",
         ":mib_compiler",
         ":mib_status",
+        requirement("jinja2"),
         requirement("lark"),
         requirement("pysmi"),
     ],

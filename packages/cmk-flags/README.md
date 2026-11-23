@@ -99,7 +99,6 @@ flag starts off.
 | 2.5.0p14       | Flag `exp_ai_assistant`. Settings section renamed to "Experimental flags (for testing only)". Werk #22265 (ident rename) added and reverted in the same release. | New key                   |
 | 2.5.0p15       | Python API renamed from `release_*` to `experimental_*`. Flags are no longer synced to remote sites.                                                             | File no longer replicated |
 | 2.5.0p18       | Flag `exp_relay_active_checks` removed: active checks on relays are released (werk #20175)                                                                       | Key ignored               |
-| 2.5.0p22       | Flag `exp_trial_mode_selection`                                                                                                                                  | New key                   |
 | 3.0.0 (master) | Has the package from the start, with the `experimental_*` API.                                                                                                   | —                         |
 
 3.0.0 is not released yet (state 2026-11-10).

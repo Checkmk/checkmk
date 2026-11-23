@@ -6,7 +6,7 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="possibly-undefined"
 
-from collections.abc import Generator, Iterator, Sequence
+from collections.abc import Generator
 
 import pytest
 
@@ -14,7 +14,7 @@ from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui import hooks, userdb
+from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.type_defs import UserSpec
@@ -249,36 +249,3 @@ def test_only_affected_sites_require_activation_when_deleting_users(
     all_users = userdb.load_users()
     assert not any(user_id in all_users for user_id in users_to_delete)
     assert expected_changed_sites == _changed_sites(sites)
-
-
-@pytest.fixture(name="announced_deletions")
-def fixture_announced_deletions() -> Iterator[list[Sequence[UserId]]]:
-    announced: list[Sequence[UserId]] = []
-    hooks.register_builtin("users-deleted", announced.append)
-    yield announced
-    hooks.unregister("users-deleted", announced.append)
-
-
-@pytest.mark.usefixtures("request_context")
-def test_deleting_users_announces_the_deleted_users(
-    announced_deletions: list[Sequence[UserId]],
-) -> None:
-    for user_id in (USER1_ID, USER2_ID):
-        create_user(
-            user_id,
-            UserSpec({"alias": user_id, "locked": False, "roles": []}),
-            default_sites,
-            get_user_attributes([]),
-            use_git=False,
-            acting_user=LoggedInSuperUser(),
-        )
-
-    delete_users(
-        [USER1_ID],
-        default_sites,
-        get_user_attributes([]),
-        use_git=False,
-        acting_user=LoggedInSuperUser(),
-    )
-
-    assert announced_deletions == [[USER1_ID]]

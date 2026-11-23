@@ -222,14 +222,6 @@ def _redeem_authorization_code(
         _error("invalid_grant")
         return
 
-    # Tokens of a deleted or locked user are refused anyway, by active_token()
-    # and on refresh. This matters for a user deleted and re-created under the
-    # same name within the code's lifetime: their grants were revoked with the
-    # deletion, and a grant started now would go to the new user.
-    if not user_can_authenticate(UserId(record.user_id)):
-        _error("invalid_grant")
-        return
-
     # We assume that parse_scopes will be fine here, as we serialized the previously parsed
     # scopes into the AuthCodeStore ourselves. If it still goes wrong it's not a user error.
     granted_scopes = parse_scopes(record.scope)
@@ -282,10 +274,8 @@ def _refresh(refresh_token: str | None, client_id: str | None, sessions: Mapping
             _error("invalid_grant")
             return
 
-        # Stop refreshing for deleted or locked users. Deleting a user also
-        # revokes their grants (see cmk.gui.oauth.user_cleanup), so this is
-        # for locked users, and for deleted users whose grants survived until
-        # someone is re-created under the same name.
+        # Stop refreshing for deleted or locked users. The grant is bound to
+        # the user name, so a re-created user inherits it.
         if not user_can_authenticate(presented.grant.user_id):
             store.revoke_grant(presented.grant.grant_id)
             _error("invalid_grant")

@@ -305,7 +305,6 @@ class SyncUsersResult:
     has_changed_passwords: bool = False
     profiles_to_synchronize: dict[UserId, UserSpec] = field(default_factory=dict)
     security_events: list[UserManagementEvent] = field(default_factory=list)
-    deleted_users: list[UserId] = field(default_factory=list)
 
 
 def _load_copy_of_existing_user(
@@ -1738,7 +1737,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             user_connection_id = user.get("connector")
             if user_connection_id == self.id and self._strip_suffix(user_id) not in ldap_users:
                 del users[user_id]  # remove the user
-                sync_users_result.deleted_users.append(user_id)
                 sync_users_result.changes.append(
                     _("LDAP [%s]: Removed user %s") % (self.id, user_id)
                 )
@@ -1882,8 +1880,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 active_config.wato_pprint_config,
                 True,
             )
-            if sync_users_result.deleted_users:
-                hooks.call("users-deleted", sync_users_result.deleted_users)
         else:
             release_users_lock()
 

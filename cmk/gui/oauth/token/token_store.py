@@ -390,26 +390,6 @@ class TokenStore:
             )
         return cursor.rowcount
 
-    def revoke_grants_of_users(self, user_ids: Collection[UserId]) -> int:
-        """End the grants of the given users with all of their tokens, and return how many ended."""
-        params = [(user_id,) for user_id in set(user_ids)]
-        if not params:
-            return 0
-
-        with write_transaction(self._connection):
-            cursor = self._connection.executemany("DELETE FROM grants WHERE user_id = ?", params)
-        return cursor.rowcount
-
-    def revoke_grants_of_users_not_in(self, user_ids: Collection[UserId]) -> set[UserId]:
-        """End the grants of every user not in user_ids, and return those users."""
-        stored = {
-            UserId(row["user_id"])
-            for row in self._connection.execute("SELECT DISTINCT user_id FROM grants")
-        }
-        removed = stored - set(user_ids)
-        self.revoke_grants_of_users(removed)
-        return removed
-
     def get_refresh_token(self, refresh_token: str) -> RefreshTokenRecord | None:
         try:
             token_hash = _refresh_token_hash(refresh_token)

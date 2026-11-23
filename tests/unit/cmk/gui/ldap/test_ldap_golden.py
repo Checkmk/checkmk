@@ -24,8 +24,6 @@ from pytest_mock import MockerFixture
 
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
-from cmk.gui import hooks
-from cmk.gui.config import active_config
 from cmk.gui.ldap_integration.ldap_connector import (
     _sync_ldap_user,
     FetchedLDAPUser,
@@ -269,37 +267,6 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
         save_users_func=assert_expected_users,
         default_user_profile={},
     )
-
-
-@pytest.fixture(name="announced_deletions")
-def fixture_announced_deletions() -> Iterator[list[Sequence[UserId]]]:
-    announced: list[Sequence[UserId]] = []
-    hooks.register_builtin("users-deleted", announced.append)
-    yield announced
-    hooks.unregister("users-deleted", announced.append)
-
-
-@pytest.mark.usefixtures("request_context")
-def test_sync_announces_the_users_it_removed(
-    mocker: MockerFixture,
-    monkeypatch: pytest.MonkeyPatch,
-    announced_deletions: list[Sequence[UserId]],
-) -> None:
-    connector = LDAPUserConnector(_test_config)
-    mocker.patch.object(connector, "get_users", return_value={})
-
-    with monkeypatch.context() as m:
-        m.setattr(active_config, "user_connections", [_test_config])
-        connector.do_sync(
-            add_to_changelog=True,
-            only_username=None,
-            user_attributes=get_user_attributes([]),
-            load_users_func=lambda _: {UserId("bob"): UserSpec(connector=connector.id)},
-            save_users_func=lambda *_args: None,
-            default_user_profile={},
-        )
-
-    assert announced_deletions == [[UserId("bob")]]
 
 
 def test_check_credentials_valid(

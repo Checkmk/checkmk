@@ -859,7 +859,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.gui.breadcrumb",
         "cmk.gui.config",
         "cmk.gui.exceptions",
-        "cmk.gui.hooks",
         "cmk.gui.htmllib",
         "cmk.gui.http",
         "cmk.gui.i18n",

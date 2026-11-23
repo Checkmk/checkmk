@@ -17,7 +17,6 @@ from cmk.ccc import store
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.licensing.basics.paths import get_verification_response_file_path
 from cmk.licensing.basics.protocol_version import (
-    AllowedVerificationResponseVersions,
     parse_verification_response_version,
 )
 
@@ -117,16 +116,18 @@ def load_plain_verification_response(omd_root: Path) -> PlainVerificationRespons
 
     try:
         raw = json.loads(raw_dump.decode("utf-8"))
-        return parse_plain_verification_response(parse_verification_response_version(raw), raw)
+        return parse_plain_verification_response(raw)
     except json.decoder.JSONDecodeError as e:
         raise InvalidVerificationResponse(f"Failed to load verification response: {e}") from e
     except (TypeError, ValueError, KeyError) as e:
         raise InvalidVerificationResponse(f"Failed to parse verification response: {e}") from e
 
 
-def parse_plain_verification_response(
-    protocol_version: AllowedVerificationResponseVersions, raw: object
-) -> PlainVerificationResponse:
+def parse_plain_verification_response(raw: object) -> PlainVerificationResponse:
+    try:
+        protocol_version = parse_verification_response_version(raw)
+    except TypeError as e:
+        raise ValueError("Failed to parse verification response version: %s" % e) from e
     match protocol_version:
         case "1.0" | "1.1" | "1.2" | "1.3" | "1.4" | "1.5":
             raise ValueError(protocol_version)

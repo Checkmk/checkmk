@@ -11,7 +11,8 @@ void main() {
             def container_name = "testing-ubuntu-2404-checkmk-${safe_branch_name.replace('.', '-')}";
 
             container(container_name) {
-                sh("bazel build //doc/documentation")
+                // Any non-community edition includes the pages of the non-free packages.
+                sh("bazel build --cmk_edition=ultimate //doc/documentation")
 
                 // groovylint-disable-next-line DuplicateMapLiteral
                 withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {

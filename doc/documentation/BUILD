@@ -32,7 +32,12 @@ doc_srcs(
     ]) + [
         # Pages that live in the package they describe
         "//packages/cmk-check-engine:docs",
-    ],
+    ] + select({
+        "@cmk//edition:community": [],
+        "//conditions:default": [
+            "//non-free/packages/cmk-liveproxyd:docs",
+        ],
+    }),
     visibility = ["//:__subpackages__"],
 )
 

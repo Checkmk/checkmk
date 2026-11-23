@@ -12,6 +12,7 @@
 #ifndef WTOOLS_USER_CONTROL_H
 #define WTOOLS_USER_CONTROL_H
 
+#include <cstdint>
 #include <string>  // for wstring
 
 // User Control namespace
@@ -40,6 +41,13 @@ public:
     // indirectly tested
     [[nodiscard]] Status changeUserPassword(std::wstring_view user_name,
                                             std::wstring_view pwd_string) const;
+
+    /// Return the password length the account policy asks for
+    ///
+    /// Returns:
+    ///     The configured minimum, or 0 when the policy cannot be read, so
+    ///     that the caller falls back to its own minimum.
+    [[nodiscard]] uint32_t minPasswordLength() const noexcept;
 
     // Local Group
     [[nodiscard]] Status localGroupAdd(std::wstring_view group_name,

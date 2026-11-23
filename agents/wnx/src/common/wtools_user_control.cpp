@@ -73,6 +73,20 @@ Status LdapControl::changeUserPassword(std::wstring_view user_name,
     return Status::error;
 }
 
+uint32_t LdapControl::minPasswordLength() const noexcept {
+    USER_MODALS_INFO_0 *modals = nullptr;
+    const auto err = ::NetUserModalsGet(
+        primary_dc_name_, 0, reinterpret_cast<unsigned char **>(&modals));
+    if (err != NERR_Success || modals == nullptr) {
+        XLOG::l("Error reading the password policy: [{}]", err);
+        return 0U;
+    }
+
+    const auto length = static_cast<uint32_t>(modals->usrmod0_min_passwd_len);
+    ::NetApiBufferFree(modals);
+    return length;
+}
+
 bool LdapControl::setAsSpecialUser(std::wstring_view user_name) {
     return SetRegistryValue(getSpecialUserRegistryPath(), user_name, 0u);
 }

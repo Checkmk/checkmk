@@ -8,9 +8,12 @@
 #include <comdef.h>
 #include <fmt/format.h>
 #include <fmt/xchar.h>
+#include <lmcons.h>
 #include <sddl.h>
 #include <shellapi.h>
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <fstream>
 #include <numeric>
@@ -2622,24 +2625,70 @@ bool PatchFileLineEnding(const fs::path &fname) noexcept {
     }
 }
 
-std::wstring GenerateRandomString(size_t max_length) noexcept {
-    std::wstring possible_characters(
-        L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_#@$^&()[]{};:");
+namespace {
+/// The character categories of the Windows complexity requirement
+///
+/// Windows asks for three of five; the fifth is a Unicode letter that is
+/// neither upper nor lower case. One character of every category below covers
+/// that rule whatever the draw, where a draw over the union of the categories
+/// covers it only by chance. A replacement password filter can still ask for
+/// more.
+constexpr std::array<std::wstring_view, 4> g_password_categories{
+    std::wstring_view{L"ABCDEFGHIJKLMNOPQRSTUVWXYZ"},
+    std::wstring_view{L"abcdefghijklmnopqrstuvwxyz"},
+    std::wstring_view{L"0123456789"},
+    std::wstring_view{L"_#@$^&()[]{};:"},
+};
 
-    std::random_device rd;
-    std::mt19937 generator(rd());
+/// The password length used when the account policy asks for less
+constexpr uint32_t g_min_password_length{20U};
 
-    std::uniform_int_distribution dist(
-        0, static_cast<int>(possible_characters.size()) - 1);
-    std::wstring ret;
-    for (size_t i = 0; i < max_length; i++) {
-        const int random_index =
-            dist(generator);  // get index between 0 and
-                              // possible_characters.size()-1
-        ret += possible_characters[random_index];
+/// Headroom over the length the account policy reports
+///
+/// A password filter can ask for more than the policy reports and has no way
+/// to say so, so the margin is a guess. It costs nothing, and a filter that
+/// wants more than this rejects the password all the same.
+constexpr uint32_t g_password_margin{4U};
+
+/// The longest password 'NetUserAdd' accepts at level 1
+constexpr uint32_t g_max_password_length{PWLEN};
+}  // namespace
+
+std::wstring GeneratePassword(size_t length) noexcept {
+    std::mt19937 generator(std::random_device{}());
+    const auto pick = [&generator](std::wstring_view pool) {
+        std::uniform_int_distribution<size_t> dist(0, pool.size() - 1);
+        return pool[dist(generator)];
+    };
+
+    std::wstring all;
+    std::wstring password;
+    password.reserve(std::max(length, g_password_categories.size()));
+    for (const auto category : g_password_categories) {
+        password += pick(category);
+        all += category;
+    }
+    while (password.size() < length) {
+        password += pick(all);
     }
 
-    return ret;
+    // Without this the password would always start with one upper case, one
+    // lower case, one digit and one special character, in that order.
+    rs::shuffle(password, generator);
+    return password;
+}
+
+uint32_t CmaPasswordLength(uint32_t policy_min) noexcept {
+    // 'NetUserAdd' answers every password restriction with the same
+    // NERR_PasswordTooShort, so the length is the only part of the policy that
+    // can be read beforehand. The policy decides it, the constant is only the
+    // floor.
+    const uint32_t wanted = policy_min + g_password_margin;
+    return std::clamp(wanted, g_min_password_length, g_max_password_length);
+}
+
+std::wstring GenerateCmaUserPassword(uint32_t policy_min) noexcept {
+    return GeneratePassword(CmaPasswordLength(policy_min));
 }
 
 namespace {
@@ -2693,9 +2742,9 @@ InternalUser CreateCmaUserInGroup(const std::wstring &group_name,
         return {};
     }
 
-    auto pwd = GenerateRandomString(12);
-
     const uc::LdapControl primary_dc;
+    auto pwd = GenerateCmaUserPassword(primary_dc.minPasswordLength());
+
     const auto add_user_status = primary_dc.userAdd(name, pwd);
     switch (add_user_status) {
         case uc::Status::success:

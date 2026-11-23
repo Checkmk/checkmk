@@ -1015,7 +1015,33 @@ InternalUser CreateCmaUserInGroup(const std::wstring &group_name) noexcept;
 InternalUser CreateCmaUserInGroup(const std::wstring &group_name,
                                   std::wstring_view prefix) noexcept;
 bool RemoveCmaUser(const std::wstring &user_name) noexcept;
-std::wstring GenerateRandomString(size_t max_length) noexcept;
+/// Build a random password that satisfies the complexity requirement
+///
+/// The password holds at least one upper case letter, one lower case letter,
+/// one digit and one special character.
+///
+/// Parameters:
+///     length: the number of characters. A length below four yields the four
+///         characters of the categories and nothing more.
+std::wstring GeneratePassword(size_t length) noexcept;
+
+/// Return the password length to use for an account policy minimum
+///
+/// Parameters:
+///     policy_min: the minimum the account policy reports, 0 when the policy
+///         could not be read.
+///
+/// Returns:
+///     The minimum plus a margin, raised to a floor of 20 characters and
+///     capped at the 256 characters 'NetUserAdd' accepts.
+uint32_t CmaPasswordLength(uint32_t policy_min) noexcept;
+
+/// Build the password of the temporary user of "Run As Local Group"
+///
+/// Parameters:
+///     policy_min: the minimum the account policy reports, as
+///         'uc::LdapControl::minPasswordLength' returns it.
+std::wstring GenerateCmaUserPassword(uint32_t policy_min) noexcept;
 std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept;
 std::wstring GenerateCmaUserNameInGroup(std::wstring_view group,
                                         std::wstring_view prefix) noexcept;

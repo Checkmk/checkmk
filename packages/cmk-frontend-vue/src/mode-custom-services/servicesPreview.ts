@@ -5,10 +5,10 @@
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { type Ref, computed, shallowRef, watch } from 'vue'
+import { type Ref, computed } from 'vue'
 
 import { resolveServices } from './api'
-import { type Lookup, requestKey, useDebouncedLookup } from './debouncedLookup'
+import { type Lookup, useDebouncedLookup } from './debouncedLookup'
 import {
   type CompleteModel,
   type ServicesToCreate,
@@ -25,15 +25,12 @@ const DEFAULT_TIMEOUT_MS = 30_000
 
 /**
  * The services saving creates. A refusal is a 400 on a host name template, e.g. one the grouping
- * does not allow: the template preview already explains it. While a lookup that only changed the
- * folders of new hosts is pending, the services found before stay shown as refreshing. A refused
- * change of folders fails instead, as the template preview does not explain it.
+ * does not allow: the template preview already explains it.
  */
 export type ServicesPreview =
   | { status: 'idle' }
   | { status: 'loading' }
   | { status: 'resolved'; services: ServicesToCreate }
-  | { status: 'refreshing'; services: ServicesToCreate }
   | { status: 'refused' }
   | { status: 'failed'; error: string }
 
@@ -42,15 +39,11 @@ export interface ServicesPreviewLookup {
 }
 
 /**
- * Blocks what saving is known to refuse: names that clash, also while only the folders of new hosts
- * are looked up again. A pending or failed lookup does not block: saving resolves the names again
- * and states its own refusal.
+ * Blocks what saving is known to refuse: names that clash. A pending or failed lookup does not
+ * block: saving resolves the names again and states its own refusal.
  */
 export function servicesPreviewBlocksSave(preview: ServicesPreview): boolean {
-  return (
-    (preview.status === 'resolved' || preview.status === 'refreshing') &&
-    preview.services.clashes.length > 0
-  )
+  return preview.status === 'resolved' && preview.services.clashes.length > 0
 }
 
 function completeModel(model: ServiceModel): CompleteModel | null {
@@ -74,44 +67,25 @@ function completeModel(model: ServiceModel): CompleteModel | null {
 
 function requestOf(
   model: ServiceModel | null,
-  configurationName: string | null,
-  newHostFolders: Record<string, string>
+  configurationName: string | null
 ): ServicesToCreateRequest | null {
   const complete = model === null ? null : completeModel(model)
-  return complete === null
-    ? null
-    : buildResolveServicesRequest(complete, configurationName, newHostFolders)
-}
-
-interface ResolvedServices {
-  /** The request without the folders of new hosts, which do not change the services */
-  key: string
-  services: ServicesToCreate
-}
-
-function keyWithoutFolders(request: ServicesToCreateRequest): string {
-  return requestKey({ ...request, new_host_folders: undefined })
+  return complete === null ? null : buildResolveServicesRequest(complete, configurationName)
 }
 
 function previewOf(
-  lookup: Lookup<ResolvedServices>,
-  explainedByTemplatePreview: boolean,
-  requested: string | null,
-  shown: ResolvedServices | null
+  lookup: Lookup<ServicesToCreate>,
+  explainedByTemplatePreview: boolean
 ): ServicesPreview {
   switch (lookup.status) {
     case 'idle':
-      return lookup
     case 'loading':
-      return shown !== null && shown.key === requested
-        ? { status: 'refreshing', services: shown.services }
-        : lookup
+      return lookup
     case 'done':
-      return { status: 'resolved', services: lookup.result.services }
+      return { status: 'resolved', services: lookup.result }
     case 'failed':
       if (
         explainedByTemplatePreview &&
-        shown?.key !== requested &&
         lookup.error instanceof CmkApiError &&
         lookup.error.statusCode === 400
       ) {
@@ -131,48 +105,21 @@ function previewOf(
 /**
  * Resolves the services the model creates, with their names and hosts. Edits are debounced. A null
  * model resolves nothing. ``configurationName`` is the stored custom service being edited, whose
- * own services are no clash. ``getNewHostFolders`` names the folders of the hosts saving creates,
- * which are checked as when saving.
+ * own services are no clash.
  */
 export function useServicesPreview(
   getModel: () => ServiceModel | null,
   configurationName: string | null = null,
-  {
-    debounceMs = DEFAULT_DEBOUNCE_MS,
-    timeoutMs = DEFAULT_TIMEOUT_MS,
-    getNewHostFolders = (): Record<string, string> => ({})
-  } = {}
+  { debounceMs = DEFAULT_DEBOUNCE_MS, timeoutMs = DEFAULT_TIMEOUT_MS } = {}
 ): ServicesPreviewLookup {
-  const getRequest = () => requestOf(getModel(), configurationName, getNewHostFolders())
   const lookup = useDebouncedLookup(
-    getRequest,
-    async (request: ServicesToCreateRequest, signal: AbortSignal): Promise<ResolvedServices> => ({
-      key: keyWithoutFolders(request),
-      services: await resolveServices(request, signal)
-    }),
+    () => requestOf(getModel(), configurationName),
+    resolveServices,
     { debounceMs, timeoutMs }
   )
-  const shown = shallowRef<ResolvedServices | null>(null)
-  watch(
-    lookup,
-    (current) => {
-      if (current.status === 'done') {
-        shown.value = current.result
-      } else if (current.status === 'idle') {
-        shown.value = null
-      }
-    },
-    { flush: 'sync' }
-  )
   return {
-    preview: computed(() => {
-      const request = getRequest()
-      return previewOf(
-        lookup.value,
-        (getModel()?.hostNameTemplate ?? null) !== null,
-        request === null ? null : keyWithoutFolders(request),
-        shown.value
-      )
-    })
+    preview: computed(() =>
+      previewOf(lookup.value, (getModel()?.hostNameTemplate ?? null) !== null)
+    )
   }
 }

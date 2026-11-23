@@ -16,7 +16,6 @@ import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 import NewHostCreationStatus from './NewHostCreationStatus.vue'
 import { loadCustomServiceDefinition } from './api'
 import { serviceModelFrom } from './definition'
-import { useNewHostFolders } from './newHostFolders'
 import {
   type HostCreationStatus,
   type SaveResult,
@@ -58,11 +57,9 @@ const metricStepValid = computed(() => isMetricSelected(model.value))
 const templatePreview = useHostNameTemplatePreview(() =>
   currentStep.value === 3 ? model.value : null
 )
-const newHostFolders = useNewHostFolders(() => templatePreview.preview.value)
 const servicesPreview = useServicesPreview(
   () => (currentStep.value === 3 ? model.value : null),
-  props.configuration_name,
-  { getNewHostFolders: () => newHostFolders.toSend.value }
+  props.configuration_name
 )
 // A service name and a host, or a host name template whose matches allow saving, are required,
 // and the names of the services must not clash.
@@ -130,19 +127,14 @@ const failureMessage = computed(() =>
 async function persist(): Promise<SaveResult> {
   const configurationName = props.configuration_name
   if (configurationName === null) {
-    return await createCustomService(model.value, newHostFolders.toSend.value)
+    return await createCustomService(model.value)
   }
   // Only a failed load leaves no ETag, and that hides the wizard. Never write without one: a
   // wildcard would overwrite a concurrent change.
   if (editETag.value === null) {
     return { ok: false }
   }
-  return await updateCustomService(
-    configurationName,
-    model.value,
-    editETag.value,
-    newHostFolders.toSend.value
-  )
+  return await updateCustomService(configurationName, model.value, editETag.value)
 }
 
 // The alert wizard starts from the conditions of the custom service it is told about.
@@ -244,13 +236,11 @@ async function saveService(target: string): Promise<void> {
             :template-errors="templateErrors"
             :template-preview="templatePreview.preview.value"
             :services-preview="servicesPreview.preview.value"
-            :new-host-folders="newHostFolders.folders.value"
             :metric-name="model.metricName"
             :attribute-filter="model.attributeFilter"
             :consolidation="model.consolidation"
             :aggregator="model.aggregator"
             :append-series-attributes="model.appendSeriesAttributes"
-            @choose-folder="newHostFolders.choose"
           />
           <NewHostCreationStatus v-if="hostCreation !== null" :status="hostCreation" />
           <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />

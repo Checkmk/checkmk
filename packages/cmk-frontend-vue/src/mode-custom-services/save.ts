@@ -63,10 +63,7 @@ function validateConsolidation(model: CompleteModel): Validated {
   return { ok: true, model }
 }
 
-export async function createCustomService(
-  model: ServiceModel,
-  newHostFolders: Record<string, string> = {}
-): Promise<SaveResult> {
+export async function createCustomService(model: ServiceModel): Promise<SaveResult> {
   const [nameError] = configNameFormatErrors(model.configurationName)
   if (nameError !== undefined) {
     return { ok: false, error: nameError }
@@ -75,16 +72,13 @@ export async function createCustomService(
   if (!validated.ok) {
     return validated
   }
-  return await saveCustomServiceDefinition(
-    buildCustomServiceDefinition(validated.model, newHostFolders)
-  )
+  return await saveCustomServiceDefinition(buildCustomServiceDefinition(validated.model))
 }
 
 export async function updateCustomService(
   configurationName: string,
   model: ServiceModel,
-  etag: string,
-  newHostFolders: Record<string, string> = {}
+  etag: string
 ): Promise<SaveResult> {
   const validated = validate(model)
   if (!validated.ok) {
@@ -92,7 +86,7 @@ export async function updateCustomService(
   }
   return await updateCustomServiceDefinition(
     configurationName,
-    buildCustomServiceUpdate(validated.model, newHostFolders),
+    buildCustomServiceUpdate(validated.model),
     etag
   )
 }

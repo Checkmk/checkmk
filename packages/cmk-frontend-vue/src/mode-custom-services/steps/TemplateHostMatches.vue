@@ -58,22 +58,9 @@ const { preview, opentelemetryData = { status: 'idle' } } = defineProps<{
         <OpenTelemetryDataNotice :data="opentelemetryData" />
       </template>
       <span v-if="preview.resolution.unmatched_host_names.length > 0"
-        >{{ _t('New hosts, created on saving:') }}
+        >{{ _t('New hosts, created in the Main folder on saving:') }}
         <strong>{{ preview.resolution.unmatched_host_names.join(', ') }}</strong></span
       >
-      <CmkAlert
-        v-if="
-          preview.resolution.unmatched_host_names.length > 0 &&
-          preview.resolution.creatable_folders.length === 0
-        "
-        size="small"
-        variant="warning"
-        :text="
-          _t(
-            'You may not create hosts in any folder. Saving is refused while the template resolves to new hosts.'
-          )
-        "
-      />
       <CmkAlert
         v-if="preview.resolution.hidden_match_count > 0"
         size="small"

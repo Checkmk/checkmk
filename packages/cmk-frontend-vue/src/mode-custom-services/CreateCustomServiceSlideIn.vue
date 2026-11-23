@@ -13,7 +13,6 @@ import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import NewHostCreationStatus from './NewHostCreationStatus.vue'
-import { useNewHostFolders } from './newHostFolders'
 import {
   type HostCreationStatus,
   type SaveResult,
@@ -53,10 +52,7 @@ const templateErrors = ref<string[]>([])
 const nameStepRef = useTemplateRef<InstanceType<typeof ConfigureNameStep>>('nameStep')
 
 const templatePreview = useHostNameTemplatePreview(() => model.value)
-const newHostFolders = useNewHostFolders(() => templatePreview.preview.value)
-const servicesPreview = useServicesPreview(() => model.value, null, {
-  getNewHostFolders: () => newHostFolders.toSend.value
-})
+const servicesPreview = useServicesPreview(() => model.value)
 
 const canSave = computed(
   () =>
@@ -83,7 +79,7 @@ async function save(): Promise<void> {
       return
     }
     hostCreation.value = creatingHosts ? 'creating' : null
-    result = await createCustomService(model.value, newHostFolders.toSend.value)
+    result = await createCustomService(model.value)
     if (result.templateError !== undefined) {
       templateErrors.value = [result.templateError]
       return
@@ -125,8 +121,6 @@ async function save(): Promise<void> {
         :template-errors="templateErrors"
         :template-preview="templatePreview.preview.value"
         :services-preview="servicesPreview.preview.value"
-        :new-host-folders="newHostFolders.folders.value"
-        @choose-folder="newHostFolders.choose"
       />
       <NewHostCreationStatus v-if="hostCreation !== null" :status="hostCreation" />
       <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />

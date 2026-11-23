@@ -22,7 +22,6 @@ import { computed, ref, watch } from 'vue'
 
 import { fetchTemplateAttributes } from '../api'
 import { type TemplateAttributes, appendedAttributeNames, templateMacro } from '../definition'
-import type { CreatableFolder, NewHostFolders } from '../newHostFolders'
 import { useOpenTelemetryData } from '../openTelemetryData'
 import type { ServicesPreview } from '../servicesPreview'
 import type { TemplatePreview } from '../templatePreview'
@@ -40,8 +39,7 @@ const {
   appendSeriesAttributes,
   templatePreview,
   servicesPreview,
-  templateErrors = [],
-  newHostFolders = {}
+  templateErrors = []
 } = defineProps<{
   metricName: string | null
   attributeFilter: AttributeFilter | undefined
@@ -51,11 +49,6 @@ const {
   templatePreview: TemplatePreview
   servicesPreview: ServicesPreview
   templateErrors?: string[]
-  newHostFolders?: NewHostFolders
-}>()
-
-const emit = defineEmits<{
-  chooseFolder: [hostNames: string[], folder: string]
 }>()
 
 const serviceName = defineModel<string>('serviceName', { required: true })
@@ -113,10 +106,6 @@ watch(
 function insertMacro(macro: string): void {
   hostNameTemplate.value = `${hostNameTemplate.value ?? ''}${macro}`
 }
-
-const creatableFolders = computed<CreatableFolder[]>(() =>
-  templatePreview.status === 'resolved' ? templatePreview.resolution.creatable_folders : []
-)
 
 const appendedAttributes = computed<string>(() => {
   if (!appendSeriesAttributes) {
@@ -297,13 +286,7 @@ const templateFieldId = useId()
     </div>
 
     <div class="mode-custom-services-assign-host-step__preview">
-      <ServicesToBeCreated
-        :preview="servicesPreview"
-        :folders="creatableFolders"
-        :new-host-folders="newHostFolders"
-        :folders-not-looked-up="templatePreview.status === 'failed'"
-        @choose-folder="(hostNames, folder) => emit('chooseFolder', hostNames, folder)"
-      />
+      <ServicesToBeCreated :preview="servicesPreview" />
       <OpenTelemetryDataNotice
         v-if="assignmentMode === 'manual' && hostName"
         :data="openTelemetryData"

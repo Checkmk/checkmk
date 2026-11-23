@@ -1,4 +1,4 @@
-title: HWg-STE Ethernet Thermometer: Sensors without unit
+title: HWg-STE: Sensors without Unit
 agents: snmp
 catalog: hw/environment/hwg
 license: GPLv2

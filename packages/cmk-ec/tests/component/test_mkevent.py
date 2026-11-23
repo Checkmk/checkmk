@@ -22,7 +22,8 @@ import pytest
 
 # Instead of mkevent's default of 5 seconds, for slow machines and for giving up quickly
 _GENEROUS_DELIVERY_TIMEOUT_MS = 60_000
-_SHORT_DELIVERY_TIMEOUT_MS = 100
+# Not 0, so that mkevent tries again or waits for room in a full pipe, unless it gets there late
+_SHORT_DELIVERY_TIMEOUT_MS = 10
 
 
 def _run_mkevent(
@@ -339,7 +340,7 @@ def test_pipe_nobody_reads_is_an_error(tmp_path: Path) -> None:
     assert (result.returncode, result.stderr) == (
         1,
         (
-            f"Cannot open event pipe '{pipe}': Nobody read it within 0.1 seconds. "
+            f"Cannot open event pipe '{pipe}': Nobody read it within 0.01 seconds. "
             "Is the Event Console running?\n"
         ),
     )
@@ -380,7 +381,7 @@ def test_notification_for_full_pipe_nobody_reads_is_an_error(tmp_path: Path) -> 
     assert (result.returncode, result.stderr) == (
         1,
         (
-            f"Cannot write to event pipe '{pipe}': Still full after 0.1 seconds. "
+            f"Cannot write to event pipe '{pipe}': Still full after 0.01 seconds. "
             "Is the Event Console overloaded?\n"
         ),
     )

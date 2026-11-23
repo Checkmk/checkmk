@@ -1,4 +1,4 @@
-title: CPU Utilization
+title: CPU: Utilization via statgrab
 agents: hpux, solaris
 catalog: os/kernel
 license: GPLv2

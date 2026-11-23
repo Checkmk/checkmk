@@ -215,11 +215,12 @@ def test_killed_command_doesnt_wait_for_a_process_it_started_in_a_session_of_its
 ) -> None:
     pid_file = tmp_path / "pid"
     ready = tmp_path / "ready"
-    # The started process keeps the output of the script open, but killing the script misses it.
-    script = (
-        f"echo started; setsid sleep 60 & echo $! > {shlex.quote(str(pid_file))}; "
-        f"touch {shlex.quote(str(ready))}; wait"
+    # The started process keeps the output of the script open, but killing the script misses it,
+    # as it gets ready only in a session of its own.
+    started = (
+        f"echo $$ > {shlex.quote(str(pid_file))}; touch {shlex.quote(str(ready))}; exec sleep 60"
     )
+    script = f"echo started; setsid sh -c {shlex.quote(started)} & wait"
 
     try:
         _run_script_timing_out_once(

@@ -247,6 +247,21 @@ def test_a_geographic_map_is_named_for_its_markers(
     assert any("not migrated" in warning for warning in _warnings(caplog))
 
 
+def test_what_maps_does_not_carry_over_is_named_with_its_map(
+    admin: UserId, caplog: pytest.LogCaptureFixture
+) -> None:
+    _migrated(
+        admin,
+        "office",
+        "define host {\nhost_name=web01\nview_type=gadget\ngadget_url=my_gadget.php\n}",
+    )
+
+    assert any(
+        warning.startswith("NagVis map 'office': 1 custom gadget is shown as an icon.")
+        for warning in _warnings(caplog)
+    )
+
+
 def test_a_dynamic_map_becomes_a_grid_keeping_the_members_moved_off_it(
     admin: UserId,
 ) -> None:
@@ -671,6 +686,28 @@ def test_a_role_without_maps_access_is_named(
     assert any(
         "guest" in warning and "Use Checkmk Maps" in warning for warning in _warnings(caplog)
     )
+
+
+def test_roles_that_could_change_nagvis_maps_without_editing_foreign_maps_are_named(
+    admin: UserId, caplog: pytest.LogCaptureFixture
+) -> None:
+    _set_role_permissions("guest", {"nagvis.Map_edit_*": True})
+
+    _migrated(admin, "office", _HOST)
+
+    (warning,) = [w for w in _warnings(caplog) if "could edit or delete NagVis maps" in w]
+    assert warning.startswith("These roles could edit or delete NagVis maps")
+    assert ": guest." in warning
+
+
+def test_a_role_that_may_edit_foreign_maps_is_not_named_for_editing_nagvis_maps(
+    admin: UserId, caplog: pytest.LogCaptureFixture
+) -> None:
+    _set_role_permissions("guest", {"nagvis.Map_edit_*": True, "general.edit_foreign_map": True})
+
+    _migrated(admin, "office", _HOST)
+
+    assert not any("could edit or delete NagVis maps" in w for w in _warnings(caplog))
 
 
 def test_the_maps_of_another_admin_are_named(

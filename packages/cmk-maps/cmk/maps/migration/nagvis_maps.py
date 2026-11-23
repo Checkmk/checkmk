@@ -53,9 +53,17 @@ def _record_path() -> Path:
     return paths.omd_root / "var" / "maps" / "nagvis_maps_migration.mk"
 
 
+# For editing and for deleting: the NagVis permissions to do it to some or every
+# map, and the permission of Maps to do it to another user's map.
+_CHANGE_PERMISSIONS = (
+    (("nagvis.*_*_*", "nagvis.Map_edit_*", "nagvis.Map_edit"), "general.edit_foreign_map"),
+    (("nagvis.*_*_*", "nagvis.Map_delete_*", "nagvis.Map_delete"), "general.delete_foreign_map"),
+)
+
+
 @dataclass(frozen=True)
 class _NagVisAccess:
-    """Who could see NagVis maps, by role."""
+    """Who could see and change NagVis maps, by role."""
 
     # ``nagvis.*_*_*`` or ``nagvis.Map_view_*``: every map.
     sees_all: frozenset[str]
@@ -65,6 +73,9 @@ class _NagVisAccess:
     without_maps: frozenset[str]
     # The maps each contact group lists, by NagVis name.
     group_maps: Mapping[str, frozenset[str]]
+    # The roles that could edit or delete NagVis maps, but may not do the same to
+    # the maps of another user in Maps.
+    changes_without_maps: frozenset[str]
 
 
 def _nagvis_access() -> _NagVisAccess:
@@ -94,6 +105,14 @@ def _nagvis_access() -> _NagVisAccess:
             group_id: frozenset(str(name) for name in group.get("nagvis_maps", []))
             for group_id, group in load_contact_group_information().items()
         },
+        changes_without_maps=frozenset(
+            role_id
+            for role_id in roles
+            if any(
+                any(may(role_id, permission) for permission in nagvis) and not may(role_id, foreign)
+                for nagvis, foreign in _CHANGE_PERMISSIONS
+            )
+        ),
     )
 
 
@@ -330,6 +349,20 @@ def migrate_nagvis_maps(
             "The role(s) %(roles)s could see NagVis maps, but lack the permission "
             "'Use Checkmk Maps' or 'See user maps' and do not see them in Maps.",
             {"roles": ", ".join(lacking)},
+        )
+    if access is not None and (
+        changing := sorted(
+            role_id
+            for role_id in access.changes_without_maps
+            if any(seeing and role_id in seeing for seeing in migrated.seeing.values())
+        )
+    ):
+        logger.warning(
+            "These roles could edit or delete NagVis maps, but cannot change the migrated "
+            "maps, which belong to %(admin)s: %(roles)s. The permissions 'Edit foreign "
+            "maps' and 'Delete foreign maps' would let them change the maps of every "
+            "user, not only those NagVis let them change.",
+            {"roles": ", ".join(changing), "admin": admin},
         )
     for pool, spec in sorted(config.pools.items()):
         if spec.urls and spec.maps & migrated.names.keys():

@@ -16,7 +16,7 @@ import hashlib
 import html
 import re
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final, get_args, Literal, TypedDict
@@ -104,11 +104,13 @@ ICONSET_SIZE: dict[str, int] = {
     "std": 22,
     "std_small": 16,
 }
+# The icon sets NagVis ships; those not in ICONSET_SIZE take the map's icon size.
+_STOCK_ICONSETS = frozenset({*ICONSET_SIZE, "std_area", "std_dot", "std_geo"})
 
 _FRAMESET_TARGETS = {"main", "frames", "main_window"}
 
 # Stock legacy gadget URL → Maps gadget_type. Custom/unknown gadget_urls
-# fall back to icon mode silently — there is no equivalent Maps renderer.
+# fall back to icon mode with a warning — there is no equivalent Maps renderer.
 _GADGET_URL_MAP: dict[str, GadgetType] = {
     "std_speedometer.php": "gauge",
     "std_speedometer2.php": "gauge",
@@ -288,6 +290,9 @@ class _PendingRef:
     offset: int
 
 
+_Dropped = Literal["custom_gadget", "custom_iconset", "html_textbox", "line_cut"]
+
+
 @dataclass
 class _ImportObject:
     """One object under construction.
@@ -307,6 +312,9 @@ class _ImportObject:
     # A label's map coordinate on an axis whose object position is only known
     # once ``pending`` resolves.
     label_at: dict[Literal["x", "y"], int] = field(default_factory=dict)
+    # What of the block Maps does not carry over, with the name it is known by
+    # where the warning names one (the icon set).
+    dropped: dict[_Dropped, str] = field(default_factory=dict)
 
 
 def _pending(coords: Mapping[_Axis, _Coord]) -> dict[_Axis, _PendingRef]:
@@ -628,7 +636,7 @@ def _geo_view(p: dict[str, str]) -> WorldmapView:
     return view
 
 
-def _sources(p: dict[str, str]) -> set[str]:
+def _sources(p: Mapping[str, str]) -> set[str]:
     return {s.strip().lower() for s in p.get("sources", "").split(",") if s.strip()}
 
 
@@ -707,7 +715,30 @@ def _line_obj_common(p: dict[str, str], raw_id: str) -> _ImportObject:
         payload["mid_y"] = mid_y.value
         refs["mid_x"] = mid_x
         refs["mid_y"] = mid_y
-    return _ImportObject(payload, _pending(refs))
+    obj = _ImportObject(payload, _pending(refs))
+    # A line through a third point bends there instead.
+    if (
+        line_type in _SPLIT_LINE_TYPES
+        and "mid_x" not in payload
+        and _is_off_center_cut(p.get("line_cut"))
+    ):
+        obj.dropped["line_cut"] = ""
+    return obj
+
+
+# The line types NagVis draws in two halves, split in the middle unless
+# ``line_cut`` says otherwise.
+_SPLIT_LINE_TYPES = frozenset({10, 13, 14, 15})
+_DEFAULT_LINE_CUT = 0.5
+
+
+def _is_off_center_cut(raw: str | None) -> bool:
+    if raw is None:
+        return False
+    try:
+        return float(raw) != _DEFAULT_LINE_CUT
+    except ValueError:
+        return False
 
 
 _LINE_PERFDATA_KEYS: tuple[
@@ -872,10 +903,39 @@ def _extract_html_style(html: str) -> _HtmlStyle:
     return out
 
 
+# What of a textbox's HTML the import keeps: its text, line breaks and what
+# _extract_html_style reads.
+_KEPT_TAGS = frozenset({"br", "b", "font", "span", "div", "p"})
+_KEPT_STYLES = frozenset({"color", "font-size", "font-weight", "text-align"})
+_KEPT_FONT_ATTRIBUTES = frozenset({"color", "size"})
+_TAG_RE = re.compile(r"<\s*/?\s*([a-zA-Z][\w-]*)([^<>]*)")
+_ATTRIBUTE_RE = re.compile(r"""([\w-]+)\s*=\s*("[^"]*"|'[^']*'|[^\s"'>]*)""")
+_STYLE_PROPERTY_RE = re.compile(r"([\w-]+)\s*:")
+
+
+def _loses_html(text: str) -> bool:
+    for name, attributes in _TAG_RE.findall(text):
+        name = name.lower()
+        if name not in _KEPT_TAGS:
+            return True
+        for attribute, value in _ATTRIBUTE_RE.findall(attributes):
+            attribute = attribute.lower()
+            if attribute == "style":
+                if any(
+                    prop.lower() not in _KEPT_STYLES for prop in _STYLE_PROPERTY_RE.findall(value)
+                ):
+                    return True
+            elif name != "font" or attribute not in _KEPT_FONT_ATTRIBUTES:
+                return True
+    return False
+
+
 def _handle_textbox(p: dict[str, str], raw_id: str) -> _ImportObject:
     raw_text = p.get("text") or None
     html_style: _HtmlStyle = {}
+    loses_html = False
     if raw_text:
+        loses_html = _loses_html(raw_text)
         html_style = _extract_html_style(raw_text)
         raw_text = re.sub(r"<br\s*/?>", "\n", raw_text, flags=re.IGNORECASE)
         raw_text = re.sub(r"<[^<>]+>", "", raw_text)
@@ -917,7 +977,10 @@ def _handle_textbox(p: dict[str, str], raw_id: str) -> _ImportObject:
         payload["textbox_height"] = height
     if border := _color(p.get("border_color"), ""):
         payload["textbox_border"] = border
-    return _ImportObject(payload, _pending({"x": tx, "y": ty}))
+    obj = _ImportObject(payload, _pending({"x": tx, "y": ty}))
+    if loses_html:
+        obj.dropped["html_textbox"] = ""
+    return obj
 
 
 def _build_display(p: dict[str, str]) -> MapDisplay:
@@ -1029,7 +1092,13 @@ def _handle_monitor_block(
         for axis, coord in axes
         if coord.ref is not None and (at := _label_map_coord(p.get(f"label_{axis}"))) is not None
     }
-    return _ImportObject(payload, _pending({"x": x, "y": y}), label_at=label_at)
+    obj = _ImportObject(payload, _pending({"x": x, "y": y}), label_at=label_at)
+    if p.get("view_type") == "gadget" and display["mode"] != "gadget":
+        obj.dropped["custom_gadget"] = ""
+    iconset = p.get("iconset")
+    if display["mode"] == "icon" and iconset is not None and iconset not in _STOCK_ICONSETS:
+        obj.dropped["custom_iconset"] = iconset
+    return obj
 
 
 def _apply_links(payload: MapObject, p: dict[str, str]) -> None:
@@ -1414,6 +1483,8 @@ def convert_cfg(
     map_icon_size = ICONSET_SIZE.get(global_props.get("iconset", ""), 22)
     dynmap = _dynmap(global_props, global_defaults, map_icon_size, default_backend, warnings)
     stale = customized = lines = settings_chars = 0
+    features = _Features()
+    warnings += _unknown_type_warnings(blocks)
 
     for (block_type, p), with_template in zip(blocks, _merge_templates(blocks), strict=True):
         if block_type == "global":
@@ -1465,14 +1536,20 @@ def convert_cfg(
                 lines += 1
             obj.ref_id = object_id
             objects.append(obj)
+            features.add(obj, block_type, effective)
 
     _resolve_pending_refs(objects)
 
+    warnings += _global_warnings(global_props, map_cfg["view"]["type"])
+    if map_cfg["view"]["type"] == "flow":
+        warnings += _automap_object_warnings(len(objects))
     if map_cfg["view"]["type"] in ("flow", "worldmap"):
         # Flow auto-populates from topology; worldmap markers come from a sidecar
         # file (worldmap.db / geomap CSV) the text-only import can't read, so the
         # map is framed here and filled by the CLI importer.
         objects = []
+    else:
+        warnings += features.warnings()
     # NagVis lets a cfg repeat an object_id, and an explicit one can match the
     # counter of a block without one.
     for obj, object_id in zip(
@@ -1501,6 +1578,256 @@ def _host_group_warnings(p: dict[str, str], objects: list[MapObject]) -> list[st
         _("NagVis left out the objects of hosts outside the host group %(group)s. Maps shows them.")
         % {"group": _clipped(group)}
     ]
+
+
+# ---------------------------------------------------------------------------
+# NagVis features Maps does not support
+# ---------------------------------------------------------------------------
+
+# The sources NagVis ships; any other is a plugin of that NagVis.
+_KNOWN_SOURCES = frozenset({"automap", "dynmap", "filter", *_GEO_SOURCES})
+# What NagVis sets for an automap beyond its root and layers, with its defaults.
+_AUTOMAP_DEFAULTS = {
+    "render_mode": "undirected",
+    "rankdir": "LR",
+    "overlap": "scale",
+    "margin": "50",
+    "ignore_hosts": "",
+    "filter_by_state": "0",
+    "filter_by_ids": "",
+}
+# The blocks of a map file that are no object of the map.
+_STRUCTURAL_BLOCKS = frozenset({"global", "template"})
+_DEFAULT_TEMPLATE = "default"
+
+
+def _names(values: Collection[str]) -> str:
+    return _clipped(", ".join(sorted(values)))
+
+
+def _global_warnings(p: Mapping[str, str], view_type: str) -> list[str]:
+    """What the global block of a map sets that Maps does not carry over."""
+    warnings: list[str] = []
+    sources = _sources(p)
+    if unknown := sources - _KNOWN_SOURCES:
+        warnings.append(
+            _(
+                "The map takes objects from NagVis sources Maps does not have: %(sources)s. Add "
+                "these objects in the editor, for example as a grid with a Livestatus filter."
+            )
+            % {"sources": _names(unknown)}
+        )
+    if "automap" in sources and (
+        settings := {
+            key
+            for key, default in _AUTOMAP_DEFAULTS.items()
+            if p.get(key, default).strip() not in ("", default)
+        }
+    ):
+        warnings.append(
+            _(
+                "Maps lays out a flow map itself and does not carry over these automap layout "
+                "options: %(settings)s"
+            )
+            % {"settings": _names(settings)}
+        )
+    if (
+        view_type == "static"
+        and (iconset := p.get("iconset")) is not None
+        and iconset not in _STOCK_ICONSETS
+    ):
+        warnings.append(
+            _(
+                "The map uses the custom icon set '%(name)s', so its objects show the state icon "
+                "of Maps. To give them a look of their own, choose an image from the image "
+                "library."
+            )
+            % {"name": _clipped(iconset)}
+        )
+    if (template := p.get("header_template", _DEFAULT_TEMPLATE)) != _DEFAULT_TEMPLATE:
+        warnings.append(
+            _(
+                "The map uses the NagVis header template file '%(name)s'. Maps shows its own "
+                "header. Put what the template showed on the map, for example as textboxes or "
+                "links."
+            )
+            % {"name": _clipped(template)}
+        )
+    if _bool(p.get("event_sound")) or _bool(p.get("event_log")):
+        warnings.append(
+            _(
+                "The map plays a sound or keeps an event log when a state changes. Maps does "
+                "neither. Use notifications instead."
+            )
+        )
+    return warnings
+
+
+def _unknown_type_warnings(blocks: Sequence[tuple[str, Mapping[str, str]]]) -> list[str]:
+    unknown = Counter(
+        block_type
+        for block_type, _p in blocks
+        if block_type not in _BLOCK_TYPES and block_type not in _STRUCTURAL_BLOCKS
+    )
+    if not (count := unknown.total()):
+        return []
+    return [
+        ungettext(
+            "%(count)d object of an unknown type was left out: %(types)s. Add it in the editor as "
+            "an object Maps has.",
+            "%(count)d objects of unknown types were left out: %(types)s. Add them in the editor "
+            "as objects Maps has.",
+            count,
+        )
+        % {"count": count, "types": _names(unknown)}
+    ]
+
+
+def _automap_object_warnings(count: int) -> list[str]:
+    if not count:
+        return []
+    return [
+        ungettext(
+            "%(count)d object of the automap file was left out, as Maps lays out a flow map "
+            "itself.",
+            "%(count)d objects of the automap file were left out, as Maps lays out a flow map "
+            "itself.",
+            count,
+        )
+        % {"count": count}
+    ]
+
+
+@dataclass
+class _Features:
+    """Counts what the imported objects use that Maps does not carry over."""
+
+    dropped: Counter[_Dropped] = field(default_factory=Counter)
+    iconsets: set[str] = field(default_factory=set)
+    hover_urls: int = 0
+    macro_links: int = 0
+    hover_templates: Counter[str] = field(default_factory=Counter)
+    context_templates: Counter[str] = field(default_factory=Counter)
+
+    def add(self, obj: _ImportObject, block_type: str, p: Mapping[str, str]) -> None:
+        self.dropped.update(obj.dropped.keys())
+        if iconset := obj.dropped.get("custom_iconset"):
+            self.iconsets.add(iconset)
+        self.hover_urls += bool((url := p.get("hover_url")) and coerce_user_url(url) is not None)
+        self.macro_links += sum(
+            bool(_MACRO_RE.search(link)) and coerce_user_url(link) is not None
+            for key in ("url", "hover_url")
+            if (link := p.get(key))
+        )
+        if block_type not in _MONITOR_OBJECT_TYPES:
+            return
+        if (template := p.get("hover_template", _DEFAULT_TEMPLATE)) != _DEFAULT_TEMPLATE:
+            self.hover_templates[template] += 1
+        if (template := p.get("context_template", _DEFAULT_TEMPLATE)) != _DEFAULT_TEMPLATE:
+            self.context_templates[template] += 1
+
+    def warnings(self) -> list[str]:
+        """Name each feature with the objects it affects and what to do about it."""
+        warnings: list[str] = []
+        if count := self.dropped["custom_gadget"]:
+            warnings.append(
+                ungettext(
+                    "%(count)d custom gadget is shown as an icon. Choose a gadget type in "
+                    "the editor.",
+                    "%(count)d custom gadgets are shown as icons. Choose a gadget type in "
+                    "the editor.",
+                    count,
+                )
+                % {"count": count}
+            )
+        if count := self.dropped["html_textbox"]:
+            warnings.append(
+                ungettext(
+                    "%(count)d HTML textbox keeps its text, bold, color, size and alignment, but "
+                    "loses the rest of its HTML. Use plain text, or a hover template for "
+                    "formatted content.",
+                    "%(count)d HTML textboxes keep their text, bold, color, size and alignment, "
+                    "but lose the rest of their HTML. Use plain text, or a hover template for "
+                    "formatted content.",
+                    count,
+                )
+                % {"count": count}
+            )
+        if count := self.hover_urls:
+            warnings.append(
+                ungettext(
+                    "%(count)d object has a hover URL. Maps keeps it, but does not show it "
+                    "on hover. Put the content into a hover template.",
+                    "%(count)d objects have a hover URL. Maps keeps them, but does not show "
+                    "them on hover. Put the content into a hover template.",
+                    count,
+                )
+                % {"count": count}
+            )
+        if count := self.macro_links:
+            warnings.append(
+                ungettext(
+                    "%(count)d link uses NagVis macros such as [name], which Maps does not fill "
+                    "in. Write the link without macros.",
+                    "%(count)d links use NagVis macros such as [name], which Maps does not fill "
+                    "in. Write the links without macros.",
+                    count,
+                )
+                % {"count": count}
+            )
+        if count := self.hover_templates.total():
+            warnings.append(
+                ungettext(
+                    "%(count)d object uses a NagVis hover template file, which Maps does not "
+                    "have: %(names)s. Paste the markup into the hover template of the map or the "
+                    "object.",
+                    "%(count)d objects use NagVis hover template files, which Maps does not have: "
+                    "%(names)s. Paste the markup into the hover template of the map or the "
+                    "objects.",
+                    count,
+                )
+                % {"count": count, "names": _names(self.hover_templates)}
+            )
+        if count := self.context_templates.total():
+            warnings.append(
+                ungettext(
+                    "%(count)d object uses a NagVis context template file, which Maps does not "
+                    "have: %(names)s. Paste the markup into the context template of the map or "
+                    "the object.",
+                    "%(count)d objects use NagVis context template files, which Maps does not "
+                    "have: %(names)s. Paste the markup into the context template of the map or "
+                    "the objects.",
+                    count,
+                )
+                % {"count": count, "names": _names(self.context_templates)}
+            )
+        if count := self.dropped["custom_iconset"]:
+            warnings.append(
+                ungettext(
+                    "%(count)d object uses a custom icon set and shows the state icon of Maps: "
+                    "%(names)s. To give it a look of its own, choose an image from the image "
+                    "library.",
+                    "%(count)d objects use custom icon sets and show the state icon of Maps: "
+                    "%(names)s. To give them a look of their own, choose an image from the image "
+                    "library.",
+                    count,
+                )
+                % {"count": count, "names": _names(self.iconsets)}
+            )
+        if count := self.dropped["line_cut"]:
+            warnings.append(
+                ungettext(
+                    "%(count)d line is split elsewhere than in its middle (line_cut). Maps splits "
+                    "it in the middle. To split it where NagVis did, drag its middle in the "
+                    "editor.",
+                    "%(count)d lines are split elsewhere than in their middle (line_cut). Maps "
+                    "splits them in the middle. To split them where NagVis did, drag their middle "
+                    "in the editor.",
+                    count,
+                )
+                % {"count": count}
+            )
+        return warnings
 
 
 # ---------------------------------------------------------------------------

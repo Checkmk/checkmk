@@ -1945,3 +1945,122 @@ def test_resolve_does_not_report_a_default_the_site_lacks() -> None:
     assert resolve_connection_ids(map_cfg, ["primary"], "cmk_mysite") == []
 
     assert map_cfg["connection_id"] == "primary"
+
+
+@pytest.mark.parametrize(
+    "content, warning",
+    [
+        pytest.param(
+            "define host {\n host_name=h1\n view_type=gadget\n gadget_url=my_gadget.php\n}\n"
+            "define host {\n host_name=h2\n view_type=gadget\n gadget_url=other.php\n}\n",
+            "2 custom gadgets are shown as icons. Choose a gadget type in the editor.",
+            id="custom-gadgets",
+        ),
+        pytest.param(
+            "define textbox {\n text=<b>Core</b> <a href='/x'>switches</a>\n}\n",
+            "1 HTML textbox keeps its text, bold, color, size and alignment, but loses",
+            id="html-textbox",
+        ),
+        pytest.param(
+            "define textbox {\n text=<span style='background-color:red'>Down</span>\n}\n",
+            "1 HTML textbox keeps its text, bold, color, size and alignment, but loses",
+            id="html-textbox-style",
+        ),
+        pytest.param(
+            "define host {\n host_name=h1\n hover_url=https://example.com/info\n}\n",
+            "1 object has a hover URL. Maps keeps it, but does not show it on hover.",
+            id="hover-url",
+        ),
+        pytest.param(
+            "define host {\n host_name=h1\n url=[htmlcgi]/status.cgi?host=[name]\n}\n",
+            "1 link uses NagVis macros such as [name]",
+            id="macros-in-links",
+        ),
+        pytest.param(
+            "define global {\n hover_template=custom\n}\ndefine host {\n host_name=h1\n}\n",
+            "1 object uses a NagVis hover template file, which Maps does not have: custom.",
+            id="hover-template-file",
+        ),
+        pytest.param(
+            "define host {\n host_name=h1\n context_template=ops\n}\n",
+            "1 object uses a NagVis context template file, which Maps does not have: ops.",
+            id="context-template-file",
+        ),
+        pytest.param(
+            "define global {\n header_template=on-demand-filter\n}\n",
+            "The map uses the NagVis header template file 'on-demand-filter'.",
+            id="header-template-file",
+        ),
+        pytest.param(
+            "define global {\n iconset=traffic\n}\n",
+            "The map uses the custom icon set 'traffic'",
+            id="custom-iconset-of-the-map",
+        ),
+        pytest.param(
+            "define host {\n host_name=h1\n iconset=traffic\n}\n",
+            "1 object uses a custom icon set and shows the state icon of Maps: traffic.",
+            id="custom-iconset-of-an-object",
+        ),
+        pytest.param(
+            "define line {\n x=10,100\n y=10,100\n line_type=10\n line_cut=0.3\n}\n",
+            "1 line is split elsewhere than in its middle (line_cut).",
+            id="line-cut",
+        ),
+        pytest.param(
+            "define global {\n event_sound=1\n}\n",
+            "The map plays a sound or keeps an event log",
+            id="event-sound",
+        ),
+        pytest.param(
+            "define global {\n sources=automap\n rankdir=TB\n}\ndefine host {\n host_name=h1\n}\n",
+            "does not carry over these automap layout options: rankdir",
+            id="automap-settings",
+        ),
+        pytest.param(
+            "define global {\n sources=automap\n}\ndefine host {\n host_name=h1\n}\n",
+            "1 object of the automap file was left out, as Maps lays out a flow map itself.",
+            id="automap-objects",
+        ),
+        pytest.param(
+            "define global {\n sources=my_cmdb\n}\n",
+            "The map takes objects from NagVis sources Maps does not have: my_cmdb.",
+            id="unknown-source",
+        ),
+        pytest.param(
+            "define widget {\n x=1\n}\n",
+            "1 object of an unknown type was left out: widget.",
+            id="unknown-object-type",
+        ),
+    ],
+)
+def test_import_names_what_maps_does_not_carry_over(content: str, warning: str) -> None:
+    _parsed_map, warnings = convert_cfg(content, "m")
+
+    assert any(warning in w for w in warnings), warnings
+
+
+def test_import_does_not_warn_about_what_maps_carries_over() -> None:
+    content = (
+        "define global {\n iconset=std_small\n hover_template=default\n}\n"
+        "define template {\n name=t\n}\n"
+        "define host {\n host_name=h1\n view_type=gadget\n gadget_url=std_bar.php\n use=t\n}\n"
+        "define host {\n host_name=h2\n url=/check_mk/view.py?host=h2\n}\n"
+        "define textbox {\n text=<font color='red'><b>Core</b><br>switches</font>\n}\n"
+        "define textbox {\n text=<div style='text-align:center'>Core</div>\n}\n"
+        "define line {\n x=10,100\n y=10,100\n line_cut=0.5\n}\n"
+        "define line {\n x=10,50,100\n y=10,50,100\n line_type=10\n line_cut=0.3\n}\n"
+        "define line {\n x=10,100\n y=10,100\n line_type=11\n line_cut=0.3\n}\n"
+        "define host {\n host_name=h3\n iconset=std_geo\n}\n"
+    )
+
+    _parsed_map, warnings = convert_cfg(content, "m")
+
+    assert warnings == []
+
+
+def test_import_does_not_warn_about_automap_settings_at_their_defaults() -> None:
+    content = "define global {\n sources=automap\n render_mode=undirected\n filter_by_state=0\n}\n"
+
+    _parsed_map, warnings = convert_cfg(content, "m")
+
+    assert warnings == []

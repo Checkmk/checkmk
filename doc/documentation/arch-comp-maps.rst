@@ -1436,7 +1436,10 @@ import of the editor:
   group is published to those groups and granted to both kinds of roles, and
   one listed by none is published to all and granted to the first kind. Where
   that hides the map from roles that saw it in NagVis, the update output says
-  so; it never shows a map to more users. With an authorisation module other
+  so; it never shows a map to more users. NagVis' rights to edit and delete
+  maps are not carried over, as the migrated maps belong to the owner: a role
+  that sees a migrated map and had such a right without the matching
+  permission for foreign maps is named. With an authorisation module other
   than ``CoreAuthorisationModMultisite`` the maps stay private to the owner.
 * Shapes are copied into the image library like uploads; an identical file of
   the same name is reused. Their names are settled while the maps are
@@ -1456,6 +1459,9 @@ import of the editor:
   grid. The members moved off the grid stay as objects pinned out of it.
   Group dynamic maps, and dynamic maps combined with an automap or a
   geographic map, get no grid and are named.
+* What the ``.cfg`` import cannot carry over, such as custom gadgets or
+  NagVis template files, is named per map with the number of objects it
+  affects and what to do about it; the editor's import shows the same notes.
 
 Touchpoints in the core
 =======================

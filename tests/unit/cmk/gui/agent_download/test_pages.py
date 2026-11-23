@@ -53,7 +53,7 @@ def test_download_href_static_file_uses_apache_alias() -> None:
 def test_download_href_plugin_family_file_uses_gui_handler() -> None:
     # A plugin family file lives outside share/check_mk/agents and must not be
     # served as a broken relative "agents/<absolute path>" URL.
-    path = str(cmk.utils.paths.lib_dir / "python3/cmk/plugins/oracle/agents/mk-oracle")
+    path = str(cmk.utils.paths.lib_dir / "python3/cmk/plugins/oracle/agents/mk-oracle-v2")
     href = download_href(path)
 
     assert href.startswith(f"{DOWNLOAD_AGENT_PLUGIN_PAGE}.py?")
@@ -287,6 +287,51 @@ def test_other_mode_shows_shipped_and_local_file_in_one_section(
                     str(local_dir / "mk_oracle"), "mk_oracle (local, download requires login)"
                 ),
                 _pages.DownloadFile(str(shipped_dir / "mk_oracle.ps1"), "mk_oracle.ps1"),
+            ],
+        )
+    ]
+
+
+def test_other_mode_lists_aix_and_solaris_files_of_oracle_plugin_only(
+    mocker: MockerFixture,
+    test_edition: cmk_version.Edition,
+    page_context: PageContext,
+    tmp_path: Path,
+) -> None:
+    """CMK-41575: no other page offers the AIX and Solaris files of the new Oracle plugin"""
+    oracle_dir = tmp_path / "plugins" / "oracle" / "agents"
+    oracle_dir.mkdir(parents=True)
+    (oracle_dir / "mk-oracle-v2.aix").touch()
+    (oracle_dir / "mk-oracle-v2.solaris").touch()
+    tcp_dir = tmp_path / "plugins" / "tcp" / "agents"
+    tcp_dir.mkdir(parents=True)
+    (tcp_dir / "netstat.aix").touch()
+    (tcp_dir / "netstat.solaris").touch()
+    mocker.patch.object(
+        _pages,
+        "_plugin_family_agents",
+        return_value=[
+            _pages.PluginFamilyAgents(
+                title="Oracle", dirs=[PluginFamilyDir(path=oracle_dir, is_local=False)]
+            ),
+            _pages.PluginFamilyAgents(
+                title="Tcp", dirs=[PluginFamilyDir(path=tcp_dir, is_local=False)]
+            ),
+        ],
+    )
+
+    sections = list(
+        ModeDownloadAgentsOther(test_edition, page_context)._extra_sections()  # noqa: SLF001
+    )
+
+    assert sections == [
+        (
+            "Oracle",
+            [
+                _pages.DownloadFile(str(oracle_dir / "mk-oracle-v2.aix"), "mk-oracle-v2.aix"),
+                _pages.DownloadFile(
+                    str(oracle_dir / "mk-oracle-v2.solaris"), "mk-oracle-v2.solaris"
+                ),
             ],
         )
     ]

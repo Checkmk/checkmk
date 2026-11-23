@@ -48,15 +48,15 @@ LIN_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     OS.LINUX,
     [
         OraclePluginFile(
-            source=Path("mk-oracle"),
+            source=Path("mk-oracle-v2"),
             target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2"),
         ),
         OraclePluginFile(
-            source=Path("oracle_unified_sync"),
+            source=Path("mk-oracle-v2_sync"),
             target=Path("mk-oracle-v2_sync"),
         ),
         OraclePluginFile(
-            source=Path("oracle_unified_async"),
+            source=Path("mk-oracle-v2_async"),
             target=Path("mk-oracle-v2_async"),
             cached=True,
         ),
@@ -67,15 +67,15 @@ WIN_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     OS.WINDOWS,
     [
         OraclePluginFile(
-            source=Path("mk-oracle.exe"),
+            source=Path("mk-oracle-v2.exe"),
             target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2.exe"),
         ),
         OraclePluginFile(
-            source=Path("oracle_unified_sync.ps1"),
+            source=Path("mk-oracle-v2_sync.ps1"),
             target=Path("mk-oracle-v2_sync.ps1"),
         ),
         OraclePluginFile(
-            source=Path("oracle_unified_async.ps1"),
+            source=Path("mk-oracle-v2_async.ps1"),
             target=Path("mk-oracle-v2_async.ps1"),
             cached=True,
         ),
@@ -86,15 +86,15 @@ AIX_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     OS.AIX,
     [
         OraclePluginFile(
-            source=Path("mk-oracle.aix"),
+            source=Path("mk-oracle-v2.aix"),
             target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2.aix"),
         ),
         OraclePluginFile(
-            source=Path("oracle_unified_sync.aix"),
+            source=Path("mk-oracle-v2_sync.aix"),
             target=Path("mk-oracle-v2_sync.aix"),
         ),
         OraclePluginFile(
-            source=Path("oracle_unified_async.aix"),
+            source=Path("mk-oracle-v2_async.aix"),
             target=Path("mk-oracle-v2_async.aix"),
             cached=True,
         ),
@@ -105,15 +105,15 @@ SOLARIS_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     OS.SOLARIS,
     [
         OraclePluginFile(
-            source=Path("mk-oracle.solaris"),
+            source=Path("mk-oracle-v2.solaris"),
             target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2.solaris"),
         ),
         OraclePluginFile(
-            source=Path("oracle_unified_sync.solaris"),
+            source=Path("mk-oracle-v2_sync.solaris"),
             target=Path("mk-oracle-v2_sync.solaris"),
         ),
         OraclePluginFile(
-            source=Path("oracle_unified_async.solaris"),
+            source=Path("mk-oracle-v2_async.solaris"),
             target=Path("mk-oracle-v2_async.solaris"),
             cached=True,
         ),

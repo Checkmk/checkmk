@@ -33,49 +33,20 @@ EXPLICIT_PASSWORD: Literal["explicit_password"] = "explicit_password"
 ALWAYS_ORACLE_LIB_OPTION: Literal["always"] = "always"
 CUSTOM_ORACLE_LIB_OPTION: Literal["custom"] = "custom"
 
-
-def _source(base_os: OS) -> Path:
-    match base_os:
-        case OS.LINUX:
-            return Path("mk-oracle")
-        case OS.WINDOWS:
-            return Path("mk-oracle.exe")
-        case OS.AIX:
-            return Path("mk-oracle.aix")
-        case OS.SOLARIS:
-            return Path("mk-oracle.solaris")
-        case _:
-            raise ValueError(f"Unsupported OS: {base_os}")
-
-
-def _target(base_os: OS) -> Path:
-    match base_os:
-        case OS.LINUX:
-            return Path("libexec", "mk-oracle-v2", "mk-oracle-v2")
-        case OS.WINDOWS:
-            return Path("libexec", "mk-oracle-v2", "mk-oracle-v2.exe")
-        case OS.AIX:
-            return Path("libexec", "mk-oracle-v2", "mk-oracle-v2.aix")
-        case OS.SOLARIS:
-            return Path("libexec", "mk-oracle-v2", "mk-oracle-v2.solaris")
-        case _:
-            raise ValueError(f"Unsupported OS: {base_os}")
-
-
 linux_files: list[Plugin] = [
     Plugin(
         base_os=OS.LINUX,
-        source=Path("mk-oracle"),
+        source=Path("mk-oracle-v2"),
         target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2"),
     ),
     Plugin(
         base_os=OS.LINUX,
-        source=Path("oracle_unified_sync"),
+        source=Path("mk-oracle-v2_sync"),
         target=Path("mk-oracle-v2_sync"),
     ),
     Plugin(
         base_os=OS.LINUX,
-        source=Path("oracle_unified_async"),
+        source=Path("mk-oracle-v2_async"),
         target=Path("mk-oracle-v2_async"),
         interval=600,
     ),
@@ -84,17 +55,17 @@ linux_files: list[Plugin] = [
 windows_files: list[Plugin] = [
     Plugin(
         base_os=OS.WINDOWS,
-        source=Path("mk-oracle.exe"),
+        source=Path("mk-oracle-v2.exe"),
         target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2.exe"),
     ),
     Plugin(
         base_os=OS.WINDOWS,
-        source=Path("oracle_unified_sync.ps1"),
+        source=Path("mk-oracle-v2_sync.ps1"),
         target=Path("mk-oracle-v2_sync.ps1"),
     ),
     Plugin(
         base_os=OS.WINDOWS,
-        source=Path("oracle_unified_async.ps1"),
+        source=Path("mk-oracle-v2_async.ps1"),
         target=Path("mk-oracle-v2_async.ps1"),
         interval=600,
     ),
@@ -103,17 +74,17 @@ windows_files: list[Plugin] = [
 aix_files: list[Plugin] = [
     Plugin(
         base_os=OS.AIX,
-        source=Path("mk-oracle.aix"),
+        source=Path("mk-oracle-v2.aix"),
         target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2.aix"),
     ),
     Plugin(
         base_os=OS.AIX,
-        source=Path("oracle_unified_sync.aix"),
+        source=Path("mk-oracle-v2_sync.aix"),
         target=Path("mk-oracle-v2_sync.aix"),
     ),
     Plugin(
         base_os=OS.AIX,
-        source=Path("oracle_unified_async.aix"),
+        source=Path("mk-oracle-v2_async.aix"),
         target=Path("mk-oracle-v2_async.aix"),
         interval=600,
     ),
@@ -122,17 +93,17 @@ aix_files: list[Plugin] = [
 solaris_files: list[Plugin] = [
     Plugin(
         base_os=OS.SOLARIS,
-        source=Path("mk-oracle.solaris"),
+        source=Path("mk-oracle-v2.solaris"),
         target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2.solaris"),
     ),
     Plugin(
         base_os=OS.SOLARIS,
-        source=Path("oracle_unified_sync.solaris"),
+        source=Path("mk-oracle-v2_sync.solaris"),
         target=Path("mk-oracle-v2_sync.solaris"),
     ),
     Plugin(
         base_os=OS.SOLARIS,
-        source=Path("oracle_unified_async.solaris"),
+        source=Path("mk-oracle-v2_async.solaris"),
         target=Path("mk-oracle-v2_async.solaris"),
         interval=600,
     ),

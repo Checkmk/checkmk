@@ -381,7 +381,12 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
         for path in candidates:
             if not path.is_file():
                 continue
-            if self._exclude_by_pattern(f"/{path.name}"):
+            # The patterns hide what the page "Linux, Solaris, AIX files" offers instead.
+            # That page does not list plugin families, so the AIX and Solaris files of
+            # the new Oracle plugin would not be offered anywhere.
+            if not path.name.startswith("mk-oracle-v2") and self._exclude_by_pattern(
+                f"/{path.name}"
+            ):
                 continue
             if "deprecated" in path.name:
                 continue

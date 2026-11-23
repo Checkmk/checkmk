@@ -336,7 +336,7 @@ def test_mk_oracle_exotic_distros(
         [
             "file",
             "-k",
-            f"{site_packages}/cmk/plugins/oracle/agents/mk-oracle.{distro}",
+            f"{site_packages}/cmk/plugins/oracle/agents/mk-oracle-v2.{distro}",
         ],
         check=False,
     )
@@ -345,7 +345,7 @@ def test_mk_oracle_exotic_distros(
     normalized_stdout = process.stdout.replace("\\012- ", "")
     if missing := [token for token in expected_tokens if token not in normalized_stdout]:
         raise AssertionError(
-            f"'file -k' output for mk-oracle.{distro} is missing {missing}: {process.stdout}"
+            f"'file -k' output for mk-oracle-v2.{distro} is missing {missing}: {process.stdout}"
         )
 
 

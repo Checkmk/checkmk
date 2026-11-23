@@ -1038,7 +1038,7 @@ _SITE_PACKAGES = f"lib/python{sys.version_info.major}.{sys.version_info.minor}/s
             "share/check_mk/agents/windows",
             [
                 "share/check_mk/agents/windows/mk-sql.exe",
-                f"{_SITE_PACKAGES}/cmk/plugins/oracle/agents/mk-oracle.exe",
+                f"{_SITE_PACKAGES}/cmk/plugins/oracle/agents/mk-oracle-v2.exe",
             ],
         ),
         (
@@ -1273,13 +1273,13 @@ EXECUTABLE_EXCEPTIONS = {
     ".html.jinja",
 }
 PLUGINS_EXECUTABLE_EXCEPTIONS = {
-    "cmk/plugins/oracle/agents/mk-oracle",
-    "cmk/plugins/oracle/agents/mk-oracle.aix",
-    "cmk/plugins/oracle/agents/mk-oracle.exe",
-    "cmk/plugins/oracle/agents/mk-oracle.solaris",
-    "cmk/plugins/oracle/agents/mk-oracle.aix.faked",
-    "cmk/plugins/oracle/agents/mk-oracle.exe.faked",
-    "cmk/plugins/oracle/agents/mk-oracle.solaris.faked",
+    "cmk/plugins/oracle/agents/mk-oracle-v2",
+    "cmk/plugins/oracle/agents/mk-oracle-v2.aix",
+    "cmk/plugins/oracle/agents/mk-oracle-v2.exe",
+    "cmk/plugins/oracle/agents/mk-oracle-v2.solaris",
+    "cmk/plugins/oracle/agents/mk-oracle-v2.aix.faked",
+    "cmk/plugins/oracle/agents/mk-oracle-v2.exe.faked",
+    "cmk/plugins/oracle/agents/mk-oracle-v2.solaris.faked",
 }
 
 

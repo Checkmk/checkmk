@@ -1,4 +1,4 @@
-title: NVIDIA Graphics Card: GPU utilization
+title: NVIDIA SMI: GPU Utilization
 agents: linux, windows
 catalog: os/hardware
 license: GPLv2

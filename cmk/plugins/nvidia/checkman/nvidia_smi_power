@@ -1,4 +1,4 @@
-title: NVIDIA Graphics Card: Power usage
+title: NVIDIA SMI: Power Usage
 agents: linux, windows
 catalog: os/hardware
 license: GPLv2

@@ -1,4 +1,4 @@
-title: NVIDIA Graphics Card: Temperature
+title: NVIDIA SMI: Temperature
 agents: linux, windows
 catalog: os/hardware
 license: GPLv2

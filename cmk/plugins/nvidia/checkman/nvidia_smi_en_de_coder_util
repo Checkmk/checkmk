@@ -1,4 +1,4 @@
-title: NVIDIA Graphics Card: En-/Decoder utilization
+title: NVIDIA SMI: Encoder and Decoder Utilization
 agents: linux, windows
 catalog: os/hardware
 license: GPLv2

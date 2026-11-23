@@ -1,4 +1,4 @@
-title: NVIDIA Graphics Card: Temperature (core)
+title: NVIDIA: GPU Core Temperature
 agents: linux
 catalog: os/hardware
 license: GPLv2

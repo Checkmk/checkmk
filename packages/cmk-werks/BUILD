@@ -2,7 +2,6 @@ load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
-load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 
 exports_files([
@@ -16,7 +15,6 @@ py_library(
         "cmk/werks/__init__.py",
         "cmk/werks/__main__.py",
         "cmk/werks/cli.py",
-        "cmk/werks/collect.py",
         "cmk/werks/config.py",
         "cmk/werks/convert.py",
         "cmk/werks/error.py",
@@ -28,7 +26,6 @@ py_library(
         "cmk/werks/parse.py",
         "cmk/werks/utils/__init__.py",
         "cmk/werks/utils/__main__.py",
-        "cmk/werks/utils/collect.py",
         "cmk/werks/validate.py",
     ],
     imports = ["."],
@@ -44,13 +41,6 @@ py_library(
         requirement("pydantic"),
         requirement("requests"),
     ],
-)
-
-py_doc_test(
-    name = "doctest",
-    size = "small",
-    srcs = ["cmk-werks"],
-    tags = ["no-mypy"],
 )
 
 py_pytest_main(

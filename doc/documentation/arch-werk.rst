@@ -78,7 +78,8 @@ To compile a list of all Werks, you have to look for Werks in all branches of
 checkmk. This is done via ``python -m cmk.werks.utils collect``. There is a
 jenkins job that executes this command in a 10 minutes interval. The command
 creates a json dump, which will then be copied to the server hosting the
-homepage and read by a cron job.
+homepage and read by a cron job. The command exists only on the master branch,
+which collects the Werks of all other branches.
 
 Beside the checkmk git repository, also the repository for the checkmk appliance and
 the kubernetes repository contain Werks (robotmk will join this club eventually).
@@ -100,7 +101,8 @@ Werk is either a fix, a feature or security related).
 
 The mails are sent via ``python -m cmk.utils.werks mail``. The command is
 executed daily on jenkins for each currently supported branch. It sends mails
-directly to the mailing-list addresses.
+directly to the mailing-list addresses. The command exists only on the master
+branch, which sends the mails for all supported branches.
 
 Each and every edit on a Werk will result in at least one mail to the
 mailing lists. So if you need to modify many (>10) Werks, you should think about

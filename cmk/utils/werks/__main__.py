@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
+import sys
 from pathlib import Path
 
 from .announce import main as main_announce
-from .mail import main as mail
 
 
-def main_mail(args: argparse.Namespace) -> None:
-    mail(args)
+def main_mail(_args: argparse.Namespace) -> None:
+    sys.exit("'werks mail' is not available on this branch, run it from the master branch.")
 
 
 def path_dir(value: str) -> Path:
@@ -34,58 +34,8 @@ def parse_arguments() -> argparse.Namespace:
     parser_announce.add_argument("--format", choices=("txt", "md"), default="txt")
     parser_announce.set_defaults(func=main_announce)
 
-    parser_mail = subparsers.add_parser(
-        "mail",
-        help="Step through git commits and send out one mail for each werk change. "
-        "Commit is annotated by 'git notes' when a mail is sent.",
-    )
-    parser_mail.add_argument(
-        "repo_path",
-        help="path to git repo to read changes from",
-        type=path_dir,
-    )
-    parser_mail.add_argument(
-        "branch",
-        help="which branch to check for new werks, should look like refs/remotes/origin/<branch_name>",
-    )
-    parser_mail.add_argument(
-        "ref",
-        help="reference for git notes, should be werk_mail for production.",
-    )
-    parser_mail.add_argument(
-        "--ref-fixup",
-        default="werk_mail_fixup",
-        help="reference for git notes for fixing broken werk commits",
-    )
-    parser_mail.add_argument(
-        "--do-fetch-git-notes",
-        help="fetch git notes before interacting with them",
-        action="store_true",
-    )
-    parser_mail.add_argument(
-        "--do-push-git-notes",
-        help="push git notes after interacting with them",
-        action="store_true",
-    )
-    parser_mail.add_argument(
-        "--do-send-mail",
-        help="actually send mails, otherwise just print them.",
-        action="store_true",
-    )
-    parser_mail.add_argument(
-        "--do-add-notes",
-        help="actually add notes, otherwise just print them.",
-        action="store_true",
-    )
-    parser_mail.add_argument(
-        "--mail",
-        help="do not send mails to the official mailing lists, but the mail specified here",
-    )
-    parser_mail.add_argument(
-        "--assume-no-notes-but",
-        help="do not look up notes with git command, but assume a single note at GIT-HASH.",
-        metavar="GIT-HASH",
-    )
+    parser_mail = subparsers.add_parser("mail", help="Only available on the master branch")
+    parser_mail.add_argument("args", nargs=argparse.REMAINDER)
     parser_mail.set_defaults(func=main_mail)
 
     return parser.parse_args()

@@ -1,4 +1,4 @@
-title: Symantec Antivirus: Quarantine
+title: Symantec AntiVirus: Quarantine
 agents: linux
 catalog: app/symantec
 license: GPLv2

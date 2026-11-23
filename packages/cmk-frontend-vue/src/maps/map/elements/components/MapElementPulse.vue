@@ -14,6 +14,7 @@ same way as a service.
 import { computed } from 'vue'
 
 import { ringGeometry } from '@/maps/map/elements/composables/arcRing'
+import { countPulse } from '@/maps/map/elements/composables/pulseCount'
 
 /** How far past the ring the pulse grows before it has faded out. */
 const REACH = 8
@@ -23,6 +24,8 @@ const props = defineProps<{
   /** The state colour, as a CSS colour value. */
   color: string
 }>()
+
+countPulse()
 
 const geometry = computed(() => {
   const { innerRadius, outerRadius } = ringGeometry(props.iconSize)
@@ -70,8 +73,9 @@ const geometry = computed(() => {
   }
 }
 
-/* See useMapMotion. */
-[data-map-moving] .maps-map-element-pulse {
+/* See useMapMotion and providePulseCount. */
+[data-map-moving] .maps-map-element-pulse,
+[data-map-pulses-rest] .maps-map-element-pulse {
   display: none;
 }
 

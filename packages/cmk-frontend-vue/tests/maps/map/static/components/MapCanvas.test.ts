@@ -6,10 +6,11 @@
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { defineComponent, ref } from 'vue'
+import { defineComponent, nextTick, ref } from 'vue'
 
 import MapCanvas from '@/maps/map/static/components/MapCanvas.vue'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
+import { MAX_PULSES } from '@/maps/utils/problemState'
 
 import { aMap, aState, anObject, newMapView } from '../../../support/fixtures'
 import { mapsGlobal } from '../../../support/services'
@@ -243,6 +244,54 @@ describe('MapCanvas – smoke with real MapElement', () => {
       .querySelector<SVGElement>('.maps-map-element-state-icon')
       ?.style.getPropertyValue('--maps-map-element-state-icon-color')
   }
+
+  /** As many hosts as given, all DOWN, so each calls for the pulse. */
+  function downHosts(count: number): { config: MapConfig; states: Record<string, ObjectState> } {
+    const ids = Array.from({ length: count }, (_, i) => `d${i}`)
+    return {
+      config: aMap({
+        ...sampleConfig,
+        objects: ids.map((id, i) =>
+          anObject({ id, type: 'host', x: i, y: 0, host_name: id, display: { mode: 'icon' } })
+        )
+      }),
+      states: Object.fromEntries(
+        ids.map((id) => [id, aState({ object_id: id, type: 'host', state: 'DOWN' })])
+      )
+    }
+  }
+
+  /**
+   * Whether the pulses rest is style state with no accessible representation.
+   * The pulses count themselves once mounted, so the canvas follows a tick later.
+   */
+  async function pulsesRest(): Promise<boolean> {
+    await nextTick()
+    return screen.getByRole('group', { name: 'Map canvas' }).hasAttribute('data-map-pulses-rest')
+  }
+
+  it.each([
+    [MAX_PULSES, false],
+    [MAX_PULSES + 1, true]
+  ])('with %i hosts down, lets the pulses rest: %s', async (down, rests) => {
+    render(MapCanvas, {
+      props: { ...baseProps, ...downHosts(down) },
+      global: mapsGlobal(overlayStubs)
+    })
+
+    expect(await pulsesRest()).toBe(rests)
+  })
+
+  it('counts no pulse for a state whose object the map does not draw', async () => {
+    const { config, states } = downHosts(MAX_PULSES)
+    const undrawn = aState({ object_id: 'gone', type: 'host', state: 'DOWN' })
+    render(MapCanvas, {
+      props: { ...baseProps, config, states: { ...states, gone: undrawn } },
+      global: mapsGlobal(overlayStubs)
+    })
+
+    expect(await pulsesRest()).toBe(false)
+  })
 
   it('renders host icon and textbox content', () => {
     const { container } = render(MapCanvas, {

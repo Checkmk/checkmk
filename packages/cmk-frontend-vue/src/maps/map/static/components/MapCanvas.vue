@@ -25,6 +25,7 @@ import { useMapMotion } from '@/maps/map/composables/useMapMotion'
 import { useMapObjectMenus } from '@/maps/map/composables/useMapObjectMenus'
 import { useObjectResize } from '@/maps/map/composables/useObjectResize'
 import { useRovingFocus } from '@/maps/map/composables/useRovingFocus'
+import { providePulseCount } from '@/maps/map/elements/composables/pulseCount'
 import { backgroundLayout, isCentered, spaceFillingPane } from '@/maps/map/static/canvasSpace'
 import { useCanvasBackground } from '@/maps/map/static/composables/useCanvasBackground'
 import { useCanvasExtents } from '@/maps/map/static/composables/useCanvasExtents'
@@ -199,6 +200,7 @@ const marquee = useCanvasMarqueeSelect({
 })
 
 const { moved } = useMapMotion(() => canvas.value)
+const pulsesRest = providePulseCount()
 watch(viewport.zoom, moved)
 watch(
   viewport.scroller,
@@ -397,6 +399,7 @@ defineExpose({
   <div
     ref="canvas"
     class="maps-map-canvas"
+    :data-map-pulses-rest="pulsesRest ? '' : undefined"
     :class="cursorClass"
     :style="viewport.style.value"
     role="group"

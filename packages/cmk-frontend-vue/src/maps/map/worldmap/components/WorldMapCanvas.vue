@@ -30,6 +30,7 @@ import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
 import { useObjectResize } from '@/maps/map/composables/useObjectResize'
 import { useRovingFocus } from '@/maps/map/composables/useRovingFocus'
 import MapElementLabel from '@/maps/map/elements/components/MapElementLabel.vue'
+import { providePulseCount } from '@/maps/map/elements/composables/pulseCount'
 import { objectIconSize } from '@/maps/map/objectIconSize'
 import {
   type LineEndpoint,
@@ -125,6 +126,7 @@ const surface = useTemplateRef<HTMLElement>('surface')
 const container = useTemplateRef<HTMLElement>('container')
 let map: L.Map | null = null
 const motion = useMapMotion(() => surface.value)
+const pulsesRest = providePulseCount()
 let tiles: L.TileLayer | null = null
 
 /** The stored viewport, where this map has one. */
@@ -515,6 +517,7 @@ defineExpose({
   <div
     ref="surface"
     class="maps-world-map-canvas"
+    :data-map-pulses-rest="pulsesRest ? '' : undefined"
     @pointermove="resize.move"
     @pointerup="onResizeEnd"
     @pointercancel="onResizeEnd"

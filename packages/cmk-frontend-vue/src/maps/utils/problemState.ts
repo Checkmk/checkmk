@@ -26,6 +26,12 @@ export function isProblemState(
   return (severity === 'critical' ? CRITICAL_STATES : PROBLEM_STATES).has(state)
 }
 
+/**
+ * Beyond this many, nothing pulses: on a map that draws every host, an outage
+ * would animate thousands, which costs the browser and singles out none.
+ */
+export const MAX_PULSES = 100
+
 // Decorative types (textbox/image/line/map/cmk_label/graph) carry no state and
 // stay visible under the problems-only filter; only these types are filtered.
 export const STATEFUL_OBJECT_TYPES = new Set([

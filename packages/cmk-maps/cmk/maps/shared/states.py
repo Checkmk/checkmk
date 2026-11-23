@@ -13,8 +13,8 @@ the other (module-layer boundary), so this shared vocabulary lives in
 (which the frontend also renders) can't drift by a stray edit on one side.
 
 The critical states are also defined in ``cmk-shared-typing``, which generates the
-frontend's type for them; ``tests/unit/cmk/gui/maps/test_critical_states.py`` pins
-this set to that definition, since this layer may not import it.
+frontend's type for them; ``tests/unit_gui/test_critical_states.py`` of this package
+pins this set to that definition, since this layer may not import it.
 """
 
 from collections.abc import Mapping

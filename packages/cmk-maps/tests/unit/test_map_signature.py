@@ -5,7 +5,7 @@
 """Daemon-side verification of a GUI-signed map config.
 
 The GUI↔daemon contract is pinned end to end with the *real* signer in
-``tests/unit/cmk/gui/maps/test_map_signature_contract.py`` (which needs the GUI).
+``tests/unit_gui/test_map_signature_contract.py`` (which needs the GUI).
 This file focuses on the daemon's verification edge cases using a self-contained
 ``_sign_map``, which ``test_sign_map_mirror_matches_shared_signer`` pins against
 the shared signer so the negative cases can't drift onto a stale format.

@@ -5,6 +5,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:fastapi_openapi_spec.bzl", "fastapi_openapi_spec")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
@@ -292,4 +293,20 @@ py_requirements_test(
         ":openapi_spec_dump",
     ],
     requirements_in = "requirements.in",
+)
+
+py_cmk_test(
+    name = "unit_gui",
+    size = "small",
+    srcs = glob(["tests/unit_gui/**/*.py"]),
+    args = ["packages/cmk-maps/tests/unit_gui"],
+    use_project_pytest_config = True,
+    deps = [
+        ":backend",
+        ":gui",
+        ":rest_api",
+        "//cmk/gui:core_toolkit",
+        # Pins the daemon's critical states to the app's generated type.
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+    ],
 )

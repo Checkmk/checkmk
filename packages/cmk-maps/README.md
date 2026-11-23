@@ -39,7 +39,7 @@ GUI queries for that user (`maps_monitored_sites/show`) and which map a name
 means for them (`maps_access/resolve`), also for the names of map links
 (`maps_link_targets/resolve`). The map configs the browser
 relays are signed by `cmk.maps.gui` with the site-internal secret; the format
-is pinned by `tests/unit/cmk/gui/maps/test_map_signature_contract.py`.
+is pinned by `tests/unit_gui/test_map_signature_contract.py`.
 
 ## Built-in icons
 
@@ -63,6 +63,7 @@ Build and test via Bazel:
 ```
 bazel build //packages/cmk-maps:wheel
 bazel test //packages/cmk-maps/tests/unit:unit
+bazel test //packages/cmk-maps:unit_gui
 ```
 
 [BAZEL.md](../../BAZEL.md) describes the general Bazel workflows.

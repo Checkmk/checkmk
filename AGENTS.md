@@ -44,6 +44,12 @@ directories, the flaky-test process, and the core rules: test through the
 public surface, inject dependencies instead of patching Checkmk code, one
 behavior per test.
 
+## Documentation
+
+Before changing a package, read its `docs/` directory if it has one (e.g.
+`packages/cmk-check-engine/docs/`). Architecture that spans packages is in
+`doc/documentation/`.
+
 ## Editions
 
 The codebase supports five editions: `community`, `pro`, `ultimate`,

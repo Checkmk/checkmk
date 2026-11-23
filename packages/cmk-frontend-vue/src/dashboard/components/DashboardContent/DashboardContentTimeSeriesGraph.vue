@@ -471,6 +471,11 @@ onMounted(() => {
 
   &.db-content-time-series-graph--preview {
     pointer-events: none;
+
+    /* The scrollable preview gives no height to share: keep the plot up and scroll the legend. */
+    --graphing-graph-figure-graph-min-height: calc(
+      var(--db-widget-preview-height) - 4 * var(--dimension-8)
+    );
   }
 }
 

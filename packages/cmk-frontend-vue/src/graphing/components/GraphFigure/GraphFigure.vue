@@ -509,7 +509,7 @@ onBeforeUnmount(() => {
 
 .graphing-graph-figure__graph {
   flex: 1 1 auto;
-  min-height: 0;
+  min-height: var(--graphing-graph-figure-graph-min-height, 0);
   overflow: hidden;
 
   /* The box the loading icon and the notice centre on. */

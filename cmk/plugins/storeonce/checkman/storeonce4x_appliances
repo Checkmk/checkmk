@@ -1,4 +1,4 @@
-title: HPE StoreOnce REST API 4.x: Appliances
+title: HPE StoreOnce: Appliances via REST API 4.x
 agents: storeonce4x
 catalog: hw/storagehw/hpe
 license: GPLv2

@@ -210,7 +210,11 @@ py_library(
     # The repo edition is only used for testing.
     name = "lib_cmk_repo",
     srcs = glob(["**/*.py"]),
-    data = ["gui/wsgi/applications/index.wsgi"],
+    data = [
+        "gui/wsgi/applications/index.wsgi",
+        "utils/werks/announce/templates/announce.md.jinja2",
+        "utils/werks/announce/templates/announce.txt.jinja2",
+    ],
     imports = [".."],
     visibility = ["//tests/unit:__pkg__"],
     deps = [

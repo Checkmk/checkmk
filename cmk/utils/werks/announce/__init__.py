@@ -12,6 +12,7 @@ from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefine
 
 from cmk.ccc.version import ReleaseType, Version
 
+from cmk.werks.config import try_load_current_version_from_defines_make
 from cmk.werks.models import Class, Compatibility, Edition, Werk
 from cmk.werks.utils import (
     has_content,
@@ -73,7 +74,17 @@ def get_werks_by_edition(werks: list[Werk], edition: Edition) -> WerksByEdition:
 
 def main(args: argparse.Namespace) -> None:
     werks_list = load_raw_files(args.werk_dir)
-    version_werks = [werk for werk in werks_list if werk.version == args.version]
+    defines_make_version = try_load_current_version_from_defines_make(
+        args.werk_dir.parent / "defines.make"
+    )
+    if defines_make_version is None:
+        raise RuntimeError("Could not load version from defines.make")
+    version_werks: list[Werk] = []
+    for werk in werks_list:
+        if werk.version is None:
+            werk.version = defines_make_version
+        if werk.version == args.version:
+            version_werks.append(werk)
 
     werks = {}
     for edition in [Edition.CRE, Edition.CEE, Edition.CCE, Edition.CME, Edition.CSE]:

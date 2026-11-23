@@ -15,12 +15,15 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { LiveStatus } from '@/maps/services/MapStatesService'
+import { useStates } from '@/maps/services/context'
 
 import { connectionMessage } from './deadSites'
 
 const { _t } = usei18n()
 
 const props = defineProps<{ status: LiveStatus }>()
+
+const states = useStates()
 
 const shown = computed(() => {
   switch (props.status) {
@@ -39,7 +42,7 @@ const shown = computed(() => {
 
 <template>
   <div class="maps-map-live-indicator" :class="shown.className" :title="shown.title">
-    <span class="maps-map-live-indicator__dot" />
+    <span :key="states.lastUpdate.value ?? undefined" class="maps-map-live-indicator__dot" />
     {{ shown.text }}
   </div>
 </template>
@@ -80,16 +83,17 @@ const shown = computed(() => {
   border-radius: 9999px;
 }
 
-/* The pulse is what says "still arriving"; a static dot would look the same
-   whether the stream is alive or wedged. */
+/* The dot blinks once per update the stream delivers, which an open stream
+   alone does not prove. Not on repeat: any running animation makes the browser
+   draw frame after frame, and each redraws the whole map. */
 .maps-map-live-indicator--live .maps-map-live-indicator__dot {
   background: var(--color-state-ok);
-  animation: maps-map-live-indicator__pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: maps-map-live-indicator__blink 0.6s ease-out;
 }
 
-@keyframes maps-map-live-indicator__pulse {
-  50% {
-    opacity: 0.5;
+@keyframes maps-map-live-indicator__blink {
+  from {
+    opacity: 0.3;
   }
 }
 

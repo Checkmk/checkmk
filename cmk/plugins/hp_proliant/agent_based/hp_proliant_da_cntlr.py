@@ -35,21 +35,21 @@ class SNMPCondition(StrEnum):
 class SNMPState(StrEnum):
     OTHER = "other"
     OK = "ok"
-    GENERAL_FAILURE = "general failure"
-    CABLE_PROBLEM = "cable problem"
-    POWERED_OFF = "powered off"
-    CACHE_MODULE_MISSING = "cache module missing"
+    GENERAL_FAILURE = "general_failure"
+    CABLE_PROBLEM = "cable_problem"
+    POWERED_OFF = "powered_off"
+    CACHE_MODULE_MISSING = "cache_module_missing"
     DEGRADED = "degraded"
     ENABLED = "enabled"
     DISABLED = "disabled"
-    STANDBY_OFFLINE = "standby (offline)"
-    STANDBY_SPARE = "standby (spare)"
-    IN_TEST = "in test"
+    STANDBY_OFFLINE = "standby_offline"
+    STANDBY_SPARE = "standby_spare"
+    IN_TEST = "in_test"
     STARTING = "starting"
     ABSENT = "absent"
-    UNAVAILABLE = "unavailable (offline)"
+    UNAVAILABLE = "unavailable_offline"
     DEFERRING = "deferring"
-    QUISCED = "quisced"
+    QUIESCED = "quiesced"
     UPDATING = "updating"
     QUALIFIED = "qualified"
 
@@ -126,7 +126,7 @@ PARSER_STATE_MAP: Mapping[StateNumber, SNMPState] = {
     "14": SNMPState.ABSENT,
     "16": SNMPState.UNAVAILABLE,
     "17": SNMPState.DEFERRING,
-    "18": SNMPState.QUISCED,
+    "18": SNMPState.QUIESCED,
     "19": SNMPState.UPDATING,
     "20": SNMPState.QUALIFIED,
 }
@@ -157,7 +157,7 @@ _BOARD_STATUS_STATES: Mapping[SNMPState, State] = {
     SNMPState.ABSENT: State.CRIT,
     SNMPState.UNAVAILABLE: State.CRIT,
     SNMPState.DEFERRING: State.OK,
-    SNMPState.QUISCED: State.OK,
+    SNMPState.QUIESCED: State.OK,
     SNMPState.UPDATING: State.WARN,
     SNMPState.QUALIFIED: State.OK,
 }
@@ -190,7 +190,7 @@ def check_hp_proliant_da_cntlr(item: ControllerID, section: ParsedSection) -> Ch
     )
     yield Result(
         state=_BOARD_STATUS_STATES[controller.b_status],
-        summary=f"Board-Status: {controller.b_status}",
+        summary=f"Board-Status: {controller.b_status.replace('_', ' ')}",
     )
 
     yield Result(

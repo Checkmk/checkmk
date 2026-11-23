@@ -629,14 +629,23 @@ def test_entry_other_than_a_regular_file_in_the_spool_directory_is_warned_about_
     spool_dir = settings.paths.spool_dir.value
     spool_dir.mkdir(parents=True)
     make_entry(spool_dir / "entry")
+    _add_spool_file(spool_dir, b"first\n", name="first")
+    if _texts_of_events(event_status, 1) != ["first"]:
+        pytest.fail("the event server doesn't take the first spool file")
 
-    _add_spool_file(spool_dir, b"from the spool file\n")
-    # Meanwhile, the event server lists the spool directory again and again.
-    _texts_of_events(event_status, 1)
+    # Only a later listing finds it, skipping the entry once more.
+    _add_spool_file(spool_dir, b"second\n", name="second")
+    texts = _texts_of_events(event_status, 2)
 
-    assert _logged_warnings(caplog) == [
-        f"Skipping {spool_dir / 'entry'} in the spool directory while it leads to no regular file"
-    ]
+    assert (texts, _logged_warnings(caplog)) == (
+        ["first", "second"],
+        [
+            (
+                f"Skipping {spool_dir / 'entry'} in the spool directory "
+                "while it leads to no regular file"
+            )
+        ],
+    )
 
 
 def _eventually(condition: Callable[[], bool]) -> bool:

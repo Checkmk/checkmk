@@ -46,7 +46,7 @@ def _files(*paths: str) -> list[PackagePath]:
 
 def _tags(*tags: str) -> EntryPoints:
     return EntryPoints(
-        [EntryPoint(name="name", value="value", group=f"cmk.features.{t}") for t in tags]
+        [EntryPoint(name="name", value="value", group=f"cmk.license_options.{t}") for t in tags]
     )
 
 

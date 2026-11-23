@@ -5,7 +5,7 @@
 """License-based import filter installed by ``omd/packages/Python/sitecustomize.py``.
 
 See ``doc/documentation/arch-comp-licensing-feature-filter.rst`` for the rationale
-and the wheel tagging convention (``cmk.features.<option>`` entry-point groups).
+and the wheel tagging convention (``cmk.license_options.<option>`` entry-point groups).
 """
 
 import os
@@ -17,7 +17,7 @@ from importlib.metadata import Distribution, distributions
 from types import ModuleType
 from typing import Final, Protocol
 
-_GROUP_PREFIX = "cmk.features."
+_GROUP_PREFIX = "cmk.license_options."
 _DISTRIBUTION_PREFIX = "cmk-"
 
 

@@ -48,7 +48,7 @@ White-box overall system
         [py_wheel\n(non-free/packages/<pkg>/BUILD)] as wheel
         note right of wheel
           entry_points = {
-            "cmk.features.<option>": [...]
+            "cmk.license_options.<option>": [...]
           }
         end note
         [package_wheel] as pkgwheel
@@ -80,7 +80,7 @@ White-box overall system
 The mechanism has three parts:
 
 1. **Tagging (build time).**
-   A wheel that implements a license-gated feature carries an entry-point *group* ``cmk.features.<option>``, where ``<option>`` is a field of ``LicenseOptions`` (``packages/cmk-licensing/cmk/licensing/basics/options.py``).
+   A wheel that implements a license-gated feature carries an entry-point *group* ``cmk.license_options.<option>``, where ``<option>`` is a field of ``LicenseOptions`` (``packages/cmk-licensing/cmk/licensing/basics/options.py``).
    The entry point's name and value are irrelevant; only the group is read.
    Example from ``non-free/packages/cmk-bakery/BUILD``::
 
@@ -88,7 +88,7 @@ The mechanism has three parts:
            name = "wheel",
            distribution = "cmk-bakery",
            entry_points = {
-               "cmk.features.bakery": ["cmk-bakery = cmk.bakery"],
+               "cmk.license_options.bakery": ["cmk-bakery = cmk.bakery"],
            },
            ...
        )
@@ -141,8 +141,8 @@ Adding a license-gated package
 ------------------------------
 
 1. Add the option to ``OptionName`` and ``LicenseOptions`` in ``options.py`` (including ``get_flag`` and each edition's defaults), or reuse an existing one.
-2. Tag the wheel: add ``"cmk.features.<option>": ["<dist> = <top pkg>"]`` to the ``entry_points`` of the package's ``py_wheel``.
-3. If several wheels are delivered under one option, tag them all with that option (see ``_FEATURE_BY_FAMILY`` in ``non-free/packages/cmk-plugins-nonfree/BUILD``: both Azure extended families carry ``cmk.features.azure_extended``).
+2. Tag the wheel: add ``"cmk.license_options.<option>": ["<dist> = <top pkg>"]`` to the ``entry_points`` of the package's ``py_wheel``.
+3. If several wheels are delivered under one option, tag them all with that option (see ``_FEATURE_BY_FAMILY`` in ``non-free/packages/cmk-plugins-nonfree/BUILD``: both Azure extended families carry ``cmk.license_options.azure_extended``).
    An untagged wheel is never blocked and silently leaks into lower editions.
 4. Make sure the code that *uses* the package tolerates its absence: either it lives behind ``is_option_enabled``, or it is discovered dynamically (plugin families, GUI registration) and copes with a missing module.
 
@@ -198,7 +198,7 @@ Risks and technical debts
 * ``get_license_options`` ignores the license verification response; the "Ultimate installed, Pro licensed" case is not yet live.
   The dependency is kept on purpose so the refactoring path stays open (see  ``options.py``).
 * Tagging is by convention.
-  Nothing verifies that a wheel under ``non-free/`` carries a ``cmk.features.*`` tag, or that the tag names an  existing ``OptionName``.
+  Nothing verifies that a wheel under ``non-free/`` carries a ``cmk.license_options.*`` tag, or that the tag names an  existing ``OptionName``.
   Today the two sides already disagree:
   There are options without any tagged wheel (they are runtime-only flags), while some wheels carry tags that match no option and can therefore never be blocked (because they are part of all commercial editions).
 * Tests in ``packages/cmk-licensing/tests/test_finder.py`` cover the file selection but not ``_FeatureFilterFinder`` against real ``sys.meta_path`` finders; system tests exercise it only implicitly.

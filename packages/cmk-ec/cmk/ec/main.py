@@ -2640,6 +2640,7 @@ class StatusServer(ECServerThread):
         action_runner: ActionRunner,
         *,
         clock: Callable[[], float] = time.monotonic,
+        idle_timeout: float = 0.2,
     ) -> None:
         super().__init__(
             name="StatusServer",
@@ -2670,6 +2671,9 @@ class StatusServer(ECServerThread):
         self._action_runner = action_runner
         # Only tests pass another clock for the deadline of CREATE.
         self._clock = clock
+        # How long serve() waits for clients before it checks whether to terminate or to reopen its
+        # sockets, as nothing wakes it up for that. Only tests pass a shorter one.
+        self._idle_timeout = idle_timeout
 
         self.open_unix_socket()
         self.open_tcp_socket()
@@ -2791,7 +2795,9 @@ class StatusServer(ECServerThread):
 
                 listen_list = [s for s in (self._socket, self._tcp_socket) if s is not None]
                 try:
-                    readable: list[socket.socket] = select.select(listen_list, [], [], 0.2)[0]
+                    readable: list[socket.socket] = select.select(
+                        listen_list, [], [], self._idle_timeout
+                    )[0]
                 except OSError as e:
                     if e.args[0] != errno.EINTR:
                         raise

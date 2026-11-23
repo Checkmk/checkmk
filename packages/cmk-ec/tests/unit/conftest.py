@@ -340,6 +340,8 @@ def fixture_make_status_server(
             core_connection,
             action_runner,
             clock=clock,
+            # So that a started one terminates soon
+            idle_timeout=0.01,
         )
         status_servers.append(status_server)
         return status_server

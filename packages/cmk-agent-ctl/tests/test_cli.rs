@@ -75,6 +75,73 @@ fn test_help() {
     output.assert().success();
 }
 
+const PASSWORD_VARIABLE: &str = "CMK_AGENT_CTL_REGISTRATION_PASSWORD";
+
+#[test]
+fn test_help_names_the_password_variable_without_its_value() {
+    for mode in ["register", "register-new", "proxy-register"] {
+        let output = assert_cmd::Command::new(common::controller_command_path())
+            .env(PASSWORD_VARIABLE, "secret-from-environment")
+            .args([mode, "--help"])
+            .unwrap();
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(stdout.contains(PASSWORD_VARIABLE), "{mode}: {stdout}");
+        assert!(
+            !stdout.contains("secret-from-environment"),
+            "{mode}: {stdout}"
+        );
+    }
+}
+
+#[test]
+fn test_the_password_variable_replaces_the_prompt() {
+    if agent::is_elevation_required() {
+        println!("Test is skipped, must be in elevated mode");
+        return;
+    }
+
+    let test_dir = common::setup_test_dir("cmk_agent_ctl_test_password_variable-");
+    // Nothing listens on the port, so the registration fails at its first request
+    // to the site. The controller sends it only once it has the password.
+    let closed_port = std::net::TcpListener::bind("127.0.0.1:0")
+        .unwrap()
+        .local_addr()
+        .unwrap()
+        .port();
+
+    let output = assert_cmd::Command::new(common::controller_command_path())
+        .timeout(std::time::Duration::from_secs(60))
+        .env("DEBUG_HOME_DIR", test_dir.path())
+        .env(PASSWORD_VARIABLE, "secret-from-environment")
+        .args(["proxy-register", "--trust-cert", "-i", "site", "-H", "host"])
+        .args(["-U", "user", "-s", &format!("127.0.0.1:{closed_port}")])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(!stderr.contains("Password for Checkmk user"), "{stderr}");
+    assert!(
+        stderr.contains("Calling registration endpoint failed"),
+        "{stderr}"
+    );
+}
+
+#[test]
+fn test_the_password_variable_is_refused_with_a_one_time_token() {
+    let output = assert_cmd::Command::new(common::controller_command_path())
+        .timeout(std::time::Duration::from_secs(60))
+        .env(PASSWORD_VARIABLE, "secret-from-environment")
+        .args(["proxy-register", "-s", "127.0.0.1:8000", "-i", "site"])
+        .args(["-H", "host", "--ott", "token"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("cannot be used with"), "{stderr}");
+    assert!(!stderr.contains("secret-from-environment"), "{stderr}");
+}
+
 #[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_dump() -> AnyhowResult<()> {

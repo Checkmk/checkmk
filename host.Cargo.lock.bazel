@@ -1,5 +1,5 @@
 {
-  "checksum": "793f9125123c93351d99ae5c55f75bce6456a5e4021c22a1f9ec5def4cd77bc1",
+  "checksum": "9746c8f96abff5924e6df240c63db2fd3733c026153e2f577b40b04e7a61f763",
   "conditions": {
     "aarch64-linux-android": [],
     "aarch64-pc-windows-gnullvm": [],
@@ -2421,6 +2421,7 @@
           "color",
           "default",
           "derive",
+          "env",
           "error-context",
           "help",
           "std",
@@ -2470,6 +2471,7 @@
       "common_attrs": {
         "crate_features": [
           "color",
+          "env",
           "error-context",
           "help",
           "std",

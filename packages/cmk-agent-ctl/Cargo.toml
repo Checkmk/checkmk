@@ -17,7 +17,7 @@ unexpected_cfgs = { level = "allow", check-cfg = ['cfg(build_system_bazel)'] }
 anyhow = { workspace = true, features = ["backtrace"] }
 async-trait.workspace = true
 base64.workspace = true
-clap = { workspace = true, features = ["derive"] }
+clap = { workspace = true, features = ["derive", "env"] }
 faccess.workspace = true
 flate2.workspace = true
 flexi_logger.workspace = true

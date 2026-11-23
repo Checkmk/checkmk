@@ -41,8 +41,8 @@ from .helpers import FakeConnection, new_event, put_on_path, RecordingHistory, w
 
 _LOGGER = logging.getLogger("cmk.mkeventd")
 
-# For commands which hang right away, so it doesn't matter how fast they start
-_SHORT_TIMEOUT = 0.1  # seconds
+# For commands which never finish, so they may as well time out at once
+_TIMEOUT_AT_ONCE = 0  # seconds
 
 # For a clock standing still until the script is ready, see _run_script_timing_out_once()
 _TIMEOUT_ONCE_READY = 0.01  # seconds
@@ -399,13 +399,13 @@ def _is_running(pid: int) -> bool:
 def test_runner_kills_a_command_not_finishing_within_its_timeout(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    action_runner = ActionRunner(_LOGGER, RecordingHistory(), command_timeout=_SHORT_TIMEOUT)
+    action_runner = ActionRunner(_LOGGER, RecordingHistory(), command_timeout=_TIMEOUT_AT_ONCE)
     action_runner.start()
 
     _run_script_later(action_runner, "exec sleep 60")
     action_runner.stop(timeout=30)
 
-    assert caplog.messages == ["executing script didn't finish within 0.1 s, killed it"]
+    assert caplog.messages == ["executing script didn't finish within 0 s, killed it"]
 
 
 def test_notification_isnt_killed_after_the_timeout_of_commands(
@@ -430,14 +430,14 @@ def test_notification_not_finishing_within_its_timeout_is_killed(
 ) -> None:
     # Checkmk hanging while notifying
     put_on_path(monkeypatch, tmp_path / "bin", "cmk", "exec sleep 60")
-    action_runner = ActionRunner(_LOGGER, RecordingHistory(), notification_timeout=_SHORT_TIMEOUT)
+    action_runner = ActionRunner(_LOGGER, RecordingHistory(), notification_timeout=_TIMEOUT_AT_ONCE)
     action_runner.start()
 
     _notify_about_an_event(action_runner)
     action_runner.stop(timeout=30)
 
     assert caplog.messages == [
-        "forwarding notification for event 1 to Checkmk didn't finish within 0.1 s, killed it"
+        "forwarding notification for event 1 to Checkmk didn't finish within 0 s, killed it"
     ]
 
 
@@ -489,7 +489,7 @@ def test_killed_script_action_is_not_recorded_in_the_history(
     settings: ec.Settings, config: Config
 ) -> None:
     history = RecordingHistory()
-    action_runner = ActionRunner(_LOGGER, history, command_timeout=_SHORT_TIMEOUT)
+    action_runner = ActionRunner(_LOGGER, history, command_timeout=_TIMEOUT_AT_ONCE)
     action_runner.start()
 
     _trigger_script_action(action_runner, settings, config, "exec sleep 60")
@@ -510,7 +510,7 @@ def test_script_action_killed_on_stopping_is_not_recorded_in_the_history(
     )
     wait_until_exists(ready)
 
-    action_runner.stop(timeout=0.1)
+    action_runner.stop(timeout=0)
     action_runner.stop(timeout=30)  # i.e. wait for it to handle the killed command
 
     assert history.whats == []
@@ -866,7 +866,7 @@ def test_stopping_runner_kills_a_hanging_command_after_the_timeout(
     wait_until_exists(ready)
 
     try:
-        action_runner.stop(timeout=0.1)
+        action_runner.stop(timeout=0)
         ended = _ends_soon(int(pid_file.read_text()))
     finally:
         with suppress(ProcessLookupError):
@@ -877,7 +877,7 @@ def test_stopping_runner_kills_a_hanging_command_after_the_timeout(
         True,
         [
             (
-                "Not waiting any longer for actions still running or pending after 0.1 s, killing "
+                "Not waiting any longer for actions still running or pending after 0 s, killing "
                 "or dropping the 1 unfinished ones"
             ),
             "executing script got killed by signal 9",
@@ -894,14 +894,14 @@ def test_stopping_runner_drops_the_pending_commands_after_the_timeout(
     _run_script_later(action_runner, f"printf 2 > {shlex.quote(str(output))}")
     wait_until_exists(ready)
 
-    action_runner.stop(timeout=0.1)
+    action_runner.stop(timeout=0)
     action_runner.stop(timeout=30)  # i.e. wait for it to handle the pending command
 
     assert (action_runner.unfinished(), output.exists(), caplog.messages[0]) == (
         0,
         False,
         (
-            "Not waiting any longer for actions still running or pending after 0.1 s, killing or "
+            "Not waiting any longer for actions still running or pending after 0 s, killing or "
             "dropping the 2 unfinished ones"
         ),
     )

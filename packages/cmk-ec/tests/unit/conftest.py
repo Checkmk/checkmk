@@ -42,7 +42,7 @@ from cmk.ec.main import (
     StatusTableHistory,
 )
 from cmk.ec.perfcounters import Perfcounters
-from cmk.ec.settings import create_settings, PortNumber
+from cmk.ec.settings import create_settings, Options, PortNumber
 
 from .helpers import FakeConnection, MakeStatusServer
 
@@ -87,11 +87,17 @@ def _compile_pysnmp_mibs_once(config: pytest.Config) -> None:
 
 @pytest.fixture(name="settings")
 def fixture_settings(tmp_path: Path) -> ec.Settings:
-    settings = create_settings("1.2.3i45", tmp_path, ["mkeventd"])
+    settings = ec.Settings(paths=ec.create_paths(tmp_path), options=_options_without_arguments())
     # Like main(), make sure that the directories for the status files and the event pipe exist.
     settings.paths.status_file.value.parent.mkdir(parents=True)
     settings.paths.event_pipe.value.parent.mkdir(parents=True)
     return settings
+
+
+@functools.cache
+def _options_without_arguments() -> Options:
+    """Parsed only once, as building the argument parser takes most of the time of the fixture"""
+    return create_settings("1.2.3i45", Path("/"), ["mkeventd"]).options
 
 
 @pytest.fixture(name="logger")

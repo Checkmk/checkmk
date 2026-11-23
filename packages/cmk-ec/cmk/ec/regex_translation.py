@@ -10,7 +10,6 @@ and texts folded like Python's regexes fold case"""
 import functools
 import re
 import string
-import sys
 from collections.abc import Mapping, Sequence
 
 # Literal characters and dots, escaped or not
@@ -190,7 +189,7 @@ def _variants_of_cased(char: str) -> frozenset[str]:
 @functools.cache
 def _cased_characters() -> frozenset[str]:
     """The characters with another case, the only ones which Python's re folds: It neither
-    folds a character without another case nor folds a character to one without it."""
-    return frozenset(
-        c for c in map(chr, range(sys.maxunicode + 1)) if c.lower() != c or c.upper() != c
-    )
+    folds a character without another case nor folds a character to one without it. They are all
+    in the first two planes: The others have only ideographs, tags, variation selectors and
+    private use characters."""
+    return frozenset(c for c in map(chr, range(0x20000)) if c.lower() != c or c.upper() != c)

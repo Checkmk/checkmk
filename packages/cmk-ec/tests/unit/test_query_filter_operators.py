@@ -106,6 +106,13 @@ def test_eq_tilde_folds_case_like_livestatus(
     assert _selects(event_status, status_server, value, f"=~ {argument}") is True
 
 
+def test_eq_tilde_folds_case_beyond_the_basic_multilingual_plane(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    # Adlam capital and small letter sha, the last characters with another case
+    assert _selects(event_status, status_server, "\U0001e921", "=~ \U0001e943") is True
+
+
 KELVIN_SIGN = "K"
 
 

@@ -24,7 +24,8 @@ const RESOLUTION = {
   matching_hosts: ['pod-cart'],
   unmatched_host_names: ['pod-search'],
   hidden_match_count: 0,
-  truncated: false
+  truncated: false,
+  creatable_folders: [{ path: '/', title: 'Main' }]
 }
 
 let requests: unknown[] = []

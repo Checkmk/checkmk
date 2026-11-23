@@ -50,7 +50,8 @@ const server = useMswServer(
       matching_hosts: [],
       unmatched_host_names: [],
       hidden_match_count: 0,
-      truncated: false
+      truncated: false,
+      creatable_folders: [{ path: '/', title: 'Main' }]
     })
   ),
   http.post(RESOLVE_SERVICES_URL, () =>
@@ -243,7 +244,8 @@ test('a host name template that resolves only to new hosts can be saved', async 
         matching_hosts: [],
         unmatched_host_names: ['pod-cart'],
         hidden_match_count: 0,
-        truncated: false
+        truncated: false,
+        creatable_folders: [{ path: '/', title: 'Main' }]
       })
     )
   )
@@ -260,7 +262,8 @@ async function saveRefusedNewHost(): Promise<ReturnType<typeof renderSlideIn>> {
         matching_hosts: [],
         unmatched_host_names: ['pod-cart'],
         hidden_match_count: 0,
-        truncated: false
+        truncated: false,
+        creatable_folders: [{ path: '/', title: 'Main' }]
       })
     ),
     http.post(CREATE_URL, () =>

@@ -13,7 +13,8 @@ const RESOLUTION = {
   matching_hosts: ['pod-cart', 'pod-checkout'],
   unmatched_host_names: [],
   hidden_match_count: 0,
-  truncated: false
+  truncated: false,
+  creatable_folders: [{ path: '/', title: 'Main' }]
 }
 
 function renderMatches(preview: TemplatePreview) {

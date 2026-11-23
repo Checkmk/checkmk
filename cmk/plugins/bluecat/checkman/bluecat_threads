@@ -1,4 +1,4 @@
-title: Bluecat Adonis: Number of Threads
+title: BlueCat Adonis: Threads
 agents: snmp
 catalog: hw/network/bluecat
 license: GPLv2

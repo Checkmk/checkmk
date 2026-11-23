@@ -1,4 +1,4 @@
-title: Bluecat Adonis: Proteus NTP
+title: BlueCat Adonis: NTP
 agents: snmp
 catalog: hw/network/bluecat
 license: GPLv2

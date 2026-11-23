@@ -1,4 +1,4 @@
-title: Bluecat Adonis: DHCP State
+title: BlueCat Adonis: DHCP State
 agents: snmp
 catalog: hw/network/bluecat
 license: GPLv2

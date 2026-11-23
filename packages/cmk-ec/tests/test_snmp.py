@@ -810,3 +810,27 @@ def test_snmpv3_trap_of_the_empty_user_is_dropped(
         None,
         ["Trap (v3) dropped from 192.0.2.1: Unknown credentials (msgUserName: )"],
     )
+
+
+def test_snmpv3_trap_with_an_empty_digest_is_dropped(
+    make_parser: MakeParser,
+    config: Config,
+    logger: logging.Logger,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    parser = make_parser(snmpv3_config(config, ("authNoPriv", "sha", "harry", "right-key")))
+    logger.setLevel(VERBOSE)
+    # Flagged authNoPriv, but without authentication parameters, i.e. forged without the key
+    trap = v3_message(
+        "SNMPv2TrapPDU",
+        engine_id=bytes.fromhex(SENDER_ENGINE_ID),
+        user=b"harry",
+        auth_flag=True,
+    )
+
+    result = parser.parse(trap, ("192.0.2.1", 162))
+
+    assert (result, [m for m in caplog.messages if " dropped from " in m]) == (
+        None,
+        ["Trap (v3) dropped from 192.0.2.1: Authenticator mismatched"],
+    )

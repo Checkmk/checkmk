@@ -113,14 +113,17 @@ def test_failed_translation_warns_about_the_oid_the_sender_and_the_error(
 
     translator.translate("192.0.2.1", var_binds)
 
-    assert any(
-        message.startswith(
-            f"Failed to translate OID {UNTRANSLATABLE_OID} in trap from 192.0.2.1, "
-            "keeping it untranslated: SmiError: "  # followed by PySNMP's message
-        )
-        and message.endswith(" (enable debug logging for details)")
-        for message in caplog.messages
+    prefix = (
+        f"Failed to translate OID {UNTRANSLATABLE_OID} in trap from 192.0.2.1, "
+        "keeping it untranslated: SmiError: "
     )
+    suffix = " (enable debug logging for details)"
+    [error] = [
+        message.removeprefix(prefix).removesuffix(suffix)
+        for message in caplog.messages
+        if message.startswith(prefix) and message.endswith(suffix)
+    ]
+    assert error  # PySNMP's message
 
 
 @pytest.mark.parametrize(

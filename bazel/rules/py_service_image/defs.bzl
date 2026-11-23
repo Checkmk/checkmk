@@ -12,9 +12,15 @@ directory, and it runs as a user that is not root.
 """
 
 load("@aspect_rules_py//py/unstable:defs.bzl", "py_venv")
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load", "oci_push")
 load("@tar.bzl", "mtree_mutate", "mtree_spec", "tar")
 load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
+
+# The base is for this platform only.
+_PLATFORM = [
+    "@platforms//cpu:x86_64",
+    "@platforms//os:linux",
+]
 
 def _layer(name, srcs, strip_prefix, package_dir):
     """Packs the files of `srcs` below `strip_prefix` into `package_dir`."""
@@ -43,8 +49,11 @@ def py_service_image(
         env = {},
         exposed_ports = [],
         repo_tags = [],
+        repository = None,
         visibility = None):
     """Declares the image `name` and the target `name_load`, which loads it into Docker.
+
+    With `repository`, it also declares the target `name_push`.
 
     Args:
         name: Name of the image target.
@@ -54,6 +63,7 @@ def py_service_image(
         env: Environment variables of the image.
         exposed_ports: Ports of the service, for example ["8080/tcp"].
         repo_tags: Tags that `name_load` gives the image.
+        repository: The registry path that `name_push` pushes the image to.
         visibility: Visibility of the image.
     """
     package = native.package_name()
@@ -99,11 +109,7 @@ def py_service_image(
             "SSL_CERT_FILE": "/etc/ssl/certs/ca-certificates.crt",
         } | env,
         exposed_ports = exposed_ports,
-        # The base is for this platform only.
-        target_compatible_with = [
-            "@platforms//cpu:x86_64",
-            "@platforms//os:linux",
-        ],
+        target_compatible_with = _PLATFORM,
         tars = [
             "//bazel/rules/py_service_image:python_layer",
             name + "_libraries",
@@ -118,3 +124,21 @@ def py_service_image(
         image = name,
         repo_tags = repo_tags,
     )
+    if repository:
+        # The tag is the start of the digest. A push of the same content then changes
+        # nothing in the registry, so each run of a pipeline can push.
+        native.genrule(
+            name = name + "_tag",
+            srcs = [name + ".digest"],
+            outs = [name + ".tag"],
+            # The digest is "sha256:" and 64 characters.
+            cmd = "cut -c 8-19 $< > $@",
+            target_compatible_with = _PLATFORM,
+        )
+        oci_push(
+            name = name + "_push",
+            image = name,
+            remote_tags = name + "_tag",
+            repository = repository,
+            target_compatible_with = _PLATFORM,
+        )

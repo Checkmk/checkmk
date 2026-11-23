@@ -30,15 +30,31 @@ py_service_image(
     library = ":my_service",
     module = "cmk.my_service.app",
     repo_tags = ["cmk-my-service:latest"],
+    repository = "registry.example/checkmk/cmk-my-service",
 )
 ```
 
-This declares two targets:
+This declares three targets:
 
 - `image`: the image as an OCI layout.
 - `image_load`: loads the image into Docker or Podman with the tags of `repo_tags`.
+- `image_push`: pushes the image to `repository`.
+  The macro declares it only with `repository`.
 
 The image runs `python3 -m <module>`.
+
+## Push
+
+`bazel run <package>:image_push` pushes the image and gives it one tag: the first 12 characters of its digest.
+A push of the same content changes nothing in the registry, so a pipeline can push in each run.
+The registry then gets a new tag only when a part of the image changed.
+
+The push reads the login for the registry from the Docker configuration (`DOCKER_CONFIG`, or `~/.docker/config.json`).
+The option `--repository` sends the image to another registry path:
+
+```sh
+bazel run <package>:image_push -- --repository localhost:5000/checkmk/cmk-my-service
+```
 
 ## Rules for the service
 

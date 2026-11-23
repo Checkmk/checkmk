@@ -68,7 +68,7 @@ class WtoolsRunAsFixture : public ::testing::Test {
 public:
     void SetUp() override {
         user_ = L"a1" + fmt::format(L"_{}", ::GetCurrentProcessId());
-        pwd_ = GenerateRandomString(12);
+        pwd_ = GenerateCmaUserPassword(lc_.minPasswordLength());
     }
 
     void TearDown() override { std::ignore = lc_.userDel(user_); }
@@ -84,7 +84,7 @@ public:
     std::wstring User() const { return user_; }
     std::wstring Pwd() const { return pwd_; }
     uc::Status ChangePwd() {
-        pwd_ = GenerateRandomString(12);
+        pwd_ = GenerateCmaUserPassword(lc_.minPasswordLength());
         return lc_.changeUserPassword(User(), Pwd());
     }
 

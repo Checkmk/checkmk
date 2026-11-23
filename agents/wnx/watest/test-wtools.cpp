@@ -8,6 +8,7 @@
 #include <fmt/xchar.h>
 
 #include <chrono>
+#include <cwctype>
 #include <string_view>
 #include <unordered_set>
 
@@ -606,6 +607,35 @@ TEST(Wtools, UserGroupName) {
 
     cma::details::SetModus(cma::Modus::app);
     EXPECT_TRUE(GenerateCmaUserNameInGroup(L"XX").empty());
+}
+
+TEST(Wtools, GeneratePasswordHasEveryCategory) {
+    constexpr size_t length{20};
+    const auto pwd = GeneratePassword(length);
+
+    ASSERT_EQ(pwd.size(), length);
+    EXPECT_TRUE(rs::any_of(pwd, [](wchar_t c) { return ::iswupper(c) != 0; }));
+    EXPECT_TRUE(rs::any_of(pwd, [](wchar_t c) { return ::iswlower(c) != 0; }));
+    EXPECT_TRUE(rs::any_of(pwd, [](wchar_t c) { return ::iswdigit(c) != 0; }));
+    EXPECT_TRUE(rs::any_of(pwd, [](wchar_t c) { return ::iswpunct(c) != 0; }));
+}
+
+TEST(Wtools, GeneratePasswordDiffersPerCall) {
+    EXPECT_NE(GeneratePassword(20), GeneratePassword(20));
+}
+
+TEST(Wtools, CmaPasswordLength) {
+    EXPECT_EQ(CmaPasswordLength(0), 20U) << "the policy could not be read";
+    EXPECT_EQ(CmaPasswordLength(1), 20U);
+    EXPECT_EQ(CmaPasswordLength(16), 20U) << "the floor still wins";
+    EXPECT_EQ(CmaPasswordLength(20), 24U) << "the policy plus the margin";
+    EXPECT_EQ(CmaPasswordLength(252), 256U);
+    EXPECT_EQ(CmaPasswordLength(256), 256U) << "capped at PWLEN";
+}
+
+TEST(Wtools, GenerateCmaUserPasswordUsesTheLength) {
+    EXPECT_EQ(GenerateCmaUserPassword(0).size(), CmaPasswordLength(0));
+    EXPECT_EQ(GenerateCmaUserPassword(40).size(), CmaPasswordLength(40));
 }
 
 TEST(Wtools, Registry) {

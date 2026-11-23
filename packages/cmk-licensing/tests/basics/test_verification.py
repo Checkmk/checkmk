@@ -325,6 +325,36 @@ def test_parse_plain_verification_response_payload_not_a_dict(
         verification.parse_plain_verification_response(protocol_version, {"payload": ""})
 
 
+def test_parse_plain_verification_response_protocol_version_too_old() -> None:
+    raw_response = {
+        "VERSION": "1.0",
+        "certificate": STATIC_TEST_CERT_PEM,
+        "created_at": 1795093935,
+        "payload": {
+            "additional_features": ["ntop", "virt1_appliance"],
+            "checkmk_edition": "cme",
+            "checkmk_max_version": "",
+            "group_and_managed_services_use": True,
+            "limits": {
+                "services": 3000,
+            },
+            "message": "Thank you for uploading your license usage report.",
+            "operational_state": "active",
+            "reseller_name": "Bob Reseller Inc.",
+            "status": "successful",
+            "subscription_auto_renewal": True,
+            "subscription_expiration_ts": 1785196800,
+            "subscription_start_ts": 1753660800,
+            "unbound_license": False,
+        },
+        "request_id": "45c7fcba-7c67-11f1-8d8b-325096b39f47",
+        "response_id": "587d0c9b-c9dd-480f-b835-dd830afba72d",
+        "signature": "dEaDBeeF",
+    }
+    with pytest.raises(ValueError):
+        verification.parse_plain_verification_response("1.0", raw_response)
+
+
 def test_parse_plain_verification_response_missing_key_v2_0() -> None:
     for missing_key in TEST_VERIFICATION_RESPONSE_V2_0:
         if missing_key in ("VERSION", "payload"):
@@ -368,3 +398,56 @@ def test_parse_plain_verification_response_missing_key_v3_2() -> None:
         del response["payload"][missing_key]  # type: ignore[attr-defined]
         with pytest.raises(ValueError, match=re.escape(missing_key)):
             verification.parse_plain_verification_response("3.2", response)
+
+
+@pytest.mark.parametrize(
+    "protocol_version,base_response",
+    [
+        pytest.param("3.0", TEST_VERIFICATION_RESPONSE_V3_0, id="3.0"),
+        pytest.param("3.2", TEST_VERIFICATION_RESPONSE_V3_2, id="3.2"),
+    ],
+)
+@pytest.mark.parametrize(
+    "additional_features",
+    [
+        pytest.param("str", id="wrong-type-string"),
+        pytest.param({}, id="wrong-type-object"),
+        pytest.param(
+            ["str"],
+            id="wrong-additional-feature-type-str",
+        ),
+        pytest.param(
+            [[]],
+            id="wrong-additional-feature-type-list",
+        ),
+        pytest.param([{"enabled": True}], id="missing-name"),
+        pytest.param([{"name": 17, "enabled": True}], id="wrong-name-type"),
+        pytest.param([{"name": "ntop"}], id="missing-enabled"),
+        pytest.param(
+            [{"name": "ntop", "enabled": 1}],
+            id="wrong-enabled-type",
+        ),
+        pytest.param(
+            [{"name": "unknown", "enabled": True}],
+            id="unknown-name",
+        ),
+        pytest.param(
+            [{"name": "synthetic_monitoring", "enabled": True}],
+            id="no-synthetic-monitoring-limit",
+        ),
+        pytest.param(
+            [{"name": "synthetic_monitoring", "enabled": True, "limit": "17"}],
+            id="wrong-synthetic-monitoring-limit",
+        ),
+    ],
+)
+def test_parse_plain_verification_response_bad_additional_features(
+    protocol_version: protocol_version.AllowedVerificationResponseVersions,
+    base_response: dict[str, str | dict[str, object]],
+    additional_features: object,
+) -> None:
+    response: dict[str, str | dict[str, object]] = copy.deepcopy(base_response)
+    response["payload"]["additional_features"] = additional_features  # type: ignore[index]
+
+    with pytest.raises(ValueError):
+        verification.parse_plain_verification_response(protocol_version, response)

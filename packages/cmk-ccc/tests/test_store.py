@@ -812,6 +812,37 @@ def _wait_for_waiting_lock(path: Path, unless: Callable[[], bool] = lambda: Fals
         raise TimeoutError("No lock in waiting state after about 10 s")
 
 
+def _map_in_threads(function: Callable[[int], None]) -> None:
+    """Call the function 100 times in 20 threads, and raise the first of their failures"""
+    failures: list[BaseException] = []
+    busy: set[threading.Thread] = set()
+
+    def call(n: int) -> None:
+        busy.add(threading.current_thread())
+        try:
+            function(n)
+        except BaseException as e:
+            failures.append(e)  # A timeout would hide it otherwise.
+            raise
+        finally:
+            busy.discard(threading.current_thread())
+
+    pool = ThreadPool(20)
+    result = pool.map_async(call, range(100))
+    # Twice as long as _wait_for_waiting_lock(), so that its more specific failure wins.
+    if not _poll_until(result.ready, seconds=20):
+        stuck = next(iter(list(busy)), None)
+        where = _stack_of(stuck) if stuck else "  (none busy)\n"
+        # Threads stuck in flock() would block join(). As daemons, they don't block the exit.
+        pool.terminate()
+        raise TimeoutError(f"Threads not done after about 20 s, one stuck in:\n{where}") from (
+            failures[0] if failures else None
+        )
+    pool.close()
+    pool.join()
+    result.get()
+
+
 def test_blocking_context_manager_from_multiple_threads(test_file: Path) -> None:
     acquired = []
 
@@ -821,41 +852,38 @@ def test_blocking_context_manager_from_multiple_threads(test_file: Path) -> None
             assert len(acquired) == 1
             acquired.pop()
 
-    pool = ThreadPool(20)
-    pool.map(acquire, iter(range(100)))
-    pool.close()
-    pool.join()
+    _map_in_threads(acquire)
 
 
 def test_blocking_lock_from_multiple_threads(test_file: Path) -> None:
     acquired = []
-    saw_someone_wait: list[int] = []
+    looked_for_a_waiter: list[int] = []
 
     def acquire(_n: int) -> None:
         assert not store.have_lock(test_file)
         store.acquire_lock(test_file, blocking=True)
-        assert store.have_lock(test_file)
+        try:
+            assert store.have_lock(test_file)
+            # The lock guards this part, so it never holds more than one entry.
+            acquired.append(1)
 
-        # We check to see if the other threads are actually waiting.
-        if not saw_someone_wait:
-            _wait_for_waiting_lock(test_file)
-            saw_someone_wait.append(1)
+            # Check once that other threads wait: with broken locks, every check would wait in
+            # vain. A thread getting in meanwhile finds the entry.
+            if not looked_for_a_waiter:
+                looked_for_a_waiter.append(1)
+                _wait_for_waiting_lock(test_file)
 
-        acquired.append(1)
-        # This part is guarded by the lock, so we should never have more than one entry in here,
-        # even if multiple threads try to append at the same time
-        assert len(acquired) == 1
+            assert len(acquired) == 1
 
-        acquired.pop()
-        store.release_lock(test_file)
+            acquired.pop()
+        finally:
+            # Other threads would wait for the lock forever, and the test with them.
+            store.release_lock(test_file)
         assert not store.have_lock(test_file)
 
     # We try to append 100 ints to `acquired` in 20 threads simultaneously. As it is guarded by
     # the lock, we only ever can have one entry in the list at the same time.
-    pool = ThreadPool(20)
-    pool.map(acquire, iter(range(100)))
-    pool.close()
-    pool.join()
+    _map_in_threads(acquire)
 
     # After all the threads have finished, the list should be empty again.
     assert len(acquired) == 0

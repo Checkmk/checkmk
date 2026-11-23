@@ -323,6 +323,14 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
             "*robotmk*",
         ]
 
+    def _exclude_by_pattern(self, rel_file_path: str) -> bool:
+        # The patterns hide what the page "Linux, Solaris, AIX files" offers instead.
+        # That page does not list plugin families, so the AIX and Solaris files of
+        # the new Oracle plugin would not be offered anywhere.
+        if rel_file_path.startswith("/mk-oracle-v2"):
+            return False
+        return super()._exclude_by_pattern(rel_file_path)
+
     @cached_property
     def _title_map(self) -> Mapping[str, str]:
         return {

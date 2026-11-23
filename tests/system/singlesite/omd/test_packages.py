@@ -342,14 +342,14 @@ def test_mk_oracle_exotic_distros(
     # highest-scored one. Older libmagic (e.g. file 5.41 on Ubuntu 22.04) mis-scores the AIX
     # XCOFF64 binary as "JPEG 2000 image" and would otherwise hide the correct XCOFF match.
     process = site.run(
-        ["file", "-k", f"lib/python3/cmk/plugins/oracle/agents/mk-oracle.{distro}"], check=False
+        ["file", "-k", f"lib/python3/cmk/plugins/oracle/agents/mk-oracle-v2.{distro}"], check=False
     )
     # Matches from separate rules are joined with a literal "\012- " separator, so a token
     # may still straddle one; drop the separators before looking for the tokens.
     normalized_stdout = process.stdout.replace("\\012- ", "")
     if missing := [token for token in expected_tokens if token not in normalized_stdout]:
         raise AssertionError(
-            f"'file -k' output for mk-oracle.{distro} is missing {missing}: {process.stdout}"
+            f"'file -k' output for mk-oracle-v2.{distro} is missing {missing}: {process.stdout}"
         )
 
 

@@ -125,9 +125,9 @@ def test_linked_libraries(site: Site) -> None:
 
     exclude_entirely = [
         # These are platform specific binaries.
-        "lib/python3/cmk/plugins/oracle/agents/mk-oracle.solaris",
-        "lib/python3/cmk/plugins/oracle/agents/mk-oracle.aix",
-        "lib/python3/cmk/plugins/oracle/agents/mk-oracle.exe",
+        "lib/python3/cmk/plugins/oracle/agents/mk-oracle-v2.solaris",
+        "lib/python3/cmk/plugins/oracle/agents/mk-oracle-v2.aix",
+        "lib/python3/cmk/plugins/oracle/agents/mk-oracle-v2.exe",
     ]
 
     exclude_from_forbidden_links_check = [

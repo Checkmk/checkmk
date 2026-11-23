@@ -15,9 +15,9 @@ pkg_files(
     ],
     attributes = pkg_attributes(mode = "0755"),
     renames = {
-        ":mk-oracle.solaris": "lib/python3/cmk/plugins/oracle/agents/mk-oracle.solaris",
-        ":mk-oracle.aix": "lib/python3/cmk/plugins/oracle/agents/mk-oracle.aix",
-        ":mk-oracle.exe": "lib/python3/cmk/plugins/oracle/agents/mk-oracle.exe",
+        ":mk-oracle.solaris": "lib/python3/cmk/plugins/oracle/agents/mk-oracle-v2.solaris",
+        ":mk-oracle.aix": "lib/python3/cmk/plugins/oracle/agents/mk-oracle-v2.aix",
+        ":mk-oracle.exe": "lib/python3/cmk/plugins/oracle/agents/mk-oracle-v2.exe",
     },
     tags = ["manual"],
 )
@@ -29,6 +29,7 @@ pkg_files(
     srcs = ["//packages/mk-oracle"],
     attributes = pkg_attributes(mode = "0755"),
     prefix = "lib/python3/cmk/plugins/oracle/agents",
+    renames = {"//packages/mk-oracle": "mk-oracle-v2"},
     tags = ["manual"],
 )
 

@@ -21,7 +21,7 @@ for FILE in $(bazel cquery --output=files "${TARGET}"); do
     BASENAME=${FILE##*/}
     case "${BASENAME}" in
         mk-oracle)
-            install --mode 755 "${FULL_PATH}" "${ROOT}/lib/python3/cmk/plugins/oracle/agents/mk-oracle"
+            install --mode 755 "${FULL_PATH}" "${ROOT}/lib/python3/cmk/plugins/oracle/agents/mk-oracle-v2"
             ;;
     esac
 done

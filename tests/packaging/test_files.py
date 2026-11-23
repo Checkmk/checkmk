@@ -949,7 +949,7 @@ def _verify_signature(file_path: Path, file_name: str) -> None | str:
             "share/check_mk/agents/windows",
             [
                 "share/check_mk/agents/windows/mk-sql.exe",
-                "lib/python3/cmk/plugins/oracle/agents/mk-oracle.exe",
+                "lib/python3/cmk/plugins/oracle/agents/mk-oracle-v2.exe",
             ],
         ),
         (

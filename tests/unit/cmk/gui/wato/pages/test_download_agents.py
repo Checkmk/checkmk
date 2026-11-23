@@ -44,7 +44,7 @@ def test_download_href_static_file_uses_apache_alias(request_context: None) -> N
 def test_download_href_plugin_family_file_uses_gui_handler(request_context: None) -> None:
     # A plugin family file lives outside share/check_mk/agents and must not be
     # served as a broken relative "agents/<absolute path>" URL.
-    path = str(cmk.utils.paths.lib_dir / "python3/cmk/plugins/oracle/agents/mk-oracle")
+    path = str(cmk.utils.paths.lib_dir / "python3/cmk/plugins/oracle/agents/mk-oracle-v2")
     href = download_href(path)
 
     assert href.startswith(f"{DOWNLOAD_AGENT_PLUGIN_PAGE}.py?")
@@ -241,3 +241,42 @@ def test_other_mode_titles_plugin_family_section_by_family(
     assert mode._title_for_root("/opt/local/plugins/custom/agents", "").startswith("Custom (")
     # Files below the share tree keep their existing label.
     assert mode._title_for_root("/omd/share/check_mk/agents/plugins", "/plugins") == "Plug-ins"
+
+
+def test_other_mode_lists_aix_and_solaris_files_of_oracle_plugin_only(
+    request_context: None,
+    mocker: MockerFixture,
+    tmp_path: Path,
+) -> None:
+    """CMK-41575: no other page offers the AIX and Solaris files of the new Oracle plugin"""
+    oracle_dir = tmp_path / "plugins" / "oracle" / "agents"
+    oracle_dir.mkdir(parents=True)
+    (oracle_dir / "mk-oracle-v2.aix").touch()
+    (oracle_dir / "mk-oracle-v2.solaris").touch()
+    tcp_dir = tmp_path / "plugins" / "tcp" / "agents"
+    tcp_dir.mkdir(parents=True)
+    (tcp_dir / "netstat.aix").touch()
+    (tcp_dir / "netstat.solaris").touch()
+    mocker.patch.object(
+        download_agents,
+        "_plugin_family_agent_dirs",
+        return_value=[
+            PluginFamilyAgentDir(path=oracle_dir, title="Oracle", is_local=False),
+            PluginFamilyAgentDir(path=tcp_dir, title="Tcp", is_local=False),
+        ],
+    )
+    mode = ModeDownloadAgentsOther()
+
+    sections = [
+        (title, sorted(file_paths))
+        for agents_dir in (oracle_dir, tcp_dir)
+        for title, file_paths in mode._walk_dir(str(agents_dir))
+    ]
+
+    assert sections == [
+        (
+            "Oracle",
+            [str(oracle_dir / "mk-oracle-v2.aix"), str(oracle_dir / "mk-oracle-v2.solaris")],
+        ),
+        ("Tcp", []),
+    ]

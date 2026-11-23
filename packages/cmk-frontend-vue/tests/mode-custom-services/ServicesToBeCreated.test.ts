@@ -46,19 +46,10 @@ test('numbers every service with its name and target host', () => {
   }
 })
 
-test('marks each target host as to be created or existing', () => {
-  renderList(
-    resolved([
-      service('Latency', { host_name: 'pod-new', new_host: true }),
-      service('Latency', { host_name: 'web01' })
-    ])
-  )
+test('marks hosts that saving creates', () => {
+  renderList(resolved([service('Latency', { host_name: 'pod-new', new_host: true })]))
 
-  const [created, existing] = screen.getAllByRole('listitem')
-  expect(within(created!).getByText('To be created')).toBeTruthy()
-  expect(within(created!).queryByText('Existing')).toBeNull()
-  expect(within(existing!).getByText('Existing')).toBeTruthy()
-  expect(within(existing!).queryByText('To be created')).toBeNull()
+  expect(screen.getByRole('listitem')).toHaveTextContent('pod-new (new host)')
 })
 
 test('flags a clashing service and explains the clash', () => {

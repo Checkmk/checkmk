@@ -303,7 +303,7 @@ def _connection_args(connection: Connection, host_config: HostConfig) -> Iterato
     if (tls_versions := connection.tls_versions) is not None:
         yield from _tls_version_arg(tls_versions)
     if (proxy := connection.proxy) is not None:
-        yield from _proxy_args(proxy)
+        yield from _proxy_args(proxy, host_config.macros)
     if (address_family := connection.address_family) is not None:
         yield from _address_family_args(address_family, host_config)
     if (redirects := connection.redirects) is not None:
@@ -348,7 +348,7 @@ def _tls_version_arg(tls_versions: EnforceTlsVersion) -> Iterator[str]:
     yield tls_version_arg
 
 
-def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str]:
+def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy, macros: Mapping[str, str]) -> Iterator[str]:
     match proxy:
         case EnvProxy():
             return
@@ -361,7 +361,7 @@ def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str]:
         # also capable of handling that correctly.
         case URLProxy(url=url):
             yield "--proxy-url"
-            yield url
+            yield replace_macros(url, macros)
 
 
 def _address_family_args(address_family: AddressFamily, host_config: HostConfig) -> Iterator[str]:

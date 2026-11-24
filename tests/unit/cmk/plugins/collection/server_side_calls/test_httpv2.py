@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.plugins.collection.server_side_calls.httpv2 import active_check_httpv2
-from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config
+from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config, URLProxy
 
 
 def test_active_check_httpv2_minimal() -> None:
@@ -241,5 +241,43 @@ def test_active_check_httpv2_macros_in_body_fixed_string() -> None:
         ActiveCheckCommand(
             service_description="HTTPS My service",
             command_arguments=["--url", "https://checkmk.com", "--body-string", "testhost"],
+        ),
+    ]
+
+
+def test_active_check_httpv2_macros_in_proxy_url() -> None:
+    assert list(
+        active_check_httpv2(
+            {
+                "endpoints": [
+                    {
+                        "service_name": {"prefix": "auto", "name": "My service"},
+                        "url": "https://checkmk.com",
+                    }
+                ],
+                "standard_settings": {
+                    "connection": {
+                        "method": ("get", None),
+                        "proxy": URLProxy(url="http://$HOSTNAME$:3128"),
+                    }
+                },
+            },
+            HostConfig(
+                name="testhost",
+                ipv4_config=IPv4Config(address="1.2.3.4"),
+                macros={"$HOSTNAME$": "testhost"},
+            ),
+        )
+    ) == [
+        ActiveCheckCommand(
+            service_description="HTTPS My service",
+            command_arguments=[
+                "--url",
+                "https://checkmk.com",
+                "--method",
+                "GET",
+                "--proxy-url",
+                "http://testhost:3128",
+            ],
         ),
     ]

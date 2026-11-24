@@ -337,6 +337,25 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
     }
 
 
+def test_loading_md_werk_without_version() -> None:
+    md = """[//]: # (werk v2)
+# test < werk
+
+key | value
+--- | ---
+class | fix
+component | core
+date | 2022-12-12T11:08:08+00:00
+level | 1
+compatible | yes
+edition | cre
+
+this is the description.
+
+"""
+    assert _markdown_string_to_werk(md).version is None
+
+
 def test_parse_werkv1_missing_class() -> None:
     with pytest.raises(WerkError, match="class\n  Field required"):
         load_werk(file_content=WERK_V1_MISSING_CLASS, file_name="1234")

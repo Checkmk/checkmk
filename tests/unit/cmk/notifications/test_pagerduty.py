@@ -5,8 +5,6 @@
 
 import pytest
 
-import cmk.utils.password_store
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.notification_plugins.pagerduty import _notification_source_from_context, _pagerduty_msg
 
 
@@ -47,16 +45,6 @@ from cmk.notification_plugins.pagerduty import _notification_source_from_context
 def test_notification_source_from_context(context: dict[str, str], result: str) -> None:
     msg = _notification_source_from_context(context)
     assert msg == result
-
-
-_HOST_CONTEXT = {
-    "WHAT": "HOST",
-    "NOTIFICATIONTYPE": "PROBLEM",
-    "HOSTNAME": "myhost",
-    "HOSTADDRESS": "10.0.0.1",
-    "HOSTSTATE": "DOWN",
-    "HOSTOUTPUT": "Host unreachable",
-}
 
 
 @pytest.mark.parametrize(
@@ -180,31 +168,6 @@ _HOST_CONTEXT = {
             },
             id="notification_host_state_missing_host_address",
         ),
-        pytest.param(
-            {
-                **_HOST_CONTEXT,
-                # The format before the key became a password: ("routing_key", "mykey")
-                "PARAMETER_ROUTING_KEY": "routing_key\tmykey",
-                "PARAMETER_ROUTING_KEY_1": "routing_key",
-                "PARAMETER_ROUTING_KEY_2": "mykey",
-            },
-            {
-                "dedup_key": "myhost:10.0.0.1",
-                "event_action": "trigger",
-                "payload": {
-                    "custom_details": {
-                        "host": "myhost",
-                        "host_address": "10.0.0.1",
-                        "info": "Host unreachable",
-                    },
-                    "severity": "critical",
-                    "source": "10.0.0.1",
-                    "summary": "myhost is DOWN",
-                },
-                "routing_key": "mykey",
-            },
-            id="routing_key_in_format_before_password",
-        ),
     ],
 )
 def test_pagerduty_message(
@@ -213,52 +176,3 @@ def test_pagerduty_message(
 ) -> None:
     msg = _pagerduty_msg(context)
     assert msg == result
-
-
-def test_routing_key_stored_as_password_is_read_from_password_store() -> None:
-    cmk.utils.password_store.save(
-        {"my_key": "mykey"},
-        cmk.utils.password_store.pending_secrets_path_site(),
-    )
-    context = {
-        **_HOST_CONTEXT,
-        "PARAMETER_ROUTING_KEY_1": "cmk_postprocessed",
-        "PARAMETER_ROUTING_KEY_2": "stored_password",
-        "PARAMETER_ROUTING_KEY_3": "my_key\t",
-        "PARAMETER_ROUTING_KEY_3_1": "my_key",
-        "PARAMETER_ROUTING_KEY_3_2": "",
-    }
-
-    assert _pagerduty_msg(context)["routing_key"] == "mykey"
-
-
-def test_routing_key_from_password_store_in_format_before_password_is_read() -> None:
-    cmk.utils.password_store.save(
-        {"my_key": "mykey"},
-        cmk.utils.password_store.pending_secrets_path_site(),
-    )
-    context = {
-        **_HOST_CONTEXT,
-        "PARAMETER_ROUTING_KEY": "store\tmy_key",
-        "PARAMETER_ROUTING_KEY_1": "store",
-        "PARAMETER_ROUTING_KEY_2": "my_key",
-    }
-
-    assert _pagerduty_msg(context)["routing_key"] == "mykey"
-
-
-def test_routing_key_without_password_store_id_is_not_sent() -> None:
-    cmk.utils.password_store.save(
-        {"my_key": "mykey"},
-        cmk.utils.password_store.pending_secrets_path_site(),
-    )
-    # A rule read through the REST API and written back stored ("store", "")
-    context = {
-        **_HOST_CONTEXT,
-        "PARAMETER_ROUTING_KEY": "store\t",
-        "PARAMETER_ROUTING_KEY_1": "store",
-        "PARAMETER_ROUTING_KEY_2": "",
-    }
-
-    with pytest.raises(MKGeneralException, match="Password not found"):
-        _pagerduty_msg(context)

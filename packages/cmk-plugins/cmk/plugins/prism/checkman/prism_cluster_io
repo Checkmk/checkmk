@@ -1,4 +1,4 @@
-title: Nutanix Prism: Host IO
+title: Nutanix Prism: Cluster I/O
 agents: nutanix
 catalog: virtual/nutanix
 license: GPLv2

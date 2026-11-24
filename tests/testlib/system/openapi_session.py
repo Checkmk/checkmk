@@ -1589,6 +1589,23 @@ class TelemetryMetricsDCDConnectionAttributeFilter:
     value: str
 
 
+@dataclass(frozen=True, kw_only=True)
+class TelemetryMetricsDCDHostNameLookupRule:
+    host_name_template: str
+    resource_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = ()
+    scope_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = ()
+    data_point_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = ()
+
+
+def _attribute_filters_to_json(
+    attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter],
+) -> list[dict[str, str]]:
+    return [
+        {"key": attribute_filter.key, "value": attribute_filter.value}
+        for attribute_filter in attribute_filters
+    ]
+
+
 class DcdAPI(BaseAPI):
     def create_piggyback_connection(
         self,
@@ -1642,10 +1659,7 @@ class DcdAPI(BaseAPI):
         title: str,
         site: str | None = None,
         interval: int = 60,
-        host_name_template: str,
-        resource_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = (),
-        scope_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = (),
-        data_point_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = (),
+        host_name_lookup_rules: Sequence[TelemetryMetricsDCDHostNameLookupRule],
         delete_hosts: bool = False,
         discover_on_creation: bool = True,
         validity_period: int = 60,
@@ -1664,29 +1678,18 @@ class DcdAPI(BaseAPI):
                     "interval": interval,
                     "host_name_lookup_rules": [
                         {
-                            "host_name_template": host_name_template,
-                            "resource_attribute_filters": [
-                                {
-                                    "key": attribute_filter.key,
-                                    "value": attribute_filter.value,
-                                }
-                                for attribute_filter in resource_attribute_filters
-                            ],
-                            "scope_attribute_filters": [
-                                {
-                                    "key": attribute_filter.key,
-                                    "value": attribute_filter.value,
-                                }
-                                for attribute_filter in scope_attribute_filters
-                            ],
-                            "data_point_attribute_filters": [
-                                {
-                                    "key": attribute_filter.key,
-                                    "value": attribute_filter.value,
-                                }
-                                for attribute_filter in data_point_attribute_filters
-                            ],
+                            "host_name_template": rule.host_name_template,
+                            "resource_attribute_filters": _attribute_filters_to_json(
+                                rule.resource_attribute_filters
+                            ),
+                            "scope_attribute_filters": _attribute_filters_to_json(
+                                rule.scope_attribute_filters
+                            ),
+                            "data_point_attribute_filters": _attribute_filters_to_json(
+                                rule.data_point_attribute_filters
+                            ),
                         }
+                        for rule in host_name_lookup_rules
                     ],
                     "creation_rules": [
                         {

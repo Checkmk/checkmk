@@ -36,7 +36,11 @@ bazel_dep(name = "patchelf", version = "0.18.0.bcr.1")
 bazel_dep(name = "perl-modules", version = "0.0.1.cmk.6")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "pnp4nagios", version = "0.6.26.cmk.2")
-bazel_dep(name = "protobuf", version = "33.4")
+
+# protobuf is licensed manually: keep the pkg:pypi/protobuf@<python version> key in
+# omd/dependency_management/manually_researched_licenses.json in sync, licenses are
+# looked up by exact purl.
+bazel_dep(name = "protobuf", version = "33.6")
 bazel_dep(name = "psign", version = "0.7.0.cmk.1")
 bazel_dep(name = "redis", version = "8.4.5.cmk.1")
 bazel_dep(name = "rules_cc", version = "0.2.19")

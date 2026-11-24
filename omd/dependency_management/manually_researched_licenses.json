@@ -97,7 +97,7 @@
   "pkg:pypi/pathspec@1.0.4": "MPL-2.0",
   "pkg:pypi/ply@3.11": "BSD-3-Clause",
   "pkg:pypi/proto-plus@1.27.1": "Apache-2.0",
-  "pkg:pypi/protobuf@6.33.4": "BSD-3-Clause",
+  "pkg:pypi/protobuf@6.33.6": "BSD-3-Clause",
   "pkg:pypi/psycopg2-binary@2.9.12": "LGPL-3.0-or-later",
   "pkg:pypi/pyasn1-modules@0.4.2": "BSD-2-Clause",
   "pkg:pypi/pyghmi@1.6.18": "Apache-2.0",

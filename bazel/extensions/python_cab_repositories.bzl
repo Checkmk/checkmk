@@ -1,21 +1,15 @@
 """Module extension declaring the repositories of the Windows agent build."""
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
-load("//agents/modules/windows:python_msis.bzl", "PYTHON_MSI_FEATURES")
 
-# sha256 of each per-feature python.org MSI, for PYTHON_VERSION_WINDOWS.  The URLs
-# derive from that version below, so this map is the only part a version bump has to
-# touch; regenerate it with //agents/modules/windows:refresh_msi_pins.  Its keys are
-# PYTHON_MSI_FEATURES, each naming the @python_msi_<key> repo declared below.
-_MSI_SHA256 = {
-    "core": "1ab04330cedbf1e12e9a11a3afb21679e808d02bffe49dff5483dfaa7641b1ef",
-    "exe": "3d8b229039e276aadc880e52c4aea3ab3b9af4934e34d6be08c9cf78919c9e55",
-    "lib": "cf9dd1af2ad9d3f8c9f0ce76c56c6def378f6ab1b79f964dd54e0ea958403c08",
-    "pip": "42741e3241aeff190674d635c2b65984262e9059788040d04c6c7e66ae0ca42b",
-    "ucrt": "7abe902a0458d01b8fbcfb10ebb634398a85e3acb0ad6ec5ed6db6785af76e12",
-}
+# The python-build-standalone release whose x86_64-pc-windows-msvc install_only
+# archive of PYTHON_VERSION_WINDOWS the cabs are built from, and that archive's
+# sha256 (in the release's SHA256SUMS).  The URLs derive from both below, so a
+# version bump touches these two lines and PYTHON_VERSION_WINDOWS.
+_PBS_RELEASE = "20261110"
+_PBS_SHA256 = "a0e4e14d152efbd2a66e4873efe0b4ab42e1ee759441dbc23af034236d7a09cd"
 
 def _repos_impl(_mctx):
     http_archive(
@@ -42,29 +36,24 @@ def _repos_impl(_mctx):
         ],
     )
 
-    if sorted(_MSI_SHA256) != sorted(PYTHON_MSI_FEATURES):
-        fail("_MSI_SHA256 must pin exactly the PYTHON_MSI_FEATURES %r, got %r" % (
-            PYTHON_MSI_FEATURES,
-            sorted(_MSI_SHA256),
-        ))
-    for feature in PYTHON_MSI_FEATURES:
-        http_file(
-            name = "python_msi_" + feature,
-            downloaded_file_path = feature + ".msi",
-            sha256 = _MSI_SHA256[feature],
-            urls = [
-                "https://www.python.org/ftp/python/{version}/amd64/{feature}.msi".format(
-                    feature = feature,
-                    version = PYTHON_VERSION_WINDOWS,
-                ),
-                # The per-feature MSIs are all called <feature>.msi upstream, and the
-                # mirror is flat, so the copy there carries the version in its name.
-                UPSTREAM_MIRROR_URL + "python-{version}-amd64-{feature}.msi".format(
-                    feature = feature,
-                    version = PYTHON_VERSION_WINDOWS,
-                ),
-            ],
-        )
+    # Unpacked by Bazel; its BUILD file leaves out what the cabs never ship.
+    archive = "cpython-{version}+{release}-x86_64-pc-windows-msvc-install_only.tar.gz".format(
+        release = _PBS_RELEASE,
+        version = PYTHON_VERSION_WINDOWS,
+    )
+    http_archive(
+        name = "python_windows_standalone",
+        build_file = "//agents/modules/windows:python_windows_standalone.BUILD.bazel",
+        sha256 = _PBS_SHA256,
+        strip_prefix = "python",
+        urls = [
+            "https://github.com/astral-sh/python-build-standalone/releases/download/{release}/{archive}".format(
+                archive = archive,
+                release = _PBS_RELEASE,
+            ),
+            UPSTREAM_MIRROR_URL + archive,
+        ],
+    )
 
 repos = module_extension(
     implementation = _repos_impl,

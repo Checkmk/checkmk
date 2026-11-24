@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 
 import pytest
+from cab_members import members, unwanted
 from cabarchive import CabArchive  # type: ignore[attr-defined]
 
 _DENIED_BINARIES = {
@@ -16,7 +17,7 @@ _DENIED_BINARIES = {
 }
 _EXPECTED_PRESENT = {
     "python.exe",
-    "libcrypto-3.dll",
+    "libcrypto-3-x64.dll",
 }
 
 
@@ -35,9 +36,10 @@ def test_cab_contents(cab_archive: CabArchive) -> None:
 
 
 def test_venv_python_has_the_dlls_of_the_base_python(cab_archive: CabArchive) -> None:
-    # The venv's python.exe runs with its own copy of python3XX.dll, and CPython
-    # looks for the DLLs extension modules link against (python3.dll, 3.15's
-    # abi3t-compat\python3t.dll) relative to that copy.
+    # The venv's python.exe runs with its own copy of python3XX.dll, and Windows
+    # looks for the DLLs extension modules link against (python3.dll, and on 3.15
+    # the python3t.dll of abi3t modules, both next to python3XX.dll at the root)
+    # next to that copy, in .venv\Scripts.
     members = {m.replace("\\", "/").lstrip("/").lower() for m in cab_archive}
     base_dlls = {
         m for m in members if m.endswith(".dll") and not m.startswith(("dlls/", "lib/", ".venv/"))
@@ -65,3 +67,9 @@ def test_cab_ships_the_python_license(cab_archive: CabArchive) -> None:
     members = {m.replace("\\", "/").lstrip("/") for m in cab_archive}
 
     assert "LICENSE.txt" in members
+
+
+def test_cab_leaves_out_what_no_cab_ships() -> None:
+    shipped = unwanted(members(Path(os.environ["PYTHON_CAB"])))
+
+    assert not shipped, f"The cab ships {sorted(shipped)[:5]}"

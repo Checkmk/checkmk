@@ -437,7 +437,7 @@
     },
     "//bazel/extensions:python_cab_repositories.bzl%repos": {
       "general": {
-        "bzlTransitiveDigest": "dk0fmlpkxOl+WeiOomOZbi9YyGOIg7O71/7Ghn6fo5Y=",
+        "bzlTransitiveDigest": "+gi3B07QmuSEgNNwSj3JZp8vjP3g1t3fHmcHzgvzz5g=",
         "usagesDigest": "BXYqIAu49CQCFQxk4Z2fbq50BtPUgveC3nsyNS28Gd4=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -467,58 +467,15 @@
               ]
             }
           },
-          "python_msi_ucrt": {
-            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
+          "python_windows_standalone": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
             "attributes": {
-              "downloaded_file_path": "ucrt.msi",
-              "sha256": "7abe902a0458d01b8fbcfb10ebb634398a85e3acb0ad6ec5ed6db6785af76e12",
+              "build_file": "@@//agents/modules/windows:python_windows_standalone.BUILD.bazel",
+              "sha256": "a0e4e14d152efbd2a66e4873efe0b4ab42e1ee759441dbc23af034236d7a09cd",
+              "strip_prefix": "python",
               "urls": [
-                "https://www.python.org/ftp/python/3.15.2/amd64/ucrt.msi",
-                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.15.2-amd64-ucrt.msi"
-              ]
-            }
-          },
-          "python_msi_core": {
-            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
-            "attributes": {
-              "downloaded_file_path": "core.msi",
-              "sha256": "1ab04330cedbf1e12e9a11a3afb21679e808d02bffe49dff5483dfaa7641b1ef",
-              "urls": [
-                "https://www.python.org/ftp/python/3.15.2/amd64/core.msi",
-                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.15.2-amd64-core.msi"
-              ]
-            }
-          },
-          "python_msi_exe": {
-            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
-            "attributes": {
-              "downloaded_file_path": "exe.msi",
-              "sha256": "3d8b229039e276aadc880e52c4aea3ab3b9af4934e34d6be08c9cf78919c9e55",
-              "urls": [
-                "https://www.python.org/ftp/python/3.15.2/amd64/exe.msi",
-                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.15.2-amd64-exe.msi"
-              ]
-            }
-          },
-          "python_msi_lib": {
-            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
-            "attributes": {
-              "downloaded_file_path": "lib.msi",
-              "sha256": "cf9dd1af2ad9d3f8c9f0ce76c56c6def378f6ab1b79f964dd54e0ea958403c08",
-              "urls": [
-                "https://www.python.org/ftp/python/3.15.2/amd64/lib.msi",
-                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.15.2-amd64-lib.msi"
-              ]
-            }
-          },
-          "python_msi_pip": {
-            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
-            "attributes": {
-              "downloaded_file_path": "pip.msi",
-              "sha256": "42741e3241aeff190674d635c2b65984262e9059788040d04c6c7e66ae0ca42b",
-              "urls": [
-                "https://www.python.org/ftp/python/3.15.2/amd64/pip.msi",
-                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.15.2-amd64-pip.msi"
+                "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.15.2+20261110-x86_64-pc-windows-msvc-install_only.tar.gz",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/cpython-3.15.2+20261110-x86_64-pc-windows-msvc-install_only.tar.gz"
               ]
             }
           }

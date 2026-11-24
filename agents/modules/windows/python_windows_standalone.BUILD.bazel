@@ -1,0 +1,46 @@
+# The python-build-standalone x86_64-pc-windows-msvc install_only interpreter
+# (PSF-2.0 and the licenses of its bundled libraries), unpacked by Bazel at fetch
+# time. Used by //agents/modules/windows:python_3_cab and :python_test_cab.
+
+filegroup(
+    name = "files",
+    # What neither cab ships is left out here: debug symbols, the test
+    # extension modules, Tcl/Tk and the stdlib packages that need it (with
+    # zlib1.dll and libtommath.dll, which only Tcl loads), the C headers and
+    # import libraries, the empty Scripts dir, the stdlib's test suite, the
+    # pip in the base site-packages (each cab installs the pinned one of its
+    # closure), the PEP 739 build-details.json and the bytecode caches.
+    # //agents/modules/windows:cab_contents_test and :test_cab_contents_test
+    # check that none of it reaches the cabs.
+    srcs = glob(
+        ["**"],
+        exclude = [
+            "BUILD.bazel",
+            "REPO.bazel",
+            "WORKSPACE",
+            "WORKSPACE.bazel",
+            "**/*.pdb",
+            "**/__pycache__/**",
+            "DLLs/_ctypes_test.pyd",
+            "DLLs/_test*.pyd",
+            "DLLs/_tkinter.pyd",
+            "DLLs/libtommath.dll",
+            "DLLs/tcl*.dll",
+            "DLLs/tk*.dll",
+            "DLLs/zlib1.dll",
+            "Lib/idlelib/**",
+            "Lib/site-packages/pip-*.dist-info/**",
+            "Lib/site-packages/pip/**",
+            "Lib/test/**",
+            "Lib/tkinter/**",
+            "Lib/turtle.py",
+            "Lib/turtledemo/**",
+            "Scripts/**",
+            "build-details.json",
+            "include/**",
+            "libs/**",
+            "tcl/**",
+        ],
+    ),
+    visibility = ["//visibility:public"],
+)

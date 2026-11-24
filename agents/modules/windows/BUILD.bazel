@@ -1,4 +1,4 @@
-load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("@rules_shell//shell:sh_library.bzl", "sh_library")
@@ -9,8 +9,7 @@ load("//:bazel_variables.bzl", "UV_PIP_COMPILE_ARGS")
 load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
-load(":python_cab.bzl", "python_cab", "python_msi_tree", "python_test_cab", "python_version_major_minor")
-load(":python_msis.bzl", "PYTHON_MSI_FEATURES")
+load(":python_cab.bzl", "python_cab", "python_test_cab", "python_version_major_minor")
 
 exports_files([
     "windows-constraints.txt",
@@ -36,17 +35,6 @@ py_binary(
     main = "pack_cab.py",
     visibility = ["//visibility:public"],
     deps = ["@cabarchive"],
-)
-
-# MSI extractor — drives msiinfo (from @msitools) and cabextract (from
-# @cabextract) to unpack a Windows MSI on Linux.  Replaces upstream
-# msitools' Vala-based ``msiextract`` (which doesn't build cleanly against
-# modern glib).
-py_binary(
-    name = "extract_msi",
-    srcs = ["extract_msi.py"],
-    main = "extract_msi.py",
-    visibility = ["//visibility:public"],
 )
 
 # Offline pip driver — runs the sha256-pinned pip wheel from the closure.
@@ -137,32 +125,6 @@ pip_compile(
     visibility = ["//visibility:public"],
 )
 
-# Maintainer tool: recomputes the sha256 hashes for the python.org per-feature
-# MSIs and prints the _MSI_SHA256 map for
-# //bazel/extensions:python_cab_repositories.bzl.  Run after bumping
-# PYTHON_VERSION_WINDOWS in //:package_versions.bzl -- which it reads through
-# args below, as it does PYTHON_MSI_FEATURES, so the hashes cannot be fetched
-# for a different version or set of MSIs than the extension requests.
-py_binary(
-    name = "refresh_msi_pins",
-    srcs = ["refresh_msi_pins.py"],
-    args = ["--python-version=" + PYTHON_VERSION_WINDOWS] + [
-        "--msi=" + f
-        for f in PYTHON_MSI_FEATURES
-    ],
-    main = "refresh_msi_pins.py",
-    visibility = ["//visibility:public"],
-)
-
-# cabextract (LZX-capable CAB extractor) from the @cabextract bcr module —
-# needed because cabarchive only supports MSZIP and None compression, while
-# python.org MSIs ship LZX-compressed cabinets.
-filegroup(
-    name = "_cabextract",
-    srcs = ["@cabextract"],
-    output_group = "cabextract",
-)
-
 # PyPI has no cp315 win_amd64 wheel of PyYAML 6.0.3, so both cabs get a
 # pure-Python one, built from its sdist: yaml falls back to its Python loaders
 # and dumpers without the libyaml extension, only CLoader & co. are missing.
@@ -181,16 +143,21 @@ py_wheel(
     deps = ["@pyyaml_sdist//:pyyaml"],
 )
 
-# The python.org MSIs extracted once, for both cabs.
-python_msi_tree(name = "python_tree")
-
 python_cab(
     name = "python_3_cab",
     postinstall_cmd = "postinstall.cmd",
-    python_tree = ":python_tree",
     venv_scripts = [":venv_scripts"],
     visibility = ["//visibility:public"],
     wheels = all_whl_requirements + [":pyyaml_wheel"],
+)
+
+# What the cab tests check both cabs for.
+py_library(
+    name = "cab_members",
+    testonly = True,
+    srcs = ["cab_members.py"],
+    imports = ["."],
+    deps = ["@cabarchive"],
 )
 
 py_cmk_test(
@@ -199,6 +166,7 @@ py_cmk_test(
     data = [":python_3_cab"],
     env = {"PYTHON_CAB": "$(rootpath :python_3_cab)"},
     deps = [
+        ":cab_members",
         "@cabarchive",
     ],
 )
@@ -210,7 +178,6 @@ py_cmk_test(
 python_test_cab(
     name = "python_test_cab",
     testonly = True,
-    python_tree = ":python_tree",
     visibility = ["//agents/wnx/tests:__subpackages__"],
     wheels = test_whl_requirements + [":pyyaml_wheel"],
 )
@@ -220,7 +187,5 @@ py_cmk_test(
     srcs = ["test_cab_contents_test.py"],
     data = [":python_test_cab"],
     env = {"PYTHON_TEST_CAB": "$(rootpath :python_test_cab)"},
-    deps = [
-        "@cabarchive",
-    ],
+    deps = [":cab_members"],
 )

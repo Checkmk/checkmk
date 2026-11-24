@@ -8,7 +8,8 @@
 # site-packages, the harness Python of the Windows agent's pytest suites.
 #
 # Usage: build_python_test_cab.sh --out CAB --cab-lib FILE
-#            --python-version 3.14.7 --python-tree DIR --pip-offline BIN
+#            --python-version 3.14.7 --python-root DIR --python-files FILE
+#            --pip-offline BIN
 #            --pack-cab BIN
 #            [--wheel WHL]... [--requirement PIN]...
 #
@@ -24,7 +25,8 @@ while [ $# -gt 0 ]; do
         --out) out="$2" ;;
         --cab-lib) cab_lib="$2" ;;
         --python-version) python_version="$2" ;;
-        --python-tree) python_tree="$2" ;;
+        --python-root) python_root="$2" ;;
+        --python-files) python_files="$2" ;;
         --pip-offline) pip_offline="$2" ;;
         --pack-cab) pack_cab="$2" ;;
         --wheel) wheels+=("$2") ;;
@@ -40,8 +42,8 @@ done
 # shellcheck disable=SC1090,SC1091 # cab_lib.sh, see python_cab.bzl
 source "$cab_lib"
 
-# 1. A writable copy of the extracted interpreter, and the wheels.
-cab_setup "$python_tree" "${wheels[@]}"
+# 1. A writable copy of the interpreter, and the wheels.
+cab_setup "$python_root" "$python_files" "${wheels[@]}"
 
 # 2. The closure, straight into the base interpreter's site-packages: no venv,
 # the harness calls this python.exe by its path. site processes the .pth files

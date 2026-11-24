@@ -13,6 +13,8 @@ from polyfactory.factories import TypedDictFactory
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_sensor_readings import (
+    check_sensor_battery,
+    check_sensor_humidity,
     check_sensor_temperature,
     discover_sensor_temperature,
     parse_sensor_readings,
@@ -77,3 +79,64 @@ def test_check_sensor_temperature() -> None:
     ]
 
     assert value == expected
+
+
+@pytest.mark.usefixtures("empty_value_store")
+@pytest.mark.xfail(strict=True, reason="readings of zero are skipped")
+def test_check_sensor_temperature_reports_zero_degrees() -> None:
+    sensor_reading = _RawSensorReadingsFactory.build(
+        readings=[
+            {
+                "ts": "2000-01-15T12:00:00Z",
+                "metric": "temperature",
+                "temperature": {"fahrenheit": 32.0, "celsius": 0.0},
+            },
+        ]
+    )
+    section = parse_sensor_readings([[f"[{json.dumps(sensor_reading)}]"]])
+    assert section
+
+    value = list(check_sensor_temperature("Sensor", {"levels_lower": (5.0, 2.0)}, section))
+
+    assert (
+        Result(state=State.CRIT, summary="Temperature: 0.0 °C (warn/crit below 5.0 °C/2.0 °C)")
+        in value
+    )
+
+
+@pytest.mark.xfail(strict=True, reason="readings of zero are skipped")
+def test_check_sensor_battery_reports_empty_battery() -> None:
+    sensor_reading = _RawSensorReadingsFactory.build(
+        readings=[
+            {
+                "ts": "2000-01-15T12:00:00Z",
+                "metric": "battery",
+                "battery": {"percentage": 0},
+            },
+        ]
+    )
+    section = parse_sensor_readings([[f"[{json.dumps(sensor_reading)}]"]])
+    assert section
+
+    value = list(check_sensor_battery("Sensor", {"levels_lower": (20, 10)}, section))
+
+    assert Result(state=State.CRIT, summary="0% (warn/crit below 20.00%/10.00%)") in value
+
+
+@pytest.mark.xfail(strict=True, reason="readings of zero are skipped")
+def test_check_sensor_humidity_reports_zero_percent() -> None:
+    sensor_reading = _RawSensorReadingsFactory.build(
+        readings=[
+            {
+                "ts": "2000-01-15T12:00:00Z",
+                "metric": "humidity",
+                "humidity": {"relativePercentage": 0},
+            },
+        ]
+    )
+    section = parse_sensor_readings([[f"[{json.dumps(sensor_reading)}]"]])
+    assert section
+
+    value = list(check_sensor_humidity("Sensor", {"levels_lower": (20.0, 10.0)}, section))
+
+    assert Result(state=State.CRIT, summary="0% (warn/crit below 20.00%/10.00%)") in value

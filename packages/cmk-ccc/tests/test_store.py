@@ -267,7 +267,7 @@ def test_save_data_to_file_not_pretty(tmp_path: Path) -> None:
         pytest.param([b"foob\xc3\xa4r"], id="bytes"),
     ],
 )
-def test_save_data_to_file(tmp_path: Path, data: None | Sequence[str | int]) -> None:
+def test_save_data_to_file(tmp_path: Path, data: None | Sequence[str | int | bytes]) -> None:
     path = tmp_path / "lala"
     store.save_object_to_file(path, data)
     assert store.load_object_from_file(path, default=None, debug=False) == data

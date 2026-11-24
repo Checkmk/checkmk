@@ -32,6 +32,7 @@ doc_srcs(
     ]) + [
         # Pages that live in the package they describe
         "//packages/cmk-check-engine:docs",
+        "//packages/cmk-maps:docs",
     ] + select({
         "@cmk//edition:community": [],
         "//conditions:default": [

@@ -51,7 +51,6 @@ Components
    arch-comp-rrd-backend.rst
    arch-comp-rrdcached.rst
    arch-comp-nagvis.rst
-   arch-comp-maps.rst
    arch-comp-crontab.rst
    arch-comp-backup.rst
    arch-comp-agent-receiver.rst

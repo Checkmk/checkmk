@@ -5,7 +5,7 @@
 
 """One-time migration of OrbVis boards into Checkmk Maps.
 
-See "Update from OrbVis" in ``doc/documentation/arch-comp-maps.rst``. What became
+See "Update from OrbVis" in ``packages/cmk-maps/docs/arch-comp-maps.rst``. What became
 of each board, and the name each OrbVis icon got in Maps' library, is recorded in
 ``var/maps/legacy_maps_migration.mk``. A later run only looks at boards and icons not
 recorded there, so an icon the operator deleted or replaced in Maps stays that way:

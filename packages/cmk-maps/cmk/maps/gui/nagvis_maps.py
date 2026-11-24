@@ -5,7 +5,7 @@
 
 """Reading a NagVis installation's maps, images and rotation pools as Maps data.
 
-See "Update from NagVis" in ``doc/documentation/arch-comp-maps.rst`` for the files
+See "Update from NagVis" in ``packages/cmk-maps/docs/arch-comp-maps.rst`` for the files
 read. None of them is changed here.
 """
 

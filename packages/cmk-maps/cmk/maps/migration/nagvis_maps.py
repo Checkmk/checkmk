@@ -5,7 +5,7 @@
 
 """Migration of NagVis maps into Checkmk Maps, on update and by ``cmk-migrate-maps``.
 
-See "Update from NagVis" in ``doc/documentation/arch-comp-maps.rst``. The maps that
+See "Update from NagVis" in ``packages/cmk-maps/docs/arch-comp-maps.rst``. The maps that
 were migrated are recorded in ``var/maps/nagvis_maps_migration.mk``; a later run only
 looks at maps not recorded there, unless forced. A map that could not be migrated is
 not recorded, so every update tries it again.

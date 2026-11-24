@@ -11,6 +11,7 @@ common: &common
     - "almalinux-10"
     - "sles-15sp7"
     - "sles-16.0"
+    - "sles-16.1"
 
 # A reduced set of distros for the daily builds
 # Containing only the latest version of each supported OS
@@ -22,6 +23,7 @@ daily_reduced: &daily_reduced
     - "ubuntu-24.04"
     - "ubuntu-26.04"
     - "sles-16.0"
+    - "sles-16.1"
 
 daily_saas: &daily_saas
     - "ubuntu-24.04"

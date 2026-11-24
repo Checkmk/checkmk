@@ -296,6 +296,7 @@ rrdtool_perl_bindings(
             "@cmk//distro:debian-13": "debian-13",
             "@cmk//distro:sles-15sp7": "sles-15sp7",
             "@cmk//distro:sles-16.0": "sles-16.0",
+            "@cmk//distro:sles-16.1": "sles-16.1",
             "@cmk//distro:ubuntu-22.04": "ubuntu-22.04",
             "@cmk//distro:ubuntu-24.04": "ubuntu-24.04",
             "@cmk//distro:ubuntu-26.04": "ubuntu-26.04",

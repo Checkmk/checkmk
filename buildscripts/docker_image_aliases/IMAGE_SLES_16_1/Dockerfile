@@ -1,0 +1,1 @@
+FROM artifacts.lan.tribe29.com:4000/bci-base@sha256:873977971d0a39c1e90dc0c8a6fe5a0728ca21b255b2d544039da4bfdf7b4fa4

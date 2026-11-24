@@ -1,6 +1,6 @@
 module(
     name = "rrdtool",
-    version = "1.7.2.cmk.3",
+    version = "1.7.2.cmk.4",
     bazel_compatibility = [">=7.2.1"],
     compatibility_level = 1,
 )

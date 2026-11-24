@@ -759,6 +759,7 @@ pkg_files(
         "@cmk//distro:debian-13": ["//omd/distros:DEBIAN_13.mk"],
         "@cmk//distro:sles-15sp7": ["//omd/distros:SLES_15SP7.mk"],
         "@cmk//distro:sles-16.0": ["//omd/distros:SLES_16.0.mk"],
+        "@cmk//distro:sles-16.1": ["//omd/distros:SLES_16.1.mk"],
         "@cmk//distro:ubuntu-22.04": ["//omd/distros:UBUNTU_22.04.mk"],
         "@cmk//distro:ubuntu-24.04": ["//omd/distros:UBUNTU_24.04.mk"],
         "@cmk//distro:ubuntu-26.04": ["//omd/distros:UBUNTU_26.04.mk"],
@@ -772,6 +773,7 @@ pkg_files(
         "@cmk//distro:debian-13": {"//omd/distros:DEBIAN_13.mk": "distro.info"},
         "@cmk//distro:sles-15sp7": {"//omd/distros:SLES_15SP7.mk": "distro.info"},
         "@cmk//distro:sles-16.0": {"//omd/distros:SLES_16.0.mk": "distro.info"},
+        "@cmk//distro:sles-16.1": {"//omd/distros:SLES_16.1.mk": "distro.info"},
         "@cmk//distro:ubuntu-22.04": {"//omd/distros:UBUNTU_22.04.mk": "distro.info"},
         "@cmk//distro:ubuntu-24.04": {"//omd/distros:UBUNTU_24.04.mk": "distro.info"},
         "@cmk//distro:ubuntu-26.04": {"//omd/distros:UBUNTU_26.04.mk": "distro.info"},
@@ -1030,6 +1032,7 @@ pkg_name_info(
         "@cmk//distro:debian-13": "0.trixie",
         "@cmk//distro:sles-15sp7": "sles15sp7",
         "@cmk//distro:sles-16.0": "sles16.0",
+        "@cmk//distro:sles-16.1": "sles16.1",
         "@cmk//distro:ubuntu-22.04": "0.jammy",
         "@cmk//distro:ubuntu-24.04": "0.noble",
         "@cmk//distro:ubuntu-26.04": "0.resolute",
@@ -1168,6 +1171,7 @@ write_omd_spec(
         "@cmk//distro:almalinux-9": "el9",
         "@cmk//distro:sles-15sp7": "sles15sp7",
         "@cmk//distro:sles-16.0": "sles16.0",
+        "@cmk//distro:sles-16.1": "sles16.1",
         "//conditions:default": "",
     }),
     edition = "@cmk//edition",
@@ -1190,6 +1194,7 @@ pkg_rpm_from_tar(
         "@cmk//distro:almalinux-9": "el9",
         "@cmk//distro:sles-15sp7": "sles15sp7",
         "@cmk//distro:sles-16.0": "sles16.0",
+        "@cmk//distro:sles-16.1": "sles16.1",
         "//conditions:default": "",
     }),
     edition = "@cmk//edition",
@@ -1247,6 +1252,10 @@ sh_test(
             "$(location //tests/packaging/package_validator:system_dependencies_sles)",
             "$(location //tests/packaging/package_validator:system_dependencies_sles16_0)",
         ],
+        "@cmk//distro:sles-16.1": [
+            "$(location //tests/packaging/package_validator:system_dependencies_sles)",
+            "$(location //tests/packaging/package_validator:system_dependencies_sles16_1)",
+        ],
     }),
     data = [
         ":rpm",
@@ -1273,6 +1282,10 @@ sh_test(
         "@cmk//distro:sles-16.0": [
             "//tests/packaging/package_validator:system_dependencies_sles",
             "//tests/packaging/package_validator:system_dependencies_sles16_0",
+        ],
+        "@cmk//distro:sles-16.1": [
+            "//tests/packaging/package_validator:system_dependencies_sles",
+            "//tests/packaging/package_validator:system_dependencies_sles16_1",
         ],
     }),
     tags = [

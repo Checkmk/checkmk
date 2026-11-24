@@ -24,6 +24,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.ccc.version import __version__, Edition
+from cmk.events.notification_result import NotificationContext
 from cmk.events.notify_types import (
     AlwaysBulkParameters,
     EventRule,
@@ -38,6 +39,8 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.logged_in import save_user_file
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.notifications.modes import (
     get_disabled_notifications_infos,
     get_total_sent_notifications,
@@ -630,9 +633,9 @@ def test_test_form_offers_the_simulation_options(
     assert "Trigger notification for a specific method" in page
 
 
-def _submitted_test(
+def _fill_test_form(
     load_config: Config, test_edition: Edition, button: str, **overrides: str
-) -> dict[str, str]:
+) -> None:
     form = form_values(
         render_page(ModeTestNotifications(test_edition, page_context(load_config)), load_config),
         "test_notifications",
@@ -642,61 +645,25 @@ def _submitted_test(
         "advanced_opts_p_date_and_time_0": "2026-10-07",
         "advanced_opts_p_date_and_time_1": "10:00",
     }
-    submit(**{**form, **browser_only, button: "1", **overrides})
-    return redirect_vars(
-        ModeTestNotifications(test_edition, page_context(load_config)).action(load_config)
-    )
+    set_request_vars(**{**form, **browser_only, button: "1", **overrides})
 
 
-def _follow_redirect(redirect: dict[str, str]) -> None:
-    request.del_vars("_")
-    set_request_vars(**redirect)
+def _submitted_test(
+    load_config: Config, test_edition: Edition, button: str, **overrides: str
+) -> ModeTestNotifications:
+    _fill_test_form(load_config, test_edition, button, **overrides)
+    submit()
+    mode = ModeTestNotifications(test_edition, page_context(load_config))
+    assert mode.action(load_config) is None
+    return mode
 
 
-def test_testing_a_host_builds_a_host_context(load_config: Config, test_edition: Edition) -> None:
-    redirect = _submitted_test(
-        load_config,
-        test_edition,
-        "_test_host_notifications",
-        general_opts_p_on_hostname_hint="web01",
-        general_opts_p_plugin_output="host test output",
-    )
-
-    context = json.loads(redirect["test_context"])
-    assert redirect["test_type"] == "host_test"
-    assert context["HOSTNAME"] == "web01"
-    assert context["WHAT"] == "HOST"
-    assert context["NOTIFICATIONTYPE"] == "PROBLEM"
-    assert context["HOSTOUTPUT"] == "host test output"
-
-
-def test_testing_a_service_builds_a_service_context(
-    load_config: Config, test_edition: Edition
-) -> None:
-    redirect = _submitted_test(
-        load_config,
-        test_edition,
-        "_test_service_notifications",
-        general_opts_p_on_hostname_hint="web01",
-        general_opts_p_on_service_hint="CPU load",
-        general_opts_p_plugin_output="service test output",
-    )
-
-    context = json.loads(redirect["test_context"])
-    assert redirect["test_type"] == "svc_test"
-    assert context["WHAT"] == "SERVICE"
-    assert context["SERVICEDESC"] == "CPU load"
-    assert context["SERVICEOUTPUT"] == "service test output"
-
-
-def test_testing_without_a_host_is_rejected(load_config: Config, test_edition: Edition) -> None:
-    with pytest.raises(MKUserError, match="Please provide a host name"):
-        _submitted_test(
-            load_config,
-            test_edition,
-            "_test_host_notifications",
-            general_opts_p_on_hostname_hint="",
-        )
+def _sent_tests(automations: _Automations) -> list[tuple[NotificationContext, str]]:
+    return [
+        (json.loads(context), dispatch)
+        for command, (context, dispatch) in automations.calls
+        if command == "notification-test"
+    ]
 
 
 @pytest.fixture(name="monitored_web01")
@@ -741,6 +708,109 @@ def fixture_monitored_web01(mock_livestatus: MockLiveStatusConnection) -> MockLi
     return mock_livestatus
 
 
+def test_testing_a_host_builds_a_host_context(
+    automations: _Automations,
+    monitored_web01: MockLiveStatusConnection,
+    load_config: Config,
+    test_edition: Edition,
+) -> None:
+    automations.results["notification-test"] = NotificationTestResult(result=None)
+    monitored_web01.expect_query(["GET hosts"], match_type="loose")
+    with monitored_web01:
+        _submitted_test(
+            load_config,
+            test_edition,
+            "_test_host_notifications",
+            general_opts_p_on_hostname_hint="web01",
+            general_opts_p_plugin_output="host test output",
+        )
+
+    [(context, _dispatch)] = _sent_tests(automations)
+    assert context["HOSTNAME"] == "web01"
+    assert context["WHAT"] == "HOST"
+    assert context["NOTIFICATIONTYPE"] == "PROBLEM"
+    assert context["HOSTOUTPUT"] == "host test output"
+
+
+def test_testing_a_service_builds_a_service_context(
+    automations: _Automations,
+    monitored_web01: MockLiveStatusConnection,
+    load_config: Config,
+    test_edition: Edition,
+) -> None:
+    automations.results["notification-test"] = NotificationTestResult(result=None)
+    monitored_web01.expect_query(["GET hosts"], match_type="loose")
+    monitored_web01.expect_query(["GET services"], match_type="loose")
+    with monitored_web01:
+        _submitted_test(
+            load_config,
+            test_edition,
+            "_test_service_notifications",
+            general_opts_p_on_hostname_hint="web01",
+            general_opts_p_on_service_hint="CPU load",
+            general_opts_p_plugin_output="service test output",
+        )
+
+    [(context, _dispatch)] = _sent_tests(automations)
+    assert context["WHAT"] == "SERVICE"
+    assert context["SERVICEDESC"] == "CPU load"
+    assert context["SERVICEOUTPUT"] == "service test output"
+
+
+def test_testing_without_a_host_is_rejected(load_config: Config, test_edition: Edition) -> None:
+    with pytest.raises(MKUserError, match="Please provide a host name"):
+        _submitted_test(
+            load_config,
+            test_edition,
+            "_test_host_notifications",
+            general_opts_p_on_hostname_hint="",
+        )
+
+
+def test_failing_test_is_reported(
+    automations: _Automations,
+    monitored_web01: MockLiveStatusConnection,
+    load_config: Config,
+    test_edition: Edition,
+) -> None:
+    automations.failing.add("notification-test")
+    monitored_web01.expect_query(["GET hosts"], match_type="loose")
+
+    with monitored_web01, pytest.raises(MKUserError, match="notification-test failed"):
+        _submitted_test(
+            load_config,
+            test_edition,
+            "_test_host_notifications",
+            general_opts_p_on_hostname_hint="web01",
+        )
+
+
+def test_resubmitting_a_test_does_not_test_again(
+    automations: _Automations,
+    monitored_web01: MockLiveStatusConnection,
+    load_config: Config,
+    test_edition: Edition,
+) -> None:
+    """A reload or a step back and forth in the browser history submits the form again"""
+    automations.results["notification-test"] = NotificationTestResult(result=None)
+    _fill_test_form(
+        load_config,
+        test_edition,
+        "_test_host_notifications",
+        general_opts_p_on_hostname_hint="web01",
+    )
+    transactions.store_new()
+    set_request_vars(_csrf_token=session.session_info.csrf_token)
+    monitored_web01.expect_query(["GET hosts"], match_type="loose")
+
+    with monitored_web01:
+        ModeTestNotifications(test_edition, page_context(load_config)).action(load_config)
+    resubmitted = ModeTestNotifications(test_edition, page_context(load_config)).action(load_config)
+
+    assert redirect_vars(resubmitted) == {"mode": "test_notifications"}
+    assert len(_sent_tests(automations)) == 1
+
+
 def _tested_service_page(
     automations: _Automations,
     monitored_web01: MockLiveStatusConnection,
@@ -750,22 +820,18 @@ def _tested_service_page(
     rules = [mail_rule("matching"), mail_rule("missing")]
     _save_rules(rules)
     automations.results["notification-test"] = NotificationTestResult(result=_analysis(rules))
-    _follow_redirect(
-        _submitted_test(
+    monitored_web01.expect_query(["GET hosts"], match_type="loose")
+    monitored_web01.expect_query(["GET services"], match_type="loose")
+
+    with monitored_web01:
+        mode = _submitted_test(
             load_config,
             test_edition,
             "_test_service_notifications",
             general_opts_p_on_hostname_hint="web01",
             general_opts_p_on_service_hint="CPU load",
         )
-    )
-    monitored_web01.expect_query(["GET hosts"], match_type="loose")
-    monitored_web01.expect_query(["GET services"], match_type="loose")
-
-    with monitored_web01:
-        return render_page(
-            ModeTestNotifications(test_edition, page_context(load_config)), load_config
-        )
+    return render_page(mode, load_config)
 
 
 def test_testing_a_notification_sends_the_monitored_context(
@@ -776,10 +842,7 @@ def test_testing_a_notification_sends_the_monitored_context(
 ) -> None:
     _tested_service_page(automations, monitored_web01, load_config, test_edition)
 
-    [(context_arg, _dispatch)] = [
-        args for command, args in automations.calls if command == "notification-test"
-    ]
-    sent_context = json.loads(context_arg)
+    [(sent_context, _dispatch)] = _sent_tests(automations)
     assert {
         key: sent_context[key]
         for key in ("SITEOFHOST", "HOST_SL", "SVC_SL", "HOSTTAG_criticality", "SERVICELABEL_team")
@@ -835,21 +898,18 @@ def test_testing_an_unmonitored_host_is_rejected(
     load_config: Config,
     test_edition: Edition,
 ) -> None:
-    _follow_redirect(
-        _submitted_test(
-            load_config,
-            test_edition,
-            "_test_host_notifications",
-            general_opts_p_on_hostname_hint="unknown",
-        )
-    )
     monitored_web01.expect_query(["GET hosts"], match_type="loose")
 
     with (
         monitored_web01,
         pytest.raises(MKUserError, match="is not known in the activated monitoring"),
     ):
-        render_page(ModeTestNotifications(test_edition, page_context(load_config)), load_config)
+        _submitted_test(
+            load_config,
+            test_edition,
+            "_test_host_notifications",
+            general_opts_p_on_hostname_hint="unknown",
+        )
 
 
 def test_user_rule_table_links_to_the_user_rule_editor(

@@ -99,7 +99,6 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -1848,7 +1847,6 @@ class AutomationNotificationTest(AutomationCommand[NotificationTestRequest]):
 
 
 class NotificationTestType(enum.StrEnum):
-    host = "host_test"
     service = "svc_test"
 
 
@@ -1857,11 +1855,18 @@ class AdvancedTestOptions(TypedDict):
     date_and_time: NotRequired[tuple[str, str]]
 
 
+class _NotificationTestRun(NamedTuple):
+    context: NotificationContext
+    dispatch: str
+    result: NotifyAnalysisInfo | None
+
+
 class ModeTestNotifications(ModeNotifications):
     def __init__(self, edition: Edition, ctx: PageContext) -> None:
         super().__init__(edition, ctx)
         options = user.load_file("test_notification_display_options", {})
         self._show_user_rules = options.get("show_user_rules", False)
+        self._test_run: _NotificationTestRun | None = None
 
     @classmethod
     @override
@@ -1999,21 +2004,20 @@ class ModeTestNotifications(ModeNotifications):
             self._show_user_rules = bool(request.var("_show_user"))
             self._save_test_notification_display_options()
 
+        # Run the test here and render the result in the same response: a URL that runs it
+        # would send the notification again on every reload or history navigation.
         if self._test_notification_ongoing() and transactions.check_transaction(request):
-            context, dispatch, test_type = self._infos_from_vars()
-            return redirect(
-                makeuri(
-                    request,
-                    [
-                        ("mode", "test_notifications"),
-                        ("test_notification", "1"),
-                        ("test_context", json.dumps(context)),
-                        ("dispatch", dispatch or ""),
-                        ("test_type", test_type),
-                    ],
-                    filename="wato.py",
+            context, dispatch = self._infos_from_vars()
+            try:
+                result = self._run_test(
+                    context, dispatch, site_configs=config.sites, debug=config.debug
                 )
-            )
+            except MKGeneralException as e:
+                # Site, version and automation failures; the action handler shows only user
+                # errors above the form
+                raise MKUserError(None, str(e)) from e
+            self._test_run = _NotificationTestRun(context, dispatch, result)
+            return None
 
         return redirect(self.mode_url())
 
@@ -2029,81 +2033,63 @@ class ModeTestNotifications(ModeNotifications):
 
         self._render_test_notifications()
 
-        analyse = None
-        if not user_errors:
-            context, analyse = self._result_from_request(
-                site_configs=config.sites, debug=config.debug
+        if (test_run := self._test_run) is None:
+            self._show_rules(None, config)
+            return
+
+        self._show_notification_test_overview(test_run)
+        self._show_notification_test_details(
+            test_run.context,
+            test_run.result,
+            escape_plugin_output=config.escape_plugin_output,
+            table_row_limit=config.table_row_limit,
+        )
+        if test_run.result:
+            self._show_resulting_notifications(
+                result=test_run.result, table_row_limit=config.table_row_limit
             )
-            self._show_notification_test_overview(context, analyse)
-            self._show_notification_test_details(
-                context,
-                analyse,
-                escape_plugin_output=config.escape_plugin_output,
-                table_row_limit=config.table_row_limit,
-            )
-            if request.var("test_notification") and analyse:
-                self._show_resulting_notifications(
-                    result=analyse, table_row_limit=config.table_row_limit
-                )
-        self._show_rules(analyse, config)
+        self._show_rules(test_run.result, config)
 
-    def _result_from_request(
-        self, *, site_configs: Mapping[SiteId, SiteConfiguration], debug: bool
-    ) -> tuple[NotificationContext | None, NotifyAnalysisInfo | None]:
-        if request.var("test_notification"):
-            try:
-                context: NotificationContext = json.loads(
-                    request.get_str_input_mandatory("test_context")
-                )
-            except Exception as e:
-                raise MKUserError(None, "Failed to parse context from request.") from e
-
-            event_date = time.time()
-            try:
-                self._add_missing_host_context(context, event_date)
-                if context["WHAT"] == "SERVICE":
-                    self._add_missing_service_context(context, event_date)
-            except ValueError as e:
-                raise MKUserError(None, str(e)) from e
-
-            site_id = SiteId(context["SITEOFHOST"])
-            site_config = site_configs[site_id]
-            remote_spooling = site_config.get("globals", {}).get("notification_spooling", False)
-            automation_config = make_automation_config(site_config)
-            if isinstance(automation_config, LocalAutomationConfig) or remote_spooling:
-                return (
-                    context,
-                    notification_test(
-                        raw_context=context,
-                        dispatch=request.var("dispatch", ""),
-                        debug=debug,
-                    ).result,
-                )
-
-            remote_result = cast(
-                NotifyAnalysisInfo,
-                do_remote_automation(
-                    automation_config,
-                    "notification-test",
-                    [
-                        ("context", json.dumps(context)),
-                        ("dispatch", request.var("dispatch", "")),
-                        ("debug", "1" if debug else ""),
-                    ],
-                    debug=debug,
-                ),
-            )
-
-            return (context, remote_result)
-
-        return None, None
-
-    def _show_notification_test_overview(
+    def _run_test(
         self,
-        context: NotificationContext | None,
-        analyse: NotifyAnalysisInfo | None,
-    ) -> None:
-        if not context or not analyse:
+        context: NotificationContext,
+        dispatch: str,
+        *,
+        site_configs: Mapping[SiteId, SiteConfiguration],
+        debug: bool,
+    ) -> NotifyAnalysisInfo | None:
+        """Runs the test on the site of the host, which sends the notification if dispatch names
+        a method. Completes the context with the monitoring data of the host and service."""
+        event_date = time.time()
+        try:
+            self._add_missing_host_context(context, event_date)
+            if context["WHAT"] == "SERVICE":
+                self._add_missing_service_context(context, event_date)
+        except ValueError as e:
+            raise MKUserError(None, str(e)) from e
+
+        site_config = site_configs[SiteId(context["SITEOFHOST"])]
+        remote_spooling = site_config.get("globals", {}).get("notification_spooling", False)
+        automation_config = make_automation_config(site_config)
+        if isinstance(automation_config, LocalAutomationConfig) or remote_spooling:
+            return notification_test(raw_context=context, dispatch=dispatch, debug=debug).result
+
+        return cast(
+            NotifyAnalysisInfo,
+            do_remote_automation(
+                automation_config,
+                "notification-test",
+                [
+                    ("context", json.dumps(context)),
+                    ("dispatch", dispatch),
+                    ("debug", "1" if debug else ""),
+                ],
+                debug=debug,
+            ),
+        )
+
+    def _show_notification_test_overview(self, test_run: _NotificationTestRun) -> None:
+        if not (analyse := test_run.result):
             return
 
         html.open_div(id_="notification_analysis_container")
@@ -2162,7 +2148,7 @@ class ModeTestNotifications(ModeNotifications):
                 ),
             )
         )
-        if dispatch_method := request.var("dispatch"):
+        if dispatch_method := test_run.dispatch:
             unique_contacts = {
                 contact
                 for raw_contact, method, *_ in analyse_resulting_notifications
@@ -2191,15 +2177,12 @@ class ModeTestNotifications(ModeNotifications):
 
     def _show_notification_test_details(
         self,
-        context: NotificationContext | None,
+        context: NotificationContext,
         analyse: NotifyAnalysisInfo | None,
         *,
         escape_plugin_output: bool,
         table_row_limit: int,
     ) -> None:
-        if not context:
-            return
-
         with table_element(
             table_id="notification_test",
             title=_("Analysis: test notifications"),
@@ -2292,15 +2275,10 @@ class ModeTestNotifications(ModeNotifications):
         )
         advanced_test_options: AdvancedTestOptions = {}
         notify_plugin = {}
-        if (
-            form_submitted := request.var("test_notification")
-        ) or self._test_notification_ongoing():
+        if self._test_notification_ongoing():
             general_test_options = self._vs_general_test_options().from_html_vars("general_opts")
-            if form_submitted:
-                advanced_test_options = self._vs_advanced_test_options().from_html_vars(
-                    "advanced_opts"
-                )
-                notify_plugin = self._vs_notify_plugin().from_html_vars("notify_plugin")
+            advanced_test_options = self._vs_advanced_test_options().from_html_vars("advanced_opts")
+            notify_plugin = self._vs_notify_plugin().from_html_vars("notify_plugin")
 
         self._ensure_correct_default_test_options()
 
@@ -2336,7 +2314,7 @@ class ModeTestNotifications(ModeNotifications):
             "_test_service_notifications"
         )
 
-    def _infos_from_vars(self) -> tuple[dict[str, Any], str | None, str]:
+    def _infos_from_vars(self) -> tuple[NotificationContext, str]:
         general_test_options = self._vs_general_test_options().from_html_vars("general_opts")
         self._vs_general_test_options().validate_value(general_test_options, "general_opts")
 
@@ -2344,13 +2322,11 @@ class ModeTestNotifications(ModeNotifications):
         self._vs_advanced_test_options().validate_value(advanced_test_options, "advanced_opts")
 
         hostname = general_test_options["on_hostname_hint"]
-        context: dict[str, Any] = {
-            "HOSTNAME": hostname,
-        }
+        context = NotificationContext({"HOSTNAME": hostname})
 
         notify_plugin = self._vs_notify_plugin().from_html_vars("notify_plugin")
         self._vs_notify_plugin().validate_value(notify_plugin, "notify_plugin")
-        dispatch = None
+        dispatch = ""
         if notify_plugin:
             method, parameter_id = notify_plugin["notify_plugin"]
             dispatch = method
@@ -2374,9 +2350,7 @@ class ModeTestNotifications(ModeNotifications):
             context["HOSTSTATE"] = "UP"
 
         notification_nr = str(advanced_test_options["notification_nr"])
-        test_type = NotificationTestType.host
         if service_desc := general_test_options.get("on_service_hint"):
-            test_type = NotificationTestType.service
             if not service_desc:
                 raise MKUserError(None, _("Please provide a service."))
 
@@ -2418,7 +2392,7 @@ class ModeTestNotifications(ModeNotifications):
         else:
             context["HOSTOUTPUT"] = plugin_output
 
-        return context, dispatch, test_type
+        return context, dispatch
 
     def _add_missing_host_context(self, context: NotificationContext, event_date: float) -> None:
         """We don't want to transport all possible informations via HTTP vars
@@ -2755,16 +2729,15 @@ class ModeTestNotifications(ModeNotifications):
         return {}
 
     def _ensure_correct_default_test_options(self) -> None:
-        test_type = request.var("test_type")
         if (
             request.has_var("_test_service_notifications")
-            or test_type == NotificationTestType.service
+            or request.var("test_type") == NotificationTestType.service
         ):
             html.call_ts_function(
                 function_name="toggle_test_notification_visibility",
                 arguments={"source": "test_on_service", "target": "test_on_host"},
             )
-        elif request.has_var("_test_host_notifications") or test_type == NotificationTestType.host:
+        elif request.has_var("_test_host_notifications"):
             html.call_ts_function(
                 function_name="toggle_test_notification_visibility",
                 arguments={

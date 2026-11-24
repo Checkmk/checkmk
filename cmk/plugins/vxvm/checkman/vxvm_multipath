@@ -1,4 +1,4 @@
-title: Veritas VxVM: Multipath
+title: Veritas VxVM: Multipathing
 agents: hpux, linux
 catalog: os/storage
 license: GPLv2

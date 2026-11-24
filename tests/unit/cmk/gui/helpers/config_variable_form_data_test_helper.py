@@ -746,6 +746,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         },
         "openai.base_url": NoSaveableDefault(),
         "openai.context_window_tokens": NoSaveableDefault(),
+        "checkmk_ai_router": None,
     },
     "auth_by_http_header": {
         "[enable]": "X-Remote-User",
@@ -1627,6 +1628,7 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
     "ai_control_plane_instructions": [CasePass("custom", "Dummy instructions.")],
     "ai_control_plane_provider": [
         CasePass("none", ("none", None)),
+        CasePass("checkmk_ai_router", ("checkmk_ai_router", None)),
         CasePass(
             "anthropic",
             (

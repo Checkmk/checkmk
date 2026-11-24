@@ -408,6 +408,12 @@ class TestInventoryMerakiInterfaces:
 
         assert value == expected
 
+    def test_speed_in_kbps(self) -> None:
+        section = self._build_section({"speed": "100 Kbps"})
+        row, *_ = inventorize_meraki_interfaces(section)
+        assert isinstance(row, TableRow)
+        assert row.inventory_columns["speed"] == 100_000
+
     def test_speed_not_included_in_columns_when_missing(self) -> None:
         section = self._build_section({"speed": ""})
         row, *_ = inventorize_meraki_interfaces(section)

@@ -158,7 +158,7 @@ class SwitchPortsStatus(BaseModel, frozen=True):
 
         match unit.lower()[0]:
             case "k":  # kilobit per second
-                return int(value + 1e3)
+                return int(value * 1e3)
             case "m":  # megabit per second
                 return int(value * 1e6)
             case "g":  # gigabit per second

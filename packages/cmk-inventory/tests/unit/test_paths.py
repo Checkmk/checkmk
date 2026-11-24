@@ -24,13 +24,15 @@ from cmk.inventory.paths import (
     TreePathGz,
 )
 
+_OMD_ROOT = Path("/omd_root")
+
 
 @pytest.mark.parametrize(
     "raw_host_name", ["hostname", "hostname.", "hostname.domain", "hostname.json"]
 )
-def test_tree_paths(tmp_path: Path, raw_host_name: str) -> None:
+def test_tree_paths(raw_host_name: str) -> None:
     host_name = HostName(raw_host_name)
-    inv_paths = InventoryPaths(tmp_path)
+    inv_paths = InventoryPaths(_OMD_ROOT)
     assert (
         inv_paths.inventory_tree(host_name),
         inv_paths.inventory_tree_gz(host_name),
@@ -39,24 +41,24 @@ def test_tree_paths(tmp_path: Path, raw_host_name: str) -> None:
         inv_paths.delta_cache_tree(host_name, 123, 456),
     ) == (
         TreePath(
-            path=tmp_path / f"var/check_mk/inventory/{raw_host_name}.json",
-            legacy=tmp_path / f"var/check_mk/inventory/{raw_host_name}",
+            path=_OMD_ROOT / f"var/check_mk/inventory/{raw_host_name}.json",
+            legacy=_OMD_ROOT / f"var/check_mk/inventory/{raw_host_name}",
         ),
         TreePathGz(
-            path=tmp_path / f"var/check_mk/inventory/{raw_host_name}.json.gz",
-            legacy=tmp_path / f"var/check_mk/inventory/{raw_host_name}.gz",
+            path=_OMD_ROOT / f"var/check_mk/inventory/{raw_host_name}.json.gz",
+            legacy=_OMD_ROOT / f"var/check_mk/inventory/{raw_host_name}.gz",
         ),
         TreePath(
-            path=tmp_path / f"tmp/check_mk/status_data/{raw_host_name}.json",
-            legacy=tmp_path / f"tmp/check_mk/status_data/{raw_host_name}",
+            path=_OMD_ROOT / f"tmp/check_mk/status_data/{raw_host_name}.json",
+            legacy=_OMD_ROOT / f"tmp/check_mk/status_data/{raw_host_name}",
         ),
         TreePath(
-            path=tmp_path / f"var/check_mk/inventory_archive/{raw_host_name}/123.json",
-            legacy=tmp_path / f"var/check_mk/inventory_archive/{raw_host_name}/123",
+            path=_OMD_ROOT / f"var/check_mk/inventory_archive/{raw_host_name}/123.json",
+            legacy=_OMD_ROOT / f"var/check_mk/inventory_archive/{raw_host_name}/123",
         ),
         TreePath(
-            path=tmp_path / f"var/check_mk/inventory_delta_cache/{raw_host_name}/123_456.json",
-            legacy=tmp_path / f"var/check_mk/inventory_delta_cache/{raw_host_name}/123_456",
+            path=_OMD_ROOT / f"var/check_mk/inventory_delta_cache/{raw_host_name}/123_456.json",
+            legacy=_OMD_ROOT / f"var/check_mk/inventory_delta_cache/{raw_host_name}/123_456",
         ),
     )
 
@@ -69,13 +71,13 @@ def test_tree_paths(tmp_path: Path, raw_host_name: str) -> None:
 )
 @pytest.mark.parametrize("suffix", ["", ".json"])
 def test_tree_path_from_archive_or_delta_cache_file_path(
-    tmp_path: Path, raw_host_name: str, directory: str, file_name: str, suffix: str
+    raw_host_name: str, directory: str, file_name: str, suffix: str
 ) -> None:
     assert TreePath.from_archive_or_delta_cache_file_path(
-        tmp_path / f"var/check_mk/{directory}/{raw_host_name}/{file_name}{suffix}"
+        _OMD_ROOT / f"var/check_mk/{directory}/{raw_host_name}/{file_name}{suffix}"
     ) == TreePath(
-        path=tmp_path / f"var/check_mk/{directory}/{raw_host_name}/{file_name}.json",
-        legacy=tmp_path / f"var/check_mk/{directory}/{raw_host_name}/{file_name}",
+        path=_OMD_ROOT / f"var/check_mk/{directory}/{raw_host_name}/{file_name}.json",
+        legacy=_OMD_ROOT / f"var/check_mk/{directory}/{raw_host_name}/{file_name}",
     )
 
 
@@ -86,9 +88,9 @@ def test_tree_path_from_archive_or_delta_cache_file_path(
         pytest.param(123, 456, "123_456", id="pair"),
     ],
 )
-def test_delta_cache_tree(tmp_path: Path, previous: int, current: int, expected_name: str) -> None:
-    file_path = tmp_path / f"var/check_mk/inventory_delta_cache/hostname/{expected_name}"
-    assert InventoryPaths(tmp_path).delta_cache_tree(
+def test_delta_cache_tree(previous: int, current: int, expected_name: str) -> None:
+    file_path = _OMD_ROOT / f"var/check_mk/inventory_delta_cache/hostname/{expected_name}"
+    assert InventoryPaths(_OMD_ROOT).delta_cache_tree(
         HostName("hostname"), previous, current
     ) == TreePath(path=file_path.with_suffix(".json"), legacy=file_path)
 
@@ -101,9 +103,9 @@ def test_delta_cache_tree(tmp_path: Path, previous: int, current: int, expected_
         pytest.param(-1, -1, id="previous-equal-current"),
     ],
 )
-def test_delta_cache_tree_error(tmp_path: Path, previous: int, current: int) -> None:
+def test_delta_cache_tree_error(previous: int, current: int) -> None:
     with pytest.raises(ValueError):
-        InventoryPaths(tmp_path).delta_cache_tree(HostName("hostname"), previous, current)
+        InventoryPaths(_OMD_ROOT).delta_cache_tree(HostName("hostname"), previous, current)
 
 
 def test_parse_archive_timestamp() -> None:
@@ -168,10 +170,10 @@ def test_tree_path_gz_rejects_a_misnamed_path(path: Path, legacy: Path) -> None:
     "host_name", [json.loads('".."'), HostName("")], ids=["parent directory", "empty"]
 )
 def test_tree_paths_refuse_a_host_name_leaving_their_directory(
-    tmp_path: Path, path_of: Callable[[InventoryPaths, HostName], object], host_name: HostName
+    path_of: Callable[[InventoryPaths, HostName], object], host_name: HostName
 ) -> None:
     with pytest.raises(HostNameValidationError):
-        path_of(InventoryPaths(tmp_path), host_name)
+        path_of(InventoryPaths(_OMD_ROOT), host_name)
 
 
 def test_has_inventory_tree(tmp_path: Path) -> None:
@@ -243,10 +245,10 @@ def test_has_no_history(tmp_path: Path) -> None:
     assert not has_history(InventoryPaths(tmp_path), HostName("host"))
 
 
-def test_host_tree_files(tmp_path: Path) -> None:
+def test_host_tree_files() -> None:
     assert [
-        str(p.relative_to(tmp_path))
-        for p in InventoryPaths(tmp_path).host_tree_files(HostName("host"))
+        str(p.relative_to(_OMD_ROOT))
+        for p in InventoryPaths(_OMD_ROOT).host_tree_files(HostName("host"))
     ] == [
         "var/check_mk/inventory/host.json",
         "var/check_mk/inventory/host",

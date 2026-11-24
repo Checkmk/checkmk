@@ -42,7 +42,6 @@ from ._fixtures import (
     filled_immutable_tree,
     filled_mutable_tree,
     immutable_tree,
-    raw_tree,
 )
 
 
@@ -462,12 +461,12 @@ def test_parse_from_gzipped(raw: Mapping[str, object], expected: SDMetaAndRawTre
 
 
 def test_parse_from_raw_status_data_tree() -> None:
-    tree = raw_tree("val")
+    tree = serialize_tree(filled_mutable_tree())
     assert parse_from_raw_status_data_tree(json.dumps(tree).encode()) == deserialize_tree(tree)
 
 
 def test_parse_from_raw_status_data_tree_legacy() -> None:
-    tree = raw_tree("val")
+    tree = serialize_tree(filled_mutable_tree())
     assert parse_from_raw_status_data_tree(repr(tree).encode()) == deserialize_tree(tree)
 
 

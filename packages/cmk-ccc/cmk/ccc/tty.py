@@ -140,6 +140,8 @@ def print_table(
     headers: TableRow, colors: TableColors, rows: Iterable[TableRow], indent: str = ""
 ) -> None:
     num_columns = len(headers)
+    if len(colors) < num_columns:
+        raise ValueError(f"{num_columns} columns need as many colors, got {len(colors)}")
     # Pad short rows, cut long ones.
     rows = [[*row[:num_columns], *[""] * (num_columns - len(row))] for row in rows]
     lengths = _column_lengths(headers, rows)

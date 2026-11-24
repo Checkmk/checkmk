@@ -62,6 +62,11 @@ def test_print_table_fills_short_rows(uncolored_capsys: pytest.CaptureFixture[st
     assert uncolored_capsys.readouterr().out == "h1       h2\n-------- --\nonly-one   \n"
 
 
+def test_print_table_rejects_missing_colors() -> None:
+    with pytest.raises(ValueError, match="2 columns need as many colors, got 1"):
+        tty.print_table(["h1", "h2"], ["XX"], [["r1", "r2"]])
+
+
 def test_print_table_ignores_cells_without_a_header(
     uncolored_capsys: pytest.CaptureFixture[str],
 ) -> None:

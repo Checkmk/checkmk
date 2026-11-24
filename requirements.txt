@@ -800,6 +800,7 @@ checkmk-dev-tools==3.0.0 \
     --hash=sha256:71904e43a3d4da20a00c175f9c7944e6ba8e7f96ae56d04e98e4d8d9bb5663dc \
     --hash=sha256:e45bfad29720194a72d03a0a3647454868bdda2d0081153fa7dd0127d24d46bc
     # via
+    #   -r packages/cmk-dev/requirements.in
     #   -r tests/dev-requirements.in
     #   cmk-dev-site
 click==8.5.1 \
@@ -1163,6 +1164,7 @@ cryptography==50.0.2 \
     #   -r non-free/packages/cmk-dev-ai/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-crypto/requirements.in
+    #   -r packages/cmk-dev/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
     #   -r packages/cmk-relay-protocols/requirements.in
     #   azure-identity
@@ -1385,6 +1387,7 @@ fastapi==0.165.0 \
     #   -r non-free/packages/cmk-ai-router/requirements.in
     #   -r non-free/packages/cmk-dev-ai/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-dev/requirements.in
     #   -r packages/cmk-fastapi/requirements.in
     #   -r packages/cmk-maps/requirements.in
     #   cmk-dev-site
@@ -4425,6 +4428,7 @@ pydantic==2.14.4 \
     #   -r non-free/packages/cmk-telemetry/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-backup/requirements.in
+    #   -r packages/cmk-dev/requirements.in
     #   -r packages/cmk-fastapi/requirements.in
     #   -r packages/cmk-flags/requirements.in
     #   -r packages/cmk-licensing/requirements.in
@@ -4642,6 +4646,7 @@ pyjwt[crypto]==2.15.1 \
     --hash=sha256:4f259e80cdfb6b3fc18a7de51fd1ef9ec79652f25019bae68975ca2468a34df8
     # via
     #   -r cmk/requirements.in
+    #   -r packages/cmk-dev/requirements.in
     #   cmk-dev-site
     #   mcp
     #   msal
@@ -4910,6 +4915,7 @@ pytest==9.2.0 \
     #   -r packages/cmk-cli-engine/dev-requirements.in
     #   -r packages/cmk-crash/dev-requirements.in
     #   -r packages/cmk-crypto/dev-requirements.in
+    #   -r packages/cmk-dev/dev-requirements.in
     #   -r packages/cmk-dev-deploy/dev-requirements.in
     #   -r packages/cmk-diagnostics/dev-requirements.in
     #   -r packages/cmk-ec/dev-requirements.in
@@ -5136,6 +5142,7 @@ python-multipart==0.0.34 \
     --hash=sha256:ebacd224bd686eee2f9aa1066a657affe07435a185834e05e5235e2e59173e91
     # via
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-dev/requirements.in
     #   cmk-dev-site
     #   mcp
 python-slugify==9.2.0 \
@@ -5454,6 +5461,7 @@ requests==2.34.2 \
     #   -r non-free/packages/cmk-dcd/requirements.in
     #   -r non-free/packages/cmk-plugins-nonfree/requirements.in
     #   -r packages/cmk-crash/requirements.in
+    #   -r packages/cmk-dev/requirements.in
     #   -r packages/cmk-notification-plugins/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
     #   -r packages/cmk-plugins/requirements.in
@@ -6579,6 +6587,7 @@ uvicorn==0.54.0 \
     #   -r non-free/packages/cmk-dev-ai/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-dev/requirements.in
     #   -r packages/cmk-maps/requirements.in
     #   cmk-dev-site
     #   mcp

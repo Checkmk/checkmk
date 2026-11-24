@@ -49,6 +49,8 @@ filegroup(
         "//packages/cmk-cli-engine:dev-requirements.in",
         "//packages/cmk-crash:dev-requirements.in",
         "//packages/cmk-crypto:dev-requirements.in",
+        "//packages/cmk-dev:dev-requirements.in",
+        "//packages/cmk-dev:requirements.in",
         "//packages/cmk-dev-deploy:dev-requirements.in",
         "//packages/cmk-dev-deploy:requirements.in",
         "//packages/cmk-diagnostics:dev-requirements.in",

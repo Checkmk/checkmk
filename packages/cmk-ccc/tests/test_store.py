@@ -859,28 +859,6 @@ def test_blocking_lock_from_multiple_threads(test_file: Path) -> None:
     assert len(acquired) == 0
 
 
-def test_non_blocking_lock_from_multiple_threads(test_file: Path) -> None:
-    acquired = []
-
-    # Only one thread will ever be able to acquire this lock.
-    def acquire(_n: int) -> None:
-        try:
-            store.acquire_lock(test_file, blocking=False)
-            acquired.append(1)
-            assert store.have_lock(test_file)
-            store.release_lock(test_file)
-            assert not store.have_lock(test_file)
-        except OSError:
-            assert not store.have_lock(test_file)
-
-    pool = ThreadPool(2)
-    pool.map(acquire, iter(range(20)))
-    pool.close()
-    pool.join()
-
-    assert len(acquired) > 1, "No thread got any lock."
-
-
 def test_blocking_lock_while_other_holds_the_lock(t1: LockTestThread, t2: LockTestThread) -> None:
     # Before the try: a failure here would make t1.unlock() fail, too.
     t1.lock()

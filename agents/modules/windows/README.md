@@ -157,6 +157,7 @@ test is the curated diagnostic that names every spot.
 ```
 python-3.cab
 |-- postinstall.cmd          # verbatim from agents/modules/windows/postinstall.cmd
+|-- LICENSE.txt              # CPython's license (PSF), kept as it asks
 |-- python.exe               # base interpreter (from core.msi + exe.msi)
 |-- python3XX.dll            # XX = PYTHON_VERSION_WINDOWS's minor
 |-- DLLs/

@@ -168,6 +168,14 @@ def test_load_data_not_locked(tmp_path: Path) -> None:
     assert store.have_lock(locked_file) is False
 
 
+@pytest.fixture(name="release_locks")
+def fixture_release_locks() -> Iterator[None]:
+    yield
+    # Otherwise the test's thread keeps its locks until a later test releases them.
+    store.release_all_locks()
+
+
+@pytest.mark.usefixtures("release_locks")
 def test_load_data_from_file_locking(tmp_path: Path) -> None:
     locked_file = tmp_path / "locked_file"
     _write_file(locked_file, b"[1, 2]")
@@ -365,6 +373,7 @@ def test_bootstrap_statement_keeps_a_predefined_object() -> None:
     assert namespace["x"] is predefined
 
 
+@pytest.mark.usefixtures("release_locks")
 def test_acquire_lock_not_existing(tmp_path: Path) -> None:
     assert store.acquire_lock(tmp_path / "asd") is True
 
@@ -447,6 +456,7 @@ def test_try_locked(test_file: Path) -> None:
     assert store.have_lock(test_file) is False
 
 
+@pytest.mark.usefixtures("release_locks")
 def test_acquire_lock(test_file: Path) -> None:
     assert store.have_lock(test_file) is False
     assert store.acquire_lock(test_file)

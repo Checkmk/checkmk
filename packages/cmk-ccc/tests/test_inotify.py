@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -59,3 +61,42 @@ def test_removed_watch_reports_nothing(tmp_path: Path) -> None:
 def test_watching_outside_of_the_context_raises(tmp_path: Path) -> None:
     with pytest.raises(RuntimeError, match="Context not entered"):
         INotify().add_watch(tmp_path, Masks.CREATE)
+
+
+# Audit events for starting programs or forking
+_PROCESS_STARTS = {
+    "_posixsubprocess.fork_exec",
+    "os.exec",
+    "os.fork",
+    "os.forkpty",
+    "os.posix_spawn",
+    "os.system",
+    "subprocess.Popen",
+}
+
+
+def _processes_started_while(action: Callable[[], object]) -> list[str]:
+    started: list[str] = []
+    recording = True
+
+    def record(event: str, args: tuple[object, ...]) -> None:
+        if recording and event in _PROCESS_STARTS:
+            started.append(" ".join(str(arg) for arg in (event, *args[:1])))
+
+    # Audit hooks can't be removed, so this one goes quiet afterwards.
+    sys.addaudithook(record)
+    try:
+        action()
+    finally:
+        recording = False
+    return started
+
+
+def test_watching_starts_no_process(tmp_path: Path) -> None:
+    def watch() -> None:
+        with INotify() as inotify:
+            inotify.add_watch(tmp_path, Masks.CREATE)
+
+    started = _processes_started_while(watch)
+
+    assert started == []

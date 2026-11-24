@@ -14,10 +14,10 @@ rather than being a comprehensive interface to what the kernel offers.
 import contextlib
 import enum
 import errno
+import functools
 import os
 from collections.abc import Iterator, Sequence
 from ctypes import c_int, CDLL, get_errno
-from ctypes.util import find_library
 from dataclasses import dataclass
 from fcntl import ioctl
 from io import FileIO
@@ -130,16 +130,17 @@ class _EventParser:
             )
 
 
+@functools.cache
+def _load_libc() -> CDLL:
+    # The process has loaded the C library already.
+    return CDLL(None, use_errno=True)
+
+
 class _LibCINotify:
     """Wrap the CDLL object for proper typing"""
 
-    __libc: CDLL | None = None
-
     def __init__(self) -> None:
-        if self.__libc is None:
-            libc_so = find_library("c") or "libc.so.6"
-            self.__libc = CDLL(libc_so, use_errno=True)
-        self._libc = self.__libc
+        self._libc = _load_libc()
 
     def init1(self, flags: int) -> int:
         if (rc := int(self._libc.inotify_init1(flags))) == -1:

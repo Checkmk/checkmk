@@ -88,7 +88,7 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
-from cmk.rulesets.internal.form_specs import SingleChoiceExtended
+from cmk.rulesets.internal.form_specs import MultipleChoiceExtended, SingleChoiceExtended
 from cmk.rulesets.v1 import form_specs, Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
@@ -131,7 +131,7 @@ class SimpleModeType[T: Mapping[str, Any]](abc.ABC):
 
     def site_form_spec(
         self,
-    ) -> SingleChoice | MultipleChoice | SingleChoiceExtended:
+    ) -> SingleChoice | MultipleChoice | SingleChoiceExtended | MultipleChoiceExtended:
         return create_setup_site_choice()
 
     @abc.abstractmethod

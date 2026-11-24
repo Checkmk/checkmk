@@ -84,3 +84,12 @@
                    mso-line-height-rule: exactly">&nbsp;</td>
     </tr>
 {% endmacro %}
+{% macro divider_tr(color="#e5e5e5") %}
+    <tr>
+        <td style="border-bottom: 1px solid {{ color }};
+                   height: 1px;
+                   line-height: 1px">
+            <span style="display:block; width:100%; height:1px; line-height:1px">&nbsp;</span>
+        </td>
+    </tr>
+{% endmacro %}

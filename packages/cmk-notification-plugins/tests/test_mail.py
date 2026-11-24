@@ -798,6 +798,38 @@ def test_bulk_with_single_notification_uses_its_subject() -> None:
 
 
 @pytest.mark.usefixtures("mail_site_root")
+def test_bulk_html_starts_with_event_summary() -> None:
+    content = mail.BulkEmailContent(lambda: ({}, [_host_context(), _service_context()]))
+
+    assert "Event summary" in content.content_html
+
+
+@pytest.mark.parametrize(
+    "parameters, expected_heading",
+    [
+        pytest.param({}, "Event history (oldest to newest)", id="default"),
+        pytest.param({"PARAMETER_BULK_SORT_ORDER": "oldest_first"}, "Event history (oldest to newest)", id="oldest first"),
+        pytest.param({"PARAMETER_BULK_SORT_ORDER": "newest_first"}, "Event history (newest to oldest)", id="newest first"),
+    ],
+)  # fmt: skip
+@pytest.mark.usefixtures("mail_site_root")
+def test_bulk_event_history_heading_follows_sort_order(
+    parameters: dict[str, str], expected_heading: str
+) -> None:
+    content = mail.BulkEmailContent(lambda: (parameters, [_host_context(), _service_context()]))
+
+    assert content.content_html.count(expected_heading) == 1
+
+
+@pytest.mark.usefixtures("mail_site_root")
+def test_bulk_with_single_notification_renders_like_single_notification() -> None:
+    bulk = mail.BulkEmailContent(lambda: ({}, [_host_context()]))
+    single = mail.SingleEmailContent(_host_context)
+
+    assert bulk.content_html == single.content_html
+
+
+@pytest.mark.usefixtures("mail_site_root")
 def test_bulk_text_concatenates_all_notifications() -> None:
     content = mail.BulkEmailContent(
         lambda: ({"PARAMETER_ELEMENTSS": "abstime address"}, [_host_context(), _host_context()])
@@ -828,6 +860,21 @@ def test_bulk_attaches_graphs_only_for_the_first_notifications(graph_url: re.Pat
     assert [a.name for a in content.attachments if a.name.startswith("heute-")] == [
         "heute-_HOST_-0.png"
     ]
+
+
+@pytest.mark.usefixtures("mail_site_root")
+@responses.activate
+def test_bulk_with_single_notification_respects_graph_limit(graph_url: re.Pattern[str]) -> None:
+    responses.get(graph_url, json={"result_code": 0, "result": ["YQ=="]})
+
+    content = mail.BulkEmailContent(
+        lambda: (
+            {"PARAMETER_ELEMENTSS": "graph", "PARAMETER_NOTIFICATIONS_WITH_GRAPHS": "0"},
+            [_host_context()],
+        )
+    )
+
+    assert not [a for a in content.attachments if a.name.startswith("heute-")]
 
 
 @pytest.mark.xfail(

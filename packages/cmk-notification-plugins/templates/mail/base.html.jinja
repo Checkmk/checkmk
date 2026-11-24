@@ -56,6 +56,19 @@
                       max-width:600px">
             <tr>
                 <td style="margin:0 auto; padding: 20px;" class="mobile_padding">
+                    {% if event_history_heading %}
+                        <table width="100%" style="margin: 0 auto; max-width: 600px;">
+                            {{ macros.divider_tr("#ccc") }}
+                            {{ macros.margin_tr() }}
+                            <tr>
+                                <th style="font-size: 18px;
+                                           font-weight: 600;
+                                           text-align: left;
+                                           padding-left: 9px">{{ event_history_heading }}</th>
+                            </tr>
+                            {{ macros.margin_tr() }}
+                        </table>
+                    {% endif %}
                     <table border="0"
                            cellspacing="0"
                            cellpadding="0"
@@ -86,13 +99,7 @@
                                         </tr>
                                     </table>
                                     <table width="100%" style="margin: 0 auto; max-width: 600px;">
-                                        <tr>
-                                            <td style="border-bottom: 1px solid #e5e5e5;
-                                                       height: 1px;
-                                                       line-height: 1px">
-                                                <span style="display:block; width:100%; height:1px; line-height:1px">&nbsp;</span>
-                                            </td>
-                                        </tr>
+                                        {{ macros.divider_tr() }}
                                         {{ macros.margin_tr() }}
                                     </table>
                                 {% endif %}

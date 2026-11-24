@@ -457,10 +457,12 @@ def render_performance_graphs(
 def construct_content(
     context: dict[str, str],
     is_bulk: bool = False,
-    bulk_summary: list[dict[str, str]] | None = None,
     last_bulk_entry: bool = False,
-    notification_number: int = 1,
+    notification_number: int | None = None,
+    event_history_heading: str = "",
 ) -> tuple[str, str, list[InlineImageAttachment]]:
+    """notification_number is the position within a bulk; the bulk graph limit applies to it.
+    event_history_heading is shown above the event, separating it from the bulk summary."""
     # A list of optional information is configurable via the parameter "elements"
     # (new configuration style)
     # Note: The value PARAMETER_ELEMENTSS is NO TYPO.
@@ -470,7 +472,7 @@ def construct_content(
     else:
         elements = ["graph", "abstime", "address", "longoutput"]
 
-    if is_bulk and "graph" in elements:
+    if notification_number is not None and "graph" in elements:
         # User notification rules using the legacy dict format do not
         # propagate this parameter, fall back to the same default that
         # _rbn_finalize_plugin_parameters applies for global rules.
@@ -504,8 +506,8 @@ def construct_content(
                 "graphs": file_names,
                 "insert": context.get("PARAMETER_INSERT_HTML_SECTION", ""),
                 "is_bulk": is_bulk,
-                "bulk_summary": bulk_summary,
                 "last_bulk_entry": last_bulk_entry,
+                "event_history_heading": event_history_heading,
             },
         ),
         context,
@@ -621,29 +623,37 @@ class BulkEmailContent(EmailContent):
             extend_context(escaped_context, is_bulk=True)
             all_contexts_updated.append(escaped_context)
 
-        bulk_summary = _get_bulk_summary(all_contexts_updated)
-
-        content_html += TemplateRenderer().render_template(
-            "base.html.jinja",
-            {
-                "data": {
-                    "EVENTHISTORYURL": utils.eventhistory_url_from_context(all_contexts_updated[0])
+        # A bulk holding a single event is rendered like a single notification.
+        is_bulk = len(all_contexts_updated) > 1
+        if is_bulk:
+            content_html += TemplateRenderer().render_template(
+                "base.html.jinja",
+                {
+                    "data": {
+                        "EVENTHISTORYURL": utils.eventhistory_url_from_context(
+                            all_contexts_updated[0]
+                        )
+                    },
+                    "graphs": [],
+                    "insert": "",
+                    "is_bulk": True,
+                    "bulk_summary": _get_bulk_summary(all_contexts_updated),
+                    "last_bulk_entry": False,
                 },
-                "graphs": [],
-                "insert": "",
-                "is_bulk": True,
-                "bulk_summary": bulk_summary,
-                "last_bulk_entry": False,
-            },
-        )
+            )
 
+        event_history_heading = (
+            "Event history (newest to oldest)"
+            if parameters.get("PARAMETER_BULK_SORT_ORDER") == "newest_first"
+            else "Event history (oldest to newest)"
+        )
         for i, c in enumerate(all_contexts_updated, 1):
             txt, html, att = construct_content(
                 c,
-                is_bulk=True,
-                bulk_summary=None,
+                is_bulk=is_bulk,
                 last_bulk_entry=i == len(all_contexts_updated),
                 notification_number=i,
+                event_history_heading=event_history_heading if is_bulk and i == 1 else "",
             )
             content_txt += txt
             content_html += html
@@ -658,10 +668,9 @@ class BulkEmailContent(EmailContent):
             context=escaped_context,
             # Assume the same in each context
             mailto=escaped_context["CONTACTEMAIL"],
-            # Use the single context subject in case there is only one context in the bulk
             subject=(
                 utils.get_bulk_notification_subject(contexts, hosts)
-                if len(contexts) > 1
+                if is_bulk
                 else escaped_context["SUBJECT"]
             ),
             from_address=utils.format_address(

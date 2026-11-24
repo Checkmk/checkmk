@@ -14559,19 +14559,20 @@ msgid ""
 "document is above or below the thresholds."
 msgstr ""
 
+#, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a unit is allowed to be in a "
-"'reloading' state"
+"Choose time levels for which a unit is allowed to be in a 'deactivating' "
+"state"
 msgstr ""
-"Alegeți nivelurile de timp (în secunde) pentru care o unitate are voie să se "
-"afle în stare de 'reîncărcare'."
+"Alegeți nivelurile de timp pentru care o unitate poate fi în stare de "
+"'activare'."
 
+#, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a unti is allowed to be in an "
-"'deactivating' state"
+"Choose time levels for which a unit is allowed to be in a 'reloading' state"
 msgstr ""
-"Alegeți nivelurile de timp (în secunde) pentru care se permite ca o unti să "
-"se afle în starea 'dezactivare'."
+"Alegeți nivelurile de timp pentru care o unitate poate fi în stare de "
+"'activare'."
 
 msgid ""
 "Choose time levels for which a unit is allowed to be in an 'activating' state"
@@ -27422,6 +27423,10 @@ msgid ""
 msgstr ""
 "Nu s-a reușit scrierea în directorul configurat. Directorul țintă trebuie să "
 "fie inscriptibil."
+
+#, fuzzy
+msgid "Failed units that are disabled will be considered critical"
+msgstr "State tratate ca fiind critice"
 
 msgid "Failed!"
 msgstr "A eșuat!"
@@ -45743,7 +45748,8 @@ msgstr ""
 "Starea de monitorizare în cazul în care un serviciu monitorizat nu este "
 "găsit deloc."
 
-msgid "Monitoring state if a monitored unit is not found at all."
+#, fuzzy
+msgid "Monitoring state if a monitored unit is not found at all"
 msgstr ""
 "Starea de monitorizare în cazul în care o unitate monitorizată nu este "
 "găsită deloc."
@@ -72547,6 +72553,10 @@ msgstr "Cheia / certificatul există deja (Cheie: %d, Descriere: %s)"
 msgid "The key file is invalid or the password is wrong."
 msgstr ""
 
+#, fuzzy
+msgid "The key must not be empty or contain a colon."
+msgstr "Comentariul nu trebuie să conțină punct și virgulă."
+
 msgid ""
 "The key size is provided as an integer and needs to match exactly the value "
 "in the certificate."
@@ -92017,6 +92027,14 @@ msgstr ""
 "Cu ServiceNow puteți crea diferite tipuri de probleme de management, în "
 "prezent sunt acceptate indicii și cazuri."
 
+msgid ""
+"With an explicit match, the pattern must equal the whole text. With a "
+"regular expression match, the pattern is a regular expression that is "
+"matched from the beginning. Add a trailing <tt>$</tt> to match the whole "
+"text. Read more about [regexes|regular expression matching in Checkmk] in "
+"our User Guide."
+msgstr ""
+
 #, python-format
 msgid ""
 "With authentication type set to 'OAuth2' the option '%s' must be specified."
@@ -95747,6 +95765,10 @@ msgstr "se așteaptă ca toți"
 
 msgid "explicit host labels"
 msgstr "etichete gazdă explicite"
+
+#, fuzzy
+msgid "failed"
+msgstr "A eșuat"
 
 msgid "fault"
 msgstr "defect"
@@ -102995,6 +103017,20 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Procesul a expirat"
+
+#~ msgid ""
+#~ "Choose time levels (in seconds) for which a unit is allowed to be in a "
+#~ "'reloading' state"
+#~ msgstr ""
+#~ "Alegeți nivelurile de timp (în secunde) pentru care o unitate are voie să "
+#~ "se afle în stare de 'reîncărcare'."
+
+#~ msgid ""
+#~ "Choose time levels (in seconds) for which a unti is allowed to be in an "
+#~ "'deactivating' state"
+#~ msgstr ""
+#~ "Alegeți nivelurile de timp (în secunde) pentru care se permite ca o unti "
+#~ "să se afle în starea 'dezactivare'."
 
 #, fuzzy
 #~ msgid "Manage in global settings"

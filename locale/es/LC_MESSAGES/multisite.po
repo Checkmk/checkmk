@@ -14597,19 +14597,20 @@ msgid ""
 "document is above or below the thresholds."
 msgstr ""
 
+#, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a unit is allowed to be in a "
-"'reloading' state"
+"Choose time levels for which a unit is allowed to be in a 'deactivating' "
+"state"
 msgstr ""
-"Elija los niveles de tiempo (en segundos) durante los que se permite que una "
-"unidad esté en estado de 'recarga'"
+"Elegir los niveles de tiempo durante los cuales una unidad puede estar en "
+"estado 'activando'"
 
+#, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a unti is allowed to be in an "
-"'deactivating' state"
+"Choose time levels for which a unit is allowed to be in a 'reloading' state"
 msgstr ""
-"Elija los niveles de tiempo (en segundos) durante los cuales se permite que "
-"una unti esté en estado 'desactivando'"
+"Elegir los niveles de tiempo durante los cuales una unidad puede estar en "
+"estado 'activando'"
 
 msgid ""
 "Choose time levels for which a unit is allowed to be in an 'activating' state"
@@ -27506,6 +27507,10 @@ msgid ""
 msgstr ""
 "Fallo al escribir en el directorio configurado. El directorio de destino "
 "debe poder escribirse."
+
+#, fuzzy
+msgid "Failed units that are disabled will be considered critical"
+msgstr "Estados tratados como críticos"
 
 msgid "Failed!"
 msgstr "¡Falló!"
@@ -45940,7 +45945,8 @@ msgstr ""
 "Estado de monitorización si no se encuentra un servicio monitorizado en "
 "absoluto."
 
-msgid "Monitoring state if a monitored unit is not found at all."
+#, fuzzy
+msgid "Monitoring state if a monitored unit is not found at all"
 msgstr "Estado de supervisión si no se encuentra ninguna unidad supervisada."
 
 #, fuzzy
@@ -72863,6 +72869,10 @@ msgstr "El par de claves ya existe (Clave: %d, Descripción: %s)"
 msgid "The key file is invalid or the password is wrong."
 msgstr ""
 
+#, fuzzy
+msgid "The key must not be empty or contain a colon."
+msgstr "El comentario no debe contener punto y coma."
+
 msgid ""
 "The key size is provided as an integer and needs to match exactly the value "
 "in the certificate."
@@ -92251,6 +92261,14 @@ msgstr ""
 "Con ServiceNow se pueden crear diferentes tipos de asuntos de gestión, "
 "actualmente se soportan los indicentes y los casos."
 
+msgid ""
+"With an explicit match, the pattern must equal the whole text. With a "
+"regular expression match, the pattern is a regular expression that is "
+"matched from the beginning. Add a trailing <tt>$</tt> to match the whole "
+"text. Read more about [regexes|regular expression matching in Checkmk] in "
+"our User Guide."
+msgstr ""
+
 #, python-format
 msgid ""
 "With authentication type set to 'OAuth2' the option '%s' must be specified."
@@ -95973,6 +95991,10 @@ msgstr "esperar todo"
 
 msgid "explicit host labels"
 msgstr "etiquetas explícitas de host"
+
+#, fuzzy
+msgid "failed"
+msgstr "Fallido"
 
 msgid "fault"
 msgstr "fallo"
@@ -103160,6 +103182,20 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "La prueba ha caducado"
+
+#~ msgid ""
+#~ "Choose time levels (in seconds) for which a unit is allowed to be in a "
+#~ "'reloading' state"
+#~ msgstr ""
+#~ "Elija los niveles de tiempo (en segundos) durante los que se permite que "
+#~ "una unidad esté en estado de 'recarga'"
+
+#~ msgid ""
+#~ "Choose time levels (in seconds) for which a unti is allowed to be in an "
+#~ "'deactivating' state"
+#~ msgstr ""
+#~ "Elija los niveles de tiempo (en segundos) durante los cuales se permite "
+#~ "que una unti esté en estado 'desactivando'"
 
 #, fuzzy
 #~ msgid "Manage in global settings"

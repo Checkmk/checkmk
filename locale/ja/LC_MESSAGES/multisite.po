@@ -13646,15 +13646,16 @@ msgstr ""
 "ションを選択してください。実際のドキュメントのサイズがしきい値を上回ったり下"
 "回ったりすると、WARNが表示されます。"
 
+#, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a unit is allowed to be in a "
-"'reloading' state"
-msgstr "ユニットが[リロード]状態にあることを許可する時間レベル(秒)を選択します"
+"Choose time levels for which a unit is allowed to be in a 'deactivating' "
+"state"
+msgstr "サービスが[起動]状態にあることを許可する時間レベルを選択します"
 
+#, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a unti is allowed to be in an "
-"'deactivating' state"
-msgstr "ユニットが[停止]状態にあることを許可する時間レベル(秒)を選択します"
+"Choose time levels for which a unit is allowed to be in a 'reloading' state"
+msgstr "サービスが[起動]状態にあることを許可する時間レベルを選択します"
 
 msgid ""
 "Choose time levels for which a unit is allowed to be in an 'activating' state"
@@ -25872,6 +25873,10 @@ msgid ""
 msgstr ""
 "構成されたディレクトリへの書き込みに失敗しました。ターゲットディレクトリは書"
 "き込み可能である必要があります。"
+
+#, fuzzy
+msgid "Failed units that are disabled will be considered critical"
+msgstr "故障したユニットで動作不能になったものを重大な問題として扱う"
 
 msgid "Failed!"
 msgstr "失敗しました！"
@@ -43188,7 +43193,8 @@ msgstr "コンテナの終了に失敗した場合の監視状態（終了コー
 msgid "Monitoring state if a monitored service is not found at all."
 msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
 
-msgid "Monitoring state if a monitored unit is not found at all."
+#, fuzzy
+msgid "Monitoring state if a monitored unit is not found at all"
 msgstr "監視対象ユニットが全く見つからない場合の監視状態。"
 
 #, fuzzy
@@ -68543,6 +68549,10 @@ msgstr "キー/証明書はすでに存在します (キー: %d、 説明: %s)"
 msgid "The key file is invalid or the password is wrong."
 msgstr "キーファイルが無効です、またはパスワードが間違っています。"
 
+#, fuzzy
+msgid "The key must not be empty or contain a colon."
+msgstr "コメントにセミコロンを含めることはできません。"
+
 msgid ""
 "The key size is provided as an integer and needs to match exactly the value "
 "in the certificate."
@@ -86710,6 +86720,14 @@ msgstr ""
 "ServiceNowでは、様々なタイプの管理課題を作成することができます。現在サポート"
 "されているのは、インシデント管理とケース管理です。"
 
+msgid ""
+"With an explicit match, the pattern must equal the whole text. With a "
+"regular expression match, the pattern is a regular expression that is "
+"matched from the beginning. Add a trailing <tt>$</tt> to match the whole "
+"text. Read more about [regexes|regular expression matching in Checkmk] in "
+"our User Guide."
+msgstr ""
+
 #, python-format
 msgid ""
 "With authentication type set to 'OAuth2' the option '%s' must be specified."
@@ -90297,6 +90315,10 @@ msgstr "すべてを期待する"
 
 msgid "explicit host labels"
 msgstr "明示的なホストラベル"
+
+#, fuzzy
+msgid "failed"
+msgstr "失敗しました"
 
 msgid "fault"
 msgstr "障害"
@@ -97638,6 +97660,17 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "試用期間満了"
+
+#~ msgid ""
+#~ "Choose time levels (in seconds) for which a unit is allowed to be in a "
+#~ "'reloading' state"
+#~ msgstr ""
+#~ "ユニットが[リロード]状態にあることを許可する時間レベル(秒)を選択します"
+
+#~ msgid ""
+#~ "Choose time levels (in seconds) for which a unti is allowed to be in an "
+#~ "'deactivating' state"
+#~ msgstr "ユニットが[停止]状態にあることを許可する時間レベル(秒)を選択します"
 
 #~ msgid ""
 #~ "We believe in only receiving data you explicitly choose to share. You can "

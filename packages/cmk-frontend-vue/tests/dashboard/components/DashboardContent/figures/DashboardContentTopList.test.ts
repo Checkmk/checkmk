@@ -11,7 +11,7 @@ import {
   useFakeResizeObserver
 } from 'cmk-ui-library/vitest.resize-observer'
 import { describe, expect, it } from 'vitest'
-import { defineComponent, h, ref } from 'vue'
+import { defineComponent, h, ref, shallowRef } from 'vue'
 
 import DashboardContentTopList from '@/dashboard/components/DashboardContent/figures/DashboardContentTopList.vue'
 import { useProvideDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
@@ -289,10 +289,59 @@ describe('DashboardContentTopList', () => {
     expect(fill!.style.width).toBe('100%')
   })
 
-  it('renders the placeholder when there are no entries', async () => {
+  it('shows loading rows, marked busy, until the top list arrives', () => {
+    render(DashboardContentTopList, { props: props() })
+
+    expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true')
+  })
+
+  it('tells that nothing matches when there are no entries', async () => {
     endpoint.answerInThisTest(topList({ entries: [] }))
     await renderWidget()
-    expect(screen.getByText('No entries')).toBeInTheDocument()
+    expect(
+      screen.getByText('Nothing matches the widget filter in the selected time frame.')
+    ).toBeVisible()
+  })
+
+  it('marks the table busy while a refresh runs', async () => {
+    const componentProps = shallowRef(props())
+    render(defineComponent({ setup: () => () => h(DashboardContentTopList, componentProps.value) }))
+    await waitFor(() => expect(screen.getByRole('table')).not.toHaveAttribute('aria-busy'))
+
+    componentProps.value = { ...componentProps.value, tick: 1 }
+
+    await waitFor(() => expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true'))
+  })
+
+  it('tells that the data could not be loaded', async () => {
+    endpoint.failInThisTest(503)
+    render(DashboardContentTopList, { props: props() })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Data could not be loaded')
+  })
+
+  it('fetches again on retry', async () => {
+    endpoint.failInThisTest(503)
+    render(DashboardContentTopList, { props: props() })
+    await screen.findByRole('alert')
+    endpoint.answerInThisTest(topList())
+
+    await userEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+    expect(await screen.findByText('host-a')).toBeInTheDocument()
+  })
+
+  it('tells the age of the last data when a refresh fails', async () => {
+    const componentProps = shallowRef(props())
+    render(defineComponent({ setup: () => () => h(DashboardContentTopList, componentProps.value) }))
+    await screen.findByText('host-a')
+    endpoint.failInThisTest(503)
+
+    componentProps.value = { ...componentProps.value, tick: 1 }
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Last successful update less than a minute ago.'
+    )
   })
 
   it('renders the conflicting-metrics table when the backend reports errors', async () => {

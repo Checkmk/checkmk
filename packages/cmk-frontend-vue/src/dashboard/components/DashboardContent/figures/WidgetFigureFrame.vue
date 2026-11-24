@@ -23,8 +23,12 @@ const props = defineProps<{
 
 defineEmits<{ retry: [] }>()
 
-defineSlots<{
+const slots = defineSlots<{
   default(props: { value: T; width: number; height: number }): unknown
+  /** Replaces the loading notice, at once rather than after a delay. */
+  loading?(): unknown
+  /** Replaces the error notice; `retry` fetches again. */
+  error?(props: { detail: string; retry: () => void }): unknown
 }>()
 
 const { _t } = usei18n()
@@ -61,6 +65,9 @@ const showLoading = useDelayedFlag(
       >
         <slot :value="state.value" :width="width" :height="height" />
       </div>
+      <div v-else-if="state.kind === 'error' && slots.error" class="db-widget-figure-frame__notice">
+        <slot name="error" :detail="state.detail" :retry="() => $emit('retry')" />
+      </div>
       <CmkSurfaceNotice
         v-else-if="state.kind === 'error'"
         class="db-widget-figure-frame__notice"
@@ -76,6 +83,12 @@ const showLoading = useDelayedFlag(
         variant="warning"
         :message="state.detail"
       />
+      <div
+        v-else-if="state.kind === 'loading' && slots.loading"
+        class="db-widget-figure-frame__figure"
+      >
+        <slot name="loading" />
+      </div>
       <CmkSurfaceNotice
         v-else-if="state.kind === 'loading' && showLoading"
         class="db-widget-figure-frame__notice"

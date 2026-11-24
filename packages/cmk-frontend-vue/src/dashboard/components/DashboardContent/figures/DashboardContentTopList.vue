@@ -5,6 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
+import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
+import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
@@ -25,6 +27,7 @@ import { useTimeRangeVariables } from '@/graphing/GlobalTimePicker/timeRangeUrl'
 import { DRILLED_FROM_PARAM } from '@/page-header/drillUp'
 
 import type { ContentProps } from '../types.ts'
+import WidgetDataErrorAlert from './WidgetDataErrorAlert.vue'
 import WidgetFigureFrame from './WidgetFigureFrame.vue'
 
 const { _t } = usei18n()
@@ -32,7 +35,10 @@ const props = defineProps<ContentProps<TopListContent>>()
 const isPublicDashboard = useInjectIsPublicDashboard()
 const drillDownSource = useInjectDrillDownSource()
 const timeRange = useTimeRangeVariables()
-const { state, retry } = useComputedWidget(props, dashboardAPI.computeTopList)
+const { state, retry, fetching, lastSuccessAt } = useComputedWidget(
+  props,
+  dashboardAPI.computeTopList
+)
 
 const errorMessage: string = _t(
   `Due to a limitation in how Checkmk handles metrics internally, the results contain conflicting metrics and this top list may be incorrect or incomplete.\n
@@ -109,7 +115,8 @@ function contextualLink(
   return entries.length === 1 ? { href: entries[0]!.href } : { choices: entries }
 }
 
-function columns(topList: ComputedTopList): RankedTableColumn[] {
+// Without a top list yet, the value column has no title and no range.
+function columns(topList?: ComputedTopList): RankedTableColumn[] {
   const showBar = props.content.columns.show_bar_visualization !== false
   const result: RankedTableColumn[] = [
     { key: 'host', title: _t('Host'), render: 'text', bar: false }
@@ -119,11 +126,11 @@ function columns(topList: ComputedTopList): RankedTableColumn[] {
   }
   const value: RankedTableColumn = {
     key: 'value',
-    title: topList.full_metric_name,
+    title: topList?.full_metric_name ?? '',
     render: 'count',
     bar: showBar
   }
-  if (showBar) {
+  if (showBar && topList) {
     // The backend derives the range from the widget's "display range" setting.
     value.barRange = [topList.value_range.min_value, topList.value_range.max_value]
   }
@@ -172,17 +179,43 @@ function errorRows(topList: ComputedTopList): RankedTableRow[] {
     :state="state"
     @retry="retry"
   >
+    <template #loading>
+      <CmkRankedTable
+        :columns="columns()"
+        :rows="[]"
+        :placeholder="{ kind: 'loading', rows: content.limit_to }"
+      />
+    </template>
+    <template #error="{ detail, retry: retryFetch }">
+      <WidgetDataErrorAlert :detail="detail" :last-success-at="lastSuccessAt" @retry="retryFetch" />
+    </template>
     <template #default="{ value }">
       <div class="db-content-top-list__scroll">
-        <div :class="{ 'db-content-top-list__preview-shield': isPreview }">
+        <div
+          :class="{
+            'db-content-top-list__preview-shield': isPreview,
+            'db-content-top-list__fill': !value.entries.length && !value.errors.length
+          }"
+        >
           <CmkRankedTable
             v-if="value.entries.length"
             :columns="columns(value)"
             :rows="rows(value)"
+            :busy="fetching"
           />
-          <div v-else class="db-content-top-list__no-entries">
-            {{ _t('No entries') }}
-          </div>
+          <CmkRankedTable
+            v-else
+            :columns="columns(value)"
+            :rows="[]"
+            :placeholder="{ kind: 'empty', rows: content.limit_to }"
+          >
+            <template #empty>
+              <CmkHeading type="h4">{{ _t('No data') }}</CmkHeading>
+              <CmkParagraph>
+                {{ _t('Nothing matches the widget filter in the selected time frame.') }}
+              </CmkParagraph>
+            </template>
+          </CmkRankedTable>
           <template v-if="value.errors.length">
             <CmkAlertBoxDeprecated variant="error">
               <div class="db-content-top-list__error-msg">{{ errorMessage }}</div>
@@ -205,8 +238,8 @@ function errorRows(topList: ComputedTopList): RankedTableRow[] {
   pointer-events: none;
 }
 
-.db-content-top-list__no-entries {
-  padding: var(--spacing);
+.db-content-top-list__fill {
+  height: 100%;
 }
 
 .db-content-top-list__error-msg {

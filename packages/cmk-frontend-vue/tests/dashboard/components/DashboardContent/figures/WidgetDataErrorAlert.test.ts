@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen } from '@testing-library/vue'
 import { afterEach, expect, test, vi } from 'vitest'
 
 import WidgetDataErrorAlert from '@/dashboard/components/DashboardContent/figures/WidgetDataErrorAlert.vue'
@@ -47,8 +47,10 @@ test('keeps the age current while the alert is shown', async () => {
   expect(screen.getByRole('alert')).toHaveTextContent('Last successful update 9 min ago.')
 })
 
-test('offers no button', () => {
-  render(WidgetDataErrorAlert, { props: { detail: 'down' } })
+test('asks for a retry from its button', async () => {
+  const { emitted } = render(WidgetDataErrorAlert, { props: { detail: 'down' } })
 
-  expect(screen.queryByRole('button')).toBeNull()
+  await fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+  expect(emitted('retry')).toHaveLength(1)
 })

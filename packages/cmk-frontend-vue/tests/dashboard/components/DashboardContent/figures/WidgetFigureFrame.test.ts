@@ -113,4 +113,52 @@ describe('WidgetFigureFrame', () => {
 
     expect(screen.getByText('Loading data …')).toBeInTheDocument()
   })
+
+  it('shows a given loading slot at once', () => {
+    vi.useFakeTimers()
+    render(WidgetFigureFrame, {
+      props: {
+        effectiveTitle: 'Hosts',
+        general_settings: GENERAL_SETTINGS,
+        state: { kind: 'loading' }
+      },
+      slots: { default: () => null, loading: () => h('p', 'skeleton') }
+    })
+
+    expect(screen.getByText('skeleton')).toBeInTheDocument()
+  })
+
+  it('emits retry when a given error slot asks for it', async () => {
+    const { emitted } = render(WidgetFigureFrame, {
+      props: {
+        effectiveTitle: 'Hosts',
+        general_settings: GENERAL_SETTINGS,
+        state: { kind: 'error', detail: 'down' }
+      },
+      slots: {
+        default: () => null,
+        error: (slot: { retry: () => void }) => h('button', { onClick: slot.retry }, 'again')
+      }
+    })
+
+    await fireEvent.click(screen.getByRole('button', { name: 'again' }))
+
+    expect(emitted('retry')).toHaveLength(1)
+  })
+
+  it('hands the error detail to a given error slot', () => {
+    render(WidgetFigureFrame, {
+      props: {
+        effectiveTitle: 'Hosts',
+        general_settings: GENERAL_SETTINGS,
+        state: { kind: 'error', detail: 'down' }
+      },
+      slots: {
+        default: () => null,
+        error: (slot: { detail: string }) => h('p', `own ${slot.detail}`)
+      }
+    })
+
+    expect(screen.getByText('own down')).toBeInTheDocument()
+  })
 })

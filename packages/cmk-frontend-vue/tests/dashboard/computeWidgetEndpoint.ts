@@ -41,6 +41,7 @@ type Post<P extends ComputePath> = (path: P, resolver: ComputeResolver<P>) => Ht
 interface ComputeWidgetEndpoint<P extends ComputePath> {
   readonly requests: readonly ComputeRequest<P>[]
   answerInThisTest(value: ComputeValue<P>): void
+  failInThisTest(status: number): void
 }
 
 /** Serves one widget compute endpoint through the caller's typed `post` and records its requests. */
@@ -60,6 +61,9 @@ export function useComputeWidgetEndpoint<P extends ComputePath>(
     requests,
     answerInThisTest: (answer) => {
       server.use(answering(answer))
+    },
+    failInThisTest: (status) => {
+      server.use(post(path, async () => new HttpResponse(null, { status })))
     }
   }
 }

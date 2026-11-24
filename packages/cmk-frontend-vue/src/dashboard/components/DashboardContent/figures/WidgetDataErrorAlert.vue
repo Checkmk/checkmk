@@ -14,6 +14,8 @@ const { detail, lastSuccessAt } = defineProps<{
   lastSuccessAt?: number | undefined
 }>()
 
+const emit = defineEmits<{ retry: [] }>()
+
 const { _t } = usei18n()
 
 const AGE_UPDATE_INTERVAL_MS = 30_000
@@ -44,5 +46,11 @@ const text = computed(() => {
 </script>
 
 <template>
-  <CmkAlert variant="error" size="medium" :heading="_t('Data could not be loaded')" :text="text" />
+  <CmkAlert
+    variant="error"
+    size="medium"
+    :heading="_t('Data could not be loaded')"
+    :text="text"
+    :main-button="{ title: _t('Retry'), onclick: () => emit('retry') }"
+  />
 </template>

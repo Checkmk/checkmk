@@ -35,6 +35,12 @@ def sanitize_name(name: str) -> str:
     return name.replace("'", "_").replace(" ", "_")
 
 
+def job_item(job_name: str, job_id: str) -> str:
+    """The item of a job's services: the ID keeps jobs with alike names, or with the
+    same name on several backup servers, apart."""
+    return f"{sanitize_name(job_name)} ({job_id[:8]})"
+
+
 def check_backup_age(
     last_backup_age: float | None,
     levels_upper: LevelsT[float],

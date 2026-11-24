@@ -27,9 +27,9 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.veeam.lib import (
     check_backup_age,
+    job_item,
     parse_dotnet_timespan_seconds,
     parse_iso8601_epoch,
-    sanitize_name,
 )
 
 
@@ -47,14 +47,14 @@ class Unparsable:
 @dataclass(frozen=True, kw_only=True)
 class BackupTask:
     """Mirrors the VBR REST API's BackupTaskSessionModel (GET /api/v1/taskSessions),
-    enriched with the job name the task's session belongs to.
+    enriched by the special agent with the name and ID of the job the task's session
+    belongs to, and with the name of the backup server that ran it.
 
     BackupTaskSessionModel carries no job name or job ID of its own: that link only
-    exists on SessionModel (GET /api/v1/sessions), keyed by the task's sessionId. The
-    special agent is assumed to resolve it via that join; if it cannot, this section
-    cannot be produced for that task, since `item` (the job name) is not optional here.
+    exists on SessionModel (GET /api/v1/sessions), keyed by the task's sessionId.
     """
 
+    backup_server: str | None
     state: str
     result: str
     result_message: str | None
@@ -128,7 +128,8 @@ def parse_veeam_backups(string_table: StringTable) -> Section:
         progress = task_dict.get("progress") or {}
         result = task_dict.get("result") or {}
         duration = progress.get("duration")
-        section[sanitize_name(task_dict["jobName"])] = BackupTask(
+        section[job_item(task_dict["jobName"], task_dict["jobId"])] = BackupTask(
+            backup_server=task_dict.get("backupServer"),
             state=task_dict["state"],
             result=result.get("result", "None"),
             result_message=result.get("message"),
@@ -231,6 +232,9 @@ def check_veeam_backups(
                 )
             case None:
                 pass
+
+    if task.backup_server is not None:
+        yield Result(state=State.OK, notice=f"Backup server: {task.backup_server}")
 
 
 def _check_last_backup(

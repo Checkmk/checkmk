@@ -583,6 +583,12 @@ class _JobState(_ApiItem):
     session_progress: _SessionProgress | None = None
 
 
+class _ServerInfo(_ApiItem):
+    """GET /api/v1/serverInfo."""
+
+    name: str
+
+
 class _RestorePoint(_ApiItem):
     """An item of GET /api/v1/restorePoints."""
 
@@ -1220,9 +1226,19 @@ def _session_fallback_task(
     }
 
 
+def _backup_server_name(client: VeeamClient) -> str | None:
+    """None where the user may not read /api/v1/serverInfo, e.g. with the Veeam Backup
+    Viewer role: the name is only a detail, so the records are written without it."""
+    try:
+        return _ServerInfo.model_validate(client.get("/api/v1/serverInfo")).name
+    except AccessDenied:
+        return None
+
+
 def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     """One record per (job, object) pair: the newest task for that pairing,
-    labelled with the job's name.
+    labelled with the job's name and ID and the backup server's name (`name` of
+    /api/v1/serverInfo).
 
     Piggyback identity comes from `_resolve_job_object_names`, not a task's own
     `name` (the two disagree for some platforms, e.g. Agent Backup). A
@@ -1333,10 +1349,14 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
                 job_obj.session, job_obj.job_name, progress_by_job_id.get(job_id)
             )
 
+    backup_server = _backup_server_name(client)
     return Fetched(
         piggyback={
             object_name: f"<<<{name}:sep(0)>>>\n"
-            + "".join(f"{json.dumps(record)}\n" for record in job_records.values())
+            + "".join(
+                f"{json.dumps({**record, 'jobId': job_id, 'backupServer': backup_server})}\n"
+                for job_id, record in job_records.items()
+            )
             for object_name, job_records in records.items()
         }
     )

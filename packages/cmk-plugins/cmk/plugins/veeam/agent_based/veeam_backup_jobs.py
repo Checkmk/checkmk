@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.veeam.lib import parse_dotnet_timespan_seconds, parse_iso8601_epoch, sanitize_name
+from cmk.plugins.veeam.lib import job_item, parse_dotnet_timespan_seconds, parse_iso8601_epoch
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -69,7 +69,7 @@ def parse_veeam_backup_jobs(string_table: StringTable) -> Section:
         duration = session_progress.get("duration")
         last_run = job_dict.get("lastRun")
         next_run = job_dict.get("nextRun")
-        section[sanitize_name(job_dict["name"])] = BackupJob(
+        section[job_item(job_dict["name"], job_dict["id"])] = BackupJob(
             job_type=job_dict["type"],
             status=job_dict["status"],
             is_disabled=job_dict["isDisabled"],

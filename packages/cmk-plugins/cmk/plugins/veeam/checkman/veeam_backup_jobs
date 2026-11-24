@@ -45,4 +45,5 @@ discovery:
 
 item:
  The name of the backup job, sanitized: spaces and apostrophes are replaced
- by underscores.
+ by underscores, followed by the first 8 characters of the job's Veeam ID
+ in parentheses, e.g. "Daily_VMs (1a2b3c4d)".

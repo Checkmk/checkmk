@@ -18,15 +18,20 @@ description:
  A finished backup without an end time is {CRIT}.
 
  The summary shows the result, the time since the last backup and the
- backup size; the average speed and the duration are shown in the details.
+ backup size; the average speed, the duration and the name of the backup
+ server that reported the backup are shown in the details. The name of the
+ backup server is left out where the user may not read it, e.g. with the
+ Veeam Backup Viewer role.
 
  While a backup is running, its age and duration are not evaluated. Size,
  speed and duration metrics use the same metric names as the {VEEAM Client}
  service, so existing graphs and thresholds carry over.
 
 discovery:
- One service is created for each backup job that has processed this machine.
+ One service is created for each backup job that has processed this machine,
+ also for jobs of several backup servers.
 
 item:
  The name of the backup job, sanitized: spaces and apostrophes are replaced
- by underscores.
+ by underscores, followed by the first 8 characters of the job's Veeam ID
+ in parentheses, e.g. "Daily_VMs (1a2b3c4d)".

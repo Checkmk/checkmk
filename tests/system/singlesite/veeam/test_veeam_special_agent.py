@@ -91,7 +91,7 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
             r"Auto update: enabled\b",
         ],
     ),
-    "Veeam Backup job Disabled_Windows_AP": ExpectedServiceResult(
+    "Veeam Backup job Disabled_Windows_AP (fc1d7216)": ExpectedServiceResult(
         0,
         [
             r"Status: Disabled\b",
@@ -101,7 +101,7 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
             r"Type: WindowsAgentBackupServerPolicy\b",
         ],
     ),
-    "Veeam Backup job Failing_job": ExpectedServiceResult(
+    "Veeam Backup job Failing_job (b50355ba)": ExpectedServiceResult(
         2,  # CRIT
         [
             r"Status: Enabled\b",
@@ -110,10 +110,10 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
             r"Type: LinuxAgentBackupServerPolicy\b",
         ],
     ),
-    "Veeam Backup job File_Backup_Job": ExpectedServiceResult(
+    "Veeam Backup job File_Backup_Job (7a597775)": ExpectedServiceResult(
         0, [r"Status: Stopped\b", r"Result: Success\b", r"Objects: 4\b", r"Type: FileBackup\b"]
     ),
-    "Veeam Backup job Never_run_job": ExpectedServiceResult(
+    "Veeam Backup job Never_run_job (1d532d6b)": ExpectedServiceResult(
         0,
         [
             r"Status: Inactive\b",
@@ -123,7 +123,7 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
         ],
     ),
     "VEEAM Job Successful_job": ExpectedServiceResult(0, [r"Result: Success\b", r"Type: Backup\b"]),
-    "Veeam Backup job Successful_job": ExpectedServiceResult(
+    "Veeam Backup job Successful_job (1ec37ede)": ExpectedServiceResult(
         0,
         [
             r"Status: Stopped\b",
@@ -203,7 +203,9 @@ EXPECTED_PROTECTED_MACHINE_SERVICES: Mapping[str, ExpectedServiceResult | None] 
     ),
     "Check_MK Discovery": None,
     "VEEAM Client Successful_job": ExpectedServiceResult(0, [r"Status: Success\b"]),
-    "Veeam Backup Successful_job": ExpectedServiceResult(0, [r"Status: Success\b"]),
+    "Veeam Backup Successful_job (1ec37ede)": ExpectedServiceResult(
+        0, [r"Status: Success\b", r"Backup server: \S+"]
+    ),
     "Veeam Restore points": ExpectedServiceResult(
         0,
         [

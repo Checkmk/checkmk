@@ -1355,11 +1355,15 @@ def _task(**overrides: object) -> dict[str, object]:
     return task
 
 
+BACKUP_SERVER_NAME = "vbr01.example.com"
+
+
 def _mock_jobs(
     api: responses.RequestsMock,
     jobs: list[dict[str, object]],
     disabled_ids: Container[object] = (),
 ) -> None:
+    api.get(f"{URL}/api/v1/serverInfo", json={"name": BACKUP_SERVER_NAME})
     api.get(
         f"{URL}/api/v1/jobs/states?skip=0",
         json={"data": jobs, "pagination": {"total": len(jobs)}},
@@ -1438,6 +1442,41 @@ def test_fetch_backups_resolves_the_job_name_via_the_session_join(
     (record,) = (json.loads(line) for line in lines[1:-1])
     assert record["jobName"] == "Daily_VM_Backup"
     assert lines[-1] == "<<<<>>>>"
+
+
+def test_fetch_backups_labels_each_record_with_the_job_id_and_the_backup_server(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(api, [_job()])
+    _mock_session_and_objects(api, "session-1", ["vm-1"])
+    _mock_tasks(api, [_task()])
+
+    write_sections(_client(_auth(secrets), storage), [("veeam_backups", fetch_backups)])
+
+    _header, _section_header, line, _footer = capsys.readouterr().out.splitlines()
+    record = json.loads(line)
+    assert (record["jobId"], record["backupServer"]) == ("job-id-1", BACKUP_SERVER_NAME)
+
+
+def test_fetch_backups_without_access_to_the_server_info_still_writes_the_records(
+    api: responses.RequestsMock,
+    storage: Storage,
+    secrets: ObfuscatedStorage[Secret[str]],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    api.get(f"{URL}/api/v1/serverInfo", status=HTTPStatus.FORBIDDEN)
+    _mock_jobs(api, [_job()])
+    _mock_session_and_objects(api, "session-1", ["vm-1"])
+    _mock_tasks(api, [_task()])
+
+    write_sections(_client(_auth(secrets), storage), [("veeam_backups", fetch_backups)])
+
+    _header, _section_header, line, _footer = capsys.readouterr().out.splitlines()
+    record = json.loads(line)
+    assert (record["jobName"], record["backupServer"]) == ("Daily_VM_Backup", None)
 
 
 def _task_requests(api: responses.RequestsMock) -> list[str]:

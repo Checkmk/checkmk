@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-11-23 14:11+0000\n"
+"PO-Revision-Date: 2026-11-24 15:55+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -527,6 +527,18 @@ msgstr "Últimas %(count)d %(unit_name)s"
 msgid "%(count)d Filter settings"
 msgstr "%(count)d Configurações de filtro"
 
+#, python-format
+msgid ""
+"%(count)d HTML textbox keeps its text, bold, color, size and alignment, but "
+"loses the rest of its HTML. Use plain text, or a hover template for "
+"formatted content."
+msgid_plural ""
+"%(count)d HTML textboxes keep their text, bold, color, size and alignment, "
+"but lose the rest of their HTML. Use plain text, or a hover template for "
+"formatted content."
+msgstr[0] ""
+msgstr[1] ""
+
 #, fuzzy, python-format
 msgid "%(count)d changed label"
 msgid_plural "%(count)d changed labels"
@@ -544,6 +556,16 @@ msgstr ""
 #, python-format
 msgid "%(count)d columns"
 msgstr "%(count)d colunas"
+
+#, python-format
+msgid ""
+"%(count)d custom gadget is shown as an icon. Choose a gadget type in the "
+"editor."
+msgid_plural ""
+"%(count)d custom gadgets are shown as icons. Choose a gadget type in the "
+"editor."
+msgstr[0] ""
+msgstr[1] ""
 
 #, fuzzy, python-format
 msgid "%(count)d discovery parameter added"
@@ -566,6 +588,28 @@ msgstr[1] "Propriedades Gerais"
 #, fuzzy, python-format
 msgid "%(count)d hosts looked at."
 msgstr "Não selecionado"
+
+#, python-format
+msgid ""
+"%(count)d line is split elsewhere than in its middle (line_cut). Maps splits "
+"it in the middle. To split it where NagVis did, drag its middle in the "
+"editor."
+msgid_plural ""
+"%(count)d lines are split elsewhere than in their middle (line_cut). Maps "
+"splits them in the middle. To split them where NagVis did, drag their middle "
+"in the editor."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid ""
+"%(count)d link uses NagVis macros such as [name], which Maps does not fill "
+"in. Write the link without macros."
+msgid_plural ""
+"%(count)d links use NagVis macros such as [name], which Maps does not fill "
+"in. Write the links without macros."
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-format
 msgid "%(count)d link uses an address Maps does not accept. It was dropped."
@@ -592,6 +636,16 @@ msgstr[1] "Adicionar nova etiqueta"
 
 #, python-format
 msgid ""
+"%(count)d object has a hover URL. Maps keeps it, but does not show it on "
+"hover. Put the content into a hover template."
+msgid_plural ""
+"%(count)d objects have a hover URL. Maps keeps them, but does not show them "
+"on hover. Put the content into a hover template."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid ""
 "%(count)d object ignores the state of some members by a pattern Maps cannot "
 "apply. Maps counts every member; the setting was dropped."
 msgid_plural ""
@@ -607,6 +661,102 @@ msgid ""
 msgid_plural ""
 "%(count)d objects leave out members by a pattern Maps cannot apply. The "
 "patterns were dropped."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid ""
+"%(count)d object of an unknown type was left out: %(types)s. Add it in the "
+"editor as an object Maps has."
+msgid_plural ""
+"%(count)d objects of unknown types were left out: %(types)s. Add them in the "
+"editor as objects Maps has."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid ""
+"%(count)d object of the automap file was left out, as Maps lays out a flow "
+"map itself."
+msgid_plural ""
+"%(count)d objects of the automap file were left out, as Maps lays out a flow "
+"map itself."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid ""
+"%(count)d object of the type the filter adds is not one the filter added. "
+"NagVis does not show it, so it was left out."
+msgid_plural ""
+"%(count)d objects of the type the filter adds are not ones the filter added. "
+"NagVis does not show them, so they were left out."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid ""
+"%(count)d object shows what a Livestatus filter Maps cannot use matches. It "
+"was left out."
+msgid_plural ""
+"%(count)d objects show what a Livestatus filter Maps cannot use matches. "
+"They were left out."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid ""
+"%(count)d object the filter adds had settings of its own. Maps shows every "
+"such object as the map's settings say."
+msgid_plural ""
+"%(count)d objects the filter adds had settings of their own. Maps shows "
+"every such object as the map's settings say."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid ""
+"%(count)d object the filter adds is drawn as a line. Maps shows it as a line "
+"and in the grid, too."
+msgid_plural ""
+"%(count)d objects the filter adds are drawn as lines. Maps shows them as "
+"lines and in the grid, too."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid ""
+"%(count)d object uses a NagVis context template file, which Maps does not "
+"have: %(names)s. Paste the markup into the context template of the map or "
+"the object."
+msgid_plural ""
+"%(count)d objects use NagVis context template files, which Maps does not "
+"have: %(names)s. Paste the markup into the context template of the map or "
+"the objects."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid ""
+"%(count)d object uses a NagVis hover template file, which Maps does not "
+"have: %(names)s. Paste the markup into the hover template of the map or the "
+"object."
+msgid_plural ""
+"%(count)d objects use NagVis hover template files, which Maps does not have: "
+"%(names)s. Paste the markup into the hover template of the map or the "
+"objects."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid ""
+"%(count)d object uses a custom icon set and shows the state icon of Maps: "
+"%(names)s. To give it a look of its own, choose an image from the image "
+"library."
+msgid_plural ""
+"%(count)d objects use custom icon sets and show the state icon of Maps: "
+"%(names)s. To give them a look of their own, choose an image from the image "
+"library."
 msgstr[0] ""
 msgstr[1] ""
 
@@ -2029,15 +2179,15 @@ msgstr ""
 
 msgid ""
 "<b>Single account:</b> monitor the account these credentials belong to. Its "
-"data goes to a piggyback host named after its account ID.<br><b>Explicit "
-"list of account IDs:</b> monitor several accounts with this one rule. Every "
-"listed account needs a role with the same name that these credentials may "
-"assume. The data of each account goes to a piggyback host named after its "
-"account ID.<br><b>All accounts in the organization:</b> like the list, but "
-"the agent queries AWS Organizations for the accounts on every run, so new "
-"accounts are monitored without changing the rule. Suspended and closed "
-"accounts are skipped. The management account is one of the accounts: exclude "
-"it if it has no such role."
+"data goes to a piggyback host named aws_account_ followed by its account ID."
+"<br><b>Explicit list of account IDs:</b> monitor several accounts with this "
+"one rule. Every listed account needs a role with the same name that these "
+"credentials may assume. The data of each account goes to a piggyback host "
+"named aws_account_ followed by its account ID.<br><b>All accounts in the "
+"organization:</b> like the list, but the agent queries AWS Organizations for "
+"the accounts on every run, so new accounts are monitored without changing "
+"the rule. Suspended and closed accounts are skipped. The management account "
+"is one of the accounts: exclude it if it has no such role."
 msgstr ""
 
 #, python-format
@@ -3670,6 +3820,10 @@ msgstr "Todos os serviços"
 msgid "AWS services found!"
 msgstr "Não foram encontrados hospedeiros/serviços."
 
+#, fuzzy
+msgid "AWS tag"
+msgstr "Tags AWS"
+
 msgid "AWS tags"
 msgstr "Tags AWS"
 
@@ -4084,6 +4238,9 @@ msgstr "Sobre a Checkmk"
 #, fuzzy
 msgid "About the processing cycle"
 msgstr "Tempo de processamento de eventos"
+
+msgid "Absent"
+msgstr ""
 
 msgid "Absolut level for total number of used file descriptors"
 msgstr "Nível absoluto para o número total de descritores de arquivo usados"
@@ -11774,6 +11931,14 @@ msgstr "Bluecat NTP Configurações"
 msgid "BlueCat command server settings"
 msgstr "Configurações do Bluecat Command Server"
 
+#, fuzzy
+msgid "Board condition"
+msgstr "Adicionar condição"
+
+#, fuzzy
+msgid "Board status"
+msgstr "Status do Hardware"
+
 msgid "Body"
 msgstr "Corpo"
 
@@ -11830,8 +11995,11 @@ msgid "Both conditions must match (defensive)"
 msgstr ""
 
 #, fuzzy
-msgid "Both updaters"
-msgstr "Actualizações do mapa de bits"
+msgid "Both updaters (agent installed by Agent Controller)"
+msgstr "Limitar o acesso aos dados do agente local ao controlador do agente"
+
+msgid "Both updaters (agent installed by legacy updater)"
+msgstr ""
 
 msgid "Bottom"
 msgstr "Fundo"
@@ -13585,6 +13753,10 @@ msgstr ""
 "actualmente na fila."
 
 #, fuzzy
+msgid "Cable problem"
+msgstr "Problemas de agrupamento"
+
+#, fuzzy
 msgid "Cache age for asynchronous built-in sections"
 msgstr "Idade da cache para verificação de antecedentes"
 
@@ -13630,6 +13802,10 @@ msgstr "Tamanho da Cache"
 
 msgid "Cache misses per second"
 msgstr "Falhas de cache por segundo"
+
+#, fuzzy
+msgid "Cache module missing"
+msgstr "Falta o nome do cliente"
 
 #, fuzzy
 msgid "Cache per resource"
@@ -18637,6 +18813,10 @@ msgid "Controller ID"
 msgstr "Controlador"
 
 #, fuzzy
+msgid "Controller index"
+msgstr "Controlador %d"
+
+#, fuzzy
 msgid "Controller version"
 msgstr "Versão do Controlador"
 
@@ -21811,6 +21991,10 @@ msgid "Deferred files in spool"
 msgstr "Arquivos diferidos no Spool"
 
 #, fuzzy
+msgid "Deferring"
+msgstr "Transferredsize"
+
+#, fuzzy
 msgid ""
 "Define Distinguished Names or Common Names of the LDAP groups to add users "
 "this role. e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> or "
@@ -22059,6 +22243,10 @@ msgstr ""
 "da licença, mensagens do sistema Splunk, trabalhos Splunk, mostrados no menu "
 "de trabalhos dentro do Splunk. Você também pode consultar a saúde do "
 "componente e os alertas disparados."
+
+#, fuzzy
+msgid "Degraded"
+msgstr "degradado"
 
 msgid "Degraded hosts"
 msgstr "Anfitriões degradados"
@@ -25478,6 +25666,22 @@ msgid ""
 "host.<br><br><b>IP - Region - Instance ID:</b><br>The name consists of "
 "\"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely identifies "
 "the EC2 instance. It is not possible to ping this host name."
+msgstr ""
+"Cada instância EC2 cria um anfitrião piggyback. Nota:<br><b>Nota:</b> Nem "
+"todos os nomes de anfitrião são pingáveis e a alteração do nome piggyback "
+"irá repor o anfitrião piggyback.<br><br><b>IP - Região - ID da Instância:</"
+"b><br>O nome consiste em \"{Endereço IPv4 privado}-{Region}-{ID da Instância}"
+"\". Isto identifica de forma exclusiva a instância EC2. Não é possível fazer "
+"ping a este nome de anfitrião."
+
+#, fuzzy
+msgid ""
+"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every host "
+"name is pingable and changing the piggyback name will reset the piggyback "
+"host.<br><br><b>IP - Region - Instance ID:</b><br>The name consists of "
+"\"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely identifies "
+"the EC2 instance. It is not possible to ping this host name.<br><br><b>AWS "
+"tag:</b><br>The name is the value of the AWS tag with the key that you enter."
 msgstr ""
 "Cada instância EC2 cria um anfitrião piggyback. Nota:<br><b>Nota:</b> Nem "
 "todos os nomes de anfitrião são pingáveis e a alteração do nome piggyback "
@@ -31137,6 +31341,10 @@ msgid "General error"
 msgstr "Erro geral"
 
 #, fuzzy
+msgid "General failure"
+msgstr "Erro geral"
+
+#, fuzzy
 msgid "General filters"
 msgstr "Erro geral"
 
@@ -31872,6 +32080,9 @@ msgstr "HP-UX Multipath Count"
 #, fuzzy
 msgid "HPE - Storagesubsystem"
 msgstr "Sistemas de armazenamento EMC VNX"
+
+msgid "HPE ProLiant RAID controller"
+msgstr ""
 
 msgid "HPE StoreOnce"
 msgstr "HPE StoreOnce"
@@ -38812,6 +39023,10 @@ msgstr ""
 msgid "In termination"
 msgstr "Intervalo"
 
+#, fuzzy
+msgid "In test"
+msgstr "Realizar testes"
+
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
 "manage change log entries (Werks) that requrire user interaction. These "
@@ -42300,10 +42515,6 @@ msgstr "Plugins de inventário legados"
 
 msgid "Legacy run"
 msgstr "Execução antiga"
-
-#, fuzzy
-msgid "Legacy updater installed the package"
-msgstr "Sempre instalar o Python com o agente"
 
 #, fuzzy
 msgid "Legacy updater only"
@@ -45885,6 +46096,12 @@ msgstr ""
 msgid "Maps connections"
 msgstr "conexões"
 
+#, python-format
+msgid ""
+"Maps lays out a flow map itself and does not carry over these automap layout "
+"options: %(settings)s"
+msgstr ""
+
 msgid ""
 "Maps renders objects centered on their coordinates. NagVis-classic places "
 "them as NagVis does, anchored top-left, with labels at their own offset and "
@@ -49140,9 +49357,20 @@ msgstr "NagVis"
 msgid "NagVis Maps"
 msgstr "Mapas NagVis"
 
+msgid ""
+"NagVis added the objects of the filter from one site. Maps adds those of "
+"every site of the connection."
+msgstr ""
+
 #, fuzzy
 msgid "NagVis is disabled"
 msgstr "O site está desativado"
+
+#, python-format
+msgid ""
+"NagVis left out the objects of hosts outside the host group %(group)s. Maps "
+"shows them."
+msgstr ""
 
 msgid "NagVis map"
 msgstr "Mapa NagVis"
@@ -50693,6 +50921,10 @@ msgstr ""
 "pacotes de extensão então você precisa criar arquivos abaixo do diretório "
 "<tt>%s/local</tt> da sua instância Check_MK."
 
+#, fuzzy
+msgid "No updater"
+msgstr "Actualizações do mapa de bits"
+
 msgid "No user creation: Use existing user. Fail if it doesn't exist."
 msgstr ""
 
@@ -51187,9 +51419,6 @@ msgstr "Não se limita a mostrar um objecto específico."
 
 msgid "Not runnable (loaded, but waiting for event)"
 msgstr "Não pode ser executado (Carregado mas à espera do evento)"
-
-msgid "Not running the updater"
-msgstr ""
 
 msgid "Not selected"
 msgstr "Não selecionado"
@@ -57878,6 +58107,10 @@ msgid "Please specify a relative path only using a-z, 0-9, -, _, . and $"
 msgstr ""
 "Especifique um caminho relativo utilizando apenas a-z, 0-9, -, _, . e $"
 
+#, fuzzy
+msgid "Please specify a site."
+msgstr "Por favor, especifique um título."
+
 msgid "Please specify a tag ID"
 msgstr "Por favor, especifique uma identificação da etiqueta"
 
@@ -58406,6 +58639,10 @@ msgid "Powered ON"
 msgstr "Ligado"
 
 msgid "Powered Off"
+msgstr "Desligado"
+
+#, fuzzy
+msgid "Powered off"
 msgstr "Desligado"
 
 msgid "Powering on"
@@ -59469,6 +59706,10 @@ msgstr "Salvar e ir para a configuração de serviço"
 msgid "Qtree Quotas"
 msgstr "Fitas gratuitas"
 
+#, fuzzy
+msgid "Qualified"
+msgstr "Facilidade"
+
 msgid "Quantum Storage Status"
 msgstr "Status de armazenamento quântico"
 
@@ -59631,6 +59872,10 @@ msgstr "Pesquisa rápida"
 
 msgid "Quick search search order"
 msgstr "Ordem de busca rápida"
+
+#, fuzzy
+msgid "Quiesced"
+msgstr "Cache quieto"
 
 msgid "Quiet cache"
 msgstr "Cache quieto"
@@ -70281,6 +70526,14 @@ msgstr "Tópicos padrão"
 msgid "Standby"
 msgstr "Em espera"
 
+#, fuzzy
+msgid "Standby (offline)"
+msgstr "Base de Dados Offline"
+
+#, fuzzy
+msgid "Standby (spare)"
+msgstr "Caminhos em espera"
+
 msgid "Standby paths"
 msgstr "Caminhos em espera"
 
@@ -72930,6 +73183,10 @@ msgid "Tag groups with only one choice must have a tag ID."
 msgstr "Grupos de etiquetas com apenas uma opção devem ter um ID de etiqueta."
 
 #, fuzzy
+msgid "Tag key"
+msgstr "Nome do Modelo"
+
+#, fuzzy
 msgid "Tag matching subscriptions"
 msgstr "Assinaturas de eventos"
 
@@ -74273,6 +74530,12 @@ msgstr ""
 "0% a 100%"
 
 msgid "The Python packages installed in the site ('pip freeze')"
+msgstr ""
+
+msgid ""
+"The RAID controllers of HPE ProLiant servers report a condition, a board "
+"condition and a board status. Here you can set the monitoring state for each "
+"value they report."
 msgstr ""
 
 #, fuzzy
@@ -76639,6 +76902,11 @@ msgid ""
 "instructions."
 msgstr ""
 
+msgid ""
+"The instrument agent does not recognize the value. You may need to upgrade "
+"the instrument agent."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The interval the connection will be executed in to check the available "
@@ -76706,6 +76974,20 @@ msgstr ""
 #, fuzzy
 msgid "The key must not be empty or contain a colon."
 msgstr "O comentário não deve conter ponto-e-vírgula."
+
+msgid ""
+"The key of the AWS tag whose value is the host name. AWS tag keys are case-"
+"sensitive, so the key must match exactly: <tt>Name</tt> does not match "
+"<tt>name</tt>.<br><br>Checkmk replaces each character that a host name "
+"cannot contain with <tt>_</tt>. A host name can contain only the letters a-z "
+"and A-Z, the digits 0-9, <tt>-</tt>, <tt>_</tt> and <tt>.</tt>. For example, "
+"the tag value <tt>web server/01</tt> gives the host name <tt>web_server_01</"
+"tt>, and <tt>Müller</tt> gives <tt>M_ller</tt>.<br><br>An EC2 instance gets "
+"no host if it does not have the tag, or if the tag value is empty, longer "
+"than 240 characters or starts with <tt>-</tt> or <tt>.</tt>.<br><br><b>Note:"
+"</b> Tag values do not have to be unique. If two EC2 instances get the same "
+"host name, only one of them is monitored."
+msgstr ""
 
 msgid ""
 "The key size is provided as an integer and needs to match exactly the value "
@@ -76805,15 +77087,16 @@ msgid ""
 "activation mode to <i>Enable agent updates using the Agent Controller</i> in "
 "the rule set <a href=\"%(url)s\">Agent updater (Linux, Windows, Solaris)</"
 "a>. We recommend switching before the legacy updater is removed.<br><br>The "
-"counters cover the hosts whose baked agent enables agent updates:"
-"<ul><li><b>Not running the updater</b>: neither updater has contacted the "
-"site in the last %(days)d days.</li><li><b>Agent Controller only</b>: the "
-"host uses only the Agent Controller updater.</li><li><b>Legacy updater only</"
-"b>: the host uses only the legacy updater.</li><li><b>Both updaters</b>: the "
-"host uses both the Agent Controller updater and the legacy updater.</"
-"li><li><b>Legacy updater installed the package</b>: the host uses both "
-"updaters, and its current agent package was installed by the legacy updater."
-"</li></ul>A host counts in one case only."
+"counts include only hosts whose baked agent has agent updates enabled:"
+"<ul><li><b>No updater</b>: neither updater has contacted the site in the "
+"last %(days)d days.</li><li><b>Agent Controller only</b>: the host uses only "
+"the updater integrated into the Agent Controller.</li><li><b>Legacy updater "
+"only</b>: the host uses only the legacy updater.</li><li><b>Both updaters "
+"(agent installed by Agent Controller)</b>: the host uses both updaters, and "
+"the legacy updater did not install its current agent package.</"
+"li><li><b>Both updaters (agent installed by legacy updater)</b>: the host "
+"uses both updaters, and the legacy updater installed its current agent "
+"package.</li></ul>A host counts in one case only."
 msgstr ""
 
 msgid ""
@@ -77010,6 +77293,38 @@ msgstr "Falta o nome do grupo obrigatório"
 #, fuzzy, python-format
 msgid "The map contains more than %(limit)d objects."
 msgstr "A sua consulta produziu mais de %(limit)d resultados. "
+
+#, python-format
+msgid ""
+"The map names several NagVis backends (%(backends)s). Maps reads from one "
+"monitoring connection only; the others are ignored."
+msgstr ""
+
+msgid ""
+"The map plays a sound or keeps an event log when a state changes. Maps does "
+"neither. Use notifications instead."
+msgstr ""
+
+#, python-format
+msgid ""
+"The map takes objects from NagVis sources Maps does not have: %(sources)s. "
+"Add these objects in the editor, for example as a grid with a Livestatus "
+"filter."
+msgstr ""
+
+#, python-format
+msgid ""
+"The map uses the NagVis header template file '%(name)s'. Maps shows its own "
+"header. Put what the template showed on the map, for example as textboxes or "
+"links."
+msgstr ""
+
+#, python-format
+msgid ""
+"The map uses the custom icon set '%(name)s', so its objects show the state "
+"icon of Maps. To give them a look of their own, choose an image from the "
+"image library."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -77726,6 +78041,21 @@ msgid ""
 msgstr ""
 "O ID de transição de resolução numérica JIRA. 11 - 'To Do', 21 - 'In "
 "Progress', 31 - 'Done'"
+
+msgid ""
+"The objects a filter adds ignore the state of some members by a pattern Maps "
+"cannot apply. Maps counts every member; the setting was dropped."
+msgstr ""
+
+msgid ""
+"The objects a filter adds leave out members by a pattern Maps cannot apply. "
+"The pattern was dropped."
+msgstr ""
+
+msgid ""
+"The objects a filter adds put their labels at one point of the map. Maps "
+"puts each label at its own object."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -80559,10 +80889,22 @@ msgstr ""
 "Esta identificação é usada como identificador único. Não pode ser alterado "
 "mais tarde."
 
+#, python-format
 msgid ""
-"This NagVis map adds its objects from a Livestatus filter. Maps keeps only "
-"the objects the file lists. To show the state of everything the filter "
-"matches, add a dynamic group with that filter."
+"This NagVis map adds a %(type)s for each group a Livestatus filter matches. "
+"A grid in Maps adds only hosts or services, so those objects were left out."
+msgstr ""
+
+#, python-format
+msgid ""
+"This NagVis map adds its objects from a Livestatus filter Maps cannot use: "
+"\"%(filter)s\". Those objects were left out."
+msgstr ""
+
+msgid ""
+"This NagVis map also adds objects from a Livestatus filter, which Maps does "
+"not combine with an automatic or a geographic map. Those objects were left "
+"out."
 msgstr ""
 
 #, python-brace-format
@@ -90445,6 +90787,10 @@ msgstr "Cacos não atribuídos"
 msgid "Unavailable"
 msgstr "não disponíveis"
 
+#, fuzzy
+msgid "Unavailable (offline)"
+msgstr "não disponíveis"
+
 msgid "Unblended costs"
 msgstr "Custos não misturados"
 
@@ -91059,6 +91405,10 @@ msgstr "As actualizações serão <b>disabled</b> para este anfitrião: %(e)s"
 
 msgid "Updates will be enabled for this host."
 msgstr "As actualizações serão activadas para este anfitrião."
+
+#, fuzzy
+msgid "Updating"
+msgstr "Aguardando"
 
 msgid "Updating of search index started"
 msgstr "Atualização do índice de pesquisa iniciada"
@@ -104831,14 +105181,14 @@ msgid "Vertical axis"
 msgstr "Largura do eixo vertical"
 
 #, fuzzy
-msgid "Graph styling"
-msgstr "Afinação de gráficos"
+msgid "Styling"
+msgstr "Estilo"
 
 #, fuzzy
 msgid "Select presentation"
 msgstr "Ligações rejeitadas"
 
-msgid "Date and time stamp (right upper corner)"
+msgid "Date and time stamp (left upper corner)"
 msgstr ""
 
 #, fuzzy
@@ -104848,17 +105198,6 @@ msgstr "Mostrar margem ao redor do gráfico"
 #, fuzzy
 msgid "Legend"
 msgstr "Estado da licença"
-
-#, fuzzy
-msgid "Interaction"
-msgstr "Intervalo"
-
-#, fuzzy
-msgid "Click on graph to place pin"
-msgstr "Clonar coleção de gráficos"
-
-msgid "Show burger menu for graph options"
-msgstr ""
 
 #, fuzzy
 msgid "Icon selector"
@@ -104900,6 +105239,27 @@ msgid "Add & place widget"
 msgstr "Adicionar alvo"
 
 #, fuzzy
+msgid "Controls"
+msgstr "Controlador"
+
+#, fuzzy
+msgid "Click on graph to place pin"
+msgstr "Clonar coleção de gráficos"
+
+msgid "Show burger menu for graph options"
+msgstr ""
+
+#, fuzzy
+msgid "Link title to"
+msgstr "Link de Título"
+
+msgid ""
+"A click on a host or service name, a related hosts count or a perfometer "
+"opens no details, and the rows offer no actions. The graph links next to the "
+"names still open the graphs."
+msgstr ""
+
+#, fuzzy
 msgid "Value must be a valid URL"
 msgstr "O valor deve ser uma cadeia de caracteres"
 
@@ -104918,10 +105278,6 @@ msgid ""
 msgstr ""
 "Estas macros podem ser combinadas com elementos de texto arbitrários, por "
 "exemplo, \"algum texto <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\"."
-
-#, fuzzy
-msgid "Link title to"
-msgstr "Link de Título"
 
 #, fuzzy
 msgid "Appearance"
@@ -104984,16 +105340,12 @@ msgid "Not available with the selected log filters."
 msgstr "%s não nas pastas de configuração seleccionadas."
 
 #, fuzzy
-msgid "Data settings"
-msgstr "Propriedades do painel de controlo"
-
-#, fuzzy
 msgid "Limit objects to"
 msgstr "Objetos de limite"
 
 #, fuzzy
-msgid "Widget settings"
-msgstr "Editar definições"
+msgid "Interaction"
+msgstr "Intervalo"
 
 #, fuzzy
 msgid "Show as"
@@ -105019,10 +105371,6 @@ msgstr "Notas da loja para análise de regras"
 #, fuzzy
 msgid "Show notifications for services only"
 msgstr "Notas da loja para análise de regras"
-
-#, fuzzy
-msgid "Additional graph options"
-msgstr "Opções adicionais"
 
 #, fuzzy
 msgid "Choose how to display your data"
@@ -105101,6 +105449,10 @@ msgstr "Propriedades Gerais"
 #, fuzzy
 msgid "Search custom graphs ..."
 msgstr "Novo gráfico personalizado..."
+
+#, fuzzy
+msgid "Widget settings"
+msgstr "Editar definições"
 
 #, fuzzy
 msgid "No sites available."
@@ -105370,10 +105722,6 @@ msgstr "não %s estados"
 #, fuzzy
 msgid "Show summary for not UP states"
 msgstr "Mostrar resumo para os estados não %s"
-
-#, fuzzy
-msgid "Contextual link"
-msgstr "Informações de Contexto"
 
 msgid "Selected state"
 msgstr "Estado seleccionado"
@@ -105645,12 +105993,6 @@ msgstr "Ordenar por coluna"
 #, fuzzy
 msgid "Sort direction"
 msgstr "Ligações rejeitadas"
-
-msgid ""
-"A click on a host or service name, a related hosts count or a perfometer "
-"opens no details, and the rows offer no actions. The graph links next to the "
-"names still open the graphs."
-msgstr ""
 
 msgid ""
 "A preview of ntop widgets is not available due to the widget size limitation"
@@ -107741,8 +108083,24 @@ msgid "Remove bend"
 msgstr "Removido"
 
 #, fuzzy
+msgid "Pin out of the grid"
+msgstr "Minuto da hora (0-59)"
+
+#, fuzzy
+msgid "Edit grid properties"
+msgstr "Editar propriedades"
+
+#, fuzzy
+msgid "Duplicate grid"
+msgstr "Taxa de desduplicação"
+
+#, fuzzy
 msgid "Duplicate"
 msgstr "Taxa de desduplicação"
+
+#, fuzzy
+msgid "Delete grid"
+msgstr "Eliminar %s"
 
 #, fuzzy
 msgid "Site unreachable: %{sites} — showing last known state for its hosts"
@@ -107801,6 +108159,26 @@ msgstr "Notificações são desativadas para esta %(what)s"
 msgid "MUTED"
 msgstr ""
 
+msgid ""
+"Livestatus could not read the objects a grid of this map adds. The editor "
+"shows which grid it is."
+msgstr ""
+
+msgid "Livestatus could not read the objects a grid of this map adds."
+msgstr ""
+
+#, fuzzy
+msgid "Grid failed"
+msgstr "Login desactivado"
+
+msgid ""
+"A grid matches more than %{n} objects, so the map shows only some of them."
+msgstr ""
+
+#, fuzzy
+msgid "Not all objects shown"
+msgstr "Objetos de limite"
+
 #, fuzzy
 msgid "Exit full screen"
 msgstr "Dados enviados"
@@ -107841,6 +108219,25 @@ msgid "%{seconds}s"
 msgstr "Não selecionado"
 
 #, fuzzy
+msgid "%{current} of %{total}"
+msgstr "Adicionar nova etiqueta"
+
+#, fuzzy
+msgid "%{n} match"
+msgid_plural "%{n} matches"
+msgstr[0] "%d dias"
+msgstr[1] "%d dias"
+
+msgid "Nothing on the map matches; type '/' for the search operators"
+msgstr ""
+
+msgid "Too many matches to show on the map; refine the search"
+msgstr ""
+
+msgid "Enter shows the next match, Shift+Enter the previous one"
+msgstr ""
+
+#, fuzzy
 msgid "Object ID"
 msgstr "Objeto"
 
@@ -107858,7 +108255,7 @@ msgstr "Padrão de pesquisa"
 
 msgid ""
 "Pick one here, or type '/' in the search box. Without a prefix all fields "
-"are searched; multiple terms must all match."
+"are searched; multiple terms must all match; '*' stands for any characters."
 msgstr ""
 
 #, fuzzy
@@ -107886,6 +108283,15 @@ msgstr "Objetos de limite"
 #, fuzzy
 msgid "Reset to fit"
 msgstr "Redefinir para o padrão"
+
+msgid "Pinned %{name} out of the grid"
+msgstr ""
+
+msgid "Undo"
+msgstr ""
+
+msgid "A map takes at most %{n} grids."
+msgstr ""
 
 #, fuzzy
 msgid "%{duration} ago"
@@ -107976,6 +108382,10 @@ msgstr ""
 #, fuzzy
 msgid "Raw metrics (%{n})"
 msgstr "Métricas"
+
+#, fuzzy
+msgid "Unreachable through"
+msgstr "Anfitriões inalcançáveis"
 
 #, fuzzy
 msgid "Members matching \"%{pattern}\" are not counted."
@@ -108128,9 +108538,6 @@ msgstr "Anfitrião do filtro"
 msgid "Livestatus filter"
 msgstr "erro do Livestatus"
 
-msgid "One or more Filter: lines, forwarded verbatim to Livestatus."
-msgstr ""
-
 #, fuzzy
 msgid "Text content"
 msgstr "conteúdo"
@@ -108139,7 +108546,7 @@ msgstr "conteúdo"
 msgid "Add object"
 msgstr "Adicionar previsão"
 
-msgid "Grid"
+msgid "Snap to grid"
 msgstr ""
 
 #, fuzzy
@@ -108177,6 +108584,17 @@ msgstr "Selecione o tipo de dispositivo"
 #, fuzzy
 msgid "Place on map"
 msgstr "Clone"
+
+#, fuzzy
+msgid "Empty: all services"
+msgstr "Todos os serviços"
+
+#, fuzzy
+msgid "Empty: all hosts"
+msgstr "Anfitriões de Importação"
+
+msgid "One %{filter} line per condition, for example %{example}."
+msgstr ""
 
 msgid "Start each line with %{headers}."
 msgstr ""
@@ -108288,6 +108706,40 @@ msgid "Time window"
 msgstr "Janela de tempo de taxa"
 
 #, fuzzy
+msgid "State, worst first"
+msgstr "O mais recente primeiro"
+
+#, fuzzy
+msgid "State, best first"
+msgstr "O mais recente primeiro"
+
+msgid "Grid"
+msgstr ""
+
+#, fuzzy
+msgid "Objects per row"
+msgstr "Tipo de objeto"
+
+#, fuzzy
+msgid "Spacing X"
+msgstr "Poupança de espaço"
+
+#, fuzzy
+msgid "Spacing Y"
+msgstr "Poupança de espaço"
+
+msgid ""
+"Label and appearance apply to each object of the grid. Drag an object out of "
+"the grid, or use \"Pin out of the grid\" in its context menu, to place it on "
+"its own."
+msgstr ""
+
+msgid ""
+"Livestatus could not read the objects this filter matches. If the site "
+"answers, check its regular expressions and column names."
+msgstr ""
+
+#, fuzzy
 msgid "Monitoring object"
 msgstr "Núcleo de monitorização"
 
@@ -108297,11 +108749,6 @@ msgstr "Mostrar Estado de"
 
 msgid "group name"
 msgstr "Nome do grupo"
-
-msgid ""
-"One or more %{filter} lines, each terminated by a literal %{newline}. "
-"Forwarded verbatim to Livestatus against %{query}."
-msgstr ""
 
 #, fuzzy
 msgid "Only hard states"
@@ -109426,9 +109873,6 @@ msgid ""
 "light instead."
 msgstr ""
 
-msgid "Undo"
-msgstr ""
-
 msgid "Redo"
 msgstr ""
 
@@ -109647,12 +110091,42 @@ msgstr ""
 msgid "Map canvas"
 msgstr "Dados cartografados"
 
+#, fuzzy
+msgid "Could not read the matching services"
+msgstr "Adicionar configuração do estado"
+
+#, fuzzy
+msgid "Could not read the matching hosts"
+msgstr "Conde de outros anfitriões"
+
+#, fuzzy
+msgid "%{n} shown, more match"
+msgstr "Em tempo de inatividade"
+
+#, fuzzy
+msgid "No matching services"
+msgstr "Serviços de jogo"
+
+#, fuzzy
+msgid "No matching hosts"
+msgstr "Nenhum nome de anfitrião correspondente"
+
+#, fuzzy
+msgid "%{n} service"
+msgid_plural "%{n} services"
+msgstr[0] "Serviços forçados"
+msgstr[1] "Serviços forçados"
+
 msgid "No objects yet. Use the Edit button at the bottom right to add some."
 msgstr ""
 
 #, fuzzy
 msgid "This map has no objects yet"
 msgstr "Este grupo não existe."
+
+#, fuzzy
+msgid "No hosts or services match the grids on this map."
+msgstr "Notas de serviços personalizados"
 
 #, fuzzy
 msgid "Geo map canvas"
@@ -110036,6 +110510,38 @@ msgstr "Não foi possível encontrar o DN de base do grupo."
 msgid "+ all attributes"
 msgstr "Atributo de função"
 
+#, fuzzy
+msgid "+ grouped attributes"
+msgstr "Atributo de função"
+
+msgid ""
+"The attribute values of each series are appended to this name so that every "
+"series gets its own service, for example \"http.server.duration GET - 200\". "
+"Values that are part of the host name, fixed by the filter or already shown "
+"in the name are left out. Names that are too long are shortened and end in a "
+"short hash. Each new attribute value creates a new service, for example a "
+"new pod after a deployment. To keep names short and services stable, group "
+"the series by the attributes you need. Only their values are then appended."
+msgstr ""
+
+msgid ""
+"The value of the grouped attribute %{attribute} is appended to this name so "
+"that every group gets its own service, for example \"http.server.duration /"
+"cart\". Names that are too long are shortened and end in a short hash."
+msgstr ""
+
+msgid ""
+"The values of the grouped attributes (%{attributes}) are appended to this "
+"name so that every group gets its own service, for example "
+"\"http.server.duration GET - 200\". Names that are too long are shortened "
+"and end in a short hash."
+msgstr ""
+
+msgid ""
+"Nothing is appended to this name, so the service is named as entered, with "
+"its macros filled in."
+msgstr ""
+
 msgid ""
 "Combine free text with macros to name each service after the data it "
 "monitors: every macro is replaced by the matching value of each series, such "
@@ -110046,14 +110552,6 @@ msgstr ""
 #, fuzzy
 msgid "Available service name macros:"
 msgstr "Disponível até"
-
-msgid ""
-"The attribute values of each series are appended to this name, so that every "
-"series gets its own service, e.g. \"http.server.duration GET - 200\". Very "
-"long names are shortened and end in a short hash. Use \"Group by\" to append "
-"only the grouped attributes: this keeps the names short and stable, as every "
-"new attribute value creates a new service."
-msgstr ""
 
 #, fuzzy
 msgid "Monitor this metric as a service on a host."
@@ -110148,10 +110646,6 @@ msgstr "Outros registos para este serviço"
 msgid "Services to be created"
 msgstr "Estados de serviços"
 
-#, fuzzy
-msgid "Updating…"
-msgstr "A carregar..."
-
 msgid ""
 "Enter a service name and select a host or enter a host name template to see "
 "the services to be created."
@@ -110174,25 +110668,8 @@ msgid "Target host:"
 msgstr "Metas"
 
 #, fuzzy
-msgid "To be created"
-msgstr "Arquivo criado"
-
-#, fuzzy
-msgid "Existing"
-msgstr "Testes"
-
-#, fuzzy
-msgid "Folder:"
-msgstr "Folder"
-
-#, fuzzy
-msgid "Folder of %{host}"
-msgstr "Pasta: %s"
-
-msgid ""
-"The folders you may create hosts in could not be looked up, so new hosts go "
-"to the Main folder. Saving fails if you may not create hosts there."
-msgstr ""
+msgid "(new host)"
+msgstr "(sem anfitriões)"
 
 #, fuzzy
 msgid "Showing the first %{shown} of %{total} services."
@@ -110208,47 +110685,6 @@ msgid "%{count} more service names clash."
 msgstr "Serviços forçados"
 
 msgid "Series appearing after saving add services that are not shown here."
-msgstr ""
-
-#, fuzzy
-msgid "%{n} more new host is created in"
-msgid_plural "%{n} more new hosts are created in"
-msgstr[0] "Criação do anfitrião"
-msgstr[1] "Criação do anfitrião"
-
-#, fuzzy
-msgid "%{n} new host is created in"
-msgid_plural "%{n} new hosts are created in"
-msgstr[0] "Criação do anfitrião"
-msgstr[1] "Criação do anfitrião"
-
-#, fuzzy
-msgid "Several folders"
-msgstr "Filtros de serviço"
-
-#, fuzzy
-msgid "Folder of the other new hosts"
-msgstr "Cor dos pontos dispersos"
-
-msgid ""
-"You may not create hosts: you lack the permission \"Add & remove hosts\". "
-"Saving is refused while the template resolves to new hosts."
-msgstr ""
-
-msgid ""
-"You may not create hosts in any folder: you have neither \"Write access to "
-"all hosts and folders\" nor membership in a contact group permitted on a "
-"folder. Saving is refused while the template resolves to new hosts."
-msgstr ""
-
-msgid ""
-"You may not create hosts in any folder: the hosts are locked in every folder "
-"you may write to. Saving is refused while the template resolves to new hosts."
-msgstr ""
-
-msgid ""
-"You may not create hosts in any folder. Saving is refused while the template "
-"resolves to new hosts."
 msgstr ""
 
 #, fuzzy
@@ -110269,7 +110705,7 @@ msgid "Target hosts:"
 msgstr "Metas"
 
 #, fuzzy
-msgid "New hosts, created on saving:"
+msgid "New hosts, created in the Main folder on saving:"
 msgstr "Anfitriões para criar em cada pasta"
 
 msgid ""
@@ -113567,9 +114003,11 @@ msgstr "Dados líquidos recebidos"
 msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
 "<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
-"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>, <tt>$SERIES_ATTRIBUTES$</tt> (all "
-"attribute values of the series; names longer than 200 bytes are shortened "
-"and end in a short hash)"
+"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>, <tt>$SERIES_ATTRIBUTES$</tt> (the "
+"attribute values of the series, without those the host name template "
+"references or an equals condition of the filter fixes and those the name "
+"already shows; names longer than 200 bytes are shortened and end in a short "
+"hash)"
 msgstr ""
 
 #, fuzzy
@@ -115007,6 +115445,66 @@ msgstr ""
 msgid "To explore"
 msgstr "O julgamento expirou"
 
+#, fuzzy
+#~ msgid "Legacy updater installed the package"
+#~ msgstr "Sempre instalar o Python com o agente"
+
+#, fuzzy
+#~ msgid "Graph styling"
+#~ msgstr "Afinação de gráficos"
+
+#, fuzzy
+#~ msgid "Data settings"
+#~ msgstr "Propriedades do painel de controlo"
+
+#, fuzzy
+#~ msgid "Additional graph options"
+#~ msgstr "Opções adicionais"
+
+#, fuzzy
+#~ msgid "Contextual link"
+#~ msgstr "Informações de Contexto"
+
+#, fuzzy
+#~ msgid "Updating…"
+#~ msgstr "A carregar..."
+
+#, fuzzy
+#~ msgid "To be created"
+#~ msgstr "Arquivo criado"
+
+#, fuzzy
+#~ msgid "Existing"
+#~ msgstr "Testes"
+
+#, fuzzy
+#~ msgid "Folder:"
+#~ msgstr "Folder"
+
+#, fuzzy
+#~ msgid "Folder of %{host}"
+#~ msgstr "Pasta: %s"
+
+#, fuzzy
+#~ msgid "%{n} more new host is created in"
+#~ msgid_plural "%{n} more new hosts are created in"
+#~ msgstr[0] "Criação do anfitrião"
+#~ msgstr[1] "Criação do anfitrião"
+
+#, fuzzy
+#~ msgid "%{n} new host is created in"
+#~ msgid_plural "%{n} new hosts are created in"
+#~ msgstr[0] "Criação do anfitrião"
+#~ msgstr[1] "Criação do anfitrião"
+
+#, fuzzy
+#~ msgid "Several folders"
+#~ msgstr "Filtros de serviço"
+
+#, fuzzy
+#~ msgid "Folder of the other new hosts"
+#~ msgstr "Cor dos pontos dispersos"
+
 #~ msgid ""
 #~ "Choose time levels (in seconds) for which a unit is allowed to be in a "
 #~ "'reloading' state"
@@ -115085,10 +115583,6 @@ msgstr "O julgamento expirou"
 #, fuzzy
 #~ msgid "Applied dashboard & widget filters"
 #~ msgstr "Filtros Aplicados:"
-
-#, fuzzy
-#~ msgid "(new host)"
-#~ msgstr "(sem anfitriões)"
 
 #, fuzzy
 #~ msgid ""
@@ -115494,12 +115988,6 @@ msgstr "O julgamento expirou"
 #, fuzzy
 #~ msgid "no active downtimes"
 #~ msgstr "Remover tempos de paragem"
-
-#, fuzzy
-#~ msgid "%{n} downtime active"
-#~ msgid_plural "%{n} downtimes active"
-#~ msgstr[0] "Em tempo de inatividade"
-#~ msgstr[1] "Em tempo de inatividade"
 
 #, fuzzy
 #~ msgid "Removing…"
@@ -115931,10 +116419,6 @@ msgstr "O julgamento expirou"
 #, fuzzy, python-format
 #~ msgid "Protocol %(id)d"
 #~ msgstr "Protocolo"
-
-#, fuzzy
-#~ msgid "Quality"
-#~ msgstr "Facilidade"
 
 #, fuzzy
 #~ msgid "Remove this network"
@@ -117390,10 +117874,6 @@ msgstr "O julgamento expirou"
 #, fuzzy
 #~ msgid "CMK RRD data"
 #~ msgstr "Dados cartografados"
-
-#, fuzzy
-#~ msgid "No custom service matches this name."
-#~ msgstr "Notas de serviços personalizados"
 
 #, fuzzy
 #~ msgid "Edit host %{name}"
@@ -123560,9 +124040,6 @@ msgstr "O julgamento expirou"
 #~ msgid "Enclosure ID"
 #~ msgstr "Identificação do invólucro"
 
-#~ msgid "Hardware status"
-#~ msgstr "Status do Hardware"
-
 #, fuzzy
 #~ msgid ""
 #~ "If you don't configure the user name and password, the special agent "
@@ -124273,10 +124750,6 @@ msgstr "O julgamento expirou"
 
 #~ msgid "Configuration generation"
 #~ msgstr "Geração da configuração"
-
-#, python-format
-#~ msgid "Controller %d"
-#~ msgstr "Controlador %d"
 
 #~ msgid "Core & setup"
 #~ msgstr "Núcleo e configuração"

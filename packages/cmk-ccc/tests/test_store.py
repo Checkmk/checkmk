@@ -508,8 +508,11 @@ def test_release_lock_not_locked_no_exception() -> None:
 def test_release_lock(test_file: Path) -> None:
     store.acquire_lock(test_file)
     assert store.have_lock(test_file) is True
+
     store.release_lock(test_file)
+
     assert store.have_lock(test_file) is False
+    assert not _locked_by_anyone(test_file)
 
 
 def _fd_of(path: Path) -> int:

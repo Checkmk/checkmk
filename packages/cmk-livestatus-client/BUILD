@@ -9,6 +9,13 @@ load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 load("//bazel/rules:replace_string_in_file.bzl", "replace_string_in_file")
+load("//doc/documentation:defs.bzl", "package_docs")
+
+package_docs(
+    name = "docs",
+    index = "docs/arch-comp-livestatus-client.rst",
+    visibility = ["//doc/documentation:__pkg__"],
+)
 
 exports_files([
     "dev-requirements.in",

@@ -34,6 +34,7 @@ doc_srcs(
         "//omd/packages/omd:docs",
         "//packages/cmk-backup:docs",
         "//packages/cmk-check-engine:docs",
+        "//packages/cmk-livestatus-client:docs",
         "//packages/cmk-maps:docs",
         "//packages/cmk-plugins/cmk/plugins/kube:docs",
     ] + select({

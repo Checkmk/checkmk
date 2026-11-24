@@ -3,96 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import gzip
-import io
-import json
-from collections.abc import Sequence
-from pathlib import Path
-
 from cmk.inventory.delta import ImmutableDeltaTree
 from cmk.inventory.serialization import (
     deserialize_delta_tree,
     deserialize_tree,
-    make_meta,
-    SDMetaAndRawTree,
     SDRawDeltaTree,
-    SDRawTree,
     serialize_tree,
 )
-from cmk.inventory.store import InventoryStore
-from cmk.inventory.trees import ImmutableTree, MutableTree, RetentionInterval, SDKey, SDNodeName
-
-
-def file_names(directory: Path) -> Sequence[str]:
-    return sorted(p.name for p in directory.iterdir())
-
-
-def inventory_store() -> InventoryStore:
-    return InventoryStore(Path(__file__).parent / "tree_test_data")
-
-
-def raw_tree(value: str) -> SDRawTree:
-    return SDRawTree(
-        Attributes={"Pairs": {SDKey("key"): value}},
-        Table={
-            "KeyColumns": [SDKey("col1")],
-            "Rows": [
-                {SDKey("col1"): "val11", SDKey("col2"): "val12"},
-                {SDKey("col1"): "val21", SDKey("col2"): "val22"},
-            ],
-        },
-        Nodes={
-            SDNodeName("node"): SDRawTree(
-                Attributes={"Pairs": {SDKey("nkey"): "nval"}},
-                Table={
-                    "KeyColumns": [SDKey("ncol1")],
-                    "Rows": [
-                        {SDKey("ncol1"): "nval11", SDKey("ncol2"): "nval12"},
-                        {SDKey("ncol1"): "nval21", SDKey("ncol2"): "nval22"},
-                    ],
-                },
-                Nodes={},
-            ),
-        },
-    )
-
-
-def tree_with_table_retentions() -> SDRawTree:
-    return SDRawTree(
-        Attributes={},
-        Table={
-            "KeyColumns": [SDKey("kc")],
-            "Rows": [{SDKey("kc"): "KC", SDKey("c1"): "C1"}],
-            "Retentions": {("KC",): {SDKey("c1"): (1, 2, 3, "current")}},
-        },
-        Nodes={},
-    )
-
-
-TABLE_RETENTIONS = {("KC",): {SDKey("c1"): RetentionInterval(1, 2, 3, "current")}}
-
-
-def gzipped_repr(raw_tree: SDRawTree) -> bytes:
-    buf = io.BytesIO()
-    with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-        f.write(
-            (
-                repr(SDMetaAndRawTree(meta=make_meta(do_archive=False), raw_tree=raw_tree)) + "\n"
-            ).encode("utf-8")
-        )
-    return buf.getvalue()
-
-
-def gzipped_json(raw_tree: SDRawTree) -> bytes:
-    buf = io.BytesIO()
-    with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-        f.write(
-            (
-                json.dumps(SDMetaAndRawTree(meta=make_meta(do_archive=False), raw_tree=raw_tree))
-                + "\n"
-            ).encode("utf-8")
-        )
-    return buf.getvalue()
+from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName
 
 
 def immutable_tree(tree: MutableTree) -> ImmutableTree:

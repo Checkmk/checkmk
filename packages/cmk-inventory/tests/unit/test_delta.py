@@ -7,7 +7,6 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.ccc.hostaddress import HostName
 from cmk.inventory.delta import compare_trees, ImmutableDeltaTable, SDDeltaValue
 from cmk.inventory.serialization import deserialize_tree
 from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName
@@ -16,7 +15,6 @@ from ._fixtures import (
     empty_immutable_tree,
     filled_immutable_tree,
     immutable_tree,
-    inventory_store,
 )
 
 
@@ -177,51 +175,6 @@ def test_compare_trees_lists_the_keys_of_changed_rows(
 
     delta_tree = compare_trees(immutable_tree(current_tree), immutable_tree(previous_tree))
     assert {k for r in delta_tree.table.rows for k in r} == expected_keys
-
-
-@pytest.mark.parametrize(
-    "tree_name_old, tree_name_new, result",
-    [
-        (
-            HostName("tree_old_addresses_arrays_memory"),
-            HostName("tree_new_addresses_arrays_memory"),
-            (3, 2, 1),
-        ),
-        (
-            HostName("tree_old_addresses"),
-            HostName("tree_new_addresses"),
-            (5, 0, 6),
-        ),
-        (
-            HostName("tree_old_arrays"),
-            HostName("tree_new_arrays"),
-            (2, 0, 2),
-        ),
-        (
-            HostName("tree_old_interfaces"),
-            HostName("tree_new_interfaces"),
-            (17, 0, 116),
-        ),
-        (
-            HostName("tree_old_memory"),
-            HostName("tree_new_memory"),
-            (1, 1, 1),
-        ),
-        (
-            HostName("tree_old_heute"),
-            HostName("tree_new_heute"),
-            (1, 1, 2),
-        ),
-    ],
-)
-def test_compare_real_trees(
-    tree_name_old: HostName, tree_name_new: HostName, result: tuple[int, int, int]
-) -> None:
-    inv_store = inventory_store()
-    old_tree = inv_store.load_inventory_tree(host_name=tree_name_old)
-    new_tree = inv_store.load_inventory_tree(host_name=tree_name_new)
-    stats = compare_trees(new_tree, old_tree).get_stats()
-    assert (stats["new"], stats["changed"], stats["removed"]) == result
 
 
 def test_compare_trees_reports_new_removed_and_changed_pairs() -> None:

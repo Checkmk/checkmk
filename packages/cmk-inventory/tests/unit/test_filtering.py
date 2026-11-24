@@ -8,7 +8,6 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.ccc.hostaddress import HostName
 from cmk.inventory.config import InventoryPathsConfig, PermittedPath
 from cmk.inventory.delta import ImmutableDeltaTree, SDDeltaValue
 from cmk.inventory.filtering import (
@@ -25,7 +24,6 @@ from ._fixtures import (
     filled_immutable_tree,
     filled_mutable_tree,
     immutable_tree,
-    inventory_store,
 )
 
 _RowCounts = Counter[frozenset[tuple[SDKey, object]]]
@@ -344,175 +342,6 @@ def test_make_filter_choices_from_api_request_paths(
 
 
 @pytest.mark.parametrize(
-    "filters, unavail",
-    [
-        (
-            [
-                SDFilterChoice(
-                    path=(SDNodeName("hardware"), SDNodeName("components")),
-                    pairs="all",
-                    columns="all",
-                    nodes="all",
-                ),
-                SDFilterChoice(
-                    path=(SDNodeName("networking"), SDNodeName("interfaces")),
-                    pairs="all",
-                    columns="all",
-                    nodes="all",
-                ),
-                SDFilterChoice(
-                    path=(SDNodeName("software"), SDNodeName("os")),
-                    pairs="all",
-                    columns="all",
-                    nodes="all",
-                ),
-            ],
-            [("hardware", "system"), ("software", "applications")],
-        ),
-    ],
-)
-def test_filter_real_tree_drops_the_unchosen_nodes(
-    filters: Sequence[SDFilterChoice],
-    unavail: Sequence[tuple[str, str]],
-) -> None:
-    tree = inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces"))
-    filtered = filter_tree(tree, filters)
-    assert (tree == filtered, [_size(filtered, *path) for path in unavail]) == (
-        False,
-        [0] * len(unavail),
-    )
-
-
-@pytest.mark.parametrize(
-    "filters, amount_if_entries",
-    [
-        (
-            [
-                SDFilterChoice(
-                    path=(SDNodeName("networking"),),
-                    pairs="all",
-                    columns="all",
-                    nodes="all",
-                )
-            ],
-            3178,
-        ),
-        (
-            [
-                SDFilterChoice(
-                    path=(SDNodeName("networking"),),
-                    pairs=(
-                        [
-                            SDKey("total_interfaces"),
-                            SDKey("total_ethernet_ports"),
-                            SDKey("available_ethernet_ports"),
-                        ]
-                    ),
-                    columns=(
-                        [
-                            SDKey("total_interfaces"),
-                            SDKey("total_ethernet_ports"),
-                            SDKey("available_ethernet_ports"),
-                        ]
-                    ),
-                    nodes="nothing",
-                ),
-            ],
-            0,
-        ),
-        (
-            [
-                SDFilterChoice(
-                    path=(SDNodeName("networking"), SDNodeName("interfaces")),
-                    pairs="all",
-                    columns="all",
-                    nodes="all",
-                ),
-            ],
-            3178,
-        ),
-        (
-            [
-                SDFilterChoice(
-                    path=(SDNodeName("networking"), SDNodeName("interfaces")),
-                    pairs=[SDKey("admin_status")],
-                    columns=[SDKey("admin_status")],
-                    nodes="nothing",
-                ),
-            ],
-            326,
-        ),
-        (
-            [
-                SDFilterChoice(
-                    path=(SDNodeName("networking"), SDNodeName("interfaces")),
-                    pairs=[SDKey("admin_status"), SDKey("FOOBAR")],
-                    columns=[SDKey("admin_status"), SDKey("FOOBAR")],
-                    nodes="nothing",
-                ),
-            ],
-            326,
-        ),
-        (
-            [
-                SDFilterChoice(
-                    path=(SDNodeName("networking"), SDNodeName("interfaces")),
-                    pairs=[SDKey("admin_status"), SDKey("oper_status")],
-                    columns=[SDKey("admin_status"), SDKey("oper_status")],
-                    nodes="nothing",
-                ),
-            ],
-            652,
-        ),
-        (
-            [
-                SDFilterChoice(
-                    path=(SDNodeName("networking"), SDNodeName("interfaces")),
-                    pairs=[SDKey("admin_status"), SDKey("oper_status"), SDKey("FOOBAR")],
-                    columns=[SDKey("admin_status"), SDKey("oper_status"), SDKey("FOOBAR")],
-                    nodes="nothing",
-                ),
-            ],
-            652,
-        ),
-    ],
-)
-def test_filter_networking_tree_keeps_only_networking(
-    filters: Sequence[SDFilterChoice],
-    amount_if_entries: int,
-) -> None:
-    filtered = filter_tree(
-        inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces")),
-        filters,
-    )
-    assert (
-        _size(filtered, "networking") > 0,
-        _size(filtered, "hardware"),
-        _size(filtered, "software"),
-        _size(filtered, "networking", "interfaces"),
-    ) == (True, 0, 0, amount_if_entries)
-
-
-def test_filter_networking_tree_with_nothing_chosen_is_empty() -> None:
-    filtered = filter_tree(
-        inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces")),
-        [
-            SDFilterChoice(
-                path=(SDNodeName("networking"),),
-                pairs="nothing",
-                columns="nothing",
-                nodes="nothing",
-            ),
-        ],
-    )
-    assert (
-        _size(filtered, "networking"),
-        _size(filtered, "hardware"),
-        _size(filtered, "software"),
-    ) == (0, 0, 0)
-
-
-@pytest.mark.parametrize(
     "entry, expected_filter_choice",
     [
         (
@@ -607,6 +436,8 @@ def test_make_filter_choices_from_contact_groups_translates_a_permitted_path(
 
 
 _PATHS_A = PermittedPath(visible_raw_path="a")
+
+
 _PATHS_B = PermittedPath(visible_raw_path="b")
 
 

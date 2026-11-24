@@ -369,21 +369,20 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
             del edit_rules[nr]
             save_rules(edit_rules)
 
-        elif request.has_var("_move"):
-            if transactions.check_transaction(request):
-                from_pos = request.get_integer_input_mandatory("_move")
-                to_pos = request.get_integer_input_mandatory("_index")
-                rule = edit_rules[from_pos]
-                del edit_rules[from_pos]  # make to_pos now match!
-                edit_rules[to_pos:to_pos] = [rule]
-                save_rules(edit_rules)
-                self._add_change(
-                    action_name=what + "-move-rule",
-                    text=_("Changed position of %(what_title)s %(from_pos)d")
-                    % {"what_title": what_title, "from_pos": from_pos},
-                    pending_changes=pending_changes,
-                    site_configs=site_configs,
-                )
+        elif request.has_var("_move") and transactions.check_transaction(request):
+            from_pos = request.get_integer_input_mandatory("_move")
+            to_pos = request.get_integer_input_mandatory("_index")
+            rule = edit_rules[from_pos]
+            del edit_rules[from_pos]  # make to_pos now match!
+            edit_rules[to_pos:to_pos] = [rule]
+            save_rules(edit_rules)
+            self._add_change(
+                action_name=what + "-move-rule",
+                text=_("Changed position of %(what_title)s %(from_pos)d")
+                % {"what_title": what_title, "from_pos": from_pos},
+                pending_changes=pending_changes,
+                site_configs=site_configs,
+            )
 
 
 def _simple_host_rule_match_conditions(

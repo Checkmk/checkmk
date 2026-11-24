@@ -67,10 +67,9 @@ class PluginOutput:
                 current_section = match.group(1)
                 current_content = []
                 line_start = i
-            elif current_section is not None:
+            elif current_section is not None and line.strip():
                 # Add content to current section (skip empty lines)
-                if line.strip():
-                    current_content.append(line)
+                current_content.append(line)
 
         # Save last section
         if current_section is not None:

@@ -138,7 +138,7 @@ creation or a logged-in browser page.
    its result folder `results/performance-<suite>/` and its database, so it must be unique.
    What matters:
 
-   ```python
+   ```starlark
    py_cmk_test(
        name = "performance",
        size = "large",

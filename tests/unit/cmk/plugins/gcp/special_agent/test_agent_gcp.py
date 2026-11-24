@@ -566,14 +566,49 @@ def test_metric_requests_additional_groupby_fields(interval: monitoring_v3.TimeI
     assert request == expected
 
 
-def test_redis_cpu_request_asks_for_cpu_seconds_per_second_of_each_node(
+@pytest.mark.parametrize(
+    "metric_name, aligner, reducer, group_by_fields",
+    [
+        pytest.param(
+            "redis.googleapis.com/stats/cpu_utilization",
+            Aligner.ALIGN_RATE,
+            Reducer.REDUCE_SUM,
+            ["resource.instance_id", "resource.node_id"],
+            id="cpu-seconds delta -> rate per node",
+        ),
+        pytest.param(
+            "redis.googleapis.com/stats/memory/usage_ratio",
+            Aligner.ALIGN_MAX,
+            Reducer.REDUCE_MAX,
+            ["resource.instance_id", "resource.node_id"],
+            id="memory ratio -> per node",
+        ),
+        pytest.param(
+            "redis.googleapis.com/stats/memory/system_memory_usage_ratio",
+            Aligner.ALIGN_MAX,
+            Reducer.REDUCE_MAX,
+            ["resource.instance_id", "resource.node_id"],
+            id="system memory ratio -> per node",
+        ),
+        pytest.param(
+            "redis.googleapis.com/stats/cache_hit_ratio",
+            Aligner.ALIGN_MAX,
+            Reducer.REDUCE_MAX,
+            ["resource.instance_id", "metric.role"],
+            id="hit ratio -> per role",
+        ),
+    ],
+)
+def test_redis_request_does_not_sum_values_of_different_nodes(
     interval: monitoring_v3.TimeInterval,
+    metric_name: str,
+    aligner: int,
+    reducer: int,
+    group_by_fields: Sequence[str],
 ) -> None:
-    [cpu] = [
-        m for m in agent_gcp.REDIS.metrics if m.name == "redis.googleapis.com/stats/cpu_utilization"
-    ]
+    [metric] = [m for m in agent_gcp.REDIS.metrics if m.name == metric_name]
 
-    request = cpu.request(
+    request = metric.request(
         interval=interval,
         groupby=agent_gcp.REDIS.default_groupby,
         project="fun",
@@ -581,8 +616,9 @@ def test_redis_cpu_request_asks_for_cpu_seconds_per_second_of_each_node(
     )
 
     aggregation = request["aggregation"]
-    assert aggregation.per_series_aligner == Aligner.ALIGN_RATE
-    assert list(aggregation.group_by_fields) == ["resource.instance_id", "resource.node_id"]
+    assert aggregation.per_series_aligner == aligner
+    assert aggregation.cross_series_reducer == reducer
+    assert list(aggregation.group_by_fields) == group_by_fields
 
 
 @pytest.fixture(name="cost_output")

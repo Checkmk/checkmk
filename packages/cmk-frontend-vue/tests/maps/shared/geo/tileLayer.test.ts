@@ -12,7 +12,7 @@ import type { GeoView, TileSource } from '@/maps/types/api'
 import { newMapView } from '../../support/fixtures'
 
 function geoMap(over: Partial<GeoView> = {}): GeoView {
-  return { ...(newMapView('worldmap') as GeoView), ...over }
+  return { ...(newMapView('geo') as GeoView), ...over }
 }
 
 /** What the site answers when it has not configured a tile server of its own. */

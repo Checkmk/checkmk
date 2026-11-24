@@ -35,7 +35,7 @@ describe('placeableObjectTypes', () => {
 describe('mapTypeOptions', () => {
   it('returns all map types unconditionally', () => {
     const names = mapTypeOptions(t).map((o) => o.name)
-    expect(names).toEqual(['static', 'worldmap', 'flow', 'radar', 'foldertree', 'presentation'])
+    expect(names).toEqual(['static', 'geo', 'flow', 'radar', 'foldertree', 'presentation'])
   })
 })
 

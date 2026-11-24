@@ -68,7 +68,7 @@ _FLOW_MAP: dict[str, object] = {
 
 _GEO_MAP: dict[str, object] = {
     "name": "world",
-    "view": {"type": "worldmap", "lat": 51.0, "lng": 10.0, "zoom": 5, "auto_source": "all_hosts"},
+    "view": {"type": "geo", "lat": 51.0, "lng": 10.0, "zoom": 5, "auto_source": "all_hosts"},
     "objects": [{"id": "h1", "type": "host", "host_name": "srv1", "lat": 48.1, "lng": 11.6}],
 }
 

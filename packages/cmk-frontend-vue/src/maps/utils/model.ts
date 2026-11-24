@@ -117,7 +117,7 @@ export function derivesItsContent(view: MapView | undefined): boolean {
 
 /** A geo map that populates itself from the hosts' own coordinates. */
 export function hasAutoSource(view: MapView | undefined): boolean {
-  return view?.type === 'worldmap' && !!view.auto_source
+  return view?.type === 'geo' && !!view.auto_source
 }
 
 /**
@@ -129,9 +129,9 @@ export function newMapView(mapType: 'foldertree'): FolderTreeView
 export function newMapView(mapType: string): MapView
 export function newMapView(mapType: string): MapView {
   switch (mapType) {
-    case 'worldmap':
+    case 'geo':
       return {
-        type: 'worldmap',
+        type: 'geo',
         lat: 51.0,
         lng: 10.0,
         zoom: 5,

@@ -165,13 +165,13 @@ def test_map_config_from_spec_derives_light_fields() -> None:
         "alias": "Network overview",
         "connection_id": "cmk_heute",
         "objects": [{"id": "o1"}, {"id": "o2"}, {"id": "o3"}],
-        "view": {"type": "worldmap"},
+        "view": {"type": "geo"},
     }
     cfg = map_config_from_spec(owner, "net", map_spec)
     assert cfg.owner == owner
     assert cfg.name == "net"
     assert cfg.title == "Network overview"
-    assert cfg.map_type == "worldmap"
+    assert cfg.map_type == "geo"
     assert cfg.connection_id == "cmk_heute"
     assert cfg.object_count == 3
     assert cfg.public is False

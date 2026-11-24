@@ -1049,7 +1049,7 @@ def test_worldmap_global_becomes_geo_view() -> None:
     )
     parsed_map = cfg_to_map(text, "wm")
     assert parsed_map["view"] == {
-        "type": "worldmap",
+        "type": "geo",
         "lat": 50.868,
         "lng": 10.217,
         "zoom": 6,
@@ -1066,14 +1066,14 @@ def test_worldmap_view_out_of_range_is_brought_within_it() -> None:
         " worldmap_center=95,499.5\n worldmap_zoom=25\n}\n"
     )
     view = cfg_to_map(text, "wm")["view"]
-    assert view["type"] == "worldmap"
+    assert view["type"] == "geo"
     assert (view["lat"], view["lng"], view["zoom"]) == (90.0, 139.5, 18)
 
 
 def test_worldmap_center_that_is_no_number_falls_back_to_the_default() -> None:
     text = "define global {\n object_id=0\n sources=worldmap\n worldmap_center=nan,inf\n}\n"
     view = cfg_to_map(text, "wm")["view"]
-    assert view["type"] == "worldmap"
+    assert view["type"] == "geo"
     assert (view["lat"], view["lng"]) == (51.0, 10.0)
 
 
@@ -1157,7 +1157,7 @@ def test_settings_passed_on_to_objects_are_capped() -> None:
 def test_geomap_global_becomes_geo_view() -> None:
     parsed_map = cfg_to_map("define global {\n sources=geomap\n geomap_zoom=7\n}\n", "gm")
     view = parsed_map["view"]
-    assert view["type"] == "worldmap"
+    assert view["type"] == "geo"
     assert view["zoom"] == 7
 
 

@@ -31,7 +31,7 @@ const geoMapThumbnail = defineAsyncComponent(
 
 const ILLUSTRATIONS: Record<MapViewType, Component> = {
   static: StaticMapThumbnail,
-  worldmap: geoMapThumbnail,
+  geo: geoMapThumbnail,
   flow: FlowMapThumbnail,
   radar: RadarMapThumbnail,
   foldertree: FolderTreeMapThumbnail,
@@ -64,7 +64,7 @@ const backgroundImage = computed(() =>
  */
 const illustrationProps = computed(() => {
   const view = props.map.view
-  return view.type === 'worldmap' ? { view, lat: view.lat, lng: view.lng, zoom: view.zoom } : {}
+  return view.type === 'geo' ? { view, lat: view.lat, lng: view.lng, zoom: view.zoom } : {}
 })
 
 const illustration = computed(() => ILLUSTRATIONS[props.map.view.type])

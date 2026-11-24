@@ -52,10 +52,10 @@ def test_flatten_merges_map_and_object() -> None:
 def test_flatten_geo_map_carries_tile_url() -> None:
     map_form = {
         **WATO_MAP_DEFAULTS,
-        "default_map_type": ("worldmap", {"tile_url": "https://t/{z}"}),
+        "default_map_type": ("geo", {"tile_url": "https://t/{z}"}),
     }
     g = _settings._flatten(map_form, WATO_OBJECT_DEFAULTS)  # noqa: SLF001
-    assert g["default_map_type"] == "worldmap"
+    assert g["default_map_type"] == "geo"
     assert g["default_tile_url"] == "https://t/{z}"
 
 

@@ -54,7 +54,7 @@ const readsPerfdata = computed(
     showsService.value &&
     (form.value.line_perfdata_label !== 'none' || form.value.line_weather_color)
 )
-const hasOwnCoordinates = computed(() => props.mapType !== 'worldmap')
+const hasOwnCoordinates = computed(() => props.mapType !== 'geo')
 </script>
 
 <template>

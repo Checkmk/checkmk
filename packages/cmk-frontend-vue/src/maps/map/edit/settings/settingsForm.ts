@@ -93,7 +93,7 @@ export function initialGeoView(
   if (parentView) {
     return { lat: parentView.lat, lng: parentView.lng, zoom: parentView.zoom }
   }
-  if (map.view.type === 'worldmap') {
+  if (map.view.type === 'geo') {
     const view = map.view as GeoView
     return { lat: view.lat, lng: view.lng, zoom: view.zoom }
   }
@@ -105,7 +105,7 @@ export function formFromMap(
   parentView: { lat: number; lng: number; zoom: number } | null | undefined
 ): SettingsForm {
   const geo = initialGeoView(map, parentView)
-  const geoMap = map.view.type === 'worldmap' ? (map.view as GeoView) : null
+  const geoMap = map.view.type === 'geo' ? (map.view as GeoView) : null
   const radar = map.view.type === 'radar' ? (map.view as RadarView) : null
   const folderTree = map.view.type === 'foldertree' ? (map.view as FolderTreeView) : null
   return {
@@ -180,9 +180,9 @@ export function viewFromForm(
   switch (form.map_type) {
     case 'static':
       return { type: 'static', problems_only: form.problems_only }
-    case 'worldmap':
+    case 'geo':
       return {
-        type: 'worldmap',
+        type: 'geo',
         lat: form.geo_lat,
         lng: form.geo_lng,
         zoom: form.geo_zoom,

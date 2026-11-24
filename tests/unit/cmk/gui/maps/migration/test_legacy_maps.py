@@ -569,6 +569,14 @@ def test_a_css_rgb_color_becomes_hex(
     assert obj["label"]["color"] == hex_color
 
 
+def test_a_geo_board_becomes_a_geo_map(admin: UserId) -> None:
+    view = {"type": "worldmap", "lat": 51.0, "lng": 10.0, "zoom": 5}
+
+    spec = _migrated(admin, "geo-board", _complete_map(view=view)).config.map_spec
+
+    assert _view(spec)["type"] == "geo"
+
+
 def test_a_geo_view_past_the_limits_is_brought_within_them(admin: UserId) -> None:
     # OrbVis saved Leaflet's view as is: past the antimeridian, up to zoom 19.
     view = {"type": "worldmap", "lat": 48.1, "lng": 191.5, "zoom": 19}

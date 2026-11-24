@@ -161,7 +161,7 @@ def read_nagvis_map(path: Path, name: str, config: NagVisConfig) -> tuple[MapPay
     )
     map_cfg["name"] = name
     warnings += _apply_rotation(map_cfg, path.stem, config.pools)
-    if map_cfg["view"]["type"] == "worldmap":
+    if map_cfg["view"]["type"] == "geo":
         warnings.append("Its objects are kept outside the map file and are not migrated.")
     return map_cfg, warnings
 

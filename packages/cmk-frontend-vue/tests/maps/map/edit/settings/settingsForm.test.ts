@@ -41,8 +41,8 @@ function aMapRead(overrides: Partial<MapRead> = {}): MapRead {
 
 function geoMap(view: Partial<MapView> = {}): MapRead {
   return aMapRead({
-    view_type: 'worldmap',
-    view: { ...newMapView('worldmap'), lat: 48.1, lng: 11.6, zoom: 9, ...view } as MapView
+    view_type: 'geo',
+    view: { ...newMapView('geo'), lat: 48.1, lng: 11.6, zoom: 9, ...view } as MapView
   })
 }
 
@@ -73,7 +73,7 @@ describe('formFromMap', () => {
   it('reads the type-specific fields of the view the map actually has', () => {
     const form = formFromMap(geoMap({ tile_url: 'https://tiles/{z}' } as Partial<MapView>), null)
     expect(form).toMatchObject({
-      map_type: 'worldmap',
+      map_type: 'geo',
       geo_tile_url: 'https://tiles/{z}',
       radar_filter: 'hostgroup'
     })
@@ -110,7 +110,7 @@ describe('viewFromForm', () => {
   it('carries only the picked type’s own fields', () => {
     const form = formFromMap(geoMap(), null)
     expect(viewFromForm(form, {})).toEqual({
-      type: 'worldmap',
+      type: 'geo',
       lat: 48.1,
       lng: 11.6,
       zoom: 9,
@@ -148,7 +148,7 @@ describe('viewFromForm', () => {
     })
   })
 
-  it.each(['static', 'worldmap', 'radar', 'flow', 'foldertree'] as const)(
+  it.each(['static', 'geo', 'radar', 'flow', 'foldertree'] as const)(
     'keeps the problems filter of a %s map',
     (type) => {
       const view = { ...newMapView(type), problems_only: true } as MapView

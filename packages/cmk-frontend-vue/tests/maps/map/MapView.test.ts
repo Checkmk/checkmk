@@ -156,7 +156,7 @@ describe('MapView – map-type dispatch', () => {
   })
 
   it('renders the GeoMapView for a geo map view', async () => {
-    opensMap(newMapView('worldmap'))
+    opensMap(newMapView('geo'))
     renderMap()
     await expectOnlyRenderer('renderer-geo')
   })
@@ -592,7 +592,7 @@ describe('MapView – unreachable sites', () => {
 
   it('tells a geo automap that the hosts of an unreachable site are missing', async () => {
     opensMap({
-      type: 'worldmap',
+      type: 'geo',
       lat: 51,
       lng: 10,
       zoom: 5,
@@ -646,7 +646,7 @@ describe('MapView – unreachable sites', () => {
 
 describe('MapView – saving the settings', () => {
   const automap: MapView = {
-    type: 'worldmap',
+    type: 'geo',
     lat: 51,
     lng: 10,
     zoom: 5,

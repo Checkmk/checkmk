@@ -285,7 +285,7 @@ def _bound_geo_view(spec: dict[str, object]) -> None:
     panned across it, and up to the tile layer's zoom 19.
     """
     view = spec.get("view")
-    if not isinstance(view, dict) or view.get("type") != "worldmap":
+    if not isinstance(view, dict) or view.get("type") != "geo":
         return
     view["lat"], view["lng"], view["zoom"] = bounded_view(
         _finite(view.get("lat"), 51.0),
@@ -308,7 +308,7 @@ def _caption_geo_objects(spec: dict[str, object]) -> None:
     OrbVis static board, shows no label for it.
     """
     view = spec.get("view")
-    if not isinstance(view, dict) or view.get("type") != "worldmap":
+    if not isinstance(view, dict) or view.get("type") != "geo":
         return
     for obj in _dict_objects(spec):
         if obj.get("label") is None:
@@ -317,6 +317,9 @@ def _caption_geo_objects(spec: dict[str, object]) -> None:
 
 def _translate_legacy_keys(spec: dict[str, object]) -> None:
     accept_legacy_backend_id(spec)
+    # OrbVis named the view of a geo board after NagVis' worldmap.
+    if isinstance(view := spec.get("view"), dict) and view.get("type") == "worldmap":
+        view["type"] = "geo"
     # The pagetype holds ``show_in_lists`` as its ``hidden``; ``readonly`` only
     # marked the demo boards.
     spec.pop("show_in_lists", None)

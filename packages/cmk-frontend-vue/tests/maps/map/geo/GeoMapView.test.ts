@@ -15,7 +15,7 @@ import { aMap, aState, anObject } from '../../support/fixtures'
 import { fakeMapsServices, mapsGlobal, runWithServices } from '../../support/services'
 
 const geoView = (view: Partial<GeoView> = {}): GeoView => ({
-  type: 'worldmap',
+  type: 'geo',
   lat: 51,
   lng: 10,
   zoom: 5,

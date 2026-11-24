@@ -607,7 +607,7 @@ def test_object_rejects_null_for_non_nullable_line_fields(clients: ClientRegistr
 
 
 def _geo_map(**view: object) -> dict[str, object]:
-    return _map("map1", view={"type": "worldmap", "lat": 51.0, "lng": 10.0, "zoom": 5, **view})
+    return _map("map1", view={"type": "geo", "lat": 51.0, "lng": 10.0, "zoom": 5, **view})
 
 
 def test_geo_view_accepts_its_bounds(clients: ClientRegistry) -> None:

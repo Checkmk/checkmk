@@ -16,7 +16,7 @@ import { fakeMapsServices, provideServices } from '../../../support/services'
 describe('GeoMapSettings', () => {
   // The geo map's empty hint opens the settings on this option.
   it('puts the cursor on the automatic placement when opened for it', async () => {
-    const map = aListedMap({ view_type: 'worldmap', view: newMapView('worldmap') })
+    const map = aListedMap({ view_type: 'geo', view: newMapView('geo') })
     const form = formFromMap(map, null)
     // Shown after the first render, as the dialog does: render() moves what it
     // mounts, which would drop a focus taken on mount.
@@ -36,7 +36,7 @@ describe('GeoMapSettings', () => {
   })
 
   it('marks the group as missing once a save was tried without one', () => {
-    const map = aListedMap({ view_type: 'worldmap', view: newMapView('worldmap') })
+    const map = aListedMap({ view_type: 'geo', view: newMapView('geo') })
     const form = { ...formFromMap(map, null), geo_auto_source: 'hostgroup' as const }
     render(GeoMapSettings, {
       props: { form, saveAttempted: true },
@@ -52,7 +52,7 @@ describe('GeoMapSettings', () => {
 
   describe('the group picked for automatic placement', () => {
     function renderWithGroup() {
-      const map = aListedMap({ view_type: 'worldmap', view: newMapView('worldmap') })
+      const map = aListedMap({ view_type: 'geo', view: newMapView('geo') })
       const form = ref<SettingsForm>({
         ...formFromMap(map, null),
         geo_auto_source: 'hostgroup',

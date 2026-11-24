@@ -103,7 +103,7 @@ const sampleConfig = (): MapConfig =>
     rotation_interval: 0,
     sort_order: 0,
     click_action: 'link',
-    view: newMapView('worldmap'),
+    view: newMapView('geo'),
     objects: [
       anObject({
         id: 'h1',

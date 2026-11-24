@@ -131,7 +131,7 @@ def map_defaults_spec(
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(
-                            name="worldmap",
+                            name="geo",
                             title=Title("Geo map"),
                             parameter_form=Dictionary(
                                 elements={

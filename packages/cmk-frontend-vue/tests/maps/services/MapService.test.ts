@@ -752,7 +752,7 @@ describe('MapService.loadAutoObjects()', () => {
     aMap({
       name: 'world',
       view: {
-        type: 'worldmap',
+        type: 'geo',
         lat: 51,
         lng: 10,
         zoom: 5,

@@ -47,7 +47,7 @@ const connectionOptions = computed(() => ({
 const mapTypeCards = computed(() => {
   const descriptions: Record<string, string> = {
     static: _t('Place objects on a blank canvas or a picture, such as a floor plan'),
-    worldmap: _t('Show hosts, services and groups at their geographic locations'),
+    geo: _t('Show hosts, services and groups at their geographic locations'),
     flow: _t('Lay out all hosts automatically by how they are connected'),
     radar: _t('Show all hosts or services, or those of one group, worst first'),
     foldertree: _t('Watch your Setup folders as a tree, each folder in its worst state'),

@@ -119,7 +119,7 @@ const pulsesRest = providePulseCount()
 let tiles: L.TileLayer | null = null
 
 /** The stored viewport, where this map has one. */
-const viewport = computed(() => (props.config.view.type === 'worldmap' ? props.config.view : null))
+const viewport = computed(() => (props.config.view.type === 'geo' ? props.config.view : null))
 
 const objectsById = computed(
   () => new Map(props.config.objects.map((object) => [object.id, object]))

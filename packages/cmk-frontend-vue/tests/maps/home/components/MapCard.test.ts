@@ -52,7 +52,7 @@ describe('MapCard', () => {
   })
 
   it('says what kind of map it is', async () => {
-    await renderCard(listed({ view: newMapView('worldmap') }))
+    await renderCard(listed({ view: newMapView('geo') }))
     expect(screen.getByText('Geo map')).toBeInTheDocument()
   })
 

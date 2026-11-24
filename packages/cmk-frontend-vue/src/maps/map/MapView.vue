@@ -141,7 +141,7 @@ const mapConfigAsRead = computed<MapRead | null>(() => {
     has_grid: mapGrids(cfg).length > 0
   }
 })
-const isGeoMap = computed(() => mapConfig.value?.view.type === 'worldmap')
+const isGeoMap = computed(() => mapConfig.value?.view.type === 'geo')
 const isFlowmap = computed(() => mapConfig.value?.view.type === 'flow')
 const isRadar = computed(() => mapConfig.value?.view.type === 'radar')
 const isFolderTree = computed(() => mapConfig.value?.view.type === 'foldertree')

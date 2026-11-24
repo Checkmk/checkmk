@@ -164,7 +164,7 @@ def _labels_from(object_form: Mapping[str, object], fallback: _LabelDefaults) ->
 def _map_type_from(map_form: Mapping[str, object], fallback: str) -> tuple[str, str | None]:
     """Unpack ``default_map_type`` into (type, tile URL).
 
-    A CascadingSingleChoice: (name, sub) where the "worldmap" branch carries
+    A CascadingSingleChoice: (name, sub) where the "geo" branch carries
     ``{"tile_url": …}`` and the others carry ``None``. The tile URL is only
     meaningful for geo map, so it stays ``None`` for every other type.
     """
@@ -174,7 +174,7 @@ def _map_type_from(map_form: Mapping[str, object], fallback: str) -> tuple[str, 
     else:
         name, cfg = raw, None
     map_type = str(name) if name else fallback
-    if map_type == "worldmap" and isinstance(cfg, dict):
+    if map_type == "geo" and isinstance(cfg, dict):
         return map_type, _optional_text(cfg.get("tile_url"))
     return map_type, None
 

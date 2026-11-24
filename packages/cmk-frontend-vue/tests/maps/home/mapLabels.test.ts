@@ -12,7 +12,7 @@ import { aListedMap } from '../support/fixtures'
 
 describe('hasDynamicContent', () => {
   it('is true for the map types whose objects come from the live query', () => {
-    for (const type of ['flow', 'radar', 'worldmap'] as const) {
+    for (const type of ['flow', 'radar', 'geo'] as const) {
       expect(hasDynamicContent(aListedMap({ view: newMapView(type) }))).toBe(true)
     }
   })

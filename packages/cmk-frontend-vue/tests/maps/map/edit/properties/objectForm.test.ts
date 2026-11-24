@@ -180,7 +180,7 @@ describe('updatesFromForm', () => {
     expect(onCanvas).toMatchObject({ x: 40, y: 60 })
     expect(onCanvas).not.toHaveProperty('lat')
 
-    const onGeo = updatesFromForm(formOf(object), object, 'worldmap')
+    const onGeo = updatesFromForm(formOf(object), object, 'geo')
     expect(onGeo).toMatchObject({ lat: 51, lng: 10 })
     expect(onGeo).not.toHaveProperty('x')
   })
@@ -194,7 +194,7 @@ describe('updatesFromForm', () => {
       x2: 200,
       y2: 60
     })
-    expect(updatesFromForm(formOf(object), object, 'worldmap')).not.toHaveProperty('x2')
+    expect(updatesFromForm(formOf(object), object, 'geo')).not.toHaveProperty('x2')
   })
 
   it('keeps a line bound to no host a plain line', () => {

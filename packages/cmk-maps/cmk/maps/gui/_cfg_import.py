@@ -629,7 +629,7 @@ def _geo_view(p: dict[str, str]) -> GeoView:
     lat, lng = _parse_latlng(p.get("worldmap_center")) or (_GEO_DEFAULT_LAT, _GEO_DEFAULT_LNG)
     zoom = p.get("worldmap_zoom") or p.get("geomap_zoom")
     lat, lng, zoom_level = bounded_view(lat, lng, _int(zoom, _GEO_DEFAULT_ZOOM))
-    view: GeoView = {"type": "worldmap", "lat": lat, "lng": lng, "zoom": zoom_level}
+    view: GeoView = {"type": "geo", "lat": lat, "lng": lng, "zoom": zoom_level}
     saturate = p.get("worldmap_tiles_saturate")
     if saturate not in (None, ""):
         view["tile_saturate"] = float(max(0, min(100, _int(saturate, 100))))
@@ -1543,7 +1543,7 @@ def convert_cfg(
     warnings += _global_warnings(global_props, map_cfg["view"]["type"])
     if map_cfg["view"]["type"] == "flow":
         warnings += _automap_object_warnings(len(objects))
-    if map_cfg["view"]["type"] in ("flow", "worldmap"):
+    if map_cfg["view"]["type"] in ("flow", "geo"):
         # Flow auto-populates from topology; worldmap markers come from a sidecar
         # file (worldmap.db / geomap CSV) the text-only import can't read, so the
         # map is framed here and filled by the CLI importer.

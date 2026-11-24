@@ -104,7 +104,7 @@ class MapDisplay(TypedDict):
 
 MapViewType = Literal[
     "static",
-    "worldmap",
+    "geo",
     "radar",
     "flow",
     "foldertree",
@@ -219,7 +219,7 @@ class StaticView(TypedDict):
 
 
 class GeoView(TypedDict):
-    type: Literal["worldmap"]
+    type: Literal["geo"]
     lat: float
     lng: float
     zoom: int

@@ -104,7 +104,7 @@ def test_legacy_weathermap_style_migrates_to_arrow_inward() -> None:
 )
 def test_geo_map_view_rejects_a_view_it_cannot_open_on(view: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
-        GeoView.model_validate({"type": "worldmap", **view})
+        GeoView.model_validate({"type": "geo", **view})
 
 
 @pytest.mark.parametrize("pool", ["noc wall", "a" * 101])

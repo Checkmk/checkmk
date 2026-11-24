@@ -80,8 +80,8 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
                   name: 'map1',
                   alias: 'Map One',
                   connection_id: 'live_1',
-                  view_type: 'worldmap',
-                  view: { type: 'worldmap', lat: 51, lng: 10, zoom: 5 },
+                  view_type: 'geo',
+                  view: { type: 'geo', lat: 51, lng: 10, zoom: 5 },
                   click_action: 'link',
                   object_count: 3,
                   has_grid: false
@@ -100,8 +100,8 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
     expect(maps).toHaveLength(1)
     expect(maps[0]).toMatchObject({
       name: 'map1',
-      view_type: 'worldmap',
-      view: { type: 'worldmap', lat: 51, lng: 10, zoom: 5 },
+      view_type: 'geo',
+      view: { type: 'geo', lat: 51, lng: 10, zoom: 5 },
       object_count: 3,
       owner: 'alice',
       can_edit: true,

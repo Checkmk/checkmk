@@ -23,7 +23,7 @@ const form = defineModel<ObjectForm>('form', { required: true })
 
 const { _t } = usei18n()
 
-const isGeo = computed(() => props.mapType === 'worldmap')
+const isGeo = computed(() => props.mapType === 'geo')
 </script>
 
 <template>

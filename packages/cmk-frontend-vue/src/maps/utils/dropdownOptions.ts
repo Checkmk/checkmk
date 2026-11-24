@@ -134,7 +134,7 @@ export function placeableObjectTypes(
 export function mapTypeOptions(_t: TranslateFn) {
   return [
     { name: 'static', title: _t('Static map') },
-    { name: 'worldmap', title: _t('Geo map') },
+    { name: 'geo', title: _t('Geo map') },
     { name: 'flow', title: _t('Flow map') },
     { name: 'radar', title: _t('Radar map') },
     { name: 'foldertree', title: _t('Folder tree') },

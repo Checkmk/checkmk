@@ -874,8 +874,8 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "default_map_type.presentation": None,
         "default_map_type.radar": None,
         "default_map_type.static": None,
-        "default_map_type.worldmap": {},
-        "default_map_type.worldmap.tile_url": NoSaveableDefault(),
+        "default_map_type.geo": {},
+        "default_map_type.geo.tile_url": NoSaveableDefault(),
     },
     "maps_object_defaults": {
         "context_template": NoSaveableDefault(),
@@ -2244,7 +2244,7 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
             DefaultWithOverrides(
                 {
                     "default_map_type": (
-                        "worldmap",
+                        "geo",
                         {"tile_url": "https://tiles.example.com/{z}/{x}/{y}.png"},
                     )
                 }

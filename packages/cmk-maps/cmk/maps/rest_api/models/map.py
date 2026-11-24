@@ -429,7 +429,7 @@ class MapStaticView:
 
 @api_model
 class MapGeoView:
-    type: Literal["worldmap"] = api_field(description="View discriminator.", example="worldmap")
+    type: Literal["geo"] = api_field(description="View discriminator.", example="geo")
     lat: Annotated[FiniteFloat, Field(ge=-LAT_LIMIT, le=LAT_LIMIT)] = api_field(
         description="Initial map center latitude.", example=51.0
     )
@@ -1184,9 +1184,7 @@ class MapListEntry:
     name: str = api_field(description="Unique map name.", example="datacenter-muc")
     alias: str = api_field(description="Human-readable title.", example="Datacenter Munich")
     connection_id: str = api_field(description="Default monitoring connection.", example="live_1")
-    view_type: str = api_field(
-        description="Renderer type (static/flow/worldmap/...).", example="static"
-    )
+    view_type: str = api_field(description="Renderer type (static/flow/geo/...).", example="static")
     view: MapView = api_field(
         description="Map view (renderer + geometry).", example={"type": "static"}
     )

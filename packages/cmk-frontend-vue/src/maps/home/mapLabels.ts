@@ -24,7 +24,7 @@ export function mapTypeLabel(type: MapViewType, _t: TranslateFn): TranslatedStri
   switch (type) {
     case 'static':
       return _t('Static')
-    case 'worldmap':
+    case 'geo':
       return _t('Geo map')
     case 'flow':
       return _t('Flow map')
@@ -91,5 +91,5 @@ export function hasManagementFlags(map: MapRead): boolean {
  * number that would be wrong the moment it is rendered.
  */
 export function hasDynamicContent(map: MapRead): boolean {
-  return ['flow', 'radar', 'worldmap'].includes(map.view.type) || !!map.has_grid
+  return ['flow', 'radar', 'geo'].includes(map.view.type) || !!map.has_grid
 }

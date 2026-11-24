@@ -124,7 +124,7 @@ const missingFields = computed<string[]>(() => {
     missing.push(_t('Group name'))
   }
   if (
-    mapType.value === 'worldmap' &&
+    mapType.value === 'geo' &&
     needsGroup(form.value.geo_auto_source) &&
     !form.value.geo_auto_filter_value
   ) {
@@ -134,7 +134,7 @@ const missingFields = computed<string[]>(() => {
 })
 // Shown at the fields as they are typed; only blocks the save here.
 const geoViewInvalid = computed(
-  () => mapType.value === 'worldmap' && geoViewOutOfRange(form.value).length > 0
+  () => mapType.value === 'geo' && geoViewOutOfRange(form.value).length > 0
 )
 const isComplete = computed(() => missingFields.value.length === 0 && !geoViewInvalid.value)
 
@@ -177,7 +177,7 @@ const preview = useSettingsPreview({
       : (background.previewUrl.value ?? form.value.background_image) || null,
   parentMapSize: () => props.parentMapSize,
   viewEdited: () => viewEdited.value,
-  isGeoMap: () => mapType.value === 'worldmap'
+  isGeoMap: () => mapType.value === 'geo'
 })
 
 watch([form, formSpecData, flowViewFormSpecData], preview.schedule, { deep: true })
@@ -187,7 +187,7 @@ watch(
   () => [form.value.geo_lat, form.value.geo_lng, form.value.geo_zoom] as const,
   ([lat, lng, zoom]) => {
     viewEdited.value = true
-    if (mapType.value === 'worldmap') {
+    if (mapType.value === 'geo') {
       emit('geoMapViewChange', { lat, lng, zoom })
     }
   }
@@ -247,7 +247,7 @@ function startGeoMapViewPick(): void {
  * look like an edit nobody made.
  */
 function baseline(): string {
-  const stored = props.map.view.type === 'worldmap' ? props.map.view : null
+  const stored = props.map.view.type === 'geo' ? props.map.view : null
   return JSON.stringify({
     form: stored
       ? {
@@ -612,7 +612,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
                     :classic="map.render_mode === 'nagvis_classic'"
                   />
                   <GeoMapSettings
-                    v-else-if="mapType === 'worldmap'"
+                    v-else-if="mapType === 'geo'"
                     v-model:form="form"
                     :save-attempted="saveAttempted"
                     :initial-focus="initialFocus ?? null"

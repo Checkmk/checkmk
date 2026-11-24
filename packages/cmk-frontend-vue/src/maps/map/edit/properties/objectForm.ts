@@ -413,13 +413,13 @@ export function updatesFromForm(
       // own it would colour the inbound half from an arbitrary metric.
       updates.weathermap_metric_out = (form.weathermap_metric && form.weathermap_metric_out) || null
     }
-    if (mapType !== 'worldmap') {
+    if (mapType !== 'geo') {
       updates.x = numberOr(form.x, object.x)
       updates.y = numberOr(form.y, object.y)
       updates.x2 = numberOr(form.x2, object.x2)
       updates.y2 = numberOr(form.y2, object.y2)
     }
-  } else if (mapType === 'worldmap') {
+  } else if (mapType === 'geo') {
     updates.lat = numberOr(form.lat, object.lat)
     updates.lng = numberOr(form.lng, object.lng)
   } else {

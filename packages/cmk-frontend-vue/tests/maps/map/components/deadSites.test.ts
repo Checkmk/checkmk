@@ -20,7 +20,7 @@ describe('deadSiteHostsOf', () => {
 
   it('drops the hosts of an automap', () => {
     const automap: MapView = {
-      type: 'worldmap',
+      type: 'geo',
       lat: 51,
       lng: 10,
       zoom: 5,

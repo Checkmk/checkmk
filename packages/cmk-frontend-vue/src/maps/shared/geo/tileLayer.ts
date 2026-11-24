@@ -63,7 +63,7 @@ export interface TileSettings {
 }
 
 function geoMapView(view: MapView | null | undefined): GeoView | null {
-  return view?.type === 'worldmap' ? view : null
+  return view?.type === 'geo' ? view : null
 }
 
 /**

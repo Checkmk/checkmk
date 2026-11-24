@@ -153,7 +153,7 @@ class StaticView(BaseModel):
 
 
 class GeoView(BaseModel):
-    type: Literal["worldmap"] = "worldmap"
+    type: Literal["geo"] = "geo"
     # Out of these bounds the map opens on nothing.
     lat: FiniteFloat = Field(default=51.0, ge=-LAT_LIMIT, le=LAT_LIMIT)
     lng: FiniteFloat = Field(default=10.0, ge=-LNG_LIMIT, le=LNG_LIMIT)

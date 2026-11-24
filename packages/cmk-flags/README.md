@@ -24,17 +24,12 @@ fixes the type to `bool`, defaults it to `False`, and attaches the metadata that
 keeps flags from rotting:
 
 - `description` — what the flag gates
-- `remove_ticket` — the ticket tracking its removal
-- `remove_after` — the version by which the flag must be gone
-- `owner` — who is responsible for removing it
+- `remove_ticket` — the ticket tracking its removal; its assignee and
+  component determine who is responsible for removing the flag
 
 `ExperimentalFlagConfig` is `frozen=True` (flags are read-only at runtime) and
 `extra="ignore"`, so deleting a flag does not break sites whose on-disk config
 still names it.
-
-A test (`test_no_expired_flags`) compares every flag's `remove_after` against the
-current Checkmk version and fails once a flag outlives its deadline — the feature
-must then be made permanent by deleting the flag, or the gated code removed.
 
 ## Usage
 

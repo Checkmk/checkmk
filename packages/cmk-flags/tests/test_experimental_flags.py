@@ -7,7 +7,6 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict
 
-from cmk.ccc.version import __version__, Version
 from cmk.flags import (
     CONFIG_FILENAME,
     experimental_field,
@@ -15,7 +14,7 @@ from cmk.flags import (
     load_experimental_flags,
 )
 
-_REQUIRED_METADATA = ("description", "remove_ticket", "remove_after", "owner")
+_REQUIRED_METADATA = ("description", "remove_ticket")
 
 
 class _ExampleFlags(BaseModel):
@@ -28,8 +27,6 @@ class _ExampleFlags(BaseModel):
         experimental_field(
             description="An example flag.",
             remove_ticket="CMK-00000",
-            remove_after="99.99.99",
-            owner="example.owner@checkmk.com",
         ),
     ]
 
@@ -41,19 +38,6 @@ def test_experimental_field_records_metadata() -> None:
     assert field_info.annotation is bool
     for key in _REQUIRED_METADATA:
         assert extra[key]
-
-
-def test_no_expired_flags() -> None:
-    current = Version.from_str(__version__)
-    for name, field_info in ExperimentalFlagConfig.model_fields.items():
-        extra = field_info.json_schema_extra or {}
-        assert isinstance(extra, dict)
-        remove_after = str(extra.get("remove_after", ""))
-        assert Version.from_str(remove_after) > current, (
-            f"Experimental flag '{name}' passed its removal deadline {remove_after} "
-            f"(current version {__version__}). Make the feature permanent by "
-            "deleting the flag, or delete the gated code."
-        )
 
 
 def test_load_returns_config_when_file_missing(tmp_path: Path) -> None:

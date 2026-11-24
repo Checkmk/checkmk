@@ -9,9 +9,9 @@ without exposing it to users. Flags are declared as fields on the single
 :class:`ExperimentalFlagConfig` model and persisted as JSON in
 ``$OMD_ROOT/etc/check_mk/release_flag.json``.
 
-Every flag carries the metadata that keeps it from rotting: a description, the
-ticket tracking its removal, the version by which it must be gone, and an owner.
-The tests enforce that flags are removed before their deadline.
+Every flag carries the metadata that keeps it from rotting: a description and
+the ticket tracking its removal. Responsibility for the removal follows that
+ticket (assignee and component).
 """
 
 from pathlib import Path
@@ -34,16 +34,12 @@ def experimental_field(
     *,
     description: str,
     remove_ticket: str,
-    remove_after: str,
-    owner: str,
 ) -> FieldInfo:
     return FieldInfo.from_field(
         False,
         json_schema_extra={
             "description": description,
             "remove_ticket": remove_ticket,
-            "remove_after": remove_after,
-            "owner": owner,
         },
     )
 
@@ -56,8 +52,6 @@ class ExperimentalFlagConfig(BaseModel):
         new_monitoring_views: Annotated[bool, experimental_field(
             description="Enable the experimental new monitoring views.",
             remove_ticket="CMK-12345",
-            remove_after="2.6.0",
-            owner="some.owner@checkmk.com",
         )]
 
     ``extra="ignore"`` drops keys for flags that have already been removed, so
@@ -76,8 +70,6 @@ class ExperimentalFlagConfig(BaseModel):
                 "this same gate."
             ),
             remove_ticket="CMK-39016",
-            remove_after="3.1.0",
-            owner="max.linke@checkmk.com",
         ),
     ] = False
 

@@ -196,12 +196,11 @@ def _make_flag_config_variable(
     extra = field_info.json_schema_extra or {}
     assert isinstance(extra, dict)
     description = str(extra.get("description", ""))
-    remove_after = str(extra.get("remove_after", ""))
     help_text = Help(
-        "%(description)s<br><br>This is a temporary experimental flag. It is scheduled for "
-        "removal in version %(remove_after)s and must not be relied on for permanent "
+        "%(description)s<br><br>This is a temporary experimental flag. It will be "
+        "removed in a future version and must not be relied on for permanent "
         "configuration."
-    ) % {"description": description, "remove_after": remove_after}
+    ) % {"description": description}
     return ConfigVariable(
         group=ConfigVariableGroupExperimentalFlags,
         primary_domain=ConfigDomainExperimentalFlags,

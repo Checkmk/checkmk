@@ -31,6 +31,7 @@ doc_srcs(
         "**/*.svg",
     ]) + [
         # Pages that live in the package they describe
+        "//packages/cmk-backup:docs",
         "//packages/cmk-check-engine:docs",
         "//packages/cmk-maps:docs",
     ] + select({

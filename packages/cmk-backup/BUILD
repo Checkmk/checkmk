@@ -6,6 +6,14 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
+load("//doc/documentation:defs.bzl", "package_docs")
+
+package_docs(
+    name = "docs",
+    srcs = ["docs/arch-comp-backup.puml"],
+    index = "docs/arch-comp-backup.rst",
+    visibility = ["//doc/documentation:__pkg__"],
+)
 
 exports_files([
     "dev-requirements.in",

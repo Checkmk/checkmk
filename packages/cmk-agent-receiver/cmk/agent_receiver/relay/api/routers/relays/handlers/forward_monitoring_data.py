@@ -73,12 +73,17 @@ class _CoreQueue:
 
     async def put(self, forward: _Forward) -> None:
         if time.monotonic() < self._paused_until:
+            logger.error(
+                "Refused monitoring data of %(host)s from relay %(relay_id)s: "
+                "the core stalled, refusing until the pause ends",
+                {"host": forward.host, "relay_id": forward.relay_id},
+            )
             raise ForwardRefusedError("The core takes no monitoring data at the moment")
         try:
             async with asyncio.timeout(self._wait):
                 await self._queue.put(forward)
         except TimeoutError:
-            logger.warning(
+            logger.error(
                 "Refused monitoring data of %(host)s from relay %(relay_id)s: "
                 "%(queued)d hand-overs to the core are queued",
                 {"host": forward.host, "relay_id": forward.relay_id, "queued": len(self)},
@@ -88,20 +93,22 @@ class _CoreQueue:
     async def get(self) -> _Forward:
         return await self._queue.get()
 
-    def stall(self) -> int | None:
-        """Drop the queue and pause; the number dropped, or None if already paused
+    def stall(self) -> int:
+        """Drop the queue and pause; the number dropped
 
         A stall during the pause extends it. Only the hand-overs already under way can
         stall then, so a core that recovered is paused for at most one socket timeout
         more.
         """
-        paused_already = time.monotonic() < self._paused_until
         self._paused_until = time.monotonic() + self._pause
+        return self.drop()
+
+    def drop(self) -> int:
         dropped = 0
         while not self._queue.empty():
             self._queue.get_nowait()
             dropped += 1
-        return None if paused_already else dropped
+        return dropped
 
 
 class ForwardMonitoringDataHandler:
@@ -145,6 +152,11 @@ class ForwardMonitoringDataHandler:
             for sender in senders:
                 with contextlib.suppress(asyncio.CancelledError):
                     await sender
+            if dropped := self._queue.drop():
+                logger.error(
+                    "Shutting down: Dropped %(dropped)d queued forwards to the core",
+                    {"dropped": dropped},
+                )
 
     async def process(
         self,
@@ -202,8 +214,7 @@ class ForwardMonitoringDataHandler:
                     )
 
     def _core_stalled(self, forward: _Forward, error: _CoreStalledError) -> None:
-        if (dropped := self._queue.stall()) is None:
-            return
+        dropped = self._queue.stall()
         logger.error(
             "The core took no monitoring data of %(host)s from relay %(relay_id)s within "
             "%(timeout)s s: %(error)s. Dropped %(dropped)d queued forwards, refusing new "

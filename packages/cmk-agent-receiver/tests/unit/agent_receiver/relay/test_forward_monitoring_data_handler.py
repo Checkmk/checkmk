@@ -36,6 +36,40 @@ async def test_a_forward_is_refused_while_the_queue_stays_full(tmp_path: Path) -
 
 
 @pytest.mark.asyncio
+async def test_a_refusal_for_a_full_queue_is_logged_as_error(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    handler = ForwardMonitoringDataHandler(
+        data_socket=tmp_path / "raw-data", socket_timeout=1.0, queue_size=1, queue_wait=0.1
+    )
+
+    await _forward(handler, b"queued")
+    with caplog.at_level(logging.ERROR), pytest.raises(ForwardRefusedError):
+        await _forward(handler, b"refused")
+
+    assert "Refused monitoring data of host from relay relay" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_forwards_queued_at_shutdown_are_logged(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    handler = ForwardMonitoringDataHandler(
+        data_socket=tmp_path / "raw-data", socket_timeout=5.0, queue_size=8, queue_wait=1.0
+    )
+
+    with caplog.at_level(logging.ERROR), _core_stuck_on_large_payloads(tmp_path / "raw-data"):
+        async with handler.running():
+            # Large enough that every sender waits on the stuck core, so these stay queued.
+            for _ in range(4):
+                await _forward(handler, b"x" * 1024 * 1024)
+            await _forward(handler, b"queued")
+            await asyncio.sleep(0.2)
+
+    assert "Dropped 1 queued forwards" in caplog.text
+
+
+@pytest.mark.asyncio
 async def test_a_failed_hand_over_is_logged(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -141,6 +175,25 @@ async def test_a_stalled_core_gets_forwards_refused_at_once(tmp_path: Path) -> N
             await asyncio.sleep(0.5)  # past the socket timeout of that hand-over
             with pytest.raises(ForwardRefusedError):
                 await _forward(handler, b"payload")
+
+
+@pytest.mark.asyncio
+async def test_a_refusal_during_the_stall_pause_is_logged(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    core = tmp_path / "raw-data"
+    handler = ForwardMonitoringDataHandler(
+        data_socket=core, socket_timeout=0.2, queue_size=8, queue_wait=1.0, stall_pause=10.0
+    )
+
+    with create_busy_socket(socket_path=str(core), busy_for=10.0):
+        async with handler.running():
+            await _forward(handler, b"payload")
+            await asyncio.sleep(0.5)  # past the socket timeout of that hand-over
+            with caplog.at_level(logging.ERROR), pytest.raises(ForwardRefusedError):
+                await _forward(handler, b"payload")
+
+    assert "Refused monitoring data of host from relay relay" in caplog.text
 
 
 @pytest.mark.asyncio

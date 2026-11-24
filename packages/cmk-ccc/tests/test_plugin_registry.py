@@ -20,89 +20,93 @@ class PluginRegistry(cmk.ccc.plugin_registry.Registry[type[Plugin]]):
         return instance.__name__
 
 
-@pytest.fixture(scope="module")
-def basic_registry() -> PluginRegistry:
+def _registry_with_plugin() -> PluginRegistry:
     registry = PluginRegistry()
     registry.register(Plugin)
     return registry
 
 
-def test_initialization() -> None:
-    registry = PluginRegistry()
-    assert not list(registry.items())
+def test_new_registry_is_empty() -> None:
+    assert not list(PluginRegistry().items())
 
 
-def test_decorator_registration() -> None:
+def test_registered_class_is_found_by_its_plugin_name() -> None:
     registry = PluginRegistry()
-    assert not list(registry.items())
+
+    registry.register(Plugin)
+
+    assert registry["Plugin"] is Plugin
+
+
+def test_register_works_as_class_decorator() -> None:
+    registry = PluginRegistry()
 
     @registry.register
     class DecoratedPlugin(Plugin):
         pass
 
-    assert registry.get("DecoratedPlugin") == DecoratedPlugin
+    assert registry["DecoratedPlugin"] is DecoratedPlugin
 
 
-def test_method_registration() -> None:
-    registry = PluginRegistry()
-    assert not list(registry.items())
+def test_looking_up_an_unknown_name_raises_key_error() -> None:
+    registry = _registry_with_plugin()
 
-    class MethodRegisteredPlugin(Plugin):
-        pass
-
-    registry.register(MethodRegisteredPlugin)
-    assert registry.get("MethodRegisteredPlugin") == MethodRegisteredPlugin
-
-
-def test_contains(basic_registry: PluginRegistry) -> None:
-    assert "bla" not in basic_registry
-    assert "Plugin" in basic_registry
-
-
-def test_delitem(basic_registry: PluginRegistry) -> None:
     with pytest.raises(KeyError):
-        basic_registry.unregister("bla")
-
-    @basic_registry.register
-    class DelPlugin(Plugin):
-        pass
-
-    basic_registry.unregister("DelPlugin")
+        _ = registry["bla"]
 
 
-def test_clear() -> None:
-    registry = PluginRegistry()
-    registry.register(Plugin)
-    assert "Plugin" in registry
+def test_registry_contains_registered_name() -> None:
+    assert "Plugin" in _registry_with_plugin()
 
-    registry.clear()
+
+def test_registry_does_not_contain_unknown_name() -> None:
+    assert "bla" not in _registry_with_plugin()
+
+
+def test_unregistered_name_is_gone() -> None:
+    registry = _registry_with_plugin()
+
+    registry.unregister("Plugin")
+
     assert "Plugin" not in registry
 
 
-def test_getitem(basic_registry: PluginRegistry) -> None:
+def test_unregistering_an_unknown_name_raises_key_error() -> None:
+    registry = _registry_with_plugin()
+
     with pytest.raises(KeyError):
-        _unused = basic_registry["bla"]
-
-    assert basic_registry["Plugin"] == Plugin
+        registry.unregister("bla")
 
 
-def test_values(basic_registry: PluginRegistry) -> None:
-    assert list(basic_registry.values()) == [Plugin]
+def test_clear_removes_all_registrations() -> None:
+    registry = _registry_with_plugin()
+
+    registry.clear()
+
+    assert not list(registry.items())
 
 
-def test_items(basic_registry: PluginRegistry) -> None:
-    assert list(basic_registry.items()) == [("Plugin", Plugin)]
+def test_values_are_the_registered_objects() -> None:
+    assert list(_registry_with_plugin().values()) == [Plugin]
 
 
-def test_keys(basic_registry: PluginRegistry) -> None:
-    assert list(basic_registry.keys()) == ["Plugin"]
+def test_items_pair_plugin_names_with_registered_objects() -> None:
+    assert list(_registry_with_plugin().items()) == [("Plugin", Plugin)]
 
 
-def test_get(basic_registry: PluginRegistry) -> None:
-    assert basic_registry.get("bla") is None
-    assert basic_registry.get("bla", "blub") == "blub"
+def test_keys_are_the_plugin_names() -> None:
+    assert list(_registry_with_plugin().keys()) == ["Plugin"]
 
-    assert basic_registry.get("Plugin") == Plugin
+
+def test_get_returns_the_registered_object() -> None:
+    assert _registry_with_plugin().get("Plugin") is Plugin
+
+
+def test_get_returns_the_default_for_an_unknown_name() -> None:
+    registry = _registry_with_plugin()
+
+    assert registry.get("bla") is None
+    assert registry.get("bla", "blub") == "blub"
 
 
 class InstanceRegistry(cmk.ccc.plugin_registry.Registry[Plugin]):

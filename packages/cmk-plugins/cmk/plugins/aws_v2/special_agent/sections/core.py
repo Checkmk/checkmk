@@ -614,23 +614,29 @@ class AWSSectionCloudwatch(AWSSection):
         if not metric_specs:
             return []
 
-        # A single GetMetricData call can include up to 500 MetricDataQuery structures
-        # There's no pagination for this operation:
-        # self._client.can_paginate('get_metric_data') = False
-        raw_content = []
+        # We send at most 500 queries in one GetMetricData call.
+        # CloudWatch can split the answer into pages. A query can have its values on more than
+        # one page, so we join the values of each query.
+        paginator = self._client.get_paginator("get_metric_data")
+        raw_content: list[dict[str, Any]] = []
         for chunk in chunks(metric_specs, length=500):
-            if not chunk:
-                continue
-            response = self._client.get_metric_data(  # type: ignore[attr-defined]
+            results_by_id: dict[str, dict[str, Any]] = {}
+            for page in paginator.paginate(
                 MetricDataQueries=chunk,
                 StartTime=start_time,
                 EndTime=end_time,
+            ):
+                for result in self._get_response_content(page, "MetricDataResults"):
+                    if (known := results_by_id.get(result["Id"])) is None:
+                        results_by_id[result["Id"]] = result
+                        continue
+                    known["Timestamps"].extend(result["Timestamps"])
+                    known["Values"].extend(result["Values"])
+                    known["StatusCode"] = result["StatusCode"]
+            # The periods are added by position, so keep the order of the queries.
+            raw_content.extend(
+                results_by_id[query["Id"]] for query in chunk if query["Id"] in results_by_id
             )
-
-            metrics = self._get_response_content(response, "MetricDataResults")
-            if not metrics:
-                continue
-            raw_content.extend(metrics)
 
         self._extend_metrics_by_period(metric_specs, raw_content)
 

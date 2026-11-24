@@ -7,6 +7,7 @@
 
 
 import abc
+import importlib
 import random
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from types import SimpleNamespace
@@ -3015,12 +3016,30 @@ class FakeCloudwatchClientDescribeAlarmsPaginator:
         yield {"MetricAlarms": alarms, "NextToken": "string"}
 
 
+# The mypy setup of this test target does not see botocore, so we load it at run time.
+_Paginator = importlib.import_module("botocore.paginate").Paginator
+_BOTOCORE_SESSION = importlib.import_module("botocore.session").get_session()
+_GET_METRIC_DATA_PAGINATION = _BOTOCORE_SESSION.get_paginator_model("cloudwatch").get_paginator(
+    "GetMetricData"
+)
+_GET_METRIC_DATA_MODEL = _BOTOCORE_SESSION.get_service_model("cloudwatch").operation_model(
+    "GetMetricData"
+)
+
+
+def get_metric_data_paginator(get_metric_data: Callable[..., Mapping[str, Any]]) -> Any:
+    """The paginator of botocore for GetMetricData, on a fake get_metric_data."""
+    return _Paginator(get_metric_data, _GET_METRIC_DATA_PAGINATION, _GET_METRIC_DATA_MODEL)
+
+
 class FakeCloudwatchClient:
     meta = SimpleNamespace(partition="aws")
 
-    def get_paginator(self, api_call: str) -> FakeCloudwatchClientDescribeAlarmsPaginator:
+    def get_paginator(self, api_call: str) -> object:
         if api_call == "describe_alarms":
             return FakeCloudwatchClientDescribeAlarmsPaginator()
+        if api_call == "get_metric_data":
+            return get_metric_data_paginator(self.get_metric_data)
         raise NotImplementedError(f"Please implement the paginator for {api_call}")
 
     def get_metric_data(
@@ -3052,7 +3071,6 @@ class FakeCloudwatchClient:
             )
         return {
             "MetricDataResults": results,
-            "NextToken": "string",
             "Messages": [
                 {"Code": "string", "Value": "string"},
             ],

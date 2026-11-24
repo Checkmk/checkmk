@@ -38,6 +38,7 @@ from .agent_aws_fake_clients import (
     EC2DescribeSpotInstanceRequestsIB,
     FakeCloudwatchClient,
     FakeServiceQuotasClient,
+    get_metric_data_paginator,
 )
 
 ACCOUNT_HOST = TargetHost("aws_account_123456789012")
@@ -635,8 +636,53 @@ class SampledCloudwatchClient:
             )
         return {"MetricDataResults": results}
 
+    def get_paginator(self, api_call: str) -> object:  # noqa: ARG002
+        return get_metric_data_paginator(self.get_metric_data)
 
-def test_agent_aws_ec2_reports_a_status_check_that_failed_once_in_the_period() -> None:
+
+class PagedCloudwatchClient:
+    """Answers on more than one page, as AWS does for a large answer.
+
+    As in AWS, each page has a result for every query, with a part of its values.
+    """
+
+    def __init__(self, pages: Sequence[Sequence[float]]) -> None:
+        self._pages = pages
+
+    def get_metric_data(
+        self,
+        MetricDataQueries: Sequence[_MetricDataQuery],
+        StartTime: object = None,  # noqa: ARG002
+        EndTime: object = None,  # noqa: ARG002
+        NextToken: str = "0",
+    ) -> Mapping[str, object]:
+        page_index = int(NextToken)
+        values = self._pages[page_index]
+        is_last_page = page_index == len(self._pages) - 1
+        page: dict[str, object] = {
+            "MetricDataResults": [
+                {
+                    "Id": query["Id"],
+                    "Label": query["Label"],
+                    "Timestamps": ["1970-01-01"] * len(values),
+                    "Values": list(values),
+                    "StatusCode": "Complete" if is_last_page else "PartialData",
+                }
+                for query in MetricDataQueries
+            ]
+        }
+        if not is_last_page:
+            page["NextToken"] = str(page_index + 1)
+        return page
+
+    def get_paginator(self, api_call: str) -> object:  # noqa: ARG002
+        return get_metric_data_paginator(self.get_metric_data)
+
+
+def _run_ec2_metrics(
+    cloudwatch_client: SampledCloudwatchClient | PagedCloudwatchClient,
+) -> Sequence[Mapping[str, object]]:
+    """Run the EC2 metrics section and return the metric values of each instance host."""
     config = AWSConfig(
         "hostname",
         Args(),
@@ -648,23 +694,37 @@ def test_agent_aws_ec2_reports_a_status_check_that_failed_once_in_the_period() -
     config.add_service_tags("ec2_tags", (None, None))
     distributor = ResultDistributor()
     ec2_summary = EC2Summary(FakeEC2Client(), "region", config, distributor)
-    ec2 = EC2(
-        SampledCloudwatchClient(
-            {
-                "StatusCheckFailed_System": [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                "StatusCheckFailed_Instance": [0.0] * 10,
-            }
-        ),
-        "region",
-        config,
-    )
+    ec2 = EC2(cloudwatch_client, "region", config)
     distributor.add(ec2_summary.name, ec2)
     ec2_summary.run()
 
-    results = ec2.run().results
+    return [
+        {row["Id"].split("_", 2)[2]: row["Values"] for row in result.content}
+        for result in ec2.run().results
+    ]
 
-    assert results
-    for result in results:
-        values = {row["Id"].split("_", 2)[2]: row["Values"] for row in result.content}
+
+def test_agent_aws_ec2_reports_a_status_check_that_failed_once_in_the_period() -> None:
+    cloudwatch_client = SampledCloudwatchClient(
+        {
+            "StatusCheckFailed_System": [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "StatusCheckFailed_Instance": [0.0] * 10,
+        }
+    )
+
+    values_per_host = _run_ec2_metrics(cloudwatch_client)
+
+    assert values_per_host
+    for values in values_per_host:
         assert values["StatusCheckFailed_System"] == [(1.0, None)]
         assert values["StatusCheckFailed_Instance"] == [(0.0, None)]
+
+
+def test_agent_aws_ec2_gets_the_metric_values_of_all_pages() -> None:
+    cloudwatch_client = PagedCloudwatchClient([[12.0], [], [34.0]])
+
+    values_per_host = _run_ec2_metrics(cloudwatch_client)
+
+    assert values_per_host
+    for values in values_per_host:
+        assert values["CPUUtilization"] == [(12.0, None), (34.0, None)]

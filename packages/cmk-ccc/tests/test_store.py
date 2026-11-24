@@ -5,6 +5,7 @@
 
 import enum
 import fcntl
+import functools
 import importlib.machinery
 import importlib.util
 import os
@@ -12,6 +13,7 @@ import queue
 import sys
 import threading
 import time
+import traceback
 from collections.abc import Callable, Iterator, Sequence
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
@@ -46,6 +48,22 @@ class FakeIo(FileIo):
         yield
 
 
+def _poll_until(done: Callable[[], bool], *, seconds: int) -> bool:
+    """Poll done() for about the given time, and return whether it returned True
+
+    Counting the polls instead of watching the clock keeps a stopped process from running out of
+    time.
+    """
+    # 7 polls back off from 1 ms to 64 ms, 127 ms in all, then each poll waits 100 ms.
+    delay = 0.001
+    for _ in range(10 * seconds + 6):
+        if done():
+            return True
+        time.sleep(delay)
+        delay = min(2 * delay, 0.1)
+    return done()
+
+
 @pytest.mark.parametrize("io,exists", [(RealIo, True), (FakeIo, False)])
 def test_object_store(io: type[FileIo], exists: bool, tmp_path: Path) -> None:
     test_file = tmp_path / "hurz"
@@ -60,6 +78,44 @@ def test_object_store_fake_io() -> None:
     a = ObjectStore(Path("  "), serializer=TextSerializer(), io=FakeIo)
     a.write_obj("aaaaa")
     assert a.read_obj(default="", debug=False) == "aaaaa"
+
+
+def _stack_of(thread: threading.Thread) -> str:
+    """Return where the thread is, for the message of a failure"""
+    assert thread.ident is not None
+    # Documented, but with a leading underscore, and there is no public alternative.
+    frame = sys._current_frames().get(thread.ident)  # noqa: SLF001
+    return "".join(traceback.format_stack(frame)) if frame else "  (just ended)\n"
+
+
+def _in_own_thread[**P](test: Callable[P, None]) -> Callable[P, None]:
+    """Run the test in a thread of its own, and fail it after about 10 s
+
+    A lock waiting for another lock of the same thread would hang the test's thread otherwise.
+    The thread releases its locks in the end.
+    """
+
+    @functools.wraps(test)
+    def run_in_thread(*args: P.args, **kwargs: P.kwargs) -> None:
+        failures: list[BaseException] = []
+
+        def run() -> None:
+            try:
+                try:
+                    test(*args, **kwargs)
+                finally:
+                    store.release_all_locks()
+            except BaseException as e:
+                failures.append(e)
+
+        thread = threading.Thread(target=run, daemon=True)
+        thread.start()
+        if not _poll_until(lambda: not thread.is_alive(), seconds=10):
+            raise TimeoutError(f"Test not done after about 10 s, stuck in:\n{_stack_of(thread)}")
+        if failures:
+            raise failures[0]
+
+    return run_in_thread
 
 
 @pytest.mark.parametrize("io,exists", [(RealIo, True), (FakeIo, False)])
@@ -312,6 +368,26 @@ def test_acquire_lock_not_existing(tmp_path: Path) -> None:
     assert store.acquire_lock(tmp_path / "asd") is True
 
 
+# The tests with forked children come before the ones in threads of their own: after a failure,
+# a thread hanging in flock() would make fork() warn about threads.
+
+
+def test_a_forked_child_releasing_a_lock_leaves_the_lock_of_the_parent(test_file: Path) -> None:
+    store.acquire_lock(test_file)
+    try:
+        if (pid := os.fork()) == 0:
+            try:
+                store.release_all_locks()
+            finally:
+                os._exit(0)
+        os.waitpid(pid, 0)
+
+        assert _locked_by_anyone(test_file)
+    finally:
+        store.release_lock(test_file)
+
+
+@_in_own_thread
 def test_locked(test_file: Path) -> None:
     assert store.have_lock(test_file) is False
 
@@ -350,6 +426,7 @@ def test_acquire_lock(test_file: Path) -> None:
     assert store.have_lock(test_file) is True
 
 
+@_in_own_thread
 def test_acquire_lock_twice(test_file: Path) -> None:
     assert store.acquire_lock(test_file) is True
     assert store.have_lock(test_file) is True
@@ -471,6 +548,7 @@ def test_an_interrupted_release_lock_leaves_no_lock_behind(test_file: Path) -> N
         step += 1
 
 
+@_in_own_thread
 def test_an_interrupted_release_lock_leaves_a_consistent_lock_without_release_all_locks(
     test_file: Path,
 ) -> None:
@@ -489,21 +567,6 @@ def test_an_interrupted_release_lock_leaves_a_consistent_lock_without_release_al
         if not interrupted:
             break
         step += 1
-
-
-def test_a_forked_child_releasing_a_lock_leaves_the_lock_of_the_parent(test_file: Path) -> None:
-    store.acquire_lock(test_file)
-    try:
-        if (pid := os.fork()) == 0:
-            try:
-                store.release_all_locks()
-            finally:
-                os._exit(0)
-        os.waitpid(pid, 0)
-
-        assert _locked_by_anyone(test_file)
-    finally:
-        store.release_lock(test_file)
 
 
 class LockTestJob(enum.Enum):

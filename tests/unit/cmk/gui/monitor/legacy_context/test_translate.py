@@ -413,6 +413,14 @@ def _translate(context: VisualContext) -> ContextFilterTranslation[_JSON]:
         pytest.param(
             "host_labels",
             label_group_variables(
+                [("and", [("and", "a:1"), ("and", "b:2")]), ("and", [("and", "c:3")])]
+            ),
+            {"type": "and", "children": [_label("a:1"), _label("b:2"), _label("c:3")]},
+            id="groups joined by and are merged into one and",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables(
                 [
                     ("and", [("and", "a:1"), ("and", "b:2")]),
                     ("or", [("and", "c:3"), ("or", "d:4")]),
@@ -1163,6 +1171,58 @@ def test_first_site_filter_that_cannot_apply_is_reported_and_keeps_the_others_fr
 ) -> None:
     assert translate_context(context, fields, ANY_PAGE) == ContextFilterTranslation(
         filter=None, unapplied=list(context)
+    )
+
+
+def test_the_conditions_of_all_filters_are_joined_in_one_and() -> None:
+    translation = _translate(
+        {
+            "hostregex": {"host_regex": "web"},
+            "host_num_services": {"host_num_services_from": "1", "host_num_services_until": "9"},
+        }
+    )
+
+    assert translation == ContextFilterTranslation(
+        filter={
+            "type": "and",
+            "children": [
+                _condition("name", "contains", "web"),
+                _condition("num_services", "gte", 1),
+                _condition("num_services", "lte", 9),
+            ],
+        },
+        unapplied=[],
+    )
+
+
+def test_the_conditions_under_a_nested_field_stay_joined_in_its_node() -> None:
+    translation = translate_context(
+        {
+            "serviceregex": {"service_regex": "CPU"},
+            "host_num_services": {"host_num_services_from": "1", "host_num_services_until": "9"},
+        },
+        {"serviceregex": "name", "host_num_services": NestedField("host", "num_services")},
+        ANY_PAGE,
+    )
+
+    assert translation == ContextFilterTranslation(
+        filter={
+            "type": "and",
+            "children": [
+                _condition("name", "contains", "CPU"),
+                {
+                    "type": "host",
+                    "child": {
+                        "type": "and",
+                        "children": [
+                            _condition("num_services", "gte", 1),
+                            _condition("num_services", "lte", 9),
+                        ],
+                    },
+                },
+            ],
+        },
+        unapplied=[],
     )
 
 

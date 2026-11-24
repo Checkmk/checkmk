@@ -14,7 +14,7 @@ import re
 import time
 from collections.abc import Callable, Mapping, Sequence, Set
 from dataclasses import dataclass
-from typing import Literal
+from typing import cast, Literal
 
 from cmk.gui.type_defs import FilterHTTPVariables
 
@@ -359,9 +359,21 @@ def any_count_above_zero(counts: Mapping[str, str]) -> MultiFieldFilter:
 
 
 def all_of(nodes: Sequence[FilterJSON]) -> FilterJSON | None:
-    if len(nodes) < 2:
-        return nodes[0] if nodes else None
-    return {"type": "and", "children": list(nodes)}
+    """Join ``nodes`` in one "and". The children of a node that is an "and" itself are joined
+    instead of it, so the tree stays flat."""
+    children = [child for node in nodes for child in get_top_level_nodes(node)]
+    if len(children) < 2:
+        return children[0] if children else None
+    return {"type": "and", "children": children}
+
+
+def get_top_level_nodes(node: FilterJSON) -> list[FilterJSON]:
+    """Return the nodes that all have to match for ``node`` to match: the children of an "and",
+    else ``node`` itself."""
+    children = node.get("children")
+    if node.get("type") == "and" and isinstance(children, list):
+        return cast(list[FilterJSON], children)
+    return [node]
 
 
 def any_of(nodes: Sequence[FilterJSON]) -> FilterJSON | None:

@@ -29,6 +29,7 @@ import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
 import useId from 'cmk-ui-library/lib/useId'
+import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import {
   type CSSProperties,
   type Component,
@@ -109,6 +110,9 @@ const monitoringService = inject(MONITORING_SERVICE, null)
 const isOpen = ref(false)
 const flipUp = ref(false)
 const alignment = ref<CSSProperties>({})
+// Height cap that keeps the whole panel, and with it the footer buttons, within the visible
+// part of its scroll container. Taller content scrolls inside the panel instead.
+const maxHeight = ref<number | undefined>(undefined)
 // Swallow the click-outside fired by the same click that opened the popover.
 const suppressNextClickOutside = ref(false)
 // Whether the press behind the current click started within the funnel.
@@ -133,6 +137,24 @@ const content = ref<{ validate?: () => boolean } | null>(null)
 const panel = ref<HTMLElement | null>(null)
 const body = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLElement | null>(null)
+const scrollArea = ref<HTMLElement | null>(null)
+const scrollContent = ref<HTMLElement | null>(null)
+
+// Whether the sort options and filter outgrow the capped panel and have to scroll. Scrolling only
+// then leaves floating content that is not portaled - the calendar of a date filter, say - free to
+// overflow the panel whenever the panel fits.
+const overflowing = ref(false)
+
+function updateOverflowing(): void {
+  overflowing.value =
+    scrollArea.value !== null &&
+    scrollContent.value !== null &&
+    scrollContent.value.offsetHeight > scrollArea.value.clientHeight
+}
+
+const { observe } = useResizeObserver(updateOverflowing)
+observe(scrollArea)
+observe(scrollContent)
 
 // A filter component may mount floating content of its own (a CmkDropdown's
 // suggestion list, say). Unless it lands inside the panel it teleports to the
@@ -172,12 +194,19 @@ function isSortMarked(direction: SortDirection): boolean {
 
 const filterComponent = computed(() => FILTER_COMPONENTS[props.definition.type])
 
+const panelStyle = computed<CSSProperties>(() => ({
+  ...alignment.value,
+  ...(maxHeight.value === undefined ? {} : { maxHeight: `${maxHeight.value}px` })
+}))
+
 function open(): void {
   if (isOpen.value) {
     return
   }
   draft.value = model.value
   isValid.value = true
+  // Measure the panel at its natural height, not at the cap of its previous opening.
+  maxHeight.value = undefined
   isOpen.value = true
   monitoringService?.beginAutoPause()
   suppressNextClickOutside.value = true
@@ -187,10 +216,18 @@ function open(): void {
   registerShortcuts()
   // Capture, so it still runs when the floating content stops propagation.
   document.addEventListener('pointerdown', onPointerDown, true)
+  window.addEventListener('resize', onWindowResize)
   void nextTick(() => {
     positionPanel()
     focusFilter()
   })
+}
+
+// A resized or zoomed window changes the room the panel has, so fit it again from its natural
+// height.
+function onWindowResize(): void {
+  maxHeight.value = undefined
+  void nextTick(positionPanel)
 }
 
 function close(): void {
@@ -201,6 +238,7 @@ function close(): void {
   monitoringService?.endAutoPause()
   removeShortcuts()
   document.removeEventListener('pointerdown', onPointerDown, true)
+  window.removeEventListener('resize', onWindowResize)
   pressStartedInside.value = false
   trigger.value?.querySelector('button')?.focus()
 }
@@ -313,6 +351,9 @@ function onClickOutside(): void {
   close()
 }
 
+// Gap kept between the panel and the edge of the area it is confined to.
+const EDGE_MARGIN_PX = 8
+
 function positionPanel(): void {
   const panelEl = panel.value
   const triggerEl = trigger.value
@@ -320,11 +361,18 @@ function positionPanel(): void {
     return
   }
   const triggerRect = triggerEl.getBoundingClientRect()
-  const spaceBelow = window.innerHeight - triggerRect.bottom
-  flipUp.value = spaceBelow < panelEl.offsetHeight && triggerRect.top > spaceBelow
+  const clipping = clippingBounds(triggerEl)
+  // The panel moves along with its trigger, which may sit in a sticky table header: scrolling
+  // never reveals a part that sticks out of the visible area, so it has to fit within it.
+  const visibleTop = Math.max(clipping.top, 0)
+  const visibleBottom = Math.min(clipping.bottom, window.innerHeight)
+  const spaceBelow = visibleBottom - triggerRect.bottom - EDGE_MARGIN_PX
+  const spaceAbove = triggerRect.top - visibleTop - EDGE_MARGIN_PX
+  flipUp.value = spaceBelow < panelEl.offsetHeight && spaceAbove > spaceBelow
+  maxHeight.value = Math.max(flipUp.value ? spaceAbove : spaceBelow, 0)
+  void nextTick(updateOverflowing)
 
   const anchorRect = anchorElement(triggerEl).getBoundingClientRect()
-  const clipping = clippingBounds(triggerEl)
   const alignLeft = Math.max(anchorRect.left, clipping.left)
   const alignRight = Math.min(anchorRect.right, clipping.right)
   const overflowsRight = alignLeft + panelEl.offsetWidth > clipping.right
@@ -339,17 +387,34 @@ function anchorElement(el: HTMLElement): HTMLElement {
   return props.anchor === undefined ? el : (el.closest<HTMLElement>(props.anchor) ?? el)
 }
 
-function clippingBounds(el: HTMLElement): { left: number; right: number } {
+interface Bounds {
+  top: number
+  bottom: number
+  left: number
+  right: number
+}
+
+/**
+ * Visible area of the nearest ancestor that clips its overflow, or the viewport. That is the
+ * ancestor's client box: its borders and scrollbars are no room for the panel.
+ */
+function clippingBounds(el: HTMLElement): Bounds {
   let node: HTMLElement | null = el.parentElement
   while (node) {
-    const overflowX = getComputedStyle(node).overflowX
-    if (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden') {
+    const { overflowX, overflowY } = getComputedStyle(node)
+    if (clipsOverflow(overflowX) || clipsOverflow(overflowY)) {
       const rect = node.getBoundingClientRect()
-      return { left: rect.left, right: rect.right }
+      const top = rect.top + node.clientTop
+      const left = rect.left + node.clientLeft
+      return { top, bottom: top + node.clientHeight, left, right: left + node.clientWidth }
     }
     node = node.parentElement
   }
-  return { left: 0, right: window.innerWidth }
+  return { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth }
+}
+
+function clipsOverflow(overflow: string): boolean {
+  return overflow === 'auto' || overflow === 'scroll' || overflow === 'hidden'
 }
 
 // The focusable rows are whatever the mounted filter component renders (search
@@ -448,6 +513,7 @@ onBeforeUnmount(() => {
   }
   removeShortcuts()
   document.removeEventListener('pointerdown', onPointerDown, true)
+  window.removeEventListener('resize', onWindowResize)
 })
 </script>
 
@@ -468,105 +534,113 @@ onBeforeUnmount(() => {
       v-click-outside="{ open: true, close: onClickOutside }"
       class="monitoring-filter-dropdown__panel"
       :class="{ 'monitoring-filter-dropdown__panel--up': flipUp }"
-      :style="alignment"
+      :style="panelStyle"
       role="group"
       :aria-label="`Filter ${label}`"
       @focusout="onFocusOut"
     >
-      <div v-if="sortable" class="monitoring-filter-dropdown__sort">
-        <div
-          class="monitoring-filter-dropdown__sort-group"
-          role="group"
-          :aria-labelledby="sortHeadingId"
-        >
-          <span :id="sortHeadingId" class="monitoring-filter-dropdown__sort-heading">{{
-            _t('Sort by this column')
-          }}</span>
-          <button
-            v-for="option in sortOptions"
-            :key="String(option.direction)"
-            type="button"
-            class="monitoring-filter-dropdown__sort-option"
-            :aria-pressed="isSortMarked(option.direction)"
-            @click="pickSort(option.direction)"
-          >
-            <CmkMultitoneIcon
-              v-if="option.direction !== false"
-              name="arrow-down"
-              :rotate="option.direction === 'asc' ? 180 : 0"
-              primary-color="font"
-              aria-hidden="true"
-              size="xsmall"
-            />
-            <span
-              v-else
-              class="monitoring-filter-dropdown__sort-option-spacer"
-              aria-hidden="true"
-            ></span>
-            {{ option.label }}
-            <span
-              v-if="isSortMarked(option.direction)"
-              class="monitoring-filter-dropdown__sort-marker"
-              aria-hidden="true"
-            ></span>
-          </button>
-        </div>
-        <div
-          v-if="canExtendSort"
-          class="monitoring-filter-dropdown__sort-group"
-          role="group"
-          :aria-labelledby="extendSortHeadingId"
-        >
-          <span :id="extendSortHeadingId" class="monitoring-filter-dropdown__sort-heading">{{
-            extendSortHeading
-          }}</span>
-          <button
-            v-for="option in extendSortOptions"
-            :key="String(option.direction)"
-            type="button"
-            class="monitoring-filter-dropdown__sort-option"
-            :aria-pressed="extendedSort === option.direction"
-            @click="pickExtendedSort(option.direction)"
-          >
-            <CmkMultitoneIcon
-              name="arrow-down"
-              :rotate="option.direction === 'asc' ? 180 : 0"
-              primary-color="font"
-              aria-hidden="true"
-              size="xsmall"
-            />
-            {{ option.label }}
-            <span
-              v-if="extendedSort === option.direction"
-              class="monitoring-filter-dropdown__sort-marker"
-              aria-hidden="true"
-            ></span>
-          </button>
-        </div>
-      </div>
+      <div
+        ref="scrollArea"
+        class="monitoring-filter-dropdown__scroll"
+        :class="{ 'monitoring-filter-dropdown__scroll--overflowing': overflowing }"
+      >
+        <div ref="scrollContent">
+          <div v-if="sortable" class="monitoring-filter-dropdown__sort">
+            <div
+              class="monitoring-filter-dropdown__sort-group"
+              role="group"
+              :aria-labelledby="sortHeadingId"
+            >
+              <span :id="sortHeadingId" class="monitoring-filter-dropdown__sort-heading">{{
+                _t('Sort by this column')
+              }}</span>
+              <button
+                v-for="option in sortOptions"
+                :key="String(option.direction)"
+                type="button"
+                class="monitoring-filter-dropdown__sort-option"
+                :aria-pressed="isSortMarked(option.direction)"
+                @click="pickSort(option.direction)"
+              >
+                <CmkMultitoneIcon
+                  v-if="option.direction !== false"
+                  name="arrow-down"
+                  :rotate="option.direction === 'asc' ? 180 : 0"
+                  primary-color="font"
+                  aria-hidden="true"
+                  size="xsmall"
+                />
+                <span
+                  v-else
+                  class="monitoring-filter-dropdown__sort-option-spacer"
+                  aria-hidden="true"
+                ></span>
+                {{ option.label }}
+                <span
+                  v-if="isSortMarked(option.direction)"
+                  class="monitoring-filter-dropdown__sort-marker"
+                  aria-hidden="true"
+                ></span>
+              </button>
+            </div>
+            <div
+              v-if="canExtendSort"
+              class="monitoring-filter-dropdown__sort-group"
+              role="group"
+              :aria-labelledby="extendSortHeadingId"
+            >
+              <span :id="extendSortHeadingId" class="monitoring-filter-dropdown__sort-heading">{{
+                extendSortHeading
+              }}</span>
+              <button
+                v-for="option in extendSortOptions"
+                :key="String(option.direction)"
+                type="button"
+                class="monitoring-filter-dropdown__sort-option"
+                :aria-pressed="extendedSort === option.direction"
+                @click="pickExtendedSort(option.direction)"
+              >
+                <CmkMultitoneIcon
+                  name="arrow-down"
+                  :rotate="option.direction === 'asc' ? 180 : 0"
+                  primary-color="font"
+                  aria-hidden="true"
+                  size="xsmall"
+                />
+                {{ option.label }}
+                <span
+                  v-if="extendedSort === option.direction"
+                  class="monitoring-filter-dropdown__sort-marker"
+                  aria-hidden="true"
+                ></span>
+              </button>
+            </div>
+          </div>
 
-      <div class="monitoring-filter-dropdown__content">
-        <div class="monitoring-filter-dropdown__content-header">
-          <span v-if="heading" class="monitoring-filter-dropdown__heading">{{ heading }}</span>
-          <CmkButton
-            variant="text"
-            size="small"
-            class="monitoring-filter-dropdown__clear"
-            @click="clear"
-          >
-            {{ props.clearLabel ?? _t('Clear') }}
-          </CmkButton>
-        </div>
+          <div class="monitoring-filter-dropdown__content">
+            <div class="monitoring-filter-dropdown__content-header">
+              <span v-if="heading" class="monitoring-filter-dropdown__heading">{{ heading }}</span>
+              <CmkButton
+                variant="text"
+                size="small"
+                class="monitoring-filter-dropdown__clear"
+                @click="clear"
+              >
+                {{ props.clearLabel ?? _t('Clear') }}
+              </CmkButton>
+            </div>
 
-        <div ref="body" @keydown.enter="onBodyEnter">
-          <component
-            :is="filterComponent"
-            :key="draftKey"
-            ref="content"
-            v-model="draft"
-            :definition="definition"
-            @update:valid="isValid = $event"
-          />
+            <div ref="body" @keydown.enter="onBodyEnter">
+              <component
+                :is="filterComponent"
+                :key="draftKey"
+                ref="content"
+                v-model="draft"
+                :definition="definition"
+                @update:valid="isValid = $event"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -603,6 +677,18 @@ onBeforeUnmount(() => {
   font-weight: var(--font-weight-default);
   text-align: left;
   white-space: normal;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sort options and filter scroll, so the footer buttons stay in reach on a short screen. */
+.monitoring-filter-dropdown__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.monitoring-filter-dropdown__scroll--overflowing {
+  overflow-y: auto;
 }
 
 .monitoring-filter-dropdown__sort {
@@ -684,6 +770,7 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
   padding: var(--dimension-4) var(--dimension-5);
   align-items: center;
+  flex-shrink: 0;
   border-top: 1px solid var(--ux-theme-4);
 }
 </style>

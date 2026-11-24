@@ -351,27 +351,58 @@ function renderAnchoredDropdown(clipped = false) {
   return render(wrapper)
 }
 
-function stubRect(element: Element, left: number, right: number): void {
+interface Box {
+  top: number
+  bottom: number
+  left: number
+  right: number
+}
+
+/** Lay `element` out at `box`, as both its border box and its client box. */
+function stubBox(element: Element, { top, bottom, left, right }: Box): void {
   element.getBoundingClientRect = () =>
     ({
+      top,
+      bottom,
       left,
       right,
-      top: 0,
-      bottom: 20,
       width: right - left,
-      height: 20,
+      height: bottom - top,
       x: left,
-      y: 0,
+      y: top,
       toJSON: () => ({})
     }) as DOMRect
+  Object.defineProperties(element, {
+    clientWidth: { configurable: true, value: right - left },
+    clientHeight: { configurable: true, value: bottom - top }
+  })
+}
+
+/** A box spanning `left` to `right` in the table header row. */
+function inHeader(left: number, right: number): Box {
+  return { top: 0, bottom: 20, left, right }
+}
+
+/** A box spanning `top` to `bottom` in a column running from 100 to 300. */
+function inColumn(top: number, bottom: number): Box {
+  return { top, bottom, left: 100, right: 300 }
 }
 
 const nativeOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+const nativeOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
 
-function stubPanelWidth(width: number): void {
+/** Give the panel a size; like a browser, its height gives way to the max-height it is capped at. */
+function stubPanelSize(width: number, naturalHeight: number): void {
   Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
     configurable: true,
     value: width
+  })
+  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+    configurable: true,
+    get(this: HTMLElement) {
+      const cap = parseFloat(this.style.maxHeight)
+      return Number.isNaN(cap) ? naturalHeight : Math.min(naturalHeight, cap)
+    }
   })
 }
 
@@ -379,62 +410,149 @@ afterEach(() => {
   if (nativeOffsetWidth) {
     Object.defineProperty(HTMLElement.prototype, 'offsetWidth', nativeOffsetWidth)
   }
+  if (nativeOffsetHeight) {
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', nativeOffsetHeight)
+  }
 })
 
-async function openAnchored(anchorRight: number, triggerRight: number): Promise<HTMLElement> {
-  const user = userEvent.setup()
-  renderAnchoredDropdown()
-  stubRect(document.querySelector('.anchor')!, anchorRight - 200, anchorRight)
-  stubRect(document.querySelector('.monitoring-filter-dropdown')!, triggerRight - 20, triggerRight)
-  stubPanelWidth(300)
+interface Layout {
+  /** The scroll container around the column. Unset, nothing but the window clips the panel. */
+  clip?: Box
+  anchor: Box
+  trigger: Box
+}
 
-  await user.click(screen.getByRole('button', { name: 'Open' }))
+function layOut({ clip, anchor, trigger }: Layout): void {
+  if (clip) {
+    stubBox(document.querySelector('.clip')!, clip)
+  }
+  stubBox(document.querySelector('.anchor')!, anchor)
+  stubBox(document.querySelector('.monitoring-filter-dropdown')!, trigger)
+}
+
+async function openPanel(): Promise<HTMLElement> {
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Open' }))
+  await nextTick()
   await nextTick()
   return screen.getByRole('group', { name: 'Filter State' })
 }
 
+async function openLaidOut(layout: Layout, panelHeight = 0): Promise<HTMLElement> {
+  renderAnchoredDropdown(layout.clip !== undefined)
+  layOut(layout)
+  stubPanelSize(300, panelHeight)
+  return openPanel()
+}
+
 test('the panel lines up with the left edge of its anchor', async () => {
-  const panel = await openAnchored(300, 280)
+  const panel = await openLaidOut({ anchor: inHeader(100, 300), trigger: inHeader(260, 280) })
 
   expect(panel.style.left).toBe('-160px')
   expect(panel.style.right).toBe('auto')
 })
 
 test('the panel lines up right when left would overflow', async () => {
-  const panel = await openAnchored(1000, 980)
+  const panel = await openLaidOut({ anchor: inHeader(800, 1000), trigger: inHeader(960, 980) })
 
   expect(panel.style.left).toBe('auto')
   expect(panel.style.right).toBe('-20px')
 })
 
-async function openClipped(
-  anchor: { left: number; right: number },
-  clip: { left: number; right: number }
-): Promise<HTMLElement> {
-  const user = userEvent.setup()
-  renderAnchoredDropdown(true)
-  stubRect(document.querySelector('.clip')!, clip.left, clip.right)
-  stubRect(document.querySelector('.anchor')!, anchor.left, anchor.right)
-  stubRect(document.querySelector('.monitoring-filter-dropdown')!, anchor.right - 20, anchor.right)
-  stubPanelWidth(300)
-
-  await user.click(screen.getByRole('button', { name: 'Open' }))
-  await nextTick()
-  return screen.getByRole('group', { name: 'Filter State' })
-}
-
 test('a column scrolled past the left edge keeps the panel inside it', async () => {
-  const panel = await openClipped({ left: 100, right: 300 }, { left: 200, right: 900 })
+  const panel = await openLaidOut({
+    clip: inHeader(200, 900),
+    anchor: inHeader(100, 300),
+    trigger: inHeader(280, 300)
+  })
 
   expect(panel.style.left).toBe('-80px')
   expect(panel.style.right).toBe('auto')
 })
 
 test('a column scrolled past the right edge keeps the panel inside it', async () => {
-  const panel = await openClipped({ left: 800, right: 1100 }, { left: 200, right: 1000 })
+  const panel = await openLaidOut({
+    clip: inHeader(200, 1000),
+    anchor: inHeader(800, 1100),
+    trigger: inHeader(1080, 1100)
+  })
 
   expect(panel.style.left).toBe('auto')
   expect(panel.style.right).toBe('100px')
+})
+
+function headerAt(top: number, bottom: number, clip: Box): Layout {
+  return { clip, anchor: inColumn(top, bottom), trigger: inColumn(top, bottom) }
+}
+
+test('a panel taller than the room below its trigger is capped to that room', async () => {
+  const panel = await openLaidOut(headerAt(80, 100, inColumn(50, 400)), 600)
+
+  expect(panel).not.toHaveClass('monitoring-filter-dropdown__panel--up')
+  expect(panel.style.maxHeight).toBe('292px')
+})
+
+test('a panel flipped up is capped to the room above its trigger', async () => {
+  const panel = await openLaidOut(headerAt(500, 520, inColumn(0, 700)), 600)
+
+  expect(panel).toHaveClass('monitoring-filter-dropdown__panel--up')
+  expect(panel.style.maxHeight).toBe('492px')
+})
+
+test('a container reaching past the window caps the panel at the window', async () => {
+  // jsdom's window is 768px high.
+  const panel = await openLaidOut(headerAt(80, 100, inColumn(0, 2000)), 1000)
+
+  expect(panel.style.maxHeight).toBe('660px')
+})
+
+test('reopening the panel fits it from its natural height again', async () => {
+  await openLaidOut(headerAt(80, 100, inColumn(50, 400)), 600)
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Cancel' }))
+
+  // With 400px above and 300px below, the 600px panel flips up. Measured at the 292px cap of
+  // the first opening, it would seem to fit below.
+  layOut(headerAt(408, 428, inColumn(0, 736)))
+  const panel = await openPanel()
+
+  expect(panel).toHaveClass('monitoring-filter-dropdown__panel--up')
+  expect(panel.style.maxHeight).toBe('400px')
+})
+
+test('resizing the window fits the open panel to its new room', async () => {
+  const panel = await openLaidOut(headerAt(80, 100, inColumn(50, 400)), 600)
+
+  layOut(headerAt(80, 100, inColumn(50, 600)))
+  window.dispatchEvent(new Event('resize'))
+  await nextTick()
+  await nextTick()
+
+  expect(panel.style.maxHeight).toBe('492px')
+})
+
+/** Give the panel's scroll area `height` of room, as its cap leaves it, and fit the panel again. */
+async function leaveScrollRoom(height: number): Promise<HTMLElement> {
+  const scrollArea = document.querySelector<HTMLElement>('.monitoring-filter-dropdown__scroll')!
+  Object.defineProperty(scrollArea, 'clientHeight', { configurable: true, value: height })
+  window.dispatchEvent(new Event('resize'))
+  await nextTick()
+  await nextTick()
+  return scrollArea
+}
+
+test('filter content taller than the capped panel scrolls', async () => {
+  await openLaidOut(headerAt(80, 100, inColumn(50, 400)), 600)
+
+  const scrollArea = await leaveScrollRoom(250)
+
+  expect(scrollArea).toHaveClass('monitoring-filter-dropdown__scroll--overflowing')
+})
+
+test('filter content that fits the panel does not scroll', async () => {
+  await openLaidOut(headerAt(80, 100, inColumn(50, 400)), 200)
+
+  const scrollArea = await leaveScrollRoom(250)
+
+  expect(scrollArea).not.toHaveClass('monitoring-filter-dropdown__scroll--overflowing')
 })
 
 test('the arrow keys walk the suggestions one at a time', async () => {

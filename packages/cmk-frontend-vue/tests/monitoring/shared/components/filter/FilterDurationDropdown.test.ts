@@ -57,6 +57,24 @@ test('applying an age commits the relative bound', async () => {
   })
 })
 
+test('picking a unit keeps the filter open and applies in that unit', async () => {
+  const user = userEvent.setup()
+  const { model } = renderDropdown()
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.type(screen.getByRole('spinbutton', { name: 'Age' }), '5')
+  await user.click(screen.getByRole('combobox', { name: 'Unit' }))
+  await user.click(screen.getByRole('option', { name: 'hours' }))
+  await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+  expect(model.value).toEqual({
+    type: 'age',
+    field: 'last_state_change',
+    op: 'younger_than',
+    seconds: 5 * 3600
+  })
+})
+
 test('an inverted span is not committed', async () => {
   const user = userEvent.setup()
   const { model } = renderDropdown()

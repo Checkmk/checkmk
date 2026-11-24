@@ -243,7 +243,8 @@ defineExpose({ validate })
           hide-validation-message
         />
       </template>
-      <CmkDropdown v-model="unit" :options="unitOptions" :label="_t('Unit')" />
+      <!-- Floating, so the list escapes the filter panel when that scrolls. -->
+      <CmkDropdown v-model="unit" :options="unitOptions" :label="_t('Unit')" floating />
       <span>{{ _t('ago') }}</span>
     </div>
     <CmkInlineValidation :id="validationId" :validation="errors" />

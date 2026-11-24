@@ -2,8 +2,8 @@
 
 The `*-qemu` test tiers run cross-built Windows payloads (watest, the regression and
 integration suites, Pester, the Rust tests of cmk-agent-ctl, mk-sql and mk-oracle, the
-MSI install) inside a real Windows Server 2022 VM, driven from Linux. This directory
-builds that VM's image and the saved state the tests start from.
+MSI's ICE validation and install) inside a real Windows Server 2022 VM, driven from
+Linux. This directory builds that VM's image and the saved state the tests start from.
 
 ## How a test gets its VM
 

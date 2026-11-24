@@ -20,3 +20,18 @@ filegroup(
     srcs = ["light.exe"],
     visibility = ["//visibility:public"],
 )
+
+# WiX's tools directory, without the docs and the SDK: what an installed WiX
+# runs smoke.exe, its MSI validator, with. Real Windows only
+# (//agents/wnx:msi-install-qemu): Wine's msi.dll cannot run the ICE custom
+# actions.
+filegroup(
+    name = "tools",
+    srcs = glob([
+        "*.config",
+        "*.cub",
+        "*.dll",
+        "*.exe",
+    ]),
+    visibility = ["//visibility:public"],
+)

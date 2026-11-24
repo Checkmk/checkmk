@@ -22,7 +22,6 @@ import os
 from collections.abc import Iterator
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
 
 import pytest
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped,unused-ignore]
@@ -32,12 +31,17 @@ from tests.testlib.common.utils2 import is_containerized
 from tests.testlib.common.version import CMKEdition, CMKVersion, edition_from_env, TypeCMKEdition
 from tests.testlib.pytest_helpers import faked_artifacts, registration
 from tests.testlib.pytest_helpers.diagnostics import render_command_output
+from tests.testlib.system.pytest_helpers.options import (
+    ARG_EDITION_CMK,
+    ARG_NO_CLEANUP,
+    ARG_REUSE,
+    ARG_VERSION_CMK,
+    ENV_VAR_CLEANUP,
+    ENV_VAR_EDITION,
+    ENV_VAR_REUSE,
+    ENV_VAR_VERSION,
+)
 from tests.testlib.system.site import Site
-
-ARG_EDITION_CMK: Final[str] = "--cmk-edition"
-ARG_VERSION_CMK: Final[str] = "--cmk-version"
-ARG_REUSE: Final[str] = "--reuse"
-ARG_NO_CLEANUP: Final[str] = "--no-cleanup"
 
 
 class EditionMarker(StrEnum):
@@ -71,7 +75,7 @@ def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginMa
             "Select version of the Checkmk site under test. If not set, value of environment "
             "variable 'VERSION' is used, if available. If neither is set, 'daily' is used."
         ),
-        default=os.getenv("VERSION", CMKVersion.DAILY),
+        default=os.getenv(ENV_VAR_VERSION, CMKVersion.DAILY),
     )
     parser.addoption(
         ARG_EDITION_CMK,
@@ -88,12 +92,12 @@ def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginMa
             "Select edition of the Checkmk site under test. If not set, value of environment "
             "variable 'EDITION' is used, if available. If neither is set, 'pro' is used."
         ),
-        default=os.getenv("EDITION", CMKEdition.PRO.long),
+        default=os.getenv(ENV_VAR_EDITION, CMKEdition.PRO.long),
     )
     parser.addoption(
         ARG_REUSE,
         action="store_true",
-        default=False,
+        default=os.getenv(ENV_VAR_REUSE, "0") == "1",
         help=(
             "Reuse an existing site to perform the tests. If not set, value of environment "
             "variable 'REUSE' is used, if available. If neither is set, reuse is disabled."
@@ -102,7 +106,7 @@ def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginMa
     parser.addoption(
         ARG_NO_CLEANUP,
         action="store_true",
-        default=False,
+        default=os.getenv(ENV_VAR_CLEANUP, "1") == "0",
         help=(
             "Avoid cleanup the test-environment after a test-run. If not set, value of environment "
             "variable 'CLEANUP' is used, if available. If neither is set, cleanup is enabled."
@@ -113,25 +117,34 @@ def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginMa
 def pytest_configure(config: pytest.Config) -> None:
     """Export the options to the environment, record it in the report, register the markers"""
 
-    if config.getoption(ARG_REUSE):
-        os.environ["REUSE"] = "1"
+    reuse = config.getoption(ARG_REUSE)
+    no_cleanup = config.getoption(ARG_NO_CLEANUP)
+    edition = config.getoption(ARG_EDITION_CMK)
+    version = config.getoption(ARG_VERSION_CMK)
 
-    if config.getoption(ARG_NO_CLEANUP):
-        os.environ["CLEANUP"] = "0"
-
-    os.environ["EDITION"] = config.getoption(ARG_EDITION_CMK)
-    os.environ["VERSION"] = config.getoption(ARG_VERSION_CMK)
+    if no_cleanup:
+        os.environ[ENV_VAR_CLEANUP] = "0"
+    if reuse:
+        os.environ[ENV_VAR_REUSE] = "1"
+    os.environ[ENV_VAR_EDITION] = edition
+    os.environ[ENV_VAR_VERSION] = version
 
     env_vars = {
         "BRANCH": current_base_branch_name(),
-        "EDITION": "pro",
-        "VERSION": "daily",
-        "DISTRO": "",
+        ENV_VAR_EDITION: edition,
+        ENV_VAR_VERSION: version,
+        ENV_VAR_REUSE: "0",
+        ENV_VAR_CLEANUP: "1",
+        "DISTRO": os.getenv("DISTRO"),
         "TZ": "UTC",
-        "REUSE": "0",
-        "CLEANUP": "1",
     }
+    if reuse:
+        env_vars[ENV_VAR_REUSE] = "1"
+    if no_cleanup:
+        env_vars[ENV_VAR_CLEANUP] = "0"
+
     env_lines = [f"{key}={os.getenv(key, val)}" for key, val in env_vars.items() if val]
+
     config.stash[metadata_key]["Variables"] = (
         "<ul><li>\n" + ("</li><li>\n".join(env_lines)) + "</li></ul>"
     )

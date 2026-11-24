@@ -81,6 +81,12 @@ from tests.testlib.system.openapi_session import (
     CMKOpenApiSession,
     UnexpectedResponse,
 )
+from tests.testlib.system.pytest_helpers.options import (
+    ENV_VAR_CLEANUP,
+    ENV_VAR_EDITION,
+    ENV_VAR_REUSE,
+    ENV_VAR_VERSION,
+)
 from tests.testlib.system.web_session import CMKWebSession
 
 logger = logging.getLogger(__name__)
@@ -1169,7 +1175,11 @@ class Site:
                         f"{repo_path()}/scripts/run-uvenv",
                         f"{repo_path()}/tests/scripts/install-cmk.py",
                     ],
-                    env=dict(os.environ, VERSION=self.version.version, EDITION=self.edition.short),
+                    env={
+                        **os.environ,
+                        ENV_VAR_VERSION: self.version.version,
+                        ENV_VAR_EDITION: self.edition.short,
+                    },
                 )
                 logger.info(
                     "Checkmk package '%(omd_version)s' built using commit: '%(commit_hash)s'",
@@ -1213,7 +1223,11 @@ class Site:
                         f"{repo_path()}/tests/scripts/install-cmk.py",
                         "--uninstall",
                     ],
-                    env=dict(os.environ, VERSION=self.version.version, EDITION=self.edition.short),
+                    env={
+                        **os.environ,
+                        ENV_VAR_VERSION: self.version.version,
+                        ENV_VAR_EDITION: self.edition.short,
+                    },
                 )
             except subprocess.CalledProcessError as excp:
                 excp.add_note(
@@ -3158,13 +3172,13 @@ class SiteFactory:
         lifecycle_wrapper: Callable[[Site], AbstractContextManager[object]] | None = None,
     ) -> Iterator[Site]:
         """Return a fully set-up test site (for use in site fixtures)."""
-        reuse_site = os.environ.get("REUSE", "0") == "1"
+        reuse_site = os.environ.get(ENV_VAR_REUSE, "0") == "1"
         # by default, the site will be cleaned up if REUSE=1 is not set
         # you can also explicitly set CLEANUP=[0|1] though (for debug purposes)
         cleanup_site = (
             not reuse_site
-            if os.environ.get("CLEANUP") is None
-            else os.environ.get("CLEANUP") == "1"
+            if os.environ.get(ENV_VAR_CLEANUP) is None
+            else os.environ.get(ENV_VAR_CLEANUP) == "1"
         )
         site = self.get_existing_site(name, start=reuse_site)
         if site.exists():
@@ -3493,8 +3507,8 @@ def _resource_attributes_from_env(env: Mapping[str, str]) -> Mapping[str, str]:
     return {
         name: val
         for name, val in [
-            ("cmk.version.version", env.get("VERSION")),
-            ("cmk.version.edition_short", env.get("EDITION")),
+            ("cmk.version.version", env.get(ENV_VAR_VERSION)),
+            ("cmk.version.edition_short", env.get(ENV_VAR_EDITION)),
             ("cmk.version.branch", env.get("BRANCH")),
             ("cmk.version.distro", env.get("DISTRO")),
             ("cmk.ci.node_name", env.get("CI_NODE_NAME")),

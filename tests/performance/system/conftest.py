@@ -26,6 +26,7 @@ from tests.testlib.pytest_helpers import (
     registration,
 )
 from tests.testlib.system.pytest_helpers import cmk_package
+from tests.testlib.system.pytest_helpers.options import ARG_EDITION_CMK, ARG_VERSION_CMK
 from tests.testlib.system.site import (
     get_site_factory,
     GlobalSettingsUpdate,
@@ -43,11 +44,11 @@ def pytest_configure(config: pytest.Config) -> None:
     """Write the benchmarks, the resources and the report into the run's results folder,
     where `perftest_upload.sh --site` takes them from, unless their paths are given."""
     the_version = perftest_run.version(
-        config.getoption(cmk_package.ARG_VERSION_CMK),
+        config.getoption(ARG_VERSION_CMK),
         perftest_run.branch_version(),
         perftest_run.run_date(os.environ),
     )
-    edition = config.getoption(cmk_package.ARG_EDITION_CMK)
+    edition = config.getoption(ARG_EDITION_CMK)
     name = perftest_run.job_name(the_version, edition, os.environ)
     run_dir = perftest_run.result_root(os.environ) / "performance" / name
     if not config.option.collectonly:

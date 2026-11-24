@@ -12,6 +12,7 @@ py_cmk_test(
         "//tests/testlib/system",
         "//tests/testlib/system:shard_planning",
         requirement("docker"),
+        requirement("pytest-metadata"),
         requirement("pytest-random-order"),
         requirement("psutil"),
     ],

@@ -19,6 +19,7 @@ from pytest_mock import MockerFixture
 import cmk.ruleset_matcher.tags
 from cmk.gui.bi import _filters as bi_filters
 from cmk.gui.config import Config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.visuals import _filters as filters
@@ -721,6 +722,27 @@ def test_custom_attribute_filter_without_the_value_variable(set_config: SetConfi
             )
             == "Filter: service_custom_variables ~~ BLA ^\n"
         )
+
+
+def _service_label_group(label: str) -> dict[str, str]:
+    return {
+        "service_labels_count": "1",
+        "service_labels_1_bool": "and",
+        "service_labels_1_vs_count": "1",
+        "service_labels_1_vs_1_bool": "and",
+        "service_labels_1_vs_1_vs": label,
+    }
+
+
+@pytest.mark.parametrize("label", ["os:linux", "net:ip:v4"])
+def test_label_group_filter_accepts_a_label_with_key_and_value(label: str) -> None:
+    filter_registry["service_labels"].validate_value(_service_label_group(label))
+
+
+@pytest.mark.parametrize("label", ["shop", "os:", ":linux"])
+def test_label_group_filter_rejects_a_label_without_key_and_value(label: str) -> None:
+    with pytest.raises(MKUserError):
+        filter_registry["service_labels"].validate_value(_service_label_group(label))
 
 
 @pytest.mark.parametrize("test", filter_table_tests)

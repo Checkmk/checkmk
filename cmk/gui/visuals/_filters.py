@@ -27,6 +27,7 @@ from cmk.gui.type_defs import (
     Rows,
     VisualContext,
 )
+from cmk.gui.utils.labels import LABEL_REGEX
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.watolib.groups_io import all_groups
@@ -1662,6 +1663,18 @@ class LabelGroupFilter(Filter):
             id=self.query_filter.ident,
             object_type=self.query_filter.object_type,
         )
+
+    @override
+    def validate_value(self, value: FilterHTTPVariables) -> None:
+        for _group_operator, label_group in self.query_filter.parse_value(value):
+            for _label_operator, label in label_group:
+                if not re.match(LABEL_REGEX, label):
+                    raise MKUserError(
+                        self.htmlvars[0],
+                        _(
+                            'Labels need to be in the format "[KEY]:[VALUE]". For example "os:windows" or "net:ip:v4".'
+                        ),
+                    )
 
     @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:

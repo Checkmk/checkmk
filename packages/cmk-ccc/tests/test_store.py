@@ -90,6 +90,12 @@ def test_load_data_from_file_not_existing(tmp_path: Path) -> None:
     assert data == "DEFAULT"
 
 
+def _write_file(path: Path, content: bytes) -> None:
+    """Write a file others can't write, whatever the umask: the store wouldn't read it otherwise"""
+    path.touch(mode=0o600)
+    path.write_bytes(content)
+
+
 def test_load_data_from_file_empty(tmp_path: Path) -> None:
     locked_file = tmp_path / "test"
     locked_file.write_text("", encoding="utf-8")
@@ -99,7 +105,7 @@ def test_load_data_from_file_empty(tmp_path: Path) -> None:
 
 def test_load_data_not_locked(tmp_path: Path) -> None:
     locked_file = tmp_path / "locked_file"
-    locked_file.write_text("[1, 2]", encoding="utf-8")
+    _write_file(locked_file, b"[1, 2]")
 
     store.load_object_from_file(locked_file, default=None, debug=False)
     assert store.have_lock(locked_file) is False
@@ -107,7 +113,7 @@ def test_load_data_not_locked(tmp_path: Path) -> None:
 
 def test_load_data_from_file_locking(tmp_path: Path) -> None:
     locked_file = tmp_path / "locked_file"
-    locked_file.write_text("[1, 2]", encoding="utf-8")
+    _write_file(locked_file, b"[1, 2]")
 
     data = store.load_object_from_file(locked_file, default=None, lock=True, debug=False)
     assert data == [1, 2]
@@ -131,7 +137,7 @@ def test_load_data_from_not_permitted_file(tmp_path: Path) -> None:
 
 def test_load_data_from_file_dict(tmp_path: Path) -> None:
     locked_file = tmp_path / "test"
-    locked_file.write_bytes(repr({"1": 2, "ä": "ß"}).encode())
+    _write_file(locked_file, repr({"1": 2, "ä": "ß"}).encode())
 
     data = store.load_object_from_file(locked_file, default=None, debug=False)
     assert isinstance(data, dict)
@@ -211,7 +217,7 @@ def test_save_text_to_file(tmp_path: Path, data: str) -> None:
 def test_load_object_from_file_null_bytes(tmp_path: Path) -> None:
     """A file containing null bytes should return default, not crash with SyntaxError."""
     path = tmp_path / "corrupted.mk"
-    path.write_bytes(b"\x00" * 100)
+    _write_file(path, b"\x00" * 100)
     data = store.load_object_from_file(path, default=[], debug=False)
     assert data == []
 
@@ -795,14 +801,14 @@ def test_non_blocking_decorated_locking_while_already_locked(
 
 
 def test_load_object_from_unreadable_file_reraises_in_debug_mode(tmp_path: Path) -> None:
-    (unreadable := tmp_path / "directory").mkdir()
+    (unreadable := tmp_path / "directory").mkdir(mode=0o700)
 
     with pytest.raises(IsADirectoryError):
         store.load_object_from_file(unreadable, default=None, debug=True)
 
 
 def test_load_object_from_unreadable_file_names_the_file(tmp_path: Path) -> None:
-    (unreadable := tmp_path / "directory").mkdir()
+    (unreadable := tmp_path / "directory").mkdir(mode=0o700)
 
     with pytest.raises(MKGeneralException, match="directory"):
         store.load_object_from_file(unreadable, default=None, debug=False)

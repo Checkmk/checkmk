@@ -252,6 +252,7 @@ py_cmk_test(
     size = "small",
     timeout = "moderate",
     srcs = glob(["tests/**/*.py"]),
+    args = ["--random-order-bucket=global"],
     deps = [
         "cleanup",
         "config-path",
@@ -276,6 +277,7 @@ py_cmk_test(
         "user",
         "version",
         "version-info",
+        requirement("pytest-random-order"),
         requirement("time-machine"),
     ],
 )

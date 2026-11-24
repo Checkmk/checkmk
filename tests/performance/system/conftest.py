@@ -27,7 +27,6 @@ from tests.testlib.pytest_helpers import (
 )
 from tests.testlib.system.pytest_helpers import cmk_package
 from tests.testlib.system.site import (
-    connection,
     get_site_factory,
     GlobalSettingsUpdate,
     Site,
@@ -277,15 +276,9 @@ def _make_connected_remote_site(
         central_site: The central site to connect to.
         site_description: A description to be used for the connection.
     """
-    with (
-        site_factory.get_test_site_ctx(
-            site_name,
-            description=site_description,
-            auto_restart_httpd=True,
-            tracing_config=tracing_config_from_env(os.environ),
-        ) as remote_site,
-        connection(central_site=central_site, remote_site=remote_site),
-    ):
+    with site_factory.connected_remote_site(
+        site_name, central_site, site_description
+    ) as remote_site:
         yield remote_site
 
 

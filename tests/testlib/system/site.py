@@ -3240,6 +3240,7 @@ class SiteFactory:
         site_description: str = "",
         enable_replication: bool | None = None,
         disable_remote_configuration: bool = True,
+        lifecycle_wrapper: Callable[[Site], AbstractContextManager[object]] | None = None,
     ) -> Iterator[Site]:
         """Use a dynamically created, connected a remote site.
 
@@ -3254,6 +3255,8 @@ class SiteFactory:
             disable_remote_configuration: Disables WATO on the remote site when True (default).
                 Set to False to keep WATO enabled on the remote site while it is still recognised
                 as a distributed-setup remote (is_distributed_setup_remote_site = True).
+            lifecycle_wrapper: Optional context manager factory for edition-specific
+                site environment setup (e.g. ``edition_setup(edition).site_environment``).
 
         Yields:
             Site object for the connected remote site.
@@ -3264,8 +3267,9 @@ class SiteFactory:
                 description=site_description,
                 auto_restart_httpd=True,
                 tracing_config=tracing_config_from_env(os.environ),
+                lifecycle_wrapper=lifecycle_wrapper,
             ) as remote_site,
-            connection(
+            _remote_connection(
                 central_site=central_site,
                 remote_site=remote_site,
                 enable_replication=enable_replication,
@@ -3517,7 +3521,7 @@ def _resource_attributes_from_env(env: Mapping[str, str]) -> Mapping[str, str]:
 
 
 @contextmanager
-def connection(
+def _remote_connection(
     *,
     central_site: Site,
     remote_site: Site,

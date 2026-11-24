@@ -8,7 +8,6 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-import pytest
 from playwright.sync_api import Page
 
 from tests.system.gui.testlib.host_details import AddressFamily, AgentAndApiIntegration, HostDetails
@@ -21,7 +20,7 @@ from tests.system.gui.testlib.playwright.pom.setup.distributed_monitoring import
 )
 from tests.system.gui.testlib.playwright.pom.setup.hosts import HostProperties
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.system.site import Site, SiteFactory
+from tests.testlib.system.site import Site
 
 
 @contextmanager
@@ -80,32 +79,11 @@ def _check_host_is_monitored_from_remote_site(
         page.goto(_previous_url, wait_until="load")
 
 
-@pytest.fixture(name="remote_site", scope="module")
-def fixture_remote_site(
-    request: pytest.FixtureRequest,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-    site_factory: SiteFactory,
-) -> Iterator[Site]:
-    """Return the remote Checkmk site object."""
-
-    try:
-        with site_factory.get_test_site_ctx(name="remote") as _remote_site:
-            try:
-                yield _remote_site
-            finally:
-                # Cleanup: Remove files to unlock local setup again in remote site.
-                for file_to_delete in (
-                    "etc/check_mk/multisite.d/wato/sitespecific.mk",
-                    "etc/check_mk/conf.d/distributed_wato.mk",
-                ):
-                    if _remote_site.file_exists(file_to_delete):
-                        _remote_site.delete_file(file_to_delete)
-    except BaseException as exc:
-        exc.add_note("Error in remote site creation / connection! Failing test case run...")
-        raise exc
-
-
 def test_remote_host_configuring(
-    dashboard_page: MainDashboard, test_site: Site, credentials: CmkCredentials, remote_site: Site
+    dashboard_page: MainDashboard,
+    test_site: Site,
+    credentials: CmkCredentials,
+    remote_site_unconnected: Site,
 ) -> None:
     """Test distributed monitoring setup and verify it creating a host.
 
@@ -118,21 +96,21 @@ def test_remote_host_configuring(
     """
     try:
         distributed_monitoring_page = DistributedMonitoring(dashboard_page.page)
-        distributed_monitoring_page.add_new_connection(remote_site)
-        distributed_monitoring_page.login_to_remote_site(remote_site, credentials)
-        distributed_monitoring_page.check_site_online_status(remote_site.id)
+        distributed_monitoring_page.add_new_connection(remote_site_unconnected)
+        distributed_monitoring_page.login_to_remote_site(remote_site_unconnected, credentials)
+        distributed_monitoring_page.check_site_online_status(remote_site_unconnected.id)
 
         distributed_monitoring_page.activate_changes(test_site, number_of_sites=2)
 
         distributed_monitoring_page.navigate()
-        distributed_monitoring_page.check_site_online_status(remote_site.id)
+        distributed_monitoring_page.check_site_online_status(remote_site_unconnected.id)
 
         with _configure_a_host_to_be_deleted(
-            dashboard_page, test_site, remote_site
+            dashboard_page, test_site, remote_site_unconnected
         ) as host_for_remote_site:
             _check_host_is_monitored_from_remote_site(
                 dashboard_page.page,
-                remote_site,
+                remote_site_unconnected,
                 credentials,
                 host_for_remote_site,
             )

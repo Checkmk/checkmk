@@ -2,14 +2,14 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Unit tests for the distributed setup helper :func:`tests.testlib.system.site.connection`."""
+"""Unit tests for the distributed setup helper :func:`tests.testlib.system.site._remote_connection`."""
 
 from unittest.mock import MagicMock
 
 import pytest
 
 from tests.testlib.common.version import CMKVersion
-from tests.testlib.system.site import connection, Site
+from tests.testlib.system.site import _remote_connection, Site
 
 
 def _site(site_id: str) -> MagicMock:
@@ -34,7 +34,9 @@ def test_connection_is_removed_when_the_site_login_fails(monkeypatch: pytest.Mon
 
     with (
         pytest.raises(RuntimeError),
-        connection(central_site=central_site, remote_site=remote_site, enable_replication=True),
+        _remote_connection(
+            central_site=central_site, remote_site=remote_site, enable_replication=True
+        ),
     ):
         pytest.fail("the connection setup must not succeed")
 
@@ -49,7 +51,9 @@ def test_no_connection_is_removed_when_none_was_created(monkeypatch: pytest.Monk
 
     with (
         pytest.raises(RuntimeError),
-        connection(central_site=central_site, remote_site=remote_site, enable_replication=True),
+        _remote_connection(
+            central_site=central_site, remote_site=remote_site, enable_replication=True
+        ),
     ):
         pytest.fail("the connection setup must not succeed")
 

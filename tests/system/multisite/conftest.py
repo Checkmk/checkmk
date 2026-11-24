@@ -27,7 +27,6 @@ from tests.testlib.system.agent import (
 from tests.testlib.system.edition_setup import edition_setup
 from tests.testlib.system.pytest_helpers.cmk_package import add_host_diagnostics
 from tests.testlib.system.site import (
-    connection,
     get_site_factory,
     GlobalSettingsUpdate,
     Site,
@@ -106,16 +105,12 @@ def _make_connected_remote_site(
     site_description: str,
 ) -> Iterator[Site]:
     edition_setup(site_factory.edition).prepare_host(Path("/"))
-    with (
-        site_factory.get_test_site_ctx(
-            site_name,
-            description=site_description,
-            auto_restart_httpd=True,
-            tracing_config=tracing_config_from_env(os.environ),
-            lifecycle_wrapper=edition_setup(site_factory.edition).site_environment,
-        ) as remote_site,
-        connection(central_site=central_site, remote_site=remote_site),
-    ):
+    with site_factory.connected_remote_site(
+        site_name,
+        central_site,
+        site_description,
+        lifecycle_wrapper=edition_setup(site_factory.edition).site_environment,
+    ) as remote_site:
         yield remote_site
 
 

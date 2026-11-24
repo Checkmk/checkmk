@@ -144,6 +144,30 @@ def fixture_remote_site_wato_disabled(
         raise exc
 
 
+@pytest.fixture(name="remote_site_unconnected", scope="module")
+def fixture_remote_site_unconnected(site_factory: SiteFactory) -> Iterator[Site]:
+    """Return a remote site that is *not* connected to the central site.
+
+    The site connection is meant to be established by the test itself.
+    On teardown the distributed-setup files pushed by
+    the central site are removed so the remote's local setup is unlocked again.
+    """
+    try:
+        with site_factory.get_test_site_ctx(name="remote2") as remote_site:
+            try:
+                yield remote_site
+            finally:
+                for file_to_delete in (
+                    "etc/check_mk/multisite.d/wato/sitespecific.mk",
+                    "etc/check_mk/conf.d/distributed_wato.mk",
+                ):
+                    if remote_site.file_exists(file_to_delete):
+                        remote_site.delete_file(file_to_delete)
+    except BaseException as exc:
+        exc.add_note("Error in remote site creation / connection! Failing test case run...")
+        raise exc
+
+
 @pytest.fixture(name="credentials", scope="session")
 def fixture_credentials(test_site: Site) -> CmkCredentials:
     """Return admin user credentials of the Checkmk site."""

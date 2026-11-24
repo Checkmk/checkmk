@@ -346,6 +346,48 @@ def test_load_mk_file_does_not_wrap_errors_raised_by_its_code(tmp_path: Path) ->
         store.load_mk_file(path, default={}, lock=False)
 
 
+def test_load_mk_file_of_a_missing_file_returns_the_default(tmp_path: Path) -> None:
+    config = store.load_mk_file(tmp_path / "missing.mk", default={"x": 1}, lock=False)
+
+    assert config == {"x": 1}
+
+
+def test_load_mk_file_of_an_unreadable_file_names_the_file_and_the_reason(tmp_path: Path) -> None:
+    (unreadable := tmp_path / "directory").mkdir(mode=0o700)
+
+    with pytest.raises(MKGeneralException) as e:
+        store.load_mk_file(unreadable, default={}, lock=False)
+
+    assert str(e.value) == (
+        f"Cannot read configuration file \"{unreadable}\": [Errno 21] Is a directory: '{unreadable}'"
+    )
+
+
+@pytest.mark.usefixtures("release_locks")
+def test_load_mk_file_with_lock_leaves_the_file_locked(tmp_path: Path) -> None:
+    (path := tmp_path / "config.mk").write_text("x = 1", encoding="utf-8")
+
+    store.load_mk_file(path, default={}, lock=True)
+
+    assert store.have_lock(path) is True
+
+
+def test_load_from_mk_file_returns_the_value_of_the_key(tmp_path: Path) -> None:
+    (path := tmp_path / "config.mk").write_text("x = 1\ny = 2", encoding="utf-8")
+
+    value = store.load_from_mk_file(path, key="y", default=0, lock=False)
+
+    assert value == 2
+
+
+def test_load_from_mk_file_without_the_key_returns_the_default(tmp_path: Path) -> None:
+    (path := tmp_path / "config.mk").write_text("x = 1", encoding="utf-8")
+
+    value = store.load_from_mk_file(path, key="y", default=0, lock=False)
+
+    assert value == 0
+
+
 def test_save_mk_file(tmp_path: Path) -> None:
     path = tmp_path / "lala"
     store.save_mk_file(path, "x = 1")
@@ -991,3 +1033,130 @@ def test_load_object_from_unreadable_file_names_the_file_and_the_reason(tmp_path
     assert str(e.value) == (
         f"Cannot read file \"{unreadable}\": [Errno 21] Is a directory: '{unreadable}'"
     )
+
+
+def test_saved_pickle_file_loads_back(tmp_path: Path) -> None:
+    store.save_object_to_pickle_file(path := tmp_path / "data.pkl", {"a": [1, 2]})
+
+    data = store.load_object_from_pickle_file(path, default=None)
+
+    assert data == {"a": [1, 2]}
+
+
+def _write_file_at(path: Path, content: bytes, *, mtime: float) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    _write_file(path, content)
+    os.utime(path, (mtime, mtime))
+
+
+def _load_through_pickle_cache(path: Path, tmp_path: Path, *, lock: bool = False) -> object:
+    return store.try_load_file_from_pickle_cache(
+        path, default=None, lock=lock, temp_dir=tmp_path / "tmp", root_dir=tmp_path / "site"
+    )
+
+
+def test_pickle_cache_serves_the_cache_while_the_file_is_older(tmp_path: Path) -> None:
+    an_hour_ago = time.time() - 3600
+    _write_file_at(path := tmp_path / "site" / "data.mk", b"[1]", mtime=an_hour_ago)
+    _load_through_pickle_cache(path, tmp_path)
+    _write_file_at(path, b"[2]", mtime=an_hour_ago)
+
+    data = _load_through_pickle_cache(path, tmp_path)
+
+    assert data == [1]
+
+
+def test_pickle_cache_reads_a_file_again_that_changed_since(tmp_path: Path) -> None:
+    _write_file_at(path := tmp_path / "site" / "data.mk", b"[1]", mtime=time.time() - 3600)
+    _load_through_pickle_cache(path, tmp_path)
+    _write_file_at(path, b"[2]", mtime=time.time() + 3600)
+
+    data = _load_through_pickle_cache(path, tmp_path)
+
+    assert data == [2]
+
+
+def test_pickle_cache_reads_a_file_again_as_old_as_its_cache(tmp_path: Path) -> None:
+    _write_file_at(path := tmp_path / "site" / "data.mk", b"[1]", mtime=time.time() - 3600)
+    _load_through_pickle_cache(path, tmp_path)
+    (cached,) = (p for p in (tmp_path / "tmp").rglob("*") if p.is_file())
+    _write_file(path, b"[2]")
+    os.utime(path, ns=(cached.stat().st_mtime_ns, cached.stat().st_mtime_ns))
+
+    data = _load_through_pickle_cache(path, tmp_path)
+
+    assert data == [2]
+
+
+def test_pickle_cache_keeps_files_of_the_same_name_apart(tmp_path: Path) -> None:
+    an_hour_ago = time.time() - 3600
+    _write_file_at(first := tmp_path / "site" / "a" / "data.mk", b"[1]", mtime=an_hour_ago)
+    _write_file_at(second := tmp_path / "site" / "b" / "data.mk", b"[2]", mtime=an_hour_ago)
+    _load_through_pickle_cache(first, tmp_path)
+
+    data = _load_through_pickle_cache(second, tmp_path)
+
+    assert data == [2]
+
+
+def test_cleared_pickle_cache_reads_the_file_again(tmp_path: Path) -> None:
+    an_hour_ago = time.time() - 3600
+    _write_file_at(path := tmp_path / "site" / "data.mk", b"[1]", mtime=an_hour_ago)
+    _load_through_pickle_cache(path, tmp_path)
+    _write_file_at(path, b"[2]", mtime=an_hour_ago)
+
+    store.clear_pickled_files_cache(tmp_path / "tmp")
+    data = _load_through_pickle_cache(path, tmp_path)
+
+    assert data == [2]
+
+
+def test_pickle_cache_reads_a_file_again_whose_cache_is_broken(tmp_path: Path) -> None:
+    _write_file_at(path := tmp_path / "site" / "data.mk", b"[1]", mtime=time.time() - 3600)
+    _load_through_pickle_cache(path, tmp_path)
+    (cached,) = (p for p in (tmp_path / "tmp").rglob("*") if p.is_file())
+    cached.write_bytes(b"not a pickle")
+
+    data = _load_through_pickle_cache(path, tmp_path)
+
+    assert data == [1]
+
+
+def test_pickle_cache_does_not_serve_a_deleted_file(tmp_path: Path) -> None:
+    _write_file_at(path := tmp_path / "site" / "data.mk", b"[1]", mtime=time.time() - 3600)
+    _load_through_pickle_cache(path, tmp_path)
+    path.unlink()
+
+    data = _load_through_pickle_cache(path, tmp_path)
+
+    assert data is None
+
+
+def test_pickle_cache_does_not_cache_a_missing_file(tmp_path: Path) -> None:
+    _load_through_pickle_cache(path := tmp_path / "site" / "data.mk", tmp_path)
+    _write_file_at(path, b"[1]", mtime=time.time() - 3600)
+
+    data = _load_through_pickle_cache(path, tmp_path)
+
+    assert data == [1]
+
+
+def test_pickle_cache_does_not_cache_a_file_outside_of_the_root(tmp_path: Path) -> None:
+    an_hour_ago = time.time() - 3600
+    _write_file_at(path := tmp_path / "elsewhere" / "data.mk", b"[1]", mtime=an_hour_ago)
+    _load_through_pickle_cache(path, tmp_path)
+    _write_file_at(path, b"[2]", mtime=an_hour_ago)
+
+    data = _load_through_pickle_cache(path, tmp_path)
+
+    assert data == [2]
+
+
+@pytest.mark.usefixtures("release_locks")
+def test_pickle_cache_with_lock_leaves_a_cached_file_locked(tmp_path: Path) -> None:
+    _write_file_at(path := tmp_path / "site" / "data.mk", b"[1]", mtime=time.time() - 3600)
+    _load_through_pickle_cache(path, tmp_path)
+
+    _load_through_pickle_cache(path, tmp_path, lock=True)
+
+    assert store.have_lock(path) is True

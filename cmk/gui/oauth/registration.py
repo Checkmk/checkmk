@@ -11,6 +11,7 @@ from cmk.gui.oauth.pages._client_registration import OAuthClientRegistrationPage
 from cmk.gui.oauth.pages._introspect import OAuthIntrospectPage
 from cmk.gui.oauth.pages._oauth_well_known import OAuthAuthorizationServerMetadataPage
 from cmk.gui.oauth.pages._token import OAuthTokenPage
+from cmk.gui.oauth.user_cleanup import register as register_user_cleanup
 from cmk.gui.oauth.wato._main_module import register as register_main_module
 from cmk.gui.oauth.wato._registered_clients_mode import (
     register as register_registered_clients_mode,
@@ -72,3 +73,4 @@ def register(
         delegation_enabled=delegation_enabled,
         ignore_duplicates=ignore_duplicate_endpoints,
     )
+    register_user_cleanup()

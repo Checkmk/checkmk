@@ -15,7 +15,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.crypto.password import Password, PasswordPolicy
-from cmk.gui import site_config, userdb
+from cmk.gui import hooks, site_config, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
@@ -132,6 +132,7 @@ def delete_users(
             pprint_value=active_config.wato_pprint_config,
             call_users_saved_hook=True,
         )
+        hooks.call("users-deleted", deleted_users)
     return deleted_users, users_used_in_notification_rule
 
 

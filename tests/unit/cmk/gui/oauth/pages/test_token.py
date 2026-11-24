@@ -51,9 +51,10 @@ def _stored_record(
     code_challenge: str = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
     resource: str | None = "https://host/mysite/check_mk/mcp",
     client_id: str = "test-client",
+    user_id: str = "alice",
 ) -> AuthCodeRecord:
     return AuthCodeRecord(
-        user_id="alice",
+        user_id=user_id,
         client_id=client_id,
         redirect_uri="https://client.example/callback",
         scope="read",
@@ -76,7 +77,7 @@ def seeded_test_client(flask_app: Flask) -> None:
         )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "alice")
 class TestOAuthTokenPage:
     @pytest.mark.usefixtures("clean_redis")
     def test_redeems_a_stored_code_for_an_access_token(self, flask_app: Flask) -> None:
@@ -152,6 +153,36 @@ class TestOAuthTokenPage:
 
             assert response.status_code == 400
             assert response.json == {"error": "invalid_grant"}
+
+    @pytest.mark.usefixtures("clean_redis")
+    def test_rejects_a_code_of_a_user_deleted_since_it_was_issued(
+        self, flask_app: Flask, load_config: Config
+    ) -> None:
+        with create_and_destroy_user(username="bob", config=load_config) as (bob, _password):
+            AuthCodeStore().store(_VALID_FORM["code"], _stored_record(user_id=bob))
+
+        with flask_app.test_request_context(method="POST", data=_VALID_FORM):
+            flask_app.preprocess_request()
+            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+
+            assert response.status_code == HTTPStatus.BAD_REQUEST
+            assert response.json == {"error": "invalid_grant"}
+
+    @pytest.mark.usefixtures("clean_redis")
+    def test_rejects_a_code_of_a_locked_user(self, flask_app: Flask, load_config: Config) -> None:
+        with create_and_destroy_user(
+            username="bob", custom_attrs={"locked": True}, config=load_config
+        ) as (bob, _password):
+            AuthCodeStore().store(_VALID_FORM["code"], _stored_record(user_id=bob))
+
+            with flask_app.test_request_context(method="POST", data=_VALID_FORM):
+                flask_app.preprocess_request()
+                OAuthTokenPage(lambda: True).handle_page(
+                    PageContext(config=Config(), request=request)
+                )
+
+                assert response.status_code == HTTPStatus.BAD_REQUEST
+                assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
     def test_returns_a_different_access_token_for_each_code(self, flask_app: Flask) -> None:
@@ -584,7 +615,7 @@ _GRANT_LIFETIME = timedelta(days=365)
 
 @pytest.fixture(name="alice")
 def fixture_alice(load_config: Config) -> Iterator[UserId]:
-    # A refresh re-checks the grant's user, so it has to exist for real.
+    # Redeeming a code and refreshing re-check the user, so it has to exist for real.
     with create_and_destroy_user(username="alice", config=load_config) as (user_id, _password):
         yield user_id
 

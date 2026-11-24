@@ -323,6 +323,8 @@ allows = [
   "cmk.gui.watolib.audit_log",
   "cmk.gui.watolib.pending_changes",
   "cmk.otel_collector.gui",
+  # The licensing diagnostics query the database the telemetry binding names.
+  "cmk.data_backend.config",
 ]
 
 [plugin_families.violations.custom_service]

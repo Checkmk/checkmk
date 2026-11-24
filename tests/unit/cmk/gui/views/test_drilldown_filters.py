@@ -100,6 +100,20 @@ _VALUED_CASES = [
         id="root folder",
     ),
     pytest.param("opthostgroup", _HOST_ROW, [], {"opthost_group": "linux"}, id="host group"),
+    pytest.param(
+        "opthostgroup",
+        {"host_groups": ["web", "linux"]},
+        [],
+        {"opthost_group": "linux|web"},
+        id="any of the host groups",
+    ),
+    pytest.param(
+        "opthostgroup",
+        {"host_groups": ["all", "linux"]},
+        [],
+        {"opthost_group": "all|linux"},
+        id="host group named all stays",
+    ),
     pytest.param("sites", _HOST_ROW, [], {"sites": "heute"}, id="sites"),
     pytest.param("wato_folders", _HOST_ROW, [], {"wato_folders": "servers/linux"}, id="folders"),
     pytest.param(
@@ -140,6 +154,27 @@ _VALUED_CASES = [
         [],
         {"opthost_contact_group": "ops"},
         id="host contact group",
+    ),
+    pytest.param(
+        "opthost_contactgroup",
+        {"host_contact_groups": ["all", "ops"]},
+        [],
+        {"opthost_contact_group": "ops"},
+        id="host contact group besides all",
+    ),
+    pytest.param(
+        "opthost_contactgroup",
+        {"host_contact_groups": ["all", "web", "ops"]},
+        [],
+        {"opthost_contact_group": "ops|web"},
+        id="any of the host contact groups besides all",
+    ),
+    pytest.param(
+        "opthost_contactgroup",
+        {"host_contact_groups": ["all"]},
+        [],
+        {"opthost_contact_group": "all"},
+        id="host contact group all alone",
     ),
     pytest.param(
         "host_address",
@@ -235,6 +270,13 @@ _VALUED_CASES = [
         [],
         {"optservice_contact_group": "ops"},
         id="service contact group",
+    ),
+    pytest.param(
+        "optservice_contactgroup",
+        {"service_contact_groups": ["all", "ops"]},
+        [],
+        {"optservice_contact_group": "ops"},
+        id="service contact group besides all",
     ),
     pytest.param(
         "svc_service_level",
@@ -397,6 +439,13 @@ _VALUED_CASES = [
         {"optservice_group": "web"},
         id="service group",
     ),
+    pytest.param(
+        "optservicegroup",
+        {"service_groups": ["web", "db"]},
+        [],
+        {"optservice_group": "db|web"},
+        id="any of the service groups",
+    ),
     pytest.param("customer", {"customer_id": "acme"}, [], {"customer": "acme"}, id="customer"),
     pytest.param(
         "aggr_name",
@@ -461,9 +510,6 @@ def test_drilldowns_combine_label_keys_in_one_group() -> None:
         pytest.param("host_labels", _HOST_ROW, [], id="label filter without a key"),
         pytest.param("host_tags", _HOST_ROW, [], id="tag filter without a key"),
         pytest.param("host_auxtags", _HOST_ROW, [], id="aux tag filter without a key"),
-        pytest.param(
-            "opthostgroup", {"host_groups": ["linux", "web"]}, [], id="several host groups"
-        ),
         pytest.param("opthostgroup", {"host_groups": []}, [], id="no host group"),
         pytest.param(
             "log_contact_name", {"log_contact_name": "alice,bob"}, [], id="several contacts"

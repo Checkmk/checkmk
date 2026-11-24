@@ -67,6 +67,9 @@ from .filter.components import (
     TextInput,
 )
 
+# A new site puts every host into this contact group; a renamed one is not recognised.
+_ALL_CONTACT_GROUP = "all"
+
 _HOSTGROUP_PROBLEMS: Mapping[str, ColumnName] = {
     "hostgroups_having_hosts_down": "hostgroup_num_hosts_down",
     "hostgroups_having_hosts_unreach": "hostgroup_num_hosts_unreach",
@@ -528,7 +531,7 @@ def register_host_and_service_group_filters(filter_registry: FilterRegistry) -> 
             ),
             group_type="host",
             group=FilterGroup.HOST_PROPERTIES,
-            drilldown=drilldowns.single_item("opthost_group", "host_groups"),
+            drilldown=drilldowns.any_group("opthost_group", "host_groups"),
         )
     )
 
@@ -547,7 +550,7 @@ def register_host_and_service_group_filters(filter_registry: FilterRegistry) -> 
             ),
             group_type="service",
             group=FilterGroup.SERVICE_IS,
-            drilldown=drilldowns.single_item("optservice_group", "service_groups"),
+            drilldown=drilldowns.any_group("optservice_group", "service_groups"),
         )
     )
 
@@ -568,7 +571,11 @@ def register_contact_filters(filter_registry: FilterRegistry) -> None:
             ),
             group_type="host_contact",
             group=FilterGroup.HOST_CONTACT,
-            drilldown=drilldowns.single_item("opthost_contact_group", "host_contact_groups"),
+            drilldown=drilldowns.any_group(
+                "opthost_contact_group",
+                "host_contact_groups",
+                catch_all=_ALL_CONTACT_GROUP,
+            ),
         )
     )
 
@@ -587,7 +594,11 @@ def register_contact_filters(filter_registry: FilterRegistry) -> None:
             ),
             group_type="service_contact",
             group=FilterGroup.SERVICE_CONTACT,
-            drilldown=drilldowns.single_item("optservice_contact_group", "service_contact_groups"),
+            drilldown=drilldowns.any_group(
+                "optservice_contact_group",
+                "service_contact_groups",
+                catch_all=_ALL_CONTACT_GROUP,
+            ),
         )
     )
 

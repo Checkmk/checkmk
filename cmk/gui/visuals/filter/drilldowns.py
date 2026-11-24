@@ -124,6 +124,18 @@ def single_item(variable: str, column: ColumnName) -> Drilldown:
     return Drilldown(columns=[column], variables=variables)
 
 
+def any_group(variable: str, column: ColumnName, *, catch_all: str | None = None) -> Drilldown:
+    """Any of the object's groups, joined by "|"; a catch-all group, which matches every
+    object, drops unless it is the only one."""
+
+    def variables(row: RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+        groups = sorted(set(list_items(column)(row)))
+        groups = [group for group in groups if group != catch_all] or groups
+        return {variable: "|".join(groups)} if groups else None
+
+    return Drilldown(columns=[column], variables=variables)
+
+
 def check_command(variable: str, column: ColumnName) -> Drilldown:
     # The filter matches the command with any arguments.
     def variables(row: RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:

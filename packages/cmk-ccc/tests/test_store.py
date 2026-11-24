@@ -55,9 +55,9 @@ def _poll_until(done: Callable[[], bool], *, seconds: int) -> bool:
     Counting the polls instead of watching the clock keeps a stopped process from running out of
     time.
     """
-    # 7 polls back off from 1 ms to 64 ms, 127 ms in all, then each poll waits 100 ms.
-    delay = 0.001
-    for _ in range(10 * seconds + 6):
+    # 10 polls back off from 0.1 ms to 51.2 ms, 102.3 ms in all, then each poll waits 100 ms.
+    delay = 0.0001
+    for _ in range(10 * seconds + 9):
         if done():
             return True
         time.sleep(delay)

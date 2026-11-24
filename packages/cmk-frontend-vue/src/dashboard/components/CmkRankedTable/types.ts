@@ -48,8 +48,21 @@ export type RankedTableCell = RankedTableCellBase &
 
 export type RankedTableRow = Record<string, string | number | RankedTableCell>
 
+/**
+ * Stand-in rows in the table's columns: `loading` animates them, `empty` shows them faded
+ * behind the `empty` slot.
+ */
+export interface RankedTablePlaceholder {
+  kind: 'loading' | 'empty'
+  rows: number
+}
+
 export interface CmkRankedTableProps {
   columns: RankedTableColumn[]
   /** Rows in display order (the caller provides them pre-ranked). */
   rows: RankedTableRow[]
+  /** Replaces the rows with stand-ins. */
+  placeholder?: RankedTablePlaceholder | undefined
+  /** Whether newer rows are being fetched, which assistive tech is told. */
+  busy?: boolean
 }

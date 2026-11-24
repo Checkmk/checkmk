@@ -11,5 +11,6 @@ export type {
   RankedTableCell,
   RankedTableCellRender,
   RankedTableColumn,
+  RankedTablePlaceholder,
   RankedTableRow
 } from './types'

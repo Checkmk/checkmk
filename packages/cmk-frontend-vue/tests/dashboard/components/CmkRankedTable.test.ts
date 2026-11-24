@@ -160,3 +160,39 @@ test('marks only a cell with several destinations with the menu arrow', () => {
   )
   expect(arrows).toEqual([1, 0])
 })
+
+test('marks the table busy while new rows are fetched', () => {
+  const { getByRole } = render(CmkRankedTable, {
+    props: { columns: COLUMNS, rows: ROWS, busy: true }
+  })
+
+  expect(getByRole('table')).toHaveAttribute('aria-busy', 'true')
+})
+
+test('shows as many loading rows as asked for, in place of the data', () => {
+  const { getByRole, getAllByRole } = render(CmkRankedTable, {
+    props: { columns: COLUMNS, rows: ROWS, placeholder: { kind: 'loading', rows: 5 } }
+  })
+
+  expect(getByRole('table')).toHaveAttribute('aria-busy', 'true')
+  expect(getAllByRole('row').slice(1)).toHaveLength(5)
+  expect(getByRole('table')).not.toHaveTextContent('B')
+})
+
+test('hides the faded stand-ins of an empty table but not its message', () => {
+  const { queryByRole, getByText } = render(CmkRankedTable, {
+    props: { columns: COLUMNS, rows: [], placeholder: { kind: 'empty', rows: 3 } },
+    slots: { empty: 'No data' }
+  })
+
+  expect(queryByRole('table')).toBeNull()
+  expect(getByText('No data')).toBeVisible()
+})
+
+test('shows no stand-in rows for a negative row count', () => {
+  const { getAllByRole } = render(CmkRankedTable, {
+    props: { columns: COLUMNS, rows: [], placeholder: { kind: 'loading', rows: -1 } }
+  })
+
+  expect(getAllByRole('row')).toHaveLength(1)
+})

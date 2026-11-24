@@ -11,7 +11,28 @@ import { type RankedTableCellRender } from '@/dashboard/components/CmkRankedTabl
 
 import codeExample from './UclCmkRankedTableCodeExample.vue?raw'
 
+type TableState = 'data' | 'refreshing' | 'loading' | 'empty' | 'error'
+
 export const panelConfig = {
+  tableState: {
+    type: 'list' as const,
+    title: 'State',
+    help: 'How the table looks while its data loads, refreshes, comes back empty or fails. The error state is the widget alert that replaces the table.',
+    options: listOptions<TableState>({
+      data: 'Data',
+      refreshing: 'Refreshing (aria-busy)',
+      loading: 'Loading',
+      empty: 'Empty',
+      error: 'Error'
+    }),
+    initialState: 'data' as const
+  },
+  lastSuccessMinutes: {
+    type: 'number' as const,
+    title: 'Last success (min ago)',
+    help: 'Error state only. 0 means no fetch has succeeded yet, so the server detail is shown.',
+    initialState: 5
+  },
   containerHeight: {
     type: 'number' as const,
     title: 'Container height (px)',
@@ -87,7 +108,9 @@ export const panelConfig = {
     help: 'Cells with an `href` render as links.',
     initialState: false
   }
-} satisfies PanelConfigFor<typeof CmkRankedTable, 'rows' | 'columns'> & {
+} satisfies PanelConfigFor<typeof CmkRankedTable, 'rows' | 'columns' | 'placeholder' | 'busy'> & {
+  tableState: ListPropDef<TableState>
+  lastSuccessMinutes: NumberPropDef
   containerHeight: NumberPropDef
   containerWidth: NumberPropDef
   longHostNames: BoolPropDef
@@ -114,18 +137,23 @@ import {
   UclPropertiesPanel,
   UclResizablePreview
 } from '@ucl/_ucl/components/detail-page'
+import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
+import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import { computed } from 'vue'
 
 import CmkRankedTable, {
   type RankedTableColumn,
+  type RankedTablePlaceholder,
   type RankedTableRow
 } from '@/dashboard/components/CmkRankedTable'
+import WidgetDataErrorAlert from '@/dashboard/components/DashboardContent/figures/WidgetDataErrorAlert.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<typeof CmkRankedTable, 'rows' | 'columns'>().createRef(
-  panelConfig
-)
+const propState = new PanelStateCreator<
+  typeof CmkRankedTable,
+  'rows' | 'columns' | 'placeholder' | 'busy'
+>().createRef(panelConfig)
 
 // Pre-ranked sample data; the panel decides how many of these rows are shown.
 const HOSTS = [
@@ -191,6 +219,19 @@ const columns = computed<RankedTableColumn[]>(() => [
   }
 ])
 
+const placeholder = computed<RankedTablePlaceholder | undefined>(() => {
+  const kind = propState.value.tableState
+  return kind === 'loading' || kind === 'empty'
+    ? { kind, rows: Math.max(1, propState.value.rowCount) }
+    : undefined
+})
+
+const lastSuccessAt = computed(() =>
+  propState.value.lastSuccessMinutes > 0
+    ? Date.now() - propState.value.lastSuccessMinutes * 60_000
+    : undefined
+)
+
 const rows = computed<RankedTableRow[]>(() =>
   HOSTS.slice(0, Math.max(0, propState.value.rowCount)).map((entry, index) => {
     const host = propState.value.longHostNames ? LONG_HOST_NAMES[index]! : entry.host
@@ -216,7 +257,25 @@ const rows = computed<RankedTableRow[]>(() =>
         v-model:width="propState.containerWidth"
         v-model:height="propState.containerHeight"
       >
-        <CmkRankedTable :columns="columns" :rows="rows" />
+        <WidgetDataErrorAlert
+          v-if="propState.tableState === 'error'"
+          detail="Monitoring data source unavailable"
+          :last-success-at="lastSuccessAt"
+        />
+        <CmkRankedTable
+          v-else
+          :columns="columns"
+          :rows="rows"
+          :placeholder="placeholder"
+          :busy="propState.tableState === 'refreshing'"
+        >
+          <template #empty>
+            <CmkHeading type="h4">No data</CmkHeading>
+            <CmkParagraph
+              >Nothing matches the widget filter in the selected time frame.</CmkParagraph
+            >
+          </template>
+        </CmkRankedTable>
       </UclResizablePreview>
 
       <template #properties>

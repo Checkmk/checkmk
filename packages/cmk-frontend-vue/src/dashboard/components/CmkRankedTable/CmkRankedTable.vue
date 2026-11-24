@@ -10,6 +10,7 @@ import type { ContextualLinkEntry } from '@/dashboard/lib/contextualLinkUrl'
 
 import ContextualLinkAnchor from '../ContextualLinkAnchor.vue'
 import ContextualLinkArrow from '../ContextualLinkArrow.vue'
+import RankedTableStandIn from './RankedTableStandIn.vue'
 import type {
   CmkRankedTableProps,
   RankedTableCell,
@@ -17,7 +18,12 @@ import type {
   RankedTableRow
 } from './types'
 
-const { columns, rows } = defineProps<CmkRankedTableProps>()
+const { columns, rows, placeholder, busy = false } = defineProps<CmkRankedTableProps>()
+
+defineSlots<{
+  /** Shown above the faded stand-ins of an `empty` placeholder. */
+  empty?(): unknown
+}>()
 
 const DEFAULT_BAR_COLOR = 'var(--status-color-info)'
 
@@ -88,6 +94,21 @@ function plainTextTooltip(column: RankedTableColumn, row: RankedTableRow): strin
   return truncates(column) && isPlain ? cellText(column, row) : undefined
 }
 
+const isBusy = computed(() => busy || placeholder?.kind === 'loading')
+
+// A row count from configuration may be anything; `v-for` throws on a negative one.
+const standInRowCount = computed(() => Math.max(0, Math.floor(placeholder?.rows ?? 0)))
+
+// Varied widths make the stand-in rows read as text rather than as a grid of boxes.
+const STAND_IN_TEXT_WIDTHS = ['9em', '6.5em', '11em', '7.5em', '10em']
+
+function standInWidth(column: RankedTableColumn, rowIndex: number, columnIndex: number): string {
+  if (isNumeric(column) || column.bar) {
+    return '3.5em'
+  }
+  return STAND_IN_TEXT_WIDTHS[(rowIndex + columnIndex * 2) % STAND_IN_TEXT_WIDTHS.length]!
+}
+
 // Text columns hug their content but give way first; figures never shrink, and the
 // bar column takes the remaining space.
 const gridTemplateColumns = computed(() =>
@@ -103,8 +124,17 @@ const gridTemplateColumns = computed(() =>
 </script>
 
 <template>
-  <div class="db-cmk-ranked-table">
-    <table class="db-cmk-ranked-table__table" role="table" :style="{ gridTemplateColumns }">
+  <div
+    class="db-cmk-ranked-table"
+    :class="{ 'db-cmk-ranked-table--empty': placeholder?.kind === 'empty' }"
+  >
+    <table
+      class="db-cmk-ranked-table__table"
+      role="table"
+      :style="{ gridTemplateColumns }"
+      :aria-busy="isBusy ? 'true' : undefined"
+      :aria-hidden="placeholder?.kind === 'empty' ? 'true' : undefined"
+    >
       <thead role="rowgroup">
         <tr class="db-cmk-ranked-table__row db-cmk-ranked-table__row--head" role="row">
           <th
@@ -115,11 +145,51 @@ const gridTemplateColumns = computed(() =>
             :title="truncates(column) ? column.title : undefined"
             role="columnheader"
           >
-            {{ column.title }}
+            <RankedTableStandIn
+              v-if="placeholder && column.title === ''"
+              :animated="placeholder.kind === 'loading'"
+              width="6em"
+            />
+            <template v-else>{{ column.title }}</template>
           </th>
         </tr>
       </thead>
-      <tbody role="rowgroup">
+      <tbody v-if="placeholder" role="rowgroup">
+        <tr
+          v-for="rowIndex in standInRowCount"
+          :key="rowIndex"
+          class="db-cmk-ranked-table__row db-cmk-ranked-table__row--body"
+          role="row"
+        >
+          <td
+            v-for="(column, columnIndex) in columns"
+            :key="column.key"
+            class="db-cmk-ranked-table__td"
+            :class="{ 'db-cmk-ranked-table__cell--right': isNumeric(column) && !column.bar }"
+            role="cell"
+          >
+            <div v-if="column.bar" class="db-cmk-ranked-table__bar">
+              <RankedTableStandIn
+                class="db-cmk-ranked-table__stand-in-track"
+                :animated="placeholder.kind === 'loading'"
+                shape="track"
+              />
+              <RankedTableStandIn
+                class="db-cmk-ranked-table__stand-in-value"
+                :animated="placeholder.kind === 'loading'"
+                :width="standInWidth(column, rowIndex, columnIndex)"
+              />
+            </div>
+            <RankedTableStandIn
+              v-else
+              class="db-cmk-ranked-table__stand-in"
+              :animated="placeholder.kind === 'loading'"
+              :width="standInWidth(column, rowIndex, columnIndex)"
+            />
+          </td>
+        </tr>
+      </tbody>
+      <tbody v-else role="rowgroup">
         <tr
           v-for="(row, index) in rows"
           :key="index"
@@ -162,6 +232,9 @@ const gridTemplateColumns = computed(() =>
         </tr>
       </tbody>
     </table>
+    <div v-if="placeholder?.kind === 'empty'" class="db-cmk-ranked-table__empty-message">
+      <slot name="empty" />
+    </div>
   </div>
 </template>
 
@@ -178,11 +251,38 @@ const gridTemplateColumns = computed(() =>
   container-type: inline-size;
 }
 
+/* Positioned so it paints above the faded table, whose opacity stacks it on top. */
+.db-cmk-ranked-table__empty-message {
+  position: relative;
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--dimension-3);
+  padding: var(--dimension-6);
+  text-align: center;
+}
+
 /* A grid instead of the table layout algorithm: its tracks can hug their content
    and still shrink below it, which table cells cannot. */
 .db-cmk-ranked-table__table {
   display: grid;
   width: 100%;
+}
+
+/* The faded stand-ins share one grid cell with the message and add no height of their
+   own: they fill the box, and the message sizes it where the box is shorter. */
+.db-cmk-ranked-table--empty {
+  display: grid;
+
+  .db-cmk-ranked-table__table {
+    grid-area: 1 / 1;
+    height: 0;
+    min-height: 100%;
+    overflow: hidden;
+    opacity: 0.45;
+  }
 }
 
 .db-cmk-ranked-table__table thead,
@@ -265,6 +365,21 @@ const gridTemplateColumns = computed(() =>
 
 @container (width < 24em) {
   .db-cmk-ranked-table__bar-track {
+    display: none;
+  }
+}
+
+.db-cmk-ranked-table__cell--right > .db-cmk-ranked-table__stand-in {
+  margin-left: auto;
+}
+
+.db-cmk-ranked-table__stand-in-value {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+@container (width < 24em) {
+  .db-cmk-ranked-table__stand-in-track {
     display: none;
   }
 }

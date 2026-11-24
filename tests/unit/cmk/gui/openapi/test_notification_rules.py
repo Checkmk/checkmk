@@ -10,6 +10,7 @@ from collections.abc import Generator, Iterator, Mapping, Sequence
 from copy import deepcopy
 from http import HTTPStatus
 from typing import Any, cast, get_args, Literal
+from unittest.mock import ANY
 
 import pytest
 
@@ -79,10 +80,19 @@ from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
     register_notification_parameters,
 )
-from cmk.gui.watolib.notifications import NotificationParameterConfigFile
+from cmk.gui.watolib.notifications import (
+    NotificationParameterConfigFile,
+    NotificationRuleConfigFile,
+)
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.utils import paths
-from cmk.utils.notify_types import CaseStateStr, CustomPluginName, IncidentStateStr, PluginOptions
+from cmk.utils.notify_types import (
+    CaseStateStr,
+    CustomPluginName,
+    IncidentStateStr,
+    PluginOptions,
+    RoutingKeyType,
+)
 from cmk.utils.tags import TagID
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
@@ -2322,6 +2332,123 @@ def test_enable_sync_smtp_with_empty_value_uses_defaults(clients: ClientRegistry
         "state": "enabled",
         "value": {"auth": {"state": "disabled"}, "port": 25, "smarthosts": []},
     }
+
+
+def _create_pagerduty_rule(clients: ClientRegistry, integration_key: dict[str, str]) -> str:
+    rule_config = _rule_with_plugin(
+        {
+            "plugin_name": "pagerduty",
+            "integration_key": integration_key,
+        }
+    )
+    return str(clients.RuleNotification.create(rule_config=rule_config).json["id"])
+
+
+def _pagerduty_integration_key(clients: ClientRegistry, rule_id: str) -> object:
+    rule_config = clients.RuleNotification.get(rule_id).json["extensions"]["rule_config"]
+    return rule_config["notification_method"]["notify_plugin"]["plugin_params"]["integration_key"]
+
+
+def _set_stored_pagerduty_routing_key(routing_key: RoutingKeyType) -> None:
+    parameter_file = NotificationParameterConfigFile()
+    parameters = parameter_file.load_for_modification()
+    for parameter in parameters["pagerduty"].values():
+        parameter["parameter_properties"]["routing_key"] = routing_key  # type: ignore[typeddict-unknown-key]
+    parameter_file.save(parameters, pprint_value=False)
+
+
+@managedtest
+@pytest.mark.parametrize(
+    "integration_key, stored",
+    [
+        pytest.param(
+            {"option": "explicit", "key": "mykey"},
+            ("cmk_postprocessed", "explicit_password", (ANY, "mykey")),
+            id="explicit",
+        ),
+        pytest.param(
+            {"option": "store", "store_id": "some_store_id"},
+            ("cmk_postprocessed", "stored_password", ("some_store_id", "")),
+            id="password store",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_pagerduty_integration_key_is_stored_as_password_and_read_back(
+    clients: ClientRegistry,
+    integration_key: dict[str, str],
+    stored: tuple[object, ...],
+) -> None:
+    setup_site_data(clients)
+    rule_id = _create_pagerduty_rule(clients, integration_key)
+
+    (parameter,) = NotificationParameterConfigFile().load_for_reading()["pagerduty"].values()
+    assert parameter["parameter_properties"]["routing_key"] == stored  # type: ignore[typeddict-item]
+    assert _pagerduty_integration_key(clients, rule_id) == integration_key
+
+
+@pytest.mark.parametrize(
+    "routing_key, integration_key",
+    [
+        pytest.param(
+            ("routing_key", "mykey"),
+            {"option": "explicit", "key": "mykey"},
+            id="explicit",
+        ),
+        pytest.param(
+            ("store", "my_key"),
+            {"option": "store", "store_id": "my_key"},
+            id="password store",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_pagerduty_routing_key_in_old_format_is_read(
+    clients: ClientRegistry,
+    routing_key: RoutingKeyType,
+    integration_key: dict[str, str],
+) -> None:
+    rule_id = _create_pagerduty_rule(clients, {"option": "explicit", "key": "otherkey"})
+    _set_stored_pagerduty_routing_key(routing_key)
+
+    assert _pagerduty_integration_key(clients, rule_id) == integration_key
+
+
+def _stored_pagerduty_routing_key() -> object:
+    (rule,) = NotificationRuleConfigFile().load_for_reading()
+    _plugin, parameter_id = rule["notify_plugin"]
+    parameters = NotificationParameterConfigFile().load_for_reading()["pagerduty"]
+    return parameters[parameter_id]["parameter_properties"]["routing_key"]  # type: ignore[index, typeddict-item]
+
+
+@managedtest
+@pytest.mark.parametrize(
+    "routing_key, stored",
+    [
+        pytest.param(
+            ("routing_key", "mykey"),
+            ("cmk_postprocessed", "explicit_password", (ANY, "mykey")),
+            id="explicit",
+        ),
+        pytest.param(
+            ("store", "some_store_id"),
+            ("cmk_postprocessed", "stored_password", ("some_store_id", "")),
+            id="password store",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_pagerduty_routing_key_in_old_format_is_kept_when_written_back(
+    clients: ClientRegistry, routing_key: RoutingKeyType, stored: tuple[object, ...]
+) -> None:
+    setup_site_data(clients)
+    rule_id = _create_pagerduty_rule(clients, {"option": "explicit", "key": "otherkey"})
+    _set_stored_pagerduty_routing_key(routing_key)
+
+    rule_config = clients.RuleNotification.get(rule_id).json["extensions"]["rule_config"]
+    clients.RuleNotification.edit(rule_id=rule_id, rule_config=rule_config)
+
+    assert _stored_pagerduty_routing_key() == stored
 
 
 @pytest.mark.parametrize(

@@ -46,3 +46,11 @@ def test_print_indented_colored_table(uncolored_capsys: pytest.CaptureFixture[st
         "====XXThomasYY Anders\n"
     )
     assert captured.err == ""
+
+
+def test_print_table_prints_the_rows_of_a_generator(
+    uncolored_capsys: pytest.CaptureFixture[str],
+) -> None:
+    tty.print_table(["foo"], [""], (row for row in [["bar"]]))
+
+    assert uncolored_capsys.readouterr().out == "foo\n---\nbar\n"

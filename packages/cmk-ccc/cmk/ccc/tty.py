@@ -139,6 +139,7 @@ def get_size() -> tuple[int, int]:
 def print_table(
     headers: TableRow, colors: TableColors, rows: Iterable[TableRow], indent: str = ""
 ) -> None:
+    rows = list(rows)  # We go through them twice.
     num_columns = len(headers)
     lengths = _column_lengths(headers, rows)
     dashes = ["-" * l for l in lengths]

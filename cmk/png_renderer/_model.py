@@ -12,8 +12,12 @@ from typing import Self
 @dataclass(frozen=True, kw_only=True)
 class Area:
     color: str
-    bottom: Sequence[float]
     top: Sequence[float | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class Stack:
+    areas: Sequence[Area]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -77,7 +81,7 @@ class PngDrawing:
     times: Sequence[int]
     x_range: tuple[int, int]
     y_range: tuple[float, float]
-    areas: Sequence[Area]
+    stacks: Sequence[Stack]
     lines: Sequence[Line]
     regions: Sequence[Region]
     rules: Sequence[Rule]

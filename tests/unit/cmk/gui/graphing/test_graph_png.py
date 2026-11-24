@@ -130,7 +130,22 @@ def test_second_area_stacks_onto_the_first_not_onto_zero() -> None:
 
     drawing = _drawing(_graph(stacks=[stack]))
 
-    assert drawing.areas[1].top == [11.0, 22.0, 33.0]
+    assert drawing.stacks[0].areas[1].top == [11.0, 22.0, 33.0]
+
+
+def test_an_area_above_a_gap_stacks_onto_the_bottom_of_the_gap() -> None:
+    stack = EvaluatedStack(
+        members=[
+            _curve("first", [5.0, 5.0, 5.0]),
+            _curve("second", [1.0, None, 1.0]),
+            _curve("third", [10.0, 10.0, 10.0]),
+        ],
+        inverse=False,
+    )
+
+    drawing = _drawing(_graph(stacks=[stack]))
+
+    assert drawing.stacks[0].areas[2].top == [16.0, 15.0, 16.0]
 
 
 def test_mirrored_stack_is_drawn_below_zero() -> None:
@@ -138,7 +153,7 @@ def test_mirrored_stack_is_drawn_below_zero() -> None:
 
     drawing = _drawing(_graph(stacks=[stack]))
 
-    assert drawing.areas[0].top == [-5.0, -5.0, -5.0]
+    assert drawing.stacks[0].areas[0].top == [-5.0, -5.0, -5.0]
 
 
 def test_the_legend_shows_the_curves_own_maxima_not_their_stacked_position() -> None:

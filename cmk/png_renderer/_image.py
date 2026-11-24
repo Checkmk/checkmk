@@ -21,7 +21,8 @@ from matplotlib.patches import FancyBboxPatch
 from matplotlib.text import Text
 from matplotlib.transforms import blended_transform_factory, ScaledTranslation
 
-from ._model import Area, Legend, Line, PngDrawing, Region, RenderingFailure, TimeAxis
+from ._model import Area, Legend, Line, PngDrawing, Region, RenderingFailure, Stack, TimeAxis
+from ._stacking import area_bottoms
 from ._time_axis import compute_time_axis
 
 _DPI = 96
@@ -51,18 +52,23 @@ def _array(values: Sequence[float | None]) -> npt.NDArray[np.float64]:
     return np.array([np.nan if value is None else value for value in values], dtype=np.float64)
 
 
-def _plot_area(ax: Axes, times: Sequence[int], area: Area) -> None:
+def _plot_area(ax: Axes, times: Sequence[int], bottom: Sequence[float], area: Area) -> None:
     top = _array(area.top)
     has_value = ~np.isnan(top)
     ax.fill_between(
         times,
-        area.bottom,
-        np.where(has_value, top, area.bottom),
+        bottom,
+        np.where(has_value, top, bottom),
         where=has_value,
         color=area.color,
         alpha=0.4,
     )
     ax.plot(times, top, color=area.color, linewidth=0.5)
+
+
+def _plot_stack(ax: Axes, times: Sequence[int], stack: Stack) -> None:
+    for area, bottom in zip(stack.areas, area_bottoms(stack, len(times)), strict=True):
+        _plot_area(ax, times, bottom, area)
 
 
 def _plot_line(ax: Axes, times: Sequence[int], line: Line) -> None:
@@ -84,8 +90,8 @@ def _plot_region(ax: Axes, times: Sequence[int], region: Region) -> None:
 
 
 def _plot(ax: Axes, drawing: PngDrawing) -> None:
-    for area in drawing.areas:
-        _plot_area(ax, drawing.times, area)
+    for stack in drawing.stacks:
+        _plot_stack(ax, drawing.times, stack)
     for line in drawing.lines:
         _plot_line(ax, drawing.times, line)
     ax.set_xlim(*drawing.x_range)

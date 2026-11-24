@@ -24,6 +24,7 @@ from cmk.png_renderer import (
     Region,
     RenderingFailure,
     Rule,
+    Stack,
     TimeAxis,
     VerticalAxis,
 )
@@ -53,7 +54,7 @@ def _drawing(
     title: str = "Graph",
     times: Sequence[int] = (60, 120, 180),
     x_range: tuple[int, int] = (0, 180),
-    areas: Sequence[Area] = (),
+    stacks: Sequence[Stack] = (),
     lines: Sequence[Line] = (),
     regions: Sequence[Region] = (),
     rules: Sequence[Rule] = (),
@@ -71,7 +72,7 @@ def _drawing(
         times=times,
         x_range=x_range,
         y_range=(0.0, 3.0),
-        areas=areas,
+        stacks=stacks,
         lines=lines,
         regions=regions,
         rules=rules,
@@ -136,13 +137,23 @@ def test_a_drawing_that_fails_to_render_leaves_the_others_their_images() -> None
     assert [type(result) for result in results] == [RenderingFailure, bytes]
 
 
-def test_an_area_is_filled_from_its_bottom_up_to_its_top() -> None:
-    area = Area(color="#000000", bottom=[1.0, 2.0, 3.0], top=[11.0, 22.0, 33.0])
+def _lowest_filled(*tops: Sequence[float | None]) -> float:
     ax = Figure().add_subplot(1, 1, 1)
+    stack = Stack(areas=[Area(color="#000000", top=top) for top in tops])
 
-    _plot(ax, _drawing(areas=[area]))
+    _plot(ax, _drawing(stacks=[stack]))
 
-    assert np.isclose(np.asarray(ax.collections[0].get_paths()[0].vertices)[:, 1].max(), 33.0)
+    return min(
+        float(np.min(np.asarray(path.vertices)[:, 1])) for path in ax.collections[-1].get_paths()
+    )
+
+
+def test_the_first_area_of_a_stack_is_filled_up_from_zero() -> None:
+    assert _lowest_filled([11.0, 22.0, 33.0]) == 0.0
+
+
+def test_an_area_is_filled_up_from_the_top_of_the_area_below() -> None:
+    assert _lowest_filled([1.0, 2.0, 3.0], [11.0, 22.0, 33.0]) == 1.0
 
 
 def test_the_plot_spans_its_x_range_despite_a_long_leading_gap() -> None:
@@ -343,7 +354,7 @@ def test_the_legend_shows_its_header_titles_and_values() -> None:
 
 def test_a_drawing_with_every_kind_of_part_becomes_a_png() -> None:
     drawing = _drawing(
-        areas=[Area(color="#1e90ff", bottom=[0.0, 0.0, 0.0], top=[1.0, None, 2.0])],
+        stacks=[Stack(areas=[Area(color="#1e90ff", top=[1.0, None, 2.0])])],
         lines=[Line(color="#000000", values=[-1.0, -2.0, None])],
         regions=[Region(color="#15d1a0", lower=[0.0, 0.0, 0.0], upper=[0.5, 0.5, 0.5])],
         rules=[Rule(color="#ff0000", value=2.5)],

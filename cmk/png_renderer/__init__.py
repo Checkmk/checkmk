@@ -13,14 +13,18 @@ from ._model import (
     Region,
     RenderingFailure,
     Rule,
+    Stack,
     TimeAxis,
     VerticalAxis,
 )
+from ._stacking import area_bottoms, bottom_above
 from ._wire import drawings_to_json, pngs_from_json
 
 __all__ = [
     "Area",
+    "area_bottoms",
     "AxisLabel",
+    "bottom_above",
     "drawings_to_json",
     "Legend",
     "LegendRow",
@@ -30,6 +34,7 @@ __all__ = [
     "Region",
     "RenderingFailure",
     "Rule",
+    "Stack",
     "TimeAxis",
     "VerticalAxis",
 ]

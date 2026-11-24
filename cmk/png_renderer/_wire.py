@@ -19,6 +19,7 @@ from ._model import (
     Region,
     RenderingFailure,
     Rule,
+    Stack,
     TimeAxis,
     VerticalAxis,
 )
@@ -66,10 +67,6 @@ def _optional_float(raw: object) -> float | None:
     return None if raw is None else _float(raw)
 
 
-def _floats(raw: object) -> Sequence[float]:
-    return [_float(value) for value in _ensure_type(raw, list)]
-
-
 def _optional_floats(raw: object) -> Sequence[float | None]:
     return [_optional_float(value) for value in _ensure_type(raw, list)]
 
@@ -90,11 +87,12 @@ def _float_pair(raw: object) -> tuple[float, float]:
 
 def _area(raw: object) -> Area:
     fields = _ensure_type(raw, dict)
-    return Area(
-        color=_ensure_type(fields["color"], str),
-        bottom=_floats(fields["bottom"]),
-        top=_optional_floats(fields["top"]),
-    )
+    return Area(color=_ensure_type(fields["color"], str), top=_optional_floats(fields["top"]))
+
+
+def _stack(raw: object) -> Stack:
+    fields = _ensure_type(raw, dict)
+    return Stack(areas=[_area(area) for area in _ensure_type(fields["areas"], list)])
 
 
 def _line(raw: object) -> Line:
@@ -172,7 +170,7 @@ def _drawing(raw: object) -> PngDrawing:
         times=_ints(fields["times"]),
         x_range=_int_pair(fields["x_range"]),
         y_range=_float_pair(fields["y_range"]),
-        areas=[_area(area) for area in _ensure_type(fields["areas"], list)],
+        stacks=[_stack(stack) for stack in _ensure_type(fields["stacks"], list)],
         lines=[_line(line) for line in _ensure_type(fields["lines"], list)],
         regions=[_region(region) for region in _ensure_type(fields["regions"], list)],
         rules=[_rule(rule) for rule in _ensure_type(fields["rules"], list)],

@@ -5,7 +5,7 @@
 
 import datetime
 from bisect import bisect_left
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from statistics import fmean
 from typing import Final
@@ -29,13 +29,16 @@ from cmk.graphing_engine import (
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.png_renderer import (
     Area,
+    area_bottoms,
     AxisLabel,
+    bottom_above,
     Legend,
     LegendRow,
     Line,
     PngDrawing,
     Region,
     Rule,
+    Stack,
     TimeAxis,
     VerticalAxis,
 )
@@ -78,24 +81,28 @@ def _curve_scalars(curve: EvaluatedCurve) -> _CurveScalars:
     )
 
 
-def _areas(stack: EvaluatedStack, times: Sequence[int]) -> Sequence[Area]:
+def _stack(stack: EvaluatedStack, times: Sequence[int]) -> Stack:
     sign = _mirroring_sign(mirrored=stack.inverse)
     bottom: Sequence[float] = [0.0] * len(times)
     areas: list[Area] = []
     for member in stack.members:
-        top = [
-            None if value is None else base + value
-            for base, value in zip(bottom, _signed(member.time_series.values, sign), strict=True)
-        ]
-        areas.append(Area(color=member.attributes.color, bottom=bottom, top=top))
-        bottom = [base if value is None else value for base, value in zip(bottom, top, strict=True)]
-    return areas
+        area = Area(
+            color=member.attributes.color,
+            top=[
+                None if value is None else base + value
+                for base, value in zip(
+                    bottom, _signed(member.time_series.values, sign), strict=True
+                )
+            ],
+        )
+        areas.append(area)
+        bottom = bottom_above(bottom, area)
+    return Stack(areas=areas)
 
 
-def _present_bottom(area: Area) -> Sequence[float | None]:
-    return [
-        None if top is None else bottom for bottom, top in zip(area.bottom, area.top, strict=True)
-    ]
+def _present_bottoms(stack: Stack, point_count: int) -> Iterator[Sequence[float | None]]:
+    for area, bottom in zip(stack.areas, area_bottoms(stack, point_count), strict=True):
+        yield [None if top is None else base for base, top in zip(bottom, area.top, strict=True)]
 
 
 def _line(line: EvaluatedLine) -> Line:
@@ -142,13 +149,13 @@ def _values_drawn_on(
 def _drawn_vertical_extent(
     times: Sequence[int],
     visible: TimeRange,
-    areas: Sequence[Area],
+    stacks: Sequence[Stack],
     lines: Sequence[Line],
     regions: Sequence[EvaluatedRegion],
 ) -> tuple[float | None, float | None]:
     drawn = [
-        *(_present_bottom(area) for area in areas),
-        *(area.top for area in areas),
+        *(bottom for stack in stacks for bottom in _present_bottoms(stack, len(times))),
+        *(area.top for stack in stacks for area in stack.areas),
         *(line.values for line in lines),
         *(
             series.values
@@ -353,10 +360,10 @@ def png_drawing(
     visible_start, visible_end = png_graph.visible_time_range
     visible = TimeRange(start=visible_start, end=visible_end, step=graph.time_range.step)
     times = timestamps(graph.time_range)
-    areas = [area for stack in graph.stacks for area in _areas(stack, times)]
+    stacks = [_stack(stack, times) for stack in graph.stacks]
     lines = [_line(line) for line in graph.lines]
     lower, upper = _vertical_range_bounds(
-        graph.vertical_range, _drawn_vertical_extent(times, visible, areas, lines, graph.regions)
+        graph.vertical_range, _drawn_vertical_extent(times, visible, stacks, lines, graph.regions)
     )
     is_mirrored = any(drawn.inverse for drawn in drawn_curves(graph.stacks, graph.lines))
     y_range = _y_range(lower, upper, is_mirrored=is_mirrored)
@@ -376,7 +383,7 @@ def png_drawing(
         times=list(times),
         x_range=png_graph.visible_time_range,
         y_range=y_range,
-        areas=areas,
+        stacks=stacks,
         lines=lines,
         regions=_regions(graph, times, y_range),
         rules=_rules_in_range(graph.rules, y_range),

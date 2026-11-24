@@ -71,8 +71,6 @@ Components
    arch-comp-agent-updater.rst
    arch-comp-agent-bakery.rst
    arch-comp-relay.rst
-   arch-comp-relay-engine.rst
-   arch-comp-relay-engine-concurrency.rst
    arch-comp-relay-monitoring.rst
    arch-comp-grafana-connector.rst
 

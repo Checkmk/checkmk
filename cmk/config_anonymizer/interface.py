@@ -20,6 +20,13 @@ class AnonymizationError(Exception):
     pass
 
 
+# The id of the provider in the ultimatemt edition. It is fixed, and everything
+# that names no customer belongs to the provider implicitly. The id is only
+# defined in cmk.gui.nonfree.ultimatemt, which this (edition independent) tool
+# must not import.
+PROVIDER_CUSTOMER_ID = "provider"
+
+
 class ANONTYPE(enum.Enum):
     TAG_ID = "tag_id"
     AUX_TAG_ID = "aux_tag_id"
@@ -203,6 +210,10 @@ class AnonInterface:
     def get_customer(self, original: str | None) -> str | None:
         # A global customer (None) has to stay a global customer
         if original is None:
+            return original
+        # The provider has to stay the provider: its id is fixed, and sites,
+        # hosts and folders without a customer refer to it implicitly.
+        if original == PROVIDER_CUSTOMER_ID:
             return original
         return self._get_entry(original, ANONTYPE.CUSTOMER)
 

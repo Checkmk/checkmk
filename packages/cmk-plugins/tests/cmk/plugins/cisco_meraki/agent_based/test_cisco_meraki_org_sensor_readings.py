@@ -82,7 +82,6 @@ def test_check_sensor_temperature() -> None:
 
 
 @pytest.mark.usefixtures("empty_value_store")
-@pytest.mark.xfail(strict=True, reason="readings of zero are skipped")
 def test_check_sensor_temperature_reports_zero_degrees() -> None:
     sensor_reading = _RawSensorReadingsFactory.build(
         readings=[
@@ -104,7 +103,6 @@ def test_check_sensor_temperature_reports_zero_degrees() -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, reason="readings of zero are skipped")
 def test_check_sensor_battery_reports_empty_battery() -> None:
     sensor_reading = _RawSensorReadingsFactory.build(
         readings=[
@@ -123,7 +121,6 @@ def test_check_sensor_battery_reports_empty_battery() -> None:
     assert Result(state=State.CRIT, summary="0% (warn/crit below 20.00%/10.00%)") in value
 
 
-@pytest.mark.xfail(strict=True, reason="readings of zero are skipped")
 def test_check_sensor_humidity_reports_zero_percent() -> None:
     sensor_reading = _RawSensorReadingsFactory.build(
         readings=[

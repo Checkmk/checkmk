@@ -122,7 +122,7 @@ def check_sensor_temperature(item: str, params: TempParamType, section: Section)
     if not section.temperature:
         return
 
-    if section.temperature.temperature:
+    if section.temperature.temperature is not None:
         yield from check_temperature(
             reading=section.temperature.temperature,
             params=params,
@@ -156,7 +156,7 @@ def check_sensor_battery(item: str, params: Mapping[str, Any], section: Section)
     if not section.battery:
         return
 
-    if section.battery.percentage:
+    if section.battery.percentage is not None:
         yield from check_levels_v1(
             value=section.battery.percentage,
             render_func=render.percent,
@@ -189,7 +189,7 @@ def check_sensor_humidity(item: str, params: Mapping[str, Any], section: Section
     if not section.humidity:
         return
 
-    if section.humidity.relative_percentage:
+    if section.humidity.relative_percentage is not None:
         yield from check_humidity(
             humidity=section.humidity.relative_percentage,
             params=params,

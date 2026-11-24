@@ -53,3 +53,9 @@ def test_filter_the_page_would_reject_is_refused() -> None:
 
     with pytest.raises(ValidationError):
         all_hosts_url(Request(create_environ()), filter_node=node)
+
+
+def test_the_filters_a_link_could_not_take_over_are_named_for_the_page() -> None:
+    url = all_hosts_url(Request(create_environ()), unapplied=["wato_folder", "hostgroup"])
+
+    assert parse_qs(urlsplit(url).query) == {"unapplied": ["wato_folder,hostgroup"]}

@@ -6,7 +6,7 @@
 """How a link from a legacy view names the filters it could not take over, so that the monitoring
 page it opens can say which of them it does not apply."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Final
 
 from cmk.gui.http import Request
@@ -16,6 +16,12 @@ _UNAPPLIED_FILTERS_VAR: Final = "unapplied"
 
 type FilterTitleLookup = Callable[[FilterName], str | None]
 """Looks up the title of a legacy filter, ``None`` for a name that is no legacy filter."""
+
+
+def encode_unapplied_filters(unapplied: Sequence[FilterName]) -> list[tuple[str, str]]:
+    """Encode the filters a link could not take over as URL variables. Return none if it took
+    over all of them."""
+    return [(_UNAPPLIED_FILTERS_VAR, ",".join(unapplied))] if unapplied else []
 
 
 def read_unapplied_filter_titles(

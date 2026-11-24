@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 from werkzeug.test import create_environ
 
 from cmk.gui.http import Request
-from cmk.gui.monitor.legacy_context import read_unapplied_filter_titles
+from cmk.gui.monitor.legacy_context import encode_unapplied_filters, read_unapplied_filter_titles
 
 _TITLES = {"wato_folder": "Folder", "hostgroup": "Host group"}
 
@@ -17,8 +17,12 @@ def _request(vars_: list[tuple[str, str]]) -> Request:
     return Request(create_environ(query_string=urlencode(vars_)))
 
 
+def test_a_link_that_took_over_every_filter_names_none() -> None:
+    assert encode_unapplied_filters([]) == []
+
+
 def test_the_page_names_by_their_titles_the_filters_a_link_could_not_take_over() -> None:
-    request = _request([("unapplied", "wato_folder,hostgroup")])
+    request = _request(encode_unapplied_filters(["wato_folder", "hostgroup"]))
 
     assert read_unapplied_filter_titles(request, _TITLES.get) == [
         ("wato_folder", "Folder"),

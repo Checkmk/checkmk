@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._link import FilterTitleLookup, read_unapplied_filter_titles
+from ._link import encode_unapplied_filters, FilterTitleLookup, read_unapplied_filter_titles
 from ._translate import ContextFilterTranslation, NestedField, PageFilterModel, translate_context
 
 __all__ = [
     "ContextFilterTranslation",
+    "encode_unapplied_filters",
     "FilterTitleLookup",
     "NestedField",
     "PageFilterModel",

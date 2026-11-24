@@ -16,6 +16,7 @@ import threading
 import time
 import traceback
 from collections.abc import Callable, Iterator, Sequence
+from functools import partial
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from types import FrameType, ModuleType
@@ -275,17 +276,31 @@ def test_load_object_from_file_null_bytes(tmp_path: Path) -> None:
     assert data == []
 
 
-@pytest.mark.parametrize("permissions", [0o002, 0o666, 0o777])
-def test_load_world_writable_file(tmp_path: Path, permissions: int) -> None:
+@pytest.mark.parametrize(
+    "permissions",
+    [
+        pytest.param(0o002, id="writable for others only"),
+        pytest.param(0o666, id="readable and writable for all"),
+        pytest.param(0o777, id="everything for all"),
+    ],
+)
+@pytest.mark.parametrize(
+    "load",
+    [
+        pytest.param(partial(store.load_bytes_from_file, default=b"", debug=False), id="bytes"),
+        pytest.param(partial(store.load_object_from_file, default=None, debug=False), id="object"),
+        pytest.param(partial(store.load_text_from_file, default=""), id="text"),
+    ],
+)
+def test_load_world_writable_file(
+    tmp_path: Path, permissions: int, load: Callable[[Path], object]
+) -> None:
     path = tmp_path / "writeme.txt"
     store.save_text_to_file(path, "")
     os.chmod(path, permissions)
+
     with pytest.raises(MKGeneralException, match="Refusing to read world writable file"):
-        store.load_bytes_from_file(path, default=b"", debug=False)
-    with pytest.raises(MKGeneralException, match="Refusing to read world writable file"):
-        store.load_object_from_file(path, default=object(), debug=False)
-    with pytest.raises(MKGeneralException, match="Refusing to read world writable file"):
-        store.load_text_from_file(path, default="")
+        load(path)
 
 
 @pytest.mark.parametrize(

@@ -8,8 +8,8 @@ import { render, screen, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse } from 'msw'
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h, nextTick } from 'vue'
+import { afterAll, afterEach, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest'
+import { defineComponent, effectScope, h, nextTick } from 'vue'
 
 import DashboardContentMonitoringTable from '@/dashboard/components/DashboardContent/DashboardContentMonitoringTable.vue'
 import { useProvideCmkToken } from '@/dashboard/composables/useCmkToken'
@@ -188,7 +188,10 @@ afterEach(() => {
 
 /** Renders the widget on a page that tells how the actions run in it go, as a dashboard does. */
 async function renderWidget(content: MonitoringTableContent = CONTENT) {
-  const feedback = useActionFeedbackStack()
+  // The page is gone with the test, which stops the waits for checks still running.
+  const page = effectScope()
+  onTestFinished(() => page.stop())
+  const feedback = page.run(useActionFeedbackStack)!
   const rendered = render(DashboardContentMonitoringTable, {
     props: makeContentProps(content),
     global: { provide: { [ACTION_FEEDBACK_STACK as symbol]: feedback } }

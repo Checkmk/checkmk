@@ -761,11 +761,13 @@ def fixture_test_thread_2(test_file: Path) -> Iterator[LockTestThread]:
     t.terminate()
 
 
-def _wait_for_waiting_lock() -> None:
-    """Use /proc/locks to wait until one lock is in waiting state
+def _wait_for_waiting_lock(path: Path) -> None:
+    """Use /proc/locks to wait until one lock on the path is in waiting state
 
     https://man7.org/linux/man-pages/man5/proc_locks.5.html
     """
+    # Only the inode: stat() and /proc/locks may disagree on the device.
+    inode = str(path.stat().st_ino)
 
     def has_waiting_lock() -> bool:
         pid = os.getpid()
@@ -774,7 +776,13 @@ def _wait_for_waiting_lock() -> None:
                 p = line.strip().split()
                 # NOTE: The "->" is *not* mentioned on the proc_locks(5) man page!
                 # Nevertheless, it means the PID on the line is waiting for the lock.
-                if p[1] == "->" and p[2] == "FLOCK" and p[4] == "WRITE" and p[5] == str(pid):
+                if (
+                    p[1] == "->"
+                    and p[2] == "FLOCK"
+                    and p[4] == "WRITE"
+                    and p[5] == str(pid)
+                    and p[6].rpartition(":")[2] == inode
+                ):
                     return True
         return False
 
@@ -812,7 +820,7 @@ def test_blocking_lock_from_multiple_threads(test_file: Path) -> None:
 
         # We check to see if the other threads are actually waiting.
         if not saw_someone_wait:
-            _wait_for_waiting_lock()
+            _wait_for_waiting_lock(test_file)
             saw_someone_wait.append(1)
 
         acquired.append(1)
@@ -871,7 +879,7 @@ def test_blocking_lock_while_other_holds_the_lock(
         # Now request the lock in t2, but don't wait for the successful locking. Only wait until we
         # start waiting for the lock.
         t2.lock_nowait()
-        _wait_for_waiting_lock()
+        _wait_for_waiting_lock(test_file)
     finally:
         t1.unlock()
 

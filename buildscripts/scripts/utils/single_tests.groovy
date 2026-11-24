@@ -176,7 +176,8 @@ void run_make_target(Map args) {
 ///     CIPARAM_SYSTEM_TEST_IMAGE. global-defaults.yml (checkmk_ci) then runs the
 ///     "this-distro-container" from that image: /git has the checkout, .venv
 ///     and the installed package, owned by testuser (see
-///     buildscripts/infrastructure/build-nodes/system-test-image/Dockerfile).
+///     buildscripts/infrastructure/build-nodes/system-test-image/: Dockerfile
+///     for the checkout and .venv, package.Dockerfile for the package).
 ///     The tests run in there as testuser, with the venv as it is.
 void run_make_target_k8s(Map args) {
     withAugmentedTimeout([

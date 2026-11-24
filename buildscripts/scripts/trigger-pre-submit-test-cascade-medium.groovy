@@ -449,13 +449,16 @@ void main() {
     def medium_chain_option = "--medium-chain";
     /// The shards run in this image: checkout, venv and the pre-built package
     /// installed, see the "mc-system-tests" entry of build-build-image.groovy.
-    /// One per run, the tag names it.
+    /// It builds on the environment image (checkout and venv, no package, the
+    /// "mc-system-tests-env" entry), which is built while the package is.
+    /// One of each per run, the tag names it.
     def system_test_image_tag = "${env.BUILD_TAG}".replaceFirst(/^jenkins-/, "").replaceAll(/[^A-Za-z0-9_.-]/, "-");
-    if (system_test_image_tag.length() > 128) {
-        // the maximum length of a tag, the build number is at the end
-        system_test_image_tag = system_test_image_tag.substring(system_test_image_tag.length() - 128);
+    if (system_test_image_tag.length() > 124) {
+        // 128, the maximum length of a tag, minus "-env"; the build number is at the end
+        system_test_image_tag = system_test_image_tag.substring(system_test_image_tag.length() - 124);
     }
     def system_test_image = "${docker_registry_no_http}/mc-system-tests:${system_test_image_tag}";
+    def system_test_env_image = "${system_test_image}-env";
     def job_specs = [:];
     def new_patchset_revision = effective_git_ref;
     def medium_chain_hashtag = "medium-chain-running";
@@ -487,6 +490,7 @@ void main() {
         |durations_job_m:... │${durations_job_multisite}│
         |safe_branch_name:.. │${safe_branch_name}│
         |system_test_image:. │${system_test_image}│
+        |system_test_env_i.. │${system_test_env_image}│
         |===================================================
         """.stripMargin());
 
@@ -584,89 +588,134 @@ void main() {
                     println("  ${label}: ${spec.build_params} (no_check: ${spec.build_params_no_check})");
                 }
             }
-
-            smart_stage(
-                name: "Pre-build needed package",
-                raiseOnError: true,
-            ) {
-                triggerCascadeJob(
-                    relative_job_name: "${branch_base_folder}/builders/trigger-cmk-distro-package",
-                    git_ref: new_patchset_revision,
-                    edition: edition_medium_chain,
-                    distro: distro_medium_chain,
-                    disable_cache: force_build,
-                    disable_signing: disable_signing,
-                    fake_artifacts: fake_artifacts,
-                    force_build: force_build,
-                );
-            }
-
-            smart_stage(
-                name: "Build system test image",
-                raiseOnError: true,
-            ) {
-                smart_build(
-                    // see global-defaults.yml, needs to run in minimal container
-                    use_upstream_build: true,
-                    force_build: force_build,
-                    relative_job_name: "${branch_base_folder}/builders/build-build-image",
-                    build_params: [
-                        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: system_test_image_tag,
-                        CUSTOM_GIT_REF: new_patchset_revision,
-                        DISTRO: "mc-system-tests",
-                        PUBLISH_IMAGES: true,
-                        // to fetch the package pre-built above
-                        EDITION: edition_medium_chain,
-                        DISABLE_CACHE: force_build,
-                        DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
-                        FAKE_ARTIFACTS: fake_artifacts,
-                    ],
-                    build_params_no_check: [
-                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                    ],
-                    no_remove_others: true, // do not delete other files in the dest dir
-                    download: false,    // use copyArtifacts to avoid nested directories
-                );
-            }
         }
 
-        def stages = job_specs.collectEntries { stage_label, spec ->
-            [(stage_label) : {
-                sleep(1 * timeOffsetForOrder++);
+        /// From the first image build on, so the cleanup below also runs when the
+        /// run is aborted or throws after the environment image is pushed.
+        try {
+            inside_container_minimal(safe_branch_name: safe_branch_name) {
+                /// The environment image needs no package, so it is built while the
+                /// package is; only the system test image below waits for both.
+                /// failFast has no effect: smart_build marks a failed build with
+                /// catchError instead of throwing, so parallel waits for both builds
+                /// and the cleanup below runs after every push.
+                parallel(
+                    failFast: true,
+                    "Pre-build needed package": {
+                        smart_stage(
+                            name: "Pre-build needed package",
+                            raiseOnError: true,
+                        ) {
+                            triggerCascadeJob(
+                                relative_job_name: "${branch_base_folder}/builders/trigger-cmk-distro-package",
+                                git_ref: new_patchset_revision,
+                                edition: edition_medium_chain,
+                                distro: distro_medium_chain,
+                                disable_cache: force_build,
+                                disable_signing: disable_signing,
+                                fake_artifacts: fake_artifacts,
+                                force_build: force_build,
+                            );
+                        }
+                    },
+                    "Build system test environment": {
+                        smart_stage(
+                            name: "Build system test environment",
+                            raiseOnError: true,
+                        ) {
+                            smart_build(
+                                // see global-defaults.yml, needs to run in minimal container
+                                use_upstream_build: true,
+                                force_build: force_build,
+                                relative_job_name: "${branch_base_folder}/builders/build-build-image",
+                                build_params: [
+                                    CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: system_test_image_tag,
+                                    CUSTOM_GIT_REF: new_patchset_revision,
+                                    DISTRO: "mc-system-tests-env",
+                                    PUBLISH_IMAGES: true,
+                                    // no effect: build-build-image always has the remote cache
+                                    DISABLE_CACHE: force_build,
+                                ],
+                                build_params_no_check: [
+                                    CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                                    CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                                    CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                                ],
+                                no_remove_others: true, // do not delete other files in the dest dir
+                                download: false,    // use copyArtifacts to avoid nested directories
+                            );
+                        }
+                    },
+                );
 
                 smart_stage(
-                    name: "Trigger ${stage_label}",
+                    name: "Build system test image",
+                    raiseOnError: true,
                 ) {
-                    triggerCascadeJob(
-                        relative_job_name: "${branch_base_folder}/cv/${spec.job_name}",
-                        git_ref: new_patchset_revision,
-                        edition: edition_medium_chain,
-                        distro: distro_medium_chain,
-                        disable_cache: force_build,
-                        disable_signing: disable_signing,
-                        fake_artifacts: fake_artifacts,
-                        extra_build_params: spec.build_params,
-                        extra_build_params_no_check: spec.build_params_no_check,
+                    smart_build(
+                        // see global-defaults.yml, needs to run in minimal container
+                        use_upstream_build: true,
+                        force_build: force_build,
+                        relative_job_name: "${branch_base_folder}/builders/build-build-image",
+                        build_params: [
+                            CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: system_test_image_tag,
+                            CUSTOM_GIT_REF: new_patchset_revision,
+                            // on top of the environment image built above
+                            DISTRO: "mc-system-tests",
+                            PUBLISH_IMAGES: true,
+                            // to fetch the package pre-built above
+                            EDITION: edition_medium_chain,
+                            DISABLE_CACHE: force_build,
+                            DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
+                            FAKE_ARTIFACTS: fake_artifacts,
+                        ],
+                        build_params_no_check: [
+                            CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                            CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                            CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                        ],
+                        no_remove_others: true, // do not delete other files in the dest dir
+                        download: false,    // use copyArtifacts to avoid nested directories
                     );
                 }
-            }]
-        }
+            }
 
-        try {
+            def stages = job_specs.collectEntries { stage_label, spec ->
+                [(stage_label) : {
+                    sleep(1 * timeOffsetForOrder++);
+
+                    smart_stage(
+                        name: "Trigger ${stage_label}",
+                    ) {
+                        triggerCascadeJob(
+                            relative_job_name: "${branch_base_folder}/cv/${spec.job_name}",
+                            git_ref: new_patchset_revision,
+                            edition: edition_medium_chain,
+                            distro: distro_medium_chain,
+                            disable_cache: force_build,
+                            disable_signing: disable_signing,
+                            fake_artifacts: fake_artifacts,
+                            extra_build_params: spec.build_params,
+                            extra_build_params_no_check: spec.build_params_no_check,
+                        );
+                    }
+                }]
+            }
+
             inside_container_minimal(safe_branch_name: safe_branch_name) {
                 currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
             }
         } finally {
-            /// Only this run's shards use the image, it can go right after them,
-            /// whatever their result.
+            /// Only this run's shards use the images, they can go right after them,
+            /// whatever their result. Not there (the build failed or did not
+            /// start): nothing to delete.
             smart_stage(
                 name: "Delete system test image",
                 raiseOnError: false,
             ) {
                 inside_container_minimal(safe_branch_name: safe_branch_name) {
                     deleteImage(system_test_image);
+                    deleteImage(system_test_env_image);
                 }
             }
         }

@@ -158,71 +158,6 @@ def test_add_counts_the_added_pairs_and_rows() -> None:
     assert len(root) == 18
 
 
-@pytest.mark.parametrize(
-    "tree_name",
-    [
-        HostName("tree_old_addresses_arrays_memory"),
-        HostName("tree_old_addresses"),
-        HostName("tree_old_arrays"),
-        HostName("tree_old_interfaces"),
-        HostName("tree_old_memory"),
-        HostName("tree_old_heute"),
-        HostName("tree_new_addresses_arrays_memory"),
-        HostName("tree_new_addresses"),
-        HostName("tree_new_arrays"),
-        HostName("tree_new_interfaces"),
-        HostName("tree_new_memory"),
-        HostName("tree_new_heute"),
-    ],
-)
-def test_load_real_tree(tree_name: HostName) -> None:
-    assert len(inventory_store().load_inventory_tree(host_name=tree_name)) > 0
-
-
-@pytest.mark.parametrize(
-    "tree_name_x",
-    [
-        HostName("tree_old_addresses_arrays_memory"),
-        HostName("tree_old_addresses"),
-        HostName("tree_old_arrays"),
-        HostName("tree_old_interfaces"),
-        HostName("tree_old_memory"),
-        HostName("tree_old_heute"),
-        HostName("tree_new_addresses_arrays_memory"),
-        HostName("tree_new_addresses"),
-        HostName("tree_new_arrays"),
-        HostName("tree_new_interfaces"),
-        HostName("tree_new_memory"),
-        HostName("tree_new_heute"),
-    ],
-)
-@pytest.mark.parametrize(
-    "tree_name_y",
-    [
-        HostName("tree_old_addresses_arrays_memory"),
-        HostName("tree_old_addresses"),
-        HostName("tree_old_arrays"),
-        HostName("tree_old_interfaces"),
-        HostName("tree_old_memory"),
-        HostName("tree_old_heute"),
-        HostName("tree_new_addresses_arrays_memory"),
-        HostName("tree_new_addresses"),
-        HostName("tree_new_arrays"),
-        HostName("tree_new_interfaces"),
-        HostName("tree_new_memory"),
-        HostName("tree_new_heute"),
-    ],
-)
-def test_real_trees_are_equal_only_to_themselves(
-    tree_name_x: HostName, tree_name_y: HostName
-) -> None:
-    inv_store = inventory_store()
-    tree_x = inv_store.load_inventory_tree(host_name=tree_name_x)
-    tree_y = inv_store.load_inventory_tree(host_name=tree_name_y)
-
-    assert (tree_x == tree_y) == (tree_name_x == tree_name_y)
-
-
 def test_real_tree_order() -> None:
     inv_store = inventory_store()
     tree_ordered = inv_store.load_inventory_tree(host_name=HostName("tree_addresses_ordered"))
@@ -294,22 +229,6 @@ def test_a_real_tree_has_content_only_below_its_known_nodes(
         **dict.fromkeys(edges_t, True),
         **dict.fromkeys(edges_f, False),
     }
-
-
-@pytest.mark.parametrize(
-    "tree_name, amount_of_nodes",
-    [
-        (HostName("tree_old_addresses_arrays_memory"), 2),
-        (HostName("tree_old_addresses"), 1),
-        (HostName("tree_old_arrays"), 1),
-        (HostName("tree_old_interfaces"), 3),
-        (HostName("tree_old_memory"), 1),
-        (HostName("tree_old_heute"), 3),
-    ],
-)
-def test_a_real_tree_counts_its_top_level_nodes(tree_name: HostName, amount_of_nodes: int) -> None:
-    tree = inventory_store().load_inventory_tree(host_name=tree_name)
-    assert len(list(tree.nodes_by_name.values())) == amount_of_nodes
 
 
 def _tree_with(

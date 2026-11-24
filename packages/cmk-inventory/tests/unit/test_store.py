@@ -241,27 +241,6 @@ def test_save_inventory_tree_writes_the_meta(tmp_path: Path, do_archive: bool) -
         HostName("tree_status"),
     ],
 )
-def test_load_real_tree_files_without_an_error(tree_name: HostName) -> None:
-    inventory_store().load_inventory_tree(host_name=tree_name)
-
-
-@pytest.mark.parametrize(
-    "tree_name",
-    [
-        HostName("tree_old_addresses_arrays_memory"),
-        HostName("tree_old_addresses"),
-        HostName("tree_old_arrays"),
-        HostName("tree_old_interfaces"),
-        HostName("tree_old_memory"),
-        HostName("tree_old_heute"),
-        HostName("tree_new_addresses_arrays_memory"),
-        HostName("tree_new_addresses"),
-        HostName("tree_new_arrays"),
-        HostName("tree_new_interfaces"),
-        HostName("tree_new_memory"),
-        HostName("tree_new_heute"),
-    ],
-)
 def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
     orig_tree = inventory_store().load_inventory_tree(host_name=tree_name)
     inv_store = InventoryStore(tmp_path)

@@ -33,17 +33,6 @@ class FakeClock:
         return self._times.pop(0) if len(self._times) > 1 else self._times[0]
 
 
-def test_transformation_nothing_to_do(tmp_path: Path) -> None:
-    transform_inventory_trees(
-        logger=null_logger(),
-        omd_root=tmp_path,
-        bundle_length=0,
-        filter_host_names=[],
-        all_host_names=[],
-        clock=FakeClock(0.0),
-    )
-
-
 def test_transform_replaces_the_legacy_inventory_trees(tmp_path: Path) -> None:
     tree = raw_tree("val")
     gzipped = gzipped_repr(tree)

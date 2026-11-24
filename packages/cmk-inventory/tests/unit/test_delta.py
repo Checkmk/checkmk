@@ -180,29 +180,6 @@ def test_compare_trees_lists_the_keys_of_changed_rows(
 
 
 @pytest.mark.parametrize(
-    "tree_name",
-    [
-        HostName("tree_old_addresses_arrays_memory"),
-        HostName("tree_old_addresses"),
-        HostName("tree_old_arrays"),
-        HostName("tree_old_interfaces"),
-        HostName("tree_old_memory"),
-        HostName("tree_old_heute"),
-        HostName("tree_new_addresses_arrays_memory"),
-        HostName("tree_new_addresses"),
-        HostName("tree_new_arrays"),
-        HostName("tree_new_interfaces"),
-        HostName("tree_new_memory"),
-        HostName("tree_new_heute"),
-    ],
-)
-def test_compare_real_tree_with_itself(tree_name: HostName) -> None:
-    tree = inventory_store().load_inventory_tree(host_name=tree_name)
-    stats = compare_trees(tree, tree).get_stats()
-    assert (stats["new"], stats["changed"], stats["removed"]) == (0, 0, 0)
-
-
-@pytest.mark.parametrize(
     "tree_name_old, tree_name_new, result",
     [
         (

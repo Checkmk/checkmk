@@ -116,7 +116,14 @@ export function useGeoMapMarkers(source: {
    */
   function iconFor(object: MapElement, element: HTMLElement, size: number): L.DivIcon {
     return object.type === 'textbox'
-      ? L.divIcon({ className: '', html: element, iconAnchor: [0, 0] })
+      ? L.divIcon({
+          className: '',
+          html: element,
+          // Leaflet makes a marker 12 pixels square unless the size is given as
+          // empty, which would cut the text box down to that.
+          iconSize: undefined,
+          iconAnchor: [0, 0]
+        })
       : L.divIcon({
           className: '',
           html: element,

@@ -252,6 +252,28 @@ describe('GeoMapCanvas', () => {
     await waitFor(() => expect(container.innerHTML).toBe(''))
   })
 
+  const renderTextbox = async (): Promise<void> => {
+    leaflet.L.marker.mockClear()
+    const textbox = anObject({ id: 't1', type: 'textbox', lat: 53.55, lng: 9.99 })
+    render(GeoMapCanvas, {
+      global: mapsGlobal(),
+      props: { ...baseProps, config: aMap({ ...sampleConfig(), objects: [textbox] }) }
+    })
+    await waitFor(() => expect(leaflet.L.marker).toHaveBeenCalledTimes(1))
+  }
+
+  it('leaves the size of a text box to its text rather than to Leaflet', async () => {
+    await renderTextbox()
+    const [, options] = leaflet.L.marker.mock.calls[0]!
+
+    expect((options as { icon: object }).icon).toHaveProperty('iconSize', undefined)
+    await waitFor(() =>
+      expect(document.querySelector('[data-object-id="t1"]')?.classList).toContain(
+        'maps-geo-map-marker--textbox'
+      )
+    )
+  })
+
   // Leaflet stacks markers by their screen row, so on a shared coordinate it
   // would be chance whether the DOWN host shows or an UP one covers it.
   it('stacks the more severe of two overlapping markers on top', async () => {

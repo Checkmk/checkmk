@@ -83,7 +83,10 @@ function onResizeStart(event: PointerEvent): void {
   <div
     ref="root"
     class="maps-geo-map-marker"
-    :class="{ 'maps-geo-map-marker--selected': selected }"
+    :class="{
+      'maps-geo-map-marker--selected': selected,
+      'maps-geo-map-marker--textbox': object.type === 'textbox'
+    }"
     :style="dimmedStyle(dimmed)"
     :data-object-id="object.id"
     :tabindex="!preview && tabStop ? 0 : -1"
@@ -115,6 +118,12 @@ function onResizeStart(event: PointerEvent): void {
 </template>
 
 <style scoped>
+/* Leaflet leaves the marker of a text box without a size, and the pane it sits
+   in has none either, so the box would break its text at every space. */
+.maps-geo-map-marker--textbox {
+  width: max-content;
+}
+
 .maps-geo-map-marker:focus-visible {
   outline: revert;
   outline-offset: 2px;

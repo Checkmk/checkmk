@@ -1,14 +1,19 @@
-# Guest-side, for msi-install-qemu (msi_install_qemu.py): installs the
-# check_mk_agent.msi staged next to this script, verifies the deployed
-# agent's service answers on 6556, uninstalls again and verifies the
-# service is gone. -ProductUpgradeCode is the agent's UpgradeCode (a GUID
-# without braces), which identifies an installed agent of any build.
+# Guest-side, for msi-install-qemu (msi_install_qemu.py): validates the
+# check_mk_agent.msi staged next to this script with WiX's smoke.exe,
+# installs it, verifies the deployed agent's service answers on 6556,
+# uninstalls again and verifies the service is gone. -ProductUpgradeCode is
+# the agent's UpgradeCode (a GUID without braces), which identifies an
+# installed agent of any build. -PlaceholderVersion is Product.wxs's
+# ProductVersion, see Assert-MsiValid.
 #
-# Orchestrates install -> verify -> uninstall -> verify removal. Any
-# failed step fails the run, and the uninstall always runs, so that its
-# removal is checked after a partial install too. The exit code is the
-# result.
-param([Parameter(Mandatory)][string]$ProductUpgradeCode)
+# Orchestrates validate, then install -> verify -> uninstall -> verify
+# removal. Any failed step fails the run. The install runs after a failed
+# validation too, and the uninstall always runs, so that its removal is
+# checked after a partial install too. The exit code is the result.
+param(
+    [Parameter(Mandatory)][string]$ProductUpgradeCode,
+    [Parameter(Mandatory)][string]$PlaceholderVersion
+)
 $ErrorActionPreference = 'Stop'
 $rid = $PSScriptRoot
 $upgradeCode = '{' + $ProductUpgradeCode + '}'
@@ -36,6 +41,26 @@ function Show-MsiFailure($log) {
         Get-Content "$rid\$log" -Tail 40
     }
     $lines | ForEach-Object { Write-Host $_ }
+}
+
+# Runs the ICEs light.exe skips with -sval (WiX's darice.cub, which smoke.exe
+# loads from its own directory) on the final MSI, after build_msi.sh's
+# patch_agent_msi. ICE24 rejects the Checkmk version that sets as
+# ProductVersion (3.0.0b1, 2026.11.12), so a copy gets Product.wxs's
+# placeholder back and is validated with every ICE. Errors fail, warnings
+# (SMOK1076) are only shown.
+function Assert-MsiValid {
+    Step "validating check_mk_agent.msi"
+    $msi = "$rid\validate.msi"
+    Copy-Item "$rid\check_mk_agent.msi" $msi
+    $wi = New-Object -ComObject WindowsInstaller.Installer
+    $db = $wi.OpenDatabase($msi, 1) # msiOpenDatabaseModeTransact
+    $db.OpenView("UPDATE Property SET Value='$PlaceholderVersion' WHERE Property='ProductVersion'").Execute()
+    $db.Commit()
+    # Releases the database file for smoke.exe.
+    [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($db)
+    & "$rid\wix\smoke.exe" -nologo $msi | Out-Host
+    if ($LASTEXITCODE) { throw "smoke.exe failed with $LASTEXITCODE" }
 }
 
 function Get-CheckmkProducts {
@@ -118,6 +143,7 @@ function Assert-AgentRemoved {
 
 $failed = $false
 $installed = $false
+try { Assert-MsiValid } catch { Step "error: $_"; $failed = $true }
 try {
     Install-Agent
     $installed = $true

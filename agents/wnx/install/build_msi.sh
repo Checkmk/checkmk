@@ -34,7 +34,8 @@ link_msi() {
     wix "$CANDLE" -ext WixUtilExtension -out 'obj\InstallFolderDialog.wixobj' InstallFolderDialog.wxs
     # -sw1091: Package/@Id is pinned on purpose, patch_msi() replaces the package code after linking.
     wix "$CANDLE" -sw1091 -ext WixUtilExtension -out 'obj\Product.wixobj' Product.wxs
-    # -sval: We require a real windows to run ICE custom actions see CMK-37488.
+    # -sval: Wine cannot run the ICE custom actions; //agents/wnx:msi-install-qemu
+    # validates the final MSI on real Windows instead.
     wix "$LIGHT" -ext WixUIExtension -ext WixUtilExtension -sval -spdb \
         -o 'bin\check_mk_agent.msi' \
         'obj\Product.wixobj' 'obj\InstallMainDialog.wixobj' 'obj\InstallFolderDialog.wixobj'

@@ -603,9 +603,20 @@ pkg_files(
     tags = ["manual"],
 )
 
+# smoke.exe, for the ICE validation light.exe skips in the Linux build.
+pkg_files(
+    name = "msi_install_qemu_wix",
+    srcs = ["@wix3//:tools"],
+    prefix = "wix",
+    tags = ["manual"],
+)
+
 pkg_tar(
     name = "msi_install_qemu_stage",
-    srcs = [":msi_install_qemu_files"],
+    srcs = [
+        ":msi_install_qemu_files",
+        ":msi_install_qemu_wix",
+    ],
     extension = "tar.gz",
     tags = ["manual"],
 )

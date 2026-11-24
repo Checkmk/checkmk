@@ -746,12 +746,9 @@ def _wait_for_waiting_lock(path: Path) -> None:
                     return True
         return False
 
-    start = time.time()
-    while time.time() - start < 1:
-        if has_waiting_lock():
-            return
-        time.sleep(0.1)
-    raise TimeoutError("Timeout waiting for 'has_waiting_lock' to finish (Timeout: 1 sec)")
+    # A loaded machine can take a while to schedule the waiting thread.
+    if not _poll_until(has_waiting_lock, seconds=10):
+        raise TimeoutError("No lock in waiting state after about 10 s")
 
 
 def test_blocking_context_manager_from_multiple_threads(test_file: Path) -> None:

@@ -7,10 +7,10 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime
 from enum import StrEnum
 from pathlib import PurePosixPath
-from typing import Final, Literal
+from typing import Annotated, Final, Literal
 
 from cryptography import x509
-from pydantic import Base64Bytes, BaseModel, Field, field_validator
+from pydantic import Base64Bytes, BaseModel, Discriminator, Field, field_validator, Tag
 
 # Where a relay keeps the files of one ad-hoc active check: the site's relative tmp
 # directory (cmk.utils.paths.relative_tmp_dir), which the relay mirrors below its root.
@@ -130,11 +130,38 @@ class CertRotationTask(BaseModel, frozen=True):
     type: Literal[_TaskType.CERT_ROTATION] = _TaskType.CERT_ROTATION
 
 
+class UnknownTask(BaseModel, frozen=True):
+    """A task of a type the reader does not know, e.g. one a newer site sends.
+
+    The reader must not run it.
+    """
+
+    type: str
+
+
+_UNKNOWN_TASK_TAG: Final = "<unknown>"
+
+
+def _response_spec_tag(spec: object) -> str | None:
+    task_type = spec.get("type") if isinstance(spec, Mapping) else getattr(spec, "type", None)
+    if task_type is None:
+        return None
+    return task_type if task_type in _TaskType else _UNKNOWN_TASK_TAG
+
+
 # Only the tasks that can be created via create task API endpoint
 TaskCreateRequestSpec = FetchAdHocTask | AdHocActiveCheckTask | CertRotationTask
 
-# Any task that can be stored in the backend
-TaskResponseSpec = FetchAdHocTask | RelayConfigTask | AdHocActiveCheckTask | CertRotationTask
+# Any task that can be stored in the backend. The reader of a task list can be older
+# than the site, so it reads a task type it does not know as UnknownTask.
+TaskResponseSpec = Annotated[
+    Annotated[FetchAdHocTask, Tag(_TaskType.FETCH_AD_HOC)]
+    | Annotated[RelayConfigTask, Tag(_TaskType.RELAY_CONFIG)]
+    | Annotated[AdHocActiveCheckTask, Tag(_TaskType.AD_HOC_ACTIVE_CHECK)]
+    | Annotated[CertRotationTask, Tag(_TaskType.CERT_ROTATION)]
+    | Annotated[UnknownTask, Tag(_UNKNOWN_TASK_TAG)],
+    Discriminator(_response_spec_tag),
+]
 
 
 class TaskCreateRequest(BaseModel, frozen=True):
@@ -158,7 +185,7 @@ class TaskCreateResponse(BaseModel, frozen=True):
 
 
 class TaskResponse(BaseModel, frozen=True):
-    spec: TaskResponseSpec = Field(discriminator="type")
+    spec: TaskResponseSpec
     status: TaskStatus
     result_type: ResultType | None
     result_payload: str | None

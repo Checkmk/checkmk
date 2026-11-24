@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import base64
+import json
+from datetime import datetime
+
 import pytest
 from pydantic import ValidationError
 
@@ -11,8 +15,14 @@ from cmk.relay_protocols.tasks import (
     AdHocPasswordStore,
     AdHocSiteStores,
     CertRotationTask,
+    FetchAdHocTask,
+    RelayConfigTask,
     TaskCreateRequest,
+    TaskListResponse,
     TaskResponse,
+    TaskResponseSpec,
+    TaskStatus,
+    UnknownTask,
 )
 
 
@@ -94,3 +104,89 @@ def test_a_store_path_outside_the_ad_hoc_files_dir_is_rejected(path: str) -> Non
 def test_a_cert_rotation_task_without_a_pem_additional_ca_certificate_is_rejected() -> None:
     with pytest.raises(ValidationError, match="Invalid additional CA certificate"):
         TaskCreateRequest(spec=CertRotationTask(additional_ca_cert="not a certificate"))
+
+
+def _task(task_id: str, spec: dict[str, object]) -> dict[str, object]:
+    return {
+        "spec": spec,
+        "status": "PENDING",
+        "result_type": None,
+        "result_payload": None,
+        "creation_timestamp": "2026-01-01T00:00:00",
+        "update_timestamp": "2026-01-01T00:00:00",
+        "id": task_id,
+    }
+
+
+def test_a_task_of_a_type_the_reader_does_not_know_is_read_as_unknown() -> None:
+    body = {
+        "tasks": [
+            _task("known", {"type": "AD_HOC_ACTIVE_CHECK", "host": "h", "command": "c"}),
+            _task("unknown", {"type": "NOT_SUPPORTED_BY_THIS_READER", "new_field": 1}),
+        ]
+    }
+
+    task_list = TaskListResponse.model_validate_json(json.dumps(body))
+
+    assert [task.spec for task in task_list.tasks] == [
+        AdHocActiveCheckTask(host="h", command="c"),
+        UnknownTask(type="NOT_SUPPORTED_BY_THIS_READER"),
+    ]
+
+
+@pytest.mark.parametrize(
+    "mismatching_task",
+    [
+        pytest.param(
+            _task("missing-field", {"type": "AD_HOC_ACTIVE_CHECK", "host": "h"}),
+            id="known type with missing fields",
+        ),
+        pytest.param(
+            {k: v for k, v in _task("no-id", {"type": "NEW_TYPE"}).items() if k != "id"},
+            id="unknown type without an id",
+        ),
+        pytest.param(_task("untyped", {"host": "h", "command": "c"}), id="spec without a type"),
+    ],
+)
+def test_a_task_list_with_any_other_mismatch_is_rejected(
+    mismatching_task: dict[str, object],
+) -> None:
+    body = {"tasks": [_task("unknown", {"type": "NEW_TYPE"}), mismatching_task]}
+
+    with pytest.raises(ValidationError):
+        TaskListResponse.model_validate_json(json.dumps(body))
+
+
+@pytest.mark.parametrize(
+    "spec",
+    [
+        pytest.param(FetchAdHocTask(payload="12345", timeout=1), id="fetch"),
+        pytest.param(
+            RelayConfigTask(serial=1, tar_data=base64.b64encode(b"config tarball")), id="config"
+        ),
+        pytest.param(AdHocActiveCheckTask(host="h", command="c"), id="active check"),
+        pytest.param(CertRotationTask(), id="cert rotation"),
+    ],
+)
+def test_a_task_of_a_known_type_reads_back_as_that_type(spec: TaskResponseSpec) -> None:
+    task_list = TaskListResponse(
+        tasks=[
+            TaskResponse(
+                spec=spec,
+                status=TaskStatus.PENDING,
+                result_type=None,
+                result_payload=None,
+                creation_timestamp=datetime(2026, 1, 1),
+                update_timestamp=datetime(2026, 1, 1),
+                id="task-1",
+            )
+        ]
+    )
+
+    assert TaskListResponse.model_validate_json(task_list.model_dump_json()) == task_list
+
+
+def test_a_task_of_an_unknown_type_cannot_be_created() -> None:
+    """Only a reader that may be older than the site reads unknown types as UnknownTask."""
+    with pytest.raises(ValidationError):
+        TaskCreateRequest.model_validate({"spec": {"type": "NEW_TYPE"}})

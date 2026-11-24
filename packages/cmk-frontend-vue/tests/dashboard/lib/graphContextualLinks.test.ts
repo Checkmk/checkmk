@@ -56,7 +56,11 @@ function resolved(links: ResolvedLink[], services: GraphService[]): GraphLinks {
   }
 }
 
-const SURROUNDINGS = { context: {}, drilledFrom: null, timeRange: { start: 1_000, end: 2_000 } }
+const SURROUNDINGS = {
+  context: {},
+  drilledFrom: null,
+  timeRange: { from: '1000000', to: '2000000' }
+}
 
 describe('drawnServices', () => {
   it('names no more services than the links of a graph are resolved for', () => {
@@ -86,7 +90,7 @@ describe('graphLinkOffer', () => {
     expect(offer).toMatchObject({ type: 'link', link: { title: 'Service' } })
   })
 
-  it('carries the shown window in a link that includes it', () => {
+  it('carries the time range in a link that includes it', () => {
     const offer = graphLinkOffer(resolved([link('Service', true)], [H1_CPU]), [], SURROUNDINGS)
 
     expect(offer).toMatchObject({

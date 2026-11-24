@@ -7,7 +7,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse } from 'msw'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
 import DashboardContentTimeSeriesGraph from '@/dashboard/components/DashboardContent/DashboardContentTimeSeriesGraph.vue'
@@ -22,6 +22,12 @@ import type {
   EmbeddedCustomGraphContent,
   SingleTimeseriesContent
 } from '@/dashboard/types/widget.ts'
+import {
+  resetGlobalTimeState,
+  useGlobalRefresh,
+  useGlobalTimeRange
+} from '@/graphing/GlobalTimePicker/globalTimeState'
+import { rollingRange } from '@/graphing/GlobalTimePicker/private/timeRange'
 
 import { discoveredGraph, useRequestRecords } from '@tests/dashboard/apiHandlers'
 import { makeContentProps } from '@tests/dashboard/contentProps'
@@ -703,6 +709,9 @@ describe('the contextual link of a graph widget', () => {
   beforeEach(() => {
     serveGraphLinks(() => GRAPH_LINKS)
   })
+  afterEach(() => {
+    resetGlobalTimeState()
+  })
 
   test('leads a graph of one service straight to the target for its host', async () => {
     renderWidget({ content: LINKED_TIMESERIES, effective_filter_context: ONE_SERVICE })
@@ -711,8 +720,25 @@ describe('the contextual link of a graph widget', () => {
     expect(link.getAttribute('href')).toMatch(/^view\.py\?view_name=service&.*host=heute/)
   })
 
-  test('carries the shown window in its link', async () => {
+  test('carries the live rolling range of the dashboard it follows in its link', async () => {
+    useGlobalTimeRange().setActiveTimeRange(rollingRange(4 * 3600), 'time_picker')
+    useGlobalRefresh().resumeRefresh()
     renderWidget({ content: LINKED_TIMESERIES, effective_filter_context: ONE_SERVICE })
+
+    const link = await screen.findByRole('link', { name: 'Service' })
+    expect(link.getAttribute('href')).toContain('from=now-14400s&to=now')
+  })
+
+  test('carries the shown window of a graph with its own time range in its link', async () => {
+    useGlobalTimeRange().setActiveTimeRange(rollingRange(4 * 3600), 'time_picker')
+    useGlobalRefresh().resumeRefresh()
+    renderWidget({
+      content: {
+        ...LINKED_TIMESERIES,
+        timerange: { type: 'predefined', value: 'last_25_hours' }
+      },
+      effective_filter_context: ONE_SERVICE
+    })
 
     const link = await screen.findByRole('link', { name: 'Service' })
     expect(link.getAttribute('href')).toContain('from=1000000&to=2000000')

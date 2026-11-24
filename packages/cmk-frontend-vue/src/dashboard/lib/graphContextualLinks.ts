@@ -19,7 +19,7 @@ export type GraphLinkOffer =
 export interface GraphLinkSurroundings {
   context: VisualContext
   drilledFrom: string | null
-  timeRange: RequestedTimeRange
+  timeRange: TimeRangeVariables
 }
 
 type ServiceLinks = GraphLinks['services'][number]
@@ -47,7 +47,7 @@ export function drawnServices(metrics: Metric[]): GraphService[] {
 }
 
 // A graph's window is in seconds; links carry instants in epoch milliseconds.
-function windowVariables({ start, end }: RequestedTimeRange): TimeRangeVariables {
+export function windowVariables({ start, end }: RequestedTimeRange): TimeRangeVariables {
   return { from: String(Math.round(start * 1000)), to: String(Math.round(end * 1000)) }
 }
 
@@ -60,7 +60,7 @@ function linksOf(
     resolved.links,
     service.link_properties,
     context,
-    windowVariables(timeRange),
+    timeRange,
     drilledFrom
   ).map(({ title, href }) => ({ title, url: href }))
 }

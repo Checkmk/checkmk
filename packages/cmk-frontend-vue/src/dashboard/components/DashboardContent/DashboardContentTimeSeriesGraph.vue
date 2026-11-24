@@ -454,6 +454,7 @@ onMounted(() => {
             :single-service="singleService"
             :metrics="metrics"
             :time-range="shownTimeRange"
+            :follows-dashboard="followsDashboard"
             :set-shown="setShown"
           />
         </template>

@@ -12,7 +12,11 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { useInjectDashboardEditing } from '@/dashboard/composables/useDashboardEditing'
 import { useInjectDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
-import { drawnServices, graphLinkOffer } from '@/dashboard/lib/graphContextualLinks'
+import {
+  drawnServices,
+  graphLinkOffer,
+  windowVariables
+} from '@/dashboard/lib/graphContextualLinks'
 import type {
   GraphLinkContent,
   GraphLinks,
@@ -21,6 +25,7 @@ import type {
 } from '@/dashboard/types/widget'
 import { dashboardAPI } from '@/dashboard/utils'
 import type { Metric, RequestedTimeRange } from '@/graphing'
+import { useTimeRangeVariables } from '@/graphing/GlobalTimePicker/timeRangeUrl'
 
 const { _t } = usei18n()
 
@@ -31,11 +36,20 @@ const props = defineProps<{
   singleService: GraphService | null
   metrics: Metric[]
   timeRange: RequestedTimeRange
+  followsDashboard: boolean
   setShown: (shown: boolean) => void
 }>()
 
 const editing = useInjectDashboardEditing()
 const drillDownSource = useInjectDrillDownSource()
+const dashboardTimeRange = useTimeRangeVariables()
+
+// A graph on the dashboard's range carries it as the dashboard does: rolling while live.
+const linkTimeRange = computed(() =>
+  props.followsDashboard && dashboardTimeRange.value !== null
+    ? dashboardTimeRange.value
+    : windowVariables(props.timeRange)
+)
 
 const services = computed(() =>
   props.singleService === null ? drawnServices(props.metrics) : [props.singleService]
@@ -83,7 +97,7 @@ const offer = computed(() =>
     : graphLinkOffer(resolved.value, props.metrics, {
         context: props.context,
         drilledFrom: drillDownSource.value,
-        timeRange: props.timeRange
+        timeRange: linkTimeRange.value
       })
 )
 

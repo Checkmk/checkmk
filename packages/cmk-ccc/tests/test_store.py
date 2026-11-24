@@ -14,6 +14,7 @@ import threading
 import time
 import traceback
 from collections.abc import Callable, Iterator, Sequence
+from concurrent import futures
 from functools import partial
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
@@ -644,6 +645,8 @@ class LockTestJob(enum.Enum):
     TERMINATE = enum.auto()
     LOCK = enum.auto()
     UNLOCK = enum.auto()
+    TRY_LOCK = enum.auto()
+    TRY_LOCKED = enum.auto()
 
 
 class LockTestThread(threading.Thread):
@@ -653,55 +656,111 @@ class LockTestThread(threading.Thread):
 
         self.path = path
 
-        self._jobs: queue.Queue[LockTestJob] = queue.Queue()
+        self._jobs: queue.Queue[tuple[LockTestJob, futures.Future[bool | None]]] = queue.Queue()
+        self._pending: list[futures.Future[bool | None]] = []
+        self._hung = False
 
     @override
     def run(self) -> None:
         while True:
+            job, done = self._jobs.get()
             try:
-                job = self._jobs.get(block=True, timeout=0.1)
-            except queue.Empty:
-                continue
+                result = self._run(job)
+            except BaseException as e:
+                # The test's thread raises it: raised here, it would end this thread.
+                done.set_exception(e)
+            else:
+                done.set_result(result)
+            if job is LockTestJob.TERMINATE:
+                return
 
-            try:
-                if job is LockTestJob.TERMINATE:
-                    break
+    def _run(self, job: LockTestJob) -> bool | None:
+        match job:
+            case LockTestJob.LOCK:
+                assert store.have_lock(self.path) is False
+                store.acquire_lock(self.path)
+                assert store.have_lock(self.path) is True
+                return None
+            case LockTestJob.UNLOCK:
+                assert store.have_lock(self.path) is True
+                store.release_lock(self.path)
+                assert store.have_lock(self.path) is False
+                return None
+            case LockTestJob.TRY_LOCK:
+                locked = store.try_acquire_lock(self.path)
+                assert store.have_lock(self.path) is locked
+                return locked
+            case LockTestJob.TRY_LOCKED:
+                with store.try_locked(self.path) as locked:
+                    assert store.have_lock(self.path) is locked
+                assert store.have_lock(self.path) is False
+                return locked
+            case LockTestJob.TERMINATE:
+                return None
 
-                if job is LockTestJob.LOCK:
-                    assert store.have_lock(self.path) is False
-                    store.acquire_lock(self.path)
-                    assert store.have_lock(self.path) is True
-                    continue
-
-                if job is LockTestJob.UNLOCK:
-                    assert store.have_lock(self.path) is True
-                    store.release_lock(self.path)
-                    assert store.have_lock(self.path) is False
-                    continue
-            finally:
-                self._jobs.task_done()
+    def _send(self, job: LockTestJob) -> futures.Future[bool | None]:
+        done: futures.Future[bool | None] = futures.Future()
+        self._pending.append(done)
+        self._jobs.put((job, done))
+        return done
 
     def terminate(self) -> None:
-        """Send terminate command to thread from outside and wait for completion"""
-        self._jobs.put(LockTestJob.TERMINATE)
+        """Send terminate command to thread from outside and wait for completion, unless it hung"""
+        self._send(LockTestJob.TERMINATE)
+        if self._hung:
+            return  # As a daemon, it doesn't block the exit.
+        self.join_jobs()
         self.join()
 
     def lock(self) -> None:
         """Send lock command to thread from outside and wait for completion"""
-        self.lock_nowait()
-        self._jobs.join()
+        self._send(LockTestJob.LOCK)
+        self.join_jobs()
 
     def unlock(self) -> None:
         """Send unlock command to thread from outside and wait for completion"""
-        self._jobs.put(LockTestJob.UNLOCK)
-        self._jobs.join()
+        self._send(LockTestJob.UNLOCK)
+        self.join_jobs()
 
-    def lock_nowait(self) -> None:
-        """Send lock command to thread from outside without waiting for completion"""
-        self._jobs.put(LockTestJob.LOCK)
+    def lock_until_waiting(self) -> None:
+        """Send lock command to thread from outside, and wait until the thread waits for the lock
+
+        If the job ends instead, raise its failure.
+        """
+        locked = self._send(LockTestJob.LOCK)
+        try:
+            _wait_for_waiting_lock(self.path, unless=locked.done)
+        except TimeoutError:
+            self._hung = True
+            raise TimeoutError(
+                f"Lock job not waiting after about 10 s, stuck in:\n{_stack_of(self)}"
+            ) from None
+        if locked.done():
+            self.join_jobs()
+            raise AssertionError("Got the lock, although another thread holds it")
+
+    def try_lock(self) -> bool:
+        """Let the thread try to lock without blocking, and return whether it got the lock"""
+        done = self._send(LockTestJob.TRY_LOCK)
+        self.join_jobs()
+        assert isinstance(locked := done.result(), bool)
+        return locked
+
+    def try_locked(self) -> bool:
+        """Like try_lock(), but via the context manager, which releases the lock again"""
+        done = self._send(LockTestJob.TRY_LOCKED)
+        self.join_jobs()
+        assert isinstance(locked := done.result(), bool)
+        return locked
 
     def join_jobs(self) -> None:
-        self._jobs.join()
+        """Wait for the jobs sent so far, and raise the first of their failures"""
+        pending, self._pending = self._pending, []
+        if not _poll_until(lambda: all(done.done() for done in pending), seconds=10):
+            self._hung = True
+            raise TimeoutError(f"Lock job not done after about 10 s, stuck in:\n{_stack_of(self)}")
+        for done in pending:
+            done.result()
 
 
 @pytest.fixture(name="t1")
@@ -721,8 +780,8 @@ def _lock_test_thread(path: Path) -> Iterator[LockTestThread]:
     t.terminate()
 
 
-def _wait_for_waiting_lock(path: Path) -> None:
-    """Use /proc/locks to wait until one lock on the path is in waiting state
+def _wait_for_waiting_lock(path: Path, unless: Callable[[], bool] = lambda: False) -> None:
+    """Use /proc/locks to wait until one lock on the path is in waiting state, or unless() holds
 
     https://man7.org/linux/man-pages/man5/proc_locks.5.html
     """
@@ -747,7 +806,7 @@ def _wait_for_waiting_lock(path: Path) -> None:
         return False
 
     # A loaded machine can take a while to schedule the waiting thread.
-    if not _poll_until(has_waiting_lock, seconds=10):
+    if not _poll_until(lambda: has_waiting_lock() or unless(), seconds=10):
         raise TimeoutError("No lock in waiting state after about 10 s")
 
 
@@ -822,17 +881,11 @@ def test_non_blocking_lock_from_multiple_threads(test_file: Path) -> None:
     assert len(acquired) > 1, "No thread got any lock."
 
 
-def test_blocking_lock_while_other_holds_the_lock(
-    test_file: Path, t1: LockTestThread, t2: LockTestThread
-) -> None:
+def test_blocking_lock_while_other_holds_the_lock(t1: LockTestThread, t2: LockTestThread) -> None:
+    # Before the try: a failure here would make t1.unlock() fail, too.
+    t1.lock()
     try:
-        # Take lock with t1
-        t1.lock()
-
-        # Now request the lock in t2, but don't wait for the successful locking. Only wait until we
-        # start waiting for the lock.
-        t2.lock_nowait()
-        _wait_for_waiting_lock(test_file)
+        t2.lock_until_waiting()
     finally:
         t1.unlock()
 
@@ -848,12 +901,10 @@ def test_non_blocking_locking_without_previous_lock(test_file: Path) -> None:
     assert store.have_lock(test_file) is False
 
 
-def test_non_blocking_locking_while_already_locked(test_file: Path, t1: LockTestThread) -> None:
+def test_non_blocking_locking_while_already_locked(t1: LockTestThread, t2: LockTestThread) -> None:
     t1.lock()
 
-    # And now try to get the lock (which should not be possible)
-    assert store.try_acquire_lock(test_file) is False
-    assert store.have_lock(test_file) is False
+    assert t2.try_lock() is False
 
 
 def test_non_blocking_decorated_locking_without_previous_lock(test_file: Path) -> None:
@@ -864,15 +915,11 @@ def test_non_blocking_decorated_locking_without_previous_lock(test_file: Path) -
 
 
 def test_non_blocking_decorated_locking_while_already_locked(
-    test_file: Path, t1: LockTestThread
+    t1: LockTestThread, t2: LockTestThread
 ) -> None:
     t1.lock()
 
-    # And now try to get the lock (which should not be possible)
-    with store.try_locked(test_file) as result:
-        assert result is False
-        assert store.have_lock(test_file) is False
-    assert store.have_lock(test_file) is False
+    assert t2.try_locked() is False
 
 
 def test_load_object_from_unreadable_file_reraises_in_debug_mode(tmp_path: Path) -> None:

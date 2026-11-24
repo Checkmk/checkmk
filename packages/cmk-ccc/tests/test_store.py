@@ -153,11 +153,14 @@ def _write_file(path: Path, content: bytes) -> None:
     path.write_bytes(content)
 
 
-def test_load_data_from_file_empty(tmp_path: Path) -> None:
-    locked_file = tmp_path / "test"
-    locked_file.write_text("", encoding="utf-8")
-    data = store.load_object_from_file(tmp_path / "x", default="DEF", debug=False)
+def test_load_data_from_file_empty(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    empty_file = tmp_path / "test"
+    _write_file(empty_file, b"")
+
+    data = store.load_object_from_file(empty_file, default="DEF", debug=False)
+
     assert data == "DEF"
+    assert "Failed to deserialize" not in caplog.text
 
 
 def test_load_data_not_locked(tmp_path: Path) -> None:

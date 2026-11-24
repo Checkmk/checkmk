@@ -43,7 +43,6 @@ Components
    arch-comp-checkengine-keepalive.rst
    arch-comp-core.rst
    arch-comp-smartping.rst
-   arch-comp-mknotifyd.rst
    arch-comp-dcd.rst
    arch-comp-distributed.rst
    arch-comp-livestatus.rst

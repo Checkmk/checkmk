@@ -4,14 +4,6 @@ per-file arch-comp-gui-metrics.rst=file:/component_owners/graphing_and_metrics/O
 per-file arch-comp-gui-metrics.rst=set noparent
 per-file arch-comp-kube*=file:/component_owners/plugins_kube/OWNERS_DEFINITION
 per-file arch-comp-kube*=set noparent
-per-file arch-comp-mknotifyd-uc0-no-mknotifyd.puml=file:/component_owners/notifications/OWNERS_DEFINITION
-per-file arch-comp-mknotifyd-uc0-no-mknotifyd.puml=set noparent
-per-file arch-comp-mknotifyd-uc1-mknotifyd-async-local.puml=file:/component_owners/notifications/OWNERS_DEFINITION
-per-file arch-comp-mknotifyd-uc1-mknotifyd-async-local.puml=set noparent
-per-file arch-comp-mknotifyd-uc2-mknotifyd-remote.puml=file:/component_owners/notifications/OWNERS_DEFINITION
-per-file arch-comp-mknotifyd-uc2-mknotifyd-remote.puml=set noparent
-per-file arch-comp-mknotifyd.rst=file:/component_owners/notifications/OWNERS_DEFINITION
-per-file arch-comp-mknotifyd.rst=set noparent
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

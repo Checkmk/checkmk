@@ -6,6 +6,7 @@
 import json
 import os
 from collections.abc import Callable
+from operator import attrgetter
 from pathlib import Path
 
 import pytest
@@ -176,17 +177,20 @@ def test_tree_paths_refuse_a_host_name_leaving_their_directory(
         path_of(InventoryPaths(_OMD_ROOT), host_name)
 
 
-def test_has_inventory_tree(tmp_path: Path) -> None:
-    inv_paths = InventoryPaths(tmp_path)
-    inv_paths.inventory_dir.mkdir(parents=True)
-    inv_paths.inventory_tree(HostName("host")).path.touch()
-    assert has_inventory_tree(inv_paths, HostName("host"))
+_FILE_KINDS = pytest.mark.parametrize(
+    "file_of",
+    [
+        pytest.param(attrgetter("path"), id="json"),
+        pytest.param(attrgetter("legacy"), id="legacy"),
+    ],
+)
 
 
-def test_has_inventory_tree_of_a_legacy_file(tmp_path: Path) -> None:
+@_FILE_KINDS
+def test_has_inventory_tree(tmp_path: Path, file_of: Callable[[TreePath], Path]) -> None:
     inv_paths = InventoryPaths(tmp_path)
     inv_paths.inventory_dir.mkdir(parents=True)
-    inv_paths.inventory_tree(HostName("host")).legacy.touch()
+    file_of(inv_paths.inventory_tree(HostName("host"))).touch()
     assert has_inventory_tree(inv_paths, HostName("host"))
 
 
@@ -194,12 +198,11 @@ def test_has_no_inventory_tree(tmp_path: Path) -> None:
     assert not has_inventory_tree(InventoryPaths(tmp_path), HostName("host"))
 
 
-@pytest.mark.parametrize("legacy", [False, True])
-def test_has_status_data_tree(tmp_path: Path, legacy: bool) -> None:
+@_FILE_KINDS
+def test_has_status_data_tree(tmp_path: Path, file_of: Callable[[TreePath], Path]) -> None:
     inv_paths = InventoryPaths(tmp_path)
     inv_paths.status_data_dir.mkdir(parents=True)
-    tree_path = inv_paths.status_data_tree(HostName("host"))
-    (tree_path.legacy if legacy else tree_path.path).touch()
+    file_of(inv_paths.status_data_tree(HostName("host"))).touch()
     assert has_status_data_tree(inv_paths, HostName("host"))
 
 

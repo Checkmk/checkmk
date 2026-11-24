@@ -8,7 +8,7 @@
 import logging
 import os
 import time
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 from shutil import which
 from typing import Literal
@@ -79,6 +79,22 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
         lifecycle_wrapper=edition_setup(site_factory.edition).site_environment,
     ) as central_site:
         yield central_site
+
+
+@pytest.fixture(name="customers", scope="session")
+def _customers(central_site: Site) -> Sequence[str]:
+    """Create the customers the ultimatemt tests assign remote sites to.
+
+    They are only created on the central site: a remote site gets its customers from the
+    central site with the config sync, like in a real setup.
+    """
+    customer_ids = ("customer1", "customer2")
+    # The customers are already there if the site is reused (REUSE=1)
+    existing_ids = {customer["id"] for customer in central_site.openapi.customers.get_all()}
+    for customer_id in customer_ids:
+        if customer_id not in existing_ids:
+            central_site.openapi.customers.create(customer_id, name=customer_id)
+    return customer_ids
 
 
 @pytest.fixture(name="remote_site", scope="session")

@@ -71,6 +71,7 @@ def _monitored_host_labels(central_site: Site, host_name: str) -> Mapping[str, s
 
 
 @pytest.mark.skip_if_not_edition("ultimatemt")
+@pytest.mark.usefixtures("customers")
 def test_remote_host_has_builtin_site_and_customer_labels(
     central_site: Site, remote_site: Site, remote_monitored_host: str
 ) -> None:

@@ -2635,18 +2635,6 @@ class SiteFactory:
         logger.debug("Created site %(site_id)s", {"site_id": site.id})
         return site
 
-    def setup_customers(self, site: Site, customers: Sequence[str]) -> None:
-        if not self.edition.is_ultimatemt_edition():
-            return
-        # Self-bootstrap `customers` like `cmk.multi_tenancy.shared.customer`
-        # does, so the file is loadable without the feature config defaults
-        # being registered (e.g. by cmk-post-rename-site).
-        customer_content = "customers = locals().setdefault('customers', {})\n" + "\n".join(
-            f"customers.update({{'{customer}': {{'name': '{customer}', 'macros': [], 'customer_report_layout': 'default'}}}})"
-            for customer in customers
-        )
-        site.write_file("etc/check_mk/multisite.d/wato/customers.mk", customer_content)
-
     def get_existing_site(
         self,
         name: str,
@@ -3197,7 +3185,6 @@ class SiteFactory:
             site = self.get_site(name)
 
         try:
-            self.setup_customers(site, ["customer1", "customer2"])
             for global_settings_update in global_settings_updates:
                 site.update_global_settings(
                     global_settings_update.relative_path,

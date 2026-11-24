@@ -19,7 +19,10 @@ from tests.system.multisite.cmk.piggyback.piggyback_test_helper import (
 )
 from tests.testlib.system.site import Site
 
-pytestmark = pytest.mark.skip_if_not_edition("ultimatemt")
+pytestmark = [
+    pytest.mark.skip_if_not_edition("ultimatemt"),
+    pytest.mark.usefixtures("customers"),
+]
 
 
 def test_piggyback_services_source_remote_diff_customer(

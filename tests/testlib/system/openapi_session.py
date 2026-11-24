@@ -178,6 +178,7 @@ class CMKOpenApiSession(requests.Session):
         self.otel_collector = OtelCollectorAPI(self)
         self.event_console = EventConsoleAPI(self)
         self.saml2 = Saml2API(self)
+        self.customers = CustomersAPI(self)
         self.relays = RelayAPI(self)
         self.relay_registration_tokens = RelayRegistrationTokenAPI(self)
         self.data_backend = DataBackendAPI(self)
@@ -2270,6 +2271,26 @@ class Saml2API(BaseAPI):
         )
 
         if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class CustomersAPI(BaseAPI):
+    """Customers of the ultimatemt edition; the endpoints don't exist in other editions."""
+
+    def get_all(self) -> list[dict[str, object]]:
+        response = self.session.get("/domain-types/customer/collections/all")
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+        customers: list[dict[str, object]] = response.json()["value"]
+        return customers
+
+    def create(self, customer_id: str, name: str) -> None:
+        response = self.session.post(
+            "/domain-types/customer/collections/all",
+            json={"id": customer_id, "name": name},
+        )
+        if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
 

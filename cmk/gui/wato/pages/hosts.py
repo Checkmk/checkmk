@@ -1012,21 +1012,11 @@ class CreateHostMode(ABCHostMode):
         host = Host(
             folder=folder,
             host_name=self._clone_source.name(),
-            attributes=self._clone_source.attributes.copy(),
+            attributes=self._clone_source.clone_attributes(),
             cluster_nodes=(
                 list(nodes) if (nodes := self._clone_source.cluster_nodes()) is not None else None
             ),
         )
-
-        # The clone's counterparts were never told about these relations, so carrying the rows
-        # over would leave every one of them one-sided.
-        host.attributes.pop("relations", None)
-
-        # remove the quick setup lock from the clone
-        if is_locked_by_config_bundle(host.locked_by()):
-            host.attributes.pop("locked_by", None)
-            host.attributes.pop("locked_attributes", None)
-
         self._verify_host_type(host)
         return host
 

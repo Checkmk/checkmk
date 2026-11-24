@@ -48,7 +48,7 @@ from cmk.gui.logged_in import (
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.pages import PageContext
 from cmk.gui.search.matchers import MatchItem, MatchItemConfig
-from cmk.gui.utils.host_relations import RelationLink, relations_or_empty
+from cmk.gui.utils.host_relations import RelationLink, relations_or_empty, ResolvedRelation
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
@@ -65,6 +65,7 @@ from cmk.gui.watolib.configuration_bundles import (
 )
 from cmk.gui.watolib.host_attributes import HostAttributes, HostContactGroupSpec
 from cmk.gui.watolib.host_match_item_generator import MatchItemGeneratorHosts
+from cmk.gui.watolib.host_relations import resolve_all_relations
 from cmk.gui.watolib.hosts_and_folders import (
     all_folder_title_paths,
     collect_all_hosts,
@@ -2120,6 +2121,41 @@ def test_create_host_with_a_relation_writes_the_other_half(tree: FolderTree) -> 
     # The counterpart alone: the new host is named by its own "create-host" change.
     mirrored = next(entry for entry in recorded if entry["action_name"] == "mirror-relation")
     assert set(mirrored["domain_settings"][CORE_DOMAIN]["hosts_to_update"]) == {HostName("os1")}
+
+
+def _saved_clone_of_board(tree: FolderTree) -> hosts_and_folders.Host:
+    """A clone of "board", which manages "os1", saved the way the "Clone host" dialog fills it
+    when the user changes nothing but the name."""
+    board = _related_pair_in(tree.root_folder())
+    _create_host(board.folder(), "board-clone", board.clone_attributes())
+    return board
+
+
+def test_saving_a_clone_leaves_the_relations_of_its_source_alone(tree: FolderTree) -> None:
+    _saved_clone_of_board(tree)
+
+    assert _relations_of(tree, HostName("board-clone")) == []
+    assert _relations_of(tree, HostName("board")) == [
+        {"kind": "management", "direction": "parent", "host": "os1"}
+    ]
+    assert _relations_of(tree, HostName("os1")) == [
+        {"kind": "management", "direction": "child", "host": "board"}
+    ]
+
+
+def test_the_monitoring_shows_no_relation_of_a_clone(tree: FolderTree) -> None:
+    board = _saved_clone_of_board(tree)
+
+    assert resolve_all_relations(tree.all_hosts()) == {
+        HostName("board"): [
+            ResolvedRelation(kind="management", direction="parent", host="os1", site="other")
+        ],
+        HostName("os1"): [
+            ResolvedRelation(
+                kind="management", direction="child", host="board", site=board.site_id()
+            )
+        ],
+    }
 
 
 def test_create_host_refuses_before_touching_a_counterpart_it_may_not_write(

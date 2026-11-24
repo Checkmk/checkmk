@@ -4679,6 +4679,16 @@ class Host:
             ]
         )
 
+    def clone_attributes(self) -> HostAttributes:
+        attributes = self.attributes.copy()
+        # The clone's counterparts were never told about these relations, so carrying the rows
+        # over would leave every one of them one-sided.
+        attributes.pop("relations", None)
+        if is_locked_by_config_bundle(self.locked_by()):
+            attributes.pop("locked_by", None)
+            attributes.pop("locked_attributes", None)
+        return attributes
+
     # .--------------------------------------------------------------------.
     # | MODIFICATIONS                                                      |
     # |                                                                    |

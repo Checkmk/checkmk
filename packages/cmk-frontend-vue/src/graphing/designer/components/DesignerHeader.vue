@@ -68,9 +68,13 @@ const range = computed<DateTimeRange>({
         </CmkButton>
       </template>
       <template v-else>
-        <CmkButton variant="optional" @click="emit('enter-settings')">
-          <CmkIcon name="global-settings" variant="inline" size="small" />
-          {{ _t('Settings') }}
+        <CmkButton
+          variant="optional"
+          :title="_t('Settings')"
+          :aria-label="_t('Settings')"
+          @click="emit('enter-settings')"
+        >
+          <CmkIcon name="global-settings" />
         </CmkButton>
         <div class="graphing-designer-header__separator" />
         <CmkButton variant="primary" :running="saving" @click="emit('save')">

@@ -65,7 +65,13 @@ def _poll_until(done: Callable[[], bool], *, seconds: int) -> bool:
     return done()
 
 
-@pytest.mark.parametrize("io,exists", [(RealIo, True), (FakeIo, False)])
+@pytest.mark.parametrize(
+    "io, exists",
+    [
+        pytest.param(RealIo, True, id="real io"),
+        pytest.param(FakeIo, False, id="fake io"),
+    ],
+)
 def test_object_store(io: type[FileIo], exists: bool, tmp_path: Path) -> None:
     test_file = tmp_path / "hurz"
     a = ObjectStore(test_file, serializer=TextSerializer(), io=io)
@@ -119,7 +125,13 @@ def _in_own_thread[**P](test: Callable[P, None]) -> Callable[P, None]:
     return run_in_thread
 
 
-@pytest.mark.parametrize("io,exists", [(RealIo, True), (FakeIo, False)])
+@pytest.mark.parametrize(
+    "io, exists",
+    [
+        pytest.param(RealIo, True, id="real io"),
+        pytest.param(FakeIo, False, id="fake io"),
+    ],
+)
 def test_object_store_locked(io: type[FileIo], exists: bool, tmp_path: Path) -> None:
     test_file = tmp_path / "locked_hurz"
     a = ObjectStore(test_file, serializer=TextSerializer(), io=io)
@@ -132,7 +144,13 @@ def test_object_store_locked(io: type[FileIo], exists: bool, tmp_path: Path) -> 
     test_file.unlink(missing_ok=True)
 
 
-@pytest.mark.parametrize("io", [RealIo, FakeIo])
+@pytest.mark.parametrize(
+    "io",
+    [
+        pytest.param(RealIo, id="real io"),
+        pytest.param(FakeIo, id="fake io"),
+    ],
+)
 def test_object_store_default(io: type[FileIo], tmp_path: Path) -> None:
     test_file = tmp_path / "locked_hurz"
     a = ObjectStore(test_file, serializer=TextSerializer(), io=io)
@@ -243,10 +261,10 @@ def test_save_data_to_file_not_pretty(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     "data",
     [
-        None,
-        [2, 3],
-        ["föö"],
-        [b"foob\xc3\xa4r"],
+        pytest.param(None, id="None"),
+        pytest.param([2, 3], id="ints"),
+        pytest.param(["föö"], id="non-ASCII str"),
+        pytest.param([b"foob\xc3\xa4r"], id="bytes"),
     ],
 )
 def test_save_data_to_file(tmp_path: Path, data: None | Sequence[str | int]) -> None:
@@ -258,7 +276,7 @@ def test_save_data_to_file(tmp_path: Path, data: None | Sequence[str | int]) -> 
 @pytest.mark.parametrize(
     "data",
     [
-        "föö",
+        pytest.param("föö", id="non-ASCII"),
     ],
 )
 def test_save_text_to_file(tmp_path: Path, data: str) -> None:
@@ -305,7 +323,7 @@ def test_load_world_writable_file(
 @pytest.mark.parametrize(
     "data",
     [
-        b"foob\xc3\xa4r",
+        pytest.param(b"foob\xc3\xa4r", id="UTF-8"),
     ],
 )
 def test_save_bytes_to_file(tmp_path: Path, data: bytes) -> None:

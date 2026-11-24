@@ -139,13 +139,14 @@ def get_size() -> tuple[int, int]:
 def print_table(
     headers: TableRow, colors: TableColors, rows: Iterable[TableRow], indent: str = ""
 ) -> None:
-    rows = list(rows)  # We go through them twice.
     num_columns = len(headers)
+    # Pad short rows, cut long ones.
+    rows = [[*row[:num_columns], *[""] * (num_columns - len(row))] for row in rows]
     lengths = _column_lengths(headers, rows)
     dashes = ["-" * l for l in lengths]
     fmt = _row_template(lengths, colors, indent)
     for row in itertools.chain([headers, dashes], rows):
-        sys.stdout.write(fmt % tuple(row[:num_columns]))
+        sys.stdout.write(fmt % tuple(row))
 
 
 def _column_lengths(headers: TableRow, rows: Iterable[TableRow]) -> list[int]:

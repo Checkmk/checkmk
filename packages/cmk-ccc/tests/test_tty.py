@@ -54,3 +54,17 @@ def test_print_table_prints_the_rows_of_a_generator(
     tty.print_table(["foo"], [""], (row for row in [["bar"]]))
 
     assert uncolored_capsys.readouterr().out == "foo\n---\nbar\n"
+
+
+def test_print_table_fills_short_rows(uncolored_capsys: pytest.CaptureFixture[str]) -> None:
+    tty.print_table(["h1", "h2"], ["", ""], [["only-one"]])
+
+    assert uncolored_capsys.readouterr().out == "h1       h2\n-------- --\nonly-one   \n"
+
+
+def test_print_table_ignores_cells_without_a_header(
+    uncolored_capsys: pytest.CaptureFixture[str],
+) -> None:
+    tty.print_table(["h1", "h2"], ["", ""], [["r11", "r12__", "r13"], ["r22_", "r23"]])
+
+    assert uncolored_capsys.readouterr().out == "h1   h2   \n---- -----\nr11  r12__\nr22_ r23  \n"

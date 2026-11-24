@@ -103,7 +103,7 @@ test('renders service name and summary in their cells', () => {
 test('renders one cell per column', () => {
   const { container } = mountRow(makeService())
 
-  // select, state, modes, name, summary, last_state_change, last_check, labels, tags, contacts,
+  // select, state, indicator, name, summary, last_state_change, last_check, labels, tags, contacts,
   // contact_groups, groups, perfometer
   const tds = Array.from(container.querySelectorAll('td'))
   expect(tds).toHaveLength(13)
@@ -736,7 +736,7 @@ test('renders the host and site of a row that names its host after the summary',
   expect(cells.slice(cells.indexOf('name'), cells.indexOf('site_id') + 1)).toEqual([
     'name',
     'summary',
-    'modes',
+    'indicator',
     'host_name',
     'site_id'
   ])

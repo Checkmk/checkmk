@@ -23,7 +23,7 @@ describe('useAllServicesColumns', () => {
     expect(ids.slice(ids.indexOf('name'), ids.indexOf('site_id') + 1)).toEqual([
       'name',
       'summary',
-      'modes',
+      'indicator',
       'host_name',
       'site_id'
     ])

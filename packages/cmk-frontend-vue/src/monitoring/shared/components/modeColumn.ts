@@ -16,8 +16,8 @@ import type { BooleanGroupFilter } from './filter/types'
 import { iconListWidth } from './iconList'
 import { type RowWithStateIcons, indicatorModes } from './stateColumn'
 
-/** The Indicator column; its id predates its name and stays, as saved dashboards refer to it. */
-export const MODE_COLUMN_ID = 'modes'
+/** The Indicator column. */
+export const MODE_COLUMN_ID = 'indicator'
 
 export const MODE_ICONS_PER_ROW = 3
 
@@ -57,7 +57,8 @@ export function indicatorColumn<Row extends RowWithModes, Field extends FilterFi
   const { _t } = usei18n()
   const label = _t('Indicator')
   return {
-    // The column filter bridge keys filters by accessorKey.
+    // The column filter bridge keys filters by accessorKey. Rows have no such field: the cells
+    // read the modes themselves.
     accessorKey: MODE_COLUMN_ID,
     header: () => h(CmkIcon, { name: 'icons', size: 'medium', title: label }),
     enableSorting: false,

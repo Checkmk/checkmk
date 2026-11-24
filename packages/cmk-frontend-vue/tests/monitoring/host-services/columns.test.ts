@@ -69,7 +69,7 @@ test('the indicator, labels, tags, contact and group columns start hidden', () =
   const service = makeService()
 
   expect(service.defaultColumnVisibility).toEqual({
-    modes: false,
+    indicator: false,
     labels: false,
     tags: false,
     contacts: false,
@@ -146,7 +146,7 @@ test('the state column filter offers the state checkboxes plus the flags of its 
 
 test('the mode column filter no longer offers what moved to the state column', () => {
   const modesColumn = serviceColumns().find(
-    (column) => columnId(column as ColumnDef<never>) === 'modes'
+    (column) => columnId(column as ColumnDef<never>) === 'indicator'
   )
 
   expect(modesColumn?.meta?.filter).toEqual({

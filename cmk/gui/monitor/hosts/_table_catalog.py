@@ -17,7 +17,7 @@ _ALL_HOSTS_COLUMNS: Final[dict[str, TableColumn[HostOptionalField]]] = {
     "num_relations": TableColumn(_l("Relations"), HostOptionalField.NUM_RELATIONS),
     "alias": TableColumn(_l("Host alias"), HostOptionalField.ALIAS),
     "address": TableColumn(_l("IP address"), HostOptionalField.ADDRESS),
-    "modes": TableColumn(_l("Indicator")),
+    "indicator": TableColumn(_l("Indicator")),
     "folder": TableColumn(_l("Folder"), HostOptionalField.FOLDER),
     "site_id": TableColumn(_l("Site")),
     "last_check": TableColumn(_l("Last check"), HostOptionalField.LAST_CHECK),

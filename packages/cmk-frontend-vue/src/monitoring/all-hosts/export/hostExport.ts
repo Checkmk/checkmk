@@ -16,7 +16,7 @@ import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/label
 const COLUMN_VALUES = {
   // As the State column shows them: acknowledged, downtime and comments beside the state.
   state: (host) => ExportValues.annotated(host.state, ExportValues.ids(stateModes(host.modes))),
-  modes: (host) => ExportValues.ids(indicatorModes(host.modes)).join(', '),
+  indicator: (host) => ExportValues.ids(indicatorModes(host.modes)).join(', '),
   name: (host) => host.name,
   num_relations: (host) => ExportValues.number(host.num_relations),
   alias: (host) => host.alias ?? '',
@@ -43,7 +43,7 @@ export type HostExportColumn = keyof typeof COLUMN_VALUES
 
 const JSON_VALUES: Partial<Record<HostExportColumn, (host: HostEntry) => ExportJsonValue>> = {
   state: (host) => ({ state: host.state, modes: ExportValues.ids(stateModes(host.modes)) }),
-  modes: (host) => ExportValues.ids(indicatorModes(host.modes)),
+  indicator: (host) => ExportValues.ids(indicatorModes(host.modes)),
   labels: (host) =>
     ExportValues.sortedObject(
       Object.entries(host.labels ?? {}).map(([key, label]) => [key, label.value])

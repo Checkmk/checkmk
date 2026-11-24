@@ -68,10 +68,10 @@ describe('ServiceExport', () => {
     })
 
     const rows = JSON.parse(
-      await new ServiceExport('web-1', ['modes'], [service]).file('json').text()
+      await new ServiceExport('web-1', ['indicator'], [service]).file('json').text()
     )
 
-    expect(rows).toEqual([['modes'], [['notifications_off', 'active_checks_off']]])
+    expect(rows).toEqual([['indicator'], [['notifications_off', 'active_checks_off']]])
   })
 
   test('writes acknowledged, downtime and comments beside the state, not in the modes', async () => {
@@ -83,10 +83,10 @@ describe('ServiceExport', () => {
       ]
     })
 
-    const file = new ServiceExport('web-1', ['state', 'modes'], [service]).file('csv')
+    const file = new ServiceExport('web-1', ['state', 'indicator'], [service]).file('csv')
 
     expect((await file.text()).replace(CSV_BOM, '')).toBe(
-      '"state";"modes"\n"CRIT (comments)";"notifications_off"\n'
+      '"state";"indicator"\n"CRIT (comments)";"notifications_off"\n'
     )
   })
 

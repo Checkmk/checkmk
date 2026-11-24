@@ -12,7 +12,7 @@ const COLUMN_VALUES = {
   // As the State column shows them: acknowledged, downtime and comments beside the state.
   state: (service) =>
     ExportValues.annotated(service.state, ExportValues.ids(stateModes(service.modes))),
-  modes: (service) => ExportValues.ids(indicatorModes(service.modes)).join(', '),
+  indicator: (service) => ExportValues.ids(indicatorModes(service.modes)).join(', '),
   name: (service) => service.name,
   summary: (service) => service.summary,
   last_state_change: (service) => ExportValues.timestamp(service.last_state_change),
@@ -42,7 +42,7 @@ const JSON_VALUES: Partial<
     state: service.state,
     modes: ExportValues.ids(stateModes(service.modes))
   }),
-  modes: (service) => ExportValues.ids(indicatorModes(service.modes)),
+  indicator: (service) => ExportValues.ids(indicatorModes(service.modes)),
   labels: (service) =>
     ExportValues.sortedObject(
       Object.entries(service.labels ?? {}).map(([key, label]) => [key, label.value])

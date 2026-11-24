@@ -15,7 +15,7 @@ _HOST_SERVICES_COLUMNS: Final[dict[str, TableColumn[ServiceOptionalField]]] = {
     "state": TableColumn(_l("State")),
     "name": TableColumn(_l("Service")),
     "summary": TableColumn(_l("Summary")),
-    "modes": TableColumn(_l("Indicator")),
+    "indicator": TableColumn(_l("Indicator")),
     "last_state_change": TableColumn(_l("Last state change")),
     "last_check": TableColumn(_l("Last check")),
     "labels": TableColumn(_l("Labels"), ServiceOptionalField.LABELS),
@@ -34,7 +34,7 @@ HOST_SERVICES_TABLE: Final[ColumnCatalog[ServiceOptionalField, ServiceSort]] = C
 SERVICE_TABLE: Final[ColumnCatalog[ServiceOptionalField, ServiceSort]] = ColumnCatalog(
     # The host follows the summary, where the service rows of All services draw it.
     {
-        **{key: _HOST_SERVICES_COLUMNS[key] for key in ("state", "modes", "name", "summary")},
+        **{key: _HOST_SERVICES_COLUMNS[key] for key in ("state", "indicator", "name", "summary")},
         "host_name": TableColumn(_l("Host")),
         **_HOST_SERVICES_COLUMNS,
     },

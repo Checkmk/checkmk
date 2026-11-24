@@ -19,7 +19,7 @@ const HOST_TABLE_COLUMNS = [
   'name',
   'alias',
   'address',
-  'modes',
+  'indicator',
   'folder',
   'site_id',
   'last_check',
@@ -105,7 +105,7 @@ const SERVICE_TABLE_COLUMNS = [
   'state',
   'name',
   'summary',
-  'modes',
+  'indicator',
   'host_name',
   'last_state_change',
   'last_check',
@@ -161,7 +161,7 @@ describe('ServicesTableDescriptor', () => {
       .filter((column) => column.shownByDefault)
       .map((column) => column.id)
 
-    expect(shown).toEqual(['state', 'name', 'summary', 'modes', 'host_name'])
+    expect(shown).toEqual(['state', 'name', 'summary', 'indicator', 'host_name'])
   })
 
   it('renders every column the backend offers for the services table', () => {

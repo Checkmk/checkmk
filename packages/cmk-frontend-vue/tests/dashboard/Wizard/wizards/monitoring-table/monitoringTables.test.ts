@@ -19,7 +19,7 @@ describe('defaultMonitoringTableContent', () => {
         'state',
         'name',
         'address',
-        'modes',
+        'indicator',
         'num_services',
         'num_services_ok',
         'num_services_warn',

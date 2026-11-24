@@ -59,7 +59,7 @@ describe('HostExport', () => {
 
   test('names each mode by its stable id', async () => {
     const hostExport = new HostExport(
-      ['modes'],
+      ['indicator'],
       [
         makeHost({
           modes: [
@@ -70,28 +70,28 @@ describe('HostExport', () => {
       ]
     )
 
-    expect(await csvOf(hostExport)).toBe('"modes"\n"notifications_off, active_checks_off"\n')
+    expect(await csvOf(hostExport)).toBe('"indicator"\n"notifications_off, active_checks_off"\n')
   })
 
   test('writes acknowledged, downtime and comments beside the state, not in the modes', async () => {
     const hostExport = new HostExport(
-      ['state', 'modes'],
+      ['state', 'indicator'],
       [makeHost({ state: 'DOWN', modes: STATE_AND_INDICATOR_MODES })]
     )
 
     expect(await csvOf(hostExport)).toBe(
-      '"state";"modes"\n"DOWN (acknowledged, downtime)";"notifications_off"\n'
+      '"state";"indicator"\n"DOWN (acknowledged, downtime)";"notifications_off"\n'
     )
   })
 
   test('writes the state with its acknowledged, downtime and comments in JSON', async () => {
     const hostExport = new HostExport(
-      ['state', 'modes'],
+      ['state', 'indicator'],
       [makeHost({ state: 'DOWN', modes: STATE_AND_INDICATOR_MODES })]
     )
 
     expect(await jsonOf(hostExport)).toEqual([
-      ['state', 'modes'],
+      ['state', 'indicator'],
       [{ state: 'DOWN', modes: ['acknowledged', 'downtime'] }, ['notifications_off']]
     ])
   })
@@ -162,7 +162,7 @@ describe('HostExport', () => {
 
   test('writes labels and tags as objects and contacts, groups and modes as lists in JSON', async () => {
     const hostExport = new HostExport(
-      ['labels', 'tags', 'contacts', 'contact_groups', 'groups', 'modes'],
+      ['labels', 'tags', 'contacts', 'contact_groups', 'groups', 'indicator'],
       [
         makeHost({
           labels: {
@@ -179,7 +179,7 @@ describe('HostExport', () => {
     )
 
     expect(await jsonOf(hostExport)).toEqual([
-      ['labels', 'tags', 'contacts', 'contact_groups', 'groups', 'modes'],
+      ['labels', 'tags', 'contacts', 'contact_groups', 'groups', 'indicator'],
       [
         { 'cmk/site': 'local', note: 'a, b: c' },
         { address_family: 'ip-v4-only', snmp_ds: 'no-snmp' },

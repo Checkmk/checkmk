@@ -88,7 +88,7 @@ test('the optional columns are offered in the picker, abbreviated headers spelle
   expect(offered).toEqual([
     { id: 'alias', label: 'Host alias' },
     { id: 'address', label: 'IP address' },
-    { id: 'modes', label: 'Indicator' },
+    { id: 'indicator', label: 'Indicator' },
     { id: 'folder', label: 'Folder' },
     { id: 'site_id', label: 'Site' },
     { id: 'last_check', label: 'Check age' },
@@ -112,7 +112,7 @@ test('most offered columns are shown on first use, but alias, folder, the timest
 
   expect(service.defaultColumnVisibility).toEqual({
     alias: false,
-    modes: false,
+    indicator: false,
     folder: false,
     site_id: false,
     last_check: false,
@@ -133,7 +133,7 @@ test('the fixed columns keep their position around the optional ones', () => {
     'name',
     'alias',
     'address',
-    'modes',
+    'indicator',
     'folder',
     'site_id',
     'last_check',
@@ -158,7 +158,7 @@ test('every hideable column asks for its field while nothing is hidden', () => {
   // fields and do not appear in visibleHostFields.
   const optionalFieldColumns = makeService({ showRelations: true })
     .toggleableColumns.map((column) => column.id)
-    .filter((id) => id !== 'site_id' && id !== 'modes')
+    .filter((id) => id !== 'site_id' && id !== 'indicator')
 
   expect(requestedFields({}, { showRelations: true })).toEqual(optionalFieldColumns)
 })
@@ -197,7 +197,9 @@ test('the select column is neither rendered nor pinned when no action is permitt
 })
 
 test('the indicator column is shown on first use when any host has custom icons', () => {
-  expect(makeService({ showIndicators: true }).defaultColumnVisibility).not.toHaveProperty('modes')
+  expect(makeService({ showIndicators: true }).defaultColumnVisibility).not.toHaveProperty(
+    'indicator'
+  )
 })
 
 test('the site column filter offers the configured sites as options', () => {
@@ -244,7 +246,7 @@ test('the state column filter offers the state checkboxes plus the flags of its 
 
 test('the mode column filter no longer offers what moved to the state column', () => {
   const columns = hostColumns()
-  const modesColumn = columns.find((column) => columnId(column) === 'modes')
+  const modesColumn = columns.find((column) => columnId(column) === 'indicator')
 
   expect(modesColumn?.meta?.filter).toEqual({
     type: 'boolean-group',

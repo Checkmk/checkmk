@@ -26,6 +26,7 @@ class Params(BaseModel):
     password: Secret
     disable_cert_verification: bool
     sections: list[str]
+    additional_sections: list[str]
     timeout: int | None = None
 
 
@@ -58,7 +59,7 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterable[Speci
         "--port",
         str(params.port),
         "--sections",
-        ",".join(params.sections),
+        ",".join([*params.sections, *params.additional_sections]),
         *_tls_arguments(params.disable_cert_verification, host_config),
         *([] if params.timeout is None else ["--timeout", str(params.timeout)]),
         _connection_address(params.connection, host_config),

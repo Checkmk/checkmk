@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import Help, Label, Title
+from collections.abc import Mapping
+
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,
@@ -23,31 +25,39 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 # The section names match the agent's section registry. A selected service the
 # user may not read is reported as a warning (see agent_veeam.py).
-_SECTION_CHOICES = (
-    MultipleChoiceElement(
-        name="veeam_server_info", title=Title("Server information (HW/SW inventory)")
-    ),
-    MultipleChoiceElement(name="veeam_license", title=Title("License")),
+_VIEWER_SECTION_CHOICES = (
     MultipleChoiceElement(name="veeam_backup_jobs", title=Title("Backup jobs")),
     MultipleChoiceElement(
         name="veeam_backups",
         title=Title("Backups (on one piggyback host per protected machine)"),
     ),
-    MultipleChoiceElement(name="veeam_replicas", title=Title("Replicas")),
-    MultipleChoiceElement(name="veeam_protection_groups", title=Title("Agent protection groups")),
-    MultipleChoiceElement(name="veeam_managed_servers", title=Title("Managed servers")),
-    MultipleChoiceElement(name="veeam_wan_accelerators", title=Title("WAN accelerators")),
-    MultipleChoiceElement(name="veeam_config_backup", title=Title("Configuration backup")),
-    MultipleChoiceElement(name="veeam_proxies", title=Title("Backup proxies")),
-    MultipleChoiceElement(name="veeam_repositories", title=Title("Backup repositories")),
-    MultipleChoiceElement(
-        name="veeam_scaleout_repositories", title=Title("Scale-out repositories")
-    ),
     MultipleChoiceElement(
         name="veeam_restore_points",
         title=Title("Restore points (on one piggyback host per protected machine)"),
     ),
+    MultipleChoiceElement(name="veeam_managed_servers", title=Title("Managed servers")),
+    MultipleChoiceElement(name="veeam_repositories", title=Title("Backup repositories")),
+    MultipleChoiceElement(
+        name="veeam_scaleout_repositories", title=Title("Scale-out repositories")
+    ),
+    MultipleChoiceElement(name="veeam_proxies", title=Title("Backup proxies")),
 )
+
+_ADDITIONAL_SECTION_CHOICES = (
+    MultipleChoiceElement(name="veeam_license", title=Title("License")),
+    MultipleChoiceElement(name="veeam_config_backup", title=Title("Configuration backup")),
+    MultipleChoiceElement(
+        name="veeam_server_info", title=Title("Server information (HW/SW inventory)")
+    ),
+    MultipleChoiceElement(name="veeam_replicas", title=Title("Replicas")),
+    MultipleChoiceElement(name="veeam_protection_groups", title=Title("Agent protection groups")),
+    MultipleChoiceElement(name="veeam_wan_accelerators", title=Title("WAN accelerators")),
+)
+
+
+def _validate_any_section_selected(value: Mapping[str, object]) -> None:
+    if not value["sections"] and not value["additional_sections"]:
+        raise validators.ValidationError(Message("Select at least one service to fetch."))
 
 
 def _parameter_form() -> Dictionary:
@@ -58,10 +68,12 @@ def _parameter_form() -> Dictionary:
             "is installed on the backup server, so this also works for the Veeam "
             "software appliance, where the Checkmk agent cannot run. "
             "Use a dedicated account with the least privileged role that can read the "
-            "services you need. Some services can only be read with an administrator "
-            "account. Such an account can also delete backups and start restores, so "
-            "only use one if you need these services."
+            "services you need. The Veeam Backup Viewer role is enough for the services "
+            'selected by default. The "Additional services" need a more privileged role, '
+            "which can also delete backups or start restores, so only grant it if you "
+            "need these services."
         ),
+        custom_validate=(_validate_any_section_selected,),
         elements={
             "connection": DictElement(
                 required=True,
@@ -164,14 +176,11 @@ def _parameter_form() -> Dictionary:
             "sections": DictElement(
                 required=True,
                 parameter_form=MultipleChoice(
-                    title=Title("Services to fetch"),
+                    title=Title("Services to fetch (Veeam Backup Viewer role)"),
                     help_text=Help(
                         "Select which data the special agent fetches from the backup "
-                        "server. Deselect services you do not need, for example ones your "
-                        "monitoring account has no permission for. A selected service the "
-                        "account may not read is left out, and the Check_MK service shows "
-                        "a warning naming it, so that you can correct the selection or the "
-                        "permissions. Any other error while fetching makes the agent fail. "
+                        "server. An account with the read-only Veeam Backup Viewer role can "
+                        "read all of these services. Deselect the ones you do not need. "
                         'Most services are created on the host this rule applies to. "Backups" '
                         'and "Restore points" are instead delivered via piggyback to one host '
                         "per protected machine, named after the machine in its Veeam backup "
@@ -180,10 +189,28 @@ def _parameter_form() -> Dictionary:
                         '"Host name translation for piggybacked hosts". Without such a '
                         "host, these services are not created."
                     ),
-                    elements=_SECTION_CHOICES,
-                    prefill=DefaultValue([element.name for element in _SECTION_CHOICES]),
+                    elements=_VIEWER_SECTION_CHOICES,
+                    prefill=DefaultValue([element.name for element in _VIEWER_SECTION_CHOICES]),
                     show_toggle_all=True,
-                    custom_validate=(validators.LengthInRange(min_value=1),),
+                ),
+            ),
+            "additional_sections": DictElement(
+                required=True,
+                parameter_form=MultipleChoice(
+                    title=Title("Additional services (extended Veeam permissions required)"),
+                    help_text=Help(
+                        "These services cannot be read with the Veeam Backup Viewer role. "
+                        "License, Configuration backup and Server information require the "
+                        "Veeam Backup Administrator role. Replicas, Agent protection groups "
+                        "and WAN accelerators require the Veeam Backup Administrator or the "
+                        "Veeam Restore Operator role. A selected service the account may not "
+                        "read is left out, and the Check_MK service shows a warning naming "
+                        "it, so that you can correct the selection or the permissions. While "
+                        "this warning is shown, the automatic service discovery skips the "
+                        "host. Any other error while fetching makes the agent fail."
+                    ),
+                    elements=_ADDITIONAL_SECTION_CHOICES,
+                    prefill=DefaultValue([]),
                 ),
             ),
         },

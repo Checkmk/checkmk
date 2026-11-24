@@ -18,6 +18,7 @@ BASE_PARAMS = {
     "password": Secret(1),
     "disable_cert_verification": False,
     "sections": ["veeam_backup_jobs"],
+    "additional_sections": [],
 }
 
 
@@ -73,18 +74,18 @@ def test_certificate_is_verified_against_the_host_name_by_default() -> None:
     ]
 
 
-def test_selected_sections_are_passed_as_a_comma_separated_list() -> None:
+def test_sections_of_both_fields_are_passed_as_one_comma_separated_list() -> None:
     arguments = _arguments(
         {
             **BASE_PARAMS,
             "connection": ("ip_address", None),
-            "sections": ["veeam_backup_jobs", "veeam_license", "veeam_proxies"],
+            "sections": ["veeam_backup_jobs", "veeam_proxies"],
+            "additional_sections": ["veeam_license"],
         }
     )
 
-    assert "--sections" in arguments
     assert arguments[arguments.index("--sections") + 1] == (
-        "veeam_backup_jobs,veeam_license,veeam_proxies"
+        "veeam_backup_jobs,veeam_proxies,veeam_license"
     )
 
 

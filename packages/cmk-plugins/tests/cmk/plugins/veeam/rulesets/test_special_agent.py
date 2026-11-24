@@ -27,6 +27,7 @@ BASE_PARAMS = {
     "password": Secret(1),
     "disable_cert_verification": False,
     "sections": ["veeam_backup_jobs"],
+    "additional_sections": [],
 }
 
 # A stored value for every choice the ruleset offers. Adding a choice to the
@@ -63,19 +64,19 @@ def test_the_port_is_prefilled_with_the_veeam_default() -> None:
     assert port_form.prefill == DefaultValue(443)
 
 
-def _sections_form() -> MultipleChoice:
-    form = rule_spec_special_agent_veeam.parameter_form().elements["sections"].parameter_form
+def _multiple_choice(element: str) -> MultipleChoice:
+    form = rule_spec_special_agent_veeam.parameter_form().elements[element].parameter_form
     assert isinstance(form, MultipleChoice)
     return form
 
 
-def test_all_sections_are_selected_by_default() -> None:
-    form = _sections_form()
-    all_names = [element.name for element in form.elements]
+def _choice_names_of(element: str) -> list[str]:
+    return [choice.name for choice in _multiple_choice(element).elements]
 
-    assert form.prefill == DefaultValue(all_names)
-    # the default selection is accepted by the server-side call
-    Params.model_validate({**BASE_PARAMS, "sections": all_names})
+
+def test_only_the_services_a_viewer_may_read_are_selected_by_default() -> None:
+    assert _multiple_choice("sections").prefill == DefaultValue(_choice_names_of("sections"))
+    assert _multiple_choice("additional_sections").prefill == DefaultValue([])
 
 
 def test_section_choices_match_the_agent_registry() -> None:
@@ -83,18 +84,27 @@ def test_section_choices_match_the_agent_registry() -> None:
     # a choice the agent does not know is rejected at the CLI (and terminates the
     # agent for everyone who has it selected), and a section not offered as a choice
     # can never be fetched. Keep them equal.
-    choices = {element.name for element in _sections_form().elements}
+    viewer = set(_choice_names_of("sections"))
+    additional = set(_choice_names_of("additional_sections"))
 
-    assert choices == {name for name, _ in SECTIONS}
+    assert not viewer & additional
+    assert viewer | additional == {name for name, _ in SECTIONS}
+
+
+def _validate_rule(value: Mapping[str, object]) -> None:
+    custom_validate = rule_spec_special_agent_veeam.parameter_form().custom_validate
+    assert custom_validate is not None
+    for validate in custom_validate:
+        validate(value)
 
 
 def test_at_least_one_section_must_be_selected() -> None:
-    custom_validate = _sections_form().custom_validate
-    assert custom_validate is not None
-    (validate,) = custom_validate
-
     with pytest.raises(validators.ValidationError):
-        validate([])
+        _validate_rule({**BASE_PARAMS, "sections": [], "additional_sections": []})
+
+
+def test_selecting_only_additional_sections_is_valid() -> None:
+    _validate_rule({**BASE_PARAMS, "sections": [], "additional_sections": ["veeam_license"]})
 
 
 def _timeout_element() -> DictElement[int]:

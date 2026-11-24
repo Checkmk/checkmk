@@ -6,8 +6,7 @@ distribution: check_mk
 description:
  This check monitors an agent protection group of a Veeam Backup & Replication
  server, collected via the Veeam special agent. Reading protection groups
- requires the Veeam Backup Administrator, Restore Operator or Tape Operator
- role.
+ requires the Veeam Backup Administrator or Restore Operator role.
 
  The summary shows the following values:
 

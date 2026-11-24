@@ -286,8 +286,7 @@ def test_parse_check_mk_version(version_string: str, expected: int) -> None:
 def test_omd_version_reads_from_version_link(tmp_path: Path) -> None:
     link_path = tmp_path / "version"
     link_path.symlink_to("/omd/versions/2016.09.12.pro")
-    # Is set dynamically by fake_version_and_paths
-    assert cmk_version.orig_omd_version(link_path.parent) == "2016.09.12.pro"  # type: ignore[attr-defined]
+    assert cmk_version.omd_version(link_path.parent) == "2016.09.12.pro"
     link_path.unlink()
 
 

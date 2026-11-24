@@ -50,7 +50,6 @@ def test_edition() -> cmk_version.Edition:
 @pytest.fixture(scope="session")
 def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
     with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
         mp.setattr(
             cmk_version,
             "omd_version",

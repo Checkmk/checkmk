@@ -267,6 +267,7 @@ py_cmk_test(
         "hostaddress",
         "log",
         "observer",
+        "plugin-registry",
         "regex",
         "resulttype",
         "store",
@@ -274,6 +275,7 @@ py_cmk_test(
         "translations",
         "tty",
         "user",
+        "version",
         requirement("time-machine"),
     ],
 )

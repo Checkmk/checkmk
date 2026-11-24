@@ -3,9 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import os
+import queue
+import select
 import sys
-from collections.abc import Callable
+import threading
+import time
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
@@ -62,6 +67,107 @@ def test_removed_watch_reports_nothing(tmp_path: Path) -> None:
 def test_watching_outside_of_the_context_raises(tmp_path: Path) -> None:
     with pytest.raises(RuntimeError, match="Context not entered"):
         INotify().add_watch(tmp_path, Masks.CREATE)
+
+
+def test_watching_a_missing_path_raises(tmp_path: Path) -> None:
+    with INotify() as inotify, pytest.raises(FileNotFoundError):
+        inotify.add_watch(tmp_path / "missing", Masks.CREATE)
+
+
+def test_reading_with_a_negative_timeout_raises(tmp_path: Path) -> None:
+    with INotify() as inotify:
+        inotify.add_watch(tmp_path, Masks.CREATE)
+        # Without the check, read() returns this event instead of blocking forever.
+        (tmp_path / "file").touch()
+
+        with pytest.raises(ValueError):
+            inotify.read(timeout=-1)
+
+
+def _inotify_instances() -> set[int]:
+    fds: set[int] = set()
+    for entry in Path("/proc/self/fd").iterdir():
+        with contextlib.suppress(FileNotFoundError):
+            if os.readlink(entry) == "anon_inode:inotify":
+                fds.add(int(entry.name))
+    return fds
+
+
+def test_leaving_the_context_closes_the_inotify_instance(tmp_path: Path) -> None:
+    before = _inotify_instances()
+
+    with INotify() as inotify:
+        inotify.add_watch(tmp_path, Masks.CREATE)
+
+    assert _inotify_instances() == before
+
+
+def _touch_once_waiting_in_poll(path: Path, thread: int) -> None:
+    """Create the file a little after the thread waits in poll(), or after about 5 s"""
+    wchan = Path(f"/proc/self/task/{thread}/wchan")
+    for _ in range(5_000):
+        with contextlib.suppress(OSError):
+            if "poll" in wchan.read_text():
+                break
+        time.sleep(0.001)
+    # Longer than a timeout of 10 ms instead of 10 s
+    time.sleep(0.02)
+    path.touch()
+
+
+def test_read_waits_for_an_event(tmp_path: Path) -> None:
+    with INotify() as inotify:
+        watchee = inotify.add_watch(tmp_path, Masks.CREATE)
+        toucher = threading.Thread(
+            target=_touch_once_waiting_in_poll, args=(tmp_path / "file", threading.get_native_id())
+        )
+        toucher.start()
+
+        events = inotify.read(timeout=10)
+        toucher.join()
+
+    assert events == [Event(watchee, Masks.CREATE, Cookie(0), "file")]
+
+
+def _next_within_10_s(events: Iterator[Event]) -> Event:
+    # read_forever() has no timeout.
+    result: queue.Queue[Event] = queue.Queue()
+    threading.Thread(target=lambda: result.put(next(events)), daemon=True).start()
+    return result.get(timeout=10)
+
+
+def test_read_forever_keeps_yielding_the_events(tmp_path: Path) -> None:
+    with INotify() as inotify:
+        watchee = inotify.add_watch(tmp_path, Masks.CREATE)
+        events = inotify.read_forever()
+
+        (tmp_path / "first").touch()
+        first = _next_within_10_s(events)
+        (tmp_path / "second").touch()
+        second = _next_within_10_s(events)
+
+    assert (first, second) == (
+        Event(watchee, Masks.CREATE, Cookie(0), "first"),
+        Event(watchee, Masks.CREATE, Cookie(0), "second"),
+    )
+
+
+def test_an_external_poll_loop_can_wait_for_events_and_read_them(tmp_path: Path) -> None:
+    with INotify() as inotify:
+        watchee = inotify.add_watch(tmp_path, Masks.CREATE)
+        poller = select.poll()
+        poller.register(inotify.fileno(), select.POLLIN)
+        readable_before = bool(poller.poll(0))
+
+        (tmp_path / "file").touch()
+        readable = bool(poller.poll(10_000))
+        events = inotify.read_nowait()
+
+    assert (readable_before, readable, events) == (
+        False,
+        True,
+        [Event(watchee, Masks.CREATE, Cookie(0), "file")],
+    )
 
 
 def test_deleted_directory_is_reported_as_deleted_and_ignored(tmp_path: Path) -> None:

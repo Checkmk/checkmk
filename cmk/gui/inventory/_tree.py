@@ -5,6 +5,7 @@
 
 
 from collections.abc import Iterable, Sequence
+from typing import Protocol
 
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
@@ -141,8 +142,18 @@ def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> I
     )
 
 
+class DeltaTreeAtLoader(Protocol):
+    def load_delta_tree_at(
+        self,
+        host_name: HostName,
+        timestamp: int,
+        *,
+        delta_tree_filters: Sequence[SDFilterChoice] | None,
+    ) -> tuple[ImmutableDeltaTree, Sequence[str]] | None: ...
+
+
 def load_delta_tree(
-    history_store: HistoryStore, hostname: HostName, timestamp: int
+    history_store: DeltaTreeAtLoader, hostname: HostName, timestamp: int
 ) -> tuple[ImmutableDeltaTree, Sequence[str]]:
     if (
         found := history_store.load_delta_tree_at(

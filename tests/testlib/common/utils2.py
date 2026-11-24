@@ -458,8 +458,9 @@ def _terminate_daemon(
                 sudo=sudo,
             )
         case DaemonTerminationMode.GROUP:
+            # Not "kill -- -<pgid>": the kill of util-linux 2.42 rejects negative PIDs.
             run(
-                ["kill", "--", f"-{os.getpgid(daemon_proc.pid)}"],
+                ["pkill", "--signal", "TERM", "--pgroup", str(os.getpgid(daemon_proc.pid))],
                 sudo=sudo,
             )
         case _:

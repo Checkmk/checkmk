@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
 import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
@@ -53,26 +54,27 @@ const showWidgetBackground = defineModel<boolean | undefined>('showWidgetBackgro
     <TableFormRow>
       <FieldDescription :help="titleHelpText">{{ _t('Title') }}</FieldDescription>
       <FieldComponent>
-        <CmkInput
-          :model-value="title"
-          type="text"
-          field-size="medium"
-          @update:model-value="(value) => (title = value ?? title)"
-        />
+        <CmkCheckbox v-model="showTitle" :label="_t('Show title')" />
+        <CmkIndent v-if="showTitle">
+          <div class="field-component__item">
+            <CmkInput
+              :model-value="title"
+              type="text"
+              field-size="medium"
+              @update:model-value="(value) => (title = value ?? title)"
+            />
+          </div>
+          <div class="field-component__item">
+            <CmkCheckbox v-model="showTitleBackground" :label="_t('Show title background')" />
+          </div>
+        </CmkIndent>
       </FieldComponent>
     </TableFormRow>
-    <TableFormRow>
-      <FieldDescription>{{ _t('Appearance') }}</FieldDescription>
+
+    <TableFormRow v-if="showWidgetBackground !== undefined">
+      <FieldDescription>{{ _t('Background') }}</FieldDescription>
       <FieldComponent>
-        <div class="field-component__item">
-          <CmkCheckbox v-model="showTitle" :label="_t('Show title')" />
-        </div>
-        <div class="field-component__item">
-          <CmkCheckbox v-model="showTitleBackground" :label="_t('Show title background')" />
-        </div>
-        <div v-if="showWidgetBackground !== undefined" class="field-component__item">
-          <CmkCheckbox v-model="showWidgetBackground" :label="_t('Show widget background')" />
-        </div>
+        <CmkCheckbox v-model="showWidgetBackground" :label="_t('Show widget background')" />
       </FieldComponent>
     </TableFormRow>
   </TableForm>

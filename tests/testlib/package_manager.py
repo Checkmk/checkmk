@@ -53,6 +53,7 @@ DISTRO_CODES = {
     "sles-15sp6": "sles15sp6",
     "sles-15sp7": "sles15sp7",
     "sles-16.0": "sles16.0",
+    "sles-16.1": "sles16.1",
 }
 TCMKPackageInfos = CMKPackageInfo | CMKPackageInfoOld
 TypeCMKEditions = TypeCMKEdition | TypeCMKEditionOld

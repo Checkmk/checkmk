@@ -11,6 +11,7 @@ common: &common
     - "sles-15sp6"
     - "sles-15sp7"
     - "sles-16.0"
+    - "sles-16.1"
 
 # A reduced set of distros for the daily builds
 # Containing only the latest version of each supported OS
@@ -22,6 +23,7 @@ daily_reduced: &daily_reduced
     - "ubuntu-24.04"
     - "ubuntu-26.04"
     - "sles-16.0"
+    - "sles-16.1"
 
 # ubuntu-26.04 is the base of the cloud edition Docker image
 daily_saas: &daily_saas
@@ -56,7 +58,15 @@ editions:
         daily_tests: *daily_reduced
         fips: [*fips_distros]
         # Don't test the update process for internal distros, they are not public anyway
-        daily_update_tests: [*daily_reduced]
+        # Not sles-16.1 yet: no 2.4.0 or 2.5.0 release ships packages for it to
+        # update from
+        daily_update_tests:
+            - "almalinux-10"
+            - "debian-13"
+            - "ubuntu-22.04"
+            - "ubuntu-24.04"
+            - "ubuntu-26.04"
+            - "sles-16.0"
         weekly: [*common, *cma_distros]
         testbuild: ["ubuntu-24.04", "sles-16.0", "cma-4"]
     ultimate:
@@ -65,7 +75,15 @@ editions:
         daily_tests: *daily_reduced
         fips: []
         # Don't test the update process for internal distros, they are not public anyway
-        daily_update_tests: [*daily_reduced]
+        # Not sles-16.1 yet: no 2.4.0 or 2.5.0 release ships packages for it to
+        # update from
+        daily_update_tests:
+            - "almalinux-10"
+            - "debian-13"
+            - "ubuntu-22.04"
+            - "ubuntu-24.04"
+            - "ubuntu-26.04"
+            - "sles-16.0"
         weekly: [*common, *cma_distros]
         testbuild: []
     ultimatemt:
@@ -74,7 +92,20 @@ editions:
         daily_tests: [*common]
         fips: []
         # Don't test the update process for internal distros, they are not public anyway
-        daily_update_tests: [*common]
+        # Not sles-16.1 yet: no 2.4.0 or 2.5.0 release ships packages for it to
+        # update from
+        daily_update_tests:
+            - "debian-12"
+            - "debian-13"
+            - "ubuntu-22.04"
+            - "ubuntu-24.04"
+            - "ubuntu-26.04"
+            - "almalinux-8"
+            - "almalinux-9"
+            - "almalinux-10"
+            - "sles-15sp6"
+            - "sles-15sp7"
+            - "sles-16.0"
         weekly: [*common, *cma_distros]
         testbuild: []
     community:
@@ -83,7 +114,15 @@ editions:
         daily_tests: *daily_reduced
         fips: []
         # Don't test the update process for internal distros, they are not public anyway
-        daily_update_tests: [*daily_reduced]
+        # Not sles-16.1 yet: no 2.4.0 or 2.5.0 release ships packages for it to
+        # update from
+        daily_update_tests:
+            - "almalinux-10"
+            - "debian-13"
+            - "ubuntu-22.04"
+            - "ubuntu-24.04"
+            - "ubuntu-26.04"
+            - "sles-16.0"
         weekly: *common
         testbuild: []
     cloud:

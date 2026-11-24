@@ -157,6 +157,12 @@ filegroup(
 )
 
 filegroup(
+    name = "system_dependencies_sles16_1",
+    srcs = ["system-dependencies.sles16.1.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "system_dependencies_cma",
     srcs = ["system-dependencies.cma.txt"],
     visibility = ["//visibility:public"],

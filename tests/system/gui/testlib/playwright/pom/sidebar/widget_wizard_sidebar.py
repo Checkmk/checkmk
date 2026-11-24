@@ -594,13 +594,16 @@ class LinkCustomGraphWidgetWizard(_CustomGraphWidgetWizard):
         )
         return row.get_by_role("combobox")
 
-    def select_custom_graph(self, graph_title: str) -> None:
-        """Link the catalog graph titled `graph_title`.
+    def select_custom_graph(self, graph_name: str, graph_title: str) -> None:
+        """Link the catalog graph named `graph_name`.
 
         Args:
-            graph_title: the title of the custom graph to link.
+            graph_name: the ID of the custom graph to link.
+            graph_title: its title, which the offered entry shows next to the ID.
         """
-        self._pick_suggestion(self.custom_graph_combobox, "custom graph", graph_title)
+        self._pick_suggestion(
+            self.custom_graph_combobox, "custom graph", f"{graph_title} ({graph_name})"
+        )
 
 
 class _EmbeddedCustomGraphWidgetWizard(_CustomGraphWidgetWizard):

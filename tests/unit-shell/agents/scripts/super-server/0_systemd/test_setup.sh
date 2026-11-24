@@ -17,6 +17,10 @@ setUp() {
 
 }
 
+tearDown() {
+    rm -f "${SHUNIT_TMPDIR}${RESOURCES}"/*
+}
+
 _populate_units() {
     mkdir -p "${SHUNIT_TMPDIR}/usr/lib/systemd/system"
     touch "${SHUNIT_TMPDIR}/usr/lib/systemd/system/unit_a"
@@ -97,6 +101,42 @@ test__unit_deployed() {
     assertTrue "_unit_deployed unit_a"
     assertTrue "_unit_deployed unit_c"
     assertFalse "_unit_deployed unit_x"
+}
+
+_deploy_unit() {
+    # $1 = unit, $2 = content of the packaged unit file
+    printf "%s\n" "${2}" >"${SHUNIT_TMPDIR}${RESOURCES}/${1}"
+    mkdir -p "${SHUNIT_TMPDIR}/usr/lib/systemd/system"
+    touch "${SHUNIT_TMPDIR}/usr/lib/systemd/system/${1}"
+}
+
+# shellcheck disable=SC2317 # overwritten function called indirectly
+test_cleanup_deactivates_unit_while_its_unit_file_exists() {
+    # CMK-40902 AC3, AC4
+    _deploy_unit "cmk-update-agent.timer" "[Install]"
+    CONTROLLER_TARGET="${SHUNIT_TMPDIR}/cmk-agent-ctl"
+    _systemd_present() { :; }
+    systemctl() {
+        [ -e "${SHUNIT_TMPDIR}/usr/lib/systemd/system/${2}" ] && echo "${1} ${2}" >>"${SHUNIT_TMPDIR}/deactivated"
+    }
+
+    cleanup >/dev/null
+
+    assertEquals $'disable cmk-update-agent.timer\nstop cmk-update-agent.timer' "$(sort "${SHUNIT_TMPDIR}/deactivated")"
+    assertFalse "[ -e ${SHUNIT_TMPDIR}/usr/lib/systemd/system/cmk-update-agent.timer ]"
+}
+
+# shellcheck disable=SC2317 # overwritten function called indirectly
+test_cleanup_keeps_unit_without_install_section_running() {
+    _deploy_unit "cmk-agent-ctl-installer@.service" "[Service]"
+    CONTROLLER_TARGET="${SHUNIT_TMPDIR}/cmk-agent-ctl"
+    _systemd_present() { :; }
+    systemctl() { echo "${1} ${2}" >>"${SHUNIT_TMPDIR}/stopped_installer"; }
+
+    cleanup >/dev/null
+
+    assertFalse "[ -e ${SHUNIT_TMPDIR}/stopped_installer ]"
+    assertFalse "[ -e ${SHUNIT_TMPDIR}/usr/lib/systemd/system/cmk-agent-ctl-installer@.service ]"
 }
 
 # shellcheck disable=SC1090

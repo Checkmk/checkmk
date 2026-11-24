@@ -202,7 +202,23 @@ deploy() {
     return 1
 }
 
+_deactivate_deployed_units() {
+    # systemd needs the unit file for this. Without it, a running timer fails at the next
+    # daemon-reload, and "systemctl disable" of systemd 252 and 255 refuses the unit.
+    # A unit without [Install] section keeps running, as in trigger().
+    _systemd_present 2>/dev/null || return 0
+
+    for unit in $(_unit_files); do
+        grep -q '\[Install\]' "${ROOT}${RESOURCES}/${unit}" || continue
+        _unit_deployed "${unit}" 2>/dev/null || continue
+        systemctl stop "${unit}" 2>/dev/null
+        systemctl disable "${unit}" 2>/dev/null
+    done
+}
+
 cleanup() {
+    _deactivate_deployed_units
+
     [ -e "${CONTROLLER_TARGET}" ] && {
         printf "Removing agent controller: %s\n" "${CONTROLLER_TARGET}"
         rm -f "${CONTROLLER_TARGET}"

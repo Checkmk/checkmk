@@ -29,6 +29,7 @@ from cmk.product_usage.schema import (
     Languages,
     ProductUsagePayload,
     UserCount,
+    UsersData,
 )
 
 
@@ -44,7 +45,7 @@ def collect_data(
 
     now = int(time.time())
     site_info = site_info_collector.collect(cmk_config_dir, var_dir, omd_root)
-    users = load_users_with_profiles(default_config_dir, var_dir / "web")
+    users = _load_users(default_config_dir, var_dir, logger)
 
     return ProductUsagePayload(
         timestamp=now,
@@ -56,7 +57,7 @@ def collect_data(
         cmk_version=site_info.cmk_version,
         os=site_info.os,
         checks=checks_collector.collect(),
-        users=user_stats_collector.collect(users, default_config_dir, now),
+        users=_collect_users(users, default_config_dir, now, logger),
         inventory=inventory_collector.collect(),
         distributed_monitoring=_collect_distributed_monitoring(
             default_config_dir, cmk_config_dir, logger
@@ -88,13 +89,41 @@ def _collect_distributed_monitoring(
         return None
 
 
+def _load_users(
+    default_config_dir: Path, var_dir: Path, logger: logging.Logger
+) -> Sequence[StoredUser] | None:
+    """Read the users once for the user counts and the languages, both are lost if this fails"""
+    try:
+        return load_users_with_profiles(default_config_dir, var_dir / "web")
+    except Exception:
+        logger.exception("Could not read the users, sending no user counts and no languages")
+        return None
+
+
+def _collect_users(
+    users: Sequence[StoredUser] | None,
+    default_config_dir: Path,
+    now: int,
+    logger: logging.Logger,
+) -> UsersData | None:
+    if users is None:
+        return None
+    try:
+        return user_stats_collector.collect(users, default_config_dir, now)
+    except Exception:
+        logger.exception("Could not count the users, sending no user counts")
+        return None
+
+
 def _collect_languages(
-    users: Sequence[StoredUser],
+    users: Sequence[StoredUser] | None,
     default_config_dir: Path,
     locale_dir: Path,
     now: int,
     logger: logging.Logger,
 ) -> Languages | None:
+    if users is None:
+        return None
     try:
         return languages_collector.collect(
             users, default_config_dir=default_config_dir, locale_dir=locale_dir, now=now

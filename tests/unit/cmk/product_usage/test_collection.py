@@ -265,6 +265,48 @@ def test_payload_has_no_languages_when_the_locale_dir_is_unreadable(
     assert (payload.count_hosts, payload.count_services, payload.checks) == (10, 20, {})
 
 
+@pytest.mark.usefixtures("mock_checkmk_info", "site_api")
+def test_payload_has_no_users_and_no_languages_when_the_user_store_is_corrupt(
+    tmp_path: Path, local_connection: MockType
+) -> None:
+    _write_corrupt_user_store(tmp_path)
+
+    payload = _collect_product_usage(tmp_path, local_connection)
+
+    assert (payload.users, payload.languages) == (None, None)
+    assert (payload.count_hosts, payload.count_services, payload.checks) == (10, 20, {})
+
+
+@pytest.mark.usefixtures("mock_checkmk_info", "site_api")
+def test_corrupt_user_store_logs_the_error_of_the_users(
+    tmp_path: Path, local_connection: MockType, caplog: pytest.LogCaptureFixture
+) -> None:
+    _write_corrupt_user_store(tmp_path)
+
+    _collect_product_usage(tmp_path, local_connection)
+
+    assert (
+        "ERROR",
+        "Could not read the users, sending no user counts and no languages",
+        True,
+    ) in [
+        (record.levelname, record.getMessage(), record.exc_info is not None)
+        for record in caplog.records
+    ]
+
+
+@pytest.mark.usefixtures("mock_checkmk_info", "site_api")
+def test_payload_has_no_users_but_languages_when_the_users_cannot_be_counted(
+    tmp_path: Path, local_connection: MockType
+) -> None:
+    write_user_store(tmp_path, {"alice": {"roles": "admin"}})
+
+    payload = _collect_product_usage(tmp_path, local_connection)
+
+    assert payload.users is None
+    assert payload.languages is not None
+
+
 def _updater_usage_url() -> str:
     """The endpoint the collector asks, built when a test runs rather than at import
 

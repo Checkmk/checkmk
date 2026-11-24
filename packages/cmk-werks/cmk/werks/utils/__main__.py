@@ -18,6 +18,7 @@ from . import (
     write_as_text,
     write_precompiled_werks,
 )
+from .burn import main as burn
 
 
 def path_dir(value: str) -> Path:
@@ -63,6 +64,10 @@ def main_collect(_args: argparse.Namespace) -> None:
     sys.exit("'werks collect' is not available on this branch, run it from the master branch.")
 
 
+def main_burn(args: argparse.Namespace) -> None:
+    burn(args.repo_root)
+
+
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command")
@@ -88,6 +93,14 @@ def parse_arguments() -> argparse.Namespace:
     parser_collect = subparsers.add_parser("collect", help="Only available on the master branch")
     parser_collect.add_argument("args", nargs=argparse.REMAINDER)
     parser_collect.set_defaults(func=main_collect)
+
+    parser_burn = subparsers.add_parser(
+        "burn", help="Burn released Checkmk version into Werks without version"
+    )
+    parser_burn.add_argument(
+        "repo_root", type=path_dir, help="path to git repo, containing .werk folder"
+    )
+    parser_burn.set_defaults(func=main_burn)
 
     return parser.parse_args()
 

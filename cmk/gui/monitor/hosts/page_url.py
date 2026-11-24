@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 from cmk.gui.http import Request
 from cmk.gui.monitor.legacy_context import encode_unapplied_filters
-from cmk.gui.monitor.shared import FILTER_NODE, FilterNode
+from cmk.gui.monitor.shared import encode_filter_node, FILTER_NODE, FilterNode
 from cmk.gui.type_defs import FilterName
 from cmk.web.utils.urls import makeuri_contextless
 
@@ -26,12 +26,7 @@ def all_hosts_url(
         pydantic.ValidationError: if the filter tree does not validate against the page's filter
             model. Site conditions are checked by the page against its sites, not here.
     """
-    vars_ = []
-    if filter_node is not None:
-        filter_json = FILTER_NODE.dump_json(filter_node).decode()
-        # The nodes are plain dataclasses, only reading them back runs the model's validators.
-        FILTER_NODE.validate_json(filter_json)
-        vars_.append(("filter", filter_json))
+    vars_ = encode_filter_node(FILTER_NODE, filter_node)
     if search:
         vars_.append(("q", search))
     vars_.extend(encode_unapplied_filters(unapplied))

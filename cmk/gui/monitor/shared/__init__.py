@@ -42,6 +42,7 @@ from ._host_folders import (
     may_open_in_setup,
 )
 from ._host_state import HostState, HostStateLabel
+from ._page_url import encode_filter_node
 from ._validators import validate_label_pairs, validate_uniqueness, validate_unix_timestamp
 
 __all__ = [
@@ -52,6 +53,7 @@ __all__ = [
     "ConditionNode",
     "custom_icons",
     "CustomIcon",
+    "encode_filter_node",
     "resolved_icon",
     "FILTER_NODE",
     "FilterNode",

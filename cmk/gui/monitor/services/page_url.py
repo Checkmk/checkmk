@@ -8,19 +8,11 @@ from urllib.parse import urlencode
 
 from cmk.gui.http import Request
 from cmk.gui.monitor.legacy_context import encode_unapplied_filters
+from cmk.gui.monitor.shared import encode_filter_node
 from cmk.gui.type_defs import FilterName
 from cmk.web.utils.urls import makeuri_contextless
 
 from ._api._filters import SERVICE_FILTER_NODE, ServiceFilterNode
-
-
-def _encode_filter(filter_node: ServiceFilterNode | None) -> list[tuple[str, str]]:
-    if filter_node is None:
-        return []
-    filter_json = SERVICE_FILTER_NODE.dump_json(filter_node).decode()
-    # The nodes are plain dataclasses, only reading them back runs the model's validators.
-    SERVICE_FILTER_NODE.validate_json(filter_json)
-    return [("filter", filter_json)]
 
 
 def all_services_url(
@@ -38,7 +30,10 @@ def all_services_url(
     """
     return makeuri_contextless(
         request,
-        [*_encode_filter(filter_node), *encode_unapplied_filters(unapplied)],
+        [
+            *encode_filter_node(SERVICE_FILTER_NODE, filter_node),
+            *encode_unapplied_filters(unapplied),
+        ],
         filename="monitor_all_services.py",
     )
 
@@ -67,7 +62,7 @@ def host_services_url(
         [
             ("host", host_name),
             ("site", site_id),
-            *_encode_filter(filter_node),
+            *encode_filter_node(SERVICE_FILTER_NODE, filter_node),
             *encode_unapplied_filters(unapplied),
         ],
         filename="monitor_host_services.py",

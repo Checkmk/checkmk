@@ -45,258 +45,75 @@ def test_does_not_match_a_regex_that_covers_the_end() -> None:
     assert not matches(regex_or_name="~name", host_name=HostName("hostname"))
 
 
+def _cleanup_parameters(*regexes_or_explicits: Sequence[str]) -> InvCleanupParams:
+    return InvCleanupParams(
+        for_hosts=[
+            InvCleanupParamsOfHosts(
+                regex_or_explicit=regex_or_explicit,
+                parameters=(
+                    "combined",
+                    InvCleanupParamsCombined(
+                        strategy="and", file_age=1, number_of_history_entries=2
+                    ),
+                ),
+            )
+            for regex_or_explicit in regexes_or_explicits
+        ],
+        default=InvCleanupParamsDefaultCombined(
+            strategy="and", file_age=123, number_of_history_entries=456
+        ),
+        abandoned_file_age=100,
+    )
+
+
 @pytest.mark.parametrize(
-    "cleanup_parameters, hosts_of_site, expected",
+    "cleanup_parameters, host_names, expected",
     [
+        pytest.param(_cleanup_parameters(), [], _cleanup_parameters(), id="no-hosts-at-all"),
         pytest.param(
-            InvCleanupParams(
-                for_hosts=[],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
-            [],
-            InvCleanupParams(
-                for_hosts=[],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
-            id="no-of-hosts-and-no-hosts-of-site",
+            _cleanup_parameters(["hostname"]), [], _cleanup_parameters(), id="no-hosts-of-site"
         ),
         pytest.param(
-            InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="and",
-                                file_age=1,
-                                number_of_history_entries=2,
-                            ),
-                        ),
-                    )
-                ],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
-            [],
-            InvCleanupParams(
-                for_hosts=[],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
-            id="of-hosts-and-no-hosts-of-site",
-        ),
-        pytest.param(
-            InvCleanupParams(
-                for_hosts=[],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
+            _cleanup_parameters(),
             [HostName("hostname")],
-            InvCleanupParams(
-                for_hosts=[],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
-            id="no-of-hosts-and-hosts-of-site",
+            _cleanup_parameters(),
+            id="no-parameters-of-hosts",
         ),
         pytest.param(
-            InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname1"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="and",
-                                file_age=1,
-                                number_of_history_entries=2,
-                            ),
-                        ),
-                    )
-                ],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
+            _cleanup_parameters(["hostname1"]),
             [HostName("hostname2")],
-            InvCleanupParams(
-                for_hosts=[],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
-            id="of-hosts-and-hosts-of-site-and-no-match",
+            _cleanup_parameters(),
+            id="no-match",
         ),
         pytest.param(
-            InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="and",
-                                file_age=1,
-                                number_of_history_entries=2,
-                            ),
-                        ),
-                    )
-                ],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
+            _cleanup_parameters(["hostname"]),
             [HostName("hostname")],
-            InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["hostname"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="and",
-                                file_age=1,
-                                number_of_history_entries=2,
-                            ),
-                        ),
-                    )
-                ],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
-            id="of-hosts-and-hosts-of-site-and-match",
+            _cleanup_parameters(["hostname"]),
+            id="match",
         ),
         pytest.param(
-            InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["~h", "~g", "hostname"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="and",
-                                file_age=1,
-                                number_of_history_entries=2,
-                            ),
-                        ),
-                    )
-                ],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
+            _cleanup_parameters(["~h", "~g", "hostname"]),
             [HostName("hostname")],
-            InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["~h", "hostname"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="and",
-                                file_age=1,
-                                number_of_history_entries=2,
-                            ),
-                        ),
-                    )
-                ],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
+            _cleanup_parameters(["~h", "hostname"]),
             id="regex-match",
         ),
         pytest.param(
-            InvCleanupParams(
-                for_hosts=[
-                    InvCleanupParamsOfHosts(
-                        regex_or_explicit=["~g"],
-                        parameters=(
-                            "combined",
-                            InvCleanupParamsCombined(
-                                strategy="and",
-                                file_age=1,
-                                number_of_history_entries=2,
-                            ),
-                        ),
-                    ),
-                ],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
+            _cleanup_parameters(["~g"]),
             [HostName("hostname")],
-            InvCleanupParams(
-                for_hosts=[],
-                default=InvCleanupParamsDefaultCombined(
-                    strategy="and",
-                    file_age=123,
-                    number_of_history_entries=456,
-                ),
-                abandoned_file_age=100,
-            ),
+            _cleanup_parameters(),
             id="no-regex-match",
         ),
     ],
 )
-def test_filter_inventory_cleanup_parameters(
+def test_filter_inventory_cleanup_parameters_keeps_the_matching_hosts(
     cleanup_parameters: InvCleanupParams,
-    hosts_of_site: Sequence[HostName],
+    host_names: Sequence[HostName],
     expected: InvCleanupParams,
 ) -> None:
     assert (
         filter_inventory_cleanup_parameters(
             cleanup_parameters=cleanup_parameters,
-            host_names=hosts_of_site,
+            host_names=host_names,
         )
         == expected
     )

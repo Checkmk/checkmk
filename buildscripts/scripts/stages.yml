@@ -150,6 +150,7 @@ STAGES:
               --known-offender omd/packages/omd/omdlib/__init__.py \
               > ${RESULTS}/results.txt || make_rc=$?
           ./buildscripts/scripts/check_community_edition_all_free.sh >> ${RESULTS}/results.txt || make_rc=$?
+          ./buildscripts/scripts/check_package_docs_listed.sh >> ${RESULTS}/results.txt || make_rc=$?
           ./scripts/in_bazel.sh "requirements.in" "filegroup" \
               --path "packages" \
               --path "non-free/packages" \

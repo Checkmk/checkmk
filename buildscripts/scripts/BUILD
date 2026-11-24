@@ -127,6 +127,7 @@ sh_library(
         "build_qemu.sh",
         "build_wine.sh",
         "check_community_edition_all_free.sh",
+        "check_package_docs_listed.sh",
         "create_unsign_msi_patch.sh",
         "extract_llvm.sh",
         "gcc-toolchain/build.sh",

@@ -534,25 +534,8 @@ class CheckboxPushoverSound:
 # ----------------------------------------------------------------
 
 
-class API_SMTPAuth(TypedDict):
-    method: Literal["plaintext"]
-    user: str
-    password: API_Password
-
-
 class API_AuthValueType(CheckboxStateType, total=False):
-    value: API_SMTPAuth
-
-
-def _smtp_password_as_password(password: str | CheckmkPassword) -> CheckmkPassword:
-    """The SMTP password in the format of the password, also if it was stored as text"""
-    if isinstance(password, str):
-        return (
-            "cmk_postprocessed",
-            "explicit_password",
-            (password_store.ad_hoc_password_id(), password),
-        )
-    return password
+    value: SMTPAuthAttrs
 
 
 class API_EnableSyncViaSMTPAttrs(TypedDict):
@@ -591,14 +574,7 @@ class EnableSyncDeliveryViaSMTP:
         )
 
         if v["auth"]["state"] == "enabled":
-            auth = v["auth"]["value"]
-            password = APICheckmkPassword_FromPassword.from_api_request(auth["password"])
-            assert password.checkmk_password is not None
-            value["auth"] = SMTPAuthAttrs(
-                method=auth["method"],
-                user=auth["user"],
-                password=password.checkmk_password,
-            )
+            value["auth"] = v["auth"]["value"]
 
         if (encryption := v.get("encryption")) is not None:
             value["encryption"] = encryption
@@ -617,16 +593,7 @@ class EnableSyncDeliveryViaSMTP:
             }
 
             if (auth := self.value.get("auth")) is not None:
-                r["value"]["auth"] = {
-                    "state": "enabled",
-                    "value": {
-                        "method": auth["method"],
-                        "user": auth["user"],
-                        "password": APICheckmkPassword_FromPassword.from_mk_file_format(
-                            _smtp_password_as_password(auth["password"])
-                        ).api_response(),
-                    },
-                }
+                r["value"]["auth"] = {"state": "enabled", "value": auth}
 
             if (encryption := self.value.get("encryption")) is not None:
                 r["value"]["encryption"] = encryption

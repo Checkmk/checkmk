@@ -361,15 +361,6 @@ def _ensure_str_error_message(message: bytes | str) -> str:
     return message.decode("utf-8") if isinstance(message, bytes) else message
 
 
-def get_smtp_password(context: dict[str, str]) -> str:
-    if "PARAMETER_SMTP_AUTH_PASSWORD" in context:
-        # The password as text, the format before it became a password, from the REST API or
-        # personal notification rules saved before 2.4. add_to_event_context only adds the
-        # unsuffixed PARAMETER_SMTP_AUTH_PASSWORD for a text, never for a password.
-        return context["PARAMETER_SMTP_AUTH_PASSWORD"]
-    return get_password_from_env_or_context(key="PARAMETER_SMTP_AUTH_PASSWORD", context=context)
-
-
 def send_mail_smtp_impl(
     message: Message,
     target: MailString,
@@ -408,7 +399,10 @@ def send_mail_smtp_impl(
     if context.get("PARAMETER_SMTP_AUTH_USER") is not None:
         conn.login(
             context["PARAMETER_SMTP_AUTH_USER"],
-            get_smtp_password(context),
+            get_password_from_env_or_context(
+                key="PARAMETER_SMTP_AUTH_PASSWORD",
+                context=context,
+            ),
         )
 
     # this call returns a dictionary with the recipients that failed + the reason, but only

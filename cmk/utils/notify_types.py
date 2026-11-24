@@ -356,16 +356,9 @@ ManualPrefixURL = tuple[Literal["manual"], str]
 URLPrefix = HTTPPrefixURL | HTTPSPrefixURL | ManualPrefixURL
 
 
-CheckmkPassword = tuple[
-    Literal["cmk_postprocessed"],
-    Literal["stored_password", "explicit_password"],
-    tuple[str, str],
-]
-
-
 class SMTPAuthAttrs(TypedDict):
     method: Literal["plaintext"]
-    password: str | CheckmkPassword
+    password: str
     user: str
 
 
@@ -409,6 +402,13 @@ class BulkParameters(TypedDict, total=False):
 
 PluginNotificationContext = dict[str, str]
 NotificationRuleID = NewType("NotificationRuleID", str)
+
+
+CheckmkPassword = tuple[
+    Literal["cmk_postprocessed"],
+    Literal["stored_password", "explicit_password"],
+    tuple[str, str],
+]
 
 
 class EmailFromOrTo(TypedDict):

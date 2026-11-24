@@ -17,6 +17,7 @@ from cmk.plugins.checkmk.server_side_calls.cert import (
     Settings,
     Subject,
 )
+from cmk.server_side_calls.internal import URLProxy
 from cmk.server_side_calls.v1 import ActiveCheckCommand, EnvProxy, HostConfig, IPv4Config, NoProxy
 
 HOST_CONFIG = HostConfig(
@@ -65,6 +66,43 @@ def test_no_proxy() -> None:
         ActiveCheckCommand(
             service_description="CERT my_service",
             command_arguments=["--hostname", "abc.xyz", "--port", "443", "--ignore-proxy-env"],
+        )
+    ]
+
+
+def test_url_proxy_with_macro() -> None:
+    result = list(
+        generate_cert_services(
+            [
+                CertEndpoint(
+                    service_name=ServiceDescription(prefix=ServicePrefix.AUTO, name="my_service"),
+                    address="abc.xyz",
+                    port=443,
+                    individual_settings=Settings(
+                        proxy=URLProxy(scheme="http", proxy_server_name="$HOSTNAME$", port=3128)
+                    ),
+                )
+            ],
+            HostConfig(
+                name="testhost",
+                ipv4_config=IPv4Config(address="0.0.0.1"),
+                macros={"$HOSTNAME$": "testhost"},
+            ),
+        )
+    )
+    assert result == [
+        ActiveCheckCommand(
+            service_description="CERT my_service",
+            command_arguments=[
+                "--hostname",
+                "abc.xyz",
+                "--port",
+                "443",
+                "--proxy-url",
+                "http://testhost",
+                "--proxy-port",
+                "3128",
+            ],
         )
     ]
 

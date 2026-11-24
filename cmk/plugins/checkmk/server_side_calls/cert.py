@@ -147,7 +147,9 @@ def generate_cert_services(
         )
 
 
-def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str | Secret]:
+def _proxy_args(
+    proxy: EnvProxy | URLProxy | NoProxy, macros: Mapping[str, str]
+) -> Iterator[str | Secret]:
     match proxy:
         case EnvProxy():
             yield from ()
@@ -160,7 +162,7 @@ def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str | Secret]:
             auth=auth,
         ):
             yield "--proxy-url"
-            yield f"{scheme}://{proxy_server_name}"
+            yield f"{scheme}://{replace_macros(proxy_server_name, macros)}"
             yield "--proxy-port"
             yield str(port)
 
@@ -195,7 +197,7 @@ def _command_arguments(endpoint: CertEndpoint, host_config: HostConfig) -> Itera
         yield "--connection-type"
         yield connection_type
     if (proxy := settings.proxy) is not None:
-        yield from _proxy_args(proxy)
+        yield from _proxy_args(proxy, host_config.macros)
     if (response_time := settings.response_time) is not None:
         yield from _response_time_args(response_time)
     if (validity := settings.validity) is not None:

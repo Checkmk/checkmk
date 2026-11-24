@@ -438,3 +438,129 @@ def test_parse_plain_verification_response_bad_additional_features(
 
     with pytest.raises(ValueError):
         verification.parse_plain_verification_response(response)
+
+
+@pytest.mark.parametrize(
+    "base_response",
+    [
+        pytest.param(TEST_VERIFICATION_RESPONSE_V2_0, id="2.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_0, id="3.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_2, id="3.2"),
+    ],
+)
+def test_parse_plain_verification_response_invalid_request_id(
+    base_response: dict[str, str | dict[str, object]],
+) -> None:
+    response: dict[str, str | dict[str, object]] = copy.deepcopy(base_response)
+    response["request_id"] = "I'm a string :)"
+
+    with pytest.raises(ValueError):
+        verification.parse_plain_verification_response(response)
+
+
+@pytest.mark.parametrize(
+    "base_response",
+    [
+        pytest.param(TEST_VERIFICATION_RESPONSE_V2_0, id="2.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_0, id="3.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_2, id="3.2"),
+    ],
+)
+def test_parse_plain_verification_response_invalid_response_id(
+    base_response: dict[str, str | dict[str, object]],
+) -> None:
+    response: dict[str, str | dict[str, object]] = copy.deepcopy(base_response)
+    response["response_id"] = "I'm a string :)"
+
+    with pytest.raises(ValueError):
+        verification.parse_plain_verification_response(response)
+
+
+@pytest.mark.parametrize(
+    "base_response",
+    [
+        pytest.param(TEST_VERIFICATION_RESPONSE_V2_0, id="2.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_0, id="3.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_2, id="3.2"),
+    ],
+)
+def test_parse_plain_verification_response_invalid_certificate(
+    base_response: dict[str, str | dict[str, object]],
+) -> None:
+    response: dict[str, str | dict[str, object]] = copy.deepcopy(base_response)
+    response["certificate"] = "not a PEM"
+
+    with pytest.raises(ValueError):
+        verification.parse_plain_verification_response(response)
+
+
+@pytest.mark.parametrize(
+    "base_response",
+    [
+        pytest.param(TEST_VERIFICATION_RESPONSE_V2_0, id="2.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_0, id="3.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_2, id="3.2"),
+    ],
+)
+def test_parse_plain_verification_response_invalid_signature(
+    base_response: dict[str, str | dict[str, object]],
+) -> None:
+    response: dict[str, str | dict[str, object]] = copy.deepcopy(base_response)
+    response["signature"] = "not a base64: !@#@#$%"
+
+    with pytest.raises(ValueError):
+        verification.parse_plain_verification_response(response)
+
+
+@pytest.mark.parametrize(
+    "base_response",
+    [
+        pytest.param(TEST_VERIFICATION_RESPONSE_V2_0, id="2.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_0, id="3.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_2, id="3.2"),
+    ],
+)
+def test_parse_plain_verification_response_invalid_status(
+    base_response: dict[str, str | dict[str, object]],
+) -> None:
+    response: dict[str, str | dict[str, object]] = copy.deepcopy(base_response)
+    response["payload"]["status"] = "meh"  # type: ignore[index]
+
+    with pytest.raises(ValueError):
+        verification.parse_plain_verification_response(response)
+
+
+@pytest.mark.parametrize(
+    "base_response",
+    [
+        pytest.param(TEST_VERIFICATION_RESPONSE_V2_0, id="2.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_0, id="3.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_2, id="3.2"),
+    ],
+)
+def test_parse_plain_verification_response_invalid_edition(
+    base_response: dict[str, str | dict[str, object]],
+) -> None:
+    response: dict[str, str | dict[str, object]] = copy.deepcopy(base_response)
+    response["payload"]["checkmk_edition"] = "For Workgroups™"  # type: ignore[index]
+
+    with pytest.raises(ValueError):
+        verification.parse_plain_verification_response(response)
+
+
+@pytest.mark.parametrize(
+    "base_response",
+    [
+        pytest.param(TEST_VERIFICATION_RESPONSE_V2_0, id="2.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_0, id="3.0"),
+        pytest.param(TEST_VERIFICATION_RESPONSE_V3_2, id="3.2"),
+    ],
+)
+def test_parse_plain_verification_response_invalid_operational_state(
+    base_response: dict[str, str | dict[str, object]],
+) -> None:
+    response: dict[str, str | dict[str, object]] = copy.deepcopy(base_response)
+    response["payload"]["operational_state"] = "not-a-valid-state"  # type: ignore[index]
+
+    with pytest.raises(ValueError):
+        verification.parse_plain_verification_response(response)

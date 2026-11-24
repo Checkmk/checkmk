@@ -292,20 +292,6 @@ def test_neighbours_beyond_the_visible_range_stretch_the_vertical_axis_only_up_t
     assert drawing.y_range == (2.0, 52.0)
 
 
-def test_a_region_without_a_lower_bound_reaches_down_to_the_bottom_of_the_axis() -> None:
-    line = EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=False)
-    region = EvaluatedRegion(
-        id="region-0",
-        attributes=CurveAttributes(title="OK", unit=_UNIT, color="#15d1a0"),
-        lower=None,
-        upper=TimeSeries(time_range=_TIME_RANGE, values=[2.0, 2.0, 2.0]),
-    )
-
-    drawing = _drawing(_graph(lines=[line], regions=[region]))
-
-    assert drawing.regions[0].lower == [1.0, 1.0, 1.0]
-
-
 def test_the_caption_dates_the_range_in_the_given_time_zone() -> None:
     # 2026-09-28 23:00 UTC is already 2026-09-29 in Berlin.
     time_range = TimeRange(start=1790636400, end=1790640000, step=60)
@@ -481,14 +467,6 @@ def test_a_region_is_drawn_between_its_bounds() -> None:
         [2.0, 2.0, None],
         [4.0, 4.0, 4.0],
     )
-
-
-def test_a_region_without_an_upper_bound_reaches_up_to_the_top_of_the_axis() -> None:
-    line = EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=False)
-
-    drawing = _drawing(_graph(lines=[line], regions=[_region(lower=[2.0, 2.0, 2.0], upper=None)]))
-
-    assert drawing.regions[0].upper == [3.0, 3.0, 3.0]
 
 
 def test_the_legend_shows_the_value_of_a_rule_as_its_last_value() -> None:

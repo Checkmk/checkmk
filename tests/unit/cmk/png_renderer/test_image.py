@@ -213,14 +213,31 @@ def test_a_line_is_drawn_at_its_values() -> None:
     assert np.asarray(ax.get_lines()[0].get_ydata()).tolist() == [1.0, 2.0, 3.0]
 
 
-def test_a_region_is_filled_between_its_bounds() -> None:
-    region = Region(color="#15d1a0", lower=[1.0, 1.0, 1.0], upper=[2.0, 2.0, 2.0])
+def _region_heights(region: Region) -> tuple[float, float]:
     ax = Figure().add_subplot(1, 1, 1)
 
     _plot(ax, _drawing(regions=[region]))
 
     heights = np.asarray(ax.collections[0].get_paths()[0].vertices)[:, 1]
-    assert (heights.min(), heights.max()) == (1.0, 2.0)
+    return float(heights.min()), float(heights.max())
+
+
+def test_a_region_is_filled_between_its_bounds() -> None:
+    region = Region(color="#15d1a0", lower=[1.0, 1.0, 1.0], upper=[2.0, 2.0, 2.0])
+
+    assert _region_heights(region) == (1.0, 2.0)
+
+
+def test_a_region_without_a_lower_bound_reaches_down_to_the_bottom_of_the_plot() -> None:
+    region = Region(color="#15d1a0", lower=None, upper=[2.0, 2.0, 2.0])
+
+    assert _region_heights(region) == (0.0, 2.0)
+
+
+def test_a_region_without_an_upper_bound_reaches_up_to_the_top_of_the_plot() -> None:
+    region = Region(color="#15d1a0", lower=[1.0, 1.0, 1.0], upper=None)
+
+    assert _region_heights(region) == (1.0, 3.0)
 
 
 def test_a_rule_is_drawn_across_the_plot_at_its_value() -> None:

@@ -104,8 +104,8 @@ def _region(raw: object) -> Region:
     fields = _ensure_type(raw, dict)
     return Region(
         color=_ensure_type(fields["color"], str),
-        lower=_optional_floats(fields["lower"]),
-        upper=_optional_floats(fields["upper"]),
+        lower=None if fields["lower"] is None else _optional_floats(fields["lower"]),
+        upper=None if fields["upper"] is None else _optional_floats(fields["upper"]),
     )
 
 

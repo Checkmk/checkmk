@@ -37,7 +37,10 @@ def _drawing(*, vertical_axis: VerticalAxis | None, legend: Legend | None) -> Pn
         y_range=(-0.5, 30.0),
         stacks=[Stack(areas=[Area(color="#123456", top=[1.0, None, 3.0])])],
         lines=[Line(color="#654321", values=[None, 2.0, 4.5])],
-        regions=[Region(color="#15d1a0", lower=[-0.5, -0.5, -0.5], upper=[3.0, None, 3.0])],
+        regions=[
+            Region(color="#15d1a0", lower=None, upper=[3.0, None, 3.0]),
+            Region(color="#15d1a0", lower=[-0.5, -0.5, -0.5], upper=None),
+        ],
         rules=[Rule(color="#ff0000", value=-4.5)],
         vertical_axis=vertical_axis,
         time_axis=TimeAxis(time_zone="Europe/Berlin"),

@@ -29,8 +29,8 @@ class Line:
 @dataclass(frozen=True, kw_only=True)
 class Region:
     color: str
-    lower: Sequence[float | None]
-    upper: Sequence[float | None]
+    lower: Sequence[float | None] | None
+    upper: Sequence[float | None] | None
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -75,9 +75,18 @@ def _plot_line(ax: Axes, times: Sequence[int], line: Line) -> None:
     ax.plot(times, _array(line.values), color=line.color)
 
 
-def _plot_region(ax: Axes, times: Sequence[int], region: Region) -> None:
-    lower = _array(region.lower)
-    upper = _array(region.upper)
+def _bound(
+    values: Sequence[float | None] | None, edge: float, times: Sequence[int]
+) -> npt.NDArray[np.float64]:
+    return np.full(len(times), edge) if values is None else _array(values)
+
+
+def _plot_region(
+    ax: Axes, times: Sequence[int], y_range: tuple[float, float], region: Region
+) -> None:
+    floor, ceiling = y_range
+    lower = _bound(region.lower, floor, times)
+    upper = _bound(region.upper, ceiling, times)
     ax.fill_between(
         times,
         lower,
@@ -99,7 +108,7 @@ def _plot(ax: Axes, drawing: PngDrawing) -> None:
     # outside the data's range doesn't stretch the view via matplotlib's own autoscale.
     ax.set_ylim(*drawing.y_range)
     for region in drawing.regions:
-        _plot_region(ax, drawing.times, region)
+        _plot_region(ax, drawing.times, drawing.y_range, region)
     for rule in drawing.rules:
         ax.axhline(rule.value, color=rule.color)
 

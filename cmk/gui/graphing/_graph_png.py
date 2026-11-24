@@ -112,20 +112,12 @@ def _line(line: EvaluatedLine) -> Line:
     )
 
 
-def _regions(
-    graph: EvaluatedGraph, times: Sequence[int], y_range: tuple[float, float]
-) -> Sequence[Region]:
-    if not times:
-        return []
-    floor, ceiling = y_range
-    return [
-        Region(
-            color=region.attributes.color,
-            lower=[floor] * len(times) if region.lower is None else region.lower.values,
-            upper=[ceiling] * len(times) if region.upper is None else region.upper.values,
-        )
-        for region in graph.regions
-    ]
+def _region(region: EvaluatedRegion) -> Region:
+    return Region(
+        color=region.attributes.color,
+        lower=None if region.lower is None else region.lower.values,
+        upper=None if region.upper is None else region.upper.values,
+    )
 
 
 def _values_drawn_on(
@@ -385,7 +377,7 @@ def png_drawing(
         y_range=y_range,
         stacks=stacks,
         lines=lines,
-        regions=_regions(graph, times, y_range),
+        regions=[_region(region) for region in graph.regions],
         rules=_rules_in_range(graph.rules, y_range),
         vertical_axis=(
             _vertical_axis(formatter, y_range, options, is_mirrored=is_mirrored)

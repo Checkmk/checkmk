@@ -696,6 +696,8 @@ class LockTestThread(threading.Thread):
                 assert store.have_lock(self.path) is False
                 return locked
             case LockTestJob.TERMINATE:
+                # Locks belong to the thread which acquired them.
+                store.release_all_locks()
                 return None
 
     def _send(self, job: LockTestJob) -> futures.Future[bool | None]:

@@ -37,6 +37,7 @@ doc_srcs(
     ] + select({
         "@cmk//edition:community": [],
         "//conditions:default": [
+            "//non-free/packages/cmk-data-backend:docs",
             "//non-free/packages/cmk-liveproxyd:docs",
             "//non-free/packages/cmk-mknotifyd:docs",
             "//non-free/packages/cmk-relay-engine:docs",

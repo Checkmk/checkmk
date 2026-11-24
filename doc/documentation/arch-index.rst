@@ -54,7 +54,6 @@ Components
    arch-comp-crontab.rst
    arch-comp-agent-receiver.rst
    arch-comp-autoregistration.rst
-   arch-comp-data-backend.rst
    arch-comp-otel-monitoring-dcd.rst
    arch-comp-otel-monitoring-custom-query.rst
    arch-comp-mcp.rst

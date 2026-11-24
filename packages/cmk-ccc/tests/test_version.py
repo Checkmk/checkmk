@@ -294,18 +294,22 @@ _REQUIRES = "This target version requires at least "
         pytest.param("2.1.0", "2.0.0b1", _TOO_OLD, id="previous major beta"),
         pytest.param("2.2.0b1000", "2.3.0i1", _REQUIRES + "2.2.0p8", id="before required patch"),
         pytest.param("2.4.0p5", "3.0.0", _TOO_NEW, id="3.0.0 after 2.4.0"),
+        pytest.param("2.3.0", "2.5.0", _TOO_NEW, id="two majors up within 2.x"),
+        pytest.param("1.6.0", "3.0.0", _TOO_NEW, id="two first numbers up"),
+        pytest.param("2.5.0", "2.5.1", _TOO_NEW, id="sub version up"),
     ],
 )
 def test_incompatible_versions_tell_why(from_version: str, to_version: str, reason: str) -> None:
-    assert (
-        str(versions_compatible(Version.from_str(from_version), Version.from_str(to_version)))
-        == reason
-    )
+    result = versions_compatible(Version.from_str(from_version), Version.from_str(to_version))
+
+    assert not result.is_compatible
+    assert str(result) == reason
 
 
 def test_updating_a_beta_to_the_next_major_needs_its_release() -> None:
     result = versions_compatible(Version.from_str("2.5.0b1"), Version.from_str("3.0.0"))
 
+    assert not result.is_compatible
     assert str(result).startswith(_REQUIRES + "2.5.0")
 
 

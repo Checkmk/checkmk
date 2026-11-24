@@ -5,6 +5,7 @@
 
 from ._link import (
     build_column_filter_check,
+    build_link_url,
     encode_unapplied_filters,
     FilterTitleLookup,
     read_unapplied_filter_titles,
@@ -19,6 +20,7 @@ from ._translate import (
 
 __all__ = [
     "build_column_filter_check",
+    "build_link_url",
     "check_and_keep_tree",
     "ContextFilterTranslation",
     "encode_unapplied_filters",

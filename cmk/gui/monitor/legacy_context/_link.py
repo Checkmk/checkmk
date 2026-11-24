@@ -3,17 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""How a link from a legacy view names the filters it could not take over, so that the monitoring
-page it opens can say which of them it does not apply."""
+"""Build the links from legacy views to the new monitoring pages, and read on the page which
+filters such a link could not take over."""
 
 from collections import defaultdict
 from collections.abc import Callable, Sequence, Set
 from typing import Final
 
 from cmk.gui.http import Request
-from cmk.gui.type_defs import FilterName
+from cmk.gui.log import logger
+from cmk.gui.type_defs import FilterName, VisualContext
 
-from ._filters import FilterJSON, get_top_level_nodes
+from ._filters import FilterJSON, get_top_level_nodes, has_any_value
+from ._translate import ContextFilterTranslation
 
 _UNAPPLIED_FILTERS_VAR: Final = "unapplied"
 
@@ -76,3 +78,22 @@ def build_column_filter_check(shown_conditions: Set[str]) -> Callable[[FilterJSO
 
 def _is_condition(node: object) -> bool:
     return isinstance(node, dict) and node.get("type") == "condition"
+
+
+def build_link_url[N](
+    context: VisualContext,
+    translate: Callable[[VisualContext], ContextFilterTranslation[N]],
+    build_url: Callable[[N | None, Sequence[FilterName]], str],
+) -> str:
+    """Build the URL of a new monitoring page that keeps the filters of a legacy view.
+
+    ``translate`` turns the view's ``context`` into the page's filter, and ``build_url`` builds the
+    URL from it. If either fails, build the URL without filters and report every filter that has a
+    value as not applied. That way the legacy view still renders, and the page never shows more
+    rows than asked for without saying so."""
+    try:
+        translation = translate(context)
+        return build_url(translation.filter, translation.unapplied)
+    except Exception:
+        logger.exception("Could not take over the filters of a legacy view for a link")
+        return build_url(None, [name for name, value in context.items() if has_any_value(value)])

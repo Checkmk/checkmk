@@ -6,6 +6,7 @@
 import json
 from html.parser import HTMLParser
 from typing import override
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 
@@ -15,6 +16,7 @@ from cmk.gui.monitor.services._legacy_view_link import (
     AllServicesLinkButton,
     HostServicesLinkButton,
 )
+from cmk.gui.type_defs import VisualContext
 
 SHORTCUTS = "#page_menu_bar .shortcuts"
 
@@ -36,10 +38,12 @@ class _VueComponentData(HTMLParser):
 
 
 def _button_payload(
-    button: AllServicesLinkButton | HostServicesLinkButton, view_name: str
+    button: AllServicesLinkButton | HostServicesLinkButton,
+    view_name: str,
+    context: VisualContext | None = None,
 ) -> dict[str, object] | None:
     with html.output_funnel.plugged():
-        button(view_name)
+        button(view_name, context or {})
         rendered = html.output_funnel.drain()
 
     parser = _VueComponentData()
@@ -96,6 +100,26 @@ def test_the_configured_teleport_target_reaches_the_button() -> None:
     assert payload["teleport_target"] == SHORTCUTS
 
 
+@pytest.mark.usefixtures("request_context", "host_in_request")
+def test_the_new_view_opens_with_the_filters_of_the_classic_one() -> None:
+    context: VisualContext = {
+        "host": {"host": "heute"},
+        "serviceregex": {"service_regex": "CPU"},
+        "hoststate": {"hst0": "", "hst1": "on", "hst2": "on", "hstp": ""},
+    }
+
+    payload = _button_payload(HostServicesLinkButton(), "host", context)
+
+    assert payload is not None
+    query = parse_qs(urlsplit(str(payload["url"])).query)
+    assert {**query, "filter": [json.loads(value) for value in query["filter"]]} == {
+        "host": ["heute"],
+        "site": ["heute"],
+        "filter": [{"type": "condition", "field": "name", "op": "contains", "value": "CPU"}],
+        "unapplied": ["hoststate"],
+    }
+
+
 @pytest.mark.usefixtures("request_context")
 def test_the_classic_all_services_view_offers_the_new_view_and_a_survey() -> None:
     payload = _button_payload(AllServicesLinkButton(), "allservices")
@@ -108,3 +132,27 @@ def test_the_classic_all_services_view_offers_the_new_view_and_a_survey() -> Non
 @pytest.mark.usefixtures("request_context")
 def test_all_services_button_leaves_other_views_untouched() -> None:
     assert _button_payload(AllServicesLinkButton(), "host") is None
+
+
+@pytest.mark.usefixtures("request_context")
+def test_the_new_all_services_view_opens_with_the_filters_of_the_classic_one() -> None:
+    context: VisualContext = {
+        "serviceregex": {"service_regex": "CPU"},
+        "hostalias": {"hostalias": "web"},
+    }
+
+    payload = _button_payload(AllServicesLinkButton(), "allservices", context)
+
+    assert payload is not None
+    parts = urlsplit(str(payload["url"]))
+    query = parse_qs(parts.query)
+    assert (
+        parts.path,
+        {**query, "filter": [json.loads(value) for value in query["filter"]]},
+    ) == (
+        "monitor_all_services.py",
+        {
+            "filter": [{"type": "condition", "field": "name", "op": "contains", "value": "CPU"}],
+            "unapplied": ["hostalias"],
+        },
+    )

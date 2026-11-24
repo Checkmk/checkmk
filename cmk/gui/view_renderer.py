@@ -347,7 +347,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
         call_hooks("view_banner", self.view.name)
         call_hooks("rmk_view_banner", self.view.name)
-        call_hooks("experimental_view_button", self.view.name)
+        call_hooks("experimental_view_button", self.view.name, self.view.context)
 
         if not has_done_actions and not missing_single_infos:
             if self.view.spec.get("mustsearch") and len(rows) == 0:

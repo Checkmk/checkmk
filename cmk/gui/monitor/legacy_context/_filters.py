@@ -20,6 +20,12 @@ from cmk.gui.type_defs import FilterHTTPVariables
 
 IGNORED_TRISTATE = "-1"
 
+
+def has_any_value(value: FilterHTTPVariables) -> bool:
+    """Check whether a legacy filter has any value set, not counting an ignored tri-state flag."""
+    return any(text and text != IGNORED_TRISTATE for text in value.values())
+
+
 # The pages treat a trailing "*" as a prefix match, the legacy filters match it literally.
 _WILDCARD = "*"
 _LABEL_SEPARATOR = ":"

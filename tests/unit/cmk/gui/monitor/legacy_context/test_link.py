@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from urllib.parse import urlencode
 
 from werkzeug.test import create_environ
@@ -10,9 +11,12 @@ from werkzeug.test import create_environ
 from cmk.gui.http import Request
 from cmk.gui.monitor.legacy_context import (
     build_column_filter_check,
+    build_link_url,
+    ContextFilterTranslation,
     encode_unapplied_filters,
     read_unapplied_filter_titles,
 )
+from cmk.gui.type_defs import FilterName, VisualContext
 
 _TITLES = {"wato_folder": "Folder", "hostgroup": "Host group"}
 
@@ -48,6 +52,51 @@ def test_the_page_names_a_filter_once() -> None:
 
 def test_a_page_opened_without_the_variable_names_no_filter() -> None:
     assert read_unapplied_filter_titles(_request([]), _TITLES.get) == []
+
+
+def _url(filter_node: str | None, unapplied: Sequence[FilterName]) -> str:
+    return f"page.py?filter={filter_node}&unapplied={','.join(unapplied)}"
+
+
+# A host name filter that is set, and a folder filter that is not.
+_CONTEXT: VisualContext = {"hostregex": {"host_regex": "web"}, "wato_folder": {"wato_folder": ""}}
+
+
+def test_a_link_carries_the_filters_it_took_over() -> None:
+    def translate(_context: VisualContext) -> ContextFilterTranslation[str]:
+        return ContextFilterTranslation(filter="name~web", unapplied=["wato_folder"])
+
+    assert (
+        build_link_url(_CONTEXT, translate, _url) == "page.py?filter=name~web&unapplied=wato_folder"
+    )
+
+
+def test_a_link_that_cannot_take_over_the_filters_names_every_filter_that_is_set() -> None:
+    def translate(_context: VisualContext) -> ContextFilterTranslation[str]:
+        raise RuntimeError("translation broke")
+
+    assert build_link_url(_CONTEXT, translate, _url) == "page.py?filter=None&unapplied=hostregex"
+
+
+def test_a_link_whose_filters_the_page_rejects_names_every_filter_that_is_set() -> None:
+    def translate(_context: VisualContext) -> ContextFilterTranslation[str]:
+        return ContextFilterTranslation(filter="invalid", unapplied=[])
+
+    def url(filter_node: str | None, unapplied: Sequence[FilterName]) -> str:
+        if filter_node == "invalid":
+            raise ValueError("does not validate")
+        return _url(filter_node, unapplied)
+
+    assert build_link_url(_CONTEXT, translate, url) == "page.py?filter=None&unapplied=hostregex"
+
+
+def test_a_link_that_cannot_take_over_the_filters_does_not_name_an_ignored_flag() -> None:
+    def translate(_context: VisualContext) -> ContextFilterTranslation[str]:
+        raise RuntimeError("translation broke")
+
+    context: VisualContext = {**_CONTEXT, "host_acknowledged": {"is_host_acknowledged": "-1"}}
+
+    assert build_link_url(context, translate, _url) == "page.py?filter=None&unapplied=hostregex"
 
 
 def test_a_page_shows_a_condition_its_columns_show() -> None:

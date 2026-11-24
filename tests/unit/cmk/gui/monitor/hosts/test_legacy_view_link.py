@@ -6,11 +6,13 @@
 import json
 from html.parser import HTMLParser
 from typing import override
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.monitor.hosts._legacy_view_link import AllHostsLinkButton
+from cmk.gui.type_defs import VisualContext
 
 SHORTCUTS = "#page_menu_bar .shortcuts"
 
@@ -31,9 +33,11 @@ class _VueComponentData(HTMLParser):
                 self.payloads.append(json.loads(value))
 
 
-def _button_payload(button: AllHostsLinkButton, view_name: str) -> dict[str, object] | None:
+def _button_payload(
+    button: AllHostsLinkButton, view_name: str, context: VisualContext | None = None
+) -> dict[str, object] | None:
     with html.output_funnel.plugged():
-        button(view_name)
+        button(view_name, context or {})
         rendered = html.output_funnel.drain()
 
     parser = _VueComponentData()
@@ -68,3 +72,20 @@ def test_the_configured_teleport_target_reaches_the_button() -> None:
 
     assert payload is not None
     assert payload["teleport_target"] == SHORTCUTS
+
+
+@pytest.mark.usefixtures("request_context")
+def test_the_new_view_opens_with_the_filters_of_the_classic_one() -> None:
+    context: VisualContext = {
+        "hostregex": {"host_regex": "web"},
+        "wato_folder": {"wato_folder": "linux"},
+    }
+
+    payload = _button_payload(AllHostsLinkButton(), "allhosts", context)
+
+    assert payload is not None
+    query = parse_qs(urlsplit(str(payload["url"])).query)
+    assert {**query, "filter": [json.loads(value) for value in query["filter"]]} == {
+        "filter": [{"type": "condition", "field": "name", "op": "contains", "value": "web"}],
+        "unapplied": ["wato_folder"],
+    }

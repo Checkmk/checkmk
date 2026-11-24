@@ -26,7 +26,7 @@ from ._catalog import legacy_filters, SITE_FILTERS
 from ._filters import (
     all_of,
     FilterJSON,
-    IGNORED_TRISTATE,
+    has_any_value,
     LegacyFilter,
     MultiFieldFilter,
     PageField,
@@ -215,7 +215,7 @@ def _restricts(
     """Whether a filter the page does not map restricts anything, i.e. has to be reported."""
     if (legacy_filter := catalog.get(name)) is None:
         # Its kind is unknown, so "-1" is taken for an ignored tri-state flag.
-        return any(text and text != IGNORED_TRISTATE for text in value.values())
+        return has_any_value(value)
     try:
         # Whether it restricts anything does not depend on the fields it would be mapped to.
         if isinstance(legacy_filter, MultiFieldFilter):

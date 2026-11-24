@@ -168,6 +168,9 @@ Coexistence
 -----------
 
 The classic views offer a link to the new pages and the new pages a link back.
+The link from a classic view carries the view's filters, translated into
+the filter tree of the page, and names the filters it could not take over,
+which the page lists as not applied.
 
 The global search (``packages/cmk-frontend-vue/src/unified-search``) is an
 entry point into the monitoring pages, too: pressing Enter with the

@@ -751,11 +751,7 @@ plugin_test_data: list[PluginType] = [
             "value": {
                 "auth": {
                     "state": "enabled",
-                    "value": {
-                        "method": "plaintext",
-                        "password": {"option": "explicit", "password": "gav1234"},
-                        "user": "gav",
-                    },
+                    "value": {"method": "plaintext", "password": "gav1234", "user": "gav"},
                 },
                 "encryption": "ssl_tls",
                 "port": 25,
@@ -1754,97 +1750,6 @@ def _rule_with_plugin(plugin: Mapping[str, object]) -> APINotificationRule:
         "plugin_params": cast(PluginType, plugin),
     }
     return config
-
-
-def _smtp_rule(auth: Mapping[str, object]) -> APINotificationRule:
-    return _rule_with_plugin(
-        {
-            "plugin_name": "mail",
-            "enable_sync_smtp": {
-                "state": "enabled",
-                "value": {
-                    "auth": {"state": "enabled", "value": auth},
-                    "port": 25,
-                    "smarthosts": ["smtp.example.com"],
-                },
-            },
-        }
-    )
-
-
-def _create_smtp_rule(clients: ClientRegistry, password: dict[str, str]) -> str:
-    rule_config = _smtp_rule({"method": "plaintext", "user": "smtpuser", "password": password})
-    return str(clients.RuleNotification.create(rule_config=rule_config).json["id"])
-
-
-def _smtp_password(clients: ClientRegistry, rule_id: str) -> object:
-    rule_config = clients.RuleNotification.get(rule_id).json["extensions"]["rule_config"]
-    smtp = rule_config["notification_method"]["notify_plugin"]["plugin_params"]["enable_sync_smtp"]
-    return smtp["value"]["auth"]["value"]["password"]
-
-
-@pytest.mark.parametrize(
-    "password, stored",
-    [
-        pytest.param(
-            {"option": "explicit", "password": "s3cret"},
-            ("cmk_postprocessed", "explicit_password", (ANY, "s3cret")),
-            id="explicit",
-        ),
-        pytest.param(
-            {"option": "store", "store_id": "some_store_id"},
-            ("cmk_postprocessed", "stored_password", ("some_store_id", "")),
-            id="password store",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("mock_password_file_regeneration")
-def test_smtp_password_is_stored_as_password_and_read_back(
-    clients: ClientRegistry,
-    password: dict[str, str],
-    stored: tuple[object, ...],
-) -> None:
-    setup_site_data(clients)
-    rule_id = _create_smtp_rule(clients, password)
-
-    (parameter,) = NotificationParameterConfigFile().load_for_reading()["mail"].values()
-    assert parameter["parameter_properties"]["smtp"]["auth"]["password"] == stored  # type: ignore[typeddict-item]
-    assert _smtp_password(clients, rule_id) == password
-
-
-@pytest.mark.usefixtures("mock_password_file_regeneration")
-def test_smtp_password_stored_as_text_is_read(clients: ClientRegistry) -> None:
-    rule_id = _create_smtp_rule(clients, {"option": "explicit", "password": "other"})
-    parameter_file = NotificationParameterConfigFile()
-    parameters = parameter_file.load_for_modification()
-    for parameter in parameters["mail"].values():
-        parameter["parameter_properties"]["smtp"]["auth"]["password"] = "s3cret"  # type: ignore[typeddict-item]
-    parameter_file.save(parameters)
-
-    assert _smtp_password(clients, rule_id) == {"option": "explicit", "password": "s3cret"}
-
-
-@pytest.mark.parametrize(
-    "auth",
-    [
-        pytest.param({"method": "plaintext", "user": "smtpuser"}, id="missing password"),
-        pytest.param(
-            {
-                "method": "plaintext",
-                "user": "smtpuser",
-                "password": {"option": "store", "store_id": "unknown_store_id"},
-            },
-            id="unknown password store ID",
-        ),
-    ],
-)
-def test_smtp_password_that_cannot_be_used_400(
-    clients: ClientRegistry, auth: Mapping[str, object]
-) -> None:
-    resp = clients.RuleNotification.create(rule_config=_smtp_rule(auth), expect_ok=False)
-
-    resp.assert_status_code(400)
-    assert "password" in str(resp.json["fields"])
 
 
 def _create_pagerduty_rule(clients: ClientRegistry, integration_key: dict[str, str]) -> str:

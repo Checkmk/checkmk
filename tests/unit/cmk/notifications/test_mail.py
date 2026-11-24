@@ -558,19 +558,3 @@ def test_additional_shows_both_notes_urls_for_service_notification() -> None:
     assert "http://host-notes" in html
     assert "Custom service notes URL:" in html
     assert "http://service-notes" in html
-
-
-def test_smtp_password_stored_as_text_is_read() -> None:
-    assert mail.get_smtp_password({"PARAMETER_SMTP_AUTH_PASSWORD": "s3cret"}) == "s3cret"
-
-
-def test_smtp_password_configured_as_password_is_read() -> None:
-    context = {
-        "PARAMETER_SMTP_AUTH_PASSWORD_1": "cmk_postprocessed",
-        "PARAMETER_SMTP_AUTH_PASSWORD_2": "explicit_password",
-        "PARAMETER_SMTP_AUTH_PASSWORD_3": "uuid1234\ts3cret",
-        "PARAMETER_SMTP_AUTH_PASSWORD_3_1": "uuid1234",
-        "PARAMETER_SMTP_AUTH_PASSWORD_3_2": "s3cret",
-    }
-
-    assert mail.get_smtp_password(context) == "s3cret"

@@ -977,38 +977,6 @@ class CheckboxWithListOfEmailInfoStrs(Checkbox):
     )
 
 
-class ExplicitOrStoreOptions(BaseSchema):
-    option = fields.String(
-        enum=["store", "explicit"],
-        required=True,
-        example="store",
-    )
-
-
-PASSWORD_STORE_ID_SHOULD_EXIST = PasswordStoreIDField(
-    presence="should_exist",
-    required=True,
-)
-
-
-class SMTPExplicitPassword(ExplicitOrStoreOptions):
-    password = fields.String(
-        required=True,
-        example="password",
-    )
-
-
-class SMTPStoredPassword(ExplicitOrStoreOptions):
-    store_id = PASSWORD_STORE_ID_SHOULD_EXIST
-
-
-class SMTPPasswordSelector(OptionOneOfSchema):
-    type_schemas = {
-        "explicit": SMTPExplicitPassword,
-        "store": SMTPStoredPassword,
-    }
-
-
 class Authentication(BaseSchema):
     method = fields.String(
         enum=["plaintext"],
@@ -1023,11 +991,11 @@ class Authentication(BaseSchema):
         example="user_1",
         load_default="",
     )
-    password = fields.Nested(
-        SMTPPasswordSelector,
-        required=True,
-        description="The password for the SMTP connection, either from the password store or "
-        "explicitly configured.",
+    password = fields.String(
+        required=False,
+        description="The password for the SMTP connection.",
+        example="password",
+        load_default="",
     )
 
 
@@ -1204,6 +1172,20 @@ DISABLE_SSL_CERT_VERIFICATION = fields.Nested(
     Checkbox,
     load_default=lambda: {"state": "disabled"},
     description="Ignore unverified HTTPS request warnings. Use with caution.",
+)
+
+
+class ExplicitOrStoreOptions(BaseSchema):
+    option = fields.String(
+        enum=["store", "explicit"],
+        required=True,
+        example="store",
+    )
+
+
+PASSWORD_STORE_ID_SHOULD_EXIST = PasswordStoreIDField(
+    presence="should_exist",
+    required=True,
 )
 
 

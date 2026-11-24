@@ -161,10 +161,10 @@ def execute_tests_in_container(
                     tests/run_tests.sh test-system-singlesite
 
                 Run all single site system tests in a module:
-                    pytest tests/system/singlesite/livestatus/test_livestatus.py
+                    pytest tests/system/singlesite/monitoring_core/test_livestatus.py
 
                 Run a specific test in a module:
-                    pytest tests/system/singlesite/livestatus/test_livestatus.py -k test_service_custom_variables
+                    pytest tests/system/singlesite/monitoring_core/test_livestatus.py -k test_service_custom_variables
 
                 NOTE:
                 * The version of Checkmk you test against is set using the VERSION environment variable

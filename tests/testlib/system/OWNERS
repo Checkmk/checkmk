@@ -1,2 +1,4 @@
 per-file openapi_session.py=file:/component_owners/rest_api_framework/OWNERS_DEFINITION
 per-file openapi_session.py=set noparent
+per-file event_console.py=file:/component_owners/event_console/OWNERS_DEFINITION
+per-file event_console.py=set noparent

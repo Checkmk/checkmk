@@ -23,6 +23,19 @@ first. They are to be dissolved into feature directories over time — do not ad
 new suites in that shape, and prefer moving a test out into its feature
 directory over growing these further.
 
+As an intermediate step, `singlesite`, `multisite` and `gui` are already
+grouped by feature inside: `tests/system/<bucket>/<feature>/`, one folder per
+owning component, with one `OWNERS` file each. A feature uses the same folder
+name in every bucket (e.g. `singlesite/otel`, `multisite/otel`, `gui/otel`),
+so dissolving the buckets merges them into `tests/system/<feature>/`. The
+non-free tests of a feature are in `<feature>/nonfree/<edition>/` for now; they
+move below `non-free/tests/system/<feature>/` in that step. Only the setup the
+features share stays at the bucket level: the conftests, helpers like
+`singlesite/linux_test_host.py` and the page objects in `gui/testlib/`.
+
+Put a new test of such a suite into the folder of its feature, or create the
+folder, with an `OWNERS` file naming the component.
+
 # Pytest setup
 
 `tests/system/conftest.py` (and its copy `non-free/tests/system/conftest.py` for

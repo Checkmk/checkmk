@@ -10,6 +10,7 @@ import importlib.machinery
 import importlib.util
 import os
 import queue
+import signal
 import sys
 import threading
 import time
@@ -372,15 +373,41 @@ def test_acquire_lock_not_existing(tmp_path: Path) -> None:
 # a thread hanging in flock() would make fork() warn about threads.
 
 
+def _run_in_child(function: Callable[[], object]) -> None:
+    """Run the function in a forked child, and fail if it raises there
+
+    pytest shows the child's traceback with the output of the test. A child which takes longer
+    than about 10 s gets killed.
+    """
+    if (pid := os.fork()) == 0:
+        exit_code = 1
+        try:
+            function()
+            exit_code = 0
+        except BaseException:
+            traceback.print_exc()
+        finally:
+            os._exit(exit_code)
+
+    statuses: list[int] = []
+
+    def exited() -> bool:
+        waited_pid, status = os.waitpid(pid, os.WNOHANG)
+        if waited_pid:
+            statuses.append(status)
+        return bool(waited_pid)
+
+    if not _poll_until(exited, seconds=10):
+        os.kill(pid, signal.SIGKILL)
+        os.waitpid(pid, 0)
+        raise TimeoutError("Child not done after about 10 s")
+    assert os.waitstatus_to_exitcode(statuses[0]) == 0, "The child failed, see its stderr"
+
+
 def test_a_forked_child_releasing_a_lock_leaves_the_lock_of_the_parent(test_file: Path) -> None:
     store.acquire_lock(test_file)
     try:
-        if (pid := os.fork()) == 0:
-            try:
-                store.release_all_locks()
-            finally:
-                os._exit(0)
-        os.waitpid(pid, 0)
+        _run_in_child(store.release_all_locks)
 
         assert _locked_by_anyone(test_file)
     finally:

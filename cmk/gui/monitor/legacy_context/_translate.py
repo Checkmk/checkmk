@@ -54,21 +54,42 @@ class NestedField[T: str, F: PageField]:
         return {"type": self.node_type, "child": node}
 
 
+def _accept_any_tree(_node: FilterJSON) -> bool:
+    return True
+
+
 @dataclass(frozen=True)
 class PageFilterModel[N, F]:
     """The filter model of a page: the tree it accepts, and ``check``, which turns the tree into
     the filter the page queries with and raises a ``ValueError`` for a tree the page cannot use,
-    e.g. one with more than one site condition."""
+    e.g. one with more than one site condition. ``accepts_shape`` rejects a tree by its structure
+    before it is validated, e.g. one with conditions the page has nowhere to show."""
 
     tree: TypeAdapter[N]
     check: Callable[[N], F]
+    accepts_shape: Callable[[FilterJSON], bool] = _accept_any_tree
 
     def validate(self, node: FilterJSON) -> F:
+        if not self.accepts_shape(node):
+            raise UntranslatableFilterError
         try:
             return self.check(self.tree.validate_python(node))
         # A pydantic ValidationError is a ValueError, too.
         except ValueError as exc:
             raise UntranslatableFilterError from exc
+
+
+def check_and_keep_tree[N](check: Callable[[N], object]) -> Callable[[N], N]:
+    """Wrap ``check`` so that it only validates the tree and returns it unchanged.
+
+    Use it as ``PageFilterModel.check`` for links: a link carries the whole tree, including its
+    site condition, and the page checks it again when it opens."""
+
+    def check_and_return(node: N) -> N:
+        check(node)
+        return node
+
+    return check_and_return
 
 
 def translate_context[N, F](

@@ -10,10 +10,11 @@ import time_machine
 
 from cmk.ccc.site import SiteId
 from cmk.gui.monitor.hosts._api._filters import SiteScopedFilter
-from cmk.gui.monitor.hosts.context_filters import translate_filters
+from cmk.gui.monitor.hosts.context_filters import translate_filters, translate_filters_for_link
 from cmk.gui.monitor.shared import (
     AndNode,
     BooleanCondition,
+    FILTER_NODE,
     FilterNode,
     LabelChoiceCondition,
     NameChoiceCondition,
@@ -373,3 +374,105 @@ def test_a_dashboard_filter_the_table_cannot_apply_is_reported(context: VisualCo
     translation = translate_filters(context)
 
     assert (translation.filter, translation.unapplied) == (None, list(context))
+
+
+def test_a_link_to_all_hosts_keeps_the_site_filter_in_the_tree_it_carries() -> None:
+    context: VisualContext = {
+        "siteopt": {"site": "remote"},
+        "hostregex": {"host_regex": "web"},
+    }
+
+    translation = translate_filters_for_link(context)
+
+    assert translation.filter == FILTER_NODE.validate_python(
+        {
+            "type": "and",
+            "children": [
+                {"type": "condition", "field": "site_id", "op": "one_of", "value": ["remote"]},
+                {"type": "condition", "field": "name", "op": "contains", "value": "web"},
+            ],
+        }
+    )
+
+
+def test_a_link_to_all_hosts_joins_the_conditions_of_its_filters_in_one_and() -> None:
+    context: VisualContext = {
+        "hostregex": {"host_regex": "web"},
+        "host_num_services": {"host_num_services_from": "1", "host_num_services_until": "9"},
+    }
+
+    translation = translate_filters_for_link(context)
+
+    assert translation.filter == FILTER_NODE.validate_python(
+        {
+            "type": "and",
+            "children": [
+                {"type": "condition", "field": "name", "op": "contains", "value": "web"},
+                {"type": "condition", "field": "num_services", "op": "gte", "value": 1},
+                {"type": "condition", "field": "num_services", "op": "lte", "value": 9},
+            ],
+        }
+    )
+
+
+def _two_labels(operator: str) -> FilterHTTPVariables:
+    """The variables of the legacy label filter for one group of two labels, the second joined to
+    the first by ``operator``."""
+    return {
+        "host_labels_count": "1",
+        "host_labels_1_bool": "and",
+        "host_labels_1_vs_count": "2",
+        "host_labels_1_vs_1_bool": "and",
+        "host_labels_1_vs_1_vs": "os:linux",
+        "host_labels_1_vs_2_bool": operator,
+        "host_labels_1_vs_2_vs": "env:prod",
+    }
+
+
+@pytest.mark.parametrize(
+    "context",
+    [
+        pytest.param({"hostregex": {"host_regex": "web", "neg_host_regex": "on"}}, id="negated"),
+        pytest.param({"hostnameoralias": {"hostnameoralias": "web"}}, id="across columns"),
+        pytest.param(
+            {
+                "host_tags": {
+                    **_tag_row("criticality", "is", "prod"),
+                    "host_tag_1_grp": "agent",
+                    "host_tag_1_op": "is",
+                    "host_tag_1_val": "cmk-agent",
+                }
+            },
+            id="two tags",
+        ),
+        pytest.param({"host_labels": _two_labels("and")}, id="two labels"),
+        pytest.param({"host_labels": _two_labels("or")}, id="one label or another"),
+    ],
+)
+def test_a_link_to_all_hosts_reports_a_filter_no_column_can_show(context: VisualContext) -> None:
+    translation = translate_filters_for_link(
+        {"host_address": {"host_address": "10.0.0.1"}, **context}, tag_groups=_TAG_GROUPS
+    )
+
+    assert translation.filter == FILTER_NODE.validate_python(
+        {"type": "condition", "field": "address", "op": "matches", "value": r"^10\.0\.0\.1$"}
+    )
+    assert translation.unapplied == list(context)
+
+
+def test_a_link_to_all_hosts_reports_a_second_filter_on_one_column() -> None:
+    translation = translate_filters_for_link(
+        {"host_ctc": {"host_ctc": "alice"}, "host_ctc_regex": {"host_ctc_regex": "bob"}}
+    )
+
+    assert translation.unapplied == ["host_ctc_regex"]
+
+
+def test_a_link_to_all_hosts_carries_a_service_problem_to_count() -> None:
+    translation = translate_filters_for_link(
+        {"hosts_having_service_problems": {"hosts_having_services_crit": "on"}}
+    )
+
+    assert translation.filter == FILTER_NODE.validate_python(
+        {"type": "condition", "field": "num_services_crit", "op": "gt", "value": 0}
+    )

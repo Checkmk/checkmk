@@ -3,10 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._link import encode_unapplied_filters, FilterTitleLookup, read_unapplied_filter_titles
-from ._translate import ContextFilterTranslation, NestedField, PageFilterModel, translate_context
+from ._link import (
+    build_column_filter_check,
+    encode_unapplied_filters,
+    FilterTitleLookup,
+    read_unapplied_filter_titles,
+)
+from ._translate import (
+    check_and_keep_tree,
+    ContextFilterTranslation,
+    NestedField,
+    PageFilterModel,
+    translate_context,
+)
 
 __all__ = [
+    "build_column_filter_check",
+    "check_and_keep_tree",
     "ContextFilterTranslation",
     "encode_unapplied_filters",
     "FilterTitleLookup",

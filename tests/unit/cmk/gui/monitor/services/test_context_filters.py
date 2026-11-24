@@ -11,12 +11,18 @@ from cmk.gui.monitor.services._api._filters import (
     ServiceAndNode,
     ServiceBooleanCondition,
     ServiceFilterNode,
+    ServiceHostStateChoiceCondition,
     ServiceNameChoiceCondition,
     ServiceNotNode,
     ServiceStateChoiceCondition,
     ServiceStringCondition,
 )
-from cmk.gui.monitor.services.context_filters import translate_filters
+from cmk.gui.monitor.services.context_filters import (
+    remove_host_picking_filters,
+    translate_filters,
+    translate_filters_for_all_services_link,
+    translate_filters_for_host_services_link,
+)
 from cmk.gui.monitor.site_scope import SiteScopedFilter
 from cmk.gui.type_defs import VisualContext
 
@@ -330,3 +336,91 @@ def test_a_dashboard_filter_the_table_cannot_apply_is_reported(context: VisualCo
     translation = translate_filters(context)
 
     assert (translation.filter, translation.unapplied) == (None, list(context))
+
+
+@pytest.mark.parametrize(
+    "context, expected",
+    [
+        pytest.param(
+            {"hostregex": {"host_regex": "web"}},
+            ServiceStringCondition(type="condition", field="host_name", op="contains", value="web"),
+            id="host name regex",
+        ),
+        pytest.param(
+            {"host": {"host": "web-01"}},
+            ServiceStringCondition(
+                type="condition", field="host_name", op="matches", value="^web\\-01$"
+            ),
+            id="exact host name",
+        ),
+    ],
+)
+def test_a_link_to_all_services_filters_on_the_name_of_the_host_of_the_service(
+    context: VisualContext, expected: ServiceFilterNode
+) -> None:
+    translation = translate_filters_for_all_services_link(context)
+
+    assert (translation.filter, translation.unapplied) == (expected, [])
+
+
+def test_a_link_to_all_services_filters_on_the_state_of_the_host_of_the_service() -> None:
+    context: VisualContext = {"hoststate": {"hst0": "", "hst1": "on", "hst2": "on", "hstp": ""}}
+
+    translation = translate_filters_for_all_services_link(context)
+
+    assert (translation.filter, translation.unapplied) == (
+        ServiceHostStateChoiceCondition(
+            type="condition", field="host_state", op="one_of", value=["DOWN", "UNREACHABLE"]
+        ),
+        [],
+    )
+
+
+def test_a_link_to_all_services_reports_a_filter_on_the_host_its_columns_lack() -> None:
+    context: VisualContext = {"hostalias": {"hostalias": "web"}}
+
+    translation = translate_filters_for_all_services_link(context)
+
+    assert (translation.filter, translation.unapplied) == (None, ["hostalias"])
+
+
+def test_a_link_to_services_of_host_reports_a_filter_on_the_state_of_the_host() -> None:
+    context: VisualContext = {"hoststate": {"hst0": "", "hst1": "on", "hst2": "on", "hstp": ""}}
+
+    translation = translate_filters_for_host_services_link(context)
+
+    assert (translation.filter, translation.unapplied) == (None, ["hoststate"])
+
+
+def test_a_link_to_services_of_host_leaves_the_host_it_shows_to_the_page() -> None:
+    context: VisualContext = {
+        "host": {"host": "web-01"},
+        "siteopt": {"site": "remote"},
+        "serviceregex": {"service_regex": "CPU"},
+    }
+
+    translation = translate_filters_for_host_services_link(context)
+
+    assert (translation.filter, translation.unapplied) == (
+        ServiceStringCondition(type="condition", field="name", op="contains", value="CPU"),
+        [],
+    )
+
+
+def test_a_link_to_services_of_host_drops_the_filters_picking_the_host() -> None:
+    # The button builds its link from what is left, also when taking over the filters fails.
+    context: VisualContext = {
+        "host": {"host": "web-01"},
+        "site": {"site": "remote"},
+        "serviceregex": {"service_regex": "CPU"},
+    }
+
+    assert remove_host_picking_filters(context) == {"serviceregex": {"service_regex": "CPU"}}
+
+
+def test_a_link_to_services_of_host_reports_a_host_name_pattern() -> None:
+    context: VisualContext = {"hostregex": {"host_regex": "web"}}
+
+    translation = translate_filters_for_host_services_link(context)
+
+    assert (translation.filter, translation.unapplied) == (None, ["hostregex"])

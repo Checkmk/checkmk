@@ -7,6 +7,8 @@ from collections.abc import Mapping, Set
 from typing import Literal
 
 from cmk.gui.monitor.legacy_context import (
+    build_column_filter_check,
+    check_and_keep_tree,
     ContextFilterTranslation,
     PageFilterModel,
     translate_context,
@@ -14,12 +16,14 @@ from cmk.gui.monitor.legacy_context import (
 from cmk.gui.monitor.shared import (
     BooleanField,
     FILTER_NODE,
+    FilterNode,
     LabelField,
     NameListField,
     NumericField,
     StringField,
 )
 from cmk.gui.type_defs import FilterName, VisualContext
+from cmk.shared_typing.monitoring.page_filter_condition import AllHostsFilterCondition
 
 from ._api._filters import scope_filter_by_site, SiteScopedFilter
 
@@ -33,6 +37,12 @@ type _HostField = (
 )
 
 _PAGE = PageFilterModel(tree=FILTER_NODE, check=scope_filter_by_site)
+
+_PAGE_FOR_LINKS = PageFilterModel(
+    tree=FILTER_NODE,
+    check=check_and_keep_tree(scope_filter_by_site),
+    accepts_shape=build_column_filter_check(frozenset(AllHostsFilterCondition)),
+)
 
 _FIELDS: Mapping[FilterName, _HostField | Mapping[str, _HostField]] = {
     "sites": "site_id",
@@ -82,3 +92,10 @@ def translate_filters(
 ) -> ContextFilterTranslation[SiteScopedFilter]:
     """``tag_groups`` are the IDs of the configured tag groups."""
     return translate_context(context, _FIELDS, _PAGE, tag_groups=tag_groups)
+
+
+def translate_filters_for_link(
+    context: VisualContext, *, tag_groups: Set[str] = frozenset()
+) -> ContextFilterTranslation[FilterNode]:
+    """Translate the filters of a legacy view into the tree a link to All hosts carries."""
+    return translate_context(context, _FIELDS, _PAGE_FOR_LINKS, tag_groups=tag_groups)

@@ -200,6 +200,21 @@ Risks and technical debts
 * The filter vocabulary of the monitoring pages is defined in the API, the
   Livestatus translation and the frontend. A change has to touch all three.
   The instant report of All hosts reuses the API's model for it.
+* The filters of the classic views and the dashboards are translated into
+  the vocabulary a fourth time (``cmk.gui.monitor.legacy_context`` and the
+  ``context_filters.py`` of ``cmk/gui/monitor/hosts`` and
+  ``cmk/gui/monitor/services``). The links from the classic views use it
+  more strictly: they keep only conditions the columns of the page can
+  show, and report the other filters as not applied. Which conditions,
+  field and operator, the columns show comes from the schema
+  ``monitoring/page_filter_condition.json`` of ``cmk-shared-typing``. A
+  frontend test fails if the columns drift from it, going by a list of
+  what each kind of column filter shows that the tests of the filter
+  components back. Two rules stay unchecked copies of those components:
+  one condition or a range per field (``build_column_filter_check``),
+  and ``one_of`` with a single value only in a free-text filter, which
+  the links rely on for contacts. A new kind of column filter has to
+  touch them, too.
 * The services filter tree embeds the hosts filter tree, which lives in
   ``cmk.gui.monitor.shared``, to filter services by their host, so a change to
   the host filters also reaches the services listing. A new host condition is

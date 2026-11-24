@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -61,3 +62,22 @@ def test_python_module(
     )
     assert exe_output.ret_code == 1  # older versions returns always 0, newer - code from plugin
     assert exe_output.stderr.startswith("Missing agent info file")
+
+
+@pytest.mark.usefixtures("unpack")
+def test_venv_imports_the_compiled_packages(module_dir: Path) -> None:
+    patch_venv_config(module_dir)
+
+    result = subprocess.run(
+        [
+            module_dir / ".venv" / "Scripts" / "python.exe",
+            "-c",
+            "import _ssl, cryptography.hazmat.bindings._rust, win32api, yaml",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr

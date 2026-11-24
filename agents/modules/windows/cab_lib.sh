@@ -7,22 +7,27 @@
 # build_python_cab.sh and build_python_test_cab.sh. Paths are relative to the
 # exec root, the working directory.
 
-# Usage: cab_setup PYTHON_TREE WHEEL...
+# Usage: cab_setup PYTHON_ROOT PYTHON_FILES WHEEL...
 #
 # Sets up the scratch dir workdir, which an EXIT trap removes (replacing any
-# the caller set): PY_DIR becomes a writable copy of the extracted
-# interpreter (python_msi_tree), WHEELDIR the wheels, staged as pip's
-# --find-links dir. cab_check_no_build_paths reads workdir.
+# the caller set): PY_DIR becomes a writable copy of the interpreter, the
+# files listed in PYTHON_FILES (one exec-root path per line, all under
+# PYTHON_ROOT, where they keep their relative paths), WHEELDIR the wheels,
+# staged as pip's --find-links dir. cab_check_no_build_paths reads workdir.
 # shellcheck disable=SC2034 # sets PY_DIR and WHEELDIR for the sourcing scripts
 cab_setup() {
+    local python_root=$1 python_files=$2
+    shift 2
     workdir=$(mktemp -d)
     trap 'rm -rf "$workdir"' EXIT
     PY_DIR="$workdir/py"
     WHEELDIR="$workdir/wheels"
-    mkdir "$WHEELDIR"
-    cp -RL "$1" "$PY_DIR"
+    mkdir "$PY_DIR" "$WHEELDIR"
+    # Only the listed files: the repository directory also holds those its
+    # BUILD file leaves out. cp follows the sandbox's symlinks.
+    sed "s#^$python_root/##" "$python_files" |
+        (cd "$python_root" && xargs -d '\n' cp --parents -t "$PY_DIR")
     chmod -R u+w "$PY_DIR"
-    shift
     cp "$@" "$WHEELDIR/"
 }
 

@@ -7,7 +7,8 @@
 # in the shape production's Windows build gave it.
 #
 # Usage: build_python_cab.sh --out CAB --cab-lib FILE --python-version 3.14.7
-#            --python-tree DIR --pip-offline BIN --make-exe-wrappers BIN
+#            --python-root DIR --python-files FILE
+#            --pip-offline BIN --make-exe-wrappers BIN
 #            --pack-cab BIN --postinstall FILE
 #            [--wheel WHL]... [--requirement PIN]... [--venv-script FILE]...
 #
@@ -24,38 +25,10 @@ PYVENV_HOME='C:\ProgramData\checkmk\agent\modules\python-3'
 WRAPPER_SHEBANG="$PYVENV_HOME"'\.venv\Scripts\python.exe'
 
 # Stdlib subtrees to strip from the *base* interpreter, ported from
-# clean_environment.cmd.  ensurepip is stripped because production's CAB
-# ships without it (its phase 2 removes what phase 1 kept).
-BASE_LIB_STRIP=(test unittest idlelib turtledemo tkinter venv ensurepip sqlite3)
-
-# Loose files at the install root that production strips: NEWS.txt, leftover
-# MSI files (defensive; msiextract shouldn't drop these) and so on. Not
-# LICENSE.txt: the PSF license asks for its notice to stay with Python.
-ROOT_FILE_STRIP_GLOBS=("NEWS.txt" "*.msi" "Pipfile.*" "python-3.cab" "python-3.8.cab" "ucrtbase.dll" "api-ms-win-*.dll")
-
-# Directories at the install root that production strips (not Lib / not DLLs).
-ROOT_DIR_STRIP=(tools include libs Scripts tcl Tools)
-
-# Production ships these into .venv/Scripts/ so the venv interpreter can
-# resolve the UCRT runtime on a host without it installed system-wide.
-UCRT_RUNTIME=(
-    api-ms-win-crt-conio-l1-1-0.dll
-    api-ms-win-crt-convert-l1-1-0.dll
-    api-ms-win-crt-environment-l1-1-0.dll
-    api-ms-win-crt-filesystem-l1-1-0.dll
-    api-ms-win-crt-heap-l1-1-0.dll
-    api-ms-win-crt-locale-l1-1-0.dll
-    api-ms-win-crt-math-l1-1-0.dll
-    api-ms-win-crt-multibyte-l1-1-0.dll
-    api-ms-win-crt-private-l1-1-0.dll
-    api-ms-win-crt-process-l1-1-0.dll
-    api-ms-win-crt-runtime-l1-1-0.dll
-    api-ms-win-crt-stdio-l1-1-0.dll
-    api-ms-win-crt-string-l1-1-0.dll
-    api-ms-win-crt-time-l1-1-0.dll
-    api-ms-win-crt-utility-l1-1-0.dll
-    ucrtbase.dll
-)
+# clean_environment.cmd (the interpreter's BUILD file already left out test,
+# idlelib, turtledemo and tkinter).  ensurepip is stripped because
+# production's CAB ships without it (its phase 2 removes what phase 1 kept).
+BASE_LIB_STRIP=(unittest venv ensurepip sqlite3)
 
 exec_root=$PWD
 wheels=()
@@ -66,7 +39,8 @@ while [ $# -gt 0 ]; do
         --out) out="$2" ;;
         --cab-lib) cab_lib="$2" ;;
         --python-version) python_version="$2" ;;
-        --python-tree) python_tree="$2" ;;
+        --python-root) python_root="$2" ;;
+        --python-files) python_files="$2" ;;
         --pip-offline) pip_offline="$2" ;;
         --make-exe-wrappers) make_exe_wrappers="$2" ;;
         --pack-cab) pack_cab="$2" ;;
@@ -83,18 +57,16 @@ while [ $# -gt 0 ]; do
 done
 
 py_major_minor=${python_version%.*}
-py_short=${py_major_minor/./}
 
 # shellcheck disable=SC1090,SC1091 # cab_lib.sh, see python_cab.bzl
 source "$cab_lib"
 
-# 1. A writable copy of the extracted interpreter, and the wheels.
-cab_setup "$python_tree" "${wheels[@]}"
+# 1. A writable copy of the interpreter, and the wheels.
+cab_setup "$python_root" "$python_files" "${wheels[@]}"
 
-# The base interpreter gets no pip: the agent runs the venv, which does not
-# see the base site-packages, so a pip there would only ship as a second copy.
-# (pip.msi has an empty File table anyway: the python.org installer bootstraps
-# pip via a CustomAction msiextract can't replay.)
+# The base interpreter gets no pip (the archive's is left out): the
+# agent runs the venv, which does not see the base site-packages, so a pip
+# there would only ship as a second copy.
 
 # 2. Hand-construct the .venv/ tree the way production's virtualenv laid it
 # out.  Scripts/ gets a copy of the interpreter, its runtime DLLs, and the
@@ -105,16 +77,15 @@ mkdir -p "$VENV/Scripts" "$VENV/Lib/site-packages"
 
 cp "$PY_DIR/python.exe" "$VENV/Scripts/python.exe"
 cp "$PY_DIR/pythonw.exe" "$VENV/Scripts/pythonw3.exe"
-[ -f "$PY_DIR/python$py_short.dll" ] && cp "$PY_DIR/python$py_short.dll" "$VENV/Scripts/"
-[ -f "$PY_DIR/python3.dll" ] && cp "$PY_DIR/python3.dll" "$VENV/Scripts/"
-[ -f "$PY_DIR/vcruntime140.dll" ] && cp "$PY_DIR/vcruntime140.dll" "$VENV/Scripts/"
-[ -f "$PY_DIR/vcruntime140_1.dll" ] && cp "$PY_DIR/vcruntime140_1.dll" "$VENV/Scripts/"
+# The DLLs next to python.exe: python3XX.dll, python3.dll and the VC runtime.
+# Windows looks for them next to the venv's copy.
+cp "$PY_DIR"/*.dll "$VENV/Scripts/"
 rm "$PY_DIR"/DLLs/sqlite3.dll
 rm "$PY_DIR"/DLLs/_sqlite3.pyd
 cp "$PY_DIR"/DLLs/*.pyd "$PY_DIR"/DLLs/*.dll "$VENV/Scripts/"
 
-# The venv (re)launchers; lib.msi ships them under Lib/venv/scripts/nt
-# (harvest before BASE_LIB_STRIP removes Lib/venv).  python3/python3.exe
+# The venv (re)launchers, under Lib/venv/scripts/nt (harvest before
+# BASE_LIB_STRIP removes Lib/venv).  python3/python3.exe
 # are the launcher under the names virtualenv seeded.
 VENV_NT="$PY_DIR/Lib/venv/scripts/nt"
 if [ ! -f "$VENV_NT/venvlauncher.exe" ] || [ ! -f "$VENV_NT/venvwlauncher.exe" ]; then
@@ -125,12 +96,6 @@ cp "$VENV_NT/venvlauncher.exe" "$VENV/Scripts/venvlauncher.exe"
 cp "$VENV_NT/venvlauncher.exe" "$VENV/Scripts/python3.exe"
 cp "$VENV_NT/venvlauncher.exe" "$VENV/Scripts/python3"
 cp "$VENV_NT/venvwlauncher.exe" "$VENV/Scripts/venvwlauncher.exe"
-
-# UCRT redistributables alongside the venv python so it boots on hosts
-# without a system-wide UCRT.
-for f in "${UCRT_RUNTIME[@]}"; do
-    [ -f "$PY_DIR/$f" ] && cp "$PY_DIR/$f" "$VENV/Scripts/"
-done
 
 # Activation scripts (production paths baked in; see venv_scripts/).  The
 # .tmpl suffix only keeps repo formatters/linters away; strip it on copy.
@@ -168,20 +133,12 @@ printf 'home = %s\nversion_info = %s\ninclude-system-site-packages = false\n' \
     "$PYVENV_HOME" "$python_version" >"$VENV/pyvenv.cfg"
 
 # 5. Strip from the base interpreter what production strips (the union of
-# clean_environment.cmd's phase-1 and phase-2 cleanups).
+# clean_environment.cmd's phase-1 and phase-2 cleanups; the root directories
+# it removes were left out already).  LICENSE.txt stays: the PSF license asks
+# for its notice to stay with Python.
 for d in "${BASE_LIB_STRIP[@]}"; do
     rm -rf "$PY_DIR/Lib/$d"
 done
-for d in "${ROOT_DIR_STRIP[@]}"; do
-    rm -rf "${PY_DIR:?}/$d"
-done
-(cd "$PY_DIR" && for g in "${ROOT_FILE_STRIP_GLOBS[@]}"; do
-    # nullglob via 'find -name' so missing files don't fail the loop.
-    find . -maxdepth 1 -name "$g" -delete 2>/dev/null || true
-done)
-# clean_environment.cmd also dels DLLs/*.ico and DLLs/*.cat, but production
-# still ships them (the forward-slash del no-ops on cmd.exe): keep them.
-rm -f "$PY_DIR/Lib/turtle.py" 2>/dev/null || true
 
 # Bytecode caches.
 cab_strip_bytecode

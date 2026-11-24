@@ -1,14 +1,11 @@
 # Repositories of the python-3.cab build (agents/modules/windows): the
-# python.org per-feature MSIs, the CAB writer, and the win_amd64 wheel closure.
+# python-build-standalone interpreter, the CAB writer, and the win_amd64 wheel
+# closure.
 python_cab = use_extension("//bazel/extensions:python_cab_repositories.bzl", "repos")
 use_repo(
     python_cab,
     "cabarchive",
-    "python_msi_core",
-    "python_msi_exe",
-    "python_msi_lib",
-    "python_msi_pip",
-    "python_msi_ucrt",
+    "python_windows_standalone",
 )
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")

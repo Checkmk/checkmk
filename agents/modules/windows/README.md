@@ -18,15 +18,15 @@ The CI entry point is `buildscripts/scripts/winagt-build-modules-linux.groovy`,
 which runs on a Linux build node and pushes the resulting cab to
 `agents/modules/windows/artefacts/python-3.cab`.
 
-Build prerequisites on the Linux node: only `bazel` itself plus a C
-compiler for the foreign-cc builds of `msitools` / `cabextract`.
-Everything else is hermetic via bazel modules:
+Build prerequisites on the Linux node: only `bazel` itself. Everything else
+is hermetic via bazel modules:
 
-- `msiinfo` (from `@msitools`) — reads MSI tables and extracts cabinet
-  streams.
-- `cabextract` (from `@cabextract`) — unpacks the python.org cabinet
-  streams; LZX-compressed, which the pure-Python `cabarchive` can't
-  read.
+- the CPython of `PYTHON_VERSION_WINDOWS` from
+  [python-build-standalone](https://github.com/astral-sh/python-build-standalone),
+  its `x86_64-pc-windows-msvc-install_only` archive (`@python_windows_standalone`).
+  Astral builds it with MSVC and PGO, like python.org, and keeps publishing
+  releases for CPython versions in their source-only security phase, for which
+  python.org ships no Windows binaries.
 - `cabarchive` (Python, vendored via `@cabarchive`) — writes the final
   `python-3.cab` (MSZIP-compressed, fixed timestamps; bit-identical
   given the same inputs).
@@ -42,15 +42,20 @@ Everything else is hermetic via bazel modules:
 - CPython version: `PYTHON_VERSION_WINDOWS` in `package_versions.bzl`, the
   single source of truth for the CAB's CPython version: `defines.make`
   `sed`-reads it out of there at make time, `python_cab.bzl` `load()`s it,
-  and the MSI URLs below derive from it. Only
+  and the archive URLs below derive from it. Only
   `MODULE.bazel` files duplicate the version — they cannot `load()` it; see
   the bump procedure below.
-- Per-feature MSIs (`ucrt`, `core`, `exe`, `lib`, `pip`): declared by the
+- The python-build-standalone archive: declared by the
   `//bazel/extensions:python_cab_repositories.bzl` module extension (wired up by
   `bazel/module/python_cab.MODULE.bazel`), which builds the download URLs from
-  `PYTHON_VERSION_WINDOWS` — a `.bzl` file can `load()` it, whereas
-  `MODULE.bazel` cannot, so the version is not spelled out twice. Only the
-  SHA256 hashes (`_MSI_SHA256`) are maintained by hand.
+  `PYTHON_VERSION_WINDOWS` and the release `_PBS_RELEASE`: a `.bzl` file can
+  `load()` the version, whereas `MODULE.bazel` cannot, so it is not spelled out
+  twice. `_PBS_RELEASE` and the archive's `_PBS_SHA256` are maintained by hand.
+  Bazel unpacks the archive at fetch time, and its BUILD file
+  (`python_windows_standalone.BUILD.bazel`) leaves out what neither cab ships:
+  `.pdb` files, the `_test*.pyd` modules, Tcl/Tk and the stdlib packages that
+  need it, `include`, `libs`, the stdlib's test suite and the archive's own
+  pip. `cab_members.py` is the cab tests' check that all of it stays out.
 - Python packages: edit `windows-requirements.in`, then regenerate the
   sha256-pinned `windows-requirements.txt` with
   `bazel run //agents/modules/windows:windows_requirements` (same uv flow
@@ -104,34 +109,31 @@ disagree.
 
 For a **patch bump** (same `major.minor`, e.g. 3.13.14 → 3.13.15):
 
-- bump `PYTHON_VERSION_WINDOWS` in `package_versions.bzl` — the MSI URLs
-  follow automatically,
-- then regenerate the hashes and the wheel closure:
+- bump `PYTHON_VERSION_WINDOWS` in `package_versions.bzl`; the archive
+  URLs follow automatically,
+- in `bazel/extensions/python_cab_repositories.bzl`, set `_PBS_RELEASE` to a
+  python-build-standalone release that has the version, and `_PBS_SHA256` to
+  the sha256 of its `cpython-<version>+<release>-x86_64-pc-windows-msvc-install_only.tar.gz`
+  (from the release's `SHA256SUMS`),
+- regenerate the wheel closure:
 
   ```bash
-  bazel run //agents/modules/windows:refresh_msi_pins
   bazel run //agents/modules/windows:windows_requirements
   bazel run //agents/modules/windows:windows_test_cab_requirements
   ```
 
-  `refresh_msi_pins` takes no version: the `py_binary` passes
-  `PYTHON_VERSION_WINDOWS` through `args`, so it cannot fetch hashes for a
-  different version than the extension requests.
-
-- paste the printed `_MSI_SHA256` map over the one in
-  `bazel/extensions/python_cab_repositories.bzl`,
 - regenerate `MODULE.bazel.lock` with `bazel mod deps --lockfile_mode=update`;
   the extension's URLs and hashes are recorded there, so until it is refreshed
   every build fails with "MODULE.bazel.lock is no longer up-to-date",
-- upload the five MSIs to the upstream mirror as
-  `python-<version>-amd64-<feature>.msi` — the fallback URL is built from
-  `PYTHON_VERSION_WINDOWS`, but nothing populates the mirror automatically, so
-  until they are uploaded the fallback 404s and only python.org serves them,
+- upload the archive to the upstream mirror under its upstream name. The
+  fallback URL is built from the same version and release, but nothing
+  populates the mirror automatically, so until it is uploaded the fallback
+  404s and only GitHub serves it,
 - optionally bump the `x86_64-pc-windows-msvc`
   `single_version_platform_override` (version + url + sha256) in
-  `bazel/module/py.MODULE.bazel` — python-build-standalone releases can lag
-  python.org, and a patch-level drift between the build-time toolchain and
-  the shipped MSIs is harmless.
+  `bazel/module/py.MODULE.bazel`. That is the build-time toolchain, which may
+  pin the same archive, and a patch-level drift between it and the shipped
+  interpreter is harmless.
 
 For a **minor bump** (e.g. 3.13.x → 3.14.x), additionally:
 
@@ -158,16 +160,16 @@ test is the curated diagnostic that names every spot.
 python-3.cab
 |-- postinstall.cmd          # verbatim from agents/modules/windows/postinstall.cmd
 |-- LICENSE.txt              # CPython's license (PSF), kept as it asks
-|-- python.exe               # base interpreter (from core.msi + exe.msi)
+|-- python.exe               # base interpreter
 |-- python3XX.dll            # XX = PYTHON_VERSION_WINDOWS's minor
 |-- DLLs/
-|-- Lib/                     # stdlib (from lib.msi); strip list mirrors clean_environment.cmd history
-|-- Lib/site-packages/       # only lib.msi's README.txt: the venv does not see it
+|-- Lib/                     # stdlib; strip list mirrors clean_environment.cmd history
+|-- Lib/site-packages/       # only README.txt: the venv does not see it
 +-- .venv/
     |-- pyvenv.cfg           # 3-liner; home points at C:\ProgramData\checkmk\agent\modules\python-3
     |-- Scripts/             # interpreter + runtime DLL copies, stdlib .pyd mirror,
     |                        # venv launchers, console-script .exe wrappers (pip,
-    |                        # chardetect, ...), activation scripts, UCRT redistributables
+    |                        # chardetect, ...), activation scripts
     +-- Lib/site-packages/   # pinned packages + pip, installed cross-platform from Linux
 ```
 
@@ -176,10 +178,15 @@ python-3.cab
 The Linux build reproduces the historic CAB's layout file-for-file, with
 these deliberate differences:
 
-- **Official binaries.** All PE files come from the python.org MSIs:
-  Authenticode-signed and PGO-built, where the old flow compiled CPython
-  from source unsigned. Stdlib `.py` files keep the MSIs' CRLF endings
-  (the source tarball had LF).
+- **python-build-standalone binaries.** All PE files come from the
+  python-build-standalone archive: MSVC- and PGO-built, like python.org's,
+  where the old flow compiled CPython from source without PGO. Like the old
+  flow's, and unlike python.org's, they are not Authenticode-signed.
+- **No UCRT.** The cab ships no `ucrtbase.dll` / `api-ms-win-crt-*.dll`:
+  the interpreter uses the Windows Universal C Runtime, part of the OS on every
+  Windows version the agent supports.
+- **OpenSSL as `libcrypto-3-x64.dll` / `libssl-3-x64.dll`**, the names
+  python-build-standalone builds them under.
 - **Working wrapper/activation scripts.** The old build baked the _build
   machine's_ path (`D:\w\workspace\...`) into the `.exe` wrappers' shebangs
   and the activate scripts; we bake the production install path.
@@ -191,7 +198,7 @@ these deliberate differences:
   output).
 - **Dropped dead weight**: the pipenv/virtualenv toolchain that leaked
   into the base `Lib/site-packages`, virtualenv bookkeeping files, and
-  `.venv/Scripts` members with no MSI source and no function
+  `.venv/Scripts` members with no function
   (`py.exe`/`pyw.exe`/`pyshellext.dll`, `_tkinter.pyd`, `xxlimited*.pyd`,
   `zlib1.dll`).
 - **No pip in the base interpreter.** The historic CAB had pip in both the
@@ -202,10 +209,9 @@ these deliberate differences:
 ## Why not Wine
 
 Earlier proofs of concept used `wine msiexec /a` for MSI extraction and a
-Wine-side `pip` for package installation. Both are removable:
+Wine-side `pip` for package installation. Neither is needed:
 
-- MSIs are zip-of-cab containers with a structured stream catalog;
-  `msiextract` walks the File/Directory tables natively on Linux.
+- python-build-standalone ships the interpreter as a plain tarball.
 - Wheels are zip archives, so installing one is unpacking it plus writing
   metadata — no Windows interpreter needed. `uv` resolves the closure for
   `x86_64-pc-windows-msvc` with `--only-binary=:all:`, so every pin is a
@@ -221,9 +227,9 @@ either — the agent invokes them on the target host after CAB extraction.
 
 `:python_test_cab` is the harness Python of the Windows agent's pytest suites
 (`agents/wnx/tests/regression` and `integration`) in their QEMU tiers. It is
-built from the same MSIs, so it is always `PYTHON_VERSION_WINDOWS`, but it is not
+built from the same archive, so it is always `PYTHON_VERSION_WINDOWS`, but it is not
 the product: no `.venv`, the stdlib kept (pytest needs `unittest`, which
-`python-3.cab` strips), and the closure of `windows-test-cab-requirements.in` in the
+`python-3.cab` strips) less its test suite and Tk, which no cab ships, and the closure of `windows-test-cab-requirements.in` in the
 base interpreter's `site-packages`. That lock is resolved with `//:requirements.txt`
 as constraints, so shared packages stay at the repo's versions;
 `//:lock_python_requirements` refreshes it with the others, and

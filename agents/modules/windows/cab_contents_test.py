@@ -8,7 +8,8 @@ import os
 from pathlib import Path
 
 import pytest
-from cabarchive import CabArchive  # type: ignore[import-not-found]
+from cab_members import members, unwanted
+from cabarchive import CabArchive  # type: ignore[attr-defined, import-not-found, unused-ignore]
 
 _DENIED_BINARIES = {
     "sqlite3.dll",
@@ -16,7 +17,7 @@ _DENIED_BINARIES = {
 }
 _EXPECTED_PRESENT = {
     "python.exe",
-    "libcrypto-3.dll",
+    "libcrypto-3-x64.dll",
 }
 
 
@@ -51,3 +52,9 @@ def test_cab_ships_the_python_license(cab_archive: CabArchive) -> None:
     members = {m.replace("\\", "/").lstrip("/") for m in cab_archive}
 
     assert "LICENSE.txt" in members
+
+
+def test_cab_leaves_out_what_no_cab_ships() -> None:
+    shipped = unwanted(members(Path(os.environ["PYTHON_CAB"])))
+
+    assert not shipped, f"The cab ships {sorted(shipped)[:5]}"

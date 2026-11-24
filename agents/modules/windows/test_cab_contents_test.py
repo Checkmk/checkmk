@@ -8,13 +8,13 @@ import os
 from pathlib import Path
 
 import pytest
-from cabarchive import CabArchive  # type: ignore[import-not-found]
+from cab_members import members as cab_members
+from cab_members import unwanted
 
 
 @pytest.fixture(scope="module", name="members")
 def _members() -> set[str]:
-    cab = CabArchive(Path(os.environ["PYTHON_TEST_CAB"]).read_bytes())
-    return {m.replace("\\", "/").lstrip("/").lower() for m in cab}
+    return cab_members(Path(os.environ["PYTHON_TEST_CAB"]))
 
 
 @pytest.mark.parametrize(
@@ -35,3 +35,9 @@ def test_member_present(members: set[str], member: str) -> None:
 
 def test_no_venv(members: set[str]) -> None:
     assert not {m for m in members if m.startswith(".venv/")}
+
+
+def test_leaves_out_what_no_cab_ships(members: set[str]) -> None:
+    shipped = unwanted(members)
+
+    assert not shipped, f"The test cab ships {sorted(shipped)[:5]}"

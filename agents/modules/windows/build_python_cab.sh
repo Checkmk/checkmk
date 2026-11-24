@@ -28,10 +28,10 @@ WRAPPER_SHEBANG="$PYVENV_HOME"'\.venv\Scripts\python.exe'
 # ships without it (its phase 2 removes what phase 1 kept).
 BASE_LIB_STRIP=(test unittest idlelib turtledemo tkinter venv ensurepip sqlite3)
 
-# Loose files at the install root that production strips: LICENSE.txt,
-# NEWS.txt, leftover MSI files (defensive; msiextract shouldn't drop these)
-# and so on.
-ROOT_FILE_STRIP_GLOBS=("*.txt" "*.msi" "Pipfile.*" "python-3.cab" "python-3.8.cab" "ucrtbase.dll" "api-ms-win-*.dll")
+# Loose files at the install root that production strips: NEWS.txt, leftover
+# MSI files (defensive; msiextract shouldn't drop these) and so on. Not
+# LICENSE.txt: the PSF license asks for its notice to stay with Python.
+ROOT_FILE_STRIP_GLOBS=("NEWS.txt" "*.msi" "Pipfile.*" "python-3.cab" "python-3.8.cab" "ucrtbase.dll" "api-ms-win-*.dll")
 
 # Directories at the install root that production strips (not Lib / not DLLs).
 ROOT_DIR_STRIP=(tools include libs Scripts tcl Tools)

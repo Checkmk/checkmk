@@ -58,3 +58,10 @@ def test_base_python_has_no_site_packages(cab_archive: CabArchive) -> None:
     }
 
     assert not base_site_packages, f"The base python has {sorted(base_site_packages)[:5]}"
+
+
+def test_cab_ships_the_python_license(cab_archive: CabArchive) -> None:
+    # The PSF license asks for its notice to be retained with Python.
+    members = {m.replace("\\", "/").lstrip("/") for m in cab_archive}
+
+    assert "LICENSE.txt" in members

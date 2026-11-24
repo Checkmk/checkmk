@@ -1,4 +1,6 @@
+set noparent  # don't inherit owners information from parent folders
 
+file:/component_owners/documentation/OWNERS_DEFINITION
 
 per-file arch-comp-gui-metrics.rst=file:/component_owners/graphing_and_metrics/OWNERS_DEFINITION
 per-file arch-comp-gui-metrics.rst=set noparent

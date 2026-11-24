@@ -11,7 +11,7 @@ Commands take either files or targets:
 - `bazel run //:format` and `bazel run //:format.check` take file paths, or
   `--delta` for the files you changed.
 - `bazel build`, `bazel test`, `bazel lint` and `bazel query` take targets: a
-  single target (`//packages/cmk-ccc:regex-tests`), all targets of a package
+  single target (`//packages/cmk-ccc:unit`), all targets of a package
   (`//packages/cmk-ccc:all`), or a package and all packages below it
   (`//packages/cmk-ccc/...`). A package is a directory with a `BUILD` file.
 

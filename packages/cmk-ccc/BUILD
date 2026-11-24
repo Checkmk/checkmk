@@ -255,147 +255,25 @@ py_doc_test(
 )
 
 py_cmk_test(
-    name = "daemon-tests",
+    name = "unit",
     size = "small",
-    srcs = [
-        "tests/test_daemon.py",
-    ],
-    deps = [
-        "daemon",
-        "exceptions",
-        "store",
-    ],
-)
-
-py_cmk_test(
-    name = "hostaddress-tests",
-    size = "small",
-    srcs = [
-        "tests/test_hostaddress.py",
-    ],
-    deps = [
-        "hostaddress",
-    ],
-)
-
-py_cmk_test(
-    name = "regex-tests",
-    size = "small",
-    srcs = [
-        "tests/test_regex.py",
-    ],
-    deps = [
-        "regex",
-    ],
-)
-
-py_cmk_test(
-    name = "resulttype-tests",
-    size = "small",
-    srcs = [
-        "tests/test_resulttype.py",
-    ],
-    deps = [
-        "resulttype",
-    ],
-)
-
-py_cmk_test(
-    name = "translations-tests",
-    size = "small",
-    srcs = [
-        "tests/test_translations.py",
-    ],
-    deps = [
-        "translations",
-    ],
-)
-
-py_cmk_test(
-    name = "tty-tests",
-    size = "small",
-    srcs = [
-        "tests/test_tty.py",
-    ],
-    deps = [
-        "tty",
-    ],
-)
-
-py_cmk_test(
-    name = "store-tests",
-    size = "small",
-    srcs = [
-        "tests/test_store.py",
-    ],
-    deps = [
-        "store",
-    ],
-)
-
-py_cmk_test(
-    name = "config-path-tests",
-    size = "small",
-    srcs = [
-        "tests/test_config_path.py",
-    ],
+    timeout = "moderate",
+    srcs = glob(["tests/**/*.py"]),
     deps = [
         "config-path",
-    ],
-)
-
-py_cmk_test(
-    name = "cpu-tracking-tests",
-    size = "small",
-    srcs = [
-        "tests/test_cpu_tracking.py",
-    ],
-    deps = [
         "cpu-tracking",
-    ],
-)
-
-py_cmk_test(
-    name = "tar-archive-tests",
-    size = "small",
-    srcs = [
-        "tests/test_tar_archive.py",
-    ],
-    deps = [
-        "tar-archive",
-    ],
-)
-
-py_cmk_test(
-    name = "user-tests",
-    size = "small",
-    srcs = [
-        "tests/test_user.py",
-    ],
-    deps = [
-        "user",
-    ],
-)
-
-py_cmk_test(
-    name = "observer-tests",
-    size = "small",
-    srcs = [
-        "tests/test_observer.py",
-    ],
-    deps = [
-        "observer",
-    ],
-)
-
-py_cmk_test(
-    name = "log-tests",
-    size = "small",
-    srcs = [
-        "tests/test_log.py",
-    ],
-    deps = [
+        "daemon",
+        "exceptions",
+        "hostaddress",
         "log",
+        "observer",
+        "regex",
+        "resulttype",
+        "store",
+        "tar-archive",
+        "translations",
+        "tty",
+        "user",
         requirement("time-machine"),
     ],
 )

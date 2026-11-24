@@ -23,6 +23,8 @@ function harness() {
   const input = ref<Record<string, unknown>>({ host: 'a' })
   const tick = ref(0)
   let state: WidgetData<string>['state'] | undefined
+  let fetching: WidgetData<string>['fetching'] | undefined
+  let lastSuccessAt: WidgetData<string>['lastSuccessAt'] | undefined
   let retry: (() => void) | undefined
   let refresh: ((delayMs?: number) => void) | undefined
 
@@ -41,6 +43,8 @@ function harness() {
           () => tick.value
         )
         state = data.state
+        fetching = data.fetching
+        lastSuccessAt = data.lastSuccessAt
         retry = data.retry
         refresh = data.refresh
         return () => null
@@ -53,6 +57,8 @@ function harness() {
     input,
     tick,
     state: () => state!.value,
+    fetching: () => fetching!.value,
+    lastSuccessAt: () => lastSuccessAt!.value,
     retry: () => retry!(),
     refresh: (delayMs?: number) => refresh!(delayMs),
     unmount,
@@ -286,6 +292,45 @@ describe('useWidgetData', () => {
     await vi.advanceTimersByTimeAsync(1000)
 
     expect(h.calls).toHaveLength(1)
+  })
+
+  it('reports a fetch in flight while a refresh keeps the value shown', async () => {
+    const h = harness()
+    await h.answer(0, 'first')
+
+    h.tick.value = 1
+    await flushPromises()
+
+    expect([h.state().kind, h.fetching()]).toEqual(['data', true])
+  })
+
+  it('reports no fetch once the response is drawn', async () => {
+    const h = harness()
+
+    await h.answer(0, 'first')
+
+    expect(h.fetching()).toBe(false)
+  })
+
+  it('has no success time before a fetch succeeds', async () => {
+    const h = harness()
+
+    await h.fail(0, apiError(503, { title: 'Unavailable' }))
+
+    expect(h.lastSuccessAt()).toBeUndefined()
+  })
+
+  it('keeps the time of the last success when a refetch fails', async () => {
+    vi.useFakeTimers({ now: 1_000_000 })
+    const h = harness()
+    await h.answer(0, 'first')
+    vi.setSystemTime(2_000_000)
+    h.tick.value = 1
+    await flushPromises()
+
+    await h.fail(1, apiError(503, { title: 'Unavailable' }))
+
+    expect(h.lastSuccessAt()).toBe(1_000_000)
   })
 
   it('ignores a response that answers after unmount', async () => {

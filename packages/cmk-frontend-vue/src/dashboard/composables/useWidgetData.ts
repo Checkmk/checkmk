@@ -5,7 +5,16 @@
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import type { MaybeRestApiError } from 'cmk-ui-library/lib/types'
-import { type ShallowRef, onScopeDispose, shallowReadonly, shallowRef, watch } from 'vue'
+import {
+  type Ref,
+  type ShallowRef,
+  onScopeDispose,
+  readonly,
+  ref,
+  shallowReadonly,
+  shallowRef,
+  watch
+} from 'vue'
 
 import type { ComputedWidgetResponse } from '@/dashboard/types/widget'
 
@@ -17,6 +26,10 @@ export type WidgetDataState<T> =
 
 export interface WidgetData<T> {
   state: Readonly<ShallowRef<WidgetDataState<T>>>
+  /** Whether a fetch is under way, including a background refresh that keeps the data shown. */
+  fetching: Readonly<Ref<boolean>>
+  /** When the last fetch succeeded, in milliseconds since the epoch. */
+  lastSuccessAt: Readonly<Ref<number | undefined>>
   retry: () => void
   /**
    * Fetch again in the background after `delayMs`, keeping what is shown until the new data is
@@ -32,21 +45,23 @@ export function useWidgetData<T>(
   tick: () => number
 ): WidgetData<T> {
   const state = shallowRef<WidgetDataState<T>>({ kind: 'loading' })
+  const fetching = ref(false)
+  const lastSuccessAt = ref<number | undefined>(undefined)
   let generation = 0
-  let inFlight = false
   let refreshPending = false
   let disposed = false
   let delayedRefresh: ReturnType<typeof setTimeout> | undefined
 
   function start(): void {
     const current = ++generation
-    inFlight = true
+    fetching.value = true
     refreshPending = false
     fetch()
       .then(
         (response) => {
           if (current === generation) {
             state.value = { kind: 'data', value: response.value }
+            lastSuccessAt.value = Date.now()
           }
         },
         (error: unknown) => {
@@ -59,7 +74,7 @@ export function useWidgetData<T>(
         if (current !== generation) {
           return
         }
-        inFlight = false
+        fetching.value = false
         if (refreshPending) {
           start()
         }
@@ -74,7 +89,7 @@ export function useWidgetData<T>(
     if (disposed) {
       return
     }
-    if (inFlight) {
+    if (fetching.value) {
       refreshPending = true
       return
     }
@@ -104,6 +119,8 @@ export function useWidgetData<T>(
 
   return {
     state: shallowReadonly(state),
+    fetching: readonly(fetching),
+    lastSuccessAt: readonly(lastSuccessAt),
     retry: () => {
       state.value = { kind: 'loading' }
       start()

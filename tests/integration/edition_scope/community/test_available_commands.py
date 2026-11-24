@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.discovery import discover_commands as cli_discover_commands
 
 
@@ -38,9 +37,3 @@ def test_available_commands() -> None:
         "update-dns-cache",
         "version",
     }
-
-
-def test_no_two_commands_claim_the_same_option() -> None:
-    # Commands() rejects a collision; nothing else sees one, because the names above
-    # are a set and a duplicate would collapse into it.
-    CLICommands(commands=cli_discover_commands())

@@ -74,10 +74,14 @@ def _reads_one_after_the_remaining(positional: Sequence[Positional]) -> bool:
 type _Run[R] = Callable[[CLIContext, R], CLIExitCode]
 
 
+def _with_request[R](run: _Run[R], request: R) -> Callable[[CLIContext], CLIExitCode]:
+    return lambda context: run(context, request)
+
+
 def _binder[R](command: CLICommand[R], load: Callable[[], _Run[R]]) -> Binder:
     def bind(reader: CLIReader) -> BoundCommand:
         request = command.request(reader)
-        return BoundCommand(request=request, run=lambda context: load()(context, request))
+        return BoundCommand(request=request, load=lambda: _with_request(load(), request))
 
     return bind
 

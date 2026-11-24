@@ -41,7 +41,7 @@ _ENGINE_OPTION_COLUMN: Final = HelpColumn(indent="  ", width=21)
 @dataclass(frozen=True, kw_only=True)
 class BoundCommand:
     request: object
-    run: Callable[[CLIContext], CLIExitCode]
+    load: Callable[[], Callable[[CLIContext], CLIExitCode]]
 
 
 type Binder = Callable[[CLIReader], BoundCommand]

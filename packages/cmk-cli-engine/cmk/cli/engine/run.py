@@ -84,7 +84,7 @@ def _run_command(run_command: RunCommand, context: CLIContext, runtime: Runtime)
             {"deprecated": deprecation.spelling, "name": deprecation.replacement},
         )
     with runtime.trace_command(context, run_command):
-        return run_command.bound.run(context)
+        return run_command.bound.load()(context)
 
 
 def run(

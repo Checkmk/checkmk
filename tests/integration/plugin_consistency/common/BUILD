@@ -8,6 +8,7 @@ py_library(
     imports = ["../../../.."],
     visibility = ["//tests/integration/plugin_consistency:__subpackages__"],
     deps = [
+        "//cmk/editions:community",
         "//cmk/gui/dashboard",
         "//cmk/gui/graphing",
         "//cmk/server_side_calls_backend",

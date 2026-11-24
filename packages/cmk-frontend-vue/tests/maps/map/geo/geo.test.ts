@@ -5,13 +5,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import {
-  geoBearing,
-  lineEndLatLng,
-  midpoint,
-  objectLatLng,
-  pointObjects
-} from '@/maps/map/worldmap/geo'
+import { geoBearing, lineEndLatLng, midpoint, objectLatLng, pointObjects } from '@/maps/map/geo/geo'
 
 import { anObject } from '../../support/fixtures'
 

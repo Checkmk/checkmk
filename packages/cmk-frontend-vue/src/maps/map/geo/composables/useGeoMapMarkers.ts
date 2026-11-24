@@ -15,7 +15,7 @@
 import L from 'leaflet'
 import { type ShallowRef, shallowRef } from 'vue'
 
-import { type LatLng, objectLatLng } from '@/maps/map/worldmap/geo'
+import { type LatLng, objectLatLng } from '@/maps/map/geo/geo'
 import type { MapElement } from '@/maps/types/api'
 import { type GroupMember, applyGroupDelta, collectGroupMembers } from '@/maps/utils/groupDrag'
 
@@ -32,7 +32,7 @@ export interface MarkerTarget {
   element: HTMLElement
 }
 
-export interface WorldmapMarkers {
+export interface GeoMapMarkers {
   targets: Readonly<ShallowRef<MarkerTarget[]>>
   /** Brings the markers in line with the objects: which exist, where they sit,
    *  how they stack, and whether they can be dragged. */
@@ -66,7 +66,7 @@ const RANK_BASE = 2
 /** Stacking boost that lifts a search match above everything dimmed. */
 const MATCH_BOOST = 10000
 
-export function useWorldmapMarkers(source: {
+export function useGeoMapMarkers(source: {
   map: () => L.Map | null
   objects: () => MapElement[]
   /** Where an object that has no coordinates of its own is shown. */
@@ -84,7 +84,7 @@ export function useWorldmapMarkers(source: {
   /** Live positions while a drag is in flight, so bound lines can follow. */
   onDrag: (moves: MarkerMove[]) => void
   onDragEnd: (moves: MarkerMove[]) => void
-}): WorldmapMarkers {
+}): GeoMapMarkers {
   const entries = new Map<string, MarkerEntry>()
   const targets = shallowRef<MarkerTarget[]>([])
 

@@ -21,14 +21,14 @@ defineProps<{
 
 <template>
   <div
-    class="maps-world-map-line-handle"
-    :class="{ 'maps-world-map-line-handle--bound': bound }"
+    class="maps-geo-map-line-handle"
+    :class="{ 'maps-geo-map-line-handle--bound': bound }"
     :style="bound ? undefined : { background: color }"
   />
 </template>
 
 <style scoped>
-.maps-world-map-line-handle {
+.maps-geo-map-line-handle {
   width: 10px;
   height: 10px;
   border: 2px solid var(--white);
@@ -37,7 +37,7 @@ defineProps<{
   cursor: move;
 }
 
-.maps-world-map-line-handle--bound {
+.maps-geo-map-line-handle--bound {
   background: var(--interactive-accent);
 }
 </style>

@@ -29,9 +29,9 @@ from cmk.maps.backend.schemas.connection import (
     to_list_entry,
 )
 from cmk.maps.backend.schemas.map import (
+    GeoView,
     MapElement,
     MapElementUpdate,
-    WorldmapView,
 )
 from cmk.maps.backend.services.state_service import _names_filter
 from cmk.maps.shared.validators import (
@@ -92,7 +92,7 @@ def test_validate_image_url_rejects_other_urls(value: str) -> None:
 )
 def test_validate_tile_url_accepts_absolute_urls(value: str) -> None:
     assert validate_tile_url(value) == value
-    WorldmapView.model_validate({"tile_url": value})
+    GeoView.model_validate({"tile_url": value})
 
 
 @pytest.mark.parametrize(
@@ -124,7 +124,7 @@ def test_validate_tile_url_rejects_other_urls(value: str) -> None:
     with pytest.raises(ValueError):
         validate_tile_url(value)
     with pytest.raises(ValidationError):
-        WorldmapView.model_validate({"tile_url": value})
+        GeoView.model_validate({"tile_url": value})
 
 
 @pytest.mark.parametrize(
@@ -352,7 +352,7 @@ def test_map_element_rejects_protocol_relative_url() -> None:
 
 
 # --- map-object color validation + CSS-injection rejection ---
-# The colors are interpolated into hand-built marker HTML by the worldmap
+# The colors are interpolated into hand-built marker HTML by the geo map
 # renderer; the strict allowlist keeps attribute-breakout payloads out at the
 # schema layer (the SPA additionally escapes them at the render sink).
 

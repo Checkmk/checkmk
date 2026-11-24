@@ -251,7 +251,7 @@ describe('ObjectPropertiesModal – save payload', () => {
       only_hard_states: false,
       recognize_services: false
     })
-    // Position is persisted for a non-worldmap object.
+    // Position is persisted for a non-geo object.
     expect(payload).toMatchObject({ x: 40, y: 60 })
     // service_description belongs to service/graph objects, not a host.
     expect(payload).not.toHaveProperty('service_description')

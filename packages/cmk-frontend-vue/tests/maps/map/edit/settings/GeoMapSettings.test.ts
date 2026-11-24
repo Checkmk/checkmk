@@ -7,14 +7,14 @@ import { render, screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h, nextTick, ref } from 'vue'
 
-import WorldmapSettings from '@/maps/map/edit/settings/components/WorldmapSettings.vue'
+import GeoMapSettings from '@/maps/map/edit/settings/components/GeoMapSettings.vue'
 import { type SettingsForm, formFromMap } from '@/maps/map/edit/settings/settingsForm'
 
 import { aListedMap, newMapView } from '../../../support/fixtures'
 import { fakeMapsServices, provideServices } from '../../../support/services'
 
-describe('WorldmapSettings', () => {
-  // The world map's empty hint opens the settings on this option.
+describe('GeoMapSettings', () => {
+  // The geo map's empty hint opens the settings on this option.
   it('puts the cursor on the automatic placement when opened for it', async () => {
     const map = aListedMap({ view_type: 'worldmap', view: newMapView('worldmap') })
     const form = formFromMap(map, null)
@@ -24,7 +24,7 @@ describe('WorldmapSettings', () => {
     const host = defineComponent({
       setup: () => () =>
         shown.value
-          ? h(WorldmapSettings, { form, saveAttempted: false, initialFocus: 'automap_source' })
+          ? h(GeoMapSettings, { form, saveAttempted: false, initialFocus: 'automap_source' })
           : null
     })
     render(host, provideServices(fakeMapsServices()))
@@ -37,8 +37,8 @@ describe('WorldmapSettings', () => {
 
   it('marks the group as missing once a save was tried without one', () => {
     const map = aListedMap({ view_type: 'worldmap', view: newMapView('worldmap') })
-    const form = { ...formFromMap(map, null), worldmap_auto_source: 'hostgroup' as const }
-    render(WorldmapSettings, {
+    const form = { ...formFromMap(map, null), geo_auto_source: 'hostgroup' as const }
+    render(GeoMapSettings, {
       props: { form, saveAttempted: true },
       ...provideServices(fakeMapsServices())
     })
@@ -55,10 +55,10 @@ describe('WorldmapSettings', () => {
       const map = aListedMap({ view_type: 'worldmap', view: newMapView('worldmap') })
       const form = ref<SettingsForm>({
         ...formFromMap(map, null),
-        worldmap_auto_source: 'hostgroup',
-        worldmap_auto_filter_value: 'berlin'
+        geo_auto_source: 'hostgroup',
+        geo_auto_filter_value: 'berlin'
       })
-      render(WorldmapSettings, {
+      render(GeoMapSettings, {
         props: {
           form: form.value,
           'onUpdate:form': (next: SettingsForm) => (form.value = next),
@@ -71,22 +71,22 @@ describe('WorldmapSettings', () => {
 
     it('survives a detour over a choice without a group', async () => {
       const form = renderWithGroup()
-      form.value.worldmap_auto_source = 'all_hosts'
+      form.value.geo_auto_source = 'all_hosts'
       await nextTick()
-      form.value.worldmap_auto_source = 'hostgroup'
+      form.value.geo_auto_source = 'hostgroup'
       await nextTick()
 
-      expect(form.value.worldmap_auto_filter_value).toBe('berlin')
+      expect(form.value.geo_auto_filter_value).toBe('berlin')
     })
 
     it('is dropped for the other kind of group', async () => {
       const form = renderWithGroup()
-      form.value.worldmap_auto_source = 'all_hosts'
+      form.value.geo_auto_source = 'all_hosts'
       await nextTick()
-      form.value.worldmap_auto_source = 'servicegroup'
+      form.value.geo_auto_source = 'servicegroup'
       await nextTick()
 
-      expect(form.value.worldmap_auto_filter_value).toBe('')
+      expect(form.value.geo_auto_filter_value).toBe('')
     })
   })
 })

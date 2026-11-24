@@ -17,23 +17,23 @@ import L from 'leaflet'
 import { type ComputedRef, onScopeDispose } from 'vue'
 
 import { type MarqueeRect, useMarquee } from '@/maps/map/composables/useMarquee'
-import { pointObjects } from '@/maps/map/worldmap/geo'
+import { pointObjects } from '@/maps/map/geo/geo'
 import type { MapElement } from '@/maps/types/api'
 
-export interface WorldmapMarquee {
+export interface GeoMapMarquee {
   visible: ComputedRef<boolean>
   rect: ComputedRef<MarqueeRect>
   /** Take the press, or leave it to Leaflet's own pan. */
   tryBegin: (event: L.LeafletMouseEvent) => void
 }
 
-export function useWorldmapMarquee(source: {
+export function useGeoMapMarquee(source: {
   map: () => L.Map | null
   objects: () => MapElement[]
   /** Whether the map is being edited, which is what makes a selection useful. */
   editable: () => boolean
   onSelect: (ids: string[], additive: boolean) => void
-}): WorldmapMarquee {
+}): GeoMapMarquee {
   const marquee = useMarquee()
 
   function stopTracking(): void {

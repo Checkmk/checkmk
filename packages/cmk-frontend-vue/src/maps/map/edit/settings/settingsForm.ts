@@ -9,10 +9,10 @@ import type {
   BackgroundStyle,
   FlowView,
   FolderTreeView,
+  GeoView,
   MapConfig,
   MapRead,
-  RadarView,
-  WorldmapView
+  RadarView
 } from '@/maps/types/api'
 
 /** Where a geo map centres when the map itself says nothing. */
@@ -28,13 +28,13 @@ export function geoViewOutOfRange(form: SettingsForm): ('lat' | 'lng' | 'zoom')[
   // refuses where Math.abs would take it for 0.
   const within = (value: number, limit: number) =>
     Number.isFinite(value) && Math.abs(value) <= limit
-  if (!within(form.worldmap_lat, 90)) {
+  if (!within(form.geo_lat, 90)) {
     out.push('lat')
   }
-  if (!within(form.worldmap_lng, 180)) {
+  if (!within(form.geo_lng, 180)) {
     out.push('lng')
   }
-  const zoom = form.worldmap_zoom
+  const zoom = form.geo_zoom
   if (!(Number.isInteger(zoom) && zoom >= 0 && zoom <= GEO_MAX_ZOOM)) {
     out.push('zoom')
   }
@@ -50,13 +50,13 @@ export interface SettingsForm {
   map_type: MapRead['view']['type']
   /** Every map type but a presentation filters on problems; the map toggles it too. */
   problems_only: boolean
-  worldmap_auto_source: '' | 'all_hosts' | 'hostgroup' | 'servicegroup'
-  worldmap_auto_filter_value: string
-  worldmap_lat: number
-  worldmap_lng: number
-  worldmap_zoom: number
-  worldmap_tile_url: string
-  worldmap_tile_saturate: number | undefined
+  geo_auto_source: '' | 'all_hosts' | 'hostgroup' | 'servicegroup'
+  geo_auto_filter_value: string
+  geo_lat: number
+  geo_lng: number
+  geo_zoom: number
+  geo_tile_url: string
+  geo_tile_saturate: number | undefined
   radar_filter: string
   radar_filter_value: string
   ft_root_folder: string
@@ -94,7 +94,7 @@ export function initialGeoView(
     return { lat: parentView.lat, lng: parentView.lng, zoom: parentView.zoom }
   }
   if (map.view.type === 'worldmap') {
-    const view = map.view as WorldmapView
+    const view = map.view as GeoView
     return { lat: view.lat, lng: view.lng, zoom: view.zoom }
   }
   return { ...DEFAULT_GEO_VIEW }
@@ -105,7 +105,7 @@ export function formFromMap(
   parentView: { lat: number; lng: number; zoom: number } | null | undefined
 ): SettingsForm {
   const geo = initialGeoView(map, parentView)
-  const worldmap = map.view.type === 'worldmap' ? (map.view as WorldmapView) : null
+  const geoMap = map.view.type === 'worldmap' ? (map.view as GeoView) : null
   const radar = map.view.type === 'radar' ? (map.view as RadarView) : null
   const folderTree = map.view.type === 'foldertree' ? (map.view as FolderTreeView) : null
   return {
@@ -116,13 +116,13 @@ export function formFromMap(
     click_action: map.click_action ?? 'link',
     map_type: map.view.type,
     problems_only: map.view.type === 'presentation' ? false : (map.view.problems_only ?? false),
-    worldmap_auto_source: worldmap?.auto_source ?? '',
-    worldmap_auto_filter_value: worldmap?.auto_filter_value ?? '',
-    worldmap_lat: geo.lat,
-    worldmap_lng: geo.lng,
-    worldmap_zoom: geo.zoom,
-    worldmap_tile_url: worldmap?.tile_url ?? '',
-    worldmap_tile_saturate: worldmap?.tile_saturate ?? undefined,
+    geo_auto_source: geoMap?.auto_source ?? '',
+    geo_auto_filter_value: geoMap?.auto_filter_value ?? '',
+    geo_lat: geo.lat,
+    geo_lng: geo.lng,
+    geo_zoom: geo.zoom,
+    geo_tile_url: geoMap?.tile_url ?? '',
+    geo_tile_saturate: geoMap?.tile_saturate ?? undefined,
     radar_filter: radar?.filter ?? 'hostgroup',
     radar_filter_value: radar?.filter_value ?? '',
     ft_root_folder: folderTree?.root_folder ?? '',
@@ -183,13 +183,13 @@ export function viewFromForm(
     case 'worldmap':
       return {
         type: 'worldmap',
-        lat: form.worldmap_lat,
-        lng: form.worldmap_lng,
-        zoom: form.worldmap_zoom,
-        auto_source: form.worldmap_auto_source || null,
-        auto_filter_value: form.worldmap_auto_filter_value,
-        tile_url: form.worldmap_tile_url || null,
-        tile_saturate: form.worldmap_tile_saturate ?? null,
+        lat: form.geo_lat,
+        lng: form.geo_lng,
+        zoom: form.geo_zoom,
+        auto_source: form.geo_auto_source || null,
+        auto_filter_value: form.geo_auto_filter_value,
+        tile_url: form.geo_tile_url || null,
+        tile_saturate: form.geo_tile_saturate ?? null,
         problems_only: form.problems_only
       }
     case 'radar':

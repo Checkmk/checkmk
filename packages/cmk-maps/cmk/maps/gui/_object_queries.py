@@ -115,7 +115,7 @@ def _timestamp(value: object) -> float | None:
 
 
 # ---------------------------------------------------------------------------
-# Host geo coordinates (worldmap placement)
+# Host geo coordinates (geo map placement)
 # ---------------------------------------------------------------------------
 
 

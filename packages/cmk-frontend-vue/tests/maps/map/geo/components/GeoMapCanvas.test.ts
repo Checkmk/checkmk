@@ -8,7 +8,7 @@ import { render, screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
-import WorldMapCanvas from '@/maps/map/worldmap/components/WorldMapCanvas.vue'
+import GeoMapCanvas from '@/maps/map/geo/components/GeoMapCanvas.vue'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 
 import { aMap, aState, anObject, newMapView } from '../../../support/fixtures'
@@ -148,7 +148,7 @@ function renderCanvas() {
   const clicked = ref<MapElement | null>(null)
   render(
     defineComponent({
-      components: { WorldMapCanvas },
+      components: { GeoMapCanvas },
       setup() {
         const props = { ...baseProps, config: sampleConfig() }
         return {
@@ -158,16 +158,16 @@ function renderCanvas() {
           }
         }
       },
-      template: `<WorldMapCanvas v-bind="props" @object-click="onObjectClick" />`
+      template: `<GeoMapCanvas v-bind="props" @object-click="onObjectClick" />`
     }),
     { global: mapsGlobal() }
   )
   return { clicked }
 }
 
-describe('WorldMapCanvas', () => {
+describe('GeoMapCanvas', () => {
   it('mounts a Leaflet map and puts one accessible marker per geo object on it', async () => {
-    const { unmount } = render(WorldMapCanvas, {
+    const { unmount } = render(GeoMapCanvas, {
       global: mapsGlobal(),
       props: { ...baseProps, config: sampleConfig() }
     })
@@ -201,7 +201,7 @@ describe('WorldMapCanvas', () => {
       ...sampleStates,
       h2: aState({ object_id: 'h2', type: 'host', state: 'DOWN' })
     }
-    render(WorldMapCanvas, {
+    render(GeoMapCanvas, {
       global: mapsGlobal(),
       props: { ...baseProps, config, states, problemsOnly: true }
     })
@@ -211,7 +211,7 @@ describe('WorldMapCanvas', () => {
   })
 
   it('keeps every object in the editor, where only problems would hide what is edited', async () => {
-    render(WorldMapCanvas, {
+    render(GeoMapCanvas, {
       global: mapsGlobal(),
       props: { ...baseProps, config: sampleConfig(), problemsOnly: true, editMode: true }
     })
@@ -242,7 +242,7 @@ describe('WorldMapCanvas', () => {
   })
 
   it('unmounts cleanly even before the async mount setup resolved', async () => {
-    const { container, unmount } = render(WorldMapCanvas, {
+    const { container, unmount } = render(GeoMapCanvas, {
       global: mapsGlobal(),
       props: { ...baseProps, config: sampleConfig() }
     })
@@ -271,7 +271,7 @@ describe('WorldMapCanvas', () => {
       up: aState({ object_id: 'up', type: 'host', state: up }),
       down: aState({ object_id: 'down', type: 'host', state: down })
     })
-    const { rerender } = render(WorldMapCanvas, {
+    const { rerender } = render(GeoMapCanvas, {
       global: mapsGlobal(),
       props: { ...baseProps, config, states: states('UP', 'DOWN') }
     })
@@ -292,7 +292,7 @@ describe('WorldMapCanvas', () => {
 
   // The tile licence wants it legible, and bottom right is under the edit button.
   it('puts the tile attribution bottom left, where the theme can reach it', async () => {
-    render(WorldMapCanvas, {
+    render(GeoMapCanvas, {
       global: mapsGlobal(),
       props: { ...baseProps, config: sampleConfig() }
     })
@@ -300,6 +300,6 @@ describe('WorldMapCanvas', () => {
     await waitFor(() =>
       expect(leaflet.mapStub.attributionControl.setPosition).toHaveBeenCalledWith('bottomleft')
     )
-    expect(leaflet.attribution.classList).toContain('maps-world-map-canvas__attribution')
+    expect(leaflet.attribution.classList).toContain('maps-geo-map-canvas__attribution')
   })
 })

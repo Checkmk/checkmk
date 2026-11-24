@@ -82,8 +82,8 @@ function onResizeStart(event: PointerEvent): void {
 <template>
   <div
     ref="root"
-    class="maps-world-map-marker"
-    :class="{ 'maps-world-map-marker--selected': selected }"
+    class="maps-geo-map-marker"
+    :class="{ 'maps-geo-map-marker--selected': selected }"
     :style="dimmedStyle(dimmed)"
     :data-object-id="object.id"
     :tabindex="!preview && tabStop ? 0 : -1"
@@ -115,7 +115,7 @@ function onResizeStart(event: PointerEvent): void {
 </template>
 
 <style scoped>
-.maps-world-map-marker:focus-visible {
+.maps-geo-map-marker:focus-visible {
   outline: revert;
   outline-offset: 2px;
 }
@@ -123,7 +123,7 @@ function onResizeStart(event: PointerEvent): void {
 /* The static map's dashed selection outline, on a plate of the map's overlay
    colour reaching out to it: map tiles of any colour, and their place names,
    would otherwise show between the marker and the dashes. */
-.maps-world-map-marker--selected {
+.maps-geo-map-marker--selected {
   border-radius: var(--border-radius);
   outline: 2px dashed var(--interactive-accent);
   outline-offset: 4px;

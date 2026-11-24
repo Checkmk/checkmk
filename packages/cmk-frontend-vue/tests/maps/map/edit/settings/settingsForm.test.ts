@@ -74,7 +74,7 @@ describe('formFromMap', () => {
     const form = formFromMap(geoMap({ tile_url: 'https://tiles/{z}' } as Partial<MapView>), null)
     expect(form).toMatchObject({
       map_type: 'worldmap',
-      worldmap_tile_url: 'https://tiles/{z}',
+      geo_tile_url: 'https://tiles/{z}',
       radar_filter: 'hostgroup'
     })
   })
@@ -83,9 +83,9 @@ describe('formFromMap', () => {
 describe('geoViewOutOfRange', () => {
   const form = (lat: number, lng: number, zoom: number) => ({
     ...formFromMap(geoMap(), null),
-    worldmap_lat: lat,
-    worldmap_lng: lng,
-    worldmap_zoom: zoom
+    geo_lat: lat,
+    geo_lng: lng,
+    geo_zoom: zoom
   })
 
   it('accepts a view at its bounds', () => {

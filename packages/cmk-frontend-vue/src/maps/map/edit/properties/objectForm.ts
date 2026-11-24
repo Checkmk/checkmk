@@ -261,7 +261,7 @@ export function gridSortAndOrder(
  * The patch to send for an edited object.
  *
  * Only what the object's own type can carry is included: a hostname on a
- * textbox, or line coordinates on a worldmap object, would be stored and then
+ * textbox, or line coordinates on a geo map object, would be stored and then
  * silently ignored by every renderer. Empty strings become null so that
  * clearing a field really unsets it rather than storing "". A cleared number
  * field holds "" too (a native number input's v-model keeps it), so an

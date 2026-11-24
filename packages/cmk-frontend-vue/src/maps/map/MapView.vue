@@ -59,10 +59,10 @@ import ObjectPropertiesModal, {
 } from '@/maps/map/edit/properties/ObjectPropertiesModal.vue'
 import MapSettingsModal from '@/maps/map/edit/settings/MapSettingsModal.vue'
 import type { SettingsFocus } from '@/maps/map/edit/settings/settingsForm'
+import type GeoMapViewType from '@/maps/map/geo/GeoMapView.vue'
+import type { GeoMapViewport } from '@/maps/map/geo/geo'
 import { useGridMembers } from '@/maps/map/static/composables/useGridMembers'
 import { canAddGrid, mapGrids } from '@/maps/map/static/gridMembers'
-import type WorldMapViewType from '@/maps/map/worldmap/WorldMapView.vue'
-import type { WorldmapViewport } from '@/maps/map/worldmap/geo'
 import type { NavTarget } from '@/maps/services/NavigationService'
 import {
   useAuth,
@@ -96,7 +96,7 @@ const presentationMapView = defineAsyncComponent(
 )
 const radarMapView = defineAsyncComponent(() => import('@/maps/map/radar/RadarMapView.vue'))
 const staticMapView = defineAsyncComponent(() => import('@/maps/map/static/StaticMapView.vue'))
-const worldMapView = defineAsyncComponent(() => import('@/maps/map/worldmap/WorldMapView.vue'))
+const geoMapView = defineAsyncComponent(() => import('@/maps/map/geo/GeoMapView.vue'))
 
 const { _t } = usei18n()
 const toast = useToast()
@@ -141,7 +141,7 @@ const mapConfigAsRead = computed<MapRead | null>(() => {
     has_grid: mapGrids(cfg).length > 0
   }
 })
-const isWorldmap = computed(() => mapConfig.value?.view.type === 'worldmap')
+const isGeoMap = computed(() => mapConfig.value?.view.type === 'worldmap')
 const isFlowmap = computed(() => mapConfig.value?.view.type === 'flow')
 const isRadar = computed(() => mapConfig.value?.view.type === 'radar')
 const isFolderTree = computed(() => mapConfig.value?.view.type === 'foldertree')
@@ -199,7 +199,7 @@ const { rotationCountdown, rotationPaused, stopRotation, scheduleRotation, toggl
 const root = useTemplateRef<HTMLElement>('root')
 provideMapPalette(root)
 
-const worldmapViewRef = useTemplateRef<InstanceType<typeof WorldMapViewType>>('worldMapViewRef')
+const geoMapViewRef = useTemplateRef<InstanceType<typeof GeoMapViewType>>('geoMapViewRef')
 
 // Which element the action bar hangs off. The selection is an id -- it is made
 // by click, by marquee, by keyboard and by placing a new object -- so the node
@@ -365,9 +365,9 @@ function onObjectPlaced() {
 
 // The viewport the geo map opens on is part of the map's settings, so picking
 // it here opens the settings slide-in with the picked viewport in hand.
-function onSaveWorldmapViewport(at: WorldmapViewport) {
-  settingsWorldmapView.value = { ...at }
-  settingsParentMapSize.value = worldmapViewRef.value?.getContainerSize() ?? null
+function onSaveGeoMapViewport(at: GeoMapViewport) {
+  settingsGeoMapView.value = { ...at }
+  settingsParentMapSize.value = geoMapViewRef.value?.getContainerSize() ?? null
   showSettings.value = true
 }
 
@@ -474,7 +474,7 @@ const selectedHostCount = computed(() => {
       o.lng !== undefined
   ).length
 })
-const canBundle = computed(() => isWorldmap.value && selectedHostCount.value >= 2)
+const canBundle = computed(() => isGeoMap.value && selectedHostCount.value >= 2)
 const selectedIsBundle = computed(
   () => editor.selectedCount.value <= 1 && !!selectedObject.value?.bundle_kind
 )
@@ -662,7 +662,7 @@ function objectHasMonitoringTarget(obj: MapElement): boolean {
  */
 async function onStartPlacing() {
   const draft = editor.draft
-  if (isWorldmap.value && mapConfig.value?.connection_id && draft.host_name) {
+  if (isGeoMap.value && mapConfig.value?.connection_id && draft.host_name) {
     try {
       const geo = await objects.fetchHostGeo(draft.host_name)
       if (geo) {
@@ -722,14 +722,14 @@ watch(mapName, () => {
   _closePropsModal()
 })
 const showSettings = ref(false)
-const settingsWorldmapView = ref<WorldmapViewport | null>(null)
+const settingsGeoMapView = ref<GeoMapViewport | null>(null)
 const settingsFocus = ref<SettingsFocus | null>(null)
 const settingsParentMapSize = ref<{ width: number; height: number } | null>(null)
 
 // The picker runs on the map itself: the geo map's view shows the banner and
 // answers with the viewport the operator arrived at.
-async function onSettingsPickWorldmapView(done: (at: WorldmapViewport | null) => void) {
-  done((await worldmapViewRef.value?.pickViewport()) ?? null)
+async function onSettingsPickGeoMapView(done: (at: GeoMapViewport | null) => void) {
+  done((await geoMapViewRef.value?.pickViewport()) ?? null)
 }
 
 // The map list opens a map straight in its settings or its editor. Acted on
@@ -754,8 +754,8 @@ watch(
   { immediate: true, flush: 'post' }
 )
 
-function onSettingsWorldmapViewChange(at: WorldmapViewport) {
-  worldmapViewRef.value?.setViewport(at)
+function onSettingsGeoMapViewChange(at: GeoMapViewport) {
+  geoMapViewRef.value?.setViewport(at)
 }
 
 function openSettings(focus: SettingsFocus | null = null) {
@@ -763,9 +763,9 @@ function openSettings(focus: SettingsFocus | null = null) {
     return
   }
   settingsFocus.value = focus
-  settingsWorldmapView.value = null
-  settingsParentMapSize.value = isWorldmap.value
-    ? (worldmapViewRef.value?.getContainerSize() ?? null)
+  settingsGeoMapView.value = null
+  settingsParentMapSize.value = isGeoMap.value
+    ? (geoMapViewRef.value?.getContainerSize() ?? null)
     : null
   showSettings.value = true
 }
@@ -861,9 +861,9 @@ function closeBulkAckModal(sent: boolean): void {
         <CmkLoading />
         <span>{{ _t('Loading map…') }}</span>
       </div>
-      <world-map-view
-        v-if="isWorldmap"
-        ref="worldMapViewRef"
+      <geo-map-view
+        v-if="isGeoMap"
+        ref="geoMapViewRef"
         v-model:filter-needle="mapFilterNeedle"
         v-model:problems-only="problemsOnly"
         :config="mapConfig"
@@ -878,7 +878,7 @@ function closeBulkAckModal(sent: boolean): void {
         @object-delete="onObjectDelete"
         @placed="onObjectPlaced"
         @view-changed="geoViewTick++"
-        @save-viewport="onSaveWorldmapViewport"
+        @save-viewport="onSaveGeoMapViewport"
         @open-settings="openSettings"
       />
 
@@ -982,7 +982,7 @@ function closeBulkAckModal(sent: boolean): void {
         }"
       />
 
-      <!-- Shared detail drawer for static / worldmap / radar maps -->
+      <!-- Shared detail drawer for static / geo map / radar maps -->
       <DetailDrawer
         v-if="!isFlowmap"
         :object="detailDrawerObject"
@@ -1015,7 +1015,7 @@ function closeBulkAckModal(sent: boolean): void {
         :keyboard-active="editKeyboardActive"
         :offers-add-object="!isPresentation"
         :offers-object-grid="offersObjectGrid"
-        :offers-snap-grid="!isWorldmap && !isPresentation"
+        :offers-snap-grid="!isGeoMap && !isPresentation"
         :beside-inspector="isPresentation && editor.editMode.value"
         @start-placing="onStartPlacing()"
         @toggle-edit-mode="onToggleEditMode"
@@ -1092,13 +1092,13 @@ function closeBulkAckModal(sent: boolean): void {
     <MapSettingsModal
       v-if="showSettings && mapConfigAsRead"
       :map="mapConfigAsRead"
-      :worldmap-view="settingsWorldmapView"
+      :geo-map-view="settingsGeoMapView"
       :parent-map-size="settingsParentMapSize"
       :initial-focus="settingsFocus"
       @close="showSettings = false"
       @updated="onSettingsUpdated"
-      @pick-worldmap-view="onSettingsPickWorldmapView"
-      @worldmap-view-change="onSettingsWorldmapViewChange"
+      @pick-geo-map-view="onSettingsPickGeoMapView"
+      @geo-map-view-change="onSettingsGeoMapViewChange"
     />
   </div>
 </template>

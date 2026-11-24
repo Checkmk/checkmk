@@ -21,7 +21,7 @@ defineProps<{
 
 <template>
   <svg
-    class="maps-world-map-line-arrow"
+    class="maps-geo-map-line-arrow"
     viewBox="-6 -6 12 12"
     aria-hidden="true"
     :style="{ transform: `rotate(${degrees}deg)`, fill: color }"
@@ -31,7 +31,7 @@ defineProps<{
 </template>
 
 <style scoped>
-.maps-world-map-line-arrow {
+.maps-geo-map-line-arrow {
   width: 12px;
   height: 12px;
   overflow: visible;

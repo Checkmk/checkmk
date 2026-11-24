@@ -85,7 +85,7 @@ def topology_problem_rank(row: TopologyRow) -> int:
 class GeoHost(TypedDict):
     """A host with discovered geo-coordinates.
 
-    Used by the worldmap-map automap source to populate hosts dynamically
+    Used by the geo map automap source to populate hosts dynamically
     from monitoring custom variables (``_LATITUDE``/``_LONGITUDE`` etc.) so
     operators don't have to maintain a parallel coordinate list manually.
     """

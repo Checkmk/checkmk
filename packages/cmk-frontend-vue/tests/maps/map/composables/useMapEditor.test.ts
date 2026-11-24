@@ -347,7 +347,7 @@ describe('useMapEditor — grid members', () => {
     expect(editor.selectedIds.value).toEqual(['g', 'core'])
   })
 
-  it('still selects the hosts a world map adds, so they can be bundled', () => {
+  it('still selects the hosts a geo map adds, so they can be bundled', () => {
     const { editor } = editorOn([makeObject({ id: 'auto:db01', type: 'host' })])
 
     editor.selectObject('auto:db01')

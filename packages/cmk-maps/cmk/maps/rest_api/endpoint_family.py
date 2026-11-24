@@ -8,7 +8,7 @@ MAPS_FAMILY = EndpointFamily(
     name="Maps",
     description=(
         """
-Checkmk Maps are visual dashboards (topology, worldmap, folder tree, presentation
+Checkmk Maps are visual dashboards (topology, geo map, folder tree, presentation
 slides, …) that render live monitoring state. These endpoints manage the map
 configuration — creating, updating, listing and deleting maps — in the same way
 the Maps editor does, so maps can be provisioned and version-controlled through

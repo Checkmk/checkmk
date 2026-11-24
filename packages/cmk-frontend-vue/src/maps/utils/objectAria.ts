@@ -5,7 +5,7 @@
  */
 /**
  * Accessible names for monitored map objects. Every canvas (static, radar,
- * worldmap, flow, presentation) renders objects graphically — the aria-label
+ * geo map, flow, presentation) renders objects graphically — the aria-label
  * is the only thing that tells a screen-reader user what the object is and
  * which state it is in, so all canvases share this one builder.
  */

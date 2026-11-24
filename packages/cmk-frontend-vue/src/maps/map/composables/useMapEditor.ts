@@ -12,6 +12,7 @@ import { computed, onScopeDispose, reactive, ref, toRaw, watch } from 'vue'
 
 import { gridIdOfMember, isGridMemberId } from '@/maps/api/wire'
 import { isDraftPlaceable } from '@/maps/map/edit/draftFacts'
+import { roundCoordinate } from '@/maps/map/geo/coordinates'
 import {
   GRID_MAX_PER_MAP,
   canAddGrid,
@@ -21,7 +22,6 @@ import {
   gridMembersOf,
   mapGrids
 } from '@/maps/map/static/gridMembers'
-import { roundCoordinate } from '@/maps/map/worldmap/coordinates'
 import { useMaps, useSettings, useToast } from '@/maps/services/context'
 import type { MapElement, ObjectType } from '@/maps/types/api'
 import { newMapElement } from '@/maps/utils/model'

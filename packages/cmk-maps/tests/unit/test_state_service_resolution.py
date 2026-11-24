@@ -7,7 +7,7 @@
 Covers the resolution paths layered on top of the primary-host + roll-up core
 (tested in ``test_state_service.py``): connection registry lookup, map state
 fetch + batch-failure fallback, recursive map-link aggregation, per-object
-connection override, worldmap automap/bundle inflation, the SSE delta encoders
+connection override, geo map automap/bundle inflation, the SSE delta encoders
 (state / topology / folder-tree), and the folder-tree assembly driven by the
 demo ``FakeConnection``.
 
@@ -38,10 +38,10 @@ from cmk.maps.backend.connections.base import (
     UNSCOPED,
 )
 from cmk.maps.backend.schemas.map import (
+    GeoView,
     MapConfig,
     MapElement,
     StaticView,
-    WorldmapView,
 )
 from cmk.maps.backend.schemas.presentation import (
     DataElement,
@@ -208,7 +208,7 @@ def test_get_map_states_names_the_sites_that_stopped_answering(
         name="geo",
         alias="Geo",
         connection_id="mock",
-        view=WorldmapView(auto_source="all_hosts"),
+        view=GeoView(auto_source="all_hosts"),
         objects=[],
     )
 
@@ -609,14 +609,14 @@ def test_per_object_connection_override_unregistered_yields_pending(
 
 
 # ---------------------------------------------------------------------------
-# Worldmap auto_source + geo bundles (inflate_auto_objects)
+# Geo map auto_source + geo bundles (inflate_auto_objects)
 # ---------------------------------------------------------------------------
 
 
-def test_worldmap_auto_source_inflates_geo_hosts(
+def test_geo_map_auto_source_inflates_geo_hosts(
     mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """worldmap.auto_source pulls hosts with geo coords into transient objects."""
+    """GeoView.auto_source pulls hosts with geo coords into transient objects."""
     mock_connection.get_hosts_states = AsyncMock(
         return_value={
             "ham-srv1": ObjectState(object_id="ham-srv1", type="host", state="UP"),
@@ -635,7 +635,7 @@ def test_worldmap_auto_source_inflates_geo_hosts(
         name="geo",
         alias="Geo",
         connection_id="mock",
-        view=WorldmapView(auto_source="all_hosts"),
+        view=GeoView(auto_source="all_hosts"),
         objects=[],
     )
     result = asyncio.run(get_map_states(cfg, map_owner=""))
@@ -644,7 +644,7 @@ def test_worldmap_auto_source_inflates_geo_hosts(
     assert by_id["auto:muc-srv1"].state == "DOWN"
 
 
-def test_worldmap_auto_source_folds_service_states_into_hosts(
+def test_geo_map_auto_source_folds_service_states_into_hosts(
     mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     mock_connection.get_hosts_states = AsyncMock(
@@ -661,7 +661,7 @@ def test_worldmap_auto_source_folds_service_states_into_hosts(
         name="geo",
         alias="Geo",
         connection_id="mock",
-        view=WorldmapView(auto_source="all_hosts"),
+        view=GeoView(auto_source="all_hosts"),
         objects=[],
     )
     result = asyncio.run(get_map_states(cfg, map_owner=""))
@@ -671,7 +671,7 @@ def test_worldmap_auto_source_folds_service_states_into_hosts(
     assert by_id["auto:lei-srv1"].services_summary == summary
 
 
-def test_worldmap_auto_source_keeps_a_pending_host_with_ok_services_pending(
+def test_geo_map_auto_source_keeps_a_pending_host_with_ok_services_pending(
     mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     mock_connection.get_hosts_states = AsyncMock(
@@ -689,7 +689,7 @@ def test_worldmap_auto_source_keeps_a_pending_host_with_ok_services_pending(
         name="geo",
         alias="Geo",
         connection_id="mock",
-        view=WorldmapView(auto_source="all_hosts"),
+        view=GeoView(auto_source="all_hosts"),
         objects=[],
     )
     result = asyncio.run(get_map_states(cfg, map_owner=""))
@@ -697,7 +697,7 @@ def test_worldmap_auto_source_keeps_a_pending_host_with_ok_services_pending(
     assert by_id["auto:kie-srv1"].state == "PENDING"
 
 
-def test_worldmap_auto_source_skips_persisted_duplicates(
+def test_geo_map_auto_source_skips_persisted_duplicates(
     mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Persisted objects with matching host names win over auto-discovered ones."""
@@ -713,7 +713,7 @@ def test_worldmap_auto_source_skips_persisted_duplicates(
         name="geo",
         alias="Geo",
         connection_id="mock",
-        view=WorldmapView(auto_source="all_hosts"),
+        view=GeoView(auto_source="all_hosts"),
         objects=[MapElement(id="manual_srv1", type="host", host_name="srv1", lat=10, lng=20)],
     )
     result = asyncio.run(get_map_states(cfg, map_owner=""))
@@ -751,7 +751,7 @@ def test_static_bundle_suppresses_markers_and_folds_services(
         name="geo",
         alias="Geo",
         connection_id="mock",
-        view=WorldmapView(auto_source="all_hosts"),
+        view=GeoView(auto_source="all_hosts"),
         objects=[
             MapElement(
                 id="bundle1",
@@ -823,7 +823,7 @@ def test_location_bundle_matches_hosts_at_coordinate(
         name="geo",
         alias="Geo",
         connection_id="mock",
-        view=WorldmapView(auto_source="all_hosts"),
+        view=GeoView(auto_source="all_hosts"),
         objects=[
             MapElement(
                 id="loc1",
@@ -862,7 +862,7 @@ def test_location_bundle_without_auto_source_uses_baseline(
         name="geo",
         alias="Geo",
         connection_id="mock",
-        view=WorldmapView(auto_source=None),
+        view=GeoView(auto_source=None),
         objects=[
             MapElement(
                 id="loc1",

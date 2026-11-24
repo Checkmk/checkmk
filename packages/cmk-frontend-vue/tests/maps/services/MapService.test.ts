@@ -876,7 +876,7 @@ describe('MapService.showGridMembers()', () => {
     expect(ids(store)).toEqual([])
   })
 
-  it('survives the worldmap hosts being reloaded', async () => {
+  it('survives the geo map hosts being reloaded', async () => {
     const store = new MapService(new MapConfigApi(), { fetchAutoObjects: vi.fn() })
     store.currentMap.value = aMap({ name: 'net', objects: [] })
     store.showGridMembers('net', [anObject({ id: 'auto:grid:g:a', type: 'host' })])

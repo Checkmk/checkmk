@@ -218,7 +218,7 @@ class StaticView(TypedDict):
     type: Literal["static"]
 
 
-class WorldmapView(TypedDict):
+class GeoView(TypedDict):
     type: Literal["worldmap"]
     lat: float
     lng: float
@@ -252,7 +252,7 @@ class PresentationView(TypedDict):
     elements: list[PresentationElement]
 
 
-MapView = StaticView | WorldmapView | RadarView | FlowView | FolderTreeView | PresentationView
+MapView = StaticView | GeoView | RadarView | FlowView | FolderTreeView | PresentationView
 
 
 class MapObject(TypedDict):

@@ -7,7 +7,7 @@
  * Where a geo map's tiles come from — the one place in the SPA that knows.
  *
  * The browser fetches the tiles directly (same as NagVis' worldmap), so a site
- * on a bandwidth-limited or air-gapped network points ``WorldmapView.tile_url``
+ * on a bandwidth-limited or air-gapped network points ``GeoView.tile_url``
  * (or the site-wide default) at its own OSM-compatible server and NOTHING may
  * bypass that: the map canvas and the list thumbnails resolve the URL, the
  * attribution and the saturation through this module, so a per-map override
@@ -19,7 +19,7 @@
  */
 import L from 'leaflet'
 
-import type { MapView, TileSource, WorldmapView } from '@/maps/types/api'
+import type { GeoView, MapView, TileSource } from '@/maps/types/api'
 import { isAutoLoadable } from '@/maps/utils/autoLoadUrl'
 
 function tileHost(url: string): string | null {
@@ -62,7 +62,7 @@ export interface TileSettings {
   paneFilter: string
 }
 
-function worldmapView(view: MapView | null | undefined): WorldmapView | null {
+function geoMapView(view: MapView | null | undefined): GeoView | null {
   return view?.type === 'worldmap' ? view : null
 }
 
@@ -76,7 +76,7 @@ export function tileSettings(
   view: MapView | null | undefined,
   site: TileSource | null
 ): TileSettings {
-  const wv = worldmapView(view)
+  const wv = geoMapView(view)
   const saturate = wv?.tile_saturate
   return {
     url: wv?.tile_url || site?.default_url || '',

@@ -37,12 +37,12 @@ const SAVE_DEBOUNCE_MS = 400
 const SHOW_SAVED_DELAY_MS = 2000
 const SHOW_SAVED_SPREAD_MS = 1000
 
-function isWorldmapAutoObject(object: MapElement): boolean {
+function isGeoMapAutoObject(object: MapElement): boolean {
   return isAutoObjectId(object.id) && !isGridMemberId(object.id)
 }
 
-function withoutWorldmapAutoObjects(objects: MapConfig['objects']): MapConfig['objects'] {
-  return objects.filter((object) => !isWorldmapAutoObject(object))
+function withoutGeoMapAutoObjects(objects: MapConfig['objects']): MapConfig['objects'] {
+  return objects.filter((object) => !isGeoMapAutoObject(object))
 }
 
 /**
@@ -222,7 +222,7 @@ export class MapService {
       this.currentMapAccess.value = signed.access
       if (onSigned) {
         // The signed bytes, not ``currentMap``: that one gets client-only extras
-        // (merged worldmap auto-objects) the daemon inflates itself.
+        // (merged geo map auto-objects) the daemon inflates itself.
         onSigned({ config_b64: signed.config_b64, sig: signed.sig })
         // Rendering a large map blocks the thread; yielding first lets the
         // connect reach the network before it.
@@ -315,7 +315,7 @@ export class MapService {
   }
 
   /**
-   * Merges a worldmap's auto-source hosts into the open map, so the canvas, the
+   * Merges a geo map's auto-source hosts into the open map, so the canvas, the
    * drawer and the stream all see one object list. The daemon inflates them from
    * the config it was handed, so this only works once the map is registered:
    * without that, the hosts will not come. Replaces an earlier merge rather
@@ -328,8 +328,8 @@ export class MapService {
     }
     if (!hasAutoSource(current.view)) {
       // Left alone without any: a new array would redraw the canvas for nothing.
-      if (current.objects.some(isWorldmapAutoObject)) {
-        current.objects = withoutWorldmapAutoObjects(current.objects)
+      if (current.objects.some(isGeoMapAutoObject)) {
+        current.objects = withoutGeoMapAutoObjects(current.objects)
       }
       this.autoObjects.value = 'none'
       return
@@ -345,7 +345,7 @@ export class MapService {
       if (map?.name !== name) {
         return
       }
-      map.objects = [...withoutWorldmapAutoObjects(map.objects), ...auto]
+      map.objects = [...withoutGeoMapAutoObjects(map.objects), ...auto]
       this.autoObjects.value = 'loaded'
     } catch (error: unknown) {
       if (this.currentMap.value?.name === name) {

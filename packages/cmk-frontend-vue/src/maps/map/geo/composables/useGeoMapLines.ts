@@ -19,7 +19,7 @@
 import L from 'leaflet'
 import { type ShallowRef, shallowRef } from 'vue'
 
-import type { MarkerMove } from '@/maps/map/worldmap/composables/useWorldmapMarkers'
+import type { MarkerMove } from '@/maps/map/geo/composables/useGeoMapMarkers'
 import {
   type LatLng,
   bindCandidate,
@@ -28,7 +28,7 @@ import {
   midpoint,
   nudgedHandle,
   objectLatLng
-} from '@/maps/map/worldmap/geo'
+} from '@/maps/map/geo/geo'
 import type { MapElement } from '@/maps/types/api'
 import { DIMMED_OPACITY } from '@/maps/utils/objectFilter'
 
@@ -69,7 +69,7 @@ export interface LineDecorations {
   labels: LabelDecoration[]
 }
 
-export interface WorldmapLines {
+export interface GeoMapLines {
   decorations: Readonly<ShallowRef<LineDecorations>>
   /** Brings the lines and their decorations in line with the objects. */
   sync: () => void
@@ -116,7 +116,7 @@ const SELECTED_GLOW =
 
 const NO_DECORATIONS: LineDecorations = { handles: [], arrows: [], labels: [] }
 
-export function useWorldmapLines(source: {
+export function useGeoMapLines(source: {
   map: () => L.Map | null
   objects: () => MapElement[]
   /** The line's colour, resolved: the operator's own, or its state's. */
@@ -130,7 +130,7 @@ export function useWorldmapLines(source: {
   onHover: (id: string, event: MouseEvent) => void
   onHoverLeave: () => void
   onEndpointBind: (id: string, endpoint: LineEndpoint, at: LatLng, boundTo: string | null) => void
-}): WorldmapLines {
+}): GeoMapLines {
   const entries = new Map<string, LineEntry>()
   const decorations = shallowRef<LineDecorations>(NO_DECORATIONS)
   /** Where the objects currently being dragged are, keyed by object id. */

@@ -10,7 +10,7 @@ coordinates, and the lines drawn between them.
 Leaflet draws the tiles and owns every position — it is the only thing that
 knows how a coordinate lands on the current viewport. What the operator sees on
 top of a tile is a Vue component all the same: a marker's element is handed out
-by ``useWorldmapMarkers`` and painted through a ``Teleport``, so an object looks
+by ``useGeoMapMarkers`` and painted through a ``Teleport``, so an object looks
 the same here as on a static map instead of being built a second time as markup.
 -->
 <script setup lang="ts">
@@ -31,24 +31,13 @@ import { useObjectResize } from '@/maps/map/composables/useObjectResize'
 import { useRovingFocus } from '@/maps/map/composables/useRovingFocus'
 import MapElementLabel from '@/maps/map/elements/components/MapElementLabel.vue'
 import { providePulseCount } from '@/maps/map/elements/composables/pulseCount'
+import { type LineEndpoint, useGeoMapLines } from '@/maps/map/geo/composables/useGeoMapLines'
+import { type MarkerMove, useGeoMapMarkers } from '@/maps/map/geo/composables/useGeoMapMarkers'
+import { useGeoMapMarquee } from '@/maps/map/geo/composables/useGeoMapMarquee'
+import { type GeoMapViewport, type LatLng, objectLatLng, pointObjects } from '@/maps/map/geo/geo'
 import { objectIconSize } from '@/maps/map/objectIconSize'
-import {
-  type LineEndpoint,
-  useWorldmapLines
-} from '@/maps/map/worldmap/composables/useWorldmapLines'
-import {
-  type MarkerMove,
-  useWorldmapMarkers
-} from '@/maps/map/worldmap/composables/useWorldmapMarkers'
-import { useWorldmapMarquee } from '@/maps/map/worldmap/composables/useWorldmapMarquee'
-import {
-  type LatLng,
-  type WorldmapViewport,
-  objectLatLng,
-  pointObjects
-} from '@/maps/map/worldmap/geo'
 import { useSettings } from '@/maps/services/context'
-import { applyTileLayer } from '@/maps/shared/worldmap/tileLayer'
+import { applyTileLayer } from '@/maps/shared/geo/tileLayer'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 import { objectDisplayName } from '@/maps/utils/dropdownOptions'
 import {
@@ -60,9 +49,9 @@ import {
 import { stateRank } from '@/maps/utils/stateColors'
 import { labelText } from '@/maps/utils/template'
 
-import WorldMapLineArrow from './WorldMapLineArrow.vue'
-import WorldMapLineHandle from './WorldMapLineHandle.vue'
-import WorldMapMarker from './WorldMapMarker.vue'
+import GeoMapLineArrow from './GeoMapLineArrow.vue'
+import GeoMapLineHandle from './GeoMapLineHandle.vue'
+import GeoMapMarker from './GeoMapMarker.vue'
 
 /** Where a map opens that never had a viewport of its own: central Europe. */
 const DEFAULT_CENTRE: LatLng = [51, 10]
@@ -251,7 +240,7 @@ function onMarkersDropped(moves: MarkerMove[]): void {
   lines.followLive([])
 }
 
-const markers = useWorldmapMarkers({
+const markers = useGeoMapMarkers({
   map: () => map,
   objects: () => shownObjects.value,
   fallbackAt: () => (viewport.value ? [viewport.value.lat, viewport.value.lng] : DEFAULT_CENTRE),
@@ -266,7 +255,7 @@ const markers = useWorldmapMarkers({
   onDragEnd: onMarkersDropped
 })
 
-const lines = useWorldmapLines({
+const lines = useGeoMapLines({
   map: () => map,
   objects: () => shownObjects.value,
   colorOf,
@@ -281,7 +270,7 @@ const lines = useWorldmapLines({
   onEndpointBind: (id, endpoint, at, boundTo) => emit('endpoint-bind', id, endpoint, at, boundTo)
 })
 
-const marquee = useWorldmapMarquee({
+const marquee = useGeoMapMarquee({
   map: () => map,
   objects: () => props.config.objects,
   editable: () => props.editMode,
@@ -341,7 +330,7 @@ function onResizeEnd(): void {
   }
 }
 
-function currentViewport(): WorldmapViewport | null {
+function currentViewport(): GeoMapViewport | null {
   if (!map) {
     return null
   }
@@ -389,7 +378,7 @@ onMounted(() => {
   // The tile licence wants the attribution legible: its own class lets the
   // theme reach it, and bottom left keeps it out from under the edit button.
   map.attributionControl.setPosition('bottomleft')
-  map.attributionControl.getContainer()?.classList.add('maps-world-map-canvas__attribution')
+  map.attributionControl.getContainer()?.classList.add('maps-geo-map-canvas__attribution')
   map.on('click', (event: L.LeafletMouseEvent) => {
     // A click anywhere but on an object dismisses whatever it opened.
     menus.close()
@@ -506,7 +495,7 @@ function containerSize(): { width: number; height: number } | null {
 defineExpose({
   getViewport: currentViewport,
   getContainerSize: containerSize,
-  setViewport: (at: WorldmapViewport) => map?.setView([at.lat, at.lng], at.zoom),
+  setViewport: (at: GeoMapViewport) => map?.setView([at.lat, at.lng], at.zoom),
   zoomIn: () => map?.zoomIn(),
   zoomOut: () => map?.zoomOut(),
   fitAll
@@ -516,7 +505,7 @@ defineExpose({
 <template>
   <div
     ref="surface"
-    class="maps-world-map-canvas"
+    class="maps-geo-map-canvas"
     :data-map-pulses-rest="pulsesRest ? '' : undefined"
     @pointermove="resize.move"
     @pointerup="onResizeEnd"
@@ -526,14 +515,14 @@ defineExpose({
   >
     <div
       ref="container"
-      class="maps-world-map-canvas__map"
+      class="maps-geo-map-canvas__map"
       role="group"
       :aria-label="_t('Geo map canvas')"
     />
 
     <!-- A marker's element is Leaflet's; what it shows is the object's. -->
     <Teleport v-for="view in markerViews" :key="view.object.id" :to="view.element">
-      <WorldMapMarker
+      <GeoMapMarker
         :object="view.object"
         :state="states[view.object.id]"
         :icon-size="iconSizeOf(view.object)"
@@ -560,7 +549,7 @@ defineExpose({
       :key="handle.key"
       :to="handle.element"
     >
-      <WorldMapLineHandle
+      <GeoMapLineHandle
         :color="handle.color"
         :bound="handle.bound"
         :style="dimmedStyle(handle.dimmed)"
@@ -568,7 +557,7 @@ defineExpose({
     </Teleport>
 
     <Teleport v-for="arrow in lines.decorations.value.arrows" :key="arrow.key" :to="arrow.element">
-      <WorldMapLineArrow
+      <GeoMapLineArrow
         :color="arrow.color"
         :degrees="arrow.degrees"
         :style="dimmedStyle(arrow.dimmed)"
@@ -623,7 +612,7 @@ defineExpose({
 <style scoped>
 /* No stacking context of its own, so the hover card and the context menu drawn
    from in here reach over the map's own chrome. */
-.maps-world-map-canvas {
+.maps-geo-map-canvas {
   position: absolute;
   inset: 0;
 }
@@ -631,7 +620,7 @@ defineExpose({
 /* stylelint-disable selector-pseudo-class-no-unknown -- Leaflet renders the
    attribution, so it carries no scope attribute of its own. Under the root, the
    rule outweighs Leaflet's own white-on-white one. */
-.maps-world-map-canvas :deep(.maps-world-map-canvas__attribution) {
+.maps-geo-map-canvas :deep(.maps-geo-map-canvas__attribution) {
   padding: var(--dimension-1) var(--dimension-3);
   font-size: var(--font-size-small);
   line-height: 1.4;
@@ -639,7 +628,7 @@ defineExpose({
   background: var(--maps-map-view-overlay-bg);
 }
 
-.maps-world-map-canvas :deep(.maps-world-map-canvas__attribution a) {
+.maps-geo-map-canvas :deep(.maps-geo-map-canvas__attribution a) {
   color: var(--font-color);
   text-decoration: underline;
 }
@@ -647,13 +636,13 @@ defineExpose({
 
 /* Leaflet stacks its panes up to z-index 700; isolating them keeps that ladder
    to itself instead of letting it climb over everything the map draws on top. */
-.maps-world-map-canvas__map {
+.maps-geo-map-canvas__map {
   position: absolute;
   inset: 0;
   isolation: isolate;
 }
 
-.maps-world-map-canvas__map:focus-visible {
+.maps-geo-map-canvas__map:focus-visible {
   outline: revert;
   outline-offset: -2px;
 }

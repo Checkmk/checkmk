@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Shared GUI↔daemon host geo-coordinate resolution for Checkmk Maps.
 
-Both the daemon (``cmk.maps.backend``, for the worldmap automap source) and the
+Both the daemon (``cmk.maps.backend``, for the geo map automap source) and the
 GUI (``cmk.maps.gui``, for single-host editor placement) turn a host's
 monitoring data into ``(lat, lng)`` using the same source order: the
 ``maps_lat``/``maps_lng`` host labels first, then the legacy ``LAT``/``LONG``

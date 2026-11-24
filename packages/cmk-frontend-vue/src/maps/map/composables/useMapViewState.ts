@@ -5,7 +5,7 @@
  */
 /**
  * The view settings an operator changes from the map itself rather than from
- * its settings dialog — the problems filter, a flow map's layout, a world map's
+ * its settings dialog — the problems filter, a flow map's layout, a geo map's
  * default viewport.
  *
  * A flow map's layout and a folder tree's drawing are part of the map, so they

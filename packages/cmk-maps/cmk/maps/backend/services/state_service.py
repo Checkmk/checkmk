@@ -31,11 +31,11 @@ from cmk.maps.backend.core.ttl_cache import TtlCache
 from cmk.maps.backend.integrations.checkmk import FolderScope
 from cmk.maps.backend.schemas.map import (
     FolderTreeView,
+    GeoView,
     MapConfig,
     MapElement,
     RadarView,
     StaticView,
-    WorldmapView,
 )
 from cmk.maps.backend.schemas.presentation import DataElement, PresentationView, ShapeElement
 from cmk.maps.backend.schemas.state import (
@@ -249,7 +249,7 @@ async def _execute_map_states(
     if cfg.view.type == "presentation":
         return await _get_presentation_states(cfg, connection, restricted=restricted)
 
-    # Inflate worldmap automap-source hosts into transient map objects so
+    # Inflate geo map automap-source hosts into transient map objects so
     # the rest of the pipeline (state fetch, stream diffing, frontend
     # rendering) treats them like any other host. They are not persisted —
     # the MapConfig in map_service still holds only the user-curated set.
@@ -296,7 +296,7 @@ def _names_filter(names: list[str]) -> str:
 
 
 async def inflate_auto_objects(cfg: MapConfig, connection: ConnectionBase) -> list[MapElement]:
-    """Resolve a worldmap's automap hosts and geo "bundles".
+    """Resolve a geo map's automap hosts and geo "bundles".
 
     ``auto_source`` appends every geo host as a transient marker (persisted
     objects win on name clash). Location bundles additionally re-match hosts at
@@ -304,7 +304,7 @@ async def inflate_auto_objects(cfg: MapConfig, connection: ConnectionBase) -> li
     their members' individual markers.
     """
     view = cfg.view
-    if not isinstance(view, WorldmapView):
+    if not isinstance(view, GeoView):
         return cfg.objects
     has_location_bundle = any(o.bundle_kind == "location" for o in cfg.objects)
     if view.auto_source is None and not has_location_bundle:

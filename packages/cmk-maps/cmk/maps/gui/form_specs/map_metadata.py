@@ -7,7 +7,7 @@
 Covers the fields the Pilot vendor renders cleanly: alias, connection,
 icon-size override, rotation, templates, click action and visibility.
 
-Type-specific view geometry (worldmap lat/lng/zoom, flow root, radar
+Type-specific view geometry (geo map lat/lng/zoom, flow root, radar
 filter) plus background image stay in the existing custom Vue surface
 because they need live previews / pickers FormSpec doesn't ship.
 """

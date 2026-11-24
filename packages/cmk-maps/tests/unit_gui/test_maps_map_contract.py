@@ -66,7 +66,7 @@ _FLOW_MAP: dict[str, object] = {
     ],
 }
 
-_WORLDMAP_MAP: dict[str, object] = {
+_GEO_MAP: dict[str, object] = {
     "name": "world",
     "view": {"type": "worldmap", "lat": 51.0, "lng": 10.0, "zoom": 5, "auto_source": "all_hosts"},
     "objects": [{"id": "h1", "type": "host", "host_name": "srv1", "lat": 48.1, "lng": 11.6}],
@@ -125,7 +125,7 @@ _PRESENTATION_MAP: dict[str, object] = {
 
 _MAPS = [
     _FLOW_MAP,
-    _WORLDMAP_MAP,
+    _GEO_MAP,
     _FOLDERTREE_MAP,
     _RADAR_MAP,
     _STATIC_MAP,
@@ -247,7 +247,7 @@ def test_rest_model_rejects_css_injection_color(field: str) -> None:
     # Defense in depth at the REST write boundary: a CSS-injection color must be
     # rejected before it can be stored and served to the SPA (which also escapes
     # it at the render sink). Mirrors the daemon-side color validation.
-    dense = DaemonMapConfig.model_validate(_WORLDMAP_MAP).model_dump(mode="json")
+    dense = DaemonMapConfig.model_validate(_GEO_MAP).model_dump(mode="json")
     dense["objects"][0][field] = '#fff" onmouseover="alert(1)'
     with pytest.raises(ValidationError):
         map_from_spec(dense)
@@ -274,7 +274,7 @@ def test_rest_model_rejects_object_filter_without_filter_header() -> None:
     # safe ``Filter:`` combinator lines must be rejected at the REST write boundary.
     # Without this the store persists a filter the daemon later rejects on register,
     # leaving the map permanently offline.
-    dense = DaemonMapConfig.model_validate(_WORLDMAP_MAP).model_dump(mode="json")
+    dense = DaemonMapConfig.model_validate(_GEO_MAP).model_dump(mode="json")
     dense["objects"][0]["object_filter"] = "host_name ~ srv"
     with pytest.raises(ValidationError):
         map_from_spec(dense)
@@ -288,7 +288,7 @@ def test_rest_model_rejects_a_grid_per_row_the_daemon_would_reject() -> None:
 
 
 def test_rest_model_rejects_tile_saturation_the_daemon_would_reject() -> None:
-    dense = DaemonMapConfig.model_validate(_WORLDMAP_MAP).model_dump(mode="json")
+    dense = DaemonMapConfig.model_validate(_GEO_MAP).model_dump(mode="json")
     dense["view"]["tile_saturate"] = 150
     with pytest.raises(ValidationError):
         map_from_spec(dense)
@@ -296,7 +296,7 @@ def test_rest_model_rejects_tile_saturation_the_daemon_would_reject() -> None:
 
 @pytest.mark.parametrize("tile_url", ["/tiles/{z}/{x}/{y}.png", "tiles/{z}/{x}/{y}.png"])
 def test_rest_model_refuses_a_tile_url_of_the_site(tile_url: str) -> None:
-    dense = DaemonMapConfig.model_validate(_WORLDMAP_MAP).model_dump(mode="json")
+    dense = DaemonMapConfig.model_validate(_GEO_MAP).model_dump(mode="json")
     dense["view"]["tile_url"] = tile_url
     with pytest.raises(ValidationError):
         map_from_spec(dense)
@@ -324,7 +324,7 @@ def test_rest_model_refuses_a_graph_url_of_another_site_page() -> None:
 
 
 def test_rest_model_normalises_valid_object_filter() -> None:
-    dense = DaemonMapConfig.model_validate(_WORLDMAP_MAP).model_dump(mode="json")
+    dense = DaemonMapConfig.model_validate(_GEO_MAP).model_dump(mode="json")
     dense["objects"][0]["object_filter"] = "Filter: host_name ~ srv"
     rest_obj = map_from_spec(dense)
     binding = rest_obj.objects[0].binding
@@ -371,7 +371,7 @@ def test_rest_model_drops_traversal_in_image_filenames() -> None:
     # Icons and map backgrounds are bare filenames the SPA expands into an asset
     # URL; a traversal value must not survive to become a same-origin GET, and a
     # stored map carrying one must still load.
-    dense = DaemonMapConfig.model_validate(_WORLDMAP_MAP).model_dump(mode="json")
+    dense = DaemonMapConfig.model_validate(_GEO_MAP).model_dump(mode="json")
     dense["background_image"] = "../floor.png"
     dense["objects"][0]["display"] = {"mode": "icon", "image": "../../check_mk/logout.py"}
     rest_obj = map_from_spec(dense)

@@ -39,7 +39,7 @@ type MapElementWire = Schemas['MapElement']
 type MapViewWire = MapConfigWire['view']
 type MapPresentationElementWire = Schemas['MapPresentationView']['elements'][number]
 
-// Transient worldmap auto-source hosts the daemon inflates on every load and
+// Transient geo map auto-source hosts the daemon inflates on every load and
 // merges into ``currentMap`` for rendering. They carry synthetic ``auto:*``
 // ids (state_service._AUTO_PREFIX) and are explicitly never persisted — saving
 // them would freeze the live host set into the stored config (removed hosts
@@ -248,7 +248,7 @@ function viewToWire(view: MapView): MapViewWire {
 // extras: the ``site`` object type and each object's ``site_id`` are client
 // constructs the daemon's map schema doesn't model, so they must not be
 // persisted. Drop the ``site`` objects (never present at runtime — the daemon
-// can't resolve them) and the transient ``auto:*`` objects (worldmap hosts, grid
+// can't resolve them) and the transient ``auto:*`` objects (geo map hosts, grid
 // members), then convert each remaining flat object (and the view) to the nested
 // wire shape the REST API expects. ``site_id`` is dropped by ``objectToWire`` (not a wire field).
 export function toWireConfig(map: MapConfig): MapConfigWire {
@@ -378,7 +378,7 @@ export function mapRequestBody(
 /**
  * The map as the daemon takes it: the same flat shape, minus what only the
  * client knows about. The synthetic ``site`` nodes of a flow map and the
- * transient ``auto:*`` objects (worldmap hosts, grid members) have no meaning
+ * transient ``auto:*`` objects (geo map hosts, grid members) have no meaning
  * there — the daemon resolves them itself.
  */
 export function daemonConfig(map: MapConfig): DaemonSchemas['MapConfig'] {

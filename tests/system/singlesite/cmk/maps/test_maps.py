@@ -303,7 +303,7 @@ def test_maps_rest_builtin_map_delete_rejected(site: Site) -> None:
 
 def test_maps_csp_allows_openstreetmap_tiles(site: Site, web: CMKWebSession) -> None:
     # A geo map renders OpenStreetMap tiles from the *bare* host
-    # (WorldMapCanvas' DEFAULT_TILE_URL is https://tile.openstreetmap.org/...).
+    # (GeoMapCanvas' DEFAULT_TILE_URL is https://tile.openstreetmap.org/...).
     # A wildcard `*.tile.openstreetmap.org` does NOT match that bare host, so the
     # OMD apache CSP img-src must list it explicitly — otherwise every tile is
     # blocked and the map renders blank. Guards the exact host the frontend uses.

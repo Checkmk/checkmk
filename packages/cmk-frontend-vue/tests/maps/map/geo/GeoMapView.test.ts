@@ -8,13 +8,13 @@ import { render, screen } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import { useMapEditor } from '@/maps/map/composables/useMapEditor'
-import WorldMapView from '@/maps/map/worldmap/WorldMapView.vue'
-import type { MapConfig, ObjectState, WorldmapView } from '@/maps/types/api'
+import GeoMapView from '@/maps/map/geo/GeoMapView.vue'
+import type { GeoView, MapConfig, ObjectState } from '@/maps/types/api'
 
 import { aMap, aState, anObject } from '../../support/fixtures'
 import { fakeMapsServices, mapsGlobal, runWithServices } from '../../support/services'
 
-const geoView = (view: Partial<WorldmapView> = {}): WorldmapView => ({
+const geoView = (view: Partial<GeoView> = {}): GeoView => ({
   type: 'worldmap',
   lat: 51,
   lng: 10,
@@ -43,8 +43,8 @@ function renderView(
   const services = fakeMapsServices()
   services.maps.autoObjects.value = autoObjects
   const editor = runWithServices(services, () => useMapEditor())
-  return render(WorldMapView, {
-    global: mapsGlobal({ WorldMapCanvas: true }, services),
+  return render(GeoMapView, {
+    global: mapsGlobal({ GeoMapCanvas: true }, services),
     props: {
       config,
       states,
@@ -60,7 +60,7 @@ function renderView(
   })
 }
 
-describe('WorldMapView — a map with nothing on it', () => {
+describe('GeoMapView — a map with nothing on it', () => {
   it('shows an editor both ways to fill it', () => {
     renderView(aMap({ view: geoView(), objects: [] }))
 
@@ -115,7 +115,7 @@ describe('WorldMapView — a map with nothing on it', () => {
   })
 })
 
-describe('WorldMapView — fitting the view', () => {
+describe('GeoMapView — fitting the view', () => {
   const berlin = anObject({
     id: 'h1',
     type: 'host',

@@ -20,7 +20,7 @@ const mapSettingsFormSpecModal: Component = defineAsyncComponent(
 
 defineProps<{
   map: MapRead
-  worldmapView?: { lat: number; lng: number; zoom: number } | null
+  geoMapView?: { lat: number; lng: number; zoom: number } | null
   parentMapSize?: { width: number; height: number } | null
   initialFocus?: SettingsFocus | null
 }>()
@@ -28,8 +28,8 @@ defineProps<{
 const emit = defineEmits<{
   close: []
   updated: []
-  pickWorldmapView: [done: (view: { lat: number; lng: number; zoom: number } | null) => void]
-  worldmapViewChange: [view: { lat: number; lng: number; zoom: number }]
+  pickGeoMapView: [done: (view: { lat: number; lng: number; zoom: number } | null) => void]
+  geoMapViewChange: [view: { lat: number; lng: number; zoom: number }]
 }>()
 </script>
 
@@ -37,12 +37,12 @@ const emit = defineEmits<{
   <component
     :is="mapSettingsFormSpecModal"
     :map="map"
-    :worldmap-view="worldmapView ?? null"
+    :geo-map-view="geoMapView ?? null"
     :parent-map-size="parentMapSize ?? null"
     :initial-focus="initialFocus ?? null"
     @close="emit('close')"
     @updated="emit('updated')"
-    @pick-worldmap-view="emit('pickWorldmapView', $event)"
-    @worldmap-view-change="emit('worldmapViewChange', $event)"
+    @pick-geo-map-view="emit('pickGeoMapView', $event)"
+    @geo-map-view-change="emit('geoMapViewChange', $event)"
   />
 </template>

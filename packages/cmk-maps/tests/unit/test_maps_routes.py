@@ -32,7 +32,7 @@ from cmk.maps.backend.connections.base import GeoHost, MonitoringScope
 from cmk.maps.backend.core.auth import Principal
 from cmk.maps.backend.core.ratelimit import rest_read_limiter
 from cmk.maps.backend.core.sse import manager, Subscriber
-from cmk.maps.backend.schemas.map import MapConfig, RadarView, WorldmapView
+from cmk.maps.backend.schemas.map import GeoView, MapConfig, RadarView
 from cmk.maps.backend.schemas.state import ObjectState
 from cmk.maps.backend.services import map_service, state_service
 from cmk.maps.shared.map_signature import MAP_SIG_CONTEXT, MAP_WITHDRAWN_CONTEXT, sign_config
@@ -633,7 +633,7 @@ def test_auto_objects_scopes_geo_query_to_auth_user(
     scoped = Principal(name="bob", may_edit=True, see_all=False)  # auth_user == "bob"
     map_service.register_map(
         "bob",
-        MapConfig(name="world", connection_id="spy", view=WorldmapView(auto_source="all_hosts")),
+        MapConfig(name="world", connection_id="spy", view=GeoView(auto_source="all_hosts")),
     )
     client = _client(router_client, scoped, owner="bob")
     try:
@@ -649,7 +649,7 @@ def test_auto_objects_counts_against_the_read_budget(
 ) -> None:
     map_service.register_map(
         "bob",
-        MapConfig(name="world", connection_id="live_1", view=WorldmapView(auto_source="all_hosts")),
+        MapConfig(name="world", connection_id="live_1", view=GeoView(auto_source="all_hosts")),
     )
     client = _client(router_client, Principal(name="bob"), owner="bob")
     for _ in range(rest_read_limiter._max):  # noqa: SLF001
@@ -665,7 +665,7 @@ def test_auto_objects_is_404_for_a_map_the_user_does_not_see(
 ) -> None:
     map_service.register_map(
         "alice",
-        MapConfig(name="world", connection_id="live_1", view=WorldmapView(auto_source="all_hosts")),
+        MapConfig(name="world", connection_id="live_1", view=GeoView(auto_source="all_hosts")),
     )
     client = _client(router_client, Principal(name="bob"), owner=None)
 

@@ -428,7 +428,7 @@ class MapStaticView:
 
 
 @api_model
-class MapWorldmapView:
+class MapGeoView:
     type: Literal["worldmap"] = api_field(description="View discriminator.", example="worldmap")
     lat: Annotated[FiniteFloat, Field(ge=-LAT_LIMIT, le=LAT_LIMIT)] = api_field(
         description="Initial map center latitude.", example=51.0
@@ -600,7 +600,7 @@ class MapPresentationView:
 
 MapView = Annotated[
     MapStaticView
-    | MapWorldmapView
+    | MapGeoView
     | MapRadarView
     | MapFlowView
     | MapFolderTreeView
@@ -617,7 +617,7 @@ MapView = Annotated[
 @api_model
 class MapObjectPosition:
     """Where the object sits on the map (canvas x/y for static/flow/radar maps,
-    lat/lng for worldmaps)."""
+    lat/lng for geo maps)."""
 
     x: int | FiniteFloat = api_field(description="Canvas x position.", example=100)
     y: int | FiniteFloat = api_field(description="Canvas y position.", example=200)
@@ -627,10 +627,10 @@ class MapObjectPosition:
         default_factory=ApiOmitted,
     )
     lat: FiniteFloat | None | ApiOmitted = api_field(
-        description="Latitude (worldmap).", example=48.1, default_factory=ApiOmitted
+        description="Latitude (geo map).", example=48.1, default_factory=ApiOmitted
     )
     lng: FiniteFloat | None | ApiOmitted = api_field(
-        description="Longitude (worldmap).", example=11.6, default_factory=ApiOmitted
+        description="Longitude (geo map).", example=11.6, default_factory=ApiOmitted
     )
 
 
@@ -730,7 +730,7 @@ class MapObjectCmkLabel:
 
 @api_model
 class MapObjectBundle:
-    """Geo-bundle grouping for worldmap objects."""
+    """Geo-bundle grouping for geo map objects."""
 
     kind: Literal["static", "location"] | None | ApiOmitted = api_field(
         description="Geo bundle kind.", example="location", default_factory=ApiOmitted
@@ -994,7 +994,7 @@ class MapElement:
         description="Checkmk-label filter (cmk_label objects).", default_factory=ApiOmitted
     )
     bundle: MapObjectBundle | ApiOmitted = api_field(
-        description="Geo-bundle grouping (worldmap).", default_factory=ApiOmitted
+        description="Geo-bundle grouping (geo map).", default_factory=ApiOmitted
     )
     line: MapObjectLine | ApiOmitted = api_field(
         description="Line geometry and styling (line objects).", default_factory=ApiOmitted
@@ -1090,7 +1090,7 @@ class MapConfig:
         description="Map view (renderer + geometry).", example={"type": "static"}
     )
     objects: Annotated[list[MapElement], Field(max_length=MAP_OBJECTS_MAX)] = api_field(
-        description="Placed objects (static/flow/worldmap/radar maps).",
+        description="Placed objects (static/flow/geo/radar maps).",
         example=[
             {
                 "id": "o1",

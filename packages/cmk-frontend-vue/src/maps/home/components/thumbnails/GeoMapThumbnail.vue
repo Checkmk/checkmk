@@ -16,10 +16,10 @@ import 'leaflet/dist/leaflet.css'
 import { onMounted, onUnmounted, useTemplateRef, watch } from 'vue'
 
 import { useSettings } from '@/maps/services/context'
-import { applyTileLayer } from '@/maps/shared/worldmap/tileLayer'
-import type { WorldmapView } from '@/maps/types/api'
+import { applyTileLayer } from '@/maps/shared/geo/tileLayer'
+import type { GeoView } from '@/maps/types/api'
 
-const props = defineProps<{ view: WorldmapView }>()
+const props = defineProps<{ view: GeoView }>()
 
 const settings = useSettings()
 
@@ -44,7 +44,7 @@ onMounted(() => {
     keyboard: false,
     boxZoom: false
   })
-  map.attributionControl.getContainer()?.classList.add('maps-world-map-thumbnail__attribution')
+  map.attributionControl.getContainer()?.classList.add('maps-geo-map-thumbnail__attribution')
   tileLayer = applyTileLayer(map, props.view, settings.tiles.value, tileLayer)
 })
 
@@ -65,11 +65,11 @@ onUnmounted(() => {
 
 <template>
   <!-- Inert: a preview inside a card, so its attribution links are no tab stops. -->
-  <div ref="container" class="maps-world-map-thumbnail" inert />
+  <div ref="container" class="maps-geo-map-thumbnail" inert />
 </template>
 
 <style scoped>
-.maps-world-map-thumbnail {
+.maps-geo-map-thumbnail {
   width: 100%;
   height: 100%;
 }
@@ -77,13 +77,13 @@ onUnmounted(() => {
 /* stylelint-disable selector-pseudo-class-no-unknown -- Leaflet renders the
    attribution, so it carries no scope attribute of its own. Under the root, the
    rule outweighs Leaflet's own white-on-white one. */
-.maps-world-map-thumbnail :deep(.maps-world-map-thumbnail__attribution) {
+.maps-geo-map-thumbnail :deep(.maps-geo-map-thumbnail__attribution) {
   font-size: var(--font-size-small);
   color: var(--font-color);
   background: var(--default-tooltip-background-color);
 }
 
-.maps-world-map-thumbnail :deep(.maps-world-map-thumbnail__attribution a) {
+.maps-geo-map-thumbnail :deep(.maps-geo-map-thumbnail__attribution a) {
   color: var(--font-color);
 }
 /* stylelint-enable selector-pseudo-class-no-unknown */

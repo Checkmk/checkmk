@@ -9,7 +9,7 @@ ajax endpoints into ``var/check_mk/web/<user>/user_maps.mk``). The daemon no
 longer does map CRUD; it only needs the parts that the GUI cannot do itself:
 
 * ``register`` — cache a GUI-owned map in memory so its live state can be streamed,
-* ``auto-objects`` — inflate a worldmap automap source against Livestatus.
+* ``auto-objects`` — inflate a geo map automap source against Livestatus.
 
 Map background images and the image library are GUI-owned now (uploaded via
 ``cmk.maps.gui._images``, served statically by Apache), and stateless NagVis
@@ -280,7 +280,7 @@ async def map_withdrawn(name: MapName, body: WithdrawnRequest, auth: GuiAuthDep)
 async def get_auto_objects(
     name: MapName, current_user: Principal = Depends(rate_limited_map_read)
 ) -> list[MapElement]:
-    """Return objects synthesised from a worldmap automap source.
+    """Return objects synthesised from a geo map automap source.
 
     Empty for maps without ``auto_source`` configured. The objects are
     transient — they're never persisted, so the editor only ever sees the

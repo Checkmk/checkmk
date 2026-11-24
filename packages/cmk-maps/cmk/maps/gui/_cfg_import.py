@@ -38,6 +38,7 @@ from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH
 from cmk.maps.shared.map_payload import (
     FlowView,
     GadgetType,
+    GeoView,
     GRID_FIELD_DEFAULTS,
     GRID_OFFSET_MAX,
     GRID_PER_ROW_MAX,
@@ -53,7 +54,6 @@ from cmk.maps.shared.map_payload import (
     MapObject,
     MapPayload,
     MonitoredObjectType,
-    WorldmapView,
 )
 from cmk.maps.shared.validators import coerce_color, coerce_graph_url, coerce_user_url
 
@@ -597,7 +597,7 @@ _GLOBAL_MAP_KEYS = frozenset(
 )
 
 
-# NagVis geographic map sources that become an Maps worldmap (geo) map.
+# NagVis geographic map sources that become a Maps geo map.
 # ``dynmap`` is excluded — it is a dynamic-filter map, not geographic.
 _GEO_SOURCES = {"worldmap", "geomap"}
 _GEO_DEFAULT_LAT = 51.0
@@ -618,8 +618,8 @@ def _parse_latlng(value: str | None) -> tuple[float, float] | None:
     return None if lat is None or lng is None else (lat, lng)
 
 
-def _geo_view(p: dict[str, str]) -> WorldmapView:
-    """Build an Maps worldmap view from a NagVis worldmap/geomap global block.
+def _geo_view(p: dict[str, str]) -> GeoView:
+    """Build a Maps geo view from a NagVis worldmap/geomap global block.
 
     Worldmap objects live in ``etc/worldmap.db`` and geomap hosts in a CSV — both
     are sidecar files the text-only map import can't read, so the UI import
@@ -629,7 +629,7 @@ def _geo_view(p: dict[str, str]) -> WorldmapView:
     lat, lng = _parse_latlng(p.get("worldmap_center")) or (_GEO_DEFAULT_LAT, _GEO_DEFAULT_LNG)
     zoom = p.get("worldmap_zoom") or p.get("geomap_zoom")
     lat, lng, zoom_level = bounded_view(lat, lng, _int(zoom, _GEO_DEFAULT_ZOOM))
-    view: WorldmapView = {"type": "worldmap", "lat": lat, "lng": lng, "zoom": zoom_level}
+    view: GeoView = {"type": "worldmap", "lat": lat, "lng": lng, "zoom": zoom_level}
     saturate = p.get("worldmap_tiles_saturate")
     if saturate not in (None, ""):
         view["tile_saturate"] = float(max(0, min(100, _int(saturate, 100))))

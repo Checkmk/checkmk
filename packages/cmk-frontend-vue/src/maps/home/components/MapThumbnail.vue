@@ -25,13 +25,13 @@ import type { MapRead } from '@/maps/types/api'
 import { backgroundAssetUrl } from '@/maps/utils/assetUrl'
 
 // Lazy: leaflet only reaches the list page when a geo map is actually listed.
-const worldMapThumbnail = defineAsyncComponent(
-  () => import('@/maps/home/components/thumbnails/WorldMapThumbnail.vue')
+const geoMapThumbnail = defineAsyncComponent(
+  () => import('@/maps/home/components/thumbnails/GeoMapThumbnail.vue')
 )
 
 const ILLUSTRATIONS: Record<MapViewType, Component> = {
   static: StaticMapThumbnail,
-  worldmap: worldMapThumbnail,
+  worldmap: geoMapThumbnail,
   flow: FlowMapThumbnail,
   radar: RadarMapThumbnail,
   foldertree: FolderTreeMapThumbnail,

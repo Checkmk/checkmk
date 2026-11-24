@@ -152,7 +152,7 @@ class StaticView(BaseModel):
     problems_only: bool = False
 
 
-class WorldmapView(BaseModel):
+class GeoView(BaseModel):
     type: Literal["worldmap"] = "worldmap"
     # Out of these bounds the map opens on nothing.
     lat: FiniteFloat = Field(default=51.0, ge=-LAT_LIMIT, le=LAT_LIMIT)
@@ -232,7 +232,7 @@ class FolderTreeView(BaseModel):
 
 
 MapView = Annotated[
-    StaticView | WorldmapView | RadarView | FlowView | FolderTreeView | PresentationView,
+    StaticView | GeoView | RadarView | FlowView | FolderTreeView | PresentationView,
     Field(discriminator="type"),
 ]
 
@@ -304,7 +304,7 @@ class MapElement(BaseModel):
     object_types: Literal["host", "service"] | None = None
     object_filter: str | None = None
     # Set ⇒ this dyngroup is a geo "bundle": worst-state folds host + service
-    # severities, and the worldmap automap suppresses the member hosts' markers.
+    # severities, and the geo map automap suppresses the member hosts' markers.
     bundle_kind: Literal["static", "location"] | None = None
     bundle_hosts: list[_HostName] | None = Field(default=None, max_length=BUNDLE_HOSTS_MAX)
     # None ⇒ exact coordinate match (5 decimals ≈ 1 m).

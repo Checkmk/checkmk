@@ -134,7 +134,7 @@ class MapsMapView(CmkPage):
         return self.main_area.locator().get_by_text("Read-only", exact=True)
 
     @property
-    def world_map(self) -> Locator:
+    def geo_canvas(self) -> Locator:
         """The canvas a geo map draws its tiles and markers on."""
         return self.main_area.locator().get_by_role("group", name="Geo map canvas")
 
@@ -316,13 +316,13 @@ class MapsMapView(CmkPage):
 
     @property
     def geo_objects(self) -> Locator:
-        """All object markers placed on a geo (world map) map."""
-        return self.world_map.get_by_role("button")
+        """All object markers placed on a geo map."""
+        return self.geo_canvas.get_by_role("button")
 
     def add_geo_host_object(self, host_name: str) -> tuple[Locator, float, float]:
         """Add a host object to a geo map; return ``(marker, lat, lng)``.
 
-        On a world map map 'Place on map' resolves the host's
+        On a geo map 'Place on map' resolves the host's
         ``maps_lat``/``maps_lng`` and drops the marker there directly — no canvas
         click, so the operator never positions it by hand. Placing auto-opens the
         properties modal; the stored coordinates are read from it here (a marker
@@ -334,7 +334,7 @@ class MapsMapView(CmkPage):
         self._pick(panel.get_by_role("combobox", name="Object type"), "Host")
         self._pick(panel.get_by_role("combobox", name="Host name"), host_name, query=host_name)
         panel.get_by_role("button", name="Place on map", exact=True).click()
-        expect(self.geo_objects, message="Host was not auto-placed on the world map").to_have_count(
+        expect(self.geo_objects, message="Host was not auto-placed on the geo map").to_have_count(
             before + 1
         )
         card = self.properties_card

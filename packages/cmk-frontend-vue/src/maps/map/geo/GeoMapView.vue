@@ -10,7 +10,7 @@ lines between them along the routes they take.
 This is the map type's own view: the search over its objects, its zoom and fit
 controls, and the two things only a geo map has — the viewport the map opens on,
 which the operator picks by panning the map itself, and the coordinate an object
-is dropped at. The drawing itself is ``WorldMapCanvas``'s, and what a click on
+is dropped at. The drawing itself is ``GeoMapCanvas``'s, and what a click on
 an object leads to is the map view's.
 -->
 <script setup lang="ts">
@@ -26,10 +26,10 @@ import MapZoomControls from '@/maps/map/components/MapZoomControls.vue'
 import ProblemsOnlyToggle from '@/maps/map/components/ProblemsOnlyToggle.vue'
 import type { MapEditor } from '@/maps/map/composables/useMapEditor'
 import type { SettingsFocus } from '@/maps/map/edit/settings/settingsForm'
-import type { LineEndpoint } from '@/maps/map/worldmap/composables/useWorldmapLines'
-import type { MarkerMove } from '@/maps/map/worldmap/composables/useWorldmapMarkers'
-import { roundCoordinate } from '@/maps/map/worldmap/coordinates'
-import { type LatLng, type WorldmapViewport, pointObjects } from '@/maps/map/worldmap/geo'
+import type { LineEndpoint } from '@/maps/map/geo/composables/useGeoMapLines'
+import type { MarkerMove } from '@/maps/map/geo/composables/useGeoMapMarkers'
+import { roundCoordinate } from '@/maps/map/geo/coordinates'
+import { type GeoMapViewport, type LatLng, pointObjects } from '@/maps/map/geo/geo'
 import { useMaps } from '@/maps/services/context'
 import MapsMenu from '@/maps/shared/components/MapsMenu.vue'
 import MapsMenuItem from '@/maps/shared/components/MapsMenuItem.vue'
@@ -37,7 +37,7 @@ import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 import { hasAutoSource } from '@/maps/utils/model'
 import { problemObjects } from '@/maps/utils/objectFilter'
 
-import WorldMapCanvas from './components/WorldMapCanvas.vue'
+import GeoMapCanvas from './components/GeoMapCanvas.vue'
 
 const { _t, _tp } = usei18n()
 
@@ -66,12 +66,12 @@ const emit = defineEmits<{
   /** The map was panned or zoomed, so anything anchored to it must re-anchor. */
   'view-changed': []
   /** The operator wants this viewport to be the one the map opens on. */
-  'save-viewport': [at: WorldmapViewport]
+  'save-viewport': [at: GeoMapViewport]
   /** Open the map's settings at the option that fills the map with hosts. */
   'open-settings': [focus: SettingsFocus]
 }>()
 
-const canvas = useTemplateRef<InstanceType<typeof WorldMapCanvas>>('canvas')
+const canvas = useTemplateRef<InstanceType<typeof GeoMapCanvas>>('canvas')
 
 const { autoObjects } = useMaps()
 
@@ -138,16 +138,16 @@ function saveViewport(): void {
  * pans and zooms the map itself, and applying hands back what they arrived at.
  */
 const picking = ref(false)
-let settlePick: ((at: WorldmapViewport | null) => void) | null = null
+let settlePick: ((at: GeoMapViewport | null) => void) | null = null
 
-function settle(at: WorldmapViewport | null): void {
+function settle(at: GeoMapViewport | null): void {
   picking.value = false
   const resolve = settlePick
   settlePick = null
   resolve?.(at)
 }
 
-function pickViewport(): Promise<WorldmapViewport | null> {
+function pickViewport(): Promise<GeoMapViewport | null> {
   settle(null)
   picking.value = true
   return new Promise((resolve) => {
@@ -190,13 +190,13 @@ function onObjectDblclick(object: MapElement): void {
 
 defineExpose({
   pickViewport,
-  setViewport: (at: WorldmapViewport) => canvas.value?.setViewport(at),
+  setViewport: (at: GeoMapViewport) => canvas.value?.setViewport(at),
   getContainerSize: () => canvas.value?.getContainerSize() ?? null
 })
 </script>
 
 <template>
-  <div class="maps-world-map-view">
+  <div class="maps-geo-map-view">
     <MapPlaceholder v-if="error" :message="error" variant="error" overlay />
 
     <template v-else-if="config">
@@ -223,7 +223,7 @@ defineExpose({
         @fit="canvas?.fitAll()"
       />
 
-      <WorldMapCanvas
+      <GeoMapCanvas
         ref="canvas"
         :config="config"
         :states="states"
@@ -264,14 +264,14 @@ defineExpose({
       />
 
       <!-- Text only, as on a static map; over the tiles, which stay usable. -->
-      <div v-if="emptyState" class="maps-world-map-view__empty">
-        <p class="maps-world-map-view__empty-text">
+      <div v-if="emptyState" class="maps-geo-map-view__empty">
+        <p class="maps-geo-map-view__empty-text">
           <template v-if="emptyState.toSettings">
             {{ emptyState.text.split('%{link}')[0]
             }}<CmkButton
               variant="text"
               size="small"
-              class="maps-world-map-view__empty-link"
+              class="maps-geo-map-view__empty-link"
               @click="emit('open-settings', 'automap_source')"
               >{{ _t('Automatic object placement') }}</CmkButton
             >{{ emptyState.text.split('%{link}')[1] }}
@@ -282,7 +282,7 @@ defineExpose({
 
       <div
         v-if="autoObjects === 'loading' && !preview"
-        class="maps-world-map-view__loading"
+        class="maps-geo-map-view__loading"
         role="status"
       >
         <CmkLoading />
@@ -303,8 +303,8 @@ defineExpose({
         </MapsMenuItem>
       </MapsMenu>
 
-      <div v-if="picking" class="maps-world-map-view__picker">
-        <span class="maps-world-map-view__picker-text">
+      <div v-if="picking" class="maps-geo-map-view__picker">
+        <span class="maps-geo-map-view__picker-text">
           {{ _t('Pan/zoom the map, then apply.') }}
         </span>
         <CmkButton variant="primary" @click="settle(canvas?.getViewport() ?? null)">
@@ -321,7 +321,7 @@ defineExpose({
 </template>
 
 <style scoped>
-.maps-world-map-view__empty {
+.maps-geo-map-view__empty {
   position: absolute;
   inset: 0;
   z-index: 5;
@@ -334,7 +334,7 @@ defineExpose({
 
 /* The overlay lets clicks through to the tiles; the button takes its own. It
    sits in the sentence, so it drops the button's box. */
-.maps-world-map-view__empty-link {
+.maps-geo-map-view__empty-link {
   height: auto;
   margin: 0;
   padding: 0;
@@ -342,7 +342,7 @@ defineExpose({
   pointer-events: auto;
 }
 
-.maps-world-map-view__empty-text {
+.maps-geo-map-view__empty-text {
   max-width: 480px;
   margin: 0;
   padding: var(--dimension-4) var(--dimension-6);
@@ -357,7 +357,7 @@ defineExpose({
 }
 
 /* Bottom centre: the top centre is where an unreachable site is announced. */
-.maps-world-map-view__loading {
+.maps-geo-map-view__loading {
   position: absolute;
   bottom: var(--dimension-6);
   left: 50%;
@@ -372,14 +372,14 @@ defineExpose({
   transform: translateX(-50%);
 }
 
-.maps-world-map-view {
+.maps-geo-map-view {
   position: relative;
   flex: 1 1 0%;
   overflow: hidden;
   background: var(--ux-theme-1);
 }
 
-.maps-world-map-view__picker {
+.maps-geo-map-view__picker {
   position: absolute;
   top: var(--dimension-6);
   left: 50%;
@@ -396,7 +396,7 @@ defineExpose({
   transform: translateX(-50%);
 }
 
-.maps-world-map-view__picker-text {
+.maps-geo-map-view__picker-text {
   font-size: var(--font-size-normal);
   line-height: 16px;
   color: var(--font-color);

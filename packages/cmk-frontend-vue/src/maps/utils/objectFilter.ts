@@ -158,7 +158,7 @@ export function dimmedStyle(dimmed: boolean): { opacity?: string; filter?: strin
 // problem state to stay; decorative types (image, textbox, …) and an inactive
 // toggle always pass. A line bound to a state of its own goes by that state,
 // any other line goes with the objects it connects, so none ends in empty
-// space. Shared by the static and worldmap canvases.
+// space. Shared by the static and geo map canvases.
 export function problemObjects(
   objects: MapElement[],
   problemsOnly: boolean | undefined,

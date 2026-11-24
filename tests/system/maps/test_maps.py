@@ -9,7 +9,7 @@ Covers the operator-facing flows:
 * the home listing renders, its ownership filter and search narrow the map
   list, and a map can be created, opened and deleted through the UI
   (create/open/delete round trip);
-* a geo map created through the dialog mounts its interactive world map;
+* a geo map created through the dialog mounts its interactive canvas;
 * a shipped auto-populating map opens, its objects open a detail drawer whose
   tabs switch and close, and all shipped map types (folder-tree, flow,
   presentation, radar) render;
@@ -288,10 +288,10 @@ def test_maps_map_element_reflects_status_change(
     maps_home_page.delete_map(temporary_map)
 
 
-def test_maps_create_geo_map_renders_world_map(
+def test_maps_create_geo_map_mounts_its_canvas(
     maps_home_page: MapsHomePage, temporary_map: str
 ) -> None:
-    """A geo map can be created and mounts its interactive world map.
+    """A geo map can be created and mounts its interactive canvas.
 
     Geo is the one map type without a shipped built-in, so it is only reachable
     through the create dialog — the other four types render from built-ins in
@@ -299,7 +299,7 @@ def test_maps_create_geo_map_renders_world_map(
     """
     map_page = maps_home_page.create_map(temporary_map, MapType.GEO)
     expect(map_page.map_view, message="Map view did not render after create").to_be_visible()
-    expect(map_page.world_map, message="Geo map did not mount its world map").to_be_visible()
+    expect(map_page.geo_canvas, message="Geo map did not mount its canvas").to_be_visible()
 
 
 def test_maps_geo_map_auto_places_host_by_coordinates(
@@ -307,12 +307,12 @@ def test_maps_geo_map_auto_places_host_by_coordinates(
 ) -> None:
     """A host with geo labels is auto-placed on a geo map at its coordinates.
 
-    Adding the host on a world map map resolves its ``maps_lat``/``maps_lng``
+    Adding the host on a geo map resolves its ``maps_lat``/``maps_lng``
     and drops the marker there directly — no manual positioning — so the stored
     marker coordinates must match the host's labels.
     """
     map_page = maps_home_page.create_map(temporary_map, MapType.GEO)
-    expect(map_page.world_map, message="Geo map did not mount its world map").to_be_visible()
+    expect(map_page.geo_canvas, message="Geo map did not mount its canvas").to_be_visible()
     map_page.enter_edit_mode()
 
     marker, lat, lng = map_page.add_geo_host_object(geo_host)

@@ -228,7 +228,7 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
       })
     )
 
-    // ``currentMap`` merges the daemon's inflated worldmap hosts (synthetic
+    // ``currentMap`` merges the daemon's inflated geo map hosts (synthetic
     // ``auto:*`` ids) and the client-only ``site`` roots for rendering; neither
     // may reach the store, else the live host set freezes into the saved config.
     const curated = { id: 'host1', type: 'host', host_name: 'host1' }

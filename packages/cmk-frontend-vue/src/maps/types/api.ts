@@ -54,7 +54,7 @@ export type ServiceLayout = NonNullable<Daemon['FlowView']['service_layout']>
 // The views a map can carry. The daemon holds the map in the shape the SPA edits
 // it in, so these come from its schema, not from the REST API's nested one.
 export type StaticView = Daemon['StaticView']
-export type WorldmapView = Daemon['WorldmapView']
+export type GeoView = Daemon['GeoView']
 export type RadarView = Daemon['RadarView']
 export type FlowNodePosition = Daemon['FlowNodePosition']
 export type FlowView = Daemon['FlowView']
@@ -82,7 +82,7 @@ export type MapViewType = MapView['type']
 
 export type MapView =
   | StaticView
-  | WorldmapView
+  | GeoView
   | RadarView
   | FlowView
   | FolderTreeView

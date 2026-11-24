@@ -32,7 +32,7 @@ _TYPED_DICT_TO_MODEL: list[tuple[type, type[BaseModel]]] = [
     (wire.MapLabel, daemon.LabelConfig),
     (wire.MapDisplay, daemon.DisplayConfig),
     (wire.StaticView, daemon.StaticView),
-    (wire.WorldmapView, daemon.WorldmapView),
+    (wire.GeoView, daemon.GeoView),
     (wire.RadarView, daemon.RadarView),
     (wire.FlowView, daemon.FlowView),
     (wire.FolderTreeView, daemon.FolderTreeView),

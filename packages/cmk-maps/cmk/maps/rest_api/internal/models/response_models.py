@@ -395,7 +395,7 @@ class MapsAuthoringSettings:
         description="Rendering style a new map is created with.", example="default"
     )
     default_tile_url: str | None = api_field(
-        description="Tile server for new worldmaps. Null for every other map type.",
+        description="Tile server for new geo maps. Null for every other map type.",
         example=None,
     )
     map_list_view: MapListView = api_field(
@@ -416,7 +416,7 @@ class MapsTileSource:
     """
 
     default_url: str = api_field(
-        description="Tile template a worldmap is drawn with when it sets none of its own.",
+        description="Tile template a geo map is drawn with when it sets none of its own.",
         example="https://tile.openstreetmap.org/{z}/{x}/{y}.png",
     )
     allowed_sources: list[str] = api_field(

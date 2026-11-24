@@ -6,7 +6,7 @@ Introduction and goals
 ======================
 
 Checkmk Maps shows live monitoring state on maps that users draw themselves:
-static maps with a background image, world maps, radar views, flow/topology
+static maps with a background image, geo maps, radar views, flow/topology
 graphs, folder trees and full-screen presentations. A map is a set of
 *objects* (among others hosts, services, host and service groups, dynamic
 groups, BI aggregations, links to other maps, lines, text boxes, images and
@@ -447,7 +447,7 @@ reaches the browser without delay.
        built-in one with ``general.edit_map``), anyone else gets ``403``.
    * - GET
      - ``v1/maps/{name}/auto-objects``
-     - Hosts with geo coordinates for world maps that place hosts
+     - Hosts with geo coordinates for geo maps that place hosts
        automatically.
    * - GET
      - ``v1/maps/{name}/folder-host-services``
@@ -575,7 +575,7 @@ values). It holds:
 * the connections (``maps_connections``),
 * the daemon's log level and state refresh interval (1–300 s, default 5 s),
 * the authoring defaults for new maps and objects, including the default
-  tile server for world maps.
+  tile server for geo maps.
 
 The directory is a registered replication path, so remote sites receive the
 same settings with Activate Changes. The daemon ignores the keys it does not
@@ -1001,7 +1001,7 @@ NagVis import
 
 Livestatus queries
   In the daemon, values from requests and map configs are passed through
-  ``lqencode`` and, for searches, ``re.escape``; host names for world-map
+  ``lqencode`` and, for searches, ``re.escape``; host names for geo map
   bundles are dropped if they contain a newline or backslash. The GUI builds
   its queries with Checkmk's query expression builder. Dynamic groups and grids
   accept only ``Filter:``, ``And:``, ``Or:`` and ``Negate:`` lines without

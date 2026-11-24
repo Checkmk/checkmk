@@ -22,7 +22,7 @@ MapSpec = Mapping[str, object]
 class MapModel(pagetypes.OverridableModel):
     """On-disk shape of a map (``var/check_mk/web/<user>/user_maps.mk``)."""
 
-    # Map renderer: flow / worldmap / radar / static / foldertree.
+    # Map renderer: flow / geo map / radar / static / foldertree.
     map_type: str
     connection_id: str
     # Number of placed objects — shown as a list column.

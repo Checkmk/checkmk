@@ -33,12 +33,12 @@ import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/d
 
 import type { FormSchemaName } from '@/maps/api/formSchemas'
 import FolderTreeSettings from '@/maps/map/edit/settings/components/FolderTreeSettings.vue'
+import GeoMapSettings from '@/maps/map/edit/settings/components/GeoMapSettings.vue'
 import MapAccessTab from '@/maps/map/edit/settings/components/MapAccessTab.vue'
 import MapSettingsPreview from '@/maps/map/edit/settings/components/MapSettingsPreview.vue'
 import ProblemsOnlySettings from '@/maps/map/edit/settings/components/ProblemsOnlySettings.vue'
 import RadarSettings from '@/maps/map/edit/settings/components/RadarSettings.vue'
 import StaticMapSettings from '@/maps/map/edit/settings/components/StaticMapSettings.vue'
-import WorldmapSettings from '@/maps/map/edit/settings/components/WorldmapSettings.vue'
 import {
   type SettingsFocus,
   flowViewData,
@@ -65,7 +65,7 @@ import { interpolateTemplate } from '@/maps/utils/template'
 
 const props = defineProps<{
   map: MapRead
-  worldmapView?: { lat: number; lng: number; zoom: number } | null
+  geoMapView?: { lat: number; lng: number; zoom: number } | null
   parentMapSize?: { width: number; height: number } | null
   /** The option to open at, when the map sent the operator here for it. */
   initialFocus?: SettingsFocus | null
@@ -74,8 +74,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
   updated: []
-  pickWorldmapView: [done: (view: { lat: number; lng: number; zoom: number } | null) => void]
-  worldmapViewChange: [view: { lat: number; lng: number; zoom: number }]
+  pickGeoMapView: [done: (view: { lat: number; lng: number; zoom: number } | null) => void]
+  geoMapViewChange: [view: { lat: number; lng: number; zoom: number }]
 }>()
 
 const { _t } = usei18n()
@@ -86,7 +86,7 @@ const nav = useNavigation()
 
 type Schema = NonNullable<VueFormspecComponents['components']>
 
-const form = ref(formFromMap(props.map, props.worldmapView))
+const form = ref(formFromMap(props.map, props.geoMapView))
 const formSpecData = ref<Record<string, unknown>>(metadataFormData(props.map))
 const flowViewFormSpecData = ref<Record<string, unknown>>(flowViewData(props.map))
 
@@ -125,8 +125,8 @@ const missingFields = computed<string[]>(() => {
   }
   if (
     mapType.value === 'worldmap' &&
-    needsGroup(form.value.worldmap_auto_source) &&
-    !form.value.worldmap_auto_filter_value
+    needsGroup(form.value.geo_auto_source) &&
+    !form.value.geo_auto_filter_value
   ) {
     missing.push(_t('Group name'))
   }
@@ -184,11 +184,11 @@ watch([form, formSpecData, flowViewFormSpecData], preview.schedule, { deep: true
 watch([background.previewUrl, background.removed], preview.postBackground)
 
 watch(
-  () => [form.value.worldmap_lat, form.value.worldmap_lng, form.value.worldmap_zoom] as const,
+  () => [form.value.geo_lat, form.value.geo_lng, form.value.geo_zoom] as const,
   ([lat, lng, zoom]) => {
     viewEdited.value = true
     if (mapType.value === 'worldmap') {
-      emit('worldmapViewChange', { lat, lng, zoom })
+      emit('geoMapViewChange', { lat, lng, zoom })
     }
   }
 )
@@ -196,19 +196,19 @@ watch(
 // The parent map can push a view in while the form is already open (its
 // "save current view as default" action), long after the form read the map.
 watch(
-  () => props.worldmapView,
+  () => props.geoMapView,
   (next) => {
     if (
       !next ||
-      (form.value.worldmap_lat === next.lat &&
-        form.value.worldmap_lng === next.lng &&
-        form.value.worldmap_zoom === next.zoom)
+      (form.value.geo_lat === next.lat &&
+        form.value.geo_lng === next.lng &&
+        form.value.geo_zoom === next.zoom)
     ) {
       return
     }
-    form.value.worldmap_lat = next.lat
-    form.value.worldmap_lng = next.lng
-    form.value.worldmap_zoom = next.zoom
+    form.value.geo_lat = next.lat
+    form.value.geo_lng = next.lng
+    form.value.geo_zoom = next.zoom
   }
 )
 
@@ -216,19 +216,19 @@ watch(
 
 const isPickingView = ref(false)
 
-function startWorldmapViewPick(): void {
+function startGeoMapViewPick(): void {
   if (isPickingView.value) {
     return
   }
   isPickingView.value = true
-  emit('pickWorldmapView', (view) => {
+  emit('pickGeoMapView', (view) => {
     isPickingView.value = false
     if (!view) {
       return
     }
-    form.value.worldmap_lat = view.lat
-    form.value.worldmap_lng = view.lng
-    form.value.worldmap_zoom = view.zoom
+    form.value.geo_lat = view.lat
+    form.value.geo_lng = view.lng
+    form.value.geo_zoom = view.zoom
     // A picked view comes from the parent canvas, so the preview may go back
     // to compensating its own zoom once the watcher above has run.
     void nextTick(() => {
@@ -252,9 +252,9 @@ function baseline(): string {
     form: stored
       ? {
           ...form.value,
-          worldmap_lat: stored.lat,
-          worldmap_lng: stored.lng,
-          worldmap_zoom: stored.zoom
+          geo_lat: stored.lat,
+          geo_lng: stored.lng,
+          geo_zoom: stored.zoom
         }
       : { ...form.value },
     formSpec: formSpecData.value,
@@ -611,12 +611,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
                     :background="background"
                     :classic="map.render_mode === 'nagvis_classic'"
                   />
-                  <WorldmapSettings
+                  <GeoMapSettings
                     v-else-if="mapType === 'worldmap'"
                     v-model:form="form"
                     :save-attempted="saveAttempted"
                     :initial-focus="initialFocus ?? null"
-                    @pick-view="startWorldmapViewPick"
+                    @pick-view="startGeoMapViewPick"
                   />
                   <!-- A flow map's view fields are a FormSpec too, so their
                      titles, help and inputs match the block above. -->

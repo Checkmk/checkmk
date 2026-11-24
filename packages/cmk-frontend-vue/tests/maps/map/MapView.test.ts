@@ -44,7 +44,7 @@ const rendererStub = (testid: string) => ({ template: `<div data-testid="${testi
 const stubs = {
   // Keyed by the tag the view uses: the per-type views are async components, so
   // there is no component name to stub them by.
-  'world-map-view': rendererStub('renderer-worldmap'),
+  'geo-map-view': rendererStub('renderer-geo'),
   'radar-map-view': rendererStub('renderer-radar'),
   'folder-tree-map-view': rendererStub('renderer-foldertree'),
   'flow-map-view': rendererStub('renderer-flow'),
@@ -110,7 +110,7 @@ function renderMap(extraStubs: Record<string, unknown> = {}) {
 }
 
 const allRendererTestIds = [
-  'renderer-worldmap',
+  'renderer-geo',
   'renderer-radar',
   'renderer-foldertree',
   'renderer-flow',
@@ -155,10 +155,10 @@ describe('MapView – map-type dispatch', () => {
     await waitFor(() => expect(document.title).toBe('Datacenter Munich'))
   })
 
-  it('renders the WorldMapView for a worldmap view', async () => {
+  it('renders the GeoMapView for a geo map view', async () => {
     opensMap(newMapView('worldmap'))
     renderMap()
-    await expectOnlyRenderer('renderer-worldmap')
+    await expectOnlyRenderer('renderer-geo')
   })
 
   it('renders the RadarMapView for a radar view', async () => {

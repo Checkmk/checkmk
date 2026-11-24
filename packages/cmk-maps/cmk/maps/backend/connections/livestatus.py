@@ -1310,7 +1310,7 @@ class LivestatusConnection(ConnectionBase):
 
         Reads the maps_lat / maps_lng labels first, then the legacy LAT / LONG
         custom vars as fallback. Hosts without geo data are filtered out so the
-        worldmap automap source receives a clean list.
+        geo map automap source receives a clean list.
 
         The geo predicate is pushed into Livestatus so that an ``all_hosts``
         automap doesn't transfer every host's labels + custom variables each

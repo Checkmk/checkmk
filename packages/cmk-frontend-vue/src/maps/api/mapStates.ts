@@ -101,7 +101,7 @@ export class MapStatesApi {
   }
 
   /**
-   * The transient hosts a worldmap with an auto source inflates on every load.
+   * The transient hosts a geo map with an auto source inflates on every load.
    * They carry synthetic ``auto:*`` ids and are never persisted — saving them
    * would freeze the live host set into the stored config.
    */

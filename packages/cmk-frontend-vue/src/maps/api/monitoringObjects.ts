@@ -96,7 +96,7 @@ export class MonitoringObjectsApi {
     )
   }
 
-  /** On-demand geo lookup for one host, for a worldmap that places hosts itself. */
+  /** On-demand geo lookup for one host, for a geo map that places hosts itself. */
   public async fetchHostGeo(host: string): Promise<{ lat: number; lng: number } | null> {
     return unwrap(
       await client.GET('/objects/maps_host_geo/{host_name}', {

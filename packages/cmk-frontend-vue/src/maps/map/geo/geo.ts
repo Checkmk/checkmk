@@ -20,7 +20,7 @@ import type { MapElement } from '@/maps/types/api'
 export type LatLng = [number, number]
 
 /** What a geo map is looking at, in the shape its settings store it in. */
-export interface WorldmapViewport {
+export interface GeoMapViewport {
   lat: number
   lng: number
   zoom: number

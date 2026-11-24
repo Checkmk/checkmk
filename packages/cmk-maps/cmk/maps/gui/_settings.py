@@ -166,7 +166,7 @@ def _map_type_from(map_form: Mapping[str, object], fallback: str) -> tuple[str, 
 
     A CascadingSingleChoice: (name, sub) where the "worldmap" branch carries
     ``{"tile_url": …}`` and the others carry ``None``. The tile URL is only
-    meaningful for worldmap, so it stays ``None`` for every other type.
+    meaningful for geo map, so it stays ``None`` for every other type.
     """
     raw = map_form.get("default_map_type")
     if isinstance(raw, (list, tuple)) and len(raw) == 2:
@@ -297,7 +297,7 @@ def tile_csp_sources() -> list[str]:
 
 
 def default_tile_template() -> str:
-    """The tile template a worldmap that sets none of its own is drawn with.
+    """The tile template a geo map that sets none of its own is drawn with.
 
     The site's configured server where there is one: a map created before it was
     configured must not keep fetching from openstreetmap.org on an air-gapped

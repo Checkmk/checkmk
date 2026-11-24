@@ -26,7 +26,7 @@ import {
 } from '@/maps/map/edit/settings/settingsForm'
 import { useSettings } from '@/maps/services/context'
 import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
-import { isAllowedTileUrl } from '@/maps/shared/worldmap/tileLayer'
+import { isAllowedTileUrl } from '@/maps/shared/geo/tileLayer'
 
 const props = defineProps<{
   /** True once the operator tried to save, so gaps may be pointed out. */
@@ -62,9 +62,8 @@ const autoSourceOptions = computed(() => ({
 }))
 
 const groupKind = computed(() =>
-  form.value.worldmap_auto_source === 'hostgroup' ||
-  form.value.worldmap_auto_source === 'servicegroup'
-    ? form.value.worldmap_auto_source
+  form.value.geo_auto_source === 'hostgroup' || form.value.geo_auto_source === 'servicegroup'
+    ? form.value.geo_auto_source
     : null
 )
 
@@ -76,13 +75,11 @@ watch(groupKind, (kind) => {
     return
   }
   if (pickedFor !== null && kind !== pickedFor) {
-    form.value.worldmap_auto_filter_value = ''
+    form.value.geo_auto_filter_value = ''
   }
   pickedFor = kind
 })
-const groupNameMissing = computed(
-  () => props.saveAttempted && !form.value.worldmap_auto_filter_value
-)
+const groupNameMissing = computed(() => props.saveAttempted && !form.value.geo_auto_filter_value)
 
 const outOfRange = computed(() => new Set(geoViewOutOfRange(form.value)))
 
@@ -91,19 +88,19 @@ const outOfRange = computed(() => new Set(geoViewOutOfRange(form.value)))
 const tiles = useSettings().tiles
 const tileUrlBlocked = computed(
   () =>
-    !!form.value.worldmap_tile_url &&
-    !isAllowedTileUrl(form.value.worldmap_tile_url, tiles.value?.allowed_sources ?? [])
+    !!form.value.geo_tile_url &&
+    !isAllowedTileUrl(form.value.geo_tile_url, tiles.value?.allowed_sources ?? [])
 )
 </script>
 
 <template>
   <SettingsSection :title="_t('Map view')">
-    <div class="maps-worldmap-settings__view">
-      <div class="maps-worldmap-settings__coords">
+    <div class="maps-geo-map-settings__view">
+      <div class="maps-geo-map-settings__coords">
         <EditField v-slot="{ id }" labels-control :label="_t('Latitude')">
           <CmkInput
             :id="id"
-            v-model="form.worldmap_lat"
+            v-model="form.geo_lat"
             type="number"
             min="-90"
             max="90"
@@ -113,7 +110,7 @@ const tileUrlBlocked = computed(
         <EditField v-slot="{ id }" labels-control :label="_t('Longitude')">
           <CmkInput
             :id="id"
-            v-model="form.worldmap_lng"
+            v-model="form.geo_lng"
             type="number"
             min="-180"
             max="180"
@@ -128,7 +125,7 @@ const tileUrlBlocked = computed(
         >
           <CmkInput
             :id="id"
-            v-model="form.worldmap_zoom"
+            v-model="form.geo_zoom"
             type="number"
             min="0"
             :max="GEO_MAX_ZOOM"
@@ -162,7 +159,7 @@ const tileUrlBlocked = computed(
     >
       <CmkInput
         :id="id"
-        v-model="form.worldmap_tile_url"
+        v-model="form.geo_tile_url"
         :placeholder="untranslated('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')"
         field-size="fill"
         :external-errors="
@@ -180,7 +177,7 @@ const tileUrlBlocked = computed(
     >
       <CmkInput
         :id="id"
-        v-model="form.worldmap_tile_saturate"
+        v-model="form.geo_tile_saturate"
         type="number"
         :min="0"
         :max="100"
@@ -200,13 +197,11 @@ const tileUrlBlocked = computed(
       >
         <CmkDropdown
           ref="automapSourceDropdown"
-          :model-value="form.worldmap_auto_source"
+          :model-value="form.geo_auto_source"
           :options="autoSourceOptions"
           :label="_t('Automatic object placement')"
           width="fill"
-          @update:model-value="
-            form.worldmap_auto_source = ($event ?? '') as typeof form.worldmap_auto_source
-          "
+          @update:model-value="form.geo_auto_source = ($event ?? '') as typeof form.geo_auto_source"
         />
       </EditField>
     </div>
@@ -215,7 +210,7 @@ const tileUrlBlocked = computed(
         :validation="groupNameMissing ? [_t('Pick a group to discover hosts from.')] : []"
       />
       <MapsObjectField
-        v-model="form.worldmap_auto_filter_value"
+        v-model="form.geo_auto_filter_value"
         :kind="groupKind"
         :label="_t('Group name')"
         :placeholder="_t('Select a group')"
@@ -226,13 +221,13 @@ const tileUrlBlocked = computed(
 </template>
 
 <style scoped>
-.maps-worldmap-settings__view {
+.maps-geo-map-settings__view {
   display: flex;
   align-items: flex-end;
   gap: var(--dimension-4);
 }
 
-.maps-worldmap-settings__coords {
+.maps-geo-map-settings__coords {
   display: grid;
   flex: 1;
   grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -9,7 +9,7 @@ from collections.abc import Callable
 import pytest
 from pydantic import ValidationError
 
-from cmk.maps.backend.schemas.map import MapConfig, MapElement, WorldmapView
+from cmk.maps.backend.schemas.map import GeoView, MapConfig, MapElement
 from cmk.maps.shared.map_payload import (
     BUNDLE_HOSTS_MAX,
     FLOW_POSITIONS_MAX,
@@ -102,9 +102,9 @@ def test_legacy_weathermap_style_migrates_to_arrow_inward() -> None:
         pytest.param({"zoom": 19}, id="zoom"),
     ],
 )
-def test_worldmap_view_rejects_a_view_it_cannot_open_on(view: dict[str, object]) -> None:
+def test_geo_map_view_rejects_a_view_it_cannot_open_on(view: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
-        WorldmapView.model_validate({"type": "worldmap", **view})
+        GeoView.model_validate({"type": "worldmap", **view})
 
 
 @pytest.mark.parametrize("pool", ["noc wall", "a" * 101])

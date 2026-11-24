@@ -269,6 +269,7 @@ def test_parsed_versions_keep_their_order(older: str, newer: str) -> None:
         pytest.param("1.6.0p23", "2.0.0", id="next major after 1.6.0p23"),
         pytest.param("2.0.0p12", "2.1.0i1", id="next major after 2.0.0p12"),
         pytest.param("2.2.0p8", "2.3.0i1", id="next major after required patch release"),
+        pytest.param("2.5.0p999", "3.0.0", id="3.0.0 after a 2.5.0 patch release"),
     ],
 )
 def test_versions_are_compatible(from_version: str, to_version: str) -> None:
@@ -292,6 +293,7 @@ _REQUIRES = "This target version requires at least "
         pytest.param("2.0.0", "1.6.0p1", _TOO_OLD, id="previous major"),
         pytest.param("2.1.0", "2.0.0b1", _TOO_OLD, id="previous major beta"),
         pytest.param("2.2.0b1000", "2.3.0i1", _REQUIRES + "2.2.0p8", id="before required patch"),
+        pytest.param("2.4.0p5", "3.0.0", _TOO_NEW, id="3.0.0 after 2.4.0"),
     ],
 )
 def test_incompatible_versions_tell_why(from_version: str, to_version: str, reason: str) -> None:
@@ -299,6 +301,12 @@ def test_incompatible_versions_tell_why(from_version: str, to_version: str, reas
         str(versions_compatible(Version.from_str(from_version), Version.from_str(to_version)))
         == reason
     )
+
+
+def test_updating_a_beta_to_the_next_major_needs_its_release() -> None:
+    result = versions_compatible(Version.from_str("2.5.0b1"), Version.from_str("3.0.0"))
+
+    assert str(result).startswith(_REQUIRES + "2.5.0")
 
 
 def test_omd_version_reads_from_version_link(tmp_path: Path) -> None:

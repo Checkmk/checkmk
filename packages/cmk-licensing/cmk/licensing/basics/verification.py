@@ -14,6 +14,7 @@ from typing import Literal, TypedDict
 from uuid import UUID
 
 from cmk.ccc import store
+from cmk.crypto import MKCryptoException
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.licensing.basics.paths import get_verification_response_file_path
 from cmk.licensing.basics.protocol_version import (
@@ -139,6 +140,13 @@ def parse_plain_verification_response(raw: object) -> PlainVerificationResponse:
             return parse_verification_response_v3_2(raw)
 
 
+def _load_certificate_pem(pem: str) -> Certificate:
+    try:
+        return Certificate.load_pem(CertificatePEM(pem))
+    except MKCryptoException as e:
+        raise ValueError("Failed to load certificate: %s" % e) from e
+
+
 def parse_verification_response_v2_0(raw: object) -> PlainVerificationResponse:
     if not isinstance(raw, dict):
         raise ValueError(
@@ -153,7 +161,7 @@ def parse_verification_response_v2_0(raw: object) -> PlainVerificationResponse:
             response_id=UUID(raw["response_id"]),
             created_at=int(raw["created_at"]),
             signature=base64.b64decode(str(raw["signature"]).encode("utf-8")),
-            certificate=Certificate.load_pem(CertificatePEM(raw["certificate"])),
+            certificate=_load_certificate_pem(raw["certificate"]),
             status=VerificationStatus[payload["status"]],
             message=str(payload["message"]),
             group_and_managed_services_use=bool(payload["group_and_managed_services_use"]),
@@ -200,7 +208,7 @@ def parse_verification_response_v3_0(raw: object) -> PlainVerificationResponse:
             response_id=UUID(raw["response_id"]),
             created_at=int(raw["created_at"]),
             signature=base64.b64decode(str(raw["signature"]).encode("utf-8")),
-            certificate=Certificate.load_pem(CertificatePEM(raw["certificate"])),
+            certificate=_load_certificate_pem(raw["certificate"]),
             status=VerificationStatus[payload["status"]],
             message=str(payload["message"]),
             group_and_managed_services_use=bool(payload["group_and_managed_services_use"]),
@@ -237,7 +245,7 @@ def parse_verification_response_v3_2(raw: object) -> PlainVerificationResponse:
             response_id=UUID(raw["response_id"]),
             created_at=int(raw["created_at"]),
             signature=base64.b64decode(str(raw["signature"]).encode("utf-8")),
-            certificate=Certificate.load_pem(CertificatePEM(raw["certificate"])),
+            certificate=_load_certificate_pem(raw["certificate"]),
             status=VerificationStatus[payload["status"]],
             message=str(payload["message"]),
             group_and_managed_services_use=bool(payload["group_and_managed_services_use"]),

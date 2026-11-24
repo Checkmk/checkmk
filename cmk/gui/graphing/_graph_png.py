@@ -368,7 +368,7 @@ def png_drawing(
     is_mirrored = any(drawn.inverse for drawn in drawn_curves(graph.stacks, graph.lines))
     y_range = _y_range(lower, upper, is_mirrored=is_mirrored)
     legend_height = legend_height_ex(graph, options)
-    width_inches, height_inches = png_size_inches(graph, options)
+    width_inches, height_inches = png_size_inches(options, legend_height)
     return PngDrawing(
         width_inches=width_inches,
         height_inches=height_inches,

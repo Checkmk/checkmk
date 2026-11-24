@@ -169,7 +169,10 @@ const menus = useMapObjectMenus({
   preview: () => props.preview
 })
 
-const resize = useObjectResize({ surface: () => surface.value })
+const resize = useObjectResize({
+  surface: () => surface.value,
+  centering: () => ({ x: false, y: false })
+})
 
 /** Runs an action on the object an id belongs to, if it is still there. */
 function withObject(id: string, act: (object: MapElement) => void): void {

@@ -185,7 +185,10 @@ const drag = useCanvasObjectDrag({
   onDragStart: (id) => emit('object-drag-start', id)
 })
 
-const resize = useObjectResize({ surface: () => canvas.value })
+const resize = useObjectResize({
+  surface: () => canvas.value,
+  centering: () => ({ x: !classic.value, y: !classic.value })
+})
 
 // A click closing a gesture must not also deselect: pointer capture redirects
 // it to the canvas, where it would read as a click on empty space.

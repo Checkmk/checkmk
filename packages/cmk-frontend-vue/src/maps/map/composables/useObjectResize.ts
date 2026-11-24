@@ -30,6 +30,12 @@ export interface ObjectSize {
   height: number
 }
 
+/** The axes along which an object is centered on its coordinate. */
+export interface Centering {
+  x: boolean
+  y: boolean
+}
+
 export interface ObjectResize {
   /** Live sizes of the object being resized, keyed by id. */
   sizes: Reactive<Record<string, ObjectSize>>
@@ -42,6 +48,8 @@ export interface ObjectResize {
 export function useObjectResize(source: {
   /** The element the gesture's pointer is captured on. */
   surface: () => HTMLElement | null
+  /** Where the object grows to both sides of its coordinate rather than from its corner. */
+  centering: (object: MapElement) => Centering
 }): ObjectResize {
   const sizes = reactive<Record<string, ObjectSize>>({})
   const resizingId = ref<string | null>(null)
@@ -49,6 +57,10 @@ export function useObjectResize(source: {
   let fromY = 0
   let fromWidth = 0
   let fromHeight = 0
+  // A centered box grows by half on each side, so the grip only keeps up with
+  // the pointer when the size changes by twice what the pointer moved.
+  let growthX = 1
+  let growthY = 1
 
   function begin(event: PointerEvent, object: MapElement): void {
     const surface = source.surface()
@@ -67,6 +79,9 @@ export function useObjectResize(source: {
       fromWidth = object.graph_width ?? GRAPH_WIDTH
       fromHeight = object.graph_height ?? GRAPH_HEIGHT
     }
+    const centering = source.centering(object)
+    growthX = centering.x ? 2 : 1
+    growthY = centering.y ? 2 : 1
     fromX = event.clientX
     fromY = event.clientY
     sizes[object.id] = { width: fromWidth, height: fromHeight }
@@ -78,8 +93,8 @@ export function useObjectResize(source: {
       return false
     }
     sizes[id] = {
-      width: Math.round(Math.max(MIN_WIDTH, fromWidth + (event.clientX - fromX))),
-      height: Math.round(Math.max(MIN_HEIGHT, fromHeight + (event.clientY - fromY)))
+      width: Math.round(Math.max(MIN_WIDTH, fromWidth + growthX * (event.clientX - fromX))),
+      height: Math.round(Math.max(MIN_HEIGHT, fromHeight + growthY * (event.clientY - fromY)))
     }
     return true
   }

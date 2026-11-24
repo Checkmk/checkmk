@@ -1,4 +1,4 @@
-title: Datadog: monitors
+title: Datadog: Monitors
 agents: datadog
 catalog: cloud/datadog
 license: GPLv2

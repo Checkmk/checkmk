@@ -1,4 +1,4 @@
-title: Datadog: events
+title: Datadog: Events
 agents: datadog
 catalog: cloud/datadog
 license: GPLv2

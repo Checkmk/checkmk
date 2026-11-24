@@ -1,4 +1,4 @@
-title: Datadog: logs
+title: Datadog: Logs
 agents: datadog
 catalog: cloud/datadog
 license: GPLv2

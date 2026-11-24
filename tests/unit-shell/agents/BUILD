@@ -35,6 +35,20 @@ shunit2_test(
     deps = [":test_mk_redis_shell_script"],
 )
 
+shunit2_test(
+    name = "test_super_server_setup",
+    src = "scripts/super-server/test_setup.sh",
+    env = {"UNIT_SH_AGENTS_DIR": "${UNIT_SH_REPO_PATH}/agents"},
+    deps = ["//agents:agents_sh"],
+)
+
+shunit2_test(
+    name = "test_super_server_systemd_setup",
+    src = "scripts/super-server/0_systemd/test_setup.sh",
+    env = {"UNIT_SH_AGENTS_DIR": "${UNIT_SH_REPO_PATH}/agents"},
+    deps = ["//agents:agents_sh"],
+)
+
 # Lets shellcheck see these scripts. Nothing depends on this target.
 sh_library(
     name = "shell_scripts",

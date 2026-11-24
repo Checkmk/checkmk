@@ -182,6 +182,45 @@ test('an existing lone gte of 1 pre-selects "At least one"', () => {
   expect(screen.queryByRole('spinbutton', { name: 'From' })).not.toBeInTheDocument()
 })
 
+test('an existing "more than 0" pre-selects "At least one"', () => {
+  renderFilter({
+    type: 'condition',
+    field: 'num_services',
+    op: 'gt',
+    value: 0
+  })
+
+  expect(screen.getByRole('button', { name: 'Toggle At least one' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+})
+
+test('an existing strict range reflects the whole numbers it matches', () => {
+  renderFilter({
+    type: 'and',
+    children: [
+      { type: 'condition', field: 'num_services', op: 'gt', value: 2 },
+      { type: 'condition', field: 'num_services', op: 'lt', value: 8 }
+    ]
+  })
+
+  expect(screen.getByRole('spinbutton', { name: 'From' })).toHaveValue(3)
+  expect(screen.getByRole('spinbutton', { name: 'To' })).toHaveValue(7)
+})
+
+test('an existing exact value reflects a range of that one value', () => {
+  renderFilter({
+    type: 'condition',
+    field: 'num_services',
+    op: 'eq',
+    value: 5
+  })
+
+  expect(screen.getByRole('spinbutton', { name: 'From' })).toHaveValue(5)
+  expect(screen.getByRole('spinbutton', { name: 'To' })).toHaveValue(5)
+})
+
 test('an existing 0-to-0 range pre-selects "None"', () => {
   renderFilter({
     type: 'and',

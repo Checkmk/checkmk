@@ -32,20 +32,44 @@ const optionRanges: Record<string, NumberRange> = {
   [NONE_OPTION]: { from: 0, to: 0 }
 }
 
+// The range of whole numbers a filter matches. The field counts, so a strict
+// bound is the inclusive one next to it ("more than 0" is "from 1"), and an
+// exact value is a range of that one value. Of several bounds on one side,
+// the tightest holds, as all of them have to match.
 function extractRange(node: ColumnFilterNode<F> | undefined): NumberRange {
   const range: NumberRange = { from: undefined, to: undefined }
   if (!node) {
     return range
+  }
+  const raiseFrom = (value: number) => {
+    range.from = range.from === undefined ? value : Math.max(range.from, value)
+  }
+  const lowerTo = (value: number) => {
+    range.to = range.to === undefined ? value : Math.min(range.to, value)
   }
   const conditions = node.type === 'and' ? node.children : [node]
   for (const condition of conditions) {
     if (condition.type !== 'condition' || !('op' in condition)) {
       continue
     }
-    if (condition.op === 'gte') {
-      range.from = condition.value as number
-    } else if (condition.op === 'lte') {
-      range.to = condition.value as number
+    const value = condition.value as number
+    switch (condition.op) {
+      case 'gte':
+        raiseFrom(value)
+        break
+      case 'gt':
+        raiseFrom(value + 1)
+        break
+      case 'lte':
+        lowerTo(value)
+        break
+      case 'lt':
+        lowerTo(value - 1)
+        break
+      case 'eq':
+        raiseFrom(value)
+        lowerTo(value)
+        break
     }
   }
   return range

@@ -10,6 +10,7 @@ from cmk.base.configlib.fetchers import (
     make_metrics_identity_routing_config,
     make_parsed_snmp_fetch_intervals_config,
     make_telemetry_custom_service_config,
+    make_telemetry_disabled_sections_config,
 )
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc.hostaddress import HostName
@@ -150,6 +151,61 @@ def test_metrics_identity_routing_without_rules() -> None:
     )
 
     assert resolve(_MATCHING) == {}
+
+
+_SPECIFIC_SECTIONS: Mapping[str, object] = {
+    "sections_disabled": ["generic"],
+    "sections_enabled": [],
+}
+_CATCH_ALL_SECTIONS: Mapping[str, object] = {
+    "sections_disabled": [],
+    "sections_enabled": ["generic"],
+}
+
+
+def _config_with_disabled_sections_rules() -> BaseConfig:
+    return dataclasses.replace(
+        EMPTY_CONFIG,
+        telemetry_disabled_sections=[
+            RuleSpec(
+                value=_SPECIFIC_SECTIONS,
+                condition={"host_name": [_MATCHING]},
+                id="specific",
+            ),
+            RuleSpec(value=_CATCH_ALL_SECTIONS, condition={}, id="catch-all"),
+        ],
+    )
+
+
+def test_telemetry_disabled_sections_returns_every_matching_rule_in_rule_order() -> None:
+    """The first rule that lists a section decides about it, so none may be merged away."""
+    resolve = make_telemetry_disabled_sections_config(
+        _config_with_disabled_sections_rules(),
+        _matcher_with_hosts((_MATCHING, _OTHER)),
+        lambda _: {},
+    )
+
+    assert resolve(_MATCHING) == [_SPECIFIC_SECTIONS, _CATCH_ALL_SECTIONS]
+
+
+def test_telemetry_disabled_sections_misses_rules_for_other_hosts() -> None:
+    resolve = make_telemetry_disabled_sections_config(
+        _config_with_disabled_sections_rules(),
+        _matcher_with_hosts((_MATCHING, _OTHER)),
+        lambda _: {},
+    )
+
+    assert resolve(_OTHER) == [_CATCH_ALL_SECTIONS]
+
+
+def test_telemetry_disabled_sections_without_rules() -> None:
+    resolve = make_telemetry_disabled_sections_config(
+        EMPTY_CONFIG,
+        _matcher_with_hosts((_MATCHING,)),
+        lambda _: {},
+    )
+
+    assert resolve(_MATCHING) == []
 
 
 def test_snmp_fetch_every_time_overrides_a_lower_interval_rule() -> None:

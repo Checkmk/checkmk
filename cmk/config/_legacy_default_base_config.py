@@ -29,6 +29,7 @@ def get_legacy_default_base_config() -> dict[str, object]:
         "agent_exclude_sections": [],
         "telemetry_custom_service": [],
         "metrics_identity_routing": [],
+        "telemetry_disabled_sections": [],
         "snmp_ports": [],
         "tcp_connect_timeout": 5.0,
         "tcp_connect_timeouts": [],

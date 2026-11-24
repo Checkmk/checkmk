@@ -136,6 +136,9 @@ class BaseConfig(  # type: ignore[explicit-any]
     metrics_identity_routing: Sequence[RuleSpec[Mapping[str, object]]] = dataclasses.field(
         default_factory=list
     )
+    telemetry_disabled_sections: Sequence[RuleSpec[Mapping[str, object]]] = dataclasses.field(
+        default_factory=list
+    )
     snmp_check_interval: list[
         RuleSpec[
             tuple[list[str], tuple[Literal["cached"], float] | tuple[Literal["uncached"], None]]

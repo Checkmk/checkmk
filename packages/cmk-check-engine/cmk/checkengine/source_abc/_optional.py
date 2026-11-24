@@ -42,6 +42,10 @@ class SourceContext:
     # uninterpreted; an empty mapping means that no rule matched. Like the ruleset above
     # it is carried unresolved, so hosts whose sources never ask do not pay for the match.
     metrics_identity_routing: Callable[[HostName], Mapping[str, object]]
+    # Resolves the host's "Disabled or enabled sections (Telemetry)" rule values, every
+    # matching rule in rule order and uninterpreted; empty means that no rule matched.
+    # Carried unresolved for the same reason as the rulesets above.
+    telemetry_disabled_sections: Callable[[HostName], Sequence[Mapping[str, object]]]
     debug: bool
 
 

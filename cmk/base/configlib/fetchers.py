@@ -71,6 +71,24 @@ def make_telemetry_custom_service_config(
     )
 
 
+def make_telemetry_disabled_sections_config(
+    loaded_config: BaseConfig,
+    ruleset_matcher: RulesetMatcher,
+    labels_of_host: Callable[[HostName], Labels],
+) -> Callable[[HostName], Sequence[Mapping[str, object]]]:
+    """Resolve the "Disabled or enabled sections (Telemetry)" ruleset for a single host.
+
+    The ruleset's eval type is ALL, so every matching rule contributes; the caller gets
+    them in rule order, as which rule lists a section first decides about it. The rules
+    are not merged here: that is owned by the telemetry fetcher config.
+    """
+    return SingleHostRulesetMatcher(
+        host_ruleset=loaded_config.telemetry_disabled_sections,
+        matcher=ruleset_matcher,
+        labels_of_host=labels_of_host,
+    )
+
+
 def make_metrics_identity_routing_config(
     loaded_config: BaseConfig,
     ruleset_matcher: RulesetMatcher,

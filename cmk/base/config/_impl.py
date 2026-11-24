@@ -32,6 +32,7 @@ from cmk.base.configlib.fetchers import (
     make_metrics_identity_routing_config,
     make_tcp_fetcher_config,
     make_telemetry_custom_service_config,
+    make_telemetry_disabled_sections_config,
 )
 from cmk.base.configlib.inventory import make_inventory_config
 from cmk.base.configlib.labels import LabelConfig
@@ -1286,6 +1287,9 @@ class ConfigCache:
                 self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
             ),
             metrics_identity_routing=make_metrics_identity_routing_config(
+                self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
+            ),
+            telemetry_disabled_sections=make_telemetry_disabled_sections_config(
                 self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
             ),
             is_cmc=self._loaded_config.monitoring_core == "cmc",

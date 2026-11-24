@@ -37,10 +37,10 @@ def test_duplicate_hosts() -> None:
 @pytest.mark.parametrize(
     "hostaddress",
     [
-        "ec2-11-111-222-333.cd-blahblah-1.compute.amazonaws.com",
-        "subdomain.domain.com",
-        "domain.com",
-        "domain",
+        pytest.param("ec2-11-111-222-333.cd-blahblah-1.compute.amazonaws.com", id="AWS host name"),
+        pytest.param("subdomain.domain.com", id="subdomain"),
+        pytest.param("domain.com", id="domain"),
+        pytest.param("domain", id="single label"),
     ],
 )
 def test_valid_hostaddress(hostaddress: str) -> None:
@@ -50,16 +50,16 @@ def test_valid_hostaddress(hostaddress: str) -> None:
 @pytest.mark.parametrize(
     "hostaddress",
     [
-        ".",
-        "..",
-        ".domain",
-        ".domain.com",
-        "-subdomain.domain.com",
-        "email@domain.com",
-        "@subdomain.domain.com",
-        "domain.com\n",
-        "\ndomain.com",
-        "domain\ncom",
+        pytest.param(".", id="dot"),
+        pytest.param("..", id="two dots"),
+        pytest.param(".domain", id="leading dot"),
+        pytest.param(".domain.com", id="leading dot with subdomain"),
+        pytest.param("-subdomain.domain.com", id="leading hyphen"),
+        pytest.param("email@domain.com", id="at sign"),
+        pytest.param("@subdomain.domain.com", id="leading at sign"),
+        pytest.param("domain.com\n", id="trailing newline"),
+        pytest.param("\ndomain.com", id="leading newline"),
+        pytest.param("domain\ncom", id="inner newline"),
     ],
 )
 def test_invalid_hostaddress(hostaddress: str) -> None:

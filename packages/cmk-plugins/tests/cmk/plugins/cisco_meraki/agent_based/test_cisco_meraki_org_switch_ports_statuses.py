@@ -278,10 +278,10 @@ class TestCheckOtherResults:
 
         value = list(check_switch_ports_statuses("1", params, section))[3:7]
         expected = [
-            Result(state=State.OK, summary="In: 40.0 Bit/s"),
-            Metric("if_in_bps", 40.0),
-            Result(state=State.OK, summary="Out: 60.0 Bit/s"),
-            Metric("if_out_bps", 60.0),
+            Result(state=State.OK, summary="In: 40.0 kBit/s"),
+            Metric("if_in_bps", 40000.0),
+            Result(state=State.OK, summary="Out: 60.0 kBit/s"),
+            Metric("if_out_bps", 60000.0),
         ]
 
         assert value == expected

@@ -325,13 +325,13 @@ def check_switch_ports_statuses(item: str, params: CheckParams, section: Section
 
     if port.traffic_in_kbps:
         yield from check_levels(
-            value=port.traffic_in_kbps.recv,  # Bits
+            value=port.traffic_in_kbps.recv * 1000,  # Kbit/s -> Bit/s
             label="In",
             metric_name="if_in_bps",
             render_func=render_network_bandwidth_bits,  # Bytes
         )
         yield from check_levels(
-            value=port.traffic_in_kbps.sent,  # Bits
+            value=port.traffic_in_kbps.sent * 1000,  # Kbit/s -> Bit/s
             label="Out",
             metric_name="if_out_bps",
             render_func=render_network_bandwidth_bits,  # Bytes

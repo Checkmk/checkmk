@@ -8,27 +8,37 @@ import pytest
 from cmk.ccc import tty
 
 
-def test_print_table(capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.fixture(name="uncolored_capsys")
+def fixture_uncolored_capsys(capsys: pytest.CaptureFixture[str]) -> pytest.CaptureFixture[str]:
+    """capsys without colors, even when stdout was a terminal when importing tty (`pytest -s`)
+
+    The colors stay off afterwards: capsys still captures during the teardown of fixtures.
+    """
+    tty.reinit()
+    return capsys
+
+
+def test_print_table(uncolored_capsys: pytest.CaptureFixture[str]) -> None:
     tty.print_table(["foo", "bar"], ["", ""], [["Guildo", "Horn"], ["Dieter Thomas", "Kuhn"]])
-    captured = capsys.readouterr()
+    captured = uncolored_capsys.readouterr()
     assert captured.out == (
         "foo           bar \n------------- ----\nGuildo        Horn\nDieter Thomas Kuhn\n"
     )
     assert captured.err == ""
 
 
-def test_print_colored_table(capsys: pytest.CaptureFixture[str]) -> None:
+def test_print_colored_table(uncolored_capsys: pytest.CaptureFixture[str]) -> None:
     tty.print_table(["foo", "bar"], ["XX", "YY"], [["Angus", "Young"], ["Estas", "Tonne"]])
-    captured = capsys.readouterr()
+    captured = uncolored_capsys.readouterr()
     assert captured.out == ("XXfoo  YY bar  \nXX-----YY -----\nXXAngusYY Young\nXXEstasYY Tonne\n")
     assert captured.err == ""
 
 
-def test_print_indented_colored_table(capsys: pytest.CaptureFixture[str]) -> None:
+def test_print_indented_colored_table(uncolored_capsys: pytest.CaptureFixture[str]) -> None:
     tty.print_table(
         ["foo", "bar"], ["XX", "YY"], [["Dieter", "Bohlen"], ["Thomas", "Anders"]], indent="===="
     )
-    captured = capsys.readouterr()
+    captured = uncolored_capsys.readouterr()
     assert captured.out == (
         "====XXfoo   YY bar   \n"
         "====XX------YY ------\n"

@@ -120,21 +120,6 @@ def test_load_data_from_file_locking(tmp_path: Path) -> None:
     assert store.have_lock(locked_file) is True
 
 
-@pytest.mark.xfail(
-    reason="This test fails when executed as root user, as it is done currently in K8s CV pods. "
-    "As soon as we change this to unprivileged user, this test should work again."
-)
-def test_load_data_from_not_permitted_file(tmp_path: Path) -> None:
-    locked_file = tmp_path / "test"
-    locked_file.write_text("[1, 2]", encoding="utf-8")
-    os.chmod(str(locked_file), 0o200)
-
-    with pytest.raises(MKGeneralException) as e:
-        store.load_object_from_file(locked_file, default=None, debug=False)
-    assert str(locked_file) in f"{e!s}"
-    assert "Permission denied" in f"{e!s}"
-
-
 def test_load_data_from_file_dict(tmp_path: Path) -> None:
     locked_file = tmp_path / "test"
     _write_file(locked_file, repr({"1": 2, "ä": "ß"}).encode())
@@ -807,8 +792,12 @@ def test_load_object_from_unreadable_file_reraises_in_debug_mode(tmp_path: Path)
         store.load_object_from_file(unreadable, default=None, debug=True)
 
 
-def test_load_object_from_unreadable_file_names_the_file(tmp_path: Path) -> None:
+def test_load_object_from_unreadable_file_names_the_file_and_the_reason(tmp_path: Path) -> None:
     (unreadable := tmp_path / "directory").mkdir(mode=0o700)
 
-    with pytest.raises(MKGeneralException, match="directory"):
+    with pytest.raises(MKGeneralException) as e:
         store.load_object_from_file(unreadable, default=None, debug=False)
+
+    assert str(e.value) == (
+        f"Cannot read file \"{unreadable}\": [Errno 21] Is a directory: '{unreadable}'"
+    )

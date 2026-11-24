@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc.version import parse_check_mk_version, Version
+from cmk.ccc.version import parse_check_mk_version, Version, versions_compatible
 
 
 class TestVersion:
@@ -220,19 +220,85 @@ class TestVersion:
         pytest.param("1.5.0-2019.10.10", 1050090000, id="branch daily"),
         pytest.param("1.6.0-2019.10.10", 1060090000, id="branch daily of next minor"),
         pytest.param("1.5.0-2019.10.24", 1050090000, id="branch daily of another day"),
+        pytest.param("1.5.0-2018.05.05", 1050090000, id="branch daily of another year"),
         pytest.param("1.2.4p1", 1020450001, id="patch"),
         pytest.param("1.2.4", 1020450000, id="stable"),
         pytest.param("1.2.4b1", 1020420100, id="beta"),
         pytest.param("1.2.3p1", 1020350001, id="patch of previous sub version"),
         pytest.param("1.2.3i1", 1020310100, id="innovation release"),
+        pytest.param("1.2.3i1p1", 1020310101, id="patch of innovation release"),
         pytest.param("1.2.4p10", 1020450010, id="two-digit patch"),
         pytest.param("1.5.0p22", 1050050022, id="patch of later minor"),
         pytest.param("2020.05.26", 2020052690000, id="master daily"),
         pytest.param("2022.06.23-sandbox-az-sles-15sp3", 2022062390000, id="sandbox build"),
+        # No real Checkmk versions, but the parsing has to stay lenient for the
+        # rules of "Checkmk Agent installation auditing".
+        pytest.param("1.2", 1020050000, id="two parts"),
+        pytest.param("1.2.3i12p4b43", 1020315504, id="several release types"),
     ],
 )
 def test_parsed_versions_keep_their_integer_encoding(version_string: str, expected: int) -> None:
     assert parse_check_mk_version(version_string) == expected
+
+
+@pytest.mark.parametrize(
+    "older, newer",
+    [
+        pytest.param("1.5.0", "1.5.0p22", id="stable before patch"),
+        pytest.param("1.5.0p12", "1.5.0p13", id="patches"),
+        pytest.param("1.5.0p22", "1.5.0-2019.10.10", id="patch before branch daily"),
+    ],
+)
+def test_parsed_versions_keep_their_order(older: str, newer: str) -> None:
+    assert parse_check_mk_version(older) < parse_check_mk_version(newer)
+
+
+@pytest.mark.parametrize(
+    "from_version, to_version",
+    [
+        pytest.param("2.0.0i1", "2021.12.13", id="to old-scheme master daily"),
+        pytest.param("2021.12.13", "2.0.0i1", id="from old-scheme master daily"),
+        pytest.param("2021.12.13", "2022.01.01", id="newer old-scheme master daily"),
+        pytest.param("2022.01.01", "2021.12.13", id="older old-scheme master daily"),
+        pytest.param("2.0.0-2022.01.01", "2.0.0p3", id="from branch daily"),
+        pytest.param("2.0.0p3", "2.0.0-2022.01.01", id="to branch daily"),
+        pytest.param("2.0.0i1", "2.0.0p3", id="newer in same major"),
+        pytest.param("2.0.0p3", "2.0.0i1", id="older in same major"),
+        pytest.param("2.0.0p3", "2.0.0p3", id="same version"),
+        pytest.param("1.6.0i1", "2.0.0", id="next major after 1.6.0i1"),
+        pytest.param("1.6.0p23", "2.0.0", id="next major after 1.6.0p23"),
+        pytest.param("2.0.0p12", "2.1.0i1", id="next major after 2.0.0p12"),
+        pytest.param("2.2.0p8", "2.3.0i1", id="next major after required patch release"),
+    ],
+)
+def test_versions_are_compatible(from_version: str, to_version: str) -> None:
+    result = versions_compatible(Version.from_str(from_version), Version.from_str(to_version))
+
+    assert result.is_compatible, str(result)
+
+
+_TOO_NEW = "Target version too new (one major version jump at maximum)."
+_TOO_OLD = "Target version too old (older major version is not supported)."
+_REQUIRES = "This target version requires at least "
+
+
+@pytest.mark.parametrize(
+    "from_version, to_version, reason",
+    [
+        pytest.param("1.6.0p1", "2.1.0p3", _TOO_NEW, id="two majors up"),
+        pytest.param("1.6.0p1", "2.1.0b1", _TOO_NEW, id="two majors up to a beta"),
+        pytest.param("1.5.0i1", "2.0.0", _TOO_NEW, id="two majors up to a new first number"),
+        pytest.param("1.4.0", "2.0.0", _TOO_NEW, id="three majors up to a new first number"),
+        pytest.param("2.0.0", "1.6.0p1", _TOO_OLD, id="previous major"),
+        pytest.param("2.1.0", "2.0.0b1", _TOO_OLD, id="previous major beta"),
+        pytest.param("2.2.0b1000", "2.3.0i1", _REQUIRES + "2.2.0p8", id="before required patch"),
+    ],
+)
+def test_incompatible_versions_tell_why(from_version: str, to_version: str, reason: str) -> None:
+    assert (
+        str(versions_compatible(Version.from_str(from_version), Version.from_str(to_version)))
+        == reason
+    )
 
 
 def test_omd_version_reads_from_version_link(tmp_path: Path) -> None:

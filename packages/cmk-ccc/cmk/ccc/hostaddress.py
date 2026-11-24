@@ -61,22 +61,6 @@ class HostAddress(str):
 
         Raises:
             - HostNameValidationError: whenever the given text is not a valid HostAddress
-
-        >>> HostAddress("checkmk.com")
-        'checkmk.com'
-
-        >>> HostAddress("::1")
-        '::1'
-
-        >>> HostAddress("Â")
-        Traceback (most recent call last):
-            ...
-        cmk.ccc.hostaddress.HostNameValidationError: invalid host address: 'Â'
-
-        >>> HostAddress(".")
-        Traceback (most recent call last):
-            ...
-        cmk.ccc.hostaddress.HostNameValidationError: invalid host address: '.'
         """
         if len(text) > 240:
             # Ext4 and others allow filenames of up to 255 bytes.

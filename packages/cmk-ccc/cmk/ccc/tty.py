@@ -152,10 +152,6 @@ def print_table(
 
 
 def _column_lengths(headers: TableRow, rows: Iterable[TableRow]) -> list[int]:
-    """
-    >>> _column_lengths(['h1', 'h2'], [['r11', 'r12__', 'r13'], ['r22_', 'r23']])
-    [4, 5]
-    """
     return [max(len(i) for i in e) for e in zip(headers, *rows)]
 
 

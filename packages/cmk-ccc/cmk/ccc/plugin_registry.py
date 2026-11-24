@@ -26,21 +26,6 @@ class Registry(Mapping[str, _VT]):
     Objects can be added or removed with the register and unregister methods.
 
     Objects can be retrieved from the registry with a dictionary like syntax.
-
-    Examples:
-
-        >>> from cmk.ccc.plugin_registry import Registry
-        >>> class A:
-        ...     def __init__(self, name: str) -> None:
-        ...         self.name = name
-        >>> class MyRegistry(Registry[A]):
-        ...     def plugin_name(self, instance: A) -> str:
-        ...         return instance.name
-        >>> my_registry = MyRegistry()
-        >>> my_a = A('my_a')
-        >>> _ = my_registry.register(my_a)
-        >>> assert my_registry['my_a'] == my_a
-
     """
 
     def __init__(self) -> None:

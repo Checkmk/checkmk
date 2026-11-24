@@ -20,6 +20,12 @@ class PluginRegistry(cmk.ccc.plugin_registry.Registry[type[Plugin]]):
         return instance.__name__
 
 
+class InstanceRegistry(cmk.ccc.plugin_registry.Registry[Plugin]):
+    @override
+    def plugin_name(self, instance: Plugin) -> str:
+        return instance.__class__.__name__
+
+
 def _registry_with_plugin() -> PluginRegistry:
     registry = PluginRegistry()
     registry.register(Plugin)
@@ -46,6 +52,15 @@ def test_register_works_as_class_decorator() -> None:
         pass
 
     assert registry["DecoratedPlugin"] is DecoratedPlugin
+
+
+def test_registered_instance_is_found_by_its_plugin_name() -> None:
+    registry = InstanceRegistry()
+    plugin = Plugin()
+
+    registry.register(plugin)
+
+    assert registry["Plugin"] is plugin
 
 
 def test_looking_up_an_unknown_name_raises_key_error() -> None:
@@ -107,9 +122,3 @@ def test_get_returns_the_default_for_an_unknown_name() -> None:
 
     assert registry.get("bla") is None
     assert registry.get("bla", "blub") == "blub"
-
-
-class InstanceRegistry(cmk.ccc.plugin_registry.Registry[Plugin]):
-    @override
-    def plugin_name(self, instance: Plugin) -> str:
-        return instance.__class__.__name__

@@ -2,7 +2,6 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
-load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
@@ -247,12 +246,6 @@ _ALL = [
     "version-info",
     "general-version-infos",
 ]
-
-py_doc_test(
-    name = "doctest",
-    size = "small",
-    srcs = _ALL,
-)
 
 py_cmk_test(
     name = "unit",

@@ -388,64 +388,12 @@ def parse_check_mk_version(v: str) -> int:
     """Convert Checkmk versions into integers (lossy, see comment above).
 
     Parses versions of Checkmk and converts them into integers that are comparable
-    for most, but not all versions.
-
-    >>> p = parse_check_mk_version
+    for most, but not all versions. All daily builds of a branch get the same
+    integer.
 
     Watch out! This function can do more than just parse Checkmk versions :-(
     Changing this is incompatible, as it might render some rules for
     "Checkmk Agent installation auditing" invalid.
-    >>> p("1.2")
-    1020050000
-
-    No idea why this should be allowed:
-    >>> p("1.2.3i12p4b43")
-    1020315504
-
-    All dailies are built equal.
-
-    >>> p("1.5.0-2019.10.10")
-    1050090000
-
-    >>> p("1.6.0-2019.10.10")
-    1060090000
-
-    >>> p("1.5.0-2019.10.24") == p("1.5.0-2018.05.05")
-    True
-
-    >>> p('1.2.4p1')
-    1020450001
-
-    >>> p('1.2.4')
-    1020450000
-
-    >>> p('1.2.4b1')
-    1020420100
-
-    >>> p('1.2.3i1p1')
-    1020310101
-
-    >>> p('1.2.3i1')
-    1020310100
-
-    >>> p('1.2.4p10')
-    1020450010
-
-    >>> p("1.5.0") > p("1.5.0p22")
-    False
-
-    >>> p("1.5.0-2019.10.10") > p("1.5.0p22")
-    True
-
-    >>> p("1.5.0p13") == p("1.5.0p13")
-    True
-
-    >>> p("1.5.0p13") > p("1.5.0p12")
-    True
-
-    >>> p("2022.06.23-sandbox-az-sles-15sp3")
-    2022062390000
-
     """
     parts = v.split(".", 2)
 
@@ -520,69 +468,9 @@ def versions_compatible(
 ) -> VersionsCompatible | VersionsIncompatible:
     """Whether or not two versions are compatible (e.g. for omd update or remote automation calls)
 
-    >>> c = versions_compatible
-
-    Nightly build of master branch (with old version scheme) is always compatible as we don't know
-    which major version it belongs to. It's also not that important to validate this case.
-
-    >>> isinstance(c(Version.from_str("2.0.0i1"), Version.from_str("2021.12.13")), VersionsCompatible)
-    True
-    >>> isinstance(c(Version.from_str("2021.12.13"), Version.from_str("2.0.0i1")), VersionsCompatible)
-    True
-    >>> isinstance(c(Version.from_str("2021.12.13"), Version.from_str("2022.01.01")), VersionsCompatible)
-    True
-    >>> isinstance(c(Version.from_str("2022.01.01"), Version.from_str("2021.12.13")), VersionsCompatible)
-    True
-
-    Nightly branch builds e.g. 2.0.0-2022.01.01 are treated as 2.0.0.
-
-    >>> isinstance(c(Version.from_str("2.0.0-2022.01.01"), Version.from_str("2.0.0p3")), VersionsCompatible)
-    True
-    >>> isinstance(c(Version.from_str("2.0.0p3"), Version.from_str("2.0.0-2022.01.01")), VersionsCompatible)
-    True
-
-    Same major is allowed
-
-    >>> isinstance(c(Version.from_str("2.0.0i1"), Version.from_str("2.0.0p3")), VersionsCompatible)
-    True
-    >>> isinstance(c(Version.from_str("2.0.0p3"), Version.from_str("2.0.0i1")), VersionsCompatible)
-    True
-    >>> isinstance(c(Version.from_str("2.0.0p3"), Version.from_str("2.0.0p3")), VersionsCompatible)
-    True
-
-    Prev major to new is allowed #1
-
-    >>> isinstance(c(Version.from_str("1.6.0i1"), Version.from_str("2.0.0")), VersionsCompatible)
-    True
-    >>> isinstance(c(Version.from_str("1.6.0p23"), Version.from_str("2.0.0")), VersionsCompatible)
-    True
-    >>> isinstance(c(Version.from_str("2.0.0p12"), Version.from_str("2.1.0i1")), VersionsCompatible)
-    True
-
-    Prepre major to new not allowed
-
-    >>> str(c(Version.from_str("1.6.0p1"), Version.from_str("2.1.0p3")))
-    'Target version too new (one major version jump at maximum).'
-    >>> str(c(Version.from_str("1.6.0p1"), Version.from_str("2.1.0b1")))
-    'Target version too new (one major version jump at maximum).'
-    >>> str(c(Version.from_str("1.5.0i1"), Version.from_str("2.0.0")))
-    'Target version too new (one major version jump at maximum).'
-    >>> str(c(Version.from_str("1.4.0"), Version.from_str("2.0.0")))
-    'Target version too new (one major version jump at maximum).'
-
-    New major to old not allowed
-
-    >>> str(c(Version.from_str("2.0.0"), Version.from_str("1.6.0p1")))
-    'Target version too old (older major version is not supported).'
-    >>> str(c(Version.from_str("2.1.0"), Version.from_str("2.0.0b1")))
-    'Target version too old (older major version is not supported).'
-
-    Specific patch release requirements
-
-    >>> isinstance(c(Version.from_str("2.2.0p8"), Version.from_str("2.3.0i1")), VersionsCompatible)
-    True
-    >>> str(c(Version.from_str("2.2.0b1000"), Version.from_str("2.3.0i1")))
-    'This target version requires at least 2.2.0p...'
+    Old-style master dailies are always compatible. Branch dailies like 2.0.0-2022.01.01 count as
+    their base version, but newer than its patch releases. Compatible are the same base version
+    and the next major version, possibly only from a minimum patch release on.
     """
 
     # Daily builds of the master branch (in old format (used until 2023-11-16): YYYY.MM.DD) are

@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
+
 import pytest
 
-from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.ccc.hostaddress import HostAddress, HostName, HostNameValidationError, Hosts
 
 
 def test_all_configured_hosts() -> None:
@@ -41,10 +43,11 @@ def test_duplicate_hosts() -> None:
         pytest.param("subdomain.domain.com", id="subdomain"),
         pytest.param("domain.com", id="domain"),
         pytest.param("domain", id="single label"),
+        pytest.param("::1", id="IPv6 address"),
     ],
 )
 def test_valid_hostaddress(hostaddress: str) -> None:
-    HostAddress(hostaddress)
+    assert HostAddress(hostaddress) == hostaddress
 
 
 @pytest.mark.parametrize(
@@ -60,8 +63,11 @@ def test_valid_hostaddress(hostaddress: str) -> None:
         pytest.param("domain.com\n", id="trailing newline"),
         pytest.param("\ndomain.com", id="leading newline"),
         pytest.param("domain\ncom", id="inner newline"),
+        pytest.param("Â", id="non-ASCII letter"),
     ],
 )
 def test_invalid_hostaddress(hostaddress: str) -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        HostNameValidationError, match=re.escape(f"invalid host address: {hostaddress!r}")
+    ):
         HostAddress(hostaddress)

@@ -18,7 +18,7 @@ from concurrent import futures
 from functools import partial
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from types import FrameType
+from types import CodeType
 from typing import override
 
 import pytest
@@ -560,35 +560,57 @@ class _Interrupt(BaseException):
 
 
 def _interrupted(call: Callable[[], object], at_step: int) -> bool:
-    """Run the call and raise _Interrupt at the given line or bytecode step of the lock functions
+    """Run the call and raise _Interrupt at the given step of the lock functions
 
-    Returns whether the call was interrupted, i.e. whether the call has that many steps.
+    Steps are where async exceptions can surface: function starts, calls, returns (also of Python
+    code run by C functions or operators) and backward jumps. Returns whether the call was
+    interrupted, and fails if the lock functions swallowed the interruption.
     """
+    # Unlike sys.settrace(), sys.monitoring reports the same steps in each run.
+    monitoring, events = sys.monitoring, sys.monitoring.events
     locks_file = store.acquire_lock.__code__.co_filename
+    thread = threading.get_ident()
     steps = 0
 
-    def count_steps(_frame: FrameType, event: str, _arg: object) -> object:
+    def step(code: CodeType) -> None:
         nonlocal steps
-        if event in ("line", "opcode"):
+        if code.co_filename == locks_file and threading.get_ident() == thread:
             steps += 1
             if steps == at_step:
                 raise _Interrupt
-        return count_steps
 
-    def trace_lock_functions(frame: FrameType, _event: str, _arg: object) -> object:
-        if frame.f_code.co_filename != locks_file:
-            return None
-        frame.f_trace_opcodes = True
-        return count_steps
+    def started(code: CodeType, _offset: int) -> None:
+        step(code)
 
-    previous_trace = sys.gettrace()
-    sys.settrace(trace_lock_functions)  # type: ignore[arg-type]
+    def called(code: CodeType, _offset: int, _callable: object, _arg0: object) -> None:
+        step(code)
+
+    def returned(_code: CodeType, _offset: int, _value: object) -> None:
+        # Frame 1 returns; a thread's first frame has no caller.
+        if (caller := sys._getframe(1).f_back) is not None:  # noqa: SLF001
+            step(caller.f_code)
+
+    def jumped(code: CodeType, offset: int, destination: int) -> None:
+        if destination < offset:
+            step(code)
+
+    # Usually the debugger's ID: tools with higher ones, like coverage.py, see events first.
+    tool = next(t for t in range(6) if monitoring.get_tool(t) is None)
+    monitoring.use_tool_id(tool, "lock test interruptions")
     try:
+        monitoring.register_callback(tool, events.PY_START, started)
+        monitoring.register_callback(tool, events.CALL, called)
+        monitoring.register_callback(tool, events.C_RETURN, called)
+        monitoring.register_callback(tool, events.PY_RETURN, returned)
+        monitoring.register_callback(tool, events.JUMP, jumped)
+        # C_RETURN comes with CALL and can't be set on its own.
+        monitoring.set_events(tool, events.PY_START | events.CALL | events.PY_RETURN | events.JUMP)
         call()
     except _Interrupt:
         return True
     finally:
-        sys.settrace(previous_trace)
+        monitoring.free_tool_id(tool)
+    assert steps < at_step, f"The lock functions swallowed the interruption at step {at_step}"
     return False
 
 

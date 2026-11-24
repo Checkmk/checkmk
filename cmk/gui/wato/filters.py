@@ -46,11 +46,7 @@ def register(filter_registry: FilterRegistry) -> None:
             htmlvars=["wato_folders"],
             link_columns=[],
             group=FilterGroup.FOLDER,
-            drilldown=drilldowns.Drilldown(
-                columns=["host_filename"],
-                variables=lambda row, keys: _folders([row], keys),
-                merged=_folders,
-            ),
+            drilldown=drilldowns.multi_value("wato_folders", ["host_filename"], _setup_folders),
         ),
     )
 
@@ -74,13 +70,9 @@ def _folder(row: drilldowns.RowValues, _keys: Sequence[str]) -> FilterHTTPVariab
     return None if (folder := _row_folder(row)) is None else {"wato_folder": folder}
 
 
-def _folders(
-    rows: Sequence[drilldowns.RowValues], _keys: Sequence[str]
-) -> FilterHTTPVariables | None:
-    if not (folders := {folder for row in rows if (folder := _row_folder(row)) is not None}):
-        return None
-    # The Main folder holds every host: an empty value restricts no folder.
-    return {"wato_folders": "" if "" in folders else "|".join(sorted(folders))}
+def _setup_folders(row: drilldowns.RowValues) -> list[str]:
+    # The Main folder holds every host, so a drill-down never filters for it.
+    return [folder] if (folder := _row_folder(row)) else []
 
 
 def _row_folder(row: drilldowns.RowValues) -> str | None:

@@ -50,6 +50,7 @@ _OTHER_HOST_ROW: RowValues = {
     "host_labels": {"cmk/os_family": "windows", "env": "prod"},
 }
 
+_MAIN_FOLDER_ROW: RowValues = {"host_filename": "/wato/hosts.mk"}
 
 _ALERT_COUNTS: RowValues = {
     "log_alerts_ok": 0,
@@ -595,13 +596,15 @@ def test_drilldowns_merge_the_values_of_several_rows(
     assert _drilldown(filter_name).carried([_HOST_ROW, _OTHER_HOST_ROW], []) == (expected, [])
 
 
-def test_drilldowns_merge_a_folder_with_the_main_folder_into_all_folders() -> None:
-    main_folder_row = {"host_filename": "/wato/hosts.mk"}
-
-    assert _drilldown("wato_folders").carried([_HOST_ROW, main_folder_row], []) == (
-        {"wato_folders": ""},
+def test_drilldowns_merge_folders_leaving_out_the_main_folder() -> None:
+    assert _drilldown("wato_folders").carried([_HOST_ROW, _MAIN_FOLDER_ROW], []) == (
+        {"wato_folders": "servers/linux"},
         [],
     )
+
+
+def test_drilldowns_carry_no_folder_for_a_host_in_the_main_folder() -> None:
+    assert _drilldown("wato_folders").carried([_MAIN_FOLDER_ROW], []) == (None, [])
 
 
 def test_drilldowns_merge_the_labels_of_several_rows_into_any_of_their_values() -> None:

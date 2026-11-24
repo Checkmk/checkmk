@@ -82,6 +82,23 @@ def test_product_usage_payload_dump_with_metadata_json() -> None:
     assert actual_payload["data"] == payload
 
 
+def test_product_usage_payload_without_the_optional_fields_has_them_as_null() -> None:
+    """os, users and inventory are optional, a collector that fails sends its field as null"""
+    payload = {
+        key: value
+        for key, value in _product_usage_data().items()
+        if key not in {"os", "users", "inventory"}
+    }
+
+    data = json.loads(ProductUsagePayload.model_validate(payload).model_dump_with_metadata_json())
+
+    assert (data["data"]["os"], data["data"]["users"], data["data"]["inventory"]) == (
+        None,
+        None,
+        None,
+    )
+
+
 def test_cloud_trial_payload_carries_product_usage_data_and_null_trial_signals() -> None:
     payload = _product_usage_data()
 

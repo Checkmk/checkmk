@@ -108,6 +108,17 @@ def test_transmitted_payload_conforms_to_manifest(
     jsonschema.validate(document, manifest())
 
 
+@pytest.mark.parametrize("payload_type, manifest", PAYLOAD_MANIFESTS)
+def test_payload_without_the_optional_fields_conforms_to_manifest(
+    payload_type: type[ProductUsagePayload], manifest: BuildManifest
+) -> None:
+    payload = _payload(payload_type, None).model_copy(
+        update={"os": None, "users": None, "inventory": None}
+    )
+
+    jsonschema.validate(json.loads(payload.model_dump_with_metadata_json()), manifest())
+
+
 def test_payload_with_foreign_metadata_violates_manifest() -> None:
     document = json.loads(_payload(ProductUsagePayload, None).model_dump_with_metadata_json())
     document["metadata"]["version"] = "v0"

@@ -12,6 +12,7 @@ import numpy as np
 
 matplotlib.use("Agg")
 from matplotlib.figure import Figure
+from matplotlib.text import Text
 
 from cmk.png_renderer import (
     Area,
@@ -29,6 +30,8 @@ from cmk.png_renderer import (
 from cmk.png_renderer._image import (
     _agg_renderer,
     _DPI,
+    _figure,
+    _FIGURE_PAD_PX,
     _fit_time_axis,
     _plot,
     _plot_legend,
@@ -187,7 +190,7 @@ def _styled(drawing: PngDrawing) -> Figure:
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
     _plot(ax, drawing)
-    _style_axes(ax, _agg_renderer(fig), drawing)
+    _style_axes(fig, ax, drawing)
     return fig
 
 
@@ -252,6 +255,70 @@ def test_the_title_and_the_caption_are_shown_above_the_plot() -> None:
         "Disk IO",
         "for 2026-09-28, resolution: 1 min",
     )
+
+
+_WIDE_Y_LABELS = VerticalAxis(
+    labels=[AxisLabel(position=0.0, text="0 B"), AxisLabel(position=2.0, text="2 000 000 B")]
+)
+
+
+def _texts_on(fig: Figure, text: str) -> Sequence[Text]:
+    return [
+        artist
+        for artist in fig.axes[0].get_children()
+        if isinstance(artist, Text) and artist.get_text() == text
+    ]
+
+
+def _left_edge_of_y_labels(fig: Figure) -> float:
+    renderer = _agg_renderer(fig)
+    lower, upper = fig.axes[0].get_ylim()
+    return min(
+        float(label.get_window_extent(renderer).x0)
+        for label in fig.axes[0].get_yticklabels()
+        if label.get_text() and lower <= label.get_position()[1] <= upper
+    )
+
+
+def test_the_widest_y_label_starts_at_the_figure_pad() -> None:
+    fig = _figure(_drawing(vertical_axis=_WIDE_Y_LABELS))
+
+    assert round(_left_edge_of_y_labels(fig)) == round(_FIGURE_PAD_PX)
+
+
+def test_the_widest_automatic_y_label_starts_at_the_figure_pad() -> None:
+    fig = _figure(_drawing(vertical_axis=VerticalAxis(labels=None)))
+
+    assert round(_left_edge_of_y_labels(fig)) == round(_FIGURE_PAD_PX)
+
+
+def test_the_title_starts_at_the_figure_pad() -> None:
+    fig = _figure(_drawing(title="Disk IO", vertical_axis=_WIDE_Y_LABELS))
+
+    (title,) = _texts_on(fig, "Disk IO")
+
+    assert round(title.get_window_extent(_agg_renderer(fig)).x0) == round(_FIGURE_PAD_PX)
+
+
+def test_the_title_ends_inside_the_image() -> None:
+    fig = _figure(_drawing(title="Disk IO"))
+
+    (title,) = _texts_on(fig, "Disk IO")
+
+    assert title.get_window_extent(_agg_renderer(fig)).y1 <= fig.bbox.height
+
+
+def test_the_time_labels_end_above_the_legend() -> None:
+    fig = _figure(_drawing(x_range=(1790589600, 1790604000), legend=_LEGEND))
+    renderer = _agg_renderer(fig)
+
+    lowest_label = min(
+        label.get_window_extent(renderer).y0
+        for label in fig.axes[0].get_xticklabels(which="both")
+        if label.get_text()
+    )
+
+    assert lowest_label > fig.axes[1].get_window_extent(renderer).y1
 
 
 def test_the_legend_shows_its_header_titles_and_values() -> None:

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import io
 from collections.abc import Sequence
+from dataclasses import dataclass
 from zoneinfo import ZoneInfo
 
 import numpy as np
@@ -14,7 +15,6 @@ from matplotlib.backend_bases import RendererBase
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 from matplotlib.font_manager import FontProperties
-from matplotlib.layout_engine import TightLayoutEngine
 from matplotlib.lines import Line2D
 from matplotlib.offsetbox import AnnotationBbox, DrawingArea
 from matplotlib.patches import FancyBboxPatch
@@ -42,6 +42,9 @@ _LEGEND_VALUE_PAD = 0.1
 _TITLE_Y_OFFSET_PX = 10
 _REGION_FILL_ALPHA = 0.15
 _PT_PER_PX = 72 / _DPI
+_FIGURE_PAD_PX = 14.4
+_TICK_LABEL_PAD_PT = 3.5
+_CAPTION_PAD_PT = 6.0
 
 
 def _array(values: Sequence[float | None]) -> npt.NDArray[np.float64]:
@@ -102,21 +105,30 @@ def _agg_renderer(fig: Figure) -> RendererBase:
     return renderer
 
 
+def _text_width(renderer: RendererBase, text: str, font: FontProperties) -> float:
+    width, _height, _descent = renderer.get_text_width_height_descent(text, font, ismath=False)
+    return float(width)
+
+
+def _text_ascent(renderer: RendererBase, text: str, font: FontProperties) -> float:
+    _width, height, descent = renderer.get_text_width_height_descent(text, font, ismath=False)
+    return float(height - descent)
+
+
+def _text_height(renderer: RendererBase, text: str, font: FontProperties) -> float:
+    _width, height, _descent = renderer.get_text_width_height_descent(text, font, ismath=False)
+    return float(height)
+
+
 def _fit_time_axis(ax: Axes, renderer: RendererBase, font_size: float, time_axis: TimeAxis) -> None:
-    """Ticks as the Vue graph places them. Their density follows the plot width, so this runs
-    again once a layout pass has settled it."""
+    """Ticks as the Vue graph places them."""
     font = FontProperties(size=font_size)
-
-    def measure_label(text: str) -> float:
-        width, _height, _descent = renderer.get_text_width_height_descent(text, font, ismath=False)
-        return float(width)
-
     start, end = ax.get_xlim()
     ticks = compute_time_axis(
         start,
         end,
         ax.get_window_extent(renderer).width,
-        measure_label,
+        lambda text: _text_width(renderer, text, font),
         None if time_axis.time_zone is None else ZoneInfo(time_axis.time_zone),
     )
     # Ticks with a line get a grid line; the label-only ones (a day's label centered between
@@ -131,21 +143,17 @@ def _fit_time_axis(ax: Axes, renderer: RendererBase, font_size: float, time_axis
     )
 
 
-def _style_axes(ax: Axes, renderer: RendererBase, drawing: PngDrawing) -> Text | None:
-    ax.tick_params(labelsize=drawing.font_size, length=0)
+def _place_title(fig: Figure, ax: Axes, title_artist: Text) -> None:
+    offset = ScaledTranslation(0, _TITLE_Y_OFFSET_PX / _DPI, fig.dpi_scale_trans)
+    title_artist.set_transform(blended_transform_factory(fig.transFigure, ax.transAxes) + offset)
+    title_artist.set_position((_FIGURE_PAD_PX / fig.bbox.width, 1.0))
+
+
+def _style_axes(fig: Figure, ax: Axes, drawing: PngDrawing) -> None:
+    ax.tick_params(labelsize=drawing.font_size, length=0, pad=_TICK_LABEL_PAD_PT)
     for spine in ax.spines.values():
         spine.set_color(_DIVISION_COLOR)
     ax.spines["top"].set_visible(False)
-
-    title_artist: Text | None = None
-    if drawing.title is not None:
-        title_artist = ax.set_title(
-            drawing.title,
-            fontsize=drawing.font_size * _TITLE_FONT_SCALE,
-            fontweight="bold",
-            loc="left",
-            color=_TITLE_COLOR,
-        )
 
     if drawing.vertical_axis is None:
         ax.yaxis.set_visible(False)
@@ -158,10 +166,9 @@ def _style_axes(ax: Axes, renderer: RendererBase, drawing: PngDrawing) -> Text |
     if drawing.time_axis is None:
         ax.tick_params(axis="x", labelbottom=False, bottom=False)
     else:
-        ax.tick_params(axis="x", which="minor", labelsize=drawing.font_size, length=0)
-        # A first placement, so the layout pass reserves room for the labels; the plot width
-        # it settles on is only known afterwards.
-        _fit_time_axis(ax, renderer, drawing.font_size, drawing.time_axis)
+        ax.tick_params(
+            axis="x", which="minor", labelsize=drawing.font_size, length=0, pad=_TICK_LABEL_PAD_PT
+        )
         ax.grid(axis="x", color=_DIVISION_COLOR, linestyle="--")
 
     if drawing.caption is not None:
@@ -169,27 +176,106 @@ def _style_axes(ax: Axes, renderer: RendererBase, drawing: PngDrawing) -> Text |
             drawing.caption,
             fontsize=drawing.font_size * _X_AXIS_TITLE_FONT_SCALE,
             loc="right",
+            pad=_CAPTION_PAD_PT,
         )
 
-    return title_artist
+    if drawing.title is not None:
+        _place_title(
+            fig,
+            ax,
+            ax.set_title(
+                drawing.title,
+                fontsize=drawing.font_size * _TITLE_FONT_SCALE,
+                fontweight="bold",
+                loc="left",
+                color=_TITLE_COLOR,
+            ),
+        )
 
 
-def _align_title_to_y_ticks(
-    fig: Figure, ax: Axes, renderer: RendererBase, title_artist: Text | None
-) -> None:
-    """Runs after a layout pass: the tick label widths are only known once measured."""
-    if title_artist is None:
-        return
-    label_artists = [*ax.get_yticklabels(), ax.yaxis.label]
-    left_edges = [
-        label.get_window_extent(renderer).x0 for label in label_artists if label.get_text()
+def _y_labels_width(ax: Axes, renderer: RendererBase, font_size: float) -> float:
+    if not ax.yaxis.get_visible():
+        return 0.0
+    lower, upper = sorted(ax.get_ylim())
+    font = FontProperties(size=font_size)
+    widths = [
+        _text_width(renderer, label.get_text(), font)
+        for label in ax.get_yticklabels()
+        if label.get_text() and lower <= label.get_position()[1] <= upper
     ]
-    if not left_edges:
-        return
-    fig_x = min(left_edges) / fig.bbox.width
-    offset = ScaledTranslation(0, _TITLE_Y_OFFSET_PX / _DPI, fig.dpi_scale_trans)
-    title_artist.set_transform(blended_transform_factory(fig.transFigure, ax.transAxes) + offset)
-    title_artist.set_position((fig_x, 1.0))
+    return max(widths) + _TICK_LABEL_PAD_PT / _PT_PER_PX if widths else 0.0
+
+
+def _top_margin(renderer: RendererBase, drawing: PngDrawing) -> float:
+    title = (
+        []
+        if drawing.title is None
+        else [
+            _TITLE_Y_OFFSET_PX
+            + _text_ascent(
+                renderer,
+                drawing.title,
+                FontProperties(size=drawing.font_size * _TITLE_FONT_SCALE, weight="bold"),
+            )
+        ]
+    )
+    caption = (
+        []
+        if drawing.caption is None
+        else [
+            _CAPTION_PAD_PT / _PT_PER_PX
+            + _text_ascent(
+                renderer,
+                drawing.caption,
+                FontProperties(size=drawing.font_size * _X_AXIS_TITLE_FONT_SCALE),
+            )
+        ]
+    )
+    return _FIGURE_PAD_PX + max([*title, *caption], default=0.0)
+
+
+def _time_labels_height(renderer: RendererBase, drawing: PngDrawing) -> float:
+    if drawing.time_axis is None:
+        return 0.0
+    font = FontProperties(size=drawing.font_size)
+    return _TICK_LABEL_PAD_PT / _PT_PER_PX + _text_height(renderer, "lp", font)
+
+
+@dataclass(frozen=True, kw_only=True)
+class _Margins:
+    top: float
+    below_plot: float
+
+
+def _margins(renderer: RendererBase, drawing: PngDrawing) -> _Margins:
+    return _Margins(
+        top=_top_margin(renderer, drawing),
+        below_plot=_time_labels_height(renderer, drawing) + _FIGURE_PAD_PX,
+    )
+
+
+def _plot_and_legend_heights(
+    figure_height: float, margins: _Margins, drawing: PngDrawing
+) -> tuple[float, float]:
+    """In pixels. A legend sits below the plot, one figure pad apart, and the two share the
+    height left by the margins in the ratio plot_height : legend.height."""
+    if drawing.legend is None:
+        return figure_height - margins.top - margins.below_plot, 0.0
+    shared = figure_height - margins.top - margins.below_plot - _FIGURE_PAD_PX
+    plot_share = drawing.plot_height / (drawing.plot_height + drawing.legend.height)
+    return shared * plot_share, shared * (1 - plot_share)
+
+
+def _box(
+    fig: Figure, left: float, bottom: float, height: float
+) -> tuple[float, float, float, float]:
+    width = fig.bbox.width
+    return (
+        left / width,
+        bottom / fig.bbox.height,
+        (width - left - _FIGURE_PAD_PX) / width,
+        height / fig.bbox.height,
+    )
 
 
 def _legend_column_edges() -> Sequence[float]:
@@ -202,7 +288,6 @@ def _legend_column_edges() -> Sequence[float]:
 
 def _plot_legend(ax: Axes, legend: Legend, font_size: float) -> None:
     ax.axis("off")
-    ax.set_in_layout(False)
     rows = [*legend.curves, *legend.rules, *legend.regions]
     row_count = len(rows) + 1
     edges = _legend_column_edges()
@@ -300,30 +385,35 @@ def _plot_legend(ax: Axes, legend: Legend, font_size: float) -> None:
         )
 
 
-def _render_png(drawing: PngDrawing) -> bytes:
+def _figure(drawing: PngDrawing) -> Figure:
     fig = Figure(
         figsize=(drawing.width_inches, drawing.height_inches),
         dpi=_DPI,
         facecolor=_BACKGROUND_COLOR,
     )
     renderer = _agg_renderer(fig)
-    if drawing.legend is None:
-        ax = fig.add_subplot(1, 1, 1)
-    else:
-        gs = fig.add_gridspec(2, 1, height_ratios=[drawing.plot_height, drawing.legend.height])
-        ax = fig.add_subplot(gs[0])
-        legend_ax = fig.add_subplot(gs[1])
-        legend_ax.set_facecolor(_BACKGROUND_COLOR)
-        _plot_legend(legend_ax, drawing.legend, drawing.font_size)
+    ax = fig.add_axes((0.0, 0.0, 1.0, 1.0))
     ax.set_facecolor(_BACKGROUND_COLOR)
     _plot(ax, drawing)
-    title_artist = _style_axes(ax, renderer, drawing)
-    TightLayoutEngine().execute(fig)
+    _style_axes(fig, ax, drawing)
+    margins = _margins(renderer, drawing)
+    plot_height, legend_height = _plot_and_legend_heights(fig.bbox.height, margins, drawing)
+    plot_bottom = fig.bbox.height - margins.top - plot_height
+    ax.set_position(_box(fig, _FIGURE_PAD_PX, plot_bottom, plot_height))
+    left = _FIGURE_PAD_PX + _y_labels_width(ax, renderer, drawing.font_size)
+    ax.set_position(_box(fig, left, plot_bottom, plot_height))
+    if drawing.legend is not None:
+        legend_ax = fig.add_axes(_box(fig, left, _FIGURE_PAD_PX, legend_height))
+        legend_ax.set_facecolor(_BACKGROUND_COLOR)
+        _plot_legend(legend_ax, drawing.legend, drawing.font_size)
     if drawing.time_axis is not None:
         _fit_time_axis(ax, renderer, drawing.font_size, drawing.time_axis)
-    _align_title_to_y_ticks(fig, ax, renderer, title_artist)
+    return fig
+
+
+def _render_png(drawing: PngDrawing) -> bytes:
     buf = io.BytesIO()
-    fig.savefig(buf, format="png")
+    _figure(drawing).savefig(buf, format="png")
     buf.seek(0)
     return buf.read()
 

@@ -10,15 +10,15 @@ from ._graph_png_input import PngOptions
 _MM_PER_INCH = 25.4
 
 
-def ex_to_inches(size_ex: float, font_size_pt: float) -> float:
+def _ex_to_inches(size_ex: float, font_size_pt: float) -> float:
     # one "ex" is taken as the font size in points, and 1 point = 1/72 inch
     return size_ex * font_size_pt / 72
 
 
 def mm_per_ex(font_size_pt: float) -> float:
-    """The inverse of the renderer's ex-to-mm conversion. get_mm_per_ex uses a different ex,
+    """The inverse of the renderer's ex-to-mm conversion. _get_mm_per_ex uses a different ex,
     so an image sized with it comes out a few percent off."""
-    return ex_to_inches(1.0, font_size_pt) * _MM_PER_INCH
+    return _ex_to_inches(1.0, font_size_pt) * _MM_PER_INCH
 
 
 def legend_height_ex(graph: EvaluatedGraph, options: PngOptions) -> float:
@@ -29,8 +29,8 @@ def legend_height_ex(graph: EvaluatedGraph, options: PngOptions) -> float:
 
 def png_size_inches(graph: EvaluatedGraph, options: PngOptions) -> tuple[float, float]:
     return (
-        ex_to_inches(options.size[0], options.font_size),
-        ex_to_inches(options.size[1] + legend_height_ex(graph, options), options.font_size),
+        _ex_to_inches(options.size[0], options.font_size),
+        _ex_to_inches(options.size[1] + legend_height_ex(graph, options), options.font_size),
     )
 
 

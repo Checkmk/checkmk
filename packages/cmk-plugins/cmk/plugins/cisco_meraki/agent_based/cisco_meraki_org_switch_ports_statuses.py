@@ -196,8 +196,8 @@ def host_label_meraki_switch_ports_statuses(section: Section) -> HostLabelGenera
     """Host label function
 
     Labels:
-        cmk/meraki/has_lldp_neighbors:
-            This label is set to "yes" for all hosts with LLDP neighbors
+        cmk/has_lldp_neighbors:
+            This label is set to "yes" for all devices with at least one LLDP neighbor
     """
     # NOTE: only setting LLDP label as Meraki CDP data are not useful for NVDCT.
     for port in section.values():

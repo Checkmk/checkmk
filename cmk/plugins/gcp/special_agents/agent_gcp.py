@@ -1012,15 +1012,21 @@ REDIS = Service(
             ),
         ),
         Metric(
+            # A ratio per node: never sum ratios, not even after a failover.
             name="redis.googleapis.com/stats/memory/usage_ratio",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_MAX,
+                cross_series_reducer=Reducer.REDUCE_MAX,
+                group_by_fields=["resource.node_id"],
             ),
         ),
         Metric(
+            # A ratio per node: never sum ratios, not even after a failover.
             name="redis.googleapis.com/stats/memory/system_memory_usage_ratio",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_MAX,
+                cross_series_reducer=Reducer.REDUCE_MAX,
+                group_by_fields=["resource.node_id"],
             ),
         ),
         Metric(
@@ -1030,9 +1036,13 @@ REDIS = Service(
             ),
         ),
         Metric(
+            # A ratio per role: the check uses the primary, which serves the reads.
+            # Never sum ratios, not even when two nodes are primary during a failover.
             name="redis.googleapis.com/stats/cache_hit_ratio",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_MAX,
+                cross_series_reducer=Reducer.REDUCE_MAX,
+                group_by_fields=["metric.role"],
             ),
         ),
         Metric(

@@ -6,8 +6,6 @@
 import enum
 import fcntl
 import functools
-import importlib.machinery
-import importlib.util
 import os
 import queue
 import signal
@@ -19,7 +17,7 @@ from collections.abc import Callable, Iterator, Sequence
 from functools import partial
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from types import FrameType, ModuleType
+from types import FrameType
 from typing import override
 
 import pytest
@@ -649,11 +647,10 @@ class LockTestJob(enum.Enum):
 
 
 class LockTestThread(threading.Thread):
-    def __init__(self, store_mod: ModuleType, path: Path) -> None:
+    def __init__(self, path: Path) -> None:
         super().__init__()
         self.daemon = True
 
-        self.store = store_mod
         self.path = path
 
         self._jobs: queue.Queue[LockTestJob] = queue.Queue()
@@ -671,15 +668,15 @@ class LockTestThread(threading.Thread):
                     break
 
                 if job is LockTestJob.LOCK:
-                    assert self.store.have_lock(self.path) is False
-                    self.store.acquire_lock(self.path)
-                    assert self.store.have_lock(self.path) is True
+                    assert store.have_lock(self.path) is False
+                    store.acquire_lock(self.path)
+                    assert store.have_lock(self.path) is True
                     continue
 
                 if job is LockTestJob.UNLOCK:
-                    assert self.store.have_lock(self.path) is True
-                    self.store.release_lock(self.path)
-                    assert self.store.have_lock(self.path) is False
+                    assert store.have_lock(self.path) is True
+                    store.release_lock(self.path)
+                    assert store.have_lock(self.path) is False
                     continue
             finally:
                 self._jobs.task_done()
@@ -709,55 +706,18 @@ class LockTestThread(threading.Thread):
 
 @pytest.fixture(name="t1")
 def fixture_test_thread_1(test_file: Path) -> Iterator[LockTestThread]:
-    # HACK: We abuse modules as data containers, so we have to do this Kung Fu...
-    t_store = import_module_hack(store.__file__)
-
-    t = LockTestThread(t_store, test_file)
-    t.start()
-
-    yield t
-
-    t.store.release_all_locks()
-    t.terminate()
-
-
-def import_module_hack(pathname: str) -> ModuleType:
-    """Return the module loaded from `pathname`.
-
-    `pathname` is a path relative to the top-level directory
-    of the repository.
-
-    This function loads the module at `pathname` even if it does not have
-    the ".py" extension.
-
-    See: https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
-    """
-    name = os.path.splitext(os.path.basename(pathname))[0]
-    location = os.path.join(repo_path(), pathname)
-    loader = importlib.machinery.SourceFileLoader(name, location)
-    spec = importlib.machinery.ModuleSpec(name, loader, origin=location)
-    spec.has_location = True
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    loader.exec_module(module)
-    return module
-
-
-def repo_path() -> Path:
-    return Path(__file__).resolve().parent.parent.parent.parent
+    yield from _lock_test_thread(test_file)
 
 
 @pytest.fixture(name="t2")
 def fixture_test_thread_2(test_file: Path) -> Iterator[LockTestThread]:
-    # HACK: We abuse modules as data containers, so we have to do this Kung Fu...
-    t_store = store
+    yield from _lock_test_thread(test_file)
 
-    t = LockTestThread(t_store, test_file)
+
+def _lock_test_thread(path: Path) -> Iterator[LockTestThread]:
+    t = LockTestThread(path)
     t.start()
-
     yield t
-
-    t.store.release_all_locks()
     t.terminate()
 
 
@@ -868,10 +828,6 @@ def test_non_blocking_lock_from_multiple_threads(test_file: Path) -> None:
 def test_blocking_lock_while_other_holds_the_lock(
     test_file: Path, t1: LockTestThread, t2: LockTestThread
 ) -> None:
-    assert t1.store != t2.store
-    assert t1.store.have_lock(test_file) is False
-    assert t2.store.have_lock(test_file) is False
-
     try:
         # Take lock with t1
         t1.lock()
@@ -886,8 +842,8 @@ def test_blocking_lock_while_other_holds_the_lock(
     t2.join_jobs()
 
 
-def test_non_blocking_locking_without_previous_lock(test_file: Path, t1: LockTestThread) -> None:
-    assert t1.store != store
+@pytest.mark.usefixtures("release_locks")
+def test_non_blocking_locking_without_previous_lock(test_file: Path) -> None:
     # Try to lock first
     assert store.try_acquire_lock(test_file) is True
     assert store.have_lock(test_file) is True
@@ -896,8 +852,6 @@ def test_non_blocking_locking_without_previous_lock(test_file: Path, t1: LockTes
 
 
 def test_non_blocking_locking_while_already_locked(test_file: Path, t1: LockTestThread) -> None:
-    assert t1.store != store
-    # Now take lock with t1.store
     t1.lock()
 
     # And now try to get the lock (which should not be possible)
@@ -905,10 +859,7 @@ def test_non_blocking_locking_while_already_locked(test_file: Path, t1: LockTest
     assert store.have_lock(test_file) is False
 
 
-def test_non_blocking_decorated_locking_without_previous_lock(
-    test_file: Path, t1: LockTestThread
-) -> None:
-    assert t1.store != store
+def test_non_blocking_decorated_locking_without_previous_lock(test_file: Path) -> None:
     with store.try_locked(test_file) as result:
         assert result is True
         assert store.have_lock(test_file) is True
@@ -918,8 +869,6 @@ def test_non_blocking_decorated_locking_without_previous_lock(
 def test_non_blocking_decorated_locking_while_already_locked(
     test_file: Path, t1: LockTestThread
 ) -> None:
-    assert t1.store != store
-    # Take lock with t1.store
     t1.lock()
 
     # And now try to get the lock (which should not be possible)

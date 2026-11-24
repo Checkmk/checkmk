@@ -21,7 +21,13 @@ from cmk.inventory.transformation.tree_files import (
     TransformationResultsStore,
 )
 
-from ._fixtures import gzipped_repr, raw_tree, TABLE_RETENTIONS, tree_with_table_retentions
+from ._fixtures import (
+    file_names,
+    gzipped_repr,
+    raw_tree,
+    TABLE_RETENTIONS,
+    tree_with_table_retentions,
+)
 from ._logger import null_logger
 
 
@@ -48,12 +54,7 @@ def test_transform_replaces_the_legacy_inventory_trees(tmp_path: Path) -> None:
         clock=FakeClock(0.0),
     )
 
-    assert (
-        (tmp_path / "var/check_mk/inventory/hostname").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.gz").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.json").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.json.gz").exists(),
-    ) == (False, False, True, True)
+    assert file_names(tmp_path / "var/check_mk/inventory") == ["hostname.json", "hostname.json.gz"]
 
 
 def test_transform_replaces_the_legacy_status_data_tree(tmp_path: Path) -> None:
@@ -69,10 +70,7 @@ def test_transform_replaces_the_legacy_status_data_tree(tmp_path: Path) -> None:
         clock=FakeClock(0.0),
     )
 
-    assert (
-        (tmp_path / "tmp/check_mk/status_data/hostname").exists(),
-        (tmp_path / "tmp/check_mk/status_data/hostname.json").exists(),
-    ) == (False, True)
+    assert file_names(tmp_path / "tmp/check_mk/status_data") == ["hostname.json"]
 
 
 def test_transform_replaces_the_legacy_archive_tree(tmp_path: Path) -> None:
@@ -90,10 +88,7 @@ def test_transform_replaces_the_legacy_archive_tree(tmp_path: Path) -> None:
         clock=FakeClock(0.0),
     )
 
-    assert (
-        (tmp_path / "var/check_mk/inventory_archive/hostname/123").exists(),
-        (tmp_path / "var/check_mk/inventory_archive/hostname/123.json").exists(),
-    ) == (False, True)
+    assert file_names(tmp_path / "var/check_mk/inventory_archive/hostname") == ["123.json"]
 
 
 def test_transform_replaces_the_legacy_delta_cache_tree(tmp_path: Path) -> None:
@@ -111,10 +106,7 @@ def test_transform_replaces_the_legacy_delta_cache_tree(tmp_path: Path) -> None:
         clock=FakeClock(0.0),
     )
 
-    assert (
-        (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456").exists(),
-        (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456.json").exists(),
-    ) == (False, True)
+    assert file_names(tmp_path / "var/check_mk/inventory_delta_cache/hostname") == ["123_456.json"]
 
 
 def _transform_all_trees_of_hostname(omd_root: Path) -> None:

@@ -33,7 +33,7 @@ from cmk.inventory.trees import (
     SDNodeName,
 )
 
-from ._fixtures import gzipped_json, gzipped_repr, inventory_store, raw_tree
+from ._fixtures import file_names, gzipped_json, gzipped_repr, inventory_store, raw_tree
 
 
 def test_load_inventory_tree_legacy(tmp_path: Path) -> None:
@@ -43,9 +43,8 @@ def test_load_inventory_tree_legacy(tmp_path: Path) -> None:
 
     assert (
         InventoryStore(tmp_path).load_inventory_tree(host_name=host_name),
-        (tmp_path / "var/check_mk/inventory/hostname").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.json").exists(),
-    ) == (deserialize_tree(tree), True, False)
+        file_names(tmp_path / "var/check_mk/inventory"),
+    ) == (deserialize_tree(tree), ["hostname"])
 
 
 def test_load_inventory_tree(tmp_path: Path) -> None:
@@ -57,9 +56,8 @@ def test_load_inventory_tree(tmp_path: Path) -> None:
 
     assert (
         InventoryStore(tmp_path).load_inventory_tree(host_name=host_name),
-        (tmp_path / "var/check_mk/inventory/hostname").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.json").exists(),
-    ) == (deserialize_tree(tree), False, True)
+        file_names(tmp_path / "var/check_mk/inventory"),
+    ) == (deserialize_tree(tree), ["hostname.json"])
 
 
 def test_save_inventory_tree(tmp_path: Path) -> None:
@@ -75,12 +73,11 @@ def test_save_inventory_tree(tmp_path: Path) -> None:
         tree=deserialize_tree(tree),
         meta=make_meta(do_archive=True),
     )
-    assert (
-        (tmp_path / "var/check_mk/inventory/hostname").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.gz").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.json").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.json.gz").exists(),
-    ) == (False, False, True, True)
+    assert file_names(tmp_path / "var/check_mk/inventory") == [
+        ".last",
+        "hostname.json",
+        "hostname.json.gz",
+    ]
 
 
 def test_remove_inventory_tree(tmp_path: Path) -> None:
@@ -101,12 +98,7 @@ def test_remove_inventory_tree(tmp_path: Path) -> None:
 
     inv_store = InventoryStore(tmp_path)
     inv_store.remove_inventory_tree(host_name=host_name)
-    assert (
-        (tmp_path / "var/check_mk/inventory/hostname").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.gz").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.json").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.json.gz").exists(),
-    ) == (False, False, False, False)
+    assert file_names(tmp_path / "var/check_mk/inventory") == []
 
 
 def test_load_status_data_tree_legacy(tmp_path: Path) -> None:
@@ -116,9 +108,8 @@ def test_load_status_data_tree_legacy(tmp_path: Path) -> None:
 
     assert (
         InventoryStore(tmp_path).load_status_data_tree(host_name=host_name),
-        (tmp_path / "tmp/check_mk/status_data/hostname").exists(),
-        (tmp_path / "tmp/check_mk/status_data/hostname.json").exists(),
-    ) == (deserialize_tree(tree), True, False)
+        file_names(tmp_path / "tmp/check_mk/status_data"),
+    ) == (deserialize_tree(tree), ["hostname"])
 
 
 def test_load_status_data_tree(tmp_path: Path) -> None:
@@ -130,9 +121,8 @@ def test_load_status_data_tree(tmp_path: Path) -> None:
 
     assert (
         InventoryStore(tmp_path).load_status_data_tree(host_name=host_name),
-        (tmp_path / "tmp/check_mk/status_data/hostname").exists(),
-        (tmp_path / "tmp/check_mk/status_data/hostname.json").exists(),
-    ) == (deserialize_tree(tree), False, True)
+        file_names(tmp_path / "tmp/check_mk/status_data"),
+    ) == (deserialize_tree(tree), ["hostname.json"])
 
 
 def test_save_status_data_tree(tmp_path: Path) -> None:
@@ -142,12 +132,7 @@ def test_save_status_data_tree(tmp_path: Path) -> None:
 
     inv_store = InventoryStore(tmp_path)
     inv_store.save_status_data_tree(host_name=host_name, tree=deserialize_tree(tree))
-    assert (
-        (tmp_path / "tmp/check_mk/status_data/hostname").exists(),
-        (tmp_path / "tmp/check_mk/status_data/hostname.gz").exists(),
-        (tmp_path / "tmp/check_mk/status_data/hostname.json").exists(),
-        (tmp_path / "tmp/check_mk/status_data/hostname.json.gz").exists(),
-    ) == (False, False, True, False)
+    assert file_names(tmp_path / "tmp/check_mk/status_data") == [".last", "hostname.json"]
 
 
 def test_remove_status_data_tree(tmp_path: Path) -> None:
@@ -160,12 +145,7 @@ def test_remove_status_data_tree(tmp_path: Path) -> None:
 
     inv_store = InventoryStore(tmp_path)
     inv_store.remove_status_data_tree(host_name=host_name)
-    assert (
-        (tmp_path / "tmp/check_mk/status_data/hostname").exists(),
-        (tmp_path / "tmp/check_mk/status_data/hostname.gz").exists(),
-        (tmp_path / "tmp/check_mk/status_data/hostname.json").exists(),
-        (tmp_path / "tmp/check_mk/status_data/hostname.json.gz").exists(),
-    ) == (False, False, False, False)
+    assert file_names(tmp_path / "tmp/check_mk/status_data") == []
 
 
 def test_load_previous_inventory_tree(tmp_path: Path) -> None:
@@ -177,9 +157,8 @@ def test_load_previous_inventory_tree(tmp_path: Path) -> None:
 
     assert (
         InventoryStore(tmp_path).load_previous_inventory_tree(host_name=host_name),
-        (tmp_path / "var/check_mk/inventory_archive/hostname/123").exists(),
-        (tmp_path / "var/check_mk/inventory_archive/hostname/123.json").exists(),
-    ) == (deserialize_tree(tree), True, False)
+        file_names(tmp_path / "var/check_mk/inventory_archive/hostname"),
+    ) == (deserialize_tree(tree), ["123"])
 
 
 @pytest.mark.parametrize(
@@ -202,18 +181,10 @@ def test_save_inventory_tree_writes_the_meta(tmp_path: Path, do_archive: bool) -
         meta=make_meta(do_archive=do_archive),
     )
 
-    assert (
-        parse_from_gzipped((tmp_path / "var/check_mk/inventory/heute.json.gz").read_bytes()),
-        (tmp_path / "var/check_mk/inventory/heute.json").exists(),
-        (tmp_path / "var/check_mk/inventory/heute").exists(),
-        (tmp_path / "var/check_mk/inventory/heute.gz").exists(),
-    ) == (
-        SDMetaAndRawTree(
-            meta=SDMeta(version="1", do_archive=do_archive), raw_tree=serialize_tree(tree)
-        ),
-        True,
-        False,
-        False,
+    assert parse_from_gzipped(
+        (tmp_path / "var/check_mk/inventory/heute.json.gz").read_bytes()
+    ) == SDMetaAndRawTree(
+        meta=SDMeta(version="1", do_archive=do_archive), raw_tree=serialize_tree(tree)
     )
 
 

@@ -6,6 +6,7 @@
 import gzip
 import io
 import json
+from collections.abc import Sequence
 from pathlib import Path
 
 from cmk.inventory.delta import ImmutableDeltaTree
@@ -20,6 +21,10 @@ from cmk.inventory.serialization import (
 )
 from cmk.inventory.store import InventoryStore
 from cmk.inventory.trees import ImmutableTree, MutableTree, RetentionInterval, SDKey, SDNodeName
+
+
+def file_names(directory: Path) -> Sequence[str]:
+    return sorted(p.name for p in directory.iterdir())
 
 
 def inventory_store() -> InventoryStore:

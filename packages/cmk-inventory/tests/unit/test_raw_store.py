@@ -19,6 +19,7 @@ from cmk.inventory.serialization import (
 from cmk.inventory.store import InventoryStore
 
 from ._fixtures import (
+    file_names,
     gzipped_json,
     gzipped_repr,
     raw_tree,
@@ -178,15 +179,12 @@ def test_archive_inventory_tree(tmp_path: Path) -> None:
 
     RawInventoryStore(tmp_path).archive_inventory_tree(host_name=host_name, debug=False)
     assert (
-        (tmp_path / "var/check_mk/inventory/hostname").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.gz").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.json").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.json.gz").exists(),
         {
             tuple(p.suffixes)
             for p in (tmp_path / "var/check_mk/inventory_archive/hostname").iterdir()
         },
-    ) == (False, False, False, False, {(".json",)})
+        file_names(tmp_path / "var/check_mk/inventory"),
+    ) == ({(".json",)}, [])
 
 
 def test_archive_inventory_tree_without_a_tree_archives_nothing(tmp_path: Path) -> None:

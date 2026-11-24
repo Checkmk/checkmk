@@ -47,9 +47,9 @@ define __spec_install_pre %{___build_pre} &&\
 
 %pre
 
-if [ -r /var/lib/cmk-agent/cmk-agent/scripts/super-server/setup ]; then
-    /bin/sh /var/lib/cmk-agent/var/lib/cmk-agent/scripts/super-server/setup cleanup
-    /bin/sh /var/lib/cmk-agent/var/lib/cmk-agent/scripts/super-server/setup trigger
+if [ -r /opt/checkmk/agent/default/package/scripts/super-server/setup ]; then
+    /bin/sh /opt/checkmk/agent/default/package/scripts/super-server/setup cleanup
+    /bin/sh /opt/checkmk/agent/default/package/scripts/super-server/setup trigger
 fi
 
 %posttrans

@@ -13,8 +13,6 @@ from uuid import UUID
 
 from cryptography import x509 as pyca_x509
 
-from cmk.ccc.site import SiteId
-
 X509NameOid = pyca_x509.oid.NameOID
 
 # Copies of patterns in cmk.ccc.regex, so that this package does not depend on that module: it is
@@ -154,29 +152,28 @@ class SAN:
         return cls(pyca_x509.UniformResourceIdentifier(name.urn))
 
     @classmethod
-    def checkmk_site(cls, name: SiteId) -> SAN:
+    def checkmk_site(cls, *, site_id: str) -> SAN:
         """Create a SubjectAlternativeName that represents a Checkmk site name.
 
-        The site name is validated at runtime as the `SiteId` type doesn't implement any validation
-        at the moment.
+        The site name is validated at runtime.
 
-        >>> SAN.checkmk_site(SiteId("testsite")).name.value
+        >>> SAN.checkmk_site(site_id="testsite").name.value
         'urn:checkmk-site:testsite'
 
-        >>> SAN.checkmk_site(SiteId("Invalid Space Site"))
+        >>> SAN.checkmk_site(site_id="Invalid Space Site")
         Traceback (most recent call last):
             ...
         ValueError: Invalid site name: 'Invalid Space Site'
 
-        >>> SAN.checkmk_site(SiteId("testsite\\n"))
+        >>> SAN.checkmk_site(site_id="testsite\\n")
         Traceback (most recent call last):
             ...
         ValueError: Invalid site name: 'testsite\\n'
         """
-        if not re.match(SITE_NAME_PATTERN, name):
-            raise ValueError(f"Invalid site name: {name!r}")
+        if not re.match(SITE_NAME_PATTERN, site_id):
+            raise ValueError(f"Invalid site name: {site_id!r}")
 
-        return cls(pyca_x509.UniformResourceIdentifier(f"urn:checkmk-site:{name}"))
+        return cls(pyca_x509.UniformResourceIdentifier(f"urn:checkmk-site:{site_id}"))
 
     @classmethod
     def customer_id(cls, customer_id: str) -> SAN:
@@ -220,7 +217,7 @@ class SAN:
         if uri.startswith("urn:uuid:"):
             return cls.uuid(UUID(uri))
         if uri.startswith("urn:checkmk-site:"):
-            return cls.checkmk_site(SiteId(uri.removeprefix("urn:checkmk-site:")))
+            return cls.checkmk_site(site_id=uri.removeprefix("urn:checkmk-site:"))
         if uri.startswith("urn:customer-id:"):
             return cls.customer_id(uri.removeprefix("urn:customer-id:"))
 

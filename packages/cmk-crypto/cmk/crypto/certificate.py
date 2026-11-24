@@ -47,8 +47,6 @@ from cryptography import x509 as pyca_x509
 from cryptography.hazmat import primitives as pyca_primitives
 from dateutil.relativedelta import relativedelta
 
-from cmk.ccc.site import SiteId
-
 from . import MKCryptoException
 from .hash import HashAlgorithm
 from .issued_certificates import IssuedCertificateEntry
@@ -710,19 +708,18 @@ class Certificate:
             case unreachable:
                 assert_never(unreachable)
 
-    def get_san_checkmk_sites(self) -> list[SiteId]:
+    def get_san_checkmk_sites(self) -> list[str]:
         """
         Retrieves Checkmk site identifiers from the certificate's Subject Alternative Names (SAN).
 
         If no matching SANs are found or if the SAN extension is missing, an empty list is returned.
 
         Returns:
-            list[SiteId]: A list of validated SiteId objects extracted from the
-                matching URI SAN entries.
+            A list of site IDs extracted from the matching URI SAN entries.
         """
         prefix = "urn:checkmk-site:"
         return [
-            SiteId(san.name.value[len(prefix) :])
+            san.name.value[len(prefix) :]
             for san in self.subject_alternative_names or []
             if isinstance(san.name, pyca_x509.UniformResourceIdentifier)
             and san.name.value.startswith(prefix)

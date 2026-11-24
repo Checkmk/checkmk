@@ -33,7 +33,7 @@ py_library(
     imports = ["."],
     visibility = ["//:__subpackages__"],
     deps = [
-        "//packages/cmk-ccc:site",
+        # This is meant to be a leaf package. Don't depend on cmk.ccc.
         requirement("bcrypt"),
         requirement("cryptography"),
         requirement("python-dateutil"),

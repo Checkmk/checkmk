@@ -17,7 +17,6 @@ import time_machine
 from cryptography import x509 as pyca_x509
 from dateutil.relativedelta import relativedelta
 
-from cmk.ccc.site import SiteId
 from cmk.crypto.certificate import (
     Certificate,
     CertificatePEM,
@@ -304,7 +303,7 @@ ip0CIBdH+5jSUeJjJx5LCycuvh4TO7TG33MvgZG71DxvUY6q
             SubjectAlternativeNames(
                 [
                     SAN.uuid(UUID("12345678-1234-5678-1234-567812345678")),
-                    SAN.checkmk_site(SiteId("testsite")),
+                    SAN.checkmk_site(site_id="testsite"),
                     SAN.customer_id("testcustomer"),
                     SAN.ip_address(ip_network("127.0.0.1/24", strict=False)),
                 ]
@@ -340,7 +339,7 @@ def test_get_san_methods(self_signed_cert: CertificateWithPrivateKey) -> None:
     sans = [
         SAN.uuid(UUID("12345678-1234-5678-1234-567812345678")),
         SAN.customer_id("provider"),
-        SAN.checkmk_site(SiteId("testsite")),
+        SAN.checkmk_site(site_id="testsite"),
         SAN.customer_id("testcustomer"),
         SAN.ip_address(ip_network("127.0.0.1/24", strict=False)),
     ]

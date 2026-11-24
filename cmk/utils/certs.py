@@ -404,7 +404,7 @@ class SiteCA:
             # builtin names
             [
                 SAN.dns_name(site_id),  # historic reasons
-                SAN.checkmk_site(site_id),  # preferred
+                SAN.checkmk_site(site_id=site_id),  # preferred
             ]
             # user configured
             + [_guess_san_type(name) for name in additional_sans]
@@ -588,7 +588,7 @@ class SiteBrokerCA:
             organization=organization,
             subject_alternative_names=SubjectAlternativeNames(
                 [
-                    SAN.checkmk_site(SiteId(site_name)),
+                    SAN.checkmk_site(site_id=site_name),
                 ]
             ),
             expiry=expiry,
@@ -661,7 +661,7 @@ class CustomerBrokerCA:
             organization=organization,
             subject_alternative_names=SubjectAlternativeNames(
                 [
-                    SAN.checkmk_site(SiteId(site_name)),
+                    SAN.checkmk_site(site_id=site_name),
                     SAN.customer_id(customer),
                 ]
             ),
@@ -822,7 +822,7 @@ class DataBackendCA:
         certificate, private_key = self.root_ca.issue_new_certificate(
             common_name=str(site_id),
             organization=f"Checkmk Site {site_id}",
-            subject_alternative_names=SubjectAlternativeNames([SAN.checkmk_site(site_id)]),
+            subject_alternative_names=SubjectAlternativeNames([SAN.checkmk_site(site_id=site_id)]),
             expiry=relativedelta(years=10),
             key_size=key_size,
             cert_log=issued_certificates_path(self.cert_dir.parent.parent, "data_backend"),

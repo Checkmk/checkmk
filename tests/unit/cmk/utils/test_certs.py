@@ -317,7 +317,7 @@ def test_create_site_certificate(ca: SiteCA) -> None:
     expected_sans = [
         SAN.dns_name("test_site"),
         SAN.dns_name("checkmk.testing.local"),
-        SAN.checkmk_site(SiteId("test_site")),
+        SAN.checkmk_site(site_id="test_site"),
         SAN.ip_address(ip_address("127.0.0.1")),
     ]
     assert sorted(certificate.subject_alternative_names or [], key=str) == sorted(
@@ -339,7 +339,7 @@ def test_site_certificate_alternative_names(ca_cert_files: Path) -> None:
     expected_sans = [
         SAN.dns_name("test_site"),
         SAN.dns_name("checkmk.testing.local"),
-        SAN.checkmk_site(SiteId("test_site")),
+        SAN.checkmk_site(site_id="test_site"),
         SAN.ip_address(ip_address("::")),
         SAN.ip_address(ip_network("127.0.0.0/28")),
     ]
@@ -377,7 +377,7 @@ def test_customer_broker_ca_create_and_load(tmp_path: Path) -> None:
 
     assert created.certificate.dump_pem().bytes == loaded.certificate.dump_pem().bytes
 
-    expected_sans = [SAN.customer_id("testcustomer"), SAN.checkmk_site(SiteId("test_site"))]
+    expected_sans = [SAN.customer_id("testcustomer"), SAN.checkmk_site(site_id="test_site")]
     assert sorted(loaded.certificate.subject_alternative_names or [], key=str) == sorted(
         expected_sans, key=str
     )

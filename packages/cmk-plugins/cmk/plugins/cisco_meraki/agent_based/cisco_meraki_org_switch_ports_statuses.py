@@ -200,9 +200,8 @@ def host_label_meraki_switch_ports_statuses(section: Section) -> HostLabelGenera
             This label is set to "yes" for all devices with at least one LLDP neighbor
     """
     # NOTE: only setting LLDP label as Meraki CDP data are not useful for NVDCT.
-    for port in section.values():
-        if port.lldp:
-            yield HostLabel(name="cmk/has_lldp_neighbors", value="yes")
+    if any(port.lldp for port in section.values()):
+        yield HostLabel(name="cmk/has_lldp_neighbors", value="yes")
 
 
 agent_section_cisco_meraki_org_switch_ports_statuses = AgentSection(

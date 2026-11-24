@@ -120,6 +120,17 @@ class TestHostLabels:
 
         assert value == expected
 
+    def test_label_emitted_once_for_multiple_lldp_ports(self) -> None:
+        switch_ports_status = [
+            _RawSwitchPortsStatusFactory.build(portId=1),
+            _RawSwitchPortsStatusFactory.build(portId=2),
+        ]
+        section = parse_switch_ports_statuses([[json.dumps(switch_ports_status)]])
+
+        value = list(host_label_meraki_switch_ports_statuses(section))
+
+        assert value == [HostLabel("cmk/has_lldp_neighbors", "yes")]
+
 
 @pytest.fixture
 def params() -> CheckParams:

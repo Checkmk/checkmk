@@ -35,6 +35,7 @@ doc_srcs(
         "//packages/cmk-backup:docs",
         "//packages/cmk-check-engine:docs",
         "//packages/cmk-maps:docs",
+        "//packages/cmk-plugins/cmk/plugins/kube:docs",
     ] + select({
         "@cmk//edition:community": [],
         "//conditions:default": [

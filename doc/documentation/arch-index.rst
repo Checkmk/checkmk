@@ -46,7 +46,6 @@ Components
    arch-comp-distributed.rst
    arch-comp-livestatus.rst
    arch-comp-livestatus-client.rst
-   arch-comp-kube-monitoring.rst
    arch-comp-rrd-backend.rst
    arch-comp-rrdcached.rst
    arch-comp-nagvis.rst

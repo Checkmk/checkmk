@@ -1,6 +1,14 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_shell//shell:sh_library.bzl", "sh_library")
+load("//doc/documentation:defs.bzl", "package_docs")
+
+package_docs(
+    name = "docs",
+    srcs = glob(["docs/*.puml"]),
+    index = "docs/arch-comp-kube-monitoring.rst",
+    visibility = ["//doc/documentation:__pkg__"],
+)
 
 py_library(
     name = "kube",

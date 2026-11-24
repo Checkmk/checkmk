@@ -6,6 +6,5 @@
 """
 Kubernetes monitoring for Checkmk.
 
-See doc/documentation/arch-comp-kube-monitoring.rst from the root of the Checkmk
-repository for a technical overview.
+See docs/arch-comp-kube-monitoring.rst for a technical overview.
 """

@@ -4,8 +4,6 @@ file:/component_owners/documentation/OWNERS_DEFINITION
 
 per-file arch-comp-gui-metrics.rst=file:/component_owners/graphing_and_metrics/OWNERS_DEFINITION
 per-file arch-comp-gui-metrics.rst=set noparent
-per-file arch-comp-kube*=file:/component_owners/plugins_kube/OWNERS_DEFINITION
-per-file arch-comp-kube*=set noparent
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

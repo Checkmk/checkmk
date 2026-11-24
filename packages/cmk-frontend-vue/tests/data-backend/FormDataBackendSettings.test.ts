@@ -164,3 +164,28 @@ test('the connection test sends the settings as entered', async () => {
     })
   )
 })
+
+test('the settings still render when a save is refused for acceptance', async () => {
+  await renderForm({
+    spec,
+    data: { features: { telemetry: DISABLED } },
+    backendValidation: [
+      {
+        location: ['implied_changes_acceptance'],
+        message: 'Check "Make these changes" to save and make them.',
+        replacement_value: {
+          implied_changes: [
+            {
+              identity: 'feature_disabled:remote1:telemetry',
+              text: 'Site remote1: "OpenTelemetry metrics" is set from "Central data backend" to "Disabled".',
+              new: false
+            }
+          ],
+          accepted: false
+        }
+      }
+    ]
+  })
+
+  expect(screen.getByRole('combobox', { name: 'OpenTelemetry metrics' })).toBeVisible()
+})

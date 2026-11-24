@@ -14,6 +14,7 @@ import type { ValidationMessages } from '@/form/private/validation'
 import CentralConnectionTest from './CentralConnectionTest.vue'
 import {
   ADDRESS_SEEN_BY_CENTRAL,
+  IMPLIED_CHANGES_ACCEPTANCE,
   centrallyLocatedFeatures,
   dictionaryOf,
   locatesAFeatureCentrally
@@ -44,7 +45,11 @@ const remoteSettings = computed(() => {
 })
 
 const settingsValidation = computed(() =>
-  props.backendValidation.filter((message) => message.location[0] !== ADDRESS_SEEN_BY_CENTRAL)
+  props.backendValidation.filter(
+    (message) =>
+      message.location[0] !== ADDRESS_SEEN_BY_CENTRAL &&
+      message.location[0] !== IMPLIED_CHANGES_ACCEPTANCE
+  )
 )
 const addressValidation = computed(() =>
   props.backendValidation.filter((message) => message.location[0] === ADDRESS_SEEN_BY_CENTRAL)

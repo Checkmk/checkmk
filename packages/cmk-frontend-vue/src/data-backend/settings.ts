@@ -9,6 +9,8 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 export const ADDRESS_SEEN_BY_CENTRAL = 'address_seen_by_central'
+// A form data key, not a form spec element: it carries the implied changes of a refused save
+export const IMPLIED_CHANGES_ACCEPTANCE = 'implied_changes_acceptance'
 
 export function centrallyLocatedFeatures(
   spec: DataBackendSettings,

@@ -41,6 +41,7 @@ from cmk.gui.form_specs.unstable import (
     Catalog,
     CommentTextArea,
     LegacyValueSpec,
+    MultipleChoiceExtended,
     SingleChoiceExtended,
 )
 from cmk.gui.htmllib.html import html
@@ -117,7 +118,7 @@ class SimpleModeType[T: Mapping[str, Any]](abc.ABC):
 
     def site_form_spec(
         self,
-    ) -> SingleChoice | MultipleChoice | SingleChoiceExtended:
+    ) -> SingleChoice | MultipleChoice | SingleChoiceExtended | MultipleChoiceExtended:
         return create_setup_site_choice()
 
     @abc.abstractmethod

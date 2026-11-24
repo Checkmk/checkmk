@@ -426,6 +426,18 @@ def test_a_forked_child_releasing_a_lock_leaves_the_lock_of_the_parent(test_file
         store.release_lock(test_file)
 
 
+def test_release_lock_already_closed(test_file: Path) -> None:
+    """Should not raise exception"""
+    # It comes before the tests starting threads: another thread could get the number of the
+    # closed fd, and release_lock() would close its file then.
+    store.acquire_lock(test_file)
+    os.close(_fd_of(test_file))
+
+    store.release_lock(test_file)
+
+    assert store.have_lock(test_file) is False
+
+
 @_in_own_thread
 def test_locked(test_file: Path) -> None:
     assert store.have_lock(test_file) is False
@@ -485,14 +497,17 @@ def test_release_lock(test_file: Path) -> None:
     assert store.have_lock(test_file) is False
 
 
-def test_release_lock_already_closed(test_file: Path) -> None:
-    """Should not raise exception"""
-    store.acquire_lock(test_file)
-    fd = store._locks._get_lock(test_file)  # noqa: SLF001
-    assert isinstance(fd, int)
-    os.close(fd)
-    store.release_lock(test_file)
-    assert store.have_lock(test_file) is False
+def _fd_of(path: Path) -> int:
+    """Return the only fd of the process for the path"""
+    fds = []
+    for name in os.listdir("/proc/self/fd"):
+        try:
+            if Path("/proc/self/fd", name).readlink() == path.resolve():
+                fds.append(int(name))
+        except OSError:
+            pass  # The fd of the listing itself is gone by now.
+    assert len(fds) == 1, f"Not exactly one fd for {path}: {fds}"
+    return fds[0]
 
 
 def test_release_all_locks(tmp_path: Path) -> None:

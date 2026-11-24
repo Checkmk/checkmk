@@ -99,12 +99,6 @@ def _set_lock(path: Path, fd: int) -> _Lock:
     return lock
 
 
-def _get_lock(path: Path) -> int | None:
-    if (lock := _acquired_locks().get(path)) is None:
-        return None
-    return lock.fd
-
-
 def _del_lock(path: Path) -> None:
     _acquired_locks().pop(path, None)
 

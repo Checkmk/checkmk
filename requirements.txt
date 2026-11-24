@@ -4236,17 +4236,17 @@ proto-plus==1.28.2 \
     #   google-cloud-monitoring
     #   google-cloud-org-policy
     #   google-cloud-os-config
-protobuf==6.33.4 \
-    --hash=sha256:0f12ddbf96912690c3582f9dffb55530ef32015ad8e678cd494312bd78314c4f \
-    --hash=sha256:1fe3730068fcf2e595816a6c34fe66eeedd37d51d0400b72fabc848811fdc1bc \
-    --hash=sha256:2fe67f6c014c84f655ee06f6f66213f9254b3a8b6bda6cda0ccd4232c73c06f0 \
-    --hash=sha256:3df850c2f8db9934de4cf8f9152f8dc2558f49f298f37f90c517e8e5c84c30e9 \
-    --hash=sha256:757c978f82e74d75cba88eddec479df9b99a42b31193313b75e492c06a51764e \
-    --hash=sha256:8f11ffae31ec67fc2554c2ef891dcb561dae9a2a3ed941f9e134c2db06657dbc \
-    --hash=sha256:918966612c8232fc6c24c78e1cd89784307f5814ad7506c308ee3cf86662850d \
-    --hash=sha256:955478a89559fa4568f5a81dce77260eabc5c686f9e8366219ebd30debf06aa6 \
-    --hash=sha256:c7c64f259c618f0bef7bee042075e390debbf9682334be2b67408ec7c1c09ee6 \
-    --hash=sha256:dc2e61bca3b10470c1912d166fe0af67bfc20eb55971dcef8dfa48ce14f0ed91
+protobuf==6.33.6 \
+    --hash=sha256:0cd27b587afca21b7cfa59a74dcbd48a50f0a6400cfb59391340ad729d91d326 \
+    --hash=sha256:77179e006c476e69bf8e8ce866640091ec42e1beb80b213c3900006ecfba6901 \
+    --hash=sha256:7d29d9b65f8afef196f8334e80d6bc1d5d4adedb449971fefd3723824e6e77d3 \
+    --hash=sha256:9720e6961b251bde64edfdab7d500725a2af5280f3f4c87e57c0208376aa8c3a \
+    --hash=sha256:a6768d25248312c297558af96a9f9c929e8c4cee0659cb07e780731095f38135 \
+    --hash=sha256:bd56799fb262994b2c2faa1799693c95cc2e22c62f56fb43af311cae45d26f0e \
+    --hash=sha256:c96c37eec15086b79762ed265d59ab204dabc53056e3443e702d2681f4b39ce3 \
+    --hash=sha256:e2afbae9b8e1825e3529f88d514754e094278bb95eadc0e199751cdd9a2e82a2 \
+    --hash=sha256:e9db7e292e0ab79dd108d7f1a94fe31601ce1ee3f7b79e0692043423020b0593 \
+    --hash=sha256:f443a394af5ed23672bc6c486be138628fbe5c651ccbc536873d7da23d1868cf
     # via
     #   -c bazel-requirements-constraints.txt
     #   -r cmk/requirements.in

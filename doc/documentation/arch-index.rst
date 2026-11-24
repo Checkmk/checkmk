@@ -16,7 +16,6 @@ Topology and interfaces
 .. toctree::
    :maxdepth: 1
 
-   arch-comp-omd.rst
    arch-comp-hosts.rst
 
 Cross cutting concerns

@@ -5,6 +5,13 @@ load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:replace_string_in_file.bzl", "replace_string_in_file")
+load("//doc/documentation:defs.bzl", "package_docs")
+
+package_docs(
+    name = "docs",
+    index = "docs/arch-comp-omd.rst",
+    visibility = ["//doc/documentation:__pkg__"],
+)
 
 exports_files([
     "skel.permissions",

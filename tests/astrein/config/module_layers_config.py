@@ -1074,6 +1074,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.diskspace.config",
         "cmk.fetchers",
         "cmk.gui",
+        "cmk.inventory",
         "cmk.messaging",
         "cmk.message_broker_certs",
         "cmk.mkp_tool",

@@ -44,7 +44,7 @@ from cmk.gui.form_specs import (
     VisitorOptions,
 )
 from cmk.gui.form_specs.unstable.catalog import Catalog
-from cmk.gui.form_specs.unstable.legacy_converter import resolve_title
+from cmk.gui.form_specs.unstable.legacy_converter import resolve_title, without_help_text
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
@@ -2194,7 +2194,7 @@ class ABCEditRuleMode(WatoMode):
                         ),
                         locked_conditions=self._locked_conditions,
                         title=title,
-                        value_parameter_form=registered_form_spec,
+                        value_parameter_form=without_help_text(registered_form_spec),
                         tree=self._tree,
                         rule_spec_name=self._rulespec.name,
                         rule_spec_item=(

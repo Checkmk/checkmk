@@ -11,6 +11,7 @@ from .transform import (
     resolve_help_text,
     resolve_title,
     TransformDataForLegacyFormatOrRecomposeFunction,
+    without_help_text,
 )
 from .tuple import Tuple
 
@@ -22,4 +23,5 @@ __all__ = [
     "password_id_to_formspec",
     "resolve_help_text",
     "resolve_title",
+    "without_help_text",
 ]

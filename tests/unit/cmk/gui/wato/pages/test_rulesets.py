@@ -4,19 +4,32 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 
 import pytest
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
+from cmk.ccc.version import Edition
 from cmk.gui.config import active_config, Config
-from cmk.gui.wato.pages.rulesets import RuleConditionRenderer
+from cmk.gui.rule_specs.loader import LoadedRuleSpec
+from cmk.gui.rule_specs.registering import register_plugin
+from cmk.gui.wato.pages.rulesets import ModeNewRule, RuleConditionRenderer
 from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
+from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.ruleset_matcher.conditions import HostOrServiceConditions
 from cmk.ruleset_matcher.matcher import TagConditionNE
 from cmk.ruleset_matcher.tags import TagConfig, TagGroupID, TagID
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import Dictionary
+from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 from cmk.web.utils.html import HTML
+from tests.testlib.common.utils import reset_registries
+from tests.unit.cmk.gui.helpers.setup_mode_test_helper import (
+    page_context,
+    render_page,
+    set_request_vars,
+)
 
 
 @pytest.fixture(name="tag_config")
@@ -525,3 +538,36 @@ class TestRuleConditionRenderer:
     )
     def test_strip_regex_end_anchor(self, pattern: str, expected: str) -> None:
         assert RuleConditionRenderer._strip_regex_end_anchor(pattern) == expected  # noqa: SLF001
+
+
+@pytest.fixture(name="special_agent_with_form_help")
+def fixture_special_agent_with_form_help() -> Iterator[str]:
+    with reset_registries([rulespec_registry]), reset_registries([rulespec_group_registry]):
+        register_plugin(
+            rulespec_registry,
+            LoadedRuleSpec(
+                rule_spec=SpecialAgent(
+                    name="form_help_test",
+                    title=Title("Form help test"),
+                    topic=Topic.GENERAL,
+                    parameter_form=lambda: Dictionary(
+                        elements={}, help_text=Help("Help of the rule set value")
+                    ),
+                ),
+                edition_only=Edition.COMMUNITY,
+            ),
+            debug=True,
+        )
+        yield "special_agents:form_help_test"
+
+
+@pytest.mark.usefixtures("with_admin_login", "frontend_vue_manifest", "patch_theme")
+def test_new_rule_page_shows_the_help_of_the_value_only_once(
+    test_edition: Edition, special_agent_with_form_help: str
+) -> None:
+    set_request_vars(varname=special_agent_with_form_help, _new_dflt_rule="SET")
+    mode = ModeNewRule(test_edition, page_context(active_config))
+
+    page = render_page(mode, active_config)
+
+    assert page.count("Help of the rule set value") == 1

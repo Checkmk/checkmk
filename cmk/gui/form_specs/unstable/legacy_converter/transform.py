@@ -6,7 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from cmk.rulesets.v1 import Help, Title
@@ -53,3 +53,15 @@ def resolve_help_text(form_spec: FormSpec[Any]) -> Help | None:
         if (help_text := fs.help_text) is not None:
             return help_text
     return None
+
+
+def without_help_text(form_spec: FormSpec[Any]) -> FormSpec[Any]:
+    if form_spec.help_text is not None:
+        return replace(form_spec, help_text=None)
+    if isinstance(form_spec, TransformDataForLegacyFormatOrRecomposeFunction):
+        wrapped = form_spec.wrapped_form_spec
+        return replace(
+            form_spec,
+            wrapped_form_spec=without_help_text(wrapped() if callable(wrapped) else wrapped),
+        )
+    return form_spec

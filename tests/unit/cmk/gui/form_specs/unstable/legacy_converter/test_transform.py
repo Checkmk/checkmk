@@ -12,6 +12,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     resolve_help_text,
     resolve_title,
     TransformDataForLegacyFormatOrRecomposeFunction,
+    without_help_text,
 )
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import FormSpec, Integer
@@ -24,12 +25,14 @@ def _identity(value: object) -> object:
 def _transform(
     wrapped_form_spec: FormSpec[Any] | Callable[[], FormSpec[Any]],
     title: Title | None = None,
+    help_text: Help | None = None,
 ) -> TransformDataForLegacyFormatOrRecomposeFunction:
     return TransformDataForLegacyFormatOrRecomposeFunction(
         wrapped_form_spec=wrapped_form_spec,
         from_disk=_identity,
         to_disk=_identity,
         title=title,
+        help_text=help_text,
     )
 
 
@@ -84,3 +87,30 @@ def test_resolve_evaluates_lazy_wrapped_form_spec_only_when_needed() -> None:
 
     assert resolve_title(_transform(wrapped_form_spec)) == Title("Wrapped")
     assert len(evaluated) == 1
+
+
+def test_without_help_text_keeps_the_title_of_a_plain_form_spec() -> None:
+    spec = Integer(title=Title("Plain"), help_text=Help("Plain help"))
+
+    stripped = without_help_text(spec)
+
+    assert resolve_help_text(stripped) is None
+    assert resolve_title(stripped) == Title("Plain")
+
+
+def test_without_help_text_looks_through_transforms() -> None:
+    spec = _transform(_transform(Integer(help_text=Help("Innermost help"))))
+
+    assert resolve_help_text(without_help_text(spec)) is None
+
+
+def test_without_help_text_strips_only_the_help_text_that_is_resolved() -> None:
+    spec = _transform(Integer(help_text=Help("Wrapped help")), help_text=Help("Explicit help"))
+
+    assert resolve_help_text(without_help_text(spec)) == Help("Wrapped help")
+
+
+def test_without_help_text_looks_through_lazy_wrapped_form_spec() -> None:
+    spec = _transform(lambda: Integer(help_text=Help("Lazy help")))
+
+    assert resolve_help_text(without_help_text(spec)) is None

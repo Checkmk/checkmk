@@ -493,7 +493,7 @@ def run_via_checkhelper(
     component test; the production parser is the shared `CheckhelperFrame` (M1).
     The command must not contain single quotes.
     """
-    stdin = f"{host}\n{command}\n{timeout}\n"
+    stdin = f"{host}\n{len(command.encode())}:{command}\n{timeout}\n"
     exit_code, raw = _exec(container, ["sh", "-c", f"printf '%s' '{stdin}' | {RELAY_CHECKHELPER}"])
     if exit_code != 0:
         raise RuntimeError(f"checkhelper process failed (exit {exit_code}): {raw!r}")

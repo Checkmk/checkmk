@@ -19,6 +19,7 @@ from dateutil.relativedelta import relativedelta
 
 from cmk.crypto.certificate import (
     Certificate,
+    CertificateDER,
     CertificatePEM,
     CertificateWithPrivateKey,
     InvalidExpiryError,
@@ -183,6 +184,28 @@ def test_loading_parts_from_combined_file_content(
 
     assert Certificate.load_pem(CertificatePEM(combined)).dump_pem().str == cert_pem
     assert PrivateKey.load_pem(PlaintextPrivateKeyPEM(combined)).dump_pem(None).str == key_pem
+
+
+def test_loading_der() -> None:
+    der = CertificateDER.from_base64(
+        # openssl req -x509 -newkey rsa:1024 -sha256 -nodes -keyout key.pem -outform DER -out cert.der -days 365
+        """MIICjDCCAfWgAwIBAgIUKsK1usYQU8JcM3EfKUiHM3rRWsAwDQYJKoZIhvcNAQELBQAwWDELMAkG
+A1UEBhMCREUxEzARBgNVBAgMCld1bmRlcmxhbmQxGTAXBgNVBAoMEGNtay5jcnlwdG8udGVzdHMx
+GTAXBgNVBAMMEGNtay5jcnlwdG8udGVzdHMwHhcNMjYxMTI1MTQwMjAwWhcNMjcxMTI1MTQwMjAw
+WjBYMQswCQYDVQQGEwJERTETMBEGA1UECAwKV3VuZGVybGFuZDEZMBcGA1UECgwQY21rLmNyeXB0
+by50ZXN0czEZMBcGA1UEAwwQY21rLmNyeXB0by50ZXN0czCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
+gYkCgYEArEAh0XA/smwkTVHtZfoubtmQ1LCv/fRoGmpJ7byDNMm0r7Qlal4wO2Hfzw2jIFI4jgxh
+SGcJcbp6ivq+XajaqvCEwI+ya6diX1trsgOWlCTK7yT1ubEKmLAuv7ljw3tQ40iVyEv2c+Zx6HyJ
+b83fzW0WEW6Obub1ISgqfkIFe2ECAwEAAaNTMFEwHQYDVR0OBBYEFHNEbl2Q729h1efNO3Y1e/C2
+ohJZMB8GA1UdIwQYMBaAFHNEbl2Q729h1efNO3Y1e/C2ohJZMA8GA1UdEwEB/wQFMAMBAf8wDQYJ
+KoZIhvcNAQELBQADgYEApDhmsiWQxdo86YWHNJl73IoO2x2ThzyliSN2a9we9N9TTnlXHA4oQXtM
+mo9WbAN1KF2kPtJ9kSdAnN6NZuSqkPtg01O5xcGRNwlzJm9FS9/Q7ApWc4BjCKFkI7xMVdcIb/bm
+zl7psR5aBco94r1I27J0zubj5u/+LqVLrkRGp2Q=
+"""
+    )
+    cert = Certificate.load_der(der)
+
+    assert cert.common_name == "cmk.crypto.tests"
 
 
 def test_verify_is_signed_by() -> None:

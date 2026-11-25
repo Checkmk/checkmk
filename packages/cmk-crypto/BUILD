@@ -18,6 +18,7 @@ py_library(
         "cmk/crypto/__init__.py",
         "cmk/crypto/certificate.py",
         "cmk/crypto/deprecated.py",
+        "cmk/crypto/der.py",
         "cmk/crypto/hash.py",
         "cmk/crypto/issued_certificates.py",
         "cmk/crypto/keys.py",

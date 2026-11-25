@@ -48,6 +48,7 @@ from cryptography.hazmat import primitives as pyca_primitives
 from dateutil.relativedelta import relativedelta
 
 from . import MKCryptoException
+from .der import _DERData, DERDecodingError
 from .hash import HashAlgorithm
 from .issued_certificates import IssuedCertificateEntry
 from .keys import (
@@ -69,6 +70,10 @@ from .x509 import (
 
 class CertificatePEM(_PEMData):
     """A certificate in pem format"""
+
+
+class CertificateDER(_DERData):
+    """A certificate in X.690 DER format"""
 
 
 class InvalidExpiryError(MKCryptoException):
@@ -473,6 +478,24 @@ class Certificate:
 
         except ValueError as exc:
             raise PEMDecodingError("Unable to load certificate.") from exc
+
+    @classmethod
+    def load_der(cls, der_data: CertificateDER) -> Certificate:
+        try:
+            with warnings_module.catch_warnings(record=True, category=UserWarning):
+                cert = cls(pyca_x509.load_der_x509_certificate(der_data.bytes))
+
+                if cert.serial_number < 0:
+                    raise NegativeSerialException(
+                        f"Certificate with a negative serial number {cert.serial_number!r}",
+                        cert.subject.rfc4514_string(),
+                        cert.show_fingerprint(),
+                    )
+
+            return cert
+
+        except ValueError as exc:
+            raise DERDecodingError("Unable to load certificate.") from exc
 
     def dump_pem(self) -> CertificatePEM:
         return CertificatePEM(self._cert.public_bytes(pyca_primitives.serialization.Encoding.PEM))

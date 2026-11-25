@@ -70,8 +70,11 @@ point downwards only:
 Some collaborators are injected at wiring time instead of imported, so the
 domain stays independent of them: the classic command registry, the Setup
 folder titles and the legacy host menus. Wiring is done in
-``cmk.gui.common_registration``. Action menus and icons come from the same
-icon registry that the classic views use, so both generations stay consistent.
+``cmk.gui.common_registration``. The other direction is wired there, too:
+the global search gets the links of its monitoring results from the router,
+so that ``cmk.gui.search`` does not import ``cmk.gui.monitor``. Action menus
+and icons come from the same icon registry that the classic views use, so
+both generations stay consistent.
 
 The Vue applications share one base for all tables
 (``MonitoringService``): it owns rows, search, filter, sorting, column
@@ -99,14 +102,19 @@ Interfaces
     (``cmk/gui/monitor/services/_pages/_monitor_all_services.py``) and
     ``monitor_host_services``
     (``cmk/gui/monitor/services/_pages/_monitor_host_services.py``).
-  * The router ``monitor_search`` (``cmk/gui/monitor/router``): it renders
-    nothing itself, but parses a query of the global search with
-    ``cmk.gui.search.spec`` and redirects to the monitoring page that can
-    show it, with the query turned into the page's filters. A query without
-    prefix is tried in the order of the classic quicksearch as a filter on
-    host name, alias, address and folder title; the first that finds hosts
-    is opened, or the search box of "All hosts" when none does. An invalid
-    query goes to the search box as typed.
+
+* The router (``cmk/gui/monitor/router``), the monitoring side of the global
+  search. It decides where a search lands in the monitoring pages, whether
+  the user presses Enter or clicks a result, in two parts:
+
+  * The page ``monitor_search``, for pressing Enter: it renders nothing
+    itself, but parses a query of the global search with
+    ``cmk.gui.search.spec`` and redirects to the monitoring page that can show
+    it, with the query turned into the page's filters. A query without prefix
+    is tried in the order of the classic quicksearch as a filter on host name,
+    alias, address and folder title; the first that finds hosts is opened, or
+    the search box of "All hosts" when none does. An invalid query goes to the
+    search box as typed.
     One that no page can filter on yet goes to the legacy search of the
     classic views (``search_open.py``) and is logged by its prefixes and the
     reason, not by its values; this keeps ``search_open.py`` needed as a
@@ -115,6 +123,15 @@ Interfaces
     ``HostTable.first_hosts`` of ``cmk.gui.monitor.hosts.table`` how many
     hosts "All hosts" would list for it; for a single host, it opens
     "Services of host" for that host with the host panel open instead.
+  * The result links (``monitor_result_url``), for clicking a result in the
+    list of the global search: a host opens "Services of host" with the host
+    panel open, a service opens "Services of host" of its host with the
+    service panel open. ``cmk.gui.search`` offers this as an injection
+    point (``MonitoringResultUrl`` with the targets of
+    ``cmk.gui.search.livestatus_links``) and keeps the link to the classic view
+    for a result no monitoring page can show yet, such as host and service
+    groups. The sidebar snapin "Quick search" keeps linking to the classic
+    views.
 
 * Internal REST endpoints below ``/monitor/`` (see the *Checkmk Internal*
   documentation of the REST API).
@@ -177,8 +194,9 @@ entry point into the monitoring pages, too: pressing Enter with the
 monitoring or "all" search selected opens ``monitor_search.py`` with the
 query, and the router picks the page. A query no monitoring page can filter
 on yet goes on to the legacy search of the classic views (``search_open.py``),
-which the sidebar snapin "Quick search" still opens directly. There is no
-setting to switch back yet.
+which the sidebar snapin "Quick search" still opens directly. Clicking a
+host or service in the result list of the global search opens the monitoring
+pages as well. There is no setting to switch back yet.
 
 Risks and technical debts
 =========================

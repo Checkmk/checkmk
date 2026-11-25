@@ -55,6 +55,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/gui:core_toolkit",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
         "//packages/cmk-web/cmk/web/utils",
@@ -108,6 +109,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":livestatus_links",
         ":matchers",
         ":permissions",
         "//cmk/gui:core_toolkit",

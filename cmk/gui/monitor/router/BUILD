@@ -14,6 +14,7 @@ py_library(
         "//cmk/gui/monitor/hosts",
         "//cmk/gui/monitor/services",
         "//cmk/gui/monitor/setup_folders",
+        "//cmk/gui/search:livestatus_links",
         "//cmk/gui/search/spec",
         "//packages/cmk-ruleset-matcher",
     ],

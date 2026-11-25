@@ -69,4 +69,18 @@ def host_services_url(
     )
     if not open_host_panel:
         return url
-    return f"{url}#{urlencode({'host': host_name, 'site': site_id})}"
+    return _with_panel(url, {"host": host_name, "site": site_id})
+
+
+def host_service_panel_url(request: Request, *, host_name: str, site_id: str, service: str) -> str:
+    """Builds Services of host for one host with the panel of one of its services opened.
+
+    The panel is named in the fragment by the keys SERVICE_SLIDE_IN in HostServicesApp.vue reads.
+    """
+    return _with_panel(
+        host_services_url(request, host_name=host_name, site_id=site_id), {"service": service}
+    )
+
+
+def _with_panel(url: str, panel: dict[str, str]) -> str:
+    return f"{url}#{urlencode(panel)}"

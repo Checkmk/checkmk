@@ -51,6 +51,7 @@ from cmk.gui.graphing.openapi import register as register_graphing_openapi_endpo
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.monitor.command import downtime_recurrences, monitor_commands
 from cmk.gui.monitor.hosts import registration as monitor_hosts_registration
+from cmk.gui.monitor.router import monitor_result_url
 from cmk.gui.monitor.router import registration as monitor_router_registration
 from cmk.gui.monitor.services import registration as monitor_services_registration
 from cmk.gui.monitor.services._page_menu import host_menus
@@ -416,6 +417,7 @@ def register(
         page_registry,
         job_registry,
         match_plugin_registry,
+        monitor_result_url,
     )
     register_oauth2_connections(
         mode_registry, page_registry, main_module_registry, permission_registry

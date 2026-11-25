@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from urllib.parse import urlsplit
+
 import pytest
 from werkzeug.test import create_environ
 
@@ -16,6 +18,7 @@ from cmk.gui.search._pages import (
     _UNIFIED_SEARCH_LIVESTATUS_ORDER,
     PageUnifiedSearch,
 )
+from cmk.gui.search.livestatus_links import ResultHost, ResultTarget
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
@@ -36,9 +39,18 @@ def _counts(monitoring: int) -> UnifiedSearchResultCounts:
     return UnifiedSearchResultCounts(total=monitoring, setup=0, monitoring=monitoring, customize=0)
 
 
+def _no_monitoring_page(_request: Request, _target: ResultTarget) -> str | None:
+    return None
+
+
+def _monitoring_page(_request: Request, target: ResultTarget) -> str | None:
+    """Only hosts have a monitoring page"""
+    return "monitor.py" if isinstance(target, ResultHost) else None
+
+
 @pytest.fixture(name="page")
 def fixture_page() -> PageUnifiedSearch:
-    return PageUnifiedSearch()
+    return PageUnifiedSearch(_no_monitoring_page)
 
 
 class TestParseProviderQueryParam:
@@ -219,6 +231,29 @@ class TestPage:
         assert result["counts"]["customize"] == 0
         assert result["counts"]["monitoring"] == len(result["results"])
         assert result["messages"] == []
+
+    @staticmethod
+    def _monitored_links(result: PageResult) -> dict[str, str]:
+        """The path each result from livestatus links to, by its title"""
+        assert isinstance(result, dict)
+        return {
+            item["title"]: urlsplit(item["target"]["url"]).path
+            for item in result["results"]
+            if item["topic"] != _MENU_TOPIC
+        }
+
+    def test_each_result_links_to_its_monitoring_page_or_else_its_classic_view(
+        self,
+        load_config: Config,
+        monitoring_sites: MockLiveStatusConnection,
+    ) -> None:
+        _expect_monitoring_queries(monitoring_sites, "o")
+        ctx = self._context(load_config, "q=o&provider=monitoring")
+
+        with monitoring_sites(expect_status_query=True):
+            result = PageUnifiedSearch(_monitoring_page).page(ctx)
+
+        assert self._monitored_links(result) == {"myhost": "monitor.py", "CPU load": "view.py"}
 
     def test_the_host_alias_match_is_reported_under_its_own_topic(
         self,

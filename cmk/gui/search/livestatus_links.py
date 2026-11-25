@@ -10,6 +10,7 @@ from typing import Literal, Protocol
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.http import Request
 from cmk.web.utils.urls import HTTPVariable
 
 
@@ -43,3 +44,8 @@ class LivestatusMatch:
 
 class ResultUrlBuilder(Protocol):
     def __call__(self, result: LivestatusMatch) -> str: ...
+
+
+class MonitoringResultUrl(Protocol):
+    def __call__(self, request: Request, target: ResultTarget, /) -> str | None:
+        """The link of the target on the monitoring pages, or None if no page can show it."""

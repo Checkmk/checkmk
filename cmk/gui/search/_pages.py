@@ -23,6 +23,7 @@ from ._collapsing import get_collapser
 from ._engines._livestatus import legacy_result_urls, LivestatusSearchEngine
 from ._engines._redis import RedisSearchEngine
 from ._unified import UnifiedSearch
+from .livestatus_links import LivestatusMatch, MonitoringResultUrl, ResultUrlBuilder
 from .permissions import (
     category_permissions_handler_registry,
     search_permissions_handler_registry,
@@ -44,6 +45,9 @@ _UNIFIED_SEARCH_LIVESTATUS_ORDER: Final[list[tuple[str, str]]] = [
 
 
 class PageUnifiedSearch(AjaxPage):
+    def __init__(self, monitoring_url: MonitoringResultUrl) -> None:
+        self._monitoring_url = monitoring_url
+
     @override
     def page(self, ctx: PageContext) -> PageResult:
         query = ctx.request.get_str_input_mandatory("q")
@@ -65,7 +69,7 @@ class PageUnifiedSearch(AjaxPage):
             ),
             livestatus_engine=LivestatusSearchEngine(
                 ctx.config,
-                result_url_builder=legacy_result_urls(ctx.request),
+                result_url_builder=self._result_urls(ctx),
                 row_limit=_LIVESTATUS_ENGINE_ROW_LIMIT,
                 search_order=_UNIFIED_SEARCH_LIVESTATUS_ORDER,
             ),
@@ -92,6 +96,17 @@ class PageUnifiedSearch(AjaxPage):
                 messages=messages,
             )
         )
+
+    def _result_urls(self, ctx: PageContext) -> ResultUrlBuilder:
+        """Links a result to its monitoring page, or to its classic view when no monitoring page
+        can show it."""
+        classic_url = legacy_result_urls(ctx.request)
+
+        def build(result: LivestatusMatch) -> str:
+            url = self._monitoring_url(ctx.request, result.target)
+            return classic_url(result) if url is None else url
+
+        return build
 
     def _parse_provider_query_param(self, request: Request) -> ProviderName | None:
         if (provider := request.get_str_input("provider")) is None or provider not in ProviderName:

@@ -303,6 +303,7 @@ py_cmk_test(
         "//cmk/gui/monitor/shared",
         "//cmk/gui/monitor/table_widget",
         "//cmk/gui/nagvis",
+        "//cmk/gui/search:livestatus_links",
         "//cmk/gui/search/spec",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",

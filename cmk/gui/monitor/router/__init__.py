@@ -13,8 +13,13 @@
 
 An invalid query goes to the search box of All hosts as typed. One no page can filter on yet
 goes to the legacy search ``search_open.py`` and is logged by its prefixes and the reason.
+
+``monitor_result_url`` links host and service results of the global search to Services of their
+host, with the host or service panel open. It returns None for targets no monitoring page shows
+yet, such as groups.
 """
 
 from ._page import FirstHosts, FoundHost, MonitorRouterPage, route
+from ._result_urls import monitor_result_url
 
-__all__ = ["FirstHosts", "FoundHost", "MonitorRouterPage", "route"]
+__all__ = ["FirstHosts", "FoundHost", "MonitorRouterPage", "monitor_result_url", "route"]

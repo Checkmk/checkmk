@@ -280,7 +280,7 @@ describe('MapService', () => {
     server.use(
       http.put('*/api/internal/objects/map/:name', () =>
         HttpResponse.json(
-          { title: 'Invalid Livestatus filter', detail: "Object 'g': unknown column 'nme'" },
+          { title: 'Map too large', detail: 'A map takes at most 4 MiB.' },
           { status: 400 }
         )
       )
@@ -301,7 +301,7 @@ describe('MapService', () => {
     server.use(
       http.put('*/api/internal/objects/map/:name', () =>
         HttpResponse.json(
-          { title: 'Invalid Livestatus filter', detail: "Object 'g': unknown column 'nme'" },
+          { title: 'Map too large', detail: 'A map takes at most 4 MiB.' },
           { status: 400 }
         )
       )
@@ -312,7 +312,7 @@ describe('MapService', () => {
 
     await vi.waitFor(() => expect(store.saveError.value).not.toBeNull(), { timeout: 2000 })
 
-    expect(store.saveError.value).toEqual({ text: "Object 'g': unknown column 'nme'" })
+    expect(store.saveError.value).toEqual({ text: 'A map takes at most 4 MiB.' })
     expect(store.error.value).toBeNull()
   })
 

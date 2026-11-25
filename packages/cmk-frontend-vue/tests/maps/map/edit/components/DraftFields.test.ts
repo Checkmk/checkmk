@@ -60,7 +60,7 @@ describe('DraftFields', () => {
     // The service was picked for the previous host; the new one may not run it.
     const draft = aServiceDraft()
     render(DraftFields, {
-      props: { draft, suggestions: noSuggestions(), connectionId: 'local' },
+      props: { draft, suggestions: noSuggestions(), connectionId: 'local', filterRefusal: null },
       global: mapsGlobal()
     })
 

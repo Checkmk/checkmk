@@ -78,6 +78,17 @@ function fieldNameOf(loc: (string | number)[]): string {
   return identifiers[identifiers.length - 1] ?? ''
 }
 
+/** The field errors of a Checkmk REST error body, none for a body shaped otherwise. */
+function fieldErrors(body: unknown): PydanticError[] {
+  const fields = (body as { fields?: unknown } | null)?.fields
+  if (typeof fields !== 'object' || fields === null) {
+    return []
+  }
+  return Object.values(fields as Record<string, unknown>)
+    .map((entry) => entry as PydanticError)
+    .filter((e) => Array.isArray(e.loc) && typeof e.msg === 'string')
+}
+
 /**
  * A Checkmk REST error lists the fields it refused under ``fields``, each with
  * the value that was refused. Naming that value is what makes the difference
@@ -87,16 +98,8 @@ function fieldNameOf(loc: (string | number)[]): string {
  * fall back to its own message.
  */
 export function describeFieldProblems(body: unknown): string {
-  const fields = (body as { fields?: unknown } | null)?.fields
-  if (typeof fields !== 'object' || fields === null) {
-    return ''
-  }
   const byField = new Map<string, string>()
-  for (const entry of Object.values(fields as Record<string, unknown>)) {
-    const { loc, msg, input } = entry as PydanticError
-    if (typeof msg !== 'string' || !Array.isArray(loc)) {
-      continue
-    }
+  for (const { loc, msg, input } of fieldErrors(body)) {
     const field = fieldNameOf(loc)
     if (byField.has(field)) {
       continue
@@ -105,4 +108,25 @@ export function describeFieldProblems(body: unknown): string {
     byField.set(field, field ? `${field}: ${cleanMsg(msg)}${got}` : `${cleanMsg(msg)}${got}`)
   }
   return [...byField.values()].join(' ')
+}
+
+/** What the server said about a Livestatus filter, and the filter it said it about. */
+export interface FilterRefusal {
+  filter: string
+  message: string
+}
+
+/**
+ * What a Checkmk REST error says about the Livestatus filter of the map object
+ * at *objectIndex*, which a form shows at that field rather than for the whole
+ * object.
+ */
+export function objectFilterProblem(body: unknown, objectIndex: number): string | null {
+  for (const { loc, msg } of fieldErrors(body)) {
+    const at = loc.indexOf('objects')
+    if (at >= 0 && loc[at + 1] === objectIndex && loc.at(-1) === 'object_filter') {
+      return cleanMsg(msg)
+    }
+  }
+  return null
 }

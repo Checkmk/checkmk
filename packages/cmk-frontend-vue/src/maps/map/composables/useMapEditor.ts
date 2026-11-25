@@ -10,7 +10,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 import { computed, onScopeDispose, reactive, ref, toRaw, watch } from 'vue'
 
-import { gridIdOfMember, isGridMemberId } from '@/maps/api/wire'
+import { gridIdOfMember, isGridMemberId, savedIndexOf } from '@/maps/api/wire'
 import { isDraftPlaceable } from '@/maps/map/edit/draftFacts'
 import { roundCoordinate } from '@/maps/map/geo/coordinates'
 import {
@@ -23,6 +23,7 @@ import {
   mapGrids
 } from '@/maps/map/static/gridMembers'
 import { useMaps, useSettings, useToast } from '@/maps/services/context'
+import { type ObjectRefusal, objectRefusalOf } from '@/maps/shared/errorText'
 import type { MapElement, ObjectType } from '@/maps/types/api'
 import { newMapElement } from '@/maps/utils/model'
 import { getEffectiveObjectType, getMapElementIdentifier } from '@/maps/utils/naming'
@@ -621,6 +622,10 @@ export function useMapEditor() {
   // Counts the objects placed from the draft. Placing can start and end in the
   // same tick (a geo-located host), so watchers can't rely on `placing` flipping.
   const placedCount = ref(0)
+  /** Why the server refused the object last placed; the draft stays to correct it. */
+  const placeRefusal = ref<ObjectRefusal | null>(null)
+  /** Set while the object just placed is being saved; until then it is not yet placed. */
+  const savingPlaced = ref(false)
   const draft = reactive<NewObjectDraft>({
     type: '',
     host_name: '',
@@ -637,10 +642,11 @@ export function useMapEditor() {
   })
 
   function startPlacing() {
-    if (!draft.type) {
+    if (!draft.type || savingPlaced.value) {
       return
     }
     placing.value = true
+    placeRefusal.value = null
     selectObject(null)
   }
 
@@ -656,6 +662,7 @@ export function useMapEditor() {
     () => draft.type,
     () => {
       placing.value = false
+      placeRefusal.value = null
     }
   )
 
@@ -791,15 +798,32 @@ export function useMapEditor() {
     await _persistNewObject(obj)
   }
 
-  // Shared persist step for both placement paths (pixel + geo).
-  function _persistNewObject(obj: MapElement) {
-    if (mapsStore.currentMap.value) {
-      mapsStore.currentMap.value.objects.push(obj)
+  // Shared persist step for both placement paths (pixel + geo). Saved at once,
+  // so a refused object goes back to the draft instead of staying unsaved.
+  async function _persistNewObject(obj: MapElement) {
+    savingPlaced.value = true
+    try {
+      // What else is still waiting goes first, so a failure below is this object's.
+      await mapsStore.flushSave()
+      const current = mapsStore.currentMap.value
+      if (!current) {
+        return
+      }
+      current.objects.push(obj)
+      mapsStore.scheduleSave()
+      const failure = await mapsStore.flushSave({ quiet: true })
+      if (failure !== null) {
+        const index = savedIndexOf(current, obj.id)
+        current.objects = current.objects.filter((o) => o.id !== obj.id)
+        placeRefusal.value = objectRefusalOf(failure, index, obj.object_filter ?? '')
+        return
+      }
+      selectObject(obj.id)
+      resetDraft()
+      placedCount.value++
+    } finally {
+      savingPlaced.value = false
     }
-    mapsStore.scheduleSave()
-    selectObject(obj.id)
-    resetDraft()
-    placedCount.value++
   }
 
   async function placeAtLatLng(lat: number, lng: number) {
@@ -1073,7 +1097,9 @@ export function useMapEditor() {
     startLineDrag,
     updateObjectProperties,
     placing,
+    savingPlaced,
     placedCount,
+    placeRefusal,
     draft,
     resetDraft,
     startPlacing,

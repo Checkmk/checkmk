@@ -20,7 +20,6 @@ import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import {
   computed,
   defineAsyncComponent,
@@ -31,6 +30,7 @@ import {
   watch
 } from 'vue'
 
+import { savedIndexOf } from '@/maps/api/wire'
 import BulkAckModal from '@/maps/map/commands/BulkAckModal.vue'
 import MapGridPill from '@/maps/map/components/MapGridPill.vue'
 import MapKioskExit from '@/maps/map/components/MapKioskExit.vue'
@@ -75,7 +75,7 @@ import {
   useToast
 } from '@/maps/services/context'
 import MapsConfirmDialog from '@/maps/shared/components/MapsConfirmDialog.vue'
-import { errorText, saveFailureText } from '@/maps/shared/errorText'
+import { type ObjectRefusal, errorText, objectRefusalOf } from '@/maps/shared/errorText'
 import type { CommandTarget, MapElement, MapRead, ObjectState } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { resolveCheckmkUrl } from '@/maps/utils/deploymentBase'
@@ -274,7 +274,7 @@ const selectedObjectAnchor = computed<AnchorRect | null>(() => {
 
 const propsModalObject = ref<MapElement | null>(null)
 /** Why the properties could not be saved, shown on the card that is kept open. */
-const propsSaveError = ref<TranslatedString | null>(null)
+const propsRefusal = ref<ObjectRefusal | null>(null)
 
 // A save in the background that fails leaves the map as it is on screen.
 watch(
@@ -374,7 +374,7 @@ function onSaveGeoMapViewport(at: GeoMapViewport) {
 function _closePropsModal() {
   propsModalObject.value = null
   justPlacedId.value = null
-  propsSaveError.value = null
+  propsRefusal.value = null
 }
 
 /**
@@ -395,7 +395,7 @@ async function onPropsModalSave(updates: Record<string, unknown>) {
     _closePropsModal()
     return
   }
-  propsSaveError.value = null
+  propsRefusal.value = null
   // What else is still waiting goes first, so a failure below is this card's.
   await mapsStore.flushSave()
   const restore = editor.updateObjectProperties(object.id, updates)
@@ -404,7 +404,10 @@ async function onPropsModalSave(updates: Record<string, unknown>) {
     // Taken back, so the next save does not carry what was refused; the card
     // keeps the input to correct.
     restore()
-    propsSaveError.value = saveFailureText(failure, _t('Save failed'), object.id)
+    const map = mapsStore.currentMap.value
+    const index = map ? savedIndexOf(map, object.id) : -1
+    const filter = typeof updates.object_filter === 'string' ? updates.object_filter : ''
+    propsRefusal.value = objectRefusalOf(failure, index, filter)
     return
   }
   justPlacedId.value = null
@@ -1081,7 +1084,8 @@ function closeBulkAckModal(sent: boolean): void {
         :map-default-z="mapConfig?.default_z ?? 1"
         :checkmk-url="checkmkUrl"
         :avoid="selectedObjectAnchor"
-        :save-error="propsSaveError"
+        :save-error="propsRefusal?.text ?? null"
+        :filter-refusal="propsRefusal?.atFilter ?? null"
         @close="onPropsModalClose"
         @save="onPropsModalSave"
         @delete="onPropsModalDelete"

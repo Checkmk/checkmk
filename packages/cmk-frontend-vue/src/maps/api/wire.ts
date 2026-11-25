@@ -251,6 +251,16 @@ function viewToWire(view: MapView): MapViewWire {
 // can't resolve them) and the transient ``auto:*`` objects (geo map hosts, grid
 // members), then convert each remaining flat object (and the view) to the nested
 // wire shape the REST API expects. ``site_id`` is dropped by ``objectToWire`` (not a wire field).
+/** Whether the map's saved config holds the object, rather than the daemon or the view. */
+function isSavedObject(o: MapElement): o is MapElement & { type: Exclude<ObjectType, 'site'> } {
+  return o.type !== 'site' && !isAutoObjectId(o.id)
+}
+
+/** Where the object is in the saved config, which is how the API names it in an error. */
+export function savedIndexOf(map: MapConfig, objectId: string): number {
+  return map.objects.filter(isSavedObject).findIndex((o) => o.id === objectId)
+}
+
 export function toWireConfig(map: MapConfig): MapConfigWire {
   return {
     // The API requires the fields the daemon's model defaults, so they are
@@ -260,12 +270,7 @@ export function toWireConfig(map: MapConfig): MapConfigWire {
     // The API requires this one; the daemon model defaults it, so an unset value
     // has to be spelled out rather than omitted.
     icon_size: map.icon_size ?? null,
-    objects: map.objects
-      .filter(
-        (o): o is MapElement & { type: Exclude<ObjectType, 'site'> } =>
-          o.type !== 'site' && !isAutoObjectId(o.id)
-      )
-      .map(objectToWire),
+    objects: map.objects.filter(isSavedObject).map(objectToWire),
     view: viewToWire(map.view)
   }
 }

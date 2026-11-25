@@ -4,14 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from 'vitest'
+import { CmkApiError } from 'cmk-ui-library/lib/error'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { type MapEditor, useMapEditor } from '@/maps/map/composables/useMapEditor'
 import { GRID_MAX_PER_MAP } from '@/maps/map/static/gridMembers'
 import type { MapConfig, MapElement } from '@/maps/types/api'
 
-import { aMap } from '../../support/fixtures'
+import { aMap, anObject } from '../../support/fixtures'
 import { fakeMapsServices, runWithServices } from '../../support/services'
 
 function makeObject(o: Partial<MapElement> & { id: string; type: string }): MapElement {
@@ -171,6 +172,60 @@ describe('useMapEditor placing — services resolved outside setup', () => {
 
     expect(map.objects).toHaveLength(1)
     expect(map.objects[0]).toMatchObject({ type: 'host', lat: 48.1, lng: 11.6 })
+  })
+
+  it('keeps the draft and leaves the object out when the server refuses it', async () => {
+    const services = fakeMapsServices()
+    const map = aMap({ objects: [] })
+    services.maps.currentMap.value = map
+    vi.mocked(services.apis.mapConfig.update).mockRejectedValueOnce(
+      new CmkApiError('HTTP 400', null, '', 400, { detail: 'A map takes at most 4 MiB.' })
+    )
+    const editor = runWithServices(services, () => useMapEditor())
+
+    editor.draft.type = 'grid'
+    editor.draft.object_filter = 'Filter: nosuch = x\n'
+    editor.startPlacing()
+    await editor.placeAt(120, 80)
+
+    expect(map.objects).toEqual([])
+    expect(editor.draft).toMatchObject({ type: 'grid', object_filter: 'Filter: nosuch = x\n' })
+    expect(editor.placedCount.value).toBe(0)
+    expect(editor.placeRefusal.value).toEqual({
+      atFilter: null,
+      text: 'A map takes at most 4 MiB.'
+    })
+  })
+
+  it('tells a refused filter at the filter, found among the objects the map saves', async () => {
+    const services = fakeMapsServices()
+    // Shown on the map, but left out of what is saved and so of the server's count.
+    services.maps.currentMap.value = aMap({
+      objects: [anObject({ id: 'auto:web01', type: 'host', host_name: 'web01' })]
+    })
+    vi.mocked(services.apis.mapConfig.update).mockRejectedValueOnce(
+      new CmkApiError('HTTP 400', null, '', 400, {
+        detail: 'These fields have problems: body.config.objects.0.binding.object_filter',
+        fields: {
+          'body.config.objects.0.binding.object_filter': {
+            type: 'value_error',
+            msg: "unknown column 'nosuch'",
+            loc: ['body', 'config', 'objects', 0, 'binding', 'object_filter']
+          }
+        }
+      })
+    )
+    const editor = runWithServices(services, () => useMapEditor())
+
+    editor.draft.type = 'grid'
+    editor.draft.object_filter = 'Filter: nosuch = x\n'
+    editor.startPlacing()
+    await editor.placeAt(120, 80)
+
+    expect(editor.placeRefusal.value).toEqual({
+      atFilter: { filter: 'Filter: nosuch = x\n', message: "unknown column 'nosuch'" },
+      text: null
+    })
   })
 })
 

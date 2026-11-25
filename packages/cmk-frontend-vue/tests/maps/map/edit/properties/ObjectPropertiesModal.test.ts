@@ -279,6 +279,17 @@ describe('ObjectPropertiesModal – save payload', () => {
     ).toBeInTheDocument()
   })
 
+  it('says at the filter why the server refused it, until it is changed', async () => {
+    const user = userEvent.setup()
+    renderModal(obj({ type: 'grid', object_filter: 'Filter: nosuch = x' }), {
+      filterRefusal: { filter: 'Filter: nosuch = x', message: "unknown column 'nosuch'" }
+    })
+
+    expect(screen.getByText("unknown column 'nosuch'")).toBeInTheDocument()
+    await user.type(screen.getByRole('textbox', { name: 'Livestatus filter' }), 'y')
+    expect(screen.queryByText("unknown column 'nosuch'")).not.toBeInTheDocument()
+  })
+
   it('saves a line whose filter from an earlier type no longer shows', async () => {
     const user = userEvent.setup()
     const { emitted } = renderModal(

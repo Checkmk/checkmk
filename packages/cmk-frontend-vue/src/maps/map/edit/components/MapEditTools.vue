@@ -127,6 +127,9 @@ const snapEntries = computed<MapEditMenuEntry[]>(() =>
         <EditPanel
           v-model:draft="editor.draft"
           :placing="editor.placing.value"
+          :saving="editor.savingPlaced.value"
+          :error="editor.placeRefusal.value?.text ?? null"
+          :filter-refusal="editor.placeRefusal.value?.atFilter ?? null"
           :connection-id="connectionId"
           :offers-object-grid="offersObjectGrid"
           @start-placing="emit('start-placing')"

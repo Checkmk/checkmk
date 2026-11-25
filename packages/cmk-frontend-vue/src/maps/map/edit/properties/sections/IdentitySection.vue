@@ -40,6 +40,7 @@ import MapsTextArea from '@/maps/shared/components/MapsTextArea.vue'
 import { noAggregationsHint } from '@/maps/shared/suggestions'
 import type { MapElement, MonitoredObjectType, ObjectState } from '@/maps/types/api'
 import { dyngroupTypeOptions, lineObjectTypeOptions } from '@/maps/utils/dropdownOptions'
+import type { FilterRefusal } from '@/maps/utils/formValidation'
 
 const props = defineProps<{
   object: MapElement
@@ -47,6 +48,7 @@ const props = defineProps<{
   /** The map's connection, which the object reads from unless it overrides it. */
   mapConnectionId: string
   state?: ObjectState | undefined
+  filterRefusal: FilterRefusal | null
 }>()
 
 const form = defineModel<ObjectForm>('form', { required: true })
@@ -74,7 +76,7 @@ const showsSubtreeLines = computed(() => !isLine.value && form.value.expand_dept
 // line check cannot tell: a regular expression or a column it does not know.
 // A site that does not answer leaves it stale too, which the hint allows for.
 const filterMessages = computed(() => {
-  const problems = filterProblems(_t, form.value.object_filter)
+  const problems = filterProblems(_t, form.value.object_filter, props.filterRefusal)
   const refused =
     type.value === 'grid' &&
     props.state?.stale === true &&

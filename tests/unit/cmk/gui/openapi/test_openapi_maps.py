@@ -403,7 +403,7 @@ def test_a_filter_livestatus_would_refuse_is_refused(clients: ClientRegistry) ->
     ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
-def test_a_refused_filter_names_its_object(clients: ClientRegistry) -> None:
+def test_a_refused_filter_is_named_at_its_field(clients: ClientRegistry) -> None:
     clients.Maps.create(config=_dyngroup_map("Filter: name ~ web\n"))
 
     resp = clients.Maps.edit(
@@ -411,7 +411,9 @@ def test_a_refused_filter_names_its_object(clients: ClientRegistry) -> None:
     )
 
     resp.assert_status_code(HTTPStatus.BAD_REQUEST)
-    assert "Object 'd1'" in resp.json["detail"]
+    assert resp.json["fields"]["body.config.objects.0.binding.object_filter"]["msg"] == (
+        "unknown column 'nme'"
+    )
 
 
 def test_a_filter_the_map_already_had_is_not_checked_again(

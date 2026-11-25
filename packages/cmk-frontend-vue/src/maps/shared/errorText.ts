@@ -7,7 +7,11 @@ import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import { describeFieldProblems } from '@/maps/utils/formValidation'
+import {
+  type FilterRefusal,
+  describeFieldProblems,
+  objectFilterProblem
+} from '@/maps/utils/formValidation'
 
 /**
  * What to tell the operator about a failure.
@@ -24,14 +28,9 @@ export function errorText(error: unknown, fallback: TranslatedString): Translate
 
 /**
  * What a rejected save says, for the operator rather than an API client: the
- * problems of a field the API names by its path, the detail of anything else,
- * and without naming the object when the text is shown at it already.
+ * problems of a field the API names by its path, the detail of anything else.
  */
-export function saveFailureText(
-  error: unknown,
-  fallback: TranslatedString,
-  objectId?: string
-): TranslatedString {
+export function saveFailureText(error: unknown, fallback: TranslatedString): TranslatedString {
   if (isConflict(error)) {
     return usei18n()._t('Someone else saved the map meanwhile.')
   }
@@ -44,10 +43,27 @@ export function saveFailureText(
   }
   const { detail } = error.body as { detail?: unknown }
   if (typeof detail === 'string' && detail) {
-    const own = objectId === undefined ? '' : `Object '${objectId}': `
-    return untranslated(own && detail.startsWith(own) ? detail.slice(own.length) : detail)
+    return untranslated(detail)
   }
   return errorText(error, fallback)
+}
+
+/** Why the save of one map object was refused: at its filter, or else for the whole object. */
+export interface ObjectRefusal {
+  atFilter: FilterRefusal | null
+  text: TranslatedString | null
+}
+
+/** The refusal of the map object at *objectIndex*, saved with the Livestatus *filter*. */
+export function objectRefusalOf(
+  error: unknown,
+  objectIndex: number,
+  filter: string
+): ObjectRefusal {
+  const message = error instanceof CmkApiError ? objectFilterProblem(error.body, objectIndex) : null
+  return message === null
+    ? { atFilter: null, text: saveFailureText(error, usei18n()._t('Save failed')) }
+    : { atFilter: { filter, message }, text: null }
 }
 
 /** Someone else saved the map since the version the save was made on. */

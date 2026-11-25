@@ -29,10 +29,12 @@ import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
 import MapsTextArea from '@/maps/shared/components/MapsTextArea.vue'
 import { dyngroupTypeOptions } from '@/maps/utils/dropdownOptions'
+import type { FilterRefusal } from '@/maps/utils/formValidation'
 
 defineProps<{
   suggestions: ObjectSuggestions
   connectionId: string
+  filterRefusal: FilterRefusal | null
 }>()
 
 const draft = defineModel<NewObjectDraft>('draft', { required: true })
@@ -137,7 +139,7 @@ const dyngroupTypeSuggestions = computed(() => ({
       :help="filterHelp(_t, draft.object_types)"
       :required="draft.type === 'dyngroup'"
     >
-      <CmkInlineValidation :validation="filterProblems(_t, draft.object_filter)" />
+      <CmkInlineValidation :validation="filterProblems(_t, draft.object_filter, filterRefusal)" />
       <MapsTextArea
         :id="id"
         v-model="draft.object_filter"

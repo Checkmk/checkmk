@@ -5,7 +5,8 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
-import { describe, expect, it } from 'vitest'
+import { CmkApiError } from 'cmk-ui-library/lib/error'
+import { describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { useMapEditor } from '@/maps/map/composables/useMapEditor'
@@ -40,7 +41,7 @@ function renderTools(selection: string[], keyboardActive = true) {
     },
     global: mapsGlobal({}, services)
   })
-  return { ...rendered, map, editor }
+  return { ...rendered, map, editor, services }
 }
 
 describe('MapEditTools – keyboard shortcuts', () => {
@@ -186,6 +187,80 @@ describe('MapEditTools – the add-object panel', () => {
     editor.cancelPlacing()
 
     expect(await screen.findByRole('combobox', { name: 'Object type' })).toBeInTheDocument()
+  })
+
+  it('stays open with the reason when the server refuses the placed object', async () => {
+    const { editor, services } = renderTools([])
+    vi.mocked(services.apis.mapConfig.update).mockRejectedValueOnce(
+      new CmkApiError('HTTP 400', null, '', 400, { detail: 'A map takes at most 4 MiB.' })
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add object' }))
+    await screen.findByRole('combobox', { name: 'Object type' })
+    editor.draft.type = 'textbox'
+    await nextTick()
+    editor.startPlacing()
+    await editor.placeAt(100, 100)
+
+    expect(await screen.findByText('A map takes at most 4 MiB.')).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Object type' })).toBeInTheDocument()
+  })
+
+  it('offers no second placing while the placed object is saved', async () => {
+    const { editor, services, map } = renderTools([])
+    let refuse = (_error: Error): void => {}
+    vi.mocked(services.apis.mapConfig.update).mockReturnValueOnce(
+      new Promise((_resolve, reject) => {
+        refuse = reject
+      })
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add object' }))
+    await screen.findByRole('combobox', { name: 'Object type' })
+    editor.draft.type = 'textbox'
+    await nextTick()
+    editor.startPlacing()
+    const placed = editor.placeAt(100, 100)
+
+    expect(await screen.findByText('Saving…')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Place on map' })).not.toBeInTheDocument()
+    editor.startPlacing()
+    expect(editor.placing.value).toBe(false)
+
+    refuse(new CmkApiError('HTTP 400', null, '', 400, { detail: 'A map takes at most 4 MiB.' }))
+    await placed
+    expect(map.objects).toHaveLength(2)
+    expect(await screen.findByRole('button', { name: 'Place on map' })).toBeInTheDocument()
+  })
+
+  it('tells a refused filter at the filter field until it is changed', async () => {
+    // Placed after the two hosts the map already has.
+    const { editor, services } = renderTools([])
+    vi.mocked(services.apis.mapConfig.update).mockRejectedValueOnce(
+      new CmkApiError('HTTP 400', null, '', 400, {
+        detail: 'These fields have problems: body.config.objects.2.binding.object_filter',
+        fields: {
+          'body.config.objects.2.binding.object_filter': {
+            type: 'value_error',
+            msg: "unknown column 'nosuch'",
+            loc: ['body', 'config', 'objects', 2, 'binding', 'object_filter']
+          }
+        }
+      })
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add object' }))
+    await screen.findByRole('combobox', { name: 'Object type' })
+    editor.draft.type = 'grid'
+    editor.draft.object_filter = 'Filter: nosuch = x'
+    await nextTick()
+    editor.startPlacing()
+    await editor.placeAt(100, 100)
+
+    const filter = await screen.findByRole('textbox', { name: 'Livestatus filter' })
+    expect(await screen.findByText("unknown column 'nosuch'")).toBeInTheDocument()
+    await userEvent.type(filter, 'y')
+    expect(screen.queryByText("unknown column 'nosuch'")).not.toBeInTheDocument()
   })
 })
 

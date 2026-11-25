@@ -58,6 +58,7 @@ import { useFocusReturn } from '@/maps/shared/composables/useFocusReturn'
 import type { MapElement, MapViewType, ObjectState } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { objectDeleteTitle, objectTypeLabel } from '@/maps/utils/dropdownOptions'
+import type { FilterRefusal } from '@/maps/utils/formValidation'
 import { buildCheckmkViewUrl } from '@/maps/utils/mapNavigation'
 import { leavesOutMembers } from '@/maps/utils/memberFilter'
 import { VISUAL_ONLY_TYPES, getMapElementName } from '@/maps/utils/naming'
@@ -74,6 +75,8 @@ const props = defineProps<{
   avoid?: AnchorRect | null
   /** Why the last save was refused; the card stays open to correct it. */
   saveError?: TranslatedString | null
+  /** The filter the last save was refused for, told at the filter field. */
+  filterRefusal?: FilterRefusal | null
 }>()
 
 /** ``beside``: a click on the map next to the card rather than a cancel. */
@@ -255,7 +258,7 @@ const formError = ref('')
 // Ours, or else the one the save came back with.
 const saveError = computed(() => formError.value || props.saveError || '')
 watch(
-  () => props.saveError,
+  () => props.saveError || props.filterRefusal,
   (refused) => {
     if (refused) {
       saving.value = false
@@ -341,6 +344,7 @@ function onConfirmDelete(): void {
           :suggestions="suggestions"
           :map-connection-id="props.connectionId"
           :state="state"
+          :filter-refusal="filterRefusal ?? null"
         />
         <TextboxSection v-if="objectType === 'textbox'" v-model:form="form" />
         <GridSection v-if="objectType === 'grid'" v-model:form="form" />

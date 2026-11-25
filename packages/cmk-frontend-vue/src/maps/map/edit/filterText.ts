@@ -7,6 +7,7 @@ import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { TranslateFn } from '@/maps/utils/dropdownOptions'
+import type { FilterRefusal } from '@/maps/utils/formValidation'
 
 type FilteredObjects = 'host' | 'service'
 
@@ -57,13 +58,21 @@ export function hasFilterLines(filter: string): boolean {
   return filterLines(filter).length > 0
 }
 
-/** What to say at a filter the server would refuse for its lines. */
-export function filterProblems(_t: TranslateFn, filter: string): TranslatedString[] {
-  return isFilterWellFormed(filter)
+/**
+ * What to say at a filter the server would refuse for its lines, and what it
+ * did refuse it for while the field still holds the filter it refused.
+ */
+export function filterProblems(
+  _t: TranslateFn,
+  filter: string,
+  refusal: FilterRefusal | null = null
+): TranslatedString[] {
+  const problems = isFilterWellFormed(filter)
     ? []
     : [
         _t('Start each line with %{headers}.', {
           headers: '"Filter:", "And:", "Or:" or "Negate:"'
         })
       ]
+  return refusal?.filter === filter ? [...problems, untranslated(refusal.message)] : problems
 }

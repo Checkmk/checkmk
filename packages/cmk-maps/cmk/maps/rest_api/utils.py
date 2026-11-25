@@ -18,12 +18,13 @@ from http import HTTPStatus
 from typing import Final, get_args
 
 from pydantic import TypeAdapter, ValidationError
-from pydantic_core import PydanticSerializationError
+from pydantic_core import ErrorDetails, PydanticSerializationError
 
 from cmk.gui.openapi.framework import EndpointBehavior, ETag
 from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.restful_objects.constructors import object_href
+from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
 from cmk.gui.openapi.utils import EXT, RestAPIRequestGeneralException
 from cmk.gui.type_defs import VisualPublic
 from cmk.maps.gui._capabilities import sign_map_config
@@ -385,17 +386,23 @@ def validate_object_filters(spec: Mapping[str, object], stored: Mapping[str, obj
     Checkmk version dropped can still be saved.
     """
     kept = {(_normalized(f), t) for _, f, t in _object_filters(stored)}
-    for where, object_filter, object_types in _object_filters(spec):
+    errors: list[ErrorDetails] = []
+    for index, object_filter, object_types in _object_filters(spec):
         if (object_filter, object_types) in kept:
             continue
         try:
             check_object_filter(object_filter, object_types)
         except ValueError as e:
-            raise RestAPIRequestGeneralException(
-                status=HTTPStatus.BAD_REQUEST,
-                title="Invalid Livestatus filter",
-                detail=f"{where}: {e}",
-            ) from e
+            errors.append(
+                ErrorDetails(
+                    type="value_error",
+                    msg=str(e),
+                    loc=("body", "config", "objects", index, "binding", "object_filter"),
+                    input=object_filter,
+                )
+            )
+    if errors:
+        raise RequestDataValidator.format_error_details(errors)
 
 
 def _normalized(object_filter: str) -> str:
@@ -406,12 +413,12 @@ def _normalized(object_filter: str) -> str:
         return object_filter
 
 
-def _object_filters(spec: Mapping[str, object]) -> Iterator[tuple[str, str, str | None]]:
-    """Each Livestatus filter of a flat ``map_spec``: where it is, it, and what it queries."""
+def _object_filters(spec: Mapping[str, object]) -> Iterator[tuple[int, str, str | None]]:
+    """Each Livestatus filter of a flat ``map_spec``: its object's index, it, and what it queries."""
     objects = spec.get("objects")
-    for obj in map(_sub_mapping, objects if isinstance(objects, list) else []):
+    for index, obj in enumerate(map(_sub_mapping, objects if isinstance(objects, list) else [])):
         if isinstance(object_filter := obj.get("object_filter"), str):
-            yield f"Object {obj.get('id')!r}", object_filter, _opt_str(obj.get("object_types"))
+            yield index, object_filter, _opt_str(obj.get("object_types"))
 
 
 def validate_visibility(visibility: MapVisibility) -> None:

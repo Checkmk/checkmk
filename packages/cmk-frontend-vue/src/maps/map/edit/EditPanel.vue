@@ -9,6 +9,7 @@ Adding an object to a map: pick a type, fill in what it shows, then place it.
 While placing, the panel shrinks to its header: the draft is already described,
 and the fields would otherwise cover the corner of the canvas the object is
 being placed on -- a click there would land on the panel rather than the map.
+It stays so while the placed object is saved, which must not be placed twice.
 
 The type is picked here and nowhere else — the panel is the single surface for
 building the draft, so there is no second list competing with it for the corner
@@ -19,12 +20,14 @@ reference — the panel edits it in place so the canvas can already draw the
 object being placed.
 -->
 <script setup lang="ts">
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, watch } from 'vue'
 
 import type { NewObjectDraft } from '@/maps/map/composables/useMapEditor'
@@ -34,11 +37,15 @@ import { useObjectSuggestions } from '@/maps/map/edit/composables/useObjectSugge
 import { clearDraftBindings, isDraftPlaceable } from '@/maps/map/edit/draftFacts'
 import type { ObjectType } from '@/maps/types/api'
 import { placeableObjectTypes } from '@/maps/utils/dropdownOptions'
+import type { FilterRefusal } from '@/maps/utils/formValidation'
 
 const props = defineProps<{
   placing: boolean
+  saving: boolean
   connectionId: string
   offersObjectGrid: boolean
+  error: TranslatedString | null
+  filterRefusal: FilterRefusal | null
 }>()
 
 // The shared reactive draft owned by useMapEditor. A model rather than a prop:
@@ -80,7 +87,11 @@ watch(
         <p class="maps-edit-panel__title">{{ _t('Add object') }}</p>
         <p class="maps-edit-panel__hint" :class="{ 'maps-edit-panel__hint--placing': placing }">
           {{
-            placing ? _t('Click on map to place…') : _t('Choose a type, then place it on the map')
+            saving
+              ? _t('Saving…')
+              : placing
+                ? _t('Click on map to place…')
+                : _t('Choose a type, then place it on the map')
           }}
         </p>
       </div>
@@ -94,7 +105,7 @@ watch(
       />
     </div>
 
-    <CmkScrollContainer v-if="!placing" class="maps-edit-panel__form" height="auto">
+    <CmkScrollContainer v-if="!placing && !saving" class="maps-edit-panel__form" height="auto">
       <EditField :label="_t('Object type')" required>
         <CmkDropdown
           floating
@@ -108,10 +119,16 @@ watch(
         />
       </EditField>
 
-      <DraftFields v-model:draft="draft" :suggestions="suggestions" :connection-id="connectionId" />
+      <DraftFields
+        v-model:draft="draft"
+        :suggestions="suggestions"
+        :connection-id="connectionId"
+        :filter-refusal="filterRefusal"
+      />
     </CmkScrollContainer>
 
-    <div v-if="draft.type && !placing" class="maps-edit-panel__footer">
+    <div v-if="draft.type && !placing && !saving" class="maps-edit-panel__footer">
+      <CmkAlert v-if="error" variant="error" :text="error" />
       <CmkButton
         variant="primary"
         :disabled="!canPlace"
@@ -187,6 +204,9 @@ watch(
 }
 
 .maps-edit-panel__footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
   flex-shrink: 0;
   padding: 0 var(--dimension-6) var(--dimension-5);
 }

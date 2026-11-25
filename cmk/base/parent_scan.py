@@ -272,16 +272,33 @@ def scan_parents_of(
     return gateways
 
 
-def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
-    return (
-        subprocess.call(
-            ["ping", "-q", "-i", "0.2", "-l", "3", "-c", "%d" % probes, "-W", "5", ip],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
-            close_fds=True,
-        )
-        == 0
+def _run_ping(command: Sequence[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        command,
+        capture_output=True,
+        encoding="utf-8",
+        check=False,
+        env={**os.environ, "LC_ALL": "C"},
     )
+
+
+def gateway_reachable_via_ping(
+    ip: HostAddress,
+    probes: int,
+    run_ping: Callable[[Sequence[str]], subprocess.CompletedProcess[str]] = _run_ping,
+) -> bool:
+    # ping also counts echo replies to another process with the same ICMP
+    # identifier, and they can end it before the gateway answers. A second
+    # ping runs with a new identifier.
+    for _attempt in range(2):
+        completed = run_ping(
+            ["ping", "-n", "-i", "0.2", "-l", "3", "-c", "%d" % probes, "-W", "5", ip]
+        )
+        if completed.returncode != 0:
+            return False
+        if f"bytes from {ip}:" in completed.stdout:
+            return True
+    return False
 
 
 def _ip_to_hostname(

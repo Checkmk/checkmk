@@ -218,7 +218,7 @@ class MonitorHostServicesPage(Page):
                     ],
                     notification_rules_url=notification_rules_url(ctx.config),
                     downtime_presets_url=downtime_presets_url(ctx.config),
-                    show_indicators=any_custom_icons(sites.live(), "service", host_name=hostname),
+                    show_indicators=_any_custom_icons(site_id, hostname),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,
@@ -244,6 +244,12 @@ class MonitorHostServicesPage(Page):
         ai_explain.render_listener()
 
         html.footer()
+
+
+def _any_custom_icons(site_id: SiteId, hostname: HostName) -> bool:
+    # Only the host's own site can know its services.
+    with sites.only_sites(site_id):
+        return any_custom_icons(sites.live(), "service", host_name=hostname)
 
 
 def _host_url(ctx: PageContext, hostname: HostName, site_id: SiteId) -> str:

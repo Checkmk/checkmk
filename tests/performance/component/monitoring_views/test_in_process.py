@@ -261,18 +261,7 @@ def test_livestatus_cost_of_a_page_load(
 
 @pytest.mark.parametrize(
     "page, table",
-    [
-        pytest.param(
-            page,
-            table,
-            marks=pytest.mark.xfail(
-                reason="CMK-42442: the custom icon probe asks every site", strict=True
-            ),
-        )
-        if page is HOST_SERVICES_VUE
-        else (page, table)
-        for page, table in SITE_SCOPED_PAGES
-    ],
+    SITE_SCOPED_PAGES,
     ids=lambda argument: getattr(argument, "id", argument),
 )
 def test_a_page_scoped_to_one_site_reads_its_rows_from_that_site(

@@ -22,7 +22,10 @@ import type {
   NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
-import { MODE_COLUMN_ID, indicatorColumn } from '@/monitoring/shared/components/modeColumn'
+import {
+  INDICATOR_COLUMN_ID,
+  indicatorColumn
+} from '@/monitoring/shared/components/indicatorColumn'
 import type { StateFlagField } from '@/monitoring/shared/components/stateColumn'
 import { ACTIONS_COLUMN_ID, LONG_TEXT_COLUMN_GROW } from '@/monitoring/shared/constants'
 import { actionsColumnWidth } from '@/monitoring/shared/customActions'
@@ -78,7 +81,7 @@ const OPTIONAL_FIELD_COLUMNS = [
  * The customer is one of them because the API derives it from the site, which every host
  * carries anyway.
  */
-const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id', 'customer', MODE_COLUMN_ID] as const
+const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id', 'customer', INDICATOR_COLUMN_ID] as const
 
 /** The boolean host fields the Indicator column renders as icons and offers as filters. */
 type HostModeField =

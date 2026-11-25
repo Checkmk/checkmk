@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 ACKNOWLEDGE = "Acknowledge problems"
 SCHEDULE_DOWNTIME = "Schedule downtimes"
 
-# The tooltip of the Mode column icon an acknowledged service carries.
+# The tooltip of the Indicator column icon an acknowledged service carries.
 ACKNOWLEDGED_MODE = "Problem acknowledged"
 
 _SERVICE_CRIT = 2

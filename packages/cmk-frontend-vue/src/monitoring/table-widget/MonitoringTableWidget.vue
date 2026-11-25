@@ -14,9 +14,9 @@ import type { RowCommand } from '@/monitoring/shared/components/action/rowComman
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import {
   type RowWithModes,
-  sizeModeColumn,
-  useModeColumnWidth
-} from '@/monitoring/shared/components/modeColumn'
+  sizeIndicatorColumn,
+  useIndicatorColumnWidth
+} from '@/monitoring/shared/components/indicatorColumn'
 import { sizeStateColumn, useStateIconCount } from '@/monitoring/shared/components/stateColumn'
 import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import { sizeActionsColumn, useInlineCustomActionCount } from '@/monitoring/shared/customActions'
@@ -50,18 +50,18 @@ const rowActions = computed(() =>
   props.actions === undefined ? null : props.descriptor.rowActions(props.actions.offer)
 )
 
-const modeColumnWidth = useModeColumnWidth(() => props.rows)
+const indicatorColumnWidth = useIndicatorColumnWidth(() => props.rows)
 const stateIconCount = useStateIconCount(() => props.rows)
 const inlineCustomActions = useInlineCustomActionCount(() => props.rows)
 
 const columns = computed(() =>
   sizeStateColumn(
     sizeActionsColumn(
-      sizeModeColumn(
+      sizeIndicatorColumn(
         props.descriptor.columns(
           rowActions.value === null ? props.columnIds : [...props.columnIds, ACTIONS_COLUMN_ID]
         ),
-        modeColumnWidth.value
+        indicatorColumnWidth.value
       ),
       inlineCustomActions.value
     ),

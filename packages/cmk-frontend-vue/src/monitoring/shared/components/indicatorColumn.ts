@@ -17,13 +17,13 @@ import { iconListWidth } from './iconList'
 import { type RowWithStateIcons, indicatorModes } from './stateColumn'
 
 /** The Indicator column. */
-export const MODE_COLUMN_ID = 'indicator'
+export const INDICATOR_COLUMN_ID = 'indicator'
 
 export const MODE_ICONS_PER_ROW = 3
 
-export const MODE_COLUMN_MIN_WIDTH = 56
-export const MODE_COLUMN_MAX_WIDTH = 152
-export const FILLED_MODE_COLUMN_WIDTH = iconListWidth(MODE_ICONS_PER_ROW) + CELL_PADDING
+export const INDICATOR_COLUMN_MIN_WIDTH = 56
+export const INDICATOR_COLUMN_MAX_WIDTH = 152
+export const FILLED_INDICATOR_COLUMN_WIDTH = iconListWidth(MODE_ICONS_PER_ROW) + CELL_PADDING
 
 export interface RowWithModes extends RowWithStateIcons {
   custom_icons?: readonly CustomIcon[] | null | undefined
@@ -34,16 +34,18 @@ export function indicatorIcons(row: RowWithModes): CustomIcon[] {
   return (row.custom_icons ?? []).filter((icon) => icon.url === undefined)
 }
 
-export function useModeColumnWidth(rows: () => readonly RowWithModes[]): ComputedRef<number> {
-  const carriesModes = ref(false)
+export function useIndicatorColumnWidth(rows: () => readonly RowWithModes[]): ComputedRef<number> {
+  const carriesIndicators = ref(false)
 
   watchEffect(() => {
     if (rows().some((row) => indicatorModes(row.modes).length + indicatorIcons(row).length > 0)) {
-      carriesModes.value = true
+      carriesIndicators.value = true
     }
   })
 
-  return computed(() => (carriesModes.value ? FILLED_MODE_COLUMN_WIDTH : MODE_COLUMN_MIN_WIDTH))
+  return computed(() =>
+    carriesIndicators.value ? FILLED_INDICATOR_COLUMN_WIDTH : INDICATOR_COLUMN_MIN_WIDTH
+  )
 }
 
 /**
@@ -59,7 +61,7 @@ export function indicatorColumn<Row extends RowWithModes, Field extends FilterFi
   return {
     // The column filter bridge keys filters by accessorKey. Rows have no such field: the cells
     // read the modes themselves.
-    accessorKey: MODE_COLUMN_ID,
+    accessorKey: INDICATOR_COLUMN_ID,
     header: () => h(CmkIcon, { name: 'icons', size: 'medium', title: label }),
     enableSorting: false,
     meta: {
@@ -72,13 +74,13 @@ export function indicatorColumn<Row extends RowWithModes, Field extends FilterFi
   }
 }
 
-export function sizeModeColumn<T>(columns: ColumnDef<T>[], width: number): ColumnDef<T>[] {
+export function sizeIndicatorColumn<T>(columns: ColumnDef<T>[], width: number): ColumnDef<T>[] {
   return columns.map((column) =>
-    columnId(column) === MODE_COLUMN_ID
+    columnId(column) === INDICATOR_COLUMN_ID
       ? {
           ...column,
-          minSize: Math.max(MODE_COLUMN_MIN_WIDTH, width),
-          maxSize: MODE_COLUMN_MAX_WIDTH,
+          minSize: Math.max(INDICATOR_COLUMN_MIN_WIDTH, width),
+          maxSize: INDICATOR_COLUMN_MAX_WIDTH,
           meta: { ...column.meta, fitHeader: true }
         }
       : column

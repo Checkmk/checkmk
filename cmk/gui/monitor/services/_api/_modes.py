@@ -209,7 +209,10 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
 def build_service_modes_by_id(
     service: Service, *, hostname: str, site_id: str
 ) -> list[ServiceModeInfo]:
-    """Modes shown in the Mode column; flapping is excluded, it has its own state-column badge."""
+    """Modes shown in the Indicator column.
+
+    Flapping is excluded: it has its own state-column badge.
+    """
     modes: list[ServiceModeInfo] = []
     if service.in_downtime:
         modes.append(

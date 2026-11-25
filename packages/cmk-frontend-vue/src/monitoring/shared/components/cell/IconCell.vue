@@ -9,7 +9,7 @@ conditions defined in the file COPYING, which is part of this source code packag
  * A cell of icons, each hyperlinked when it carries a link and read-only otherwise.
  *
  * Not to be confused with StateCell: this cell says what happened, or which modes are active,
- * rather than showing the current state of a host or service. The mode columns render linked
+ * rather than showing the current state of a host or service. The Indicator column renders linked
  * icons here; the History tab renders the event icon of a log entry, which links nowhere.
  */
 import IconList from '@/monitoring/shared/components/IconList.vue'

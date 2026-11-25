@@ -23,7 +23,10 @@ import {
   fitColumnsToContent,
   useSiteColumnWidth
 } from '@/monitoring/shared/components/contentColumns'
-import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
+import {
+  sizeIndicatorColumn,
+  useIndicatorColumnWidth
+} from '@/monitoring/shared/components/indicatorColumn'
 import { sizeStateColumn, useStateIconCount } from '@/monitoring/shared/components/stateColumn'
 import {
   timestampColumnsAsShown,
@@ -166,7 +169,7 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
   ]
 })
 
-const modeColumnSize = useModeColumnWidth(() => hostService.items.value)
+const indicatorColumnSize = useIndicatorColumnWidth(() => hostService.items.value)
 const stateIconCount = useStateIconCount(() => hostService.items.value)
 const inlineCustomActions = useInlineCustomActionCount(() => hostService.items.value)
 const initialDisplayOptions = readDisplayOptionsFromUrl(window.location.search)
@@ -196,13 +199,13 @@ const tableColumns = computed(() =>
   fitColumnsToContent(
     sizeStateColumn(
       sizeActionsColumn(
-        sizeModeColumn(
+        sizeIndicatorColumn(
           timestampColumnsAsShown(
             columns,
             displayOptions.value.timestampFormat,
             timestampColumnWidth.value
           ),
-          modeColumnSize.value
+          indicatorColumnSize.value
         ),
         inlineCustomActions.value
       ),

@@ -75,7 +75,10 @@ import type {
   NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
-import { FILLED_MODE_COLUMN_WIDTH, MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
+import {
+  FILLED_INDICATOR_COLUMN_WIDTH,
+  INDICATOR_COLUMN_ID
+} from '@/monitoring/shared/components/indicatorColumn'
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 
@@ -188,11 +191,11 @@ const columns = computed<ColumnDef<HostEntry>[]>(() => [
     meta: { filter: stateFilter.value }
   },
   {
-    accessorKey: MODE_COLUMN_ID,
-    header: 'Mode',
+    accessorKey: INDICATOR_COLUMN_ID,
+    header: 'Indicator',
     enableSorting: false,
-    minSize: FILLED_MODE_COLUMN_WIDTH,
-    maxSize: FILLED_MODE_COLUMN_WIDTH,
+    minSize: FILLED_INDICATOR_COLUMN_WIDTH,
+    maxSize: FILLED_INDICATOR_COLUMN_WIDTH,
     meta: { justify: 'left', filter: modesFilter.value }
   },
   {
@@ -457,8 +460,8 @@ const sortedRows = computed<HostEntry[]>(() => {
           renders the active row. Selected values persist in the table's column-filter state, so
           they survive closing the dropdown and drive the (server-side) query. Future filter types —
           numeric range, IP range — plug in as additional dropdown contents without changing this
-          wiring. The Mode column declares a <code>boolean-group</code> filter: one tri-state group
-          per boolean field, whose non-"Any" groups are AND-combined into the node. The Labels
+          wiring. The Indicator column declares a <code>boolean-group</code> filter: one tri-state
+          group per boolean field, whose non-"Any" groups are AND-combined into the node. The Labels
           column shows the same <code>string-input</code> type with a <code>suggest</code> callback,
           which swaps its plain text field for a CmkChipAutocomplete: several picks become an
           <code>or</code> of one <code>contains</code> each. It targets the host name here because

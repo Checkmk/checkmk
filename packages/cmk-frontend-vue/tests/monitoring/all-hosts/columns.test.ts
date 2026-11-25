@@ -244,11 +244,11 @@ test('the state column filter offers the state checkboxes plus the flags of its 
   })
 })
 
-test('the mode column filter no longer offers what moved to the state column', () => {
+test('the Indicator column filter no longer offers what moved to the state column', () => {
   const columns = hostColumns()
-  const modesColumn = columns.find((column) => columnId(column) === 'indicator')
+  const indicator = columns.find((column) => columnId(column) === 'indicator')
 
-  expect(modesColumn?.meta?.filter).toEqual({
+  expect(indicator?.meta?.filter).toEqual({
     type: 'boolean-group',
     combineLabel: 'Combine selections with',
     groups: [

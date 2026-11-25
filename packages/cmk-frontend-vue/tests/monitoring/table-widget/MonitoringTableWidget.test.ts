@@ -13,7 +13,10 @@ import { type Component, type PropType, defineComponent, h } from 'vue'
 import type { HostEntry, HostRef, ServiceEntry } from '@/monitoring/shared/api/types'
 import type { ActionRun } from '@/monitoring/shared/components/action/run'
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
-import { MODE_COLUMN_ID, MODE_COLUMN_MAX_WIDTH } from '@/monitoring/shared/components/modeColumn'
+import {
+  INDICATOR_COLUMN_ID,
+  INDICATOR_COLUMN_MAX_WIDTH
+} from '@/monitoring/shared/components/indicatorColumn'
 import { useActionFeedbackStack } from '@/monitoring/shared/services/useActionFeedbackStack'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
@@ -224,12 +227,12 @@ function renderCommandWidget(
 }
 
 describe('MonitoringTableWidget', () => {
-  it('caps the mode column like the full pages', () => {
-    const modes = tableColumns(['name', MODE_COLUMN_ID]).find(
-      (column) => columnId(column) === MODE_COLUMN_ID
+  it('caps the Indicator column like the full pages', () => {
+    const indicator = tableColumns(['name', INDICATOR_COLUMN_ID]).find(
+      (column) => columnId(column) === INDICATOR_COLUMN_ID
     )
 
-    expect(modes?.maxSize).toBe(MODE_COLUMN_MAX_WIDTH)
+    expect(indicator?.maxSize).toBe(INDICATOR_COLUMN_MAX_WIDTH)
   })
 
   it('opens the details of the host whose name is clicked', async () => {

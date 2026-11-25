@@ -16,7 +16,7 @@ import type {
   CheckboxListFilter,
   StringInputWithCheckboxListFilter
 } from '@/monitoring/shared/components/filter/types'
-import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
+import { INDICATOR_COLUMN_ID } from '@/monitoring/shared/components/indicatorColumn'
 import { ACTIONS_COLUMN_ID, LONG_TEXT_COLUMN_GROW } from '@/monitoring/shared/constants'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
@@ -93,7 +93,9 @@ export function useAllServicesColumns({
       : column
   )
   // The host and site follow the summary and its indicators.
-  const indicatorIndex = serviceColumns.findIndex((column) => columnId(column) === MODE_COLUMN_ID)
+  const indicatorIndex = serviceColumns.findIndex(
+    (column) => columnId(column) === INDICATOR_COLUMN_ID
+  )
   return [
     ...serviceColumns.slice(0, indicatorIndex + 1),
     hostColumn,

@@ -2,9 +2,9 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Put one host per Mode-column icon into a dev site. 🎛️
+"""Put one host per Indicator-column icon into a dev site. 🎛️
 
-The Mode column of the new monitoring pages (monitor_all_hosts.py) renders a
+The Indicator column of the new monitoring pages (monitor_all_hosts.py) renders a
 small set of icons, each driven by a different piece of monitoring state. This
 script builds that state in a site: it creates one host named after every icon,
 configures the rules and time period the period-based icons need, activates,
@@ -57,7 +57,7 @@ UNKNOWN_STATE = 3
 
 @dataclass(frozen=True)
 class ModeIcon:
-    """One icon of the Mode column, and what it takes to make an object show it."""
+    """One icon of the Indicator column, and what it takes to make an object show it."""
 
     name: str
     title: str
@@ -245,7 +245,7 @@ class Livestatus:
 
 
 class ModeIconSite:
-    """A dev site carrying one host per Mode-column icon."""
+    """A dev site carrying one host per Indicator-column icon."""
 
     def __init__(self, api: RestApi, live: Livestatus, site: str) -> None:
         self._api = api

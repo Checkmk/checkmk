@@ -29,10 +29,10 @@ import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import GraphsLink from '@/monitoring/shared/components/graphs/GraphsLink.vue'
 import {
-  MODE_COLUMN_ID,
+  INDICATOR_COLUMN_ID,
   MODE_ICONS_PER_ROW,
   indicatorIcons
-} from '@/monitoring/shared/components/modeColumn'
+} from '@/monitoring/shared/components/indicatorColumn'
 import { indicatorModes, stateModes } from '@/monitoring/shared/components/stateColumn'
 import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import { customActions, withCustomActions } from '@/monitoring/shared/customActions'
@@ -224,8 +224,8 @@ const groupAction = narrowing.actionFor(groupCondition)
     title-only-when-cut
   />
   <IndicatorCell
-    v-if="hasColumn(MODE_COLUMN_ID)"
-    :column-id="MODE_COLUMN_ID"
+    v-if="hasColumn(INDICATOR_COLUMN_ID)"
+    :column-id="INDICATOR_COLUMN_ID"
     :modes="indicatorModes(row.modes)"
     :icons="indicatorIcons(row)"
     :max="MODE_ICONS_PER_ROW"

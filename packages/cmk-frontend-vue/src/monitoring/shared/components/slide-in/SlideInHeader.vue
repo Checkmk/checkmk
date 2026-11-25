@@ -12,7 +12,7 @@ import IconList from '@/monitoring/shared/components/IconList.vue'
 import ActionButtons, {
   type CellAction
 } from '@/monitoring/shared/components/cell/ActionButtons.vue'
-import { MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
+import { MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/indicatorColumn'
 
 withDefaults(
   defineProps<{

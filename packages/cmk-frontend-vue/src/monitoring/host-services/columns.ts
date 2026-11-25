@@ -23,7 +23,7 @@ import type {
   DateTimeRangeFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
-import { indicatorColumn } from '@/monitoring/shared/components/modeColumn'
+import { indicatorColumn } from '@/monitoring/shared/components/indicatorColumn'
 import type { StateFlagField } from '@/monitoring/shared/components/stateColumn'
 import { ACTIONS_COLUMN_ID, LONG_TEXT_COLUMN_GROW } from '@/monitoring/shared/constants'
 import { actionsColumnWidth } from '@/monitoring/shared/customActions'

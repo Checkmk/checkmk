@@ -9,7 +9,7 @@ import { defineComponent, h } from 'vue'
 import type { EventIcon, HostMode, MonitoringIcon } from '@/monitoring/shared/api/types'
 import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
 import { iconListWidth } from '@/monitoring/shared/components/iconList'
-import { MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
+import { MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/indicatorColumn'
 
 const DOWNTIME_MODE: HostMode = {
   id: 'downtime',

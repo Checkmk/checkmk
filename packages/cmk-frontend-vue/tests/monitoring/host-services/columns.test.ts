@@ -144,12 +144,12 @@ test('the state column filter offers the state checkboxes plus the flags of its 
   })
 })
 
-test('the mode column filter no longer offers what moved to the state column', () => {
-  const modesColumn = serviceColumns().find(
+test('the Indicator column filter no longer offers what moved to the state column', () => {
+  const indicator = serviceColumns().find(
     (column) => columnId(column as ColumnDef<never>) === 'indicator'
   )
 
-  expect(modesColumn?.meta?.filter).toEqual({
+  expect(indicator?.meta?.filter).toEqual({
     type: 'boolean-group',
     combineLabel: 'Combine selections with',
     groups: [

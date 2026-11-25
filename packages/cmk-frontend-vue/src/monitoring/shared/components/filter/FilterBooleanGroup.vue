@@ -208,5 +208,6 @@ function commit(stateFor: (field: F) => BooleanState): void {
 
 .monitoring-filter-boolean-group__combine {
   grid-column: 1 / -1;
+  margin-top: var(--dimension-4);
 }
 </style>

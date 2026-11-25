@@ -135,6 +135,7 @@ single_version_override(
         "bazel/patches/rules_mypy-pyhardlink-cache-merge.patch",
         "bazel/patches/rules_mypy-exec_cfg_types.patch",
         "bazel/patches/rules_mypy-bin_dir_in_mypypath.patch",
+        "bazel/patches/rules_mypy-no_sqlite_cache.patch",
     ],
 )
 

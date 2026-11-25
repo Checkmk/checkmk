@@ -17,11 +17,11 @@ const columns: RankedTableColumn[] = [
 const rows: RankedTableRow[] = [
   // A cell is either a bare value, or an object with display overrides.
   { host: { value: '10.0.71.219', href: 'view.py?view_name=host' }, flows: 1284 },
-  { host: '10.0.234.247', flows: 967 },
+  { host: '10.0.234.247', flows: { value: 967, unit: 'flows/s' } },
   { host: '10.0.171.51', flows: { value: 411, formatted: '411 flows' } }
 ]
 </script>
 
 <template>
-  <CmkRankedTable :columns="columns" :rows="rows" show-rank />
+  <CmkRankedTable :columns="columns" :rows="rows" label="Top 3: Flows" show-rank />
 </template>

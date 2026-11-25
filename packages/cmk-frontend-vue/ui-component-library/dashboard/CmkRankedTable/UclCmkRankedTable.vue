@@ -45,6 +45,12 @@ export const panelConfig = {
     help: 'Width of the box around the table. Text cells truncate before any figure does. Drag the corner of the preview to change it.',
     initialState: 600
   },
+  label: {
+    type: 'string' as const,
+    title: 'Label',
+    help: 'Accessible name of the table, e.g. the widget title.',
+    initialState: 'Top 6: Flows'
+  },
   showRank: {
     type: 'boolean' as const,
     title: 'Show rank',
@@ -60,7 +66,7 @@ export const panelConfig = {
   serviceColumn: {
     type: 'boolean' as const,
     title: 'Service column',
-    help: 'Adds a second text column.',
+    help: 'Adds a second text column, in the quieter secondary tone.',
     initialState: false
   },
   longColumnTitles: {
@@ -90,6 +96,18 @@ export const panelConfig = {
     }),
     initialState: 'count' as const
   },
+  units: {
+    type: 'boolean' as const,
+    title: 'Units',
+    help: 'Gives each value a `unit`, shown quietly after it.',
+    initialState: true
+  },
+  zeroAndTinyValues: {
+    type: 'boolean' as const,
+    title: 'Zero and tiny values',
+    help: 'Ends the table with a value of 0, which has an empty bar, and a tiny one, whose bar keeps a sliver.',
+    initialState: false
+  },
   fixedBarRange: {
     type: 'boolean' as const,
     title: 'Fixed bar range',
@@ -115,6 +133,8 @@ export const panelConfig = {
     initialState: false
   }
 } satisfies PanelConfigFor<typeof CmkRankedTable, 'rows' | 'columns' | 'placeholder' | 'busy'> & {
+  units: BoolPropDef
+  zeroAndTinyValues: BoolPropDef
   tableState: ListPropDef<TableState>
   lastSuccessMinutes: NumberPropDef
   containerHeight: NumberPropDef
@@ -212,7 +232,8 @@ const columns = computed<RankedTableColumn[]>(() => [
           key: 'service',
           title: propState.value.longColumnTitles ? 'Service description' : 'Service',
           render: 'text' as const,
-          bar: false
+          bar: false,
+          tone: 'secondary' as const
         }
       ]
     : []),
@@ -238,15 +259,24 @@ const lastSuccessAt = computed(() =>
     : undefined
 )
 
+const ZERO_AND_TINY = [
+  { host: '10.0.9.18', flows: 2 },
+  { host: '10.0.9.7', flows: 0 }
+]
+
 const rows = computed<RankedTableRow[]>(() =>
-  HOSTS.slice(0, Math.max(0, propState.value.rowCount)).map((entry, index) => {
-    const host = propState.value.longHostNames ? LONG_HOST_NAMES[index]! : entry.host
+  [
+    ...HOSTS.slice(0, Math.max(0, propState.value.rowCount)),
+    ...(propState.value.zeroAndTinyValues ? ZERO_AND_TINY : [])
+  ].map((entry, index) => {
+    const host = propState.value.longHostNames ? (LONG_HOST_NAMES[index] ?? entry.host) : entry.host
     return {
       host: propState.value.linkedHosts ? { value: host, href: '#' } : host,
       service: 'Interface 1',
       flows: {
         value: entry.flows,
         ...(propState.value.preFormatted ? { formatted: `${entry.flows} flows` } : {}),
+        ...(propState.value.units ? { unit: 'flows/s' } : {}),
         ...(propState.value.perRowColor ? { color: ROW_COLORS[index % ROW_COLORS.length]! } : {})
       }
     }
@@ -275,6 +305,7 @@ const rows = computed<RankedTableRow[]>(() =>
           :placeholder="placeholder"
           :busy="propState.tableState === 'refreshing'"
           :show-rank="propState.showRank"
+          :label="propState.label"
         >
           <template #empty>
             <CmkHeading type="h4">No data</CmkHeading>

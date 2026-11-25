@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render } from '@testing-library/vue'
+import { render, within } from '@testing-library/vue'
 
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable/CmkRankedTable.vue'
 import type {
@@ -98,10 +98,10 @@ test("prefers a cell's formatted text over the column formatting", () => {
     { host: 'A', services: 1, problems: { value: 5, formatted: 'five' } }
   ])
 
-  expect(container.querySelector('.db-cmk-ranked-table__bar-value')).toHaveTextContent('five')
+  expect(container.querySelector('tbody td:last-child')).toHaveTextContent('five')
 })
 
-test('lets a cell override the bar color', () => {
+test('lets a cell override the bar color, and leaves others to the default', () => {
   const { container } = renderTable([
     { host: 'A', services: 1, problems: { value: 5, color: 'rgb(1, 2, 3)' } },
     { host: 'B', services: 1, problems: 2 }
@@ -109,7 +109,7 @@ test('lets a cell override the bar color', () => {
 
   const fills = [...container.querySelectorAll<HTMLElement>('.db-cmk-ranked-table__bar-fill')]
   expect(fills[0]!.style.backgroundColor).toBe('rgb(1, 2, 3)')
-  expect(fills[1]!.style.backgroundColor).toBe('var(--status-color-info)')
+  expect(fills[1]!.style.backgroundColor).toBe('')
 })
 
 test('renders a link for cells carrying an href', () => {
@@ -229,4 +229,82 @@ test('leaves the rank of loading rows blank', () => {
     .slice(1)
     .map((row) => row.querySelector('td')?.textContent)
   expect(ranks).toEqual(['', ''])
+})
+
+test('leaves a zero value without a bar but keeps a sliver of any other value', () => {
+  const { container } = renderTable([
+    { host: 'A', services: 1, problems: 1000 },
+    { host: 'B', services: 1, problems: 1 },
+    { host: 'C', services: 1, problems: 0 }
+  ])
+
+  const fills = [...container.querySelectorAll<HTMLElement>('.db-cmk-ranked-table__bar-fill')]
+  expect(fills.map((el) => el.style.width)).toEqual(['100%', '2%', '0%'])
+})
+
+test('grows the bars of negative values from zero, by their size', () => {
+  const { container } = renderTable([
+    { host: 'A', services: 1, problems: -1 },
+    { host: 'B', services: 1, problems: -10 }
+  ])
+
+  const fills = [...container.querySelectorAll<HTMLElement>('.db-cmk-ranked-table__bar-fill')]
+  expect(fills.map((el) => el.style.width)).toEqual(['10%', '100%'])
+})
+
+test('hides the bars from assistive tech, so cells line up with the column headers', () => {
+  const { getAllByRole } = render(CmkRankedTable, {
+    props: { columns: COLUMNS, rows: ROWS, showRank: true }
+  })
+
+  const headers = getAllByRole('columnheader')
+  for (const row of getAllByRole('row').slice(1)) {
+    expect(within(row).getAllByRole('cell')).toHaveLength(headers.length)
+  }
+})
+
+test("shows a linked value's unit after it", () => {
+  const { getByRole } = renderTable([
+    {
+      host: 'A',
+      services: 1,
+      problems: { value: 87.3, formatted: '87.3', unit: '%', href: 'view.py' }
+    }
+  ])
+
+  expect(getByRole('link')).toHaveTextContent('87.3 %')
+})
+
+test("shows a value's unit after it", () => {
+  const { getAllByRole } = renderTable([
+    { host: 'A', services: 1, problems: { value: 87.3, formatted: '87.3', unit: '%' } }
+  ])
+
+  expect(getAllByRole('cell').at(-1)).toHaveTextContent('87.3 %')
+})
+
+test('names the table by its label', () => {
+  const { getByRole } = render(CmkRankedTable, {
+    props: { columns: COLUMNS, rows: ROWS, label: 'Top 3: Problems' }
+  })
+
+  expect(getByRole('table', { name: 'Top 3: Problems' })).toBeInTheDocument()
+})
+
+test('names each row of a ranked table by its rank', () => {
+  const { getAllByRole } = render(CmkRankedTable, {
+    props: { columns: COLUMNS, rows: ROWS, showRank: true }
+  })
+
+  expect(
+    getAllByRole('row')
+      .slice(1)
+      .map((row) => row.getAttribute('aria-label'))
+  ).toEqual(['Rank 1', 'Rank 2', 'Rank 3'])
+})
+
+test('leaves the rows of an unranked table to be named by their cells', () => {
+  const { getAllByRole } = renderTable()
+
+  expect(getAllByRole('row').every((row) => !row.hasAttribute('aria-label'))).toBe(true)
 })

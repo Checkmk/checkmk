@@ -13,6 +13,8 @@ export interface RankedTableColumn {
   title: string
   render: RankedTableCellRender
   bar: boolean
+  /** `secondary` sets the column's text and links in a quieter style. */
+  tone?: 'primary' | 'secondary'
   /**
    * Fixed `[minimum, maximum]` used to scale this column's bars, clamped to that range.
    * Defaults to `0..largest value in the column`. Only meaningful for bar columns.
@@ -26,6 +28,8 @@ interface RankedTableCellBase {
   formatted?: string
   /** CSS color overriding the default bar color for this row's bar. */
   color?: string
+  /** Shown quietly after the value. */
+  unit?: string | undefined
 }
 
 /**
@@ -67,4 +71,6 @@ export interface CmkRankedTableProps {
   busy?: boolean
   /** Prepends each row's position, starting at 1. */
   showRank?: boolean
+  /** Accessible name of the table, e.g. the widget title. */
+  label?: string | undefined
 }

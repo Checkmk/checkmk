@@ -24,7 +24,8 @@ const {
   rows,
   placeholder,
   busy = false,
-  showRank = false
+  showRank = false,
+  label
 } = defineProps<CmkRankedTableProps>()
 
 const { _t } = usei18n()
@@ -34,14 +35,16 @@ defineSlots<{
   empty?(): unknown
 }>()
 
-const DEFAULT_BAR_COLOR = 'var(--status-color-info)'
-
-// Largest value per bar column, used to scale bars of columns without a fixed `barRange`.
+// Largest distance from zero per bar column, used to scale bars of columns without a fixed
+// `barRange`: their bars grow from zero, so a negative value is as long as its size.
 const columnMax = computed<Record<string, number>>(() => {
   const max: Record<string, number> = {}
   for (const column of columns) {
     if (column.bar && column.barRange === undefined) {
-      max[column.key] = Math.max(0, ...rows.map((row) => Number(cell(column, row).value ?? 0)))
+      max[column.key] = Math.max(
+        0,
+        ...rows.map((row) => Math.abs(Number(cell(column, row).value ?? 0)))
+      )
     }
   }
   return max
@@ -64,8 +67,7 @@ function cellText(column: RankedTableColumn, row: RankedTableRow): string {
   return String(value ?? '')
 }
 
-function barPercent(column: RankedTableColumn, row: RankedTableRow): number {
-  const value = Number(cell(column, row).value ?? 0)
+function proportion(column: RankedTableColumn, value: number): number {
   if (column.barRange !== undefined) {
     const [minimum, maximum] = column.barRange
     if (maximum <= minimum) {
@@ -75,11 +77,15 @@ function barPercent(column: RankedTableColumn, row: RankedTableRow): number {
     return Math.min(100, Math.max(0, ((value - minimum) / (maximum - minimum)) * 100))
   }
   const max = columnMax.value[column.key] ?? 0
-  return max > 0 ? (value / max) * 100 : 0
+  return max > 0 ? (Math.abs(value) / max) * 100 : 0
 }
 
-function barColorOf(column: RankedTableColumn, row: RankedTableRow): string {
-  return cell(column, row).color ?? DEFAULT_BAR_COLOR
+// Any bar above the bottom of its range stays visible as a sliver.
+const MINIMUM_BAR_PERCENT = 2
+
+function barPercent(column: RankedTableColumn, row: RankedTableRow): number {
+  const percent = proportion(column, Number(cell(column, row).value ?? 0))
+  return percent <= 0 ? 0 : Math.max(MINIMUM_BAR_PERCENT, percent)
 }
 
 /** Whether a column's text may be cut with an ellipsis when the width runs short. */
@@ -103,6 +109,13 @@ function plainTextTooltip(column: RankedTableColumn, row: RankedTableRow): strin
   return truncates(column) && isPlain ? cellText(column, row) : undefined
 }
 
+function cellClasses(column: RankedTableColumn): Record<string, boolean> {
+  return {
+    'db-cmk-ranked-table__cell--right': isNumeric(column) || column.bar,
+    'db-cmk-ranked-table__cell--secondary': column.tone === 'secondary'
+  }
+}
+
 const isBusy = computed(() => busy || placeholder?.kind === 'loading')
 
 // A row count from configuration may be anything; `v-for` throws on a negative one.
@@ -118,19 +131,27 @@ function standInWidth(column: RankedTableColumn, rowIndex: number, columnIndex: 
   return STAND_IN_TEXT_WIDTHS[(rowIndex + columnIndex * 2) % STAND_IN_TEXT_WIDTHS.length]!
 }
 
-// Text columns hug their content but give way first; figures never shrink, and the
-// bar column takes the remaining space.
-const gridTemplateColumns = computed(() =>
-  [
+// Text columns hug their content but give way first; figures shrink only down to 62px, and a
+// bar takes the remaining space in its own track, left of its value. Without a bar, the last
+// column takes that space, so that separators and hover span the whole row.
+const gridTemplateColumns = computed(() => {
+  const tracks = [
     ...(showRank ? ['max-content'] : []),
-    ...columns.map((column) => {
+    ...columns.flatMap((column) => {
       if (column.bar) {
-        return 'minmax(max-content, 1fr)'
+        return ['minmax(min-content, 1fr)', 'minmax(62px, max-content)']
       }
-      return truncates(column) ? 'minmax(2.5em, max-content)' : 'max-content'
+      if (isNumeric(column)) {
+        return ['minmax(62px, max-content)']
+      }
+      return ['minmax(2.5em, max-content)']
     })
-  ].join(' ')
-)
+  ]
+  if (!columns.some((column) => column.bar) && tracks.length > 0) {
+    tracks[tracks.length - 1] = tracks.at(-1)!.replace('max-content)', '1fr)')
+  }
+  return tracks.join(' ')
+})
 </script>
 
 <template>
@@ -141,6 +162,7 @@ const gridTemplateColumns = computed(() =>
     <table
       class="db-cmk-ranked-table__table"
       role="table"
+      :aria-label="label"
       :style="{ gridTemplateColumns }"
       :aria-busy="isBusy ? 'true' : undefined"
       :aria-hidden="placeholder?.kind === 'empty' ? 'true' : undefined"
@@ -159,7 +181,10 @@ const gridTemplateColumns = computed(() =>
             v-for="column in columns"
             :key="column.key"
             class="db-cmk-ranked-table__th"
-            :class="{ 'db-cmk-ranked-table__cell--right': isNumeric(column) && !column.bar }"
+            :class="{
+              'db-cmk-ranked-table__cell--right': isNumeric(column) && !column.bar,
+              'db-cmk-ranked-table__th--bar': column.bar
+            }"
             :title="truncates(column) ? column.title : undefined"
             role="columnheader"
           >
@@ -184,32 +209,22 @@ const gridTemplateColumns = computed(() =>
             class="db-cmk-ranked-table__td db-cmk-ranked-table__rank"
             role="cell"
           />
-          <td
-            v-for="(column, columnIndex) in columns"
-            :key="column.key"
-            class="db-cmk-ranked-table__td"
-            :class="{ 'db-cmk-ranked-table__cell--right': isNumeric(column) && !column.bar }"
-            role="cell"
-          >
-            <div v-if="column.bar" class="db-cmk-ranked-table__bar">
+          <template v-for="(column, columnIndex) in columns" :key="column.key">
+            <td v-if="column.bar" class="db-cmk-ranked-table__td" aria-hidden="true">
               <RankedTableStandIn
-                class="db-cmk-ranked-table__stand-in-track"
+                class="db-cmk-ranked-table__bar"
                 :animated="placeholder.kind === 'loading'"
                 shape="track"
               />
+            </td>
+            <td class="db-cmk-ranked-table__td" :class="cellClasses(column)" role="cell">
               <RankedTableStandIn
-                class="db-cmk-ranked-table__stand-in-value"
+                class="db-cmk-ranked-table__stand-in"
                 :animated="placeholder.kind === 'loading'"
                 :width="standInWidth(column, rowIndex, columnIndex)"
               />
-            </div>
-            <RankedTableStandIn
-              v-else
-              class="db-cmk-ranked-table__stand-in"
-              :animated="placeholder.kind === 'loading'"
-              :width="standInWidth(column, rowIndex, columnIndex)"
-            />
-          </td>
+            </td>
+          </template>
         </tr>
       </tbody>
       <tbody v-else role="rowgroup">
@@ -218,43 +233,51 @@ const gridTemplateColumns = computed(() =>
           :key="index"
           class="db-cmk-ranked-table__row db-cmk-ranked-table__row--body"
           role="row"
+          :aria-label="showRank ? _t('Rank %{rank}', { rank: `${index + 1}` }) : undefined"
         >
           <td v-if="showRank" class="db-cmk-ranked-table__td db-cmk-ranked-table__rank" role="cell">
             {{ index + 1 }}
           </td>
-          <td
-            v-for="column in columns"
-            :key="column.key"
-            class="db-cmk-ranked-table__td"
-            :class="{ 'db-cmk-ranked-table__cell--right': isNumeric(column) && !column.bar }"
-            :title="plainTextTooltip(column, row)"
-            role="cell"
-          >
-            <div v-if="column.bar" class="db-cmk-ranked-table__bar">
-              <span class="db-cmk-ranked-table__bar-track">
+          <template v-for="column in columns" :key="column.key">
+            <td v-if="column.bar" class="db-cmk-ranked-table__td" aria-hidden="true">
+              <span class="db-cmk-ranked-table__bar">
                 <span
                   class="db-cmk-ranked-table__bar-fill"
                   :style="{
                     width: `${barPercent(column, row)}%`,
-                    backgroundColor: barColorOf(column, row)
+                    backgroundColor: cell(column, row).color
                   }"
                 />
               </span>
-              <span class="db-cmk-ranked-table__bar-value">{{ cellText(column, row) }}</span>
-            </div>
-            <ContextualLinkAnchor
-              v-else-if="linkEntries(column, row).length > 0"
-              v-slot="{ several }"
-              :entries="linkEntries(column, row)"
-              :title="cellText(column, row)"
+            </td>
+            <td
+              class="db-cmk-ranked-table__td"
+              :class="cellClasses(column)"
+              :title="plainTextTooltip(column, row)"
+              role="cell"
             >
-              <span class="db-contextual-link-anchor__text db-cmk-ranked-table__text">
-                {{ cellText(column, row) }}
-              </span>
-              <ContextualLinkArrow v-if="several" />
-            </ContextualLinkAnchor>
-            <span v-else class="db-cmk-ranked-table__text">{{ cellText(column, row) }}</span>
-          </td>
+              <ContextualLinkAnchor
+                v-if="linkEntries(column, row).length > 0"
+                v-slot="{ several }"
+                :entries="linkEntries(column, row)"
+                :title="cellText(column, row)"
+              >
+                <span class="db-contextual-link-anchor__text db-cmk-ranked-table__text"
+                  >{{ cellText(column, row)
+                  }}<span v-if="cell(column, row).unit" class="db-cmk-ranked-table__unit">{{
+                    ` ${cell(column, row).unit}`
+                  }}</span></span
+                >
+                <ContextualLinkArrow v-if="several" />
+              </ContextualLinkAnchor>
+              <span v-else class="db-cmk-ranked-table__text"
+                >{{ cellText(column, row)
+                }}<span v-if="cell(column, row).unit" class="db-cmk-ranked-table__unit">{{
+                  ` ${cell(column, row).unit}`
+                }}</span></span
+              >
+            </td>
+          </template>
         </tr>
       </tbody>
     </table>
@@ -267,14 +290,17 @@ const gridTemplateColumns = computed(() =>
 <style scoped>
 /* The wrapper scrolls; the table never clips its own rows. */
 .db-cmk-ranked-table {
+  --db-cmk-ranked-table-bar-color: var(--color-light-blue-50);
+
   width: 100%;
   height: 100%;
   overflow: auto;
-
-  /* Set here rather than on the table, so the container query below and the bar's
-     minimum widths are measured in the same em. */
   font-size: var(--font-size-normal);
-  container-type: inline-size;
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+[data-theme='modern-dark'] .db-cmk-ranked-table {
+  --db-cmk-ranked-table-bar-color: var(--color-light-blue-70);
 }
 
 /* Positioned so it paints above the faded table, whose opacity stacks it on top. */
@@ -294,6 +320,7 @@ const gridTemplateColumns = computed(() =>
    and still shrink below it, which table cells cannot. */
 .db-cmk-ranked-table__table {
   display: grid;
+  column-gap: 10px;
   width: 100%;
 }
 
@@ -321,6 +348,7 @@ const gridTemplateColumns = computed(() =>
   grid-column: 1 / -1;
   grid-template-columns: subgrid;
   align-items: center;
+  padding: 5px var(--dimension-3);
 }
 
 /* Stays in view while the rows scroll beneath it. */
@@ -328,36 +356,36 @@ const gridTemplateColumns = computed(() =>
   position: sticky;
   top: 0;
   z-index: 1;
-  background-color: var(--even-tr-bg-color);
+  background-color: var(--db-content-bg-color);
+}
+
+.db-cmk-ranked-table__row--body + .db-cmk-ranked-table__row--body {
+  border-top: 1px solid var(--border-color-separator);
+}
+
+.db-cmk-ranked-table__row--body:is(:hover, :focus-within) {
+  background-color: var(--background-row-hover);
 }
 
 .db-cmk-ranked-table__th {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: var(--dimension-3) var(--dimension-4);
   font-size: var(--font-size-small);
-  font-weight: var(--font-weight-bold);
-  color: var(--font-color-muted);
+  font-weight: var(--font-weight-default);
+  color: var(--font-color-secondary);
   text-align: left;
-  letter-spacing: 0.04em;
   white-space: nowrap;
-  border-bottom: 1px solid var(--ux-theme-4);
+}
+
+/* The metric name heads the bar and the value beside it. */
+.db-cmk-ranked-table__th--bar {
+  grid-column: span 2;
 }
 
 .db-cmk-ranked-table__td {
   min-width: 0;
-  padding: var(--dimension-3) var(--dimension-4);
   white-space: nowrap;
-}
-
-/* Zebra striping, using the shared alternating-row background tokens. */
-.db-cmk-ranked-table__row--body:nth-child(odd) {
-  background-color: var(--odd-tr-bg-color);
-}
-
-.db-cmk-ranked-table__row--body:nth-child(even) {
-  background-color: var(--even-tr-bg-color);
 }
 
 .db-cmk-ranked-table__cell--right {
@@ -367,9 +395,8 @@ const gridTemplateColumns = computed(() =>
 
 /* Muted and set against the name that follows it. */
 .db-cmk-ranked-table__rank {
-  padding-right: 0;
   font-size: var(--font-size-small);
-  color: var(--font-color-muted);
+  color: var(--font-color-secondary);
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
@@ -381,54 +408,32 @@ const gridTemplateColumns = computed(() =>
   text-overflow: ellipsis;
 }
 
+.db-cmk-ranked-table__cell--secondary {
+  color: var(--font-color-secondary);
+
+  .db-cmk-ranked-table__text {
+    font-weight: var(--font-weight-default);
+  }
+}
+
+.db-cmk-ranked-table__unit {
+  font-size: var(--font-size-small);
+  color: var(--font-color-secondary);
+}
+
 .db-cmk-ranked-table__bar {
-  display: flex;
-  align-items: center;
-  gap: var(--dimension-4);
-}
-
-/* Text columns give way before the bar does; only a table too narrow for a
-   meaningful bar drops it, so that the figures beside it keep their room. */
-.db-cmk-ranked-table__bar-track {
-  flex: 1;
-  min-width: 4em;
+  display: block;
   height: var(--dimension-3);
-  overflow: hidden;
-  background-color: var(--ux-theme-4);
-  border-radius: 99999px;
 }
 
-@container (width < 24em) {
-  .db-cmk-ranked-table__bar-track {
-    display: none;
-  }
-}
-
-.db-cmk-ranked-table__cell--right > .db-cmk-ranked-table__stand-in {
-  margin-left: auto;
-}
-
-.db-cmk-ranked-table__stand-in-value {
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-@container (width < 24em) {
-  .db-cmk-ranked-table__stand-in-track {
-    display: none;
-  }
+.db-cmk-ranked-table__stand-in {
+  display: inline-block;
 }
 
 .db-cmk-ranked-table__bar-fill {
   display: block;
   height: 100%;
-  border-radius: 99999px;
-}
-
-.db-cmk-ranked-table__bar-value {
-  flex-shrink: 0;
-  min-width: 5.5em;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
+  background-color: var(--db-cmk-ranked-table-bar-color);
+  border-radius: 3px;
 }
 </style>

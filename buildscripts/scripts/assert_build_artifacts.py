@@ -88,16 +88,24 @@ def hash_file(artifact_name: str) -> str:
     return f"{artifact_name}.hash"
 
 
-def build_source_artifacts(version: Version, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
-    for edition in loaded_yaml["editions"]:
+def build_source_artifacts(
+    version: Version, loaded_yaml: dict, use_case: UseCase
+) -> Iterator[tuple[str, bool]]:
+    for edition, config in loaded_yaml["editions"].items():
+        if not config.get(use_case):
+            continue
         file_name = f"check-mk-{edition}-{version.version_without_rc}.tar.gz"
         internal_only = edition in loaded_yaml.get("internal_editions", [])
         yield file_name, internal_only
         yield hash_file(file_name), internal_only
 
 
-def build_docker_artifacts(version: Version, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
-    for edition in loaded_yaml["editions"]:
+def build_docker_artifacts(
+    version: Version, loaded_yaml: dict, use_case: UseCase
+) -> Iterator[tuple[str, bool]]:
+    for edition, config in loaded_yaml["editions"].items():
+        if not config.get(use_case):
+            continue
         file_name = f"check-mk-{edition}-docker-{version.version_without_rc}.tar.gz"
         internal_only = edition in loaded_yaml.get("internal_editions", [])
         yield file_name, internal_only
@@ -105,7 +113,7 @@ def build_docker_artifacts(version: Version, loaded_yaml: dict) -> Iterator[tupl
 
 
 def build_docker_image_name_and_registry(
-    version: str, loaded_yaml: dict, registries: list[Registry]
+    version: str, loaded_yaml: dict, registries: list[Registry], use_case: UseCase
 ) -> Iterator[tuple[DockerImage, str, Registry]]:
     def build_folder(ed: str) -> str:
         match ed:
@@ -116,7 +124,9 @@ def build_docker_image_name_and_registry(
             case _:
                 raise RuntimeError(f"Unknown edition {ed}")
 
-    for edition in loaded_yaml["editions"]:
+    for edition, config in loaded_yaml["editions"].items():
+        if not config.get(use_case):
+            continue
         registry = edition_to_registry(edition, registries)
         yield (
             DockerImage(tag=version, image_name=f"{build_folder(edition)}check-mk-{edition}"),
@@ -167,7 +177,9 @@ def cmk_package_filename(edition: Edition, distro: str, version: str) -> str:
 def build_package_artifacts(
     args: Args, use_case: UseCase, loaded_yaml: dict
 ) -> Iterator[tuple[str, bool]]:
-    for edition in loaded_yaml["editions"]:
+    for edition, config in loaded_yaml["editions"].items():
+        if not config.get(use_case):
+            continue
         for distro in flatten(loaded_yaml["editions"][edition][use_case]):
             package_name = cmk_package_filename(
                 edition=Edition.from_long_edition(edition), distro=distro, version=args.version
@@ -183,8 +195,12 @@ def meta_file_name(edition: str, version: str, extension: MetaFileExtension) -> 
     return f"check-mk-{edition}-{version}-bill-of-materials.{extension}"
 
 
-def build_meta_artifacts(version: Version, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
-    for edition in loaded_yaml["editions"]:
+def build_meta_artifacts(
+    version: Version, loaded_yaml: dict, use_case: UseCase
+) -> Iterator[tuple[str, bool]]:
+    for edition, config in loaded_yaml["editions"].items():
+        if not config.get(use_case):
+            continue
         bom_file_name = meta_file_name(edition, version.version_without_rc, "json")
         csv_file_name = meta_file_name(edition, version.version_without_rc, "csv")
         internal_only = edition in loaded_yaml.get("internal_editions", [])
@@ -454,30 +470,31 @@ def _get_existing_tags(url: str, session: requests.Session, internal: bool) -> I
 def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     credentials = get_credentials()
     version = Version.from_str(args.version)
+    use_case = args.use_case
     results = []
 
-    for artifact_name, internal_only in build_source_artifacts(version, loaded_yaml):
+    for artifact_name, internal_only in build_source_artifacts(version, loaded_yaml, use_case):
         results.append(
             assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
         )
         if not internal_only:
             results.append(assert_hash_matches_package_content(artifact_name, version, credentials))
 
-    for artifact_name, internal_only in build_package_artifacts(args, args.use_case, loaded_yaml):
+    for artifact_name, internal_only in build_package_artifacts(args, use_case, loaded_yaml):
         results.append(
             assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
         )
         if not internal_only:
             results.append(assert_hash_matches_package_content(artifact_name, version, credentials))
 
-    for artifact_name, internal_only in build_meta_artifacts(version, loaded_yaml):
+    for artifact_name, internal_only in build_meta_artifacts(version, loaded_yaml, use_case):
         results.append(
             assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
         )
         if not internal_only:
             results.append(assert_hash_matches_package_content(artifact_name, version, credentials))
 
-    for artifact_name, internal_only in build_docker_artifacts(version, loaded_yaml):
+    for artifact_name, internal_only in build_docker_artifacts(version, loaded_yaml, use_case):
         results.append(
             assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
         )
@@ -491,6 +508,7 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
             version=args.version,
             loaded_yaml=loaded_yaml,
             registries=registries,
+            use_case=use_case,
         ):
             session = requests.Session()
             session.auth = (registry.credentials.username, registry.credentials.password)

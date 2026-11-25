@@ -236,7 +236,7 @@ def test_missing_public_and_present_internal_artifacts_are_errors(
 
     message = str(excinfo.value)
     assert "ARTIFACT_MISSING: check-mk-pro-2.4.0p1.tar.gz should be available" in message
-    assert "ARTIFACT_PRESENT: check-mk-cloud-2.4.0p1.tar.gz should not be available" in message
+    assert "ARTIFACT_PRESENT: check-mk-cloud-2.4.0p1.tar.gz should not be available" not in message
     assert "Downloading file failed: HTTP 404" in message, (
         "the hash check of the missing tarball fails as well"
     )

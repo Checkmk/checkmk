@@ -16,6 +16,7 @@ import itertools
 import logging
 import operator
 import os
+import re
 import shlex
 import shutil
 import socket
@@ -3240,16 +3241,40 @@ def _execute_ping(ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]
             return 2, completed_process.stdout
 
     ping_command = ["ping", "-6"] if base_cmd.value == PingHostCmd.PING6 else ["ping", "-4"]
-    completed_process = subprocess.run(
-        [*ping_command, "-A", "-i", "0.2", "-c", "2", "-W", "5", ip_or_dns_name],
+    status, output = ping_target(ping_command, ip_or_dns_name)
+    return (0 if status == 0 else 1), output
+
+
+def _run_ping(command: Sequence[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        command,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         encoding="utf-8",
         check=False,
+        env={**os.environ, "LC_ALL": "C"},
     )
-    if completed_process.returncode != 0:
-        return 1, completed_process.stdout
-    return 0, completed_process.stdout
+
+
+def ping_target(
+    ping_command: Sequence[str],
+    target: str,
+    run_ping: Callable[[Sequence[str]], subprocess.CompletedProcess[str]] = _run_ping,
+) -> tuple[int, str]:
+    completed = run_ping([*ping_command, "-n", "-A", "-i", "0.2", "-c", "2", "-W", "5", target])
+    if completed.returncode != 0:
+        return completed.returncode, completed.stdout
+    if not _replied_from_target(completed.stdout):
+        return 1, completed.stdout + "\nNo reply came from the pinged address.\n"
+    return 0, completed.stdout
+
+
+def _replied_from_target(output: str) -> bool:
+    # ping also counts echo replies from other addresses.
+    # Older iputils print the IPv6 header without a space: "PING ::1(::1) ..."
+    if (target := re.search(r"^PING \S+? ?\(([^)]+)\)", output, re.MULTILINE)) is None:
+        return False
+    return f"bytes from {target[1]}:" in output
 
 
 def automation_diag_cmk_agent(
@@ -3501,15 +3526,7 @@ class AutomationDiagHost:
         ipaddress: str,
         ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     ) -> tuple[int, str]:
-        base_cmd = "ping6" if ip_family is socket.AF_INET6 else "ping"
-        completed_process = subprocess.run(
-            [base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            encoding="utf-8",
-            check=False,
-        )
-        return completed_process.returncode, completed_process.stdout
+        return ping_target(["ping6" if ip_family is socket.AF_INET6 else "ping"], ipaddress)
 
     def _execute_agent(
         self,

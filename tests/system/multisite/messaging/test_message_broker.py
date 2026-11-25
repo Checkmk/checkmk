@@ -12,7 +12,7 @@ from typing import IO
 
 import pytest
 
-from tests.system.multisite.message_broker.utils import (
+from tests.system.multisite.messaging.utils import (
     assert_message_exchange_not_working,
     assert_message_exchange_working,
     broker_pong,

@@ -1959,7 +1959,7 @@ had hidden: T3.3 could not tell the endpoint's blanket `to_ignored` demand from 
 own, and `only_host_labels` was pinned by absence alone, so a mutant turning it into a complete
 no-op passed. Harness in the session scratchpad, not committed.
 
-### Tier 4 — remote-site parity (new file: `tests/system/multisite/cmk/gui/test_service_discovery_remote_parity.py`)
+### Tier 4 — remote-site parity (new file: `tests/system/multisite/check_engine/test_service_discovery_remote_parity.py`)
 
 Uses the existing `central_site` / `remote_site` session fixtures. One identically-configured host
 per site (same agent output, so the same preview), everything driven through the REST API **on the

@@ -82,11 +82,11 @@ flowchart TD
 The heavy trigger and the nightly build chain of each edition run these suites in a Kubernetes
 pod:
 
-| Jobs                       | Suites that concern the controller                                                                                                      |
-| :------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
-| `test-system-multisite-*`  | `tests/system/multisite/agents/` and `tests/system/multisite/controller_site_interactions/`: registration and status against real sites |
-| `test-system-singlesite-*` | suites that install the agent as a prerequisite                                                                                         |
-| `test-system-update-*`     | the update test, which installs the agent around a site update                                                                          |
+| Jobs                       | Suites that concern the controller                                                     |
+| :------------------------- | :------------------------------------------------------------------------------------- |
+| `test-system-multisite-*`  | `tests/system/multisite/agent_controller/`: registration and status against real sites |
+| `test-system-singlesite-*` | suites that install the agent as a prerequisite                                        |
+| `test-system-update-*`     | the update test, which installs the agent around a site update                         |
 
 None of these jobs runs with faked artifacts. In the Pro jobs, the cases that need the Ultimate
 edition skip themselves.

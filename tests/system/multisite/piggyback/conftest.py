@@ -7,7 +7,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.system.multisite.cmk.piggyback.piggyback_test_helper import (
+from tests.system.multisite.piggyback.piggyback_test_helper import (
     HOSTNAME_SOURCE_CENTRAL,
     HOSTNAME_SOURCE_REMOTE,
     piggyback_hub_log_level,

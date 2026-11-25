@@ -7,7 +7,7 @@ import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from tests.system.multisite.cmk.piggyback.piggyback_test_helper import (
+from tests.system.multisite.piggyback.piggyback_test_helper import (
     get_piggybacked_service_time,
     HOSTNAME_SOURCE_CENTRAL,
     HOSTNAME_SOURCE_REMOTE,

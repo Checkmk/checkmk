@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.piggyback.backend._paths import source_status_dir
-from tests.system.multisite.cmk.piggyback.piggyback_test_helper import (
+from tests.system.multisite.piggyback.piggyback_test_helper import (
     CMK_TRACK_TIMEOUT,
     HOSTNAME_SOURCE_CENTRAL,
     HOSTNAME_SOURCE_REMOTE,

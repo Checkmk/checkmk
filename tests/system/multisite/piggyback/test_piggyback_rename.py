@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from cmk.piggyback.backend._paths import payload_dir, source_status_dir
-from tests.system.multisite.cmk.piggyback.piggyback_test_helper import (
+from tests.system.multisite.piggyback.piggyback_test_helper import (
     cleanup_hosts,
     cleanup_piggyback_files,
     create_local_check,

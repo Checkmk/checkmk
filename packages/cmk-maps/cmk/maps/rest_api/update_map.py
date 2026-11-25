@@ -41,6 +41,7 @@ from cmk.maps.rest_api.utils import (
     validate_map_size,
     validate_object_filters,
     validate_object_ids,
+    validate_pinned_grids,
     validate_visibility,
 )
 
@@ -65,6 +66,7 @@ def update_map_v1(
             detail=f"The body's config.name {body.config.name!r} must match the path name {name!r}.",
         )
     validate_object_ids(body.config)
+    validate_pinned_grids(body.config)
     # ``user.ident`` narrows to a guaranteed UserId and raises (not stripped
     # under ``python -O``) if the request is somehow unauthenticated.
     user_id = user.ident

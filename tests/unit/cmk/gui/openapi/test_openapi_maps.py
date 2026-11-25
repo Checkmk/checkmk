@@ -507,6 +507,24 @@ def test_only_a_host_or_a_service_is_pinned_out_of_a_grid(clients: ClientRegistr
     )
 
 
+def test_an_object_pinned_out_of_a_grid_the_map_lacks_is_refused(
+    clients: ClientRegistry,
+) -> None:
+    host = _host_object("h1", binding={"host_name": "web", "grid_id": "grid_1"})
+
+    resp = clients.Maps.create(config=_map("map1", objects=[host]), expect_ok=False)
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert "grid_1" in resp.json["detail"]
+
+
+def test_an_object_pinned_out_of_a_grid_of_the_map_is_stored(clients: ClientRegistry) -> None:
+    grid = _host_object("grid_1", obj_type="grid", binding={"object_types": "host"})
+    host = _host_object("h1", binding={"host_name": "web", "grid_id": "grid_1"})
+
+    clients.Maps.create(config=_map("map1", objects=[grid, host]))
+
+
 def test_a_map_with_more_grids_than_it_takes_is_refused(clients: ClientRegistry) -> None:
     grids = [
         _host_object(f"g{i}", obj_type="grid", binding={"object_types": "host"})

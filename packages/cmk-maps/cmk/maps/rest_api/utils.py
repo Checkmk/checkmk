@@ -350,6 +350,26 @@ def validate_object_ids(config: MapConfig) -> None:
         )
 
 
+def validate_pinned_grids(config: MapConfig) -> None:
+    """Reject a host or service pinned out of a grid the map does not have."""
+    grids = {obj.id for obj in config.objects if obj.type == "grid"}
+    unknown = sorted(
+        {
+            obj.binding.grid_id
+            for obj in config.objects
+            if not isinstance(obj.binding, ApiOmitted)
+            and isinstance(obj.binding.grid_id, str)
+            and obj.binding.grid_id not in grids
+        }
+    )
+    if unknown:
+        raise RestAPIRequestGeneralException(
+            status=HTTPStatus.BAD_REQUEST,
+            title="Unknown grid",
+            detail=f"Objects are pinned out of a grid the map does not have: {', '.join(unknown)}",
+        )
+
+
 def validate_map_size(spec: Mapping[str, object]) -> None:
     if len(json.dumps(spec, default=str).encode()) > MAP_CONFIG_MAX_BYTES:
         raise RestAPIRequestGeneralException(

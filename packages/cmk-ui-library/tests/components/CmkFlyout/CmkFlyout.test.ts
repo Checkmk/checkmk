@@ -3,10 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import CmkFlyout from 'cmk-ui-library/components/CmkFlyout'
-import { vi } from 'vitest'
-import { defineComponent, nextTick } from 'vue'
+import { provideFloatingBoundary } from 'cmk-ui-library/lib/useFloatingTarget'
+import { afterEach, beforeEach, vi } from 'vitest'
+import { defineComponent, h, nextTick } from 'vue'
 
 // CmkFlyout is fully controlled: it never opens or closes itself. The host owns `open`, toggles it
 // from the trigger, and closes on the `cancel` event (Escape / outside press / focus leaving).
@@ -283,4 +285,234 @@ test('CmkFlyout outside press dismisses only the child while one is open', async
   expect(screen.getByTestId('parentOpen').textContent).toBe('true')
   expect(screen.getByTestId('childCancel').textContent).toBe('1')
   expect(screen.getByTestId('parentCancel').textContent).toBe('0')
+})
+
+// Floating changes where the popup is placed, nothing about how it is dismissed or focused.
+describe('CmkFlyout floating', () => {
+  test('emits a single cancel when an outside press dismisses it', async () => {
+    renderFlyout({ floating: true })
+    await fireEvent.click(screen.getByRole('button', { name: 'Toggle' }))
+
+    await fireEvent.pointerDown(screen.getByRole('button', { name: 'Outside toggle' }))
+
+    expect(openState()).toBe('false')
+    expect(cancelCount()).toBe('1')
+  })
+
+  test('tabbing out past the popup dismisses it', async () => {
+    const user = userEvent.setup()
+    renderFlyout({ floating: true })
+    await user.click(screen.getByRole('button', { name: 'Toggle' }))
+    screen.getByRole('button', { name: 'Inside' }).focus()
+
+    await user.tab()
+
+    expect(openState()).toBe('false')
+    expect(cancelCount()).toBe('1')
+  })
+
+  test('is placed by the time its owner focuses into it', async () => {
+    // Focusing a popup still inside a scroll container would scroll the container.
+    let positionAtFocus: string | undefined
+    render(
+      defineComponent({
+        components: { CmkFlyout },
+        data: () => ({ open: false }),
+        methods: {
+          async openAndFocus() {
+            this.open = true
+            await nextTick()
+            positionAtFocus = document.querySelector<HTMLElement>('[role="dialog"]')?.style.position
+          }
+        },
+        template: `
+          <CmkFlyout :open="open" :restore-focus="() => {}" floating @cancel="open = false">
+            <template #trigger="{ aria }">
+              <button type="button" v-bind="aria" @click="openAndFocus">Toggle</button>
+            </template>
+            <div>Flyout body</div>
+          </CmkFlyout>
+        `
+      })
+    )
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Toggle' }))
+
+    expect(positionAtFocus).toBe('fixed')
+  })
+})
+
+describe('CmkFlyout floating placement', () => {
+  // jsdom lays nothing out: give the window, the trigger and the popup their boxes.
+  const VIEWPORT = { width: 1000, height: 800 }
+  const POPUP = { width: 300, height: 400 }
+
+  function box(top: number, height: number, width: number, left = 100): DOMRect {
+    return new DOMRect(left, top, width, height)
+  }
+
+  const isPopup = (el: HTMLElement): boolean => el.classList.contains('cmk-flyout__popup')
+
+  beforeEach(() => {
+    vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(VIEWPORT.width)
+    vi.spyOn(document.documentElement, 'clientHeight', 'get').mockReturnValue(VIEWPORT.height)
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (
+      this: HTMLElement
+    ) {
+      return isPopup(this) ? POPUP.width : 0
+    })
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (
+      this: HTMLElement
+    ) {
+      return isPopup(this) ? POPUP.height : 0
+    })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  // Hosts the flyout in an area that confines its popup, laid out at `boundary`.
+  const boundaryHost = defineComponent({
+    props: { boundary: { type: Object as () => DOMRect | null, default: null } },
+    setup(props, { slots }) {
+      provideFloatingBoundary(() =>
+        props.boundary
+          ? (document.querySelector('[data-testid="boundary"]') ?? undefined)
+          : undefined
+      )
+      return () => h('div', { 'data-testid': 'boundary' }, slots.default?.())
+    }
+  })
+
+  async function openPlaced(
+    triggerTop: number,
+    boundary: DOMRect | null = null,
+    triggerLeft = 100,
+    origin = { top: 0, left: 0 }
+  ): Promise<HTMLElement> {
+    render(
+      defineComponent({
+        components: { CmkFlyout, BoundaryHost: boundaryHost },
+        data: () => ({ open: false, floating: true, boundary }),
+        template: `
+          <BoundaryHost :boundary="boundary">
+            <CmkFlyout :open="open" :restore-focus="() => {}" :floating="floating" @cancel="open = false">
+              <template #trigger="{ aria }">
+                <button type="button" v-bind="aria" @click="open = !open">Toggle</button>
+              </template>
+              <div>Flyout body</div>
+            </CmkFlyout>
+          </BoundaryHost>
+          <button type="button" @click="floating = false">Stop floating</button>
+        `
+      })
+    )
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement
+    ) {
+      // The popup measures itself at the origin, to find its containing block's.
+      return isPopup(this)
+        ? new DOMRect(origin.left, origin.top, POPUP.width, POPUP.height)
+        : new DOMRect(0, 0, 0, 0)
+    })
+    document.querySelector<HTMLElement>('.cmk-flyout')!.getBoundingClientRect = () =>
+      box(triggerTop, 20, 200, triggerLeft)
+    if (boundary) {
+      const host = screen.getByTestId('boundary')
+      host.getBoundingClientRect = () => boundary
+      Object.defineProperties(host, {
+        clientWidth: { configurable: true, value: boundary.width },
+        clientHeight: { configurable: true, value: boundary.height }
+      })
+    }
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Toggle' }))
+    await vi.waitFor(() => expect(screen.getByRole('dialog').style.position).toBe('fixed'))
+    return screen.getByRole('dialog')
+  }
+
+  test('opens below a trigger with room below, uncapped', async () => {
+    const popup = await openPlaced(100)
+
+    // Trigger bottom 120 plus the 4px gap.
+    expect(popup.style.top).toBe('124px')
+    expect(popup.style.maxHeight).toBe('')
+    expect(popup.style.overflowY).toBe('')
+  })
+
+  test('opens above a trigger with room only above', async () => {
+    const popup = await openPlaced(600)
+
+    // Trigger top 600 less the 4px gap and the popup's 400.
+    expect(popup.style.top).toBe('196px')
+  })
+
+  test('moves over a trigger with room on neither side', async () => {
+    const popup = await openPlaced(390)
+
+    // As low as the window leaves room for: 800 - 8 - 400.
+    expect(popup.style.top).toBe('392px')
+  })
+
+  test('stays within the boundary when the trigger lies outside it', async () => {
+    const popup = await openPlaced(100, new DOMRect(0, 200, 1000, 600))
+
+    expect(popup.style.top).toBe('208px')
+  })
+
+  test('scrolls where even the boundary is too short', async () => {
+    const popup = await openPlaced(150, new DOMRect(0, 100, 1000, 300))
+
+    expect(popup.style.top).toBe('108px')
+    expect(popup.style.maxHeight).toBe('284px')
+    expect(popup.style.overflowY).toBe('auto')
+  })
+
+  test('moves sideways from a trigger too close to the edge of the window', async () => {
+    const popup = await openPlaced(100, null, 900)
+
+    // As far right as the window leaves room for: 1000 - 8 - 300.
+    expect(popup.style.left).toBe('692px')
+  })
+
+  test('offsets its position by a shifted containing block', async () => {
+    // A transformed ancestor moves the containing block's origin off the viewport's.
+    const popup = await openPlaced(100, null, 100, { top: 30, left: 50 })
+
+    expect(popup.style.top).toBe('94px')
+    expect(popup.style.left).toBe('50px')
+  })
+
+  function moveTrigger(top: number): void {
+    document.querySelector<HTMLElement>('.cmk-flyout')!.getBoundingClientRect = () =>
+      box(top, 20, 200)
+  }
+
+  test('follows its trigger when a container scrolls', async () => {
+    const popup = await openPlaced(100)
+    moveTrigger(50)
+
+    await fireEvent.scroll(screen.getByTestId('boundary'))
+
+    expect(popup.style.top).toBe('74px')
+  })
+
+  test('stays in place when scrolling inside the popup', async () => {
+    const popup = await openPlaced(100)
+    moveTrigger(50)
+
+    await fireEvent.scroll(popup)
+
+    expect(popup.style.top).toBe('124px')
+  })
+
+  test('goes back below its trigger when it stops floating', async () => {
+    const popup = await openPlaced(600)
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Stop floating' }))
+
+    expect(popup.style.position).toBe('')
+    expect(popup.style.top).toBe('')
+  })
 })

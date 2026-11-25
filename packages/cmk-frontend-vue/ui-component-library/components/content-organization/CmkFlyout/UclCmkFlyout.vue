@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
+import type { PanelConfig } from '@ucl/_ucl/types/prop-def'
+
 import codeExample from './UclCmkFlyoutCodeExample.vue?raw'
 
 export const a11yData = [
@@ -24,17 +26,29 @@ export const a11yData = [
     description: 'Closes the flyout and returns focus to the trigger.'
   }
 ]
+
+export const panelConfig = {
+  floating: {
+    type: 'boolean',
+    title: 'Floating',
+    initialState: false,
+    help: 'Position the popup relative to the window, so a scrolling container cannot cut it off. It opens below the trigger, or above it when only that side has room. Use it for flyouts inside scrolling areas such as tables.'
+  }
+} satisfies PanelConfig
 </script>
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageDeveloperPlayground,
   UclDetailPageHeader,
-  UclDetailPageLayout
+  UclDetailPageLayout,
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
+import type { UserProps } from '@ucl/_ucl/types/prop-def'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkFlyout from 'cmk-ui-library/components/CmkFlyout'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
@@ -43,6 +57,11 @@ import { ref, useTemplateRef } from 'vue'
 import UclCmkFlyoutDev from './UclCmkFlyoutDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
+
+const propState = new PanelStateCreator<
+  typeof CmkFlyout,
+  keyof UserProps<typeof CmkFlyout>
+>().createRef(panelConfig)
 
 const open = ref(false)
 const triggerRef = useTemplateRef<InstanceType<typeof CmkButton>>('triggerRef')
@@ -57,6 +76,7 @@ const triggerRef = useTemplateRef<InstanceType<typeof CmkButton>>('triggerRef')
         :open="open"
         :label="untranslated('Toggle flyout')"
         :restore-focus="() => triggerRef?.focus()"
+        :floating="propState.floating"
         @cancel="open = false"
       >
         <template #trigger="{ aria }">
@@ -65,6 +85,10 @@ const triggerRef = useTemplateRef<InstanceType<typeof CmkButton>>('triggerRef')
 
         <p style="margin: 0">Any content can live inside the flyout popup.</p>
       </CmkFlyout>
+
+      <template #properties>
+        <UclPropertiesPanel v-model="propState" :config="panelConfig" />
+      </template>
     </UclDetailPageComponent>
 
     <UclDetailPageCodeExample :code="codeExample" />

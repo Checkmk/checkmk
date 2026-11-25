@@ -195,6 +195,8 @@ export interface CmkDateTimePickerProps<
   disabled?: boolean
   /** Accessible name for the popup dialog (sets `aria-label`). */
   label?: TranslatedString | undefined
+  /** Place the calendar against the viewport, so a scroll container cannot clip it. */
+  floating?: boolean
 }
 
 /** Props for `CmkTimePicker`. A bare wall-clock time has no "save in place" semantics, so this

@@ -23,6 +23,11 @@ export interface FlyoutProps {
    * wrapper the flyout owns.
    */
   restoreFocus: () => void
+  /**
+   * Place the popup against the viewport, below or above the trigger, so a scroll container around
+   * the flyout cannot clip it.
+   */
+  floating?: boolean | undefined
 }
 
 /**

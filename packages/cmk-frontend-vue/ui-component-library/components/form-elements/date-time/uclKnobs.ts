@@ -75,6 +75,13 @@ export const disabledKnob = { type: 'boolean' as const, title: 'Disabled', initi
 
 export const nullableKnob = { type: 'boolean' as const, title: 'Nullable', initialState: false }
 
+export const floatingKnob = {
+  type: 'boolean' as const,
+  title: 'Floating',
+  initialState: false,
+  help: 'Position the calendar relative to the window, so a scrolling container cannot cut it off. It opens below the field, or above it when only that side has room.'
+}
+
 export const presetsKnob = { type: 'boolean' as const, title: 'Presets', initialState: false }
 
 export function resolveHourCycleKnob(value: string): HourCycle | undefined {

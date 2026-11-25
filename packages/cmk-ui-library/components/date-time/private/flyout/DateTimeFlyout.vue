@@ -34,6 +34,8 @@ const props = withDefaults(
     popupBorder?: 'container' | 'field'
     /** Restore focus to the trigger when the popup closes with focus inside it (see `CmkFlyout`). */
     restoreFocus: () => void
+    /** See `CmkFlyout`. */
+    floating?: boolean
   }>(),
   {
     saveMode: false,
@@ -42,7 +44,8 @@ const props = withDefaults(
     applyDisabled: false,
     stretchActions: false,
     popupBackground: 'gradient',
-    popupBorder: 'field'
+    popupBorder: 'field',
+    floating: false
   }
 )
 
@@ -79,6 +82,7 @@ function onCancel(): void {
     ]"
     :label="label"
     :restore-focus="restoreFocus"
+    :floating="floating"
     @cancel="onCancel"
   >
     <template #trigger="{ open: isOpen, aria }">

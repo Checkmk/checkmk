@@ -6,11 +6,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
+import { useFloatingBoundary } from 'cmk-ui-library/lib/useFloatingTarget'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, useTemplateRef } from 'vue'
 
 import type { FlyoutProps, FlyoutSlots, TriggerAria } from './types'
 import { useFlyoutDismiss } from './useFlyoutDismiss'
+import { useFlyoutFloating } from './useFlyoutFloating'
 import { useFlyoutFocus } from './useFlyoutFocus'
 import { useFlyoutNesting } from './useFlyoutNesting'
 
@@ -49,6 +51,15 @@ const { onFocusOut } = useFlyoutDismiss({
 })
 useFlyoutFocus(isOpen, { popup: () => popupRef.value, restoreFocus: () => props.restoreFocus() })
 
+const floatingBoundary = useFloatingBoundary()
+useFlyoutFloating({
+  enabled: () => props.floating === true,
+  open: isOpen,
+  reference: rootRef,
+  popup: popupRef,
+  boundary: () => floatingBoundary.value
+})
+
 function onKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape' && props.open && !hasOpenChild()) {
     event.preventDefault()
@@ -61,7 +72,7 @@ function onKeydown(event: KeyboardEvent): void {
   <div
     ref="rootRef"
     class="cmk-flyout"
-    :class="{ 'cmk-flyout--open': open }"
+    :class="{ 'cmk-flyout--open': open, 'cmk-flyout--floating': floating }"
     @keydown="onKeydown"
     @focusout="onFocusOut"
   >
@@ -104,12 +115,17 @@ function onKeydown(event: KeyboardEvent): void {
   color: var(--font-color);
 }
 
-/* Square the popup's top-left corner where the trigger meets it. */
-.cmk-flyout--open > .cmk-flyout__popup {
+/* Measured and capped as one box, borders included. */
+.cmk-flyout--floating > .cmk-flyout__popup {
+  box-sizing: border-box;
+}
+
+/* Square the popup's top-left corner where the trigger meets it. A floating popup stands apart. */
+.cmk-flyout--open:not(.cmk-flyout--floating) > .cmk-flyout__popup {
   border-top-left-radius: 0;
 }
 
-.cmk-flyout--open > .cmk-flyout__trigger {
+.cmk-flyout--open:not(.cmk-flyout--floating) > .cmk-flyout__trigger {
   position: relative;
   z-index: calc(var(--z-index-modal-popup) + 1);
 }

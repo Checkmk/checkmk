@@ -21,3 +21,16 @@ export function useFloatingTarget(): ComputedRef<HTMLElement | undefined> {
   const getTarget = inject(floatingTargetKey, () => undefined)
   return computed(() => getTarget())
 }
+
+const floatingBoundaryKey: InjectionKey<() => Element | undefined> = Symbol('cmk-floating-boundary')
+
+/** Keep floating popups of descendants within this element, e.g. where a sticky header covers them. */
+export function provideFloatingBoundary(getBoundary: () => Element | undefined): void {
+  provide(floatingBoundaryKey, getBoundary)
+}
+
+/** Nearest floating boundary, if any. */
+export function useFloatingBoundary(): ComputedRef<Element | undefined> {
+  const getBoundary = inject(floatingBoundaryKey, () => undefined)
+  return computed(() => getBoundary())
+}

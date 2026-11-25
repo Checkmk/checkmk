@@ -11,6 +11,7 @@ import {
   dateFormatKnob,
   disabledKnob,
   firstDayOfWeekKnob,
+  floatingKnob,
   hourCycleKnob,
   nullableKnob,
   saveModeKnob,
@@ -26,7 +27,8 @@ export const panelConfig = {
   serverTimeZone: serverTimeZoneKnob,
   saveMode: saveModeKnob,
   disabled: disabledKnob,
-  nullable: nullableKnob
+  nullable: nullableKnob,
+  floating: floatingKnob
 } satisfies PanelConfig
 </script>
 
@@ -94,6 +96,7 @@ function onSave(): boolean {
         :settings="settings"
         :nullable="propState.nullable"
         :disabled="propState.disabled"
+        :floating="propState.floating"
         :save-mode="propState.saveMode"
         :save-handler="propState.saveMode ? onSave : undefined"
         :server-time-zone="resolveServerTimeZone(propState.serverTimeZone)"

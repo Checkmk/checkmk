@@ -128,6 +128,7 @@ async function toggleFromButton(): Promise<void> {
     :apply-disabled="!canApply(draft)"
     :label="props.label ?? _t('Choose date & time')"
     :restore-focus="() => triggerInput?.focusTriggerButton()"
+    :floating="props.floating"
     @apply="confirm"
   >
     <template #trigger="{ aria }">
@@ -138,7 +139,7 @@ async function toggleFromButton(): Promise<void> {
         :month-names="settings.monthNamesLong"
         :hour-cycle="settings.hourCycle"
         :disabled="props.disabled"
-        :open="open"
+        :open="open && !props.floating"
         as-trigger
         :trigger-aria="aria"
         @commit="confirm"

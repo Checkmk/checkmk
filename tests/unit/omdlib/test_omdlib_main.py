@@ -13,7 +13,7 @@ from omdlib.type_defs import Skeleton
 
 
 def test_hostname() -> None:
-    assert omdlib.main.hostname() == os.popen("hostname").read().strip()
+    assert omdlib.main.hostname() == os.popen("hostname").read().strip()  # type: ignore[deprecated]
 
 
 def test_permission_action_new_link_triggers_no_action() -> None:

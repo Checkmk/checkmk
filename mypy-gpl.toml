@@ -61,8 +61,6 @@ enable_error_code = [
   "unused-ignore",
 ]
 
-# We should really get rid of these...
-deprecated_calls_exclude = ["argparse.FileType", "os.popen", "os.system"]
 
 # meraki has no type annotations; with explicit_package_bases=true and mypy 1.19+, following it
 # silently triggers "Source file found twice under different module names". Skip it entirely —

@@ -139,11 +139,11 @@ def try_detect_servers(ssl_ports):
     utility (deprecated). If both network utilities are unavailable or nginx is not running on the
     machine, no statistics will be returned.
     """
-    iproute2_lines = os.popen("ss -tlnp 2>/dev/null").readlines()
+    iproute2_lines = os.popen("ss -tlnp 2>/dev/null").readlines()  # type: ignore[deprecated]
     if iproute2_lines:
         return extract_stats_from_iproute2(iproute2_lines, ssl_ports)
 
-    netstat_lines = os.popen("netstat -tlnp 2>/dev/null").readlines()
+    netstat_lines = os.popen("netstat -tlnp 2>/dev/null").readlines()  # type: ignore[deprecated]
     return extract_stats_from_netstat(netstat_lines, ssl_ports)
 
 

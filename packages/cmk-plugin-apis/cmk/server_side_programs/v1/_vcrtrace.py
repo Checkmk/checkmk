@@ -58,7 +58,7 @@ def vcrtrace(
             nargs: int | str | None = None,
             const: T | None = None,
             default: T | str | None = None,
-            type: Callable[[str], T] | argparse.FileType | None = None,  # noqa: A002
+            type: Callable[[str], T] | argparse.FileType | None = None,  # type: ignore[deprecated]  # noqa: A002
             choices: Iterable[T] | None = None,
             required: bool = False,
             help: str | None = None,  # noqa: A002

@@ -31,7 +31,7 @@ def get_pid():
 
     # This produces a false warning in Bandit, claiming there was no failing test for this nosec.
     # The warning is a bug in Bandit: https://github.com/PyCQA/bandit/issues/942
-    p = os.popen(cmd)  # nosec B605 # BNS:f6c1b9
+    p = os.popen(cmd)  # type: ignore[deprecated]  # nosec B605 # BNS:f6c1b9
     return p.read().strip()
 
 

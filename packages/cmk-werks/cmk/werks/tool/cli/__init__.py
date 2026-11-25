@@ -348,7 +348,7 @@ def git_modified_files() -> set[WerkId]:
     # this is called from `werk list` via werk_is_modified
     # so we can assume, that this won't change during runtime of this script
     modified = set()
-    for line in os.popen("git status --porcelain"):
+    for line in os.popen("git status --porcelain"):  # type: ignore[deprecated]
         if line[0] in "AM" and ".werks/" in line:
             try:
                 wid = line.rsplit("/", 1)[-1].strip().removesuffix(".md")
@@ -462,7 +462,10 @@ def git_top_level() -> str:
 
 
 def something_in_git_index() -> bool:
-    return any(line[0] == "M" for line in os.popen("git status --porcelain"))
+    status = subprocess.run(
+        ["git", "status", "--porcelain"], stdout=subprocess.PIPE, text=True, check=False
+    ).stdout
+    return any(line[0] == "M" for line in status.splitlines())
 
 
 def _launcher() -> str:

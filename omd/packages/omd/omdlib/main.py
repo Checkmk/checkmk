@@ -540,7 +540,7 @@ def _patch_template_file(
                 changed = len(
                     [
                         l
-                        for l in os.popen(f"diff {dst}.orig {dst}").readlines()  # nosec B605 # BNS:2b5952
+                        for l in os.popen(f"diff {dst}.orig {dst}").readlines()  # type: ignore[deprecated]  # nosec B605 # BNS:2b5952
                         if l.startswith(">")
                     ]
                 )
@@ -807,12 +807,12 @@ def _try_merge(
             conflict_mode=conflict_mode,
         )
         Path(f"{user_path}-{version}").write_bytes(replace_tags(skel_content, replacements))
-    version_patch = os.popen(  # nosec B605 # BNS:2b5952
+    version_patch = os.popen(  # type: ignore[deprecated]  # nosec B605 # BNS:2b5952
         f"diff -u {user_path}-{old_version} {user_path}-{new_version}"
     ).read()
 
     # First try to merge the changes in the version into the users' file
-    f = os.popen(  # nosec B605 # BNS:2b5952
+    f = os.popen(  # type: ignore[deprecated]  # nosec B605 # BNS:2b5952
         f"{site_home}/bin/patch --force --backup --forward --silent --merge {user_path} >/dev/null",
         "w",
     )

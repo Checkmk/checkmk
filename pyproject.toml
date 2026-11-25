@@ -82,8 +82,6 @@ enable_error_code = [
   "unused-ignore",
 ]
 
-# We should really get rid of these...
-deprecated_calls_exclude = ["argparse.FileType", "os.popen", "os.system"]
 
 # Do not complain about --strict problems in generated protobuf code
 [[tool.mypy.overrides]]

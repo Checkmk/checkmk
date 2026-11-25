@@ -123,7 +123,7 @@ def try_detect_servers(ssl_ports):
     #  capture content of last brackets (...))
     pattern = re.compile(r"users:.*\(([^\(\)]*?)\)\)$")
 
-    for ss_line in os.popen("ss -tlnp 2>/dev/null").readlines():
+    for ss_line in os.popen("ss -tlnp 2>/dev/null").readlines():  # type: ignore[deprecated]
         parts = ss_line.split()
         # Skip lines with wrong format
         if len(parts) < 6 or "users:" not in parts[5]:
@@ -150,7 +150,7 @@ def try_detect_servers(ssl_ports):
         # (plugin silently fails without any section output,
         #  if neither netstat nor ss are installed.)
 
-        for netstat_line in os.popen("netstat -tlnp 2>/dev/null").readlines():
+        for netstat_line in os.popen("netstat -tlnp 2>/dev/null").readlines():  # type: ignore[deprecated]
             parts = netstat_line.split()
             # Skip lines with wrong format
             if len(parts) < 7 or "/" not in parts[6]:
@@ -255,7 +255,7 @@ def get_response_charset(response):
 def get_instance_name_map(cfg):
     instance_name_map = {"custom": cfg.get("CUSTOM_ADDRESS_OVERWRITE", {})}
     if cfg.get("ENABLE_OMD_SITE_DETECTION") and os.path.exists("/usr/bin/omd"):
-        for line in os.popen("omd sites").readlines():
+        for line in os.popen("omd sites").readlines():  # type: ignore[deprecated]
             sitename = line.split()[0]
             path = "/opt/omd/sites/%s/etc/apache/listen-port.conf" % sitename
             instance_name_map.setdefault("omd_sites", {})

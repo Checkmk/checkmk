@@ -1,7 +1,9 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_env.bzl", "bazel_env")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@mypy_requirements//:requirements.bzl", mypy_requirement = "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//bazel/tools:eslint/package_json.bzl", eslint_bin = "bin")
 load("@npm//bazel/tools:npm-groovy-lint/package_json.bzl", groovy_bin = "bin")
@@ -10,9 +12,12 @@ load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("@rules_uv//uv:pip.bzl", "pip_compile")
+load("//:bazel_variables.bzl", "UV_PIP_COMPILE_ARGS")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 load("//bazel/tools:starlark_files.bzl", "STARLARK_EXCLUDED", "STARLARK_NAMES")
+load(":mypy_version.bzl", "MYPY_VERSION")
 
 exports_files(
     [
@@ -85,9 +90,27 @@ groovy_bin.npm_groovy_lint_binary(
     ],
 )
 
+write_file(
+    name = "mypy-requirements-in",
+    out = "mypy-requirements.in",
+    content = ["mypy==%s" % MYPY_VERSION],
+)
+
+# Not part of //:lock_python_requirements on purpose, see mypy_version.bzl. typing-extensions is
+# left out: the pydantic plugin brings the product's version, and two copies would compete.
+pip_compile(
+    name = "mypy_requirements",
+    args = UV_PIP_COMPILE_ARGS + ["--no-emit-package=typing-extensions"],
+    requirements_in = ":mypy-requirements-in",
+    requirements_txt = "mypy-requirements.txt",
+    tags = ["manual"],
+    # for :mypy_requirements_test in the test suites of //:BUILD
+    visibility = ["//:__pkg__"],
+)
+
 mypy_cli(
     name = "mypy_cli_original",
-    mypy_requirement = requirement("mypy"),
+    mypy_requirement = mypy_requirement("mypy"),
     python_version = "3.15",
     tags = ["no-mypy"],
     deps = [

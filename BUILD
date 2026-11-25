@@ -17,6 +17,7 @@ load("//:bazel_variables.bzl", "PYPI_PROXY_INDEX_URL", "UV_PIP_COMPILE_ARGS")
 load("//bazel/rules:deploy.bzl", "CLOUD_WHEELS", "COMMUNITY_WHEELS", "PRO_WHEELS", "ULTIMATEMT_WHEELS", "ULTIMATE_WHEELS", "deploy_python", "deploy_python_drift_test")
 load("//bazel/rules:proto.bzl", "proto_library_as")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
+load("//bazel/tools:mypy_version.bzl", "MYPY_VERSION")
 
 exports_files(
     [
@@ -250,6 +251,7 @@ write_file(
     out = "bazel-requirements-constraints.txt",
     content = [
         "ruff==0.17.6",  # keep in sync with the multitool hub % RUFF_VERSION,
+        "mypy==%s" % MYPY_VERSION,  # the same as the mypy aspect's lock
         "protobuf==%s" % PROTOBUF_PYTHON_VERSION,
     ],
 )
@@ -359,6 +361,7 @@ test_suite(
         ":runtime_requirements_test",
         "//agents/modules/windows:windows_requirements_test",
         "//agents/modules/windows:windows_test_cab_requirements_test",
+        "//bazel/tools:mypy_requirements_test",
     ],
 )
 
@@ -368,6 +371,7 @@ test_suite(
         ":community_requirements_test",
         "//agents/modules/windows:windows_requirements_test",
         "//agents/modules/windows:windows_test_cab_requirements_test",
+        "//bazel/tools:mypy_requirements_test",
     ],
 )
 

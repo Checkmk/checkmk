@@ -3339,6 +3339,7 @@ mypy==2.4.1 \
     --hash=sha256:f44dd4c5ab22df21206dd926c98381ebdbf5bfd696df37dd38ded2d23143fcb6 \
     --hash=sha256:f9118a3f50de264b614861bb11814833a742138ac3c8e2e49a860b6977fb2704
     # via
+    #   -c bazel-requirements-constraints.txt
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
     #   pylsp-mypy

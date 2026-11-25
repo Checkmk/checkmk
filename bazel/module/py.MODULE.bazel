@@ -60,6 +60,19 @@ pip.parse(
 )
 use_repo(pip, "cmk_requirements")
 
+# mypy and its helper packages for the mypy aspect, see //bazel/tools:mypy_version.bzl.
+pip.parse(
+    environment = {
+        "CC": "gcc-14",
+    },
+    hub_name = "mypy_requirements",
+    python_version = "3.15",
+    requirements_by_platform = {
+        "@//bazel/tools:mypy-requirements.txt": "linux_*",
+    },
+)
+use_repo(pip, "mypy_requirements")
+
 # elementpath 4.8.0 has no Unicode categories for Python 3.15+, but pysaml2 keeps us
 # on it (xmlschema<3, which needs elementpath<5). The patch backports the fallback of
 # elementpath 5.x; //omd/packages/python3-modules applies it to the site's copy.

@@ -139,12 +139,13 @@ prints the rest.
 
 ## Dependencies
 
-| I want to …                                              | Command                                                    |
-| -------------------------------------------------------- | ---------------------------------------------------------- |
-| Relock Python after editing a `*.in` file                | `bazel run //:lock_python_requirements`                    |
-| Upgrade one or all Python packages                       | `python3 scripts/update_python_libs.py [--package <name>]` |
-| Update `MODULE.bazel.lock` after a `MODULE.bazel` change | `bazel mod deps --lockfile_mode=update`                    |
-| Update a JavaScript package                              | `bazel run -- @pnpm//:pnpm --dir $PWD update -r <package>` |
+| I want to …                                              | Command                                                                                                                                            |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Relock Python after editing a `*.in` file                | `bazel run //:lock_python_requirements`                                                                                                            |
+| Upgrade one or all Python packages                       | `python3 scripts/update_python_libs.py [--package <name>]`                                                                                         |
+| Upgrade mypy (pinned for the aspect and the venv)        | Set `MYPY_VERSION` in `bazel/tools/mypy_version.bzl`, then `bazel run //bazel/tools:mypy_requirements` and `bazel run //:lock_python_requirements` |
+| Update `MODULE.bazel.lock` after a `MODULE.bazel` change | `bazel mod deps --lockfile_mode=update`                                                                                                            |
+| Update a JavaScript package                              | `bazel run -- @pnpm//:pnpm --dir $PWD update -r <package>`                                                                                         |
 
 ## Building and deploying
 

@@ -25,6 +25,7 @@ import type {
 } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import { useTimeRangeVariables } from '@/graphing/GlobalTimePicker/timeRangeUrl'
+import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import { DRILLED_FROM_PARAM } from '@/page-header/drillUp'
 
 import type { ContentProps } from '../types.ts'
@@ -47,14 +48,8 @@ const errorMessage: string = _t(
     You can use these examples to identify hosts and services that must be filtered out in the top list configuration to resolve the problem.`
 )
 
-const hostViewUrl = (entry: TopListEntry | TopListError) => {
-  const urlParams = new URLSearchParams({
-    view_name: 'host',
-    site: entry.site_id,
-    host: entry.host_name
-  }).toString()
-  return `view.py?${urlParams}`
-}
+const hostServicesUrl = (entry: TopListEntry | TopListError) =>
+  hostServicesPageUrl({ name: entry.host_name, site_id: entry.site_id })
 
 const serviceViewUrl = (entry: TopListEntry | TopListError) => {
   const urlParams = new URLSearchParams({
@@ -125,7 +120,13 @@ function columns(topList?: ComputedTopList): RankedTableColumn[] {
     { key: 'host', title: _t('Host'), render: 'text', bar: false }
   ]
   if (props.content.columns.show_service_description === true) {
-    result.push({ key: 'service', title: _t('Service'), render: 'text', bar: false })
+    result.push({
+      key: 'service',
+      title: _t('Service'),
+      render: 'text',
+      bar: false,
+      tone: 'secondary'
+    })
   }
   const value: RankedTableColumn = {
     key: 'value',
@@ -133,8 +134,8 @@ function columns(topList?: ComputedTopList): RankedTableColumn[] {
     render: 'count',
     bar: showBar
   }
-  if (showBar && topList) {
-    // The backend derives the range from the widget's "display range" setting.
+  // A fixed display range scales the bars; without one, they grow from zero by their size.
+  if (showBar && topList && props.content.display_range !== 'automatic') {
     value.barRange = [topList.value_range.min_value, topList.value_range.max_value]
   }
   result.push(value)
@@ -146,7 +147,7 @@ function rows(topList: ComputedTopList): RankedTableRow[] {
   return topList.entries.map((entry) => ({
     host: {
       value: entry.host_name,
-      ...contextualLink(topList, hostViewUrl(entry), entry.host_link_properties)
+      ...contextualLink(topList, hostServicesUrl(entry), entry.host_link_properties)
     },
     service: {
       value: entry.service_description,
@@ -154,7 +155,8 @@ function rows(topList: ComputedTopList): RankedTableRow[] {
     },
     value: {
       value: entry.metric.value,
-      formatted: entry.metric.formatted,
+      formatted: entry.metric.value_text,
+      unit: entry.metric.unit ?? undefined,
       color: entry.metric.color
     }
   }))
@@ -162,13 +164,13 @@ function rows(topList: ComputedTopList): RankedTableRow[] {
 
 const errorColumns: RankedTableColumn[] = [
   { key: 'host', title: _t('Host'), render: 'text', bar: false },
-  { key: 'service', title: _t('Service'), render: 'text', bar: false },
+  { key: 'service', title: _t('Service'), render: 'text', bar: false, tone: 'secondary' },
   { key: 'checkCommand', title: _t('Check command'), render: 'text', bar: false }
 ]
 
 function errorRows(topList: ComputedTopList): RankedTableRow[] {
   return topList.errors.map((error) => ({
-    host: { value: error.host_name, ...link(hostViewUrl(error)) },
+    host: { value: error.host_name, ...link(hostServicesUrl(error)) },
     service: { value: error.service_description, ...link(serviceViewUrl(error)) },
     checkCommand: { value: error.check_command, ...link(checkCommandViewUrl(error)) }
   }))
@@ -183,12 +185,17 @@ function errorRows(topList: ComputedTopList): RankedTableRow[] {
     @retry="retry"
   >
     <template #loading>
-      <CmkRankedTable
-        :columns="columns()"
-        :rows="[]"
-        :placeholder="{ kind: 'loading', rows: content.limit_to }"
-        :show-rank="showRank"
-      />
+      <div class="db-content-top-list__scroll">
+        <div class="db-content-top-list__fill">
+          <CmkRankedTable
+            :columns="columns()"
+            :rows="[]"
+            :placeholder="{ kind: 'loading', rows: content.limit_to }"
+            :show-rank="showRank"
+            :label="effectiveTitle"
+          />
+        </div>
+      </div>
     </template>
     <template #error="{ detail, retry: retryFetch }">
       <WidgetDataErrorAlert :detail="detail" :last-success-at="lastSuccessAt" @retry="retryFetch" />
@@ -198,7 +205,7 @@ function errorRows(topList: ComputedTopList): RankedTableRow[] {
         <div
           :class="{
             'db-content-top-list__preview-shield': isPreview,
-            'db-content-top-list__fill': !value.entries.length && !value.errors.length
+            'db-content-top-list__fill': !value.errors.length
           }"
         >
           <CmkRankedTable
@@ -207,6 +214,7 @@ function errorRows(topList: ComputedTopList): RankedTableRow[] {
             :rows="rows(value)"
             :busy="fetching"
             :show-rank="showRank"
+            :label="effectiveTitle"
           />
           <CmkRankedTable
             v-else
@@ -226,7 +234,11 @@ function errorRows(topList: ComputedTopList): RankedTableRow[] {
             <CmkAlertBoxDeprecated variant="error">
               <div class="db-content-top-list__error-msg">{{ errorMessage }}</div>
             </CmkAlertBoxDeprecated>
-            <CmkRankedTable :columns="errorColumns" :rows="errorRows(value)" />
+            <CmkRankedTable
+              :columns="errorColumns"
+              :rows="errorRows(value)"
+              :label="_t('Services with conflicting metrics')"
+            />
           </template>
         </div>
       </div>
@@ -235,8 +247,11 @@ function errorRows(topList: ComputedTopList): RankedTableRow[] {
 </template>
 
 <style scoped>
+/* Without errors the table fills the box and scrolls itself, under its sticky header. */
 .db-content-top-list__scroll {
+  box-sizing: border-box;
   height: 100%;
+  padding: var(--dimension-4) var(--dimension-5);
   overflow: auto;
 }
 

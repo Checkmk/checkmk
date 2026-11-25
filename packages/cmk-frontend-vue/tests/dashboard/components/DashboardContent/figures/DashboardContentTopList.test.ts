@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import { restApiHttp } from 'cmk-ui-library/vitest.msw'
 import {
   resizeObserverReporting,
@@ -113,9 +113,10 @@ async function renderWidget(
     }
   })
   const rendered = render(wrapper)
-  await waitFor(() =>
+  await waitFor(() => {
     expect(rendered.container.querySelector('.db-content-top-list__scroll')).not.toBeNull()
-  )
+    expect(rendered.container.querySelector('[aria-busy="true"]')).toBeNull()
+  })
   return rendered
 }
 
@@ -171,16 +172,23 @@ describe('DashboardContentTopList', () => {
     expect(hosts).toEqual(['host-b', 'host-a'])
   })
 
-  it('shows the pre-formatted metric value', async () => {
+  it('shows the pre-formatted metric value with its unit set apart', async () => {
     await renderWidget()
-    expect(screen.getByText('20.00 %')).toBeInTheDocument()
+    const row = screen.getByRole('row', { name: 'Rank 1' })
+    expect(row).toHaveTextContent('20.00 %')
+    expect(within(row).getByText('%')).toHaveClass('db-cmk-ranked-table__unit')
   })
 
-  it('links hosts and services to their monitoring views', async () => {
+  it('names the table after the widget title', async () => {
+    await renderWidget()
+    expect(screen.getByRole('table', { name: 'Top 10: CPU load' })).toBeInTheDocument()
+  })
+
+  it('links hosts to Services of host and services to their monitoring view', async () => {
     await renderWidget()
     expect(screen.getByRole('link', { name: 'host-b' })).toHaveAttribute(
       'href',
-      'view.py?view_name=host&site=heute&host=host-b'
+      'monitor_host_services.py?host=host-b&site=heute'
     )
     expect(screen.getAllByRole('link', { name: 'CPU load' })[0]).toHaveAttribute(
       'href',
@@ -295,7 +303,7 @@ describe('DashboardContentTopList', () => {
     expect(screen.getByRole('link', { name: 'host-b' })).toHaveAttribute(
       'href',
       new URL(
-        'view.py?view_name=host&site=heute&host=host-b&_drilled_from=Overview',
+        'monitor_host_services.py?host=host-b&site=heute&_drilled_from=Overview',
         window.location.href
       ).href
     )
@@ -307,7 +315,23 @@ describe('DashboardContentTopList', () => {
     expect(screen.getByText('host-b')).toBeInTheDocument()
   })
 
-  it('fills the bar of a lone entry, whose automatic range has no span', async () => {
+  it('grows automatic bars from zero by their size, also for negative values', async () => {
+    const base = topList()
+    endpoint.answerInThisTest({
+      ...base,
+      value_range: { min_value: -10, max_value: 0 },
+      entries: [
+        { ...base.entries[0]!, metric: { ...base.entries[0]!.metric, value: -1 } },
+        { ...base.entries[1]!, metric: { ...base.entries[1]!.metric, value: -10 } }
+      ]
+    })
+    const { container } = await renderWidget()
+
+    const fills = [...container.querySelectorAll<HTMLElement>('[class*="bar-fill"]')]
+    expect(fills.map((fill) => fill.style.width)).toEqual(['10%', '100%'])
+  })
+
+  it('fills the bar of a lone entry', async () => {
     const single = topList()
     endpoint.answerInThisTest({
       ...single,
@@ -399,5 +423,8 @@ describe('DashboardContentTopList', () => {
       'Check command'
     ])
     expect(screen.getByRole('link', { name: 'check_mk-cpu.loads' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('table', { name: 'Services with conflicting metrics' })
+    ).toBeInTheDocument()
   })
 })

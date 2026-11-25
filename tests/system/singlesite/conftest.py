@@ -10,10 +10,11 @@ import pytest
 
 from tests.testlib.pytest_helpers import flake_reporter, registration
 from tests.testlib.system.edition_setup import edition_setup
-from tests.testlib.system.event_console import CMKEventConsole
 from tests.testlib.system.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.system.site import get_site_factory, Site, SiteFactory
 from tests.testlib.system.web_session import CMKWebSession
+
+from .event_console import CMKEventConsole
 
 logger = logging.getLogger(__name__)
 

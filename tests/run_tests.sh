@@ -282,17 +282,12 @@ test-system-gui-pro() { test-system-gui; }
 
 test-system-gui-non-free() {
     prepare-playwright
-    # The non-free tests of each feature, in tests/system/gui/<feature>/nonfree/.
-    local nonfree_dirs
-    mapfile -t nonfree_dirs < <(
-        find "$(realpath "$SCRIPT_DIR/system/gui")" -mindepth 1 -maxdepth 2 -type d -name nonfree | sort
-    )
     _pytest --screenshot=only-on-failure \
         --output="${RESULT_PATH:-/tmp}/" \
         --tracing=retain-on-failure \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         --cmk-edition "$EDITION" \
-        "${nonfree_dirs[@]}"
+        "$(realpath "$SCRIPT_DIR/system/gui")/nonfree"
 }
 
 test-system-gui-ultimate() { EDITION=ultimate test-system-gui-non-free; }
@@ -333,19 +328,19 @@ test-system-mk-oracle-docker() {
 
 test-system-otel() {
     EDITION=ultimate _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/system/singlesite")/otel/nonfree/ultimate/" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/ultimate/otel/" \
         --session-timeout 1800
 }
 
 test-system-azure() {
     EDITION=ultimate _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/system/singlesite")/azure/nonfree/ultimate/" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/ultimate/azure/" \
         --session-timeout 1800
 }
 
 test-system-oauth() {
     EDITION=pro _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/system/singlesite")/user_management/oauth/" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/cmk/gui/oauth/" \
         --session-timeout 1800
 }
 

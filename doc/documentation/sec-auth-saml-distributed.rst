@@ -304,7 +304,7 @@ On a remote site *Change password* is hidden from the user menu and the related 
 Further boundaries
 ******************
 
-These properties are covered by the system tests in ``tests/system/multisite/user_management``:
+These properties are covered by the system tests in ``tests/system/multisite/identity``:
 
 * An authentication cookie minted on one site is rejected on another site.
 * Logging out on one site leaves the sessions on other sites valid.
@@ -424,7 +424,7 @@ Where to look in the code
    "``cmk/gui/ldap_integration/ldap_connector.py``", "User creation gate, takeover of SAML owned users."
    "``cmk/gui/watolib/activate_changes.py``", "User preservation during configuration pushes."
    "``cmk/update_config/plugins/actions/``", "The two update actions."
-   "``tests/system/multisite/user_management/``", "End to end tests across a central site and two remote sites."
+   "``tests/system/multisite/identity/``", "End to end tests across a central site and two remote sites."
    "``tests/unit/cmk/gui/userdb/test_identity_unification.py``", "Ownership and connector order rules."
 
 See also

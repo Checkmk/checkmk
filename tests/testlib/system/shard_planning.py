@@ -99,12 +99,12 @@ class Durations(NamedTuple):
 
 
 def module_of(nodeid: str) -> str:
-    """'tests/system/singlesite/site_management/test_omd.py::test_x[1]' -> the file part."""
+    """'tests/system/singlesite/omd/test_omd.py::test_x[1]' -> the file part."""
     return nodeid.split("::", 1)[0]
 
 
 def _split_class_name(class_name: str) -> tuple[str, str] | tuple[None, None]:
-    """'pytest.tests.system.singlesite.site_management.test_omd.TestX' -> module path + class.
+    """'pytest.tests.system.singlesite.omd.test_omd.TestX' -> module path + class.
 
     The dotted name does not mark where the module ends and a class begins.
     Test modules are named test_*, classes Test*, so the last part starting
@@ -120,7 +120,7 @@ def _split_class_name(class_name: str) -> tuple[str, str] | tuple[None, None]:
 
 
 def module_from_class_name(class_name: str) -> str | None:
-    """'pytest.tests.system.singlesite.site_management.test_omd.TestX' -> the file path."""
+    """'pytest.tests.system.singlesite.omd.test_omd.TestX' -> the file path."""
     return _split_class_name(class_name)[0]
 
 

@@ -176,3 +176,13 @@ test('an age the duration filter left behind is kept until a bound is edited', a
     ]
   })
 })
+
+test('the date range pickers float their calendars', async () => {
+  renderFilter()
+
+  await userEvent.click(bound('To').getByRole('button', { name: 'Open calendar' }))
+
+  expect(screen.getByRole('dialog', { name: 'Choose the latest date & time' }).style.position).toBe(
+    'fixed'
+  )
+})

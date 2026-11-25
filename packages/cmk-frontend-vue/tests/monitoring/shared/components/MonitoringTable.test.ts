@@ -459,6 +459,20 @@ test('turning the primary sort column around keeps the columns extending it', as
   ])
 })
 
+test('the header of an open column panel stacks above the other headers', async () => {
+  const user = userEvent.setup()
+  mountTable({})
+
+  await user.click(screen.getByRole('button', { name: 'Filter State' }))
+
+  expect(screen.getByRole('columnheader', { name: /State/ }).style.zIndex).toBe('4')
+  expect(screen.getByRole('columnheader', { name: /Name/ }).style.zIndex).toBe('')
+
+  await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+  expect(screen.getByRole('columnheader', { name: /State/ }).style.zIndex).toBe('')
+})
+
 test('headers number the sort order once more than one column sorts', () => {
   mountTable({
     sortState: [
@@ -940,6 +954,18 @@ describe('pinned columns', () => {
     await mountPinnedTable(600)
 
     expect(probedPinnedColumns()).toEqual([])
+  })
+
+  test('lift the header of an open column panel above themselves', async () => {
+    const user = userEvent.setup()
+    await mountPinnedTable(1000)
+    const nameHeader = screen.getByRole('columnheader', { name: /Name/ })
+    expect(nameHeader.style.zIndex).toBe('3')
+
+    await user.click(screen.getByRole('button', { name: 'Filter Name' }))
+
+    expect(nameHeader.style.zIndex).toBe('4')
+    expect(screen.getByRole('columnheader', { name: /Actions/ }).style.zIndex).toBe('3')
   })
 })
 

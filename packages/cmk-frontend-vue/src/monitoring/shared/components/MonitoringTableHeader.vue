@@ -18,7 +18,7 @@ import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { type CSSProperties, computed, inject, onMounted, useTemplateRef } from 'vue'
+import { type CSSProperties, computed, inject, onMounted, ref, useTemplateRef } from 'vue'
 
 import type { FilterField } from '@/monitoring/shared/api/types'
 
@@ -227,7 +227,26 @@ function toggleSelectAll(table: Table<T>): void {
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)
 
+// Each sticky header cell stacks on its own, and later cells paint over earlier ones. The cell
+// whose filter is open is lifted above all of them, pinned ones included, so they cannot cover its
+// panel or what floats out of it - a calendar opening upwards, say.
+const OPEN_FILTER_Z_INDEX = 4
+const openFilterColumnId = ref<string | null>(null)
+
+function onFilterOpenChange(columnId: string, open: boolean): void {
+  if (open) {
+    openFilterColumnId.value = columnId
+  } else if (openFilterColumnId.value === columnId) {
+    openFilterColumnId.value = null
+  }
+}
+
 function stickyStyle(columnId: string): CSSProperties {
+  const style = pinnedStyle(columnId)
+  return openFilterColumnId.value === columnId ? { ...style, zIndex: OPEN_FILTER_Z_INDEX } : style
+}
+
+function pinnedStyle(columnId: string): CSSProperties {
   const info = columns?.value.get(columnId)
   const left = info?.pinnedLeft ?? null
   if (left !== null) {
@@ -429,6 +448,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             @update:sort="setSort(header.getContext().table, header.column, $event)"
             @update:extended-sort="extendSort(header.getContext().table, header.column, $event)"
             @update:model-value="setFilterValue(header.column, $event)"
+            @open-change="onFilterOpenChange(header.column.id, $event)"
           >
             <template #trigger="{ toggle, isOpen, isActive, panelId }">
               <button

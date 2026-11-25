@@ -27,7 +27,10 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
-import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
+import {
+  provideFloatingBoundary,
+  provideFloatingTarget
+} from 'cmk-ui-library/lib/useFloatingTarget'
 import useId from 'cmk-ui-library/lib/useId'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import {
@@ -97,6 +100,11 @@ const sort = defineModel<SortDirection>('sort', { default: false })
 
 const extendedSort = defineModel<SortDirection>('extendedSort', { default: false })
 
+const emit = defineEmits<{
+  /** The panel opened or closed. */
+  openChange: [open: boolean]
+}>()
+
 const { _t } = usei18n()
 useWidgetKeys(_t('Filter'), [{ combo: ['Alt', 'ArrowDown'], description: _t('Open filter') }])
 const panelId = useId()
@@ -141,8 +149,8 @@ const scrollArea = ref<HTMLElement | null>(null)
 const scrollContent = ref<HTMLElement | null>(null)
 
 // Whether the sort options and filter outgrow the capped panel and have to scroll. Scrolling only
-// then leaves floating content that is not portaled - the calendar of a date filter, say - free to
-// overflow the panel whenever the panel fits.
+// then leaves content a filter positions absolutely within the panel free to overflow it whenever
+// the panel fits.
 const overflowing = ref(false)
 
 function updateOverflowing(): void {
@@ -162,6 +170,13 @@ observe(scrollContent)
 // whole funnel. Registering the panel as the floating target keeps that content
 // within it, the way CmkSlideIn does for its own descendants.
 provideFloatingTarget(() => panel.value ?? undefined)
+
+// Floating content that is not portaled - the calendar of a date filter - stacks no higher than
+// the panel, so the page around the table would cover any part of it reaching past the table.
+// It keeps within the area the panel is capped to.
+provideFloatingBoundary(() =>
+  trigger.value ? (clippingAncestor(trigger.value) ?? undefined) : undefined
+)
 
 const isActive = computed(() => model.value !== undefined)
 
@@ -209,6 +224,7 @@ function open(): void {
   maxHeight.value = undefined
   isOpen.value = true
   monitoringService?.beginAutoPause()
+  emit('openChange', true)
   suppressNextClickOutside.value = true
   setTimeout(() => {
     suppressNextClickOutside.value = false
@@ -236,6 +252,7 @@ function close(): void {
   }
   isOpen.value = false
   monitoringService?.endAutoPause()
+  emit('openChange', false)
   removeShortcuts()
   document.removeEventListener('pointerdown', onPointerDown, true)
   window.removeEventListener('resize', onWindowResize)
@@ -399,18 +416,27 @@ interface Bounds {
  * ancestor's client box: its borders and scrollbars are no room for the panel.
  */
 function clippingBounds(el: HTMLElement): Bounds {
+  const node = clippingAncestor(el)
+  if (!node) {
+    return { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth }
+  }
+  const rect = node.getBoundingClientRect()
+  const top = rect.top + node.clientTop
+  const left = rect.left + node.clientLeft
+  return { top, bottom: top + node.clientHeight, left, right: left + node.clientWidth }
+}
+
+/** Nearest ancestor that clips its overflow. */
+function clippingAncestor(el: HTMLElement): HTMLElement | null {
   let node: HTMLElement | null = el.parentElement
   while (node) {
     const { overflowX, overflowY } = getComputedStyle(node)
     if (clipsOverflow(overflowX) || clipsOverflow(overflowY)) {
-      const rect = node.getBoundingClientRect()
-      const top = rect.top + node.clientTop
-      const left = rect.left + node.clientLeft
-      return { top, bottom: top + node.clientHeight, left, right: left + node.clientWidth }
+      return node
     }
     node = node.parentElement
   }
-  return { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth }
+  return null
 }
 
 function clipsOverflow(overflow: string): boolean {
@@ -510,6 +536,7 @@ function onFocusOut(event: FocusEvent): void {
 onBeforeUnmount(() => {
   if (isOpen.value) {
     monitoringService?.endAutoPause()
+    emit('openChange', false)
   }
   removeShortcuts()
   document.removeEventListener('pointerdown', onPointerDown, true)

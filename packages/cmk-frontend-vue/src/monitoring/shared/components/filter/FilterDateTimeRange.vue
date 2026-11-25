@@ -90,6 +90,8 @@ watch([from, to], () => {
 </script>
 
 <template>
+  <!-- The pickers float: the column filter sits in the table's scroll container, which would
+       clip a calendar opening below the field. -->
   <div class="monitoring-filter-date-time-range">
     <div class="monitoring-filter-date-time-range__row" role="group" :aria-label="_t('From')">
       <span class="monitoring-filter-date-time-range__label">{{ _t('From') }}</span>
@@ -97,6 +99,7 @@ watch([from, to], () => {
         v-model="from"
         :nullable="true"
         :label="_t('Choose the earliest date & time')"
+        floating
       />
     </div>
 
@@ -106,6 +109,7 @@ watch([from, to], () => {
         v-model="to"
         :nullable="true"
         :label="_t('Choose the latest date & time')"
+        floating
       />
     </div>
   </div>

@@ -12,7 +12,7 @@ from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import metric_attributes, parse_performance_data, translate_metric_names
 from cmk.graphing_engine import MetricName as EngineMetricName
 from cmk.gui.autocompleters import AutocompleterFunc
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.type_defs import VisualContext
@@ -52,6 +52,8 @@ def metrics_of_query(
     registered_metrics: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     livestatus_query: LivestatusQueryFunc,
+    *,
+    debug: bool,
 ) -> Iterator[Choice]:
     # Fetch host data with the *same* query. This saves one round trip. And head
     # host has at least one service
@@ -69,7 +71,7 @@ def metrics_of_query(
         raw = parse_performance_data(
             ensure_type(row["service_perf_data"], str),
             ensure_type(row["service_check_command"], str),
-            debug=active_config.debug,
+            debug=debug,
             logger=logger,
         )
         yield from _metric_choices(
@@ -91,7 +93,11 @@ def metrics_of_query(
 def metrics_autocompleter(
     value: str,
     params: Mapping[str, object],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
     livestatus_query: LivestatusQueryFunc,
+    *,
+    debug: bool,
 ) -> list[Choice]:
     context = context_from_json(params.get("context", {}))
     host = context.get("host", {}).get("host", "")
@@ -102,11 +108,15 @@ def metrics_autocompleter(
     if context:
         metrics = set(
             metrics_of_query(
-                context, registered_metrics(), registered_translations(), livestatus_query
+                context,
+                registered_metrics,
+                registered_translations,
+                livestatus_query,
+                debug=debug,
             )
         )
     else:
-        metrics = set(registered_metric_ids_and_titles(registered_metrics()))
+        metrics = set(registered_metric_ids_and_titles(registered_metrics))
 
     return sorted(
         (v for v in metrics if _matches_id_or_title(value, v)),
@@ -115,8 +125,15 @@ def metrics_autocompleter(
 
 
 def monitored_metrics_autocompleter(livestatus_query: LivestatusQueryFunc) -> AutocompleterFunc:
-    def autocompleter(config: Config, value: str, params: dict[str, object]) -> list[Choice]:  # noqa: ARG001
-        return metrics_autocompleter(value, params, livestatus_query=livestatus_query)
+    def autocompleter(config: Config, value: str, params: dict[str, object]) -> list[Choice]:
+        return metrics_autocompleter(
+            value,
+            params,
+            registered_metrics(),
+            registered_translations(),
+            livestatus_query,
+            debug=config.debug,
+        )
 
     return autocompleter
 

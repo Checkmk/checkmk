@@ -119,6 +119,17 @@ class TestHostLabels:
 
         assert value == expected
 
+    def test_label_emitted_once_for_multiple_lldp_ports(self) -> None:
+        switch_ports_status = [
+            _RawSwitchPortsStatusFactory.build(portId=1),
+            _RawSwitchPortsStatusFactory.build(portId=2),
+        ]
+        section = parse_switch_ports_statuses([[json.dumps(switch_ports_status)]])
+
+        value = list(host_label_meraki_switch_ports_statuses(section))
+
+        assert value == [HostLabel("cmk/has_lldp_neighbors", "yes")]
+
 
 @pytest.fixture
 def params() -> CheckParams:
@@ -277,10 +288,10 @@ class TestCheckOtherResults:
 
         value = list(check_switch_ports_statuses("1", params, section))[3:7]
         expected = [
-            Result(state=State.OK, summary="In: 40.0 Bit/s"),
-            Metric("if_in_bps", 40.0),
-            Result(state=State.OK, summary="Out: 60.0 Bit/s"),
-            Metric("if_out_bps", 60.0),
+            Result(state=State.OK, summary="In: 40.0 kBit/s"),
+            Metric("if_in_bps", 40000.0),
+            Result(state=State.OK, summary="Out: 60.0 kBit/s"),
+            Metric("if_out_bps", 60000.0),
         ]
 
         assert value == expected
@@ -406,6 +417,12 @@ class TestInventoryMerakiInterfaces:
         )
 
         assert value == expected
+
+    def test_speed_in_kbps(self) -> None:
+        section = self._build_section({"speed": "100 Kbps"})
+        row, *_ = inventory_meraki_interfaces(section)
+        assert isinstance(row, TableRow)
+        assert row.inventory_columns["speed"] == 100_000
 
     def test_speed_not_included_in_columns_when_missing(self) -> None:
         section = self._build_section({"speed": ""})

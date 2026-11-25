@@ -63,7 +63,6 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/l3v6_topology",
     "cmk/meraki",
     "cmk/meraki/device_type",
-    "cmk/meraki/has_lldp_neighbors",
     "cmk/meraki/net_id",
     "cmk/meraki/net_name",
     "cmk/meraki/org_id",

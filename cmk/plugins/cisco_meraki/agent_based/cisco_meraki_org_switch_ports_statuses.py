@@ -161,7 +161,7 @@ class SwitchPortsStatus(BaseModel, frozen=True):
 
         match unit.lower()[0]:
             case "k":  # kilobit per second
-                return int(value + 1e3)
+                return int(value * 1e3)
             case "m":  # megabit per second
                 return int(value * 1e6)
             case "g":  # gigabit per second
@@ -199,13 +199,12 @@ def host_label_meraki_switch_ports_statuses(section: Section) -> HostLabelGenera
     """Host label function
 
     Labels:
-        cmk/meraki/has_lldp_neighbors:
-            This label is set to "yes" for all hosts with LLDP neighbors
+        cmk/has_lldp_neighbors:
+            This label is set to "yes" for all devices with at least one LLDP neighbor
     """
     # NOTE: only setting LLDP label as Meraki CDP data are not useful for NVDCT.
-    for port in section.values():
-        if port.lldp:
-            yield HostLabel(name="cmk/has_lldp_neighbors", value="yes")
+    if any(port.lldp for port in section.values()):
+        yield HostLabel(name="cmk/has_lldp_neighbors", value="yes")
 
 
 agent_section_cisco_meraki_org_switch_ports_statuses = AgentSection(
@@ -328,13 +327,13 @@ def check_switch_ports_statuses(item: str, params: CheckParams, section: Section
 
     if port.traffic_in_kbps:
         yield from check_levels(
-            value=port.traffic_in_kbps.recv,  # Bits
+            value=port.traffic_in_kbps.recv * 1000,  # Kbit/s -> Bit/s
             label="In",
             metric_name="if_in_bps",
             render_func=render_network_bandwidth_bits,  # Bytes
         )
         yield from check_levels(
-            value=port.traffic_in_kbps.sent,  # Bits
+            value=port.traffic_in_kbps.sent * 1000,  # Kbit/s -> Bit/s
             label="Out",
             metric_name="if_out_bps",
             render_func=render_network_bandwidth_bits,  # Bytes

@@ -99,11 +99,8 @@ class FakeEC2Client:
             "Addresses": EC2DescribeAddressesIB.create_instances(amount=3),
         }
 
-    def describe_security_groups(
-        self,
-        InstanceIds: object = None,  # noqa: ARG002
-        Filters: object = None,  # noqa: ARG002
-    ) -> Mapping[str, object]:
+    def describe_security_groups(self) -> Mapping[str, object]:
+        # Without filters: AWS rejects InstanceIds, and the groups carry no instance tags.
         return {
             "SecurityGroups": EC2DescribeSecurityGroupsIB.create_instances(amount=3),
             "NextToken": "string",

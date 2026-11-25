@@ -497,17 +497,6 @@ class EC2Summary(AWSSection):
 
 
 class EC2SecurityGroups(AWSSection):
-    def __init__(
-        self,
-        client: BaseClient,
-        region: str,
-        config: AWSConfig,
-        distributor: ResultDistributor | None = None,
-    ) -> None:
-        super().__init__(client, region, config, distributor=distributor)
-        self._names = self._config.service_config["ec2_names"]
-        self._tags = self._config.service_config["ec2_tags"]
-
     @property
     @override
     def name(self) -> str:
@@ -532,25 +521,11 @@ class EC2SecurityGroups(AWSSection):
 
     @override
     def get_live_data(self, *args):
-        sec_groups = self._describe_security_groups()
-        return {group["GroupId"]: group for group in sec_groups}
-
-    def _describe_security_groups(self):
-        if self._names is not None:
-            response = self._client.describe_security_groups(InstanceIds=self._names)  # type: ignore[attr-defined]
-            return self._get_response_content(response, "SecurityGroups")
-
-        if self._tags is not None:
-            sec_groups = []
-            for chunk in chunks(self._tags, length=200):
-                # EC2 FilterLimitExceeded: The maximum number of filter values
-                # specified on a single call is 200
-                response = self._client.describe_security_groups(Filters=chunk)  # type: ignore[attr-defined]
-                sec_groups.extend(self._get_response_content(response, "SecurityGroups"))
-            return sec_groups
-
+        # Security groups have neither the instance IDs nor the instance tags. The
+        # instances of ec2_summary select their groups in _compute_content.
         response = self._client.describe_security_groups()  # type: ignore[attr-defined]
-        return self._get_response_content(response, "SecurityGroups")
+        sec_groups = self._get_response_content(response, "SecurityGroups")
+        return {group["GroupId"]: group for group in sec_groups}
 
     @override
     def _compute_content(

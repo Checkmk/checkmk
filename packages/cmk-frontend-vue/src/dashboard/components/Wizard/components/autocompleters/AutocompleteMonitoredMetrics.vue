@@ -30,6 +30,7 @@ const metricNameAutocompleter = computed(() => {
       ident: 'monitored_metrics',
       params: {
         show_independent_of_context: true,
+        metrics_without_context: 'monitored',
         escape_regex: false,
         strict: true,
         context: props.context

@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Literal
 
+from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import metric_attributes, parse_performance_data, translate_metric_names
@@ -15,6 +16,7 @@ from cmk.gui.autocompleters import AutocompleterFunc
 from cmk.gui.config import Config
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.log import logger
+from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import VisualContext
 from cmk.web.utils.choices import Choice
 
@@ -25,6 +27,7 @@ from ._plugins import registered_metrics, registered_translations
 type LivestatusQueryFunc = Callable[
     [Literal["host", "service"], VisualContext, list[str]], Sequence[Mapping[str, object]]
 ]
+type EnabledSiteIdsFunc = Callable[[], Sequence[SiteId]]
 
 
 def _metrics_of_object(
@@ -96,37 +99,66 @@ def _matches_id_or_title(ident: str, choice: tuple[str | None, str]) -> bool:
     return ident.lower() in (choice[0] or "").lower() or ident.lower() in choice[1].lower()
 
 
+def _metric_choices(
+    params: Mapping[str, object],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
+    livestatus_query: LivestatusQueryFunc,
+    enabled_site_ids: EnabledSiteIdsFunc,
+    *,
+    debug: bool,
+) -> Iterable[Choice]:
+    context = context_from_json(params.get("context", {}))
+    host = context.get("host", {}).get("host", "")
+    service = context.get("service", {}).get("service", "")
+    if not params.get("show_independent_of_context") and not all((host, service)):
+        return ()
+
+    if context:
+        return metrics_of_query(
+            context,
+            registered_metrics,
+            registered_translations,
+            livestatus_query,
+            debug=debug,
+        )
+
+    match params.get("metrics_without_context", "registered"):
+        case "registered":
+            return registered_metric_ids_and_titles(registered_metrics)
+        case "monitored":
+            return metrics_of_query(
+                {"sites": {"sites": "|".join(enabled_site_ids())}},
+                registered_metrics,
+                registered_translations,
+                livestatus_query,
+                debug=debug,
+            )
+        case other:
+            raise ValueError(f"unknown metrics without context: {other!r}")
+
+
 def _metrics_autocompleter(
     value: str,
     params: Mapping[str, object],
     registered_metrics: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     livestatus_query: LivestatusQueryFunc,
+    enabled_site_ids: EnabledSiteIdsFunc,
     *,
     debug: bool,
 ) -> list[Choice]:
-    context = context_from_json(params.get("context", {}))
-    host = context.get("host", {}).get("host", "")
-    service = context.get("service", {}).get("service", "")
-    if not params.get("show_independent_of_context") and not all((host, service)):
-        return []
-
-    if context:
-        metrics = set(
-            metrics_of_query(
-                context,
-                registered_metrics,
-                registered_translations,
-                livestatus_query,
-                debug=debug,
-            )
-        )
-    else:
-        metrics = set(registered_metric_ids_and_titles(registered_metrics))
-
+    choices = _metric_choices(
+        params,
+        registered_metrics,
+        registered_translations,
+        livestatus_query,
+        enabled_site_ids,
+        debug=debug,
+    )
     return sorted(
-        (v for v in metrics if _matches_id_or_title(value, v)),
-        key=lambda a: a[1].lower(),
+        (choice for choice in set(choices) if _matches_id_or_title(value, choice)),
+        key=lambda choice: choice[1].lower(),
     )
 
 
@@ -138,6 +170,7 @@ def monitored_metrics_autocompleter(livestatus_query: LivestatusQueryFunc) -> Au
             registered_metrics(),
             registered_translations(),
             livestatus_query,
+            lambda: list(enabled_sites(config.sites)),
             debug=config.debug,
         )
 

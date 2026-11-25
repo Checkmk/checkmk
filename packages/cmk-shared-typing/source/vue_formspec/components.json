@@ -1641,6 +1641,10 @@
                 "show_independent_of_context": {
                   "type": "boolean"
                 },
+                "metrics_without_context": {
+                  "type": "string",
+                  "enum": ["registered", "monitored"]
+                },
                 "strict": {
                   "type": "boolean"
                 },

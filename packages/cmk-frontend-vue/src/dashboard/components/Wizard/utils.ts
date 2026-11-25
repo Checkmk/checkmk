@@ -8,6 +8,7 @@ import type {
   ConfiguredFilters,
   FilterDefinitions
 } from 'cmk-ui-library/components/filter'
+import { nextTick } from 'vue'
 
 import type { UseViewsCollection } from '@/dashboard/composables/api/useViewsCollection'
 import type { UseVisualInfoCollection } from '@/dashboard/composables/api/useVisualInfoCollection'
@@ -209,4 +210,11 @@ export function getInitialElementSelection(
   // but it shouldn't matter as both selections behave the same way with the current filters
   // for the selected content type
   return defaultSelection
+}
+
+export async function scrollToFirstErrorMessage(): Promise<void> {
+  await nextTick()
+  document
+    .querySelector('.cmk-inline-validation')
+    ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }

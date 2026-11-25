@@ -22,6 +22,7 @@ import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage2Header from '../../../components/Stage2Header.vue'
 import WidgetTiles from '../../../components/WidgetSelection/WidgetTiles.vue'
 import type { WidgetItemList } from '../../../components/WidgetSelection/types'
+import { scrollToFirstErrorMessage } from '../../../utils'
 import { Graph, getAvailableGraphs, getDisabledTooltip } from '../composables/useSelectGraphTypes'
 import ServiceState from './ServiceState/ServiceState.vue'
 import { type UseServiceState, useServiceState } from './ServiceState/composables/useServiceState'
@@ -68,6 +69,7 @@ const addWidget = async () => {
 
   const activeHandler = handler[selectedWidget.value]
   if (!activeHandler?.validate()) {
+    await scrollToFirstErrorMessage()
     return
   }
   const submitProps = await activeHandler.getSubmitProps()

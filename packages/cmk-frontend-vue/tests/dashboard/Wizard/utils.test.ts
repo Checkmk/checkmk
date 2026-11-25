@@ -4,9 +4,13 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { extractConfiguredFilters, isUrl } from '@/dashboard/components/Wizard/utils'
+import {
+  extractConfiguredFilters,
+  isUrl,
+  scrollToFirstErrorMessage
+} from '@/dashboard/components/Wizard/utils'
 
 function mockFilterManager(
   selectedFilters: string[],
@@ -68,5 +72,24 @@ describe('extractConfiguredFilters', () => {
   it('should return empty object when no filters are selected', () => {
     const manager = mockFilterManager([], { host: { host: 'myhost' } })
     expect(extractConfiguredFilters(manager)).toEqual({})
+  })
+})
+
+describe('scrollToFirstErrorMessage', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+    vi.restoreAllMocks()
+  })
+
+  it('scrolls the first validation message into view', async () => {
+    document.body.innerHTML =
+      '<div class="cmk-inline-validation" id="first"></div><div class="cmk-inline-validation"></div>'
+    const scrollIntoView = vi.spyOn(HTMLElement.prototype, 'scrollIntoView')
+
+    await scrollToFirstErrorMessage()
+
+    expect(scrollIntoView.mock.contexts.map((element) => (element as Element).id)).toEqual([
+      'first'
+    ])
   })
 })

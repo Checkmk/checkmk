@@ -27,6 +27,7 @@ import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage2Header from '../../../components/Stage2Header.vue'
 import WidgetTiles from '../../../components/WidgetSelection/WidgetTiles.vue'
 import type { WidgetItemList } from '../../../components/WidgetSelection/types'
+import { scrollToFirstErrorMessage } from '../../../utils'
 import { getGraph } from '../utils'
 import BarplotWidget from './BarplotWidget/BarplotWidget.vue'
 import { type UseBarplot, useBarplot } from './BarplotWidget/composables/useBarplot'
@@ -90,6 +91,7 @@ const gotoNextStage = async () => {
     ? handler[Graph.ANY_GRAPH]
     : handler[selectedWidget.value]
   if (!activeHandler?.validate()) {
+    await scrollToFirstErrorMessage()
     return
   }
   const submitProps = await activeHandler.getSubmitProps()

@@ -21,6 +21,7 @@ import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage2Header from '../../../components/Stage2Header.vue'
 import WidgetTiles from '../../../components/WidgetSelection/WidgetTiles.vue'
 import type { ElementSelection, UseWidgetHandler } from '../../../types'
+import { scrollToFirstErrorMessage } from '../../../utils'
 import {
   allHostSiteWidgets,
   getAvailableGraphs,
@@ -74,6 +75,7 @@ const gotoNextStage = async () => {
 
   const activeHandler = handler[selectedWidget.value]
   if (!activeHandler?.validate()) {
+    await scrollToFirstErrorMessage()
     return
   }
   const submitProps = await activeHandler.getSubmitProps()

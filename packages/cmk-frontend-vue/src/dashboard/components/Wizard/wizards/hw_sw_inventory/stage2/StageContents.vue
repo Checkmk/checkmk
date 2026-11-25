@@ -15,6 +15,7 @@ import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type { WidgetContent, WidgetGeneralSettings } from '@/dashboard/types/widget'
 
 import Stage2Header from '../../../components/Stage2Header.vue'
+import { scrollToFirstErrorMessage } from '../../../utils'
 import InventoryWidget from './InventoryWidget/InventoryWidget.vue'
 import { useInventory } from './InventoryWidget/useInventory'
 
@@ -41,6 +42,7 @@ const emit = defineEmits<{
 
 const gotoNextStage = async () => {
   if (!inventoryHandler?.validate()) {
+    await scrollToFirstErrorMessage()
     return
   }
   const submitProps = await inventoryHandler.getSubmitProps()

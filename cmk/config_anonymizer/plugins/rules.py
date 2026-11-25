@@ -344,9 +344,11 @@ def _anonymize_rule(
     custom_tag_config = load_tag_config_read_only()
 
     for k, v in rule.conditions.host_tags.items():
-        if builtin_tag_config.tag_group_exists(k):
+        if builtin_tag_config.tag_group_exists(k) or builtin_tag_config.aux_tag_list.exists(
+            TagID(k)
+        ):
             anon_host_tags[k] = v
-            continue  # do not anonymize built-in tags
+            continue  # do not anonymize built-in tag groups and auxiliary tags
 
         if TagID(k) in custom_tag_config.aux_tag_list.get_tag_ids():
             anon_group_id = anon_interface.get_id_of_aux_tag(k)

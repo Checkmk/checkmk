@@ -12,8 +12,13 @@ import pytest
 
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.plugins.hosts import (
+    _anonymize_host_tag,
     _anonymize_single_host_and_folder_attributes,
+    TagIDs,
 )
+
+_BUILTIN_TAG_IDS = frozenset({"agent", "tcp"})
+_NO_CUSTOM_AUX_TAGS = TagIDs(builtin=_BUILTIN_TAG_IDS, custom_aux=frozenset())
 
 
 def _anon_interface() -> AnonInterface:
@@ -26,7 +31,7 @@ def test_a_relation_hides_the_host_it_names() -> None:
 
     anonymized = _anonymize_single_host_and_folder_attributes(
         anon_interface,
-        [],
+        _NO_CUSTOM_AUX_TAGS,
         {"relations": [{"kind": "management", "direction": "parent", "host": "os1"}]},
     )
 
@@ -40,7 +45,7 @@ def test_a_relation_hides_the_host_it_names() -> None:
 def test_a_malformed_relations_value_is_dropped_rather_than_leaked() -> None:
     """A hand written "hosts.mk" is exactly what an anonymized dump is taken of."""
     anonymized = _anonymize_single_host_and_folder_attributes(
-        _anon_interface(), [], {"relations": "os1"}
+        _anon_interface(), _NO_CUSTOM_AUX_TAGS, {"relations": "os1"}
     )
 
     assert anonymized["relations"] == []
@@ -63,7 +68,7 @@ def test_a_metrics_association_attribute_filter_hides_its_attributes() -> None:
 
     anonymized = _anonymize_single_host_and_folder_attributes(
         anon_interface,
-        [],
+        _NO_CUSTOM_AUX_TAGS,
         {
             "metrics_association": (
                 "enabled",
@@ -115,3 +120,46 @@ def test_a_metrics_association_attribute_filter_hides_its_attributes() -> None:
         ]
     }
     assert "service.name" not in str(anonymized) and "checkout" not in str(anonymized)
+
+
+def test_a_builtin_aux_tag_of_a_host_is_kept() -> None:
+    """ "agent: cmk-agent" implies "tcp: tcp". Rules match on it, so it must survive."""
+    anonymized = _anonymize_host_tag(_anon_interface(), _NO_CUSTOM_AUX_TAGS, "tcp", "tcp")
+
+    assert anonymized == ("tcp", "tcp")
+
+
+def test_a_custom_aux_tag_of_a_host_gets_the_id_of_the_anonymized_aux_tag() -> None:
+    anon_interface = _anon_interface()
+    tag_ids = TagIDs(builtin=_BUILTIN_TAG_IDS, custom_aux=frozenset({"dmz"}))
+
+    anonymized = _anonymize_host_tag(anon_interface, tag_ids, "dmz", "dmz")
+
+    anon_aux_tag_id = anon_interface.get_id_of_aux_tag("dmz")
+    assert anonymized == (anon_aux_tag_id, anon_aux_tag_id)
+
+
+def test_a_custom_tag_of_a_host_gets_the_ids_of_the_anonymized_tag_group() -> None:
+    anon_interface = _anon_interface()
+
+    anonymized = _anonymize_host_tag(anon_interface, _NO_CUSTOM_AUX_TAGS, "location", "munich")
+
+    assert anonymized == (
+        anon_interface.get_id_of_tag_group("location"),
+        anon_interface.get_id_of_tag("munich"),
+    )
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_a_custom_tag_attribute_stays_a_tag_attribute_of_the_anonymized_tag_group() -> None:
+    anon_interface = _anon_interface()
+
+    anonymized = _anonymize_single_host_and_folder_attributes(
+        anon_interface, _NO_CUSTOM_AUX_TAGS, {"tag_location": "munich"}
+    )
+
+    assert anonymized == {
+        f"tag_{anon_interface.get_id_of_tag_group('location')}": anon_interface.get_id_of_tag(
+            "munich"
+        )
+    }

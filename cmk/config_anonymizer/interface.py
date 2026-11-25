@@ -42,7 +42,6 @@ class ANONTYPE(enum.Enum):
     SERVICE_GROUP = "service_group"
     SERVICE_GROUP_ALIAS = "service_group_alias"
     TAG_GROUP = "tag_group"
-    TAG_VALUE = "tag_value"
     HOST_LABEL_KEY = "host_label_key"
     HOST_LABEL_VALUE = "host_label_value"
     USER = "user"
@@ -132,9 +131,6 @@ class AnonInterface:
             value, ANONTYPE.SERVICE_LABEL_VALUE
         )
 
-    def get_tags(self, key: str, value: str) -> tuple[str, str]:
-        return self.get_id_of_tag_group(key), self.get_tag_value(value)
-
     def get_user(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.USER)
 
@@ -154,9 +150,6 @@ class AnonInterface:
 
     def get_id_of_tag_group(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.TAG_GROUP)
-
-    def get_tag_value(self, original: str) -> str:
-        return self._get_entry(original, ANONTYPE.TAG_VALUE)
 
     def get_contact_group(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.CONTACT_GROUP)

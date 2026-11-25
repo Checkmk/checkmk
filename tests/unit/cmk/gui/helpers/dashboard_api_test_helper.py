@@ -568,6 +568,45 @@ class TestTopListContent:
         ]["widgets"]
         assert next(iter(widgets.values()))["content"]["contextual_link"] == link
 
+    @staticmethod
+    def _stored_columns(clients: ClientRegistry, columns: dict[str, bool]) -> object:
+        clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "top_list_dashboard",
+                {
+                    "top_list": create_widget(
+                        {
+                            "type": "top_list",
+                            "metric": "availability",
+                            "display_range": "automatic",
+                            "columns": columns,
+                            "ranking_order": "high",
+                            "limit_to": 10,
+                            "contextual_link": {"type": "none"},
+                        }
+                    )
+                },
+            )
+        )
+        widgets = clients.DashboardClient.get_relative_grid_dashboard("top_list_dashboard").json[
+            "extensions"
+        ]["widgets"]
+        return next(iter(widgets.values()))["content"]["columns"]
+
+    def test_rank_numbers_are_shown_by_default(self, clients: ClientRegistry) -> None:
+        columns = {"show_service_description": False, "show_bar_visualization": False}
+
+        assert self._stored_columns(clients, columns) == {**columns, "show_rank_numbers": True}
+
+    def test_hidden_rank_numbers_round_trip(self, clients: ClientRegistry) -> None:
+        columns = {
+            "show_service_description": False,
+            "show_bar_visualization": False,
+            "show_rank_numbers": False,
+        }
+
+        assert self._stored_columns(clients, columns) == columns
+
 
 @pytest.mark.parametrize("widget_type", ["host_state", "service_state"])
 class TestStateContent:

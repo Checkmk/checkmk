@@ -464,12 +464,17 @@ class TopListColumns:
     show_bar_visualization: bool = api_field(
         description="Show a bar visualization for the metric values in the top list.",
     )
+    show_rank_numbers: bool | ApiOmitted = api_field(
+        description="Show the rank of each entry in the top list. Defaults to true.",
+        default_factory=ApiOmitted,
+    )
 
     @classmethod
     def from_internal(cls, config: TopListColumnConfig) -> Self:
         return cls(
             show_service_description=config.get("show_service_description", False),
             show_bar_visualization=config.get("show_bar_visualization", False),
+            show_rank_numbers="hide_rank_numbers" not in config,
         )
 
     def to_internal(self) -> TopListColumnConfig:
@@ -478,6 +483,8 @@ class TopListColumns:
             config["show_service_description"] = True
         if self.show_bar_visualization:
             config["show_bar_visualization"] = True
+        if self.show_rank_numbers is False:
+            config["hide_rank_numbers"] = True
         return config
 
 

@@ -203,6 +203,7 @@ class AverageScatterplotDashletConfig(DashletConfig):
 class TopListColumnConfig(TypedDict):
     show_service_description: NotRequired[Literal[True]]
     show_bar_visualization: NotRequired[Literal[True]]
+    hide_rank_numbers: NotRequired[Literal[True]]
 
 
 class TopListDashletConfig(DashletConfig):

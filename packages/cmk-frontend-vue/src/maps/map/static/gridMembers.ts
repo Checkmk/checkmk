@@ -24,8 +24,18 @@ export function mapGrids(map: MapConfig | null | undefined): MapElement[] {
   return map?.view.type === 'static' ? map.objects.filter((o) => o.type === 'grid') : []
 }
 
+/** Whether a map takes another grid, or why not: none at all, or as many as it takes. */
+export type GridOffer = 'offered' | 'full' | 'none'
+
+export function gridOffer(map: MapConfig | null | undefined): GridOffer {
+  if (map?.view.type !== 'static') {
+    return 'none'
+  }
+  return mapGrids(map).length < GRID_MAX_PER_MAP ? 'offered' : 'full'
+}
+
 export function canAddGrid(map: MapConfig | null | undefined): boolean {
-  return map?.view.type === 'static' && mapGrids(map).length < GRID_MAX_PER_MAP
+  return gridOffer(map) === 'offered'
 }
 
 export interface GridLayout {

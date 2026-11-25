@@ -78,7 +78,7 @@ describe('gridsDeletedAlong', () => {
 
 describe('placeableObjectTypes', () => {
   it('lists all object types including graph', () => {
-    const names = placeableObjectTypes(t, true).map((o) => o.name)
+    const names = placeableObjectTypes(t, 'offered').map((o) => o.name)
     expect(names).toContain('graph')
     expect(names).toContain('host')
     expect(names).toContain('line')
@@ -86,7 +86,14 @@ describe('placeableObjectTypes', () => {
   })
 
   it('leaves out the grid where the map takes none', () => {
-    expect(placeableObjectTypes(t, false).map((o) => o.name)).not.toContain('grid')
+    expect(placeableObjectTypes(t, 'none').map((o) => o.name)).not.toContain('grid')
+  })
+
+  it('shows why a map that holds as many grids as it takes offers no further one', () => {
+    const types = placeableObjectTypes(usei18n()._t, 'full')
+
+    expect(types.map((o) => o.name)).not.toContain('grid')
+    expect(types.at(-1)).toEqual({ name: null, title: 'Grid (a map takes at most 10)' })
   })
 })
 

@@ -22,13 +22,14 @@ import EditPanel from '@/maps/map/edit/EditPanel.vue'
 import MapEditMenu, { type MapEditMenuEntry } from '@/maps/map/edit/components/MapEditMenu.vue'
 import { useMapEditShortcuts } from '@/maps/map/edit/composables/useMapEditShortcuts'
 import { useMapFabMenus } from '@/maps/map/edit/composables/useMapFabMenus'
+import type { GridOffer } from '@/maps/map/static/gridMembers'
 
 const props = defineProps<{
   editor: MapEditor
   connectionId: string
   /** Presentation maps place elements on their slides, not via this panel. */
   offersAddObject: boolean
-  offersObjectGrid: boolean
+  gridOffer: GridOffer
   /** A geo map snaps to coordinates, so it has no grid to snap to. */
   offersSnapGrid: boolean
   /** False while a dialog over the map owns the keyboard. */
@@ -131,7 +132,7 @@ const snapEntries = computed<MapEditMenuEntry[]>(() =>
           :error="editor.placeRefusal.value?.text ?? null"
           :filter-refusal="editor.placeRefusal.value?.atFilter ?? null"
           :connection-id="connectionId"
-          :offers-object-grid="offersObjectGrid"
+          :grid-offer="gridOffer"
           @start-placing="emit('start-placing')"
           @cancel-add="dismissAddPanel"
         />

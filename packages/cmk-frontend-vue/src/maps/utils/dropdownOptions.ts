@@ -7,7 +7,7 @@ import type usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import { gridMembersOf } from '@/maps/map/static/gridMembers'
+import { GRID_MAX_PER_MAP, type GridOffer, gridMembersOf } from '@/maps/map/static/gridMembers'
 import type { MapElement, MonitoredObjectType, ObjectState, ObjectType } from '@/maps/types/api'
 import { getEffectiveObjectType, getMapElementName, mapElementCaption } from '@/maps/utils/naming'
 import { LINE_STYLES } from '@/maps/utils/objectOptions'
@@ -171,12 +171,13 @@ export function objectCaption(
 
 /**
  * The types the add-object panel offers, in the order it offers them. Only a
- * static map lays out a grid.
+ * static map lays out a grid; one that holds as many as it takes shows why it
+ * takes no further one.
  */
 export function placeableObjectTypes(
   _t: TranslateFn,
-  withGrid: boolean
-): { name: ObjectType; title: TranslatedString }[] {
+  grid: GridOffer
+): { name: ObjectType | null; title: TranslatedString }[] {
   const placeable: ObjectType[] = [
     'host',
     'service',
@@ -189,9 +190,14 @@ export function placeableObjectTypes(
     'textbox',
     'image',
     'graph',
-    ...(withGrid ? (['grid'] as const) : [])
+    ...(grid === 'offered' ? (['grid'] as const) : [])
   ]
-  return placeable.map((name) => ({ name, title: objectTypeLabel(name, _t) }))
+  return [
+    ...placeable.map((name) => ({ name, title: objectTypeLabel(name, _t) })),
+    ...(grid === 'full'
+      ? [{ name: null, title: _t('Grid (a map takes at most %{n})', { n: GRID_MAX_PER_MAP }) }]
+      : [])
+  ]
 }
 
 export function mapTypeOptions(_t: TranslateFn) {

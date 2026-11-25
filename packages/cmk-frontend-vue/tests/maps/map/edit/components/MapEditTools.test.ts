@@ -34,7 +34,7 @@ function renderTools(selection: string[], keyboardActive = true) {
       editor,
       connectionId: 'test',
       offersAddObject: true,
-      offersObjectGrid: true,
+      gridOffer: 'offered',
       offersSnapGrid: true,
       keyboardActive,
       besideInspector: false

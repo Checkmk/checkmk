@@ -6,10 +6,12 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  GRID_MAX_PER_MAP,
   gridColumnsAfterDrag,
   gridLabelWidths,
   gridLayout,
   gridMemberElement,
+  gridOffer,
   gridOrder,
   gridPosition,
   gridSpacingFor,
@@ -17,7 +19,7 @@ import {
 } from '@/maps/map/static/gridMembers'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 
-import { aMap, aState, anObject } from '../../support/fixtures'
+import { aMap, aState, anObject, newMapView } from '../../support/fixtures'
 
 function member(host: string, state = 'UP', extra: Partial<ObjectState> = {}): ObjectState {
   return aState({
@@ -35,6 +37,20 @@ function grid(overrides: Partial<MapElement> = {}): MapElement {
 }
 
 const hosts = (states: ObjectState[]) => states.map((state) => state.host_name)
+
+describe('gridOffer', () => {
+  const grids = (n: number) =>
+    Array.from({ length: n }, (_, i) => anObject({ id: `g${i}`, type: 'grid' }))
+
+  it('offers a grid until a static map holds as many as it takes', () => {
+    expect(gridOffer(aMap({ objects: grids(GRID_MAX_PER_MAP - 1) }))).toBe('offered')
+    expect(gridOffer(aMap({ objects: grids(GRID_MAX_PER_MAP) }))).toBe('full')
+  })
+
+  it('offers none on a map that lays out no grid', () => {
+    expect(gridOffer(aMap({ view: newMapView('geo') }))).toBe('none')
+  })
+})
 
 describe('gridOrder', () => {
   const byName = gridLayout(grid())

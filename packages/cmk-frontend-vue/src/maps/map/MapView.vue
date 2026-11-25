@@ -62,7 +62,7 @@ import type { SettingsFocus } from '@/maps/map/edit/settings/settingsForm'
 import type GeoMapViewType from '@/maps/map/geo/GeoMapView.vue'
 import type { GeoMapViewport } from '@/maps/map/geo/geo'
 import { useGridMembers } from '@/maps/map/static/composables/useGridMembers'
-import { canAddGrid, mapGrids } from '@/maps/map/static/gridMembers'
+import { gridOffer, mapGrids } from '@/maps/map/static/gridMembers'
 import type { NavTarget } from '@/maps/services/NavigationService'
 import {
   useAuth,
@@ -195,7 +195,7 @@ const gridStates = computed(() =>
 // Its own state is stale only when there is nothing left to show.
 const gridFailed = computed(() => gridStates.value.some((state) => state.stale))
 const gridTruncated = computed(() => gridStates.value.some((state) => state.grid_truncated))
-const offersObjectGrid = computed(() => canAddGrid(mapConfig.value))
+const objectGridOffer = computed(() => gridOffer(mapConfig.value))
 
 const { rotationCountdown, rotationPaused, stopRotation, scheduleRotation, toggleRotationPause } =
   useMapRotation(mapName, editor.editMode)
@@ -1032,7 +1032,7 @@ function closeBulkAckModal(sent: boolean): void {
         :connection-id="mapConfig?.connection_id ?? ''"
         :keyboard-active="editKeyboardActive"
         :offers-add-object="!isPresentation"
-        :offers-object-grid="offersObjectGrid"
+        :grid-offer="objectGridOffer"
         :offers-snap-grid="!isGeoMap && !isPresentation"
         :beside-inspector="isPresentation && editor.editMode.value"
         @start-placing="onStartPlacing()"

@@ -35,6 +35,7 @@ import DraftFields from '@/maps/map/edit/components/DraftFields.vue'
 import EditField from '@/maps/map/edit/components/EditField.vue'
 import { useObjectSuggestions } from '@/maps/map/edit/composables/useObjectSuggestions'
 import { clearDraftBindings, isDraftPlaceable } from '@/maps/map/edit/draftFacts'
+import type { GridOffer } from '@/maps/map/static/gridMembers'
 import type { ObjectType } from '@/maps/types/api'
 import { placeableObjectTypes } from '@/maps/utils/dropdownOptions'
 import type { FilterRefusal } from '@/maps/utils/formValidation'
@@ -43,7 +44,7 @@ const props = defineProps<{
   placing: boolean
   saving: boolean
   connectionId: string
-  offersObjectGrid: boolean
+  gridOffer: GridOffer
   error: TranslatedString | null
   filterRefusal: FilterRefusal | null
 }>()
@@ -61,7 +62,7 @@ const { _t } = usei18n()
 
 const objectTypeOptions = computed(() => ({
   type: 'filtered' as const,
-  suggestions: placeableObjectTypes(_t, props.offersObjectGrid)
+  suggestions: placeableObjectTypes(_t, props.gridOffer)
 }))
 
 const suggestions = useObjectSuggestions({

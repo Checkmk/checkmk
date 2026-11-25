@@ -469,7 +469,7 @@ def worst_service_state(*states: int, default: int) -> int:
 
 ### Automatic formatting with ruff
 
-The `ruff` configuration lives in the `pyproject.toml` at the repository root — the single Python tool configuration file for the whole repository.
+The `ruff` configuration lives in the `ruff.toml` at the repository root, apart from `pyproject.toml`: mypy and bandit read the latter, so a ruff change there would re-run all of them.
 Run `ruff` through Bazel as described in [Formatting](BAZEL.md#formatting) and [Linting](BAZEL.md#linting).
 
 #### Integration with CI

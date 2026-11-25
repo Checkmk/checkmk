@@ -78,7 +78,7 @@ bandit = lint_bandit_aspect(
 
 ruff = lint_ruff_aspect(
     binary = Label("@multitool_hub//tools/ruff"),
-    configs = [Label("@//:pyproject.toml")],
+    configs = [Label("@//:ruff.toml")],
 )
 
 clang_tidy = lint_clang_tidy_aspect(

@@ -21,6 +21,7 @@ per-file pnpm-lock.yaml=file:/component_owners/basic_vue_functionality/OWNERS_DE
 per-file pnpm-workspace.yaml=file:/component_owners/basic_vue_functionality/OWNERS_DEFINITION
 
 per-file pyproject.toml=file:/component_owners/basic_python_functionality/OWNERS_DEFINITION
+per-file ruff.toml=file:/component_owners/basic_python_functionality/OWNERS_DEFINITION
 
 per-file .mcp.json=file:/component_owners/ai_dev_tools/OWNERS_DEFINITION
 per-file AGENTS.md=file:/component_owners/ai_dev_tools/OWNERS_DEFINITION

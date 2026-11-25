@@ -41,6 +41,7 @@ exports_files(
         "pnpm-lock.yaml",
         "pyproject.toml",
         "requirements.txt",
+        "ruff.toml",
         "runtime-requirements.txt",
         "site.Cargo.lock.bazel",
         "PSScriptAnalyzerSettings.psd1",

@@ -90,6 +90,10 @@ def metrics_of_query(
         )
 
 
+def _matches_id_or_title(ident: str, choice: tuple[str | None, str]) -> bool:
+    return ident.lower() in (choice[0] or "").lower() or ident.lower() in choice[1].lower()
+
+
 def metrics_autocompleter(
     value: str,
     params: Mapping[str, object],
@@ -136,7 +140,3 @@ def monitored_metrics_autocompleter(livestatus_query: LivestatusQueryFunc) -> Au
         )
 
     return autocompleter
-
-
-def _matches_id_or_title(ident: str, choice: tuple[str | None, str]) -> bool:
-    return ident.lower() in (choice[0] or "").lower() or ident.lower() in choice[1].lower()

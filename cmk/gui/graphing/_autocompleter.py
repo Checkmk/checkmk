@@ -27,24 +27,29 @@ type LivestatusQueryFunc = Callable[
 ]
 
 
-def _metric_choices(
-    check_command: str,
-    raw_metric_names: Sequence[EngineMetricName],
+def _metrics_of_object(
+    check_command: object,
+    perf_data: object,
+    rrd_metrics: object,
     registered_metrics: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
+    *,
+    debug: bool,
 ) -> Iterator[Choice]:
+    raw = parse_performance_data(
+        ensure_type(perf_data, str),
+        ensure_type(check_command, str),
+        [EngineMetricName(ensure_type(name, str)) for name in ensure_type(rrd_metrics, list)],
+        debug=debug,
+        logger=logger,
+    )
     for metric_name in translate_metric_names(
-        check_command, raw_metric_names, registered_translations
+        raw.check_command, list(raw.values), registered_translations
     ):
         yield (
             metric_name,
             metric_attributes(metric_name, translate_to_current_language, registered_metrics).title,
         )
-
-
-def _engine_metric_names(raw: object) -> Iterator[EngineMetricName]:
-    for name in ensure_type(raw, list):
-        yield EngineMetricName(ensure_type(name, str))
 
 
 def metrics_of_query(
@@ -55,37 +60,35 @@ def metrics_of_query(
     *,
     debug: bool,
 ) -> Iterator[Choice]:
-    # Fetch host data with the *same* query. This saves one round trip. And head
-    # host has at least one service
     columns = [
+        "host_name",
         "service_check_command",
         "service_perf_data",
         "service_metrics",
         "host_check_command",
+        "host_perf_data",
         "host_metrics",
     ]
-
-    row: Mapping[str, object] = {}
+    host_rows: dict[tuple[object, object], Mapping[str, object]] = {}
     for row in livestatus_query("service", context, columns):
-        raw = parse_performance_data(
-            ensure_type(row["service_perf_data"], str),
-            ensure_type(row["service_check_command"], str),
+        yield from _metrics_of_object(
+            row["service_check_command"],
+            row["service_perf_data"],
+            row["service_metrics"],
+            registered_metrics,
+            registered_translations,
             debug=debug,
-            logger=logger,
         )
-        yield from _metric_choices(
-            raw.check_command,
-            [*raw.values, *_engine_metric_names(row["service_metrics"])],
-            registered_metrics,
-            registered_translations,
-        )
+        host_rows[(row.get("site"), row["host_name"])] = row
 
-    if row.get("host_check_command"):
-        yield from _metric_choices(
-            str(row["host_check_command"]),
-            list(_engine_metric_names(row["host_metrics"])),
+    for row in host_rows.values():
+        yield from _metrics_of_object(
+            row["host_check_command"],
+            row["host_perf_data"],
+            row["host_metrics"],
             registered_metrics,
             registered_translations,
+            debug=debug,
         )
 
 

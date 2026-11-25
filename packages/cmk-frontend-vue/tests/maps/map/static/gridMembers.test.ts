@@ -9,7 +9,8 @@ import {
   gridLayout,
   gridMemberElement,
   gridOrder,
-  gridPosition
+  gridPosition,
+  gridSpacingFor
 } from '@/maps/map/static/gridMembers'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 
@@ -109,6 +110,12 @@ describe('gridLayout', () => {
       sort: 'name',
       order: 'asc'
     })
+  })
+})
+
+describe('gridSpacingFor', () => {
+  it('leaves half an icon between the icons of a new grid', () => {
+    expect(gridSpacingFor(30)).toEqual({ grid_offset_x: 45, grid_offset_y: 45 })
   })
 })
 

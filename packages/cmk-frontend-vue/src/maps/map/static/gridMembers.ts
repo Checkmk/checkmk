@@ -48,6 +48,17 @@ export function gridLayout(grid: MapElement): GridLayout {
   }
 }
 
+/**
+ * How far apart a new grid places its objects: its icons and half an icon
+ * between them. NagVis' 30 px suit its smaller icons, not the ones Maps draws.
+ */
+export function gridSpacingFor(
+  iconSize: number
+): Pick<MapElement, 'grid_offset_x' | 'grid_offset_y'> {
+  const offset = Math.round(iconSize * 1.5)
+  return { grid_offset_x: offset, grid_offset_y: offset }
+}
+
 /** NagVis' default state weights; ``asc`` puts the heaviest first. */
 export function nagvisStateWeight(state: ObjectState): number {
   const handled = state.acknowledged || state.in_downtime

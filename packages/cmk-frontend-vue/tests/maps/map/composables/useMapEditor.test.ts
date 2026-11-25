@@ -197,6 +197,19 @@ describe('useMapEditor placing — services resolved outside setup', () => {
     })
   })
 
+  it("spaces a new grid's objects by the map's icon size", async () => {
+    const services = fakeMapsServices()
+    const map = aMap({ objects: [], icon_size: 40 })
+    services.maps.currentMap.value = map
+    const editor = runWithServices(services, () => useMapEditor())
+
+    editor.draft.type = 'grid'
+    editor.startPlacing()
+    await editor.placeAt(120, 80)
+
+    expect(map.objects[0]).toMatchObject({ type: 'grid', grid_offset_x: 60, grid_offset_y: 60 })
+  })
+
   it('tells a refused filter at the filter, found among the objects the map saves', async () => {
     const services = fakeMapsServices()
     // Shown on the map, but left out of what is saved and so of the server's count.

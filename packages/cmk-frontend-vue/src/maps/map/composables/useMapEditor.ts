@@ -13,6 +13,7 @@ import { computed, onScopeDispose, reactive, ref, toRaw, watch } from 'vue'
 import { gridIdOfMember, isGridMemberId, savedIndexOf } from '@/maps/api/wire'
 import { isDraftPlaceable } from '@/maps/map/edit/draftFacts'
 import { roundCoordinate } from '@/maps/map/geo/coordinates'
+import { objectIconSize } from '@/maps/map/objectIconSize'
 import {
   GRID_MAX_PER_MAP,
   canAddGrid,
@@ -20,6 +21,7 @@ import {
   gridExtent,
   gridLayout,
   gridMembersOf,
+  gridSpacingFor,
   mapGrids
 } from '@/maps/map/static/gridMembers'
 import { useMaps, useSettings, useToast } from '@/maps/services/context'
@@ -697,7 +699,7 @@ export function useMapEditor() {
   // extras stay with the two placement paths (pixel vs. geo).
   function _draftToObject(id: string): MapElement {
     const s = settingsStore.settings.value
-    return newMapElement({
+    const element = newMapElement({
       id,
       type: draft.type as ObjectType,
       host_name: draft.host_name || null,
@@ -733,6 +735,15 @@ export function useMapEditor() {
       url_target: draft.type === 'map' ? '_self' : s.url_target,
       z: s.z
     })
+    if (element.type !== 'grid') {
+      return element
+    }
+    const iconSize = objectIconSize(element, {
+      map: mapsStore.currentMap.value?.icon_size,
+      override: undefined,
+      fallback: s.icon_size
+    })
+    return { ...element, ...gridSpacingFor(iconSize) }
   }
 
   function _newDraftId(): string {

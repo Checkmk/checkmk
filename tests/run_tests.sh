@@ -282,12 +282,17 @@ test-system-gui-pro() { test-system-gui; }
 
 test-system-gui-non-free() {
     prepare-playwright
+    # The non-free tests of each feature, in tests/system/gui/<feature>/nonfree/.
+    local nonfree_dirs
+    mapfile -t nonfree_dirs < <(
+        find "$(realpath "$SCRIPT_DIR/system/gui")" -mindepth 1 -maxdepth 2 -type d -name nonfree | sort
+    )
     _pytest --screenshot=only-on-failure \
         --output="${RESULT_PATH:-/tmp}/" \
         --tracing=retain-on-failure \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         --cmk-edition "$EDITION" \
-        "$(realpath "$SCRIPT_DIR/system/gui")/nonfree"
+        "${nonfree_dirs[@]}"
 }
 
 test-system-gui-ultimate() { EDITION=ultimate test-system-gui-non-free; }

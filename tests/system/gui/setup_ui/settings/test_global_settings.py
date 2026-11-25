@@ -13,7 +13,7 @@ from typing import cast
 
 import pytest
 
-from tests.system.gui.settings.settings_files import (
+from tests.system.gui.setup_ui.settings.settings_files import (
     GUI_SETTINGS_REL_PATH,
     SITE_SPECIFIC_SETTINGS_REL_PATH,
 )

@@ -7,7 +7,7 @@ from collections.abc import Callable
 import pytest
 from playwright.sync_api import expect, Locator
 
-from tests.system.gui.settings.settings_files import (
+from tests.system.gui.setup_ui.settings.settings_files import (
     OMD_SETTINGS_REL_PATH,
     SITE_SPECIFIC_SETTINGS_REL_PATH,
 )

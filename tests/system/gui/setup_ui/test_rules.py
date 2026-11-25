@@ -92,7 +92,7 @@ def _write_rules_to_disk(site: Site) -> Iterator[None]:
 
 
 def _get_tasks() -> dict[str, list[dict[str, str]]]:
-    tasks_file_path = repo_path() / "tests" / "system" / "gui" / "customize_rules.json"
+    tasks_file_path = Path(__file__).parent / "customize_rules.json"
     with open(tasks_file_path, encoding="UTF-8") as tasks_file:
         logger.info('Importing tasks file "%s"...', tasks_file_path)
         tasks: dict[str, list[dict[str, str]]] = json.load(tasks_file)

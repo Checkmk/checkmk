@@ -74,14 +74,17 @@ pub struct UpdaterRegistrationInput {
     pub hostname: String,
 }
 
-/// Check whether the agent updater is already registered by calling
-/// `cmk-update-agent show-config --json` and looking for a non-null `host_secret`
-/// in the state file section of the output.
-///
-/// Returns `true` if the updater appears to be already registered (host_secret is present and
-/// non-null), `false` if it is not yet registered (registration can proceed).
-/// On any unexpected output, logs a warning and returns `true` to skip registration safely.
-fn is_updater_registered(cmk_update_agent_path: &str) -> bool {
+#[derive(Debug, PartialEq)]
+enum UpdaterStatus {
+    Unregistered,
+    Registered {
+        site: Option<site_spec::SiteID>,
+    },
+    /// `cmk-update-agent show-config --json` failed. A warning is logged already.
+    Unknown,
+}
+
+fn updater_status(cmk_update_agent_path: &str) -> UpdaterStatus {
     let mut cmd = Command::new(cmk_update_agent_path);
     if cfg!(windows) {
         cmd.arg("updater");
@@ -97,31 +100,48 @@ fn is_updater_registered(cmk_update_agent_path: &str) -> bool {
                 "Failed to execute '{} show-config --json': {}. Skipping updater registration.",
                 CMK_UPDATE_AGENT_CMD, e
             );
-            return true;
+            return UpdaterStatus::Unknown;
         }
     };
 
-    let stdout = String::from_utf8_lossy(&output.stdout);
-
-    let config: serde_json::Value = match serde_json::from_str(stdout.trim()) {
-        Ok(v) => v,
+    match parse_updater_status(String::from_utf8_lossy(&output.stdout).trim()) {
+        Ok(status) => status,
         Err(e) => {
             warn!(
                 "Failed to parse JSON from '{} show-config --json': {}. Skipping updater registration.",
                 CMK_UPDATE_AGENT_CMD, e
             );
-            return true;
+            UpdaterStatus::Unknown
         }
-    };
+    }
+}
 
-    // host_secret absent or null in state file → not registered
-    !matches!(
-        config
+fn parse_updater_status(show_config: &str) -> serde_json::Result<UpdaterStatus> {
+    let show_config: serde_json::Value = serde_json::from_str(show_config)?;
+    if matches!(
+        show_config
             .get("cmk-update-agent.state")
             .and_then(|s| s.get("config"))
             .and_then(|c| c.get("host_secret")),
         None | Some(serde_json::Value::Null)
-    )
+    ) {
+        return Ok(UpdaterStatus::Unregistered);
+    }
+    // show-config lists each key only under the file whose value is in effect.
+    let value = |key: &str| {
+        show_config
+            .as_object()?
+            .values()
+            .find_map(|file| file.get("config")?.get(key)?.as_str())
+    };
+    Ok(UpdaterStatus::Registered {
+        site: value("server")
+            .zip(value("site"))
+            .map(|(server, site)| site_spec::SiteID {
+                server: server.to_string(),
+                site: site.to_string(),
+            }),
+    })
 }
 
 /// Register the Python updater for one of the connections that a run
@@ -192,11 +212,21 @@ fn register_at(
     updater_registration: &UpdaterRegistration,
     registry: &config::Registry,
 ) -> AnyhowResult<()> {
-    if matches!(updater_registration, UpdaterRegistration::Keep)
-        && is_updater_registered(&python_updater.executable)
-    {
-        println!("Agent updater already registered for site {site_id}. Skipping re-registration.");
-        return Ok(());
+    if matches!(updater_registration, UpdaterRegistration::Keep) {
+        match updater_status(&python_updater.executable) {
+            UpdaterStatus::Unregistered => {}
+            UpdaterStatus::Registered { site: Some(site) } => {
+                println!(
+                    "Agent updater already registered for site {site}. Skipping re-registration."
+                );
+                return Ok(());
+            }
+            UpdaterStatus::Registered { site: None } => {
+                println!("Agent updater already registered. Skipping re-registration.");
+                return Ok(());
+            }
+            UpdaterStatus::Unknown => return Ok(()),
+        }
     }
 
     // The controller stores no host names, so it asks the site. After
@@ -568,5 +598,66 @@ mod tests {
         for (actual, expected) in args.iter().zip(expected_args.iter()) {
             assert_eq!(actual, expected);
         }
+    }
+
+    /// CMK-37336
+    #[test]
+    fn test_updater_status_names_the_registered_site() {
+        let show_config = serde_json::json!({
+            "cmk-update-agent.state": {
+                "path": "/etc/cmk-update-agent.state",
+                "config": {"host_secret": "secret", "server": "cmklab", "site": "firstsite"}
+            }
+        });
+
+        assert_eq!(
+            parse_updater_status(&show_config.to_string()).unwrap(),
+            UpdaterStatus::Registered {
+                site: Some(site_spec::SiteID {
+                    server: "cmklab".to_string(),
+                    site: "firstsite".to_string(),
+                })
+            }
+        );
+    }
+
+    /// CMK-37336
+    #[test]
+    fn test_updater_status_names_the_site_from_the_config_file() {
+        let show_config = serde_json::json!({
+            "cmk-update-agent.cfg": {
+                "path": "/etc/cmk-update-agent.cfg",
+                "config": {"server": "cmklab", "site": "firstsite"}
+            },
+            "cmk-update-agent.state": {
+                "path": "/etc/cmk-update-agent.state",
+                "config": {"host_secret": "secret"}
+            }
+        });
+
+        assert_eq!(
+            parse_updater_status(&show_config.to_string()).unwrap(),
+            UpdaterStatus::Registered {
+                site: Some(site_spec::SiteID {
+                    server: "cmklab".to_string(),
+                    site: "firstsite".to_string(),
+                })
+            }
+        );
+    }
+
+    #[test]
+    fn test_updater_without_host_secret_is_unregistered() {
+        let show_config = serde_json::json!({
+            "cmk-update-agent.cfg": {
+                "path": "/etc/cmk-update-agent.cfg",
+                "config": {"server": "cmklab", "site": "firstsite"}
+            }
+        });
+
+        assert_eq!(
+            parse_updater_status(&show_config.to_string()).unwrap(),
+            UpdaterStatus::Unregistered
+        );
     }
 }

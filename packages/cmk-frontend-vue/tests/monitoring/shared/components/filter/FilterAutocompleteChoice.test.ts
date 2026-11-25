@@ -13,8 +13,11 @@ import type { AutocompleteChoiceFilter } from '@/monitoring/shared/components/fi
 
 const LABELS = ['cmk/os_family:linux', 'criticality:prod']
 
-function mountFunnel(op: 'one_of' | 'all_of') {
-  const model = ref<ColumnFilterNode<'labels'> | undefined>(undefined)
+function mountFunnel(
+  op: 'one_of' | 'all_of',
+  initial: ColumnFilterNode<'labels'> | undefined = undefined
+) {
+  const model = ref<ColumnFilterNode<'labels'> | undefined>(initial)
   const definition: AutocompleteChoiceFilter<'labels'> = {
     type: 'autocomplete-choice',
     field: 'labels',
@@ -90,4 +93,25 @@ test('a switch flipped before the first pick applies to it', async () => {
     op: 'all_of',
     value: [LABELS[0]]
   })
+})
+
+test.each([
+  ['all_of', 'Toggle AND'],
+  ['one_of', 'Toggle OR']
+] as const)('an existing %s condition shows its picks and how they combine', (op, toggle) => {
+  mountFunnel(op === 'all_of' ? 'one_of' : 'all_of', {
+    type: 'condition',
+    field: 'labels',
+    op,
+    value: LABELS
+  })
+
+  for (const label of LABELS) {
+    expect(screen.getByText(label)).toBeInTheDocument()
+  }
+  const combine = screen.getByRole('group', { name: 'Combine selections with' })
+  expect(within(combine).getByRole('button', { name: toggle })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
 })

@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ColumnDef, VisibilityState } from '@tanstack/vue-table'
+import type { AllHostsFilterCondition } from 'cmk-shared-typing/typescript/monitoring/page_filter_condition'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
@@ -22,7 +23,85 @@ import {
 } from '@/monitoring/shared/services/MonitoringService'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
+import { listShownConditions } from '../shared/components/filter/shownConditions'
 import { makeKeyShortcutService, makeResponse } from '../shared/services/testHelpers'
+
+/**
+ * The conditions of the shared schema that the column filters of All hosts show, as
+ * `field:op`. See `listShownConditions` for how it is kept in step.
+ */
+const ALL_HOSTS_FILTER_CONDITIONS = {
+  'acknowledged:eq': true,
+  'active_checks_disabled:eq': true,
+  'address:contains': true,
+  'address:matches': true,
+  'address:one_of': true,
+  'alias:contains': true,
+  'alias:matches': true,
+  'alias:one_of': true,
+  'contact_groups:all_of': true,
+  'contact_groups:one_of': true,
+  'contacts:contains': true,
+  'contacts:matches': true,
+  'contacts:one_of': true,
+  'folder:contains': true,
+  'folder:matches': true,
+  'folder:one_of': true,
+  'groups:all_of': true,
+  'groups:one_of': true,
+  'has_comments:eq': true,
+  'in_check_period:eq': true,
+  'in_downtime:eq': true,
+  'in_notification_period:eq': true,
+  'in_service_period:eq': true,
+  'is_flapping:eq': true,
+  'labels:all_of': true,
+  'labels:one_of': true,
+  'last_check:gte': true,
+  'last_check:lte': true,
+  'last_state_change:gte': true,
+  'last_state_change:lte': true,
+  'name:contains': true,
+  'name:matches': true,
+  'name:one_of': true,
+  'notifications_enabled:eq': true,
+  'num_services:eq': true,
+  'num_services:gt': true,
+  'num_services:gte': true,
+  'num_services:lt': true,
+  'num_services:lte': true,
+  'num_services_crit:eq': true,
+  'num_services_crit:gt': true,
+  'num_services_crit:gte': true,
+  'num_services_crit:lt': true,
+  'num_services_crit:lte': true,
+  'num_services_ok:eq': true,
+  'num_services_ok:gt': true,
+  'num_services_ok:gte': true,
+  'num_services_ok:lt': true,
+  'num_services_ok:lte': true,
+  'num_services_pending:eq': true,
+  'num_services_pending:gt': true,
+  'num_services_pending:gte': true,
+  'num_services_pending:lt': true,
+  'num_services_pending:lte': true,
+  'num_services_unknown:eq': true,
+  'num_services_unknown:gt': true,
+  'num_services_unknown:gte': true,
+  'num_services_unknown:lt': true,
+  'num_services_unknown:lte': true,
+  'num_services_warn:eq': true,
+  'num_services_warn:gt': true,
+  'num_services_warn:gte': true,
+  'num_services_warn:lt': true,
+  'num_services_warn:lte': true,
+  'passive_checks_disabled:eq': true,
+  'site_id:one_of': true,
+  'stale:eq': true,
+  'state:one_of': true,
+  'tags:all_of': true,
+  'tags:one_of': true
+} satisfies Record<AllHostsFilterCondition, true>
 
 class HostColumnService extends MonitoringService<HostEntry> {
   constructor(columns: ColumnDef<HostEntry>[], shortCuts: KeyShortcutService) {
@@ -343,4 +422,12 @@ test('the export carries every data column of the table in table order', () => {
   const dataColumns = columnIds(options).filter((id) => id !== 'select' && id !== 'actions')
 
   expect(RowExport.shownColumns(hostColumns(options), {}, HostExport.isColumn)).toEqual(dataColumns)
+})
+
+test('shows in its column filters the conditions the shared schema names', () => {
+  const shown = hostColumns({ showCustomer: true, showRelations: true }).flatMap((column) =>
+    column.meta?.filter ? listShownConditions(column.meta.filter) : []
+  )
+
+  expect([...new Set(shown)].sort()).toEqual(Object.keys(ALL_HOSTS_FILTER_CONDITIONS).sort())
 })

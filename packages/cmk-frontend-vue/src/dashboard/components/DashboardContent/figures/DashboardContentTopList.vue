@@ -8,6 +8,7 @@ import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecat
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed } from 'vue'
 
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
 import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable'
@@ -115,6 +116,8 @@ function contextualLink(
   return entries.length === 1 ? { href: entries[0]!.href } : { choices: entries }
 }
 
+const showRank = computed(() => props.content.columns.show_rank_numbers !== false)
+
 // Without a top list yet, the value column has no title and no range.
 function columns(topList?: ComputedTopList): RankedTableColumn[] {
   const showBar = props.content.columns.show_bar_visualization !== false
@@ -184,6 +187,7 @@ function errorRows(topList: ComputedTopList): RankedTableRow[] {
         :columns="columns()"
         :rows="[]"
         :placeholder="{ kind: 'loading', rows: content.limit_to }"
+        :show-rank="showRank"
       />
     </template>
     <template #error="{ detail, retry: retryFetch }">
@@ -202,12 +206,14 @@ function errorRows(topList: ComputedTopList): RankedTableRow[] {
             :columns="columns(value)"
             :rows="rows(value)"
             :busy="fetching"
+            :show-rank="showRank"
           />
           <CmkRankedTable
             v-else
             :columns="columns(value)"
             :rows="[]"
             :placeholder="{ kind: 'empty', rows: content.limit_to }"
+            :show-rank="showRank"
           >
             <template #empty>
               <CmkHeading type="h4">{{ _t('No data') }}</CmkHeading>

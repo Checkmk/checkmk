@@ -109,6 +109,9 @@ const widgetProps = computed(() => handler.value.widgetProps)
               :label="_t('Show bar visualization')"
             />
           </div>
+          <div class="db-top-list-widget__item">
+            <CmkCheckbox v-model="handler.showRankNumbers.value" :label="_t('Show rank numbers')" />
+          </div>
         </FieldComponent>
       </TableFormRow>
     </TableForm>

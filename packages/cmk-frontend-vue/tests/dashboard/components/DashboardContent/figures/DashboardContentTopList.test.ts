@@ -122,6 +122,25 @@ describe('DashboardContentTopList', () => {
 
   it('renders host, service and the metric column', async () => {
     await renderWidget()
+    expect(columnHeaders()).toEqual(['#', 'Host', 'Service', 'CPU load'])
+  })
+
+  it('numbers the entries by rank by default', async () => {
+    const { container } = await renderWidget()
+    const ranks = [...container.querySelectorAll('tbody tr')].map((tr) =>
+      tr.querySelector('td')!.textContent!.trim()
+    )
+    expect(ranks).toEqual(['1', '2'])
+  })
+
+  it('omits the rank column when the setting is disabled', async () => {
+    await renderWidget({
+      columns: {
+        show_service_description: true,
+        show_bar_visualization: true,
+        show_rank_numbers: false
+      }
+    })
     expect(columnHeaders()).toEqual(['Host', 'Service', 'CPU load'])
   })
 
@@ -129,13 +148,13 @@ describe('DashboardContentTopList', () => {
     await renderWidget({
       columns: { show_service_description: false, show_bar_visualization: true }
     })
-    expect(columnHeaders()).toEqual(['Host', 'CPU load'])
+    expect(columnHeaders()).toEqual(['#', 'Host', 'CPU load'])
   })
 
   it('keeps the ranking order delivered by the backend', async () => {
     const { container } = await renderWidget()
     const hosts = [...container.querySelectorAll('tbody tr')].map((tr) =>
-      tr.querySelector('td')!.textContent!.trim()
+      tr.querySelectorAll('td')[1]!.textContent!.trim()
     )
     expect(hosts).toEqual(['host-b', 'host-a'])
   })
@@ -359,6 +378,7 @@ describe('DashboardContentTopList', () => {
     )
     await renderWidget()
     expect(columnHeaders()).toEqual([
+      '#',
       'Host',
       'Service',
       'CPU load',

@@ -46,6 +46,7 @@ export interface UseTopList extends UseWidgetHandler, UseWidgetVisualizationOpti
   limitTo: Ref<number>
   showServiceName: Ref<boolean>
   showBarVisualization: Ref<boolean>
+  showRankNumbers: Ref<boolean>
 
   MAX_ENTRIES: number
   limitToValidationErrors: Ref<string[]>
@@ -76,6 +77,7 @@ export const useTopList = async (
   const limitTo = ref<number>(currentContent?.limit_to ?? 10)
   const showServiceName = ref<boolean>(currentContent?.columns?.show_service_description ?? true)
   const showBarVisualization = ref<boolean>(currentContent?.columns?.show_bar_visualization ?? true)
+  const showRankNumbers = ref<boolean>(currentContent?.columns?.show_rank_numbers ?? true)
   const contextualLink = useContextualLink<TopListContent>(
     constants.widgets[CONTENT_TYPE]!.contextual_link!,
     currentContent?.contextual_link
@@ -120,7 +122,8 @@ export const useTopList = async (
       metric: metric,
       columns: {
         show_bar_visualization: showBarVisualization.value,
-        show_service_description: showServiceName.value
+        show_service_description: showServiceName.value,
+        show_rank_numbers: showRankNumbers.value
       },
       display_range: dataRangeProps.value,
       ranking_order: rankingOrder.value,
@@ -157,6 +160,7 @@ export const useTopList = async (
       widgetGeneralSettings,
       showBarVisualization,
       showServiceName,
+      showRankNumbers,
       dataRangeProps,
       rankingOrder,
       limitTo,
@@ -180,6 +184,7 @@ export const useTopList = async (
     limitTo,
     showServiceName,
     showBarVisualization,
+    showRankNumbers,
 
     title,
     showTitle,

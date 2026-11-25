@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The Setup folders network scan for new hosts"""
 
+import os
 import re
 import socket
 import subprocess
 import threading
 import time
 import traceback
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import timedelta
 from typing import Literal, NamedTuple, override, TypeGuard
 
@@ -485,7 +486,7 @@ def _ping_worker(
         except KeyError:
             break
 
-        if _ping(ipaddress):
+        if responds_to_ping(ipaddress):
             try:
                 host_name: HostName | HostAddress = HostName(socket.gethostbyaddr(ipaddress)[0])
             except OSError:
@@ -494,14 +495,21 @@ def _ping_worker(
             hosts.append((host_name, ipaddress))
 
 
-def _ping(address: HostAddress) -> bool:
-    return (
-        subprocess.Popen(
-            ["ping", "-c2", "-w2", address],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
-            encoding="utf-8",
-            close_fds=True,
-        ).wait()
-        == 0
+def _run_ping(command: Sequence[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        command,
+        capture_output=True,
+        encoding="utf-8",
+        check=False,
+        env={**os.environ, "LC_ALL": "C"},
     )
+
+
+def responds_to_ping(
+    address: HostAddress,
+    run_ping: Callable[[Sequence[str]], subprocess.CompletedProcess[str]] = _run_ping,
+) -> bool:
+    # ping also counts echo replies from other addresses, and with -c they
+    # can end it before the target answers
+    completed = run_ping(["ping", "-n", "-w2", address])
+    return completed.returncode == 0 and f"bytes from {address}:" in completed.stdout

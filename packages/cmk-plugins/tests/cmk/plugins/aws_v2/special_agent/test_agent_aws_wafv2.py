@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import json
 from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence
 from typing import Literal, Protocol
@@ -143,15 +144,119 @@ def test_search_string_bytes_handling_in_get_wafv2_web_acls() -> None:
             ]["SearchString"]
             assert isinstance(search_string, str)
         if "NotStatement" in rule["Statement"]:
-            search_string = rule["Statement"]["NotStatement"]["ScopeDownStatement"][
-                "ByteMatchStatement"
-            ]["SearchString"]
+            search_string = rule["Statement"]["NotStatement"]["Statement"]["ByteMatchStatement"][
+                "SearchString"
+            ]
             assert isinstance(search_string, str)
         if "AndStatement" in rule["Statement"]:
             search_string = rule["Statement"]["AndStatement"]["Statements"][0][
                 "ByteMatchStatement"
             ]["SearchString"]
             assert isinstance(search_string, str)
+
+
+class FakeNestedStatementsWAFV2Client:
+    def list_web_acls(self, Scope: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
+        return {"WebACLs": [{"Name": "nested", "Id": "id"}]}
+
+    def get_web_acl(
+        self,
+        Name: str | None = None,  # noqa: ARG002
+        Scope: str | None = None,  # noqa: ARG002
+        Id: str | None = None,  # noqa: ARG002
+    ) -> Mapping[str, object]:
+        return {
+            "WebACL": {
+                "Name": "nested",
+                "Rules": [
+                    {
+                        "Statement": {
+                            "NotStatement": {
+                                "Statement": {"ByteMatchStatement": {"SearchString": b"not-nested"}}
+                            }
+                        }
+                    },
+                    {
+                        "Statement": {
+                            "OrStatement": {
+                                "Statements": [
+                                    {
+                                        "NotStatement": {
+                                            "Statement": {
+                                                "ByteMatchStatement": {"SearchString": b"or-nested"}
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "Statement": {
+                            "ManagedRuleGroupStatement": {
+                                "ScopeDownStatement": {
+                                    "ByteMatchStatement": {"SearchString": b"scope-down"}
+                                }
+                            }
+                        }
+                    },
+                ],
+            }
+        }
+
+
+def test_nested_search_strings_can_be_written_as_json() -> None:
+    def get_response_content(
+        response: Mapping[str, object],
+        key: str,
+        dflt: object = None,  # noqa: ARG001
+    ) -> object:
+        return response[key]
+
+    web_acls = _get_wafv2_web_acls(
+        FakeNestedStatementsWAFV2Client(), "REGIONAL", get_response_content, None, None
+    )
+
+    written = json.dumps(web_acls)
+    assert [text in written for text in ("not-nested", "or-nested", "scope-down")] == [
+        True,
+        True,
+        True,
+    ]
+
+
+class FakeBinarySearchStringWAFV2Client:
+    def list_web_acls(self, Scope: str | None = None) -> Mapping[str, object]:  # noqa: ARG002
+        return {"WebACLs": [{"Name": "binary", "Id": "id"}]}
+
+    def get_web_acl(
+        self,
+        Name: str | None = None,  # noqa: ARG002
+        Scope: str | None = None,  # noqa: ARG002
+        Id: str | None = None,  # noqa: ARG002
+    ) -> Mapping[str, object]:
+        return {
+            "WebACL": {
+                "Name": "binary",
+                "Rules": [{"Statement": {"ByteMatchStatement": {"SearchString": b"\xffbin"}}}],
+            }
+        }
+
+
+def test_search_string_that_is_not_utf8_keeps_its_bytes_escaped() -> None:
+    def get_response_content(
+        response: Mapping[str, object],
+        key: str,
+        dflt: object = None,  # noqa: ARG001
+    ) -> object:
+        return response[key]
+
+    web_acls = _get_wafv2_web_acls(
+        FakeBinarySearchStringWAFV2Client(), "REGIONAL", get_response_content, None, None
+    )
+
+    statement = web_acls[0]["Rules"][0]["Statement"]  # type: ignore[index]
+    assert statement["ByteMatchStatement"]["SearchString"] == "\\xffbin"
 
 
 def create_sections(

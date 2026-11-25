@@ -70,6 +70,21 @@ def _iterate_through_wafv2_list_operations(
     return results
 
 
+def _decode_search_strings(node: object) -> None:
+    # ByteMatchStatement.SearchString comes as bytes at any depth of the
+    # statement tree, and bytes cannot be written as JSON. AWS accepts any
+    # bytes there, so they need not be valid UTF-8.
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "SearchString" and isinstance(value, bytes):
+                node[key] = value.decode(errors="backslashreplace")
+            else:
+                _decode_search_strings(value)
+    elif isinstance(node, list):
+        for item in node:
+            _decode_search_strings(item)
+
+
 def _get_wafv2_web_acls(
     client: BaseClient,
     scope: str,
@@ -98,28 +113,8 @@ def _get_wafv2_web_acls(
         for web_acl_info in web_acls_info
     ]
 
-    def _convert_byte_match_statement(byte_match_statement: dict[str, Any]) -> None:
-        byte_match_statement["SearchString"] = byte_match_statement["SearchString"].decode()
-
-    def _byte_convert_statement(general_statement: dict[str, Any]) -> None:
-        for statement_item in general_statement.items():
-            match statement_item:
-                case ("ByteMatchStatement", statement):
-                    _convert_byte_match_statement(statement)
-                case (
-                    "RateBasedStatement" | "NotStatement",
-                    {"ScopeDownStatement": {"ByteMatchStatement": statement}},
-                ):
-                    _convert_byte_match_statement(statement)
-                case ("AndStatement" | "OrStatement", statement):
-                    for s in statement["Statements"]:
-                        _byte_convert_statement(s)
-                case _:
-                    pass
-
     for acl in web_acls:
-        for rule in acl["Rules"]:
-            _byte_convert_statement(rule["Statement"])
+        _decode_search_strings(acl)
 
     return web_acls
 

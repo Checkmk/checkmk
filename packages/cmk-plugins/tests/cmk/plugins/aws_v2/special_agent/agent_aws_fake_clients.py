@@ -2939,7 +2939,7 @@ class WAFV2GetWebACLIB(InstanceBuilder):
                                 "NotStatement",
                                 [
                                     Dict(
-                                        "ScopeDownStatement",
+                                        "Statement",
                                         [
                                             Dict(
                                                 "ByteMatchStatement",

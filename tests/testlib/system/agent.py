@@ -44,6 +44,9 @@ AGENT_CTL = PurePosixPath("/usr/bin/cmk-agent-ctl")
 
 _LOCAL_HOST = LocalHost()
 
+LinuxPackageType = Literal["linux_deb", "linux_rpm"]
+PackageType = LinuxPackageType | Literal["windows_msi"]
+
 
 def bake_agents(site: Site) -> None:
     expected_baking_start_time = time.time()
@@ -55,7 +58,7 @@ def bake_agents(site: Site) -> None:
     )
 
 
-def get_package_type(host: HostUnderTest = _LOCAL_HOST) -> Literal["linux_deb", "linux_rpm"]:
+def get_package_type(host: HostUnderTest = _LOCAL_HOST) -> LinuxPackageType:
     if host.run(["test", "-e", "/var/lib/dpkg/status"], check=False).returncode == 0:
         return "linux_deb"
     has_rpm = "test -e /usr/bin/rpm || { test -e /var/lib/rpm && test -e /bin/rpm; }"
@@ -151,9 +154,7 @@ def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
     return install_agent_package(download_agent_package(site, get_package_type(), tmp_dir))
 
 
-def download_agent_package(
-    site: Site, package_type: Literal["linux_deb", "linux_rpm", "windows_msi"], target_dir: Path
-) -> Path:
+def download_agent_package(site: Site, package_type: PackageType, target_dir: Path) -> Path:
     """Download the agent package that the site serves.
 
     The Community edition has no bakery, so its endpoint hands out the prebuilt package that

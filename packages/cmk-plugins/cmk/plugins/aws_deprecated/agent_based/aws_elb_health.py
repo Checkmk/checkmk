@@ -79,7 +79,7 @@ agent_section_aws_elb_health = AgentSection(
 
 check_plugin_aws_elb_health = CheckPlugin(
     name="aws_elb_health",
-    service_name="AWS/ELB Health ",
+    service_name="AWS/ELB Health",
     discovery_function=discover_aws_elb_health,
     check_function=check_aws_elb_health,
 )

@@ -65,10 +65,10 @@ def _mypy_aspect(mypy_ini):
         },
     )
 
-mypy_aspect = _mypy_aspect(Label("@//:pyproject.toml"))
+mypy_aspect = _mypy_aspect(Label("@//:mypy.ini"))
 
 # The same with the config for the GPL code, which doesn't know about the non-free parts.
-mypy_gpl_aspect = _mypy_aspect(Label("@//:mypy-gpl.toml"))
+mypy_gpl_aspect = _mypy_aspect(Label("@//:mypy-gpl.ini"))
 
 bandit = lint_bandit_aspect(
     binary = Label(":bandit"),

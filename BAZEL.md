@@ -198,13 +198,13 @@ prints the rest.
 
 ## Configs
 
-| Config               | What it does                                                      |
-| -------------------- | ----------------------------------------------------------------- |
-| `--config=mypy`      | Type-checks the built Python targets with mypy (`pyproject.toml`) |
-| `--config=mypy-gpl`  | Like `--config=mypy`, but with `mypy-gpl.toml`                    |
-| `--config=deballast` | Reports unused dependencies of the built targets                  |
-| `--config=debug`     | Prints the applied `.bazelrc` options and failing command lines   |
-| `--config=ci`        | CI only                                                           |
+| Config               | What it does                                                    |
+| -------------------- | --------------------------------------------------------------- |
+| `--config=mypy`      | Type-checks the built Python targets with mypy (`mypy.ini`)     |
+| `--config=mypy-gpl`  | Like `--config=mypy`, but with `mypy-gpl.ini`                   |
+| `--config=deballast` | Reports unused dependencies of the built targets                |
+| `--config=debug`     | Prints the applied `.bazelrc` options and failing command lines |
+| `--config=ci`        | CI only                                                         |
 
 `bazel/rc/<name>.rc` defines each config.
 

@@ -20,6 +20,8 @@ per-file package.json=file:/component_owners/basic_vue_functionality/OWNERS_DEFI
 per-file pnpm-lock.yaml=file:/component_owners/basic_vue_functionality/OWNERS_DEFINITION
 per-file pnpm-workspace.yaml=file:/component_owners/basic_vue_functionality/OWNERS_DEFINITION
 
+per-file mypy.ini=file:/component_owners/basic_python_functionality/OWNERS_DEFINITION
+per-file mypy-gpl.ini=file:/component_owners/basic_python_functionality/OWNERS_DEFINITION
 per-file pyproject.toml=file:/component_owners/basic_python_functionality/OWNERS_DEFINITION
 per-file ruff.toml=file:/component_owners/basic_python_functionality/OWNERS_DEFINITION
 

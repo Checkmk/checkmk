@@ -4,6 +4,6 @@
 common:mypy --aspects //bazel/tools:aspects.bzl%mypy_aspect
 common:mypy --output_groups=mypy
 
-# The same with mypy-gpl.toml instead of pyproject.toml
+# The same with mypy-gpl.ini instead of mypy.ini
 common:mypy-gpl --aspects //bazel/tools:aspects.bzl%mypy_gpl_aspect
 common:mypy-gpl --output_groups=mypy

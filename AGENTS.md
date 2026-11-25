@@ -23,7 +23,7 @@ See [BAZEL.md](BAZEL.md) for the full developer command reference.
 
 ## Python Conventions
 
-- Python version per `pyproject.toml`; type hints required; pathlib over os.path
+- Python version per `package_versions.bzl` (`PYTHON_VERSION`); type hints required; pathlib over os.path
 - Formatting/linting via `bazel lint` (ruff); type checking via `bazel build --config=mypy` (mypy)
 - Agent plugins: Python 3.4+ compatible
 - GUI cannot import cmk/base internals (enforced by component isolation)

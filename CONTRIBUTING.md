@@ -469,7 +469,7 @@ def worst_service_state(*states: int, default: int) -> int:
 
 ### Automatic formatting with ruff
 
-The `ruff` configuration lives in the `ruff.toml` at the repository root, apart from `pyproject.toml`: mypy and bandit read the latter, so a ruff change there would re-run all of them.
+The `ruff` configuration lives in the `ruff.toml` at the repository root, apart from `pyproject.toml`: bandit and the tests read the latter, so a ruff change there would re-run all of them.
 Run `ruff` through Bazel as described in [Formatting](BAZEL.md#formatting) and [Linting](BAZEL.md#linting).
 
 #### Integration with CI
@@ -486,7 +486,9 @@ from being added to the repository.
 
 Run mypy through Bazel as described in [Type checking](BAZEL.md#type-checking).
 
-The configuration is the `[tool.mypy]` section of the `pyproject.toml` in the root directory of the Checkmk repository.
+The configuration is the `mypy.ini` in the root directory of the Checkmk repository, kept apart from `pyproject.toml` so that changes to the other tools' settings don't re-run mypy and vice versa.
+mypy finds it by itself from any directory of the repository.
+`mypy-gpl.ini` is the variant for the GPL code; keep the two in sync.
 For info about how to type hint refer to [mypy docs - Type hints cheat sheet (Python 2)](https://mypy.readthedocs.io/en/latest/cheat_sheet.html#type-hints-cheat-sheet-python-2).
 
 #### vim
@@ -523,7 +525,7 @@ With ":ALEInfo" you get information about the error diagnosis below, if it doesn
 
 #### Editor integration: \*macs
 
-- Flycheck finds the mypy configuration in `pyproject.toml` without further configuration.
+- Flycheck finds the mypy configuration in `mypy.ini` without further configuration.
 - To use the correct mypy executable a `.dir-locals.el` in the root directory of the Checkmk repository is used.
 - To disable the risky variable warning that is triggered by setting the mypy executable the `safe-local-variables` variable has to be extended by:
 

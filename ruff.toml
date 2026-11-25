@@ -1,12 +1,14 @@
 # The ruff settings live apart from pyproject.toml on purpose: please don't merge them back.
 #
-# mypy and bandit read pyproject.toml, so every edit there re-runs all their actions: in CI about
-# 1420 mypy actions (52-75 CPU-minutes) and 1045 bandit actions (about 16 CPU-minutes), plus the
-# 211 targets that depend on pyproject.toml, among them tests reading their pytest settings from
-# it. In the year up to 2026-11-25, 168 of the 208 commits changing pyproject.toml changed the
-# ruff settings, 167 of them without touching mypy's or bandit's (those changed in only 22 and 5
-# commits). Keeping ruff apart saves roughly 190-250 CPU-hours a year in CI, plus the rebuilds
-# developers get after rebasing across such a commit.
+# When ruff's settings moved here, mypy and bandit read pyproject.toml, so every edit there re-ran
+# all their actions: in CI about 1420 mypy actions (52-75 CPU-minutes) and 1045 bandit actions
+# (about 16 CPU-minutes), plus the 211 targets that depend on pyproject.toml, among them tests
+# reading their pytest settings from it. In the year up to 2026-11-25, 168 of the 208 commits
+# changing pyproject.toml changed the ruff settings, 167 of them without touching mypy's or
+# bandit's (those changed in only 22 and 5 commits). Keeping ruff apart saved roughly 190-250
+# CPU-hours a year in CI, plus the rebuilds developers get after rebasing across such a commit.
+# mypy's settings have moved to mypy.ini since, for the same reason. bandit and the tests still
+# read pyproject.toml.
 
 extend-exclude = ["doc/**/*.py"]
 target-version = "py315"

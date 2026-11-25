@@ -102072,6 +102072,9 @@ msgstr "Veuillez spécifier votre login d'administrateur sur le site distant."
 msgid "Suggested questions"
 msgstr "Vidéos tutorielles suggérées"
 
+msgid "Checkmk AI can make mistakes. Please double-check responses."
+msgstr ""
+
 #, fuzzy
 msgid "Ask across all hosts and services"
 msgstr "Voir tous les hôtes et services"
@@ -102114,6 +102117,28 @@ msgstr "État du contrôle"
 
 msgid "An AI assistant that helps you dive into your data and investigate"
 msgstr ""
+
+#, fuzzy
+msgid "Thinking"
+msgstr "Réduit"
+
+#, fuzzy
+msgid "Writing answer"
+msgstr "Avertissement à"
+
+#, fuzzy
+msgid "Thought process"
+msgstr "Traitement RRD"
+
+#, fuzzy
+msgid "%{count} item"
+msgid_plural "%{count} items"
+msgstr[0] "Sur les hôtes sélectionnés"
+msgstr[1] "Sur les hôtes sélectionnés"
+
+#, fuzzy
+msgid "Reason: %{reason}"
+msgstr "Motif : %s"
 
 #, fuzzy
 msgid "Cancelled"

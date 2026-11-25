@@ -97795,6 +97795,9 @@ msgstr "Bitte Administrator-Login für Remote-Instanz anlegen."
 msgid "Suggested questions"
 msgstr "Vorgeschlagene Tutorial Videos"
 
+msgid "Checkmk AI can make mistakes. Please double-check responses."
+msgstr ""
+
 #, fuzzy
 msgid "Ask across all hosts and services"
 msgstr "Alle Hosts/Services zeigen"
@@ -97837,6 +97840,28 @@ msgstr "Checkmk Zustand"
 
 msgid "An AI assistant that helps you dive into your data and investigate"
 msgstr ""
+
+#, fuzzy
+msgid "Thinking"
+msgstr "Denke nach..."
+
+#, fuzzy
+msgid "Writing answer"
+msgstr "Warnhinweise"
+
+#, fuzzy
+msgid "Thought process"
+msgstr "Host-Verarbeitung"
+
+#, fuzzy
+msgid "%{count} item"
+msgid_plural "%{count} items"
+msgstr[0] "%{count} sec"
+msgstr[1] "%{count} sec"
+
+#, fuzzy
+msgid "Reason: %{reason}"
+msgstr "Grund: %s"
 
 #, fuzzy
 msgid "Cancelled"

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-11-24 15:56+0000\n"
+"PO-Revision-Date: 2026-11-25 16:57+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -101110,6 +101110,9 @@ msgstr "Por favor, especifique o seu login de administrador no site remoto."
 msgid "Suggested questions"
 msgstr "Vídeos tutoriais sugeridos"
 
+msgid "Checkmk AI can make mistakes. Please double-check responses."
+msgstr ""
+
 #, fuzzy
 msgid "Ask across all hosts and services"
 msgstr "Ver todos os anfitriões e serviços"
@@ -101152,6 +101155,28 @@ msgstr "Estado do checkmk"
 
 msgid "An AI assistant that helps you dive into your data and investigate"
 msgstr ""
+
+#, fuzzy
+msgid "Thinking"
+msgstr "Encolhendo"
+
+#, fuzzy
+msgid "Writing answer"
+msgstr "Alerta em"
+
+#, fuzzy
+msgid "Thought process"
+msgstr "processamento do DRR"
+
+#, fuzzy
+msgid "%{count} item"
+msgid_plural "%{count} items"
+msgstr[0] "Em anfitriões seleccionados"
+msgstr[1] "Em anfitriões seleccionados"
+
+#, fuzzy
+msgid "Reason: %{reason}"
+msgstr "Motivo: %s"
 
 #, fuzzy
 msgid "Cancelled"

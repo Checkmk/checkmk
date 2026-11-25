@@ -96232,6 +96232,9 @@ msgstr "リモートサイトで管理者ログインを指定してください
 msgid "Suggested questions"
 msgstr "推奨されるチュートリアルビデオ"
 
+msgid "Checkmk AI can make mistakes. Please double-check responses."
+msgstr ""
+
 #, fuzzy
 msgid "Ask across all hosts and services"
 msgstr "全てのホストとサービスを表示"
@@ -96273,6 +96276,27 @@ msgstr "Checkmkの状態"
 
 msgid "An AI assistant that helps you dive into your data and investigate"
 msgstr ""
+
+#, fuzzy
+msgid "Thinking"
+msgstr "考え中..."
+
+#, fuzzy
+msgid "Writing answer"
+msgstr "警告アサート"
+
+#, fuzzy
+msgid "Thought process"
+msgstr "ホスト処理"
+
+#, fuzzy
+msgid "%{count} item"
+msgid_plural "%{count} items"
+msgstr[0] "選択したホスト上"
+
+#, fuzzy
+msgid "Reason: %{reason}"
+msgstr "理由:%s"
 
 #, fuzzy
 msgid "Cancelled"

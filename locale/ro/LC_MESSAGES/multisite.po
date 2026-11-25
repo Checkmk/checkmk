@@ -101703,6 +101703,9 @@ msgstr ""
 msgid "Suggested questions"
 msgstr "Videoclipuri tutorial sugerate"
 
+msgid "Checkmk AI can make mistakes. Please double-check responses."
+msgstr ""
+
 #, fuzzy
 msgid "Ask across all hosts and services"
 msgstr "Vezi toate gazdele și serviciile"
@@ -101745,6 +101748,29 @@ msgstr "Verificați starea Checkmk"
 
 msgid "An AI assistant that helps you dive into your data and investigate"
 msgstr ""
+
+#, fuzzy
+msgid "Thinking"
+msgstr "Micșorarea"
+
+#, fuzzy
+msgid "Writing answer"
+msgstr "Avertisment la"
+
+#, fuzzy
+msgid "Thought process"
+msgstr "Prelucrarea RRD"
+
+#, fuzzy
+msgid "%{count} item"
+msgid_plural "%{count} items"
+msgstr[0] "Pe gazdele selectate"
+msgstr[1] "Pe gazdele selectate"
+msgstr[2] "Pe gazdele selectate"
+
+#, fuzzy
+msgid "Reason: %{reason}"
+msgstr "Motivul: %s"
 
 #, fuzzy
 msgid "Cancelled"

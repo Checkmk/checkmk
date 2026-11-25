@@ -101168,6 +101168,9 @@ msgstr "Geef uw beheerders login op de externe site."
 msgid "Suggested questions"
 msgstr "Voorgestelde instructievideo's"
 
+msgid "Checkmk AI can make mistakes. Please double-check responses."
+msgstr ""
+
 #, fuzzy
 msgid "Ask across all hosts and services"
 msgstr "Bekijk alle hosts en diensten"
@@ -101210,6 +101213,28 @@ msgstr "Checkmk staat"
 
 msgid "An AI assistant that helps you dive into your data and investigate"
 msgstr ""
+
+#, fuzzy
+msgid "Thinking"
+msgstr "Shrinking"
+
+#, fuzzy
+msgid "Writing answer"
+msgstr "Waarschuwing bij"
+
+#, fuzzy
+msgid "Thought process"
+msgstr "RRD-verwerking"
+
+#, fuzzy
+msgid "%{count} item"
+msgid_plural "%{count} items"
+msgstr[0] "Op geselecteerde hosts"
+msgstr[1] "Op geselecteerde hosts"
+
+#, fuzzy
+msgid "Reason: %{reason}"
+msgstr "Reden: %s"
 
 #, fuzzy
 msgid "Cancelled"

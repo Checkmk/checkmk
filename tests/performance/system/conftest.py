@@ -50,10 +50,11 @@ def pytest_configure(config: pytest.Config) -> None:
         rmtree(run_dir, ignore_errors=True)
     run_dir.mkdir(parents=True, exist_ok=True)
     if config.option.benchmark_json is None:
-        config.option.benchmark_json = run_dir / "benchmark.json"
+        config.option.benchmark_json = benchmark_json.JsonFile(run_dir / "benchmark.json")
     if config.option.htmlpath is None:
         config.option.htmlpath = str(run_dir / "report.htm")
-    sysmon.set_results_dir(Path(config.option.benchmark_json).parent)
+    # A file object, whether given on the command line or set above.
+    sysmon.set_results_dir(Path(config.option.benchmark_json.name).parent)
 
 
 def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:

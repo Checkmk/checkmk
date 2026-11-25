@@ -9,9 +9,10 @@
 import ast
 import io
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
+from subprocess import CompletedProcess
 from typing import NoReturn, override
 
 import pytest
@@ -992,3 +993,59 @@ def test_get_configuration_reports_an_unreadable_config_file_as_known_error(
     result = engine.execute(AutomationID("get-configuration"), [])
 
     assert result is AutomationError.KNOWN_ERROR
+
+
+def _ping_printing(output: str) -> Callable[[Sequence[str]], CompletedProcess[str]]:
+    def run_ping(command: Sequence[str]) -> CompletedProcess[str]:
+        return CompletedProcess(command, 0, stdout=output)
+
+    return run_ping
+
+
+def test_ping_answered_only_by_another_host_fails() -> None:
+    output = """\
+PING 10.255.255.1 (10.255.255.1) 56(84) bytes of data.
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.032 ms (DIFFERENT ADDRESS!)
+64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.033 ms (DIFFERENT ADDRESS!)
+
+--- 10.255.255.1 ping statistics ---
+1 packets transmitted, 2 received, -100% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.032/0.032/0.033/0.000 ms
+"""
+
+    status, _output = checkmk.ping_target(["ping"], "10.255.255.1", _ping_printing(output))
+
+    assert status == 1
+
+
+def test_ping_answered_by_the_target_among_foreign_replies_succeeds() -> None:
+    output = """\
+PING 127.0.0.2 (127.0.0.2) 56(84) bytes of data.
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.029 ms (DIFFERENT ADDRESS!)
+64 bytes from 127.0.0.2: icmp_seq=1 ttl=64 time=0.031 ms (DUP!)
+64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.031 ms (DIFFERENT ADDRESS!)
+
+--- 127.0.0.2 ping statistics ---
+1 packets transmitted, 2 received, +1 duplicates, -100% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.029/0.030/0.031/0.000 ms
+"""
+
+    status, _output = checkmk.ping_target(["ping"], "127.0.0.2", _ping_printing(output))
+
+    assert status == 0
+
+
+def test_ping_succeeds_with_the_old_iputils_ipv6_header() -> None:
+    output = """\
+PING ::1(::1) 56 data bytes
+64 bytes from ::1: icmp_seq=1 ttl=64 time=0.040 ms
+64 bytes from ::1: icmp_seq=2 ttl=64 time=0.035 ms
+
+--- ::1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+rtt min/avg/max/mdev = 0.035/0.037/0.040/0.002 ms
+"""
+
+    status, _output = checkmk.ping_target(["ping6"], "::1", _ping_printing(output))
+
+    assert status == 0

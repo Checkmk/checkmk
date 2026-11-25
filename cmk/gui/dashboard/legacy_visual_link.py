@@ -27,7 +27,6 @@ def inherited_column_link(
     """A column's drill-down that carries the clicked object and the time range. Like "Link to", it
     leaves out the dashboard and widget filters."""
     return ContextualLinkEntryConfig(
-        title=name,
         location=(type_name, name),
         filters=[],
         include_context=False,

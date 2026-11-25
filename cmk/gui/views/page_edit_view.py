@@ -673,9 +673,8 @@ def _drilldown_link(link_spec: _RawVSLinkSpec | None) -> ContextualLinkEntryConf
         return None
     target_type, name = link_spec[1]["target"]
     pass_on = link_spec[1]["pass_on"]
-    # The editor offers no title or filter form, so it saves the defaults.
+    # The editor offers no filter form.
     return ContextualLinkEntryConfig(
-        title=name,
         location=(target_type, name),
         filters=[
             ContextFilterConfig(filter_id=raw)

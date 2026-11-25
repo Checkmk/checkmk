@@ -948,7 +948,6 @@ def _embedded_view(
 
 def test_a_stored_column_link_moves_onto_its_column() -> None:
     link = ContextualLinkEntryConfig(
-        title="host",
         location=("views", "host"),
         filters=[],
         include_context=True,
@@ -979,7 +978,6 @@ def _migrated_embedded_view(embedded_view: DashboardEmbeddedViewSpec) -> Dashboa
 
 def _inherited(target_type: Literal["views", "dashboards"], name: str) -> ContextualLinkEntryConfig:
     return ContextualLinkEntryConfig(
-        title=name,
         location=(target_type, name),
         filters=[],
         include_context=False,

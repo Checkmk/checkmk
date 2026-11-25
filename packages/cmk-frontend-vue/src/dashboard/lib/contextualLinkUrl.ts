@@ -107,7 +107,7 @@ export function contextualLinkEntries(
     const deferred = Object.values(properties).some((result) => result.status === 'deferred')
     return [
       {
-        title: link.title,
+        title: link.description ? `${link.title} · ${link.description}` : link.title,
         href:
           deferred && deferredHref
             ? deferredHref(index)

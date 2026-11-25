@@ -216,12 +216,8 @@ function confirmDelete() {
             class="db-contextual-link-config__indent db-contextual-link-config__group db-contextual-link-config__link-body"
           >
             <div class="db-contextual-link-config__field">
-              <p>{{ _t('Link name') }}</p>
-              <CmkInput
-                v-model="link.title"
-                :aria-label="_t('Link name')"
-                :placeholder="_t('e.g. host details')"
-              />
+              <p>{{ _t('Link description') }}</p>
+              <CmkInput v-model="link.description" :aria-label="_t('Link description')" />
             </div>
             <div class="db-contextual-link-config__field">
               <p>{{ _t('Target page') }}</p>

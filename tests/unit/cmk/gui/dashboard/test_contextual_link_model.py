@@ -60,6 +60,7 @@ from cmk.gui.dashboard.type_defs import (
     ContextualLinkCustomConfig,
     StatsDashletConfig,
 )
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.type_defs import ContextualLinkEntryConfig
 from cmk.gui.views.drilldown_filters import filter_drilldown
 from cmk.gui.visuals.filter import filter_registry
@@ -118,7 +119,7 @@ def test_a_custom_link_round_trips_its_entries() -> None:
         type="custom",
         links=[
             ContextualLink(
-                title="Problem services",
+                description="Problem services",
                 location=_DASHBOARD,
                 filters=[
                     HostStateContextFilter(filter_id="hoststate"),
@@ -144,7 +145,7 @@ def test_a_custom_link_round_trips_its_keyed_filters() -> None:
         type="custom",
         links=[
             ContextualLink(
-                title="Same OS",
+                description="Same OS",
                 location=_VIEW,
                 filters=[
                     HostLabelContextFilter(filter_id="host_labels", key="cmk/os_family"),
@@ -165,6 +166,26 @@ def test_a_custom_link_round_trips_its_keyed_filters() -> None:
     assert contextual_link_from_internal(stored, OBJECT_SERVICE_FILTER_ADAPTER) == link
 
 
+def test_a_stored_custom_link_without_a_description_loads_without_one() -> None:
+    stored = ContextualLinkCustomConfig(
+        type="custom",
+        links=[
+            ContextualLinkEntryConfig(
+                location=("views", "searchsvc"),
+                filters=[],
+                include_context=False,
+                include_time_range=False,
+                show_filter_form=False,
+            )
+        ],
+    )
+
+    link = contextual_link_from_internal(stored, AGGREGATE_SERVICE_FILTER_ADAPTER)
+
+    assert isinstance(link, ContextualLinkCustom)
+    assert isinstance(link.links[0].description, ApiOmitted)
+
+
 def test_a_label_filter_does_not_load_without_its_key() -> None:
     with pytest.raises(ValidationError):
         OBJECT_HOST_FILTER_ADAPTER.validate_python(ContextFilterConfig(filter_id="host_labels"))
@@ -180,7 +201,7 @@ def test_a_stored_statistics_link_reads_its_single_value_filters_as_multi_value_
         type="custom",
         links=[
             ContextualLinkEntryConfig(
-                title="Problem services",
+                description="Problem services",
                 location=("views", "searchsvc"),
                 filters=[
                     ContextFilterConfig(filter_id="siteopt"),

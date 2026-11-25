@@ -27,7 +27,7 @@ from cmk.gui.dashboard.type_defs import (
     ContextualLinkNoneConfig,
     ContextualLinkTargetType,
 )
-from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.type_defs import (
     ContextualLinkEntryConfig,
     ContextualLinkLocationConfig,
@@ -95,8 +95,9 @@ class ContextualLinkInherited:
 
 @api_model
 class ContextualLink[F]:
-    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] = api_field(
-        description="The title of the link."
+    description: Annotated[str, StringConstraints(strip_whitespace=True)] | ApiOmitted = api_field(
+        default_factory=ApiOmitted,
+        description="How the target relates to the clicked element.",
     )
     location: VisualLocation = api_field(description="The target visual.")
     filters: list[F] = api_field(
@@ -257,7 +258,9 @@ def contextual_link_to_internal(
                 type="custom",
                 links=[
                     ContextualLinkEntryConfig(
-                        title=entry.title,
+                        description=""
+                        if isinstance(entry.description, ApiOmitted)
+                        else entry.description,
                         location=_location_to_internal(entry.location),
                         filters=[context_filter_to_internal(f) for f in entry.filters],
                         include_context=entry.include_context,
@@ -317,7 +320,7 @@ def _stored_link_from_internal[F](
             type="custom",
             links=[
                 ContextualLink(
-                    title=entry["title"],
+                    description=entry.get("description") or ApiOmitted(),
                     location=location_from_internal(entry["location"]),
                     filters=[
                         filter_adapter.validate_python(f)

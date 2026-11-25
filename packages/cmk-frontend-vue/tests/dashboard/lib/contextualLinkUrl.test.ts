@@ -212,6 +212,18 @@ describe('contextualLinkEntries', () => {
     ])
   })
 
+  it('names a described link by its target and its description', () => {
+    const [entry] = contextualLinkEntries(
+      [{ ...SEARCHHOST, description: 'Down hosts' }],
+      { links: [DOWN_HOSTS] },
+      {},
+      null,
+      null
+    )
+
+    expect(entry!.title).toBe('All hosts · Down hosts')
+  })
+
   it('leaves out a deferred filter without a page to value it', () => {
     const [entry] = contextualLinkEntries(
       [SEARCHHOST],

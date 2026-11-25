@@ -315,7 +315,6 @@ def test_column_spec_keeps_its_column_link_through_raw() -> None:
     column_spec = ColumnSpec(
         name="host",
         column_link=ContextualLinkEntryConfig(
-            title="host",
             location=("views", "host"),
             filters=[],
             include_context=True,

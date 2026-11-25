@@ -48,7 +48,6 @@ def _link(
     include_time_range: bool = True,
 ) -> ContextualLinkEntryConfig:
     return ContextualLinkEntryConfig(
-        title=location[1],
         location=location,
         filters=list(filters),
         include_context=include_context,

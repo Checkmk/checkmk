@@ -56,7 +56,7 @@ def _link(
     *filter_ids: str, include_context: bool = False, include_time_range: bool = False
 ) -> dict[str, object]:
     return {
-        "title": "Problems",
+        "description": "Problems",
         "location": {"type": "views", "name": "allhosts"},
         "filters": [{"filter_id": filter_id} for filter_id in filter_ids],
         "include_context": include_context,

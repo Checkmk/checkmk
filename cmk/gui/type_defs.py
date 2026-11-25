@@ -691,7 +691,7 @@ class ContextFilterConfig(TypedDict):
 
 
 class ContextualLinkEntryConfig(TypedDict):
-    title: str
+    description: NotRequired[str]
     location: ContextualLinkLocationConfig
     filters: list[ContextFilterConfig]
     include_context: bool

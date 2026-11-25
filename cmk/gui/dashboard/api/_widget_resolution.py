@@ -13,6 +13,7 @@ import cmk.web.utils.permission_verification as permissions
 from cmk.gui import visuals
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.openapi.framework import ApiContext
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.utils.roles import UserPermissions
@@ -238,7 +239,10 @@ def _effective_links(
         case ContextualLinkCustom() as custom:
             return [
                 EffectiveLink(
-                    title=entry.title,
+                    title=visuals.visual_title_without_context(target, {}),
+                    description=""
+                    if isinstance(entry.description, ApiOmitted)
+                    else entry.description,
                     location=entry.location,
                     include_context=entry.include_context,
                     include_time_range=entry.include_time_range,
@@ -246,7 +250,7 @@ def _effective_links(
                     filters=[context_filter_to_internal(f) for f in entry.filters],
                 )
                 for entry in custom.links
-                if resolved_copy(entry.location, user_permissions) is not None
+                if (target := resolved_copy(entry.location, user_permissions)) is not None
             ]
         case ContextualLinkDefault():
             return [] if built_in_link is None else [built_in_link]

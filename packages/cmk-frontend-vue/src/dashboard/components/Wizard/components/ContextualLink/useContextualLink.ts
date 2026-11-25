@@ -32,7 +32,7 @@ export interface FilterDraft<F> {
 export interface CustomLinkDraft<F> {
   // Keys the row, so a removed row does not hand its picker state to the next one.
   id: number
-  title: string
+  description: string
   target: VisualLocation | null
   // Unchecked, the link carries no filters; the rows stay, so checking it again brings them back.
   includeClickedElement: boolean
@@ -64,10 +64,10 @@ export interface UseContextualLink<C extends LinkedContent> extends UseValidate 
 
 let nextDraftId = 0
 
-function newCustomLink<F>(title: string): CustomLinkDraft<F> {
+function newCustomLink<F>(): CustomLinkDraft<F> {
   return {
     id: nextDraftId++,
-    title,
+    description: '',
     target: null,
     includeClickedElement: true,
     filters: [],
@@ -75,17 +75,6 @@ function newCustomLink<F>(title: string): CustomLinkDraft<F> {
     includeTimeRange: true,
     showFilterForm: false
   }
-}
-
-/** A new link is named after its position, so that it can be saved as it is. */
-function freeTitle(links: CustomLinkDraft<unknown>[]): string {
-  const titles = new Set(links.map(({ title }) => title))
-  // Once a link is removed, the next position may already name one.
-  let position = links.length + 1
-  while (titles.has(_t('Link %{n}', { n: position }))) {
-    position++
-  }
-  return _t('Link %{n}', { n: position })
 }
 
 function newFilter<F>(
@@ -129,7 +118,8 @@ export function useContextualLink<C extends LinkedContent>(
   const customLinks = ref<CustomLinkDraft<F>[]>(
     stored?.type === 'custom'
       ? stored.links.map((link) => ({
-          ...newCustomLink<F>(link.title),
+          ...newCustomLink<F>(),
+          description: link.description ?? '',
           target: link.location,
           includeClickedElement: link.filters.length > 0,
           filters: link.filters.map((f) =>
@@ -139,7 +129,7 @@ export function useContextualLink<C extends LinkedContent>(
           includeTimeRange: link.include_time_range,
           showFilterForm: link.show_filter_form
         }))
-      : [newCustomLink<F>(freeTitle([]))]
+      : [newCustomLink<F>()]
   ) as Ref<CustomLinkDraft<F>[]>
   const validationErrors = ref<TranslatedString[]>([])
 
@@ -176,7 +166,7 @@ export function useContextualLink<C extends LinkedContent>(
         return {
           type: 'custom',
           links: customLinks.value.map((link) => ({
-            title: link.title,
+            description: link.description.trim(),
             location: link.target!,
             filters: _carriedFilters(link).map((filter) => {
               const key = trimmedKey(filter)
@@ -193,7 +183,7 @@ export function useContextualLink<C extends LinkedContent>(
   }
 
   function _isIncomplete(link: CustomLinkDraft<F>): boolean {
-    return link.title.trim() === '' || link.target === null
+    return link.target === null
   }
 
   function _carriedFilters(link: CustomLinkDraft<F>): FilterDraft<F>[] {
@@ -249,7 +239,7 @@ export function useContextualLink<C extends LinkedContent>(
       if (customLinks.value.length === 0) {
         errors.push(_t('Add at least one contextual link.'))
       } else if (customLinks.value.some(_isIncomplete)) {
-        errors.push(_t('Every contextual link needs a title and a target.'))
+        errors.push(_t('Every contextual link needs a target.'))
       }
       const carried = customLinks.value.map(_carriedFilters)
       if (carried.some((filters) => filters.some(_lacksKey))) {
@@ -290,7 +280,7 @@ export function useContextualLink<C extends LinkedContent>(
     inheritedIncludeTimeRange,
     inheritedIncludeContext,
     customLinks,
-    addCustomLink: () => customLinks.value.push(newCustomLink<F>(freeTitle(customLinks.value))),
+    addCustomLink: () => customLinks.value.push(newCustomLink<F>()),
     removeCustomLink: (index: number) => customLinks.value.splice(index, 1),
     addFilter: (link, filterId) =>
       link.filters.push(newFilter(filterId as F, options.filter_keys[filterId])),

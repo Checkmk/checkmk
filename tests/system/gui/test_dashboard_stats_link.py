@@ -48,7 +48,7 @@ def fixture_stats_dashboard(
 ) -> Iterator[CustomDashboard]:
     """A dashboard, opened in the browser, whose host statistics link each part to 'All hosts',
     carrying the sites of the part's hosts."""
-    link = custom_link("All hosts", "views", "allhosts", [{"filter_id": "sites"}])
+    link = custom_link("", "views", "allhosts", [{"filter_id": "sites"}])
     with rest_dashboard(
         test_site,
         dashboard_id=_DASHBOARD_ID,

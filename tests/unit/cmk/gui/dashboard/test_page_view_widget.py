@@ -100,7 +100,6 @@ def test_widget_edit_view_duplicate_keeps_the_offered_filters_of_a_custom_column
     owner = with_automation_user[0]
     clients.DashboardClient.create_relative_grid_dashboard(create_dashboard_payload("board", {}))
     link = ContextualLinkEntryConfig(
-        title="allhosts",
         location=("views", "allhosts"),
         filters=[
             ContextFilterConfig(filter_id="host_labels", key="cmk/os_family"),

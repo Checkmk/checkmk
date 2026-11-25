@@ -38,7 +38,7 @@ const HOST_STATE_OPTIONS: ContextualLinkOptions = {
 function hostStateLink(stored?: HostStateContent['contextual_link']) {
   const handler = useContextualLink<HostStateContent>(HOST_STATE_OPTIONS, stored)
   handler.mode.value = 'custom'
-  handler.customLinks.value[0]!.title = 'Same OS'
+  handler.customLinks.value[0]!.description = 'Same OS'
   handler.customLinks.value[0]!.target = SEARCHHOST
   return handler
 }
@@ -88,7 +88,7 @@ describe('useContextualLink', () => {
     handler.customLinks.value = [
       {
         id: 0,
-        title: 'Down hosts',
+        description: 'Down hosts',
         target: SEARCHHOST,
         includeClickedElement: true,
         filters: [{ id: 1, filterId: 'hoststate', key: null, keyOption: undefined }],
@@ -102,7 +102,7 @@ describe('useContextualLink', () => {
       type: 'custom',
       links: [
         {
-          title: 'Down hosts',
+          description: 'Down hosts',
           location: SEARCHHOST,
           filters: [{ filter_id: 'hoststate' }],
           include_context: false,
@@ -129,7 +129,7 @@ describe('useContextualLink', () => {
       type: 'custom',
       links: [
         {
-          title: 'Down hosts',
+          description: 'Down hosts',
           location: LINUX_DASHBOARD,
           filters: [{ filter_id: 'wato_folders' }],
           include_context: true,
@@ -161,41 +161,13 @@ describe('useContextualLink', () => {
     expect(handler.validationErrors.value).toEqual([])
   })
 
-  it('names a new custom link after its position', () => {
-    const handler = hostStatisticsLink()
-
-    handler.addCustomLink()
-
-    expect(handler.customLinks.value.map(({ title }) => title)).toEqual(['Link 1', 'Link 2'])
-  })
-
-  it('names a new custom link after a position no other link is named after', () => {
-    const handler = hostStatisticsLink()
-    handler.addCustomLink()
-    handler.removeCustomLink(0)
-
-    handler.addCustomLink()
-
-    expect(handler.customLinks.value.map(({ title }) => title)).toEqual(['Link 2', 'Link 3'])
-  })
-
-  it('accepts a new custom link with a target under its given name', () => {
+  it('accepts a new custom link with a target and no description', () => {
     const handler = hostStatisticsLink()
     handler.mode.value = 'custom'
 
     handler.customLinks.value[0]!.target = SEARCHHOST
 
     expect(handler.validate()).toBe(true)
-  })
-
-  it('rejects a custom link entry whose title was cleared', () => {
-    const handler = hostStatisticsLink()
-    handler.mode.value = 'custom'
-    handler.customLinks.value[0]!.target = SEARCHHOST
-
-    handler.customLinks.value[0]!.title = ' '
-
-    expect(handler.validate()).toBe(false)
   })
 
   it('rejects a custom link without entries', () => {
@@ -234,7 +206,7 @@ describe('useContextualLink', () => {
       type: 'custom',
       links: [
         {
-          title: 'Same OS',
+          description: 'Same OS',
           location: SEARCHHOST,
           filters: [{ filter_id: 'host_labels', key: 'cmk/os_family' }, { filter_id: 'host' }],
           include_context: false,

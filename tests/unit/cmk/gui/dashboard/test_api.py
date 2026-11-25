@@ -1297,13 +1297,13 @@ def test_a_link_changed_to_a_forbidden_target_is_rejected_on_edit(clients: Clien
 
 
 def _custom(
-    *filter_ids: str, location: dict[str, object] | None = None, title: str = "Problems"
+    *filter_ids: str, location: dict[str, object] | None = None, description: str = "Problems"
 ) -> dict[str, object]:
     return {
         "type": "custom",
         "links": [
             {
-                "title": title,
+                **({"description": description} if description else {}),
                 "location": location or {"type": "views", "name": "searchhost"},
                 "filters": [{"filter_id": filter_id} for filter_id in filter_ids],
                 "include_context": True,
@@ -1319,6 +1319,7 @@ def _custom(
     [
         pytest.param("host_stats", _custom("sites", "hoststate"), id="host"),
         pytest.param("service_stats", _custom("hoststate", "svcstate"), id="service"),
+        pytest.param("host_stats", _custom(description=""), id="without a description"),
     ],
 )
 def test_a_custom_link_round_trips(
@@ -1335,7 +1336,6 @@ def test_a_custom_link_round_trips(
         pytest.param({"type": "custom", "links": []}, id="no links"),
         pytest.param(_custom("svcstate"), id="a service filter on a host widget"),
         pytest.param(_custom("host"), id="a host name on an aggregate widget"),
-        pytest.param(_custom(title=" "), id="a blank title"),
     ],
 )
 def test_an_invalid_custom_link_is_rejected_on_write(

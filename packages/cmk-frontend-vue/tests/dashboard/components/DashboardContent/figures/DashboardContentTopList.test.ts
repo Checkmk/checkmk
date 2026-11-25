@@ -255,10 +255,11 @@ describe('DashboardContentTopList', () => {
     endpoint.answerInThisTest({
       ...custom,
       links: [
-        { ...destination, title: 'Same OS' },
+        { ...destination, title: 'All hosts', description: 'Same OS' },
         {
           ...destination,
-          title: 'Linux dashboard',
+          title: 'Linux',
+          description: 'Linux dashboard',
           location: { type: 'dashboards', name: 'linux' }
         }
       ],
@@ -273,8 +274,8 @@ describe('DashboardContentTopList', () => {
       contextual_link: {
         type: 'custom',
         links: [
-          { ...destination, title: 'Same OS', filters: [] },
-          { ...destination, title: 'Linux dashboard', filters: [] }
+          { ...destination, description: 'Same OS', filters: [] },
+          { ...destination, description: 'Linux dashboard', filters: [] }
         ]
       }
     })
@@ -282,11 +283,11 @@ describe('DashboardContentTopList', () => {
     await userEvent.click(screen.getByText('host-b'))
     await screen.findByRole('menu')
 
-    expect(screen.getByRole('menuitem', { name: 'Same OS' })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: 'All hosts · Same OS' })).toHaveAttribute(
       'href',
       'view.py?view_name=allhosts&host_labels_1_vs_1_vs=os%3Alinux&filled_in=filter&_show_filter_form=0'
     )
-    expect(screen.getByRole('menuitem', { name: 'Linux dashboard' })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: 'Linux · Linux dashboard' })).toHaveAttribute(
       'href',
       'dashboard.py?name=linux&filled_in=filter&_show_filter_form=0'
     )

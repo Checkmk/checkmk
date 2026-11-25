@@ -121,7 +121,6 @@ def test_cell_render_leaves_a_painter_without_links_unlinked() -> None:
 
 def test_cell_whose_drilldown_is_withheld_still_has_a_configured_link() -> None:
     link = ContextualLinkEntryConfig(
-        title="main",
         location=("dashboards", "main"),
         filters=[],
         include_context=True,

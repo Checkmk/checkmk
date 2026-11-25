@@ -16,7 +16,11 @@ from .contextual_link import VisualLocation
 
 @api_model
 class ResolvedLink:
-    title: str = api_field(description="The title of the link.")
+    title: str = api_field(description="The title of the target visual.")
+    description: str | ApiOmitted = api_field(
+        default_factory=ApiOmitted,
+        description="How the target relates to the clicked element, if the link has a description.",
+    )
     location: VisualLocation = api_field(description="The target visual.")
     include_context: bool = api_field(
         description="Whether the link carries the widget's effective filter context."

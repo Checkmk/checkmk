@@ -47,7 +47,7 @@ const CUSTOM: HostStatisticsContent['contextual_link'] = {
   type: 'custom',
   links: [
     {
-      title: 'Problems',
+      description: 'Problems',
       location: { type: 'views', name: 'searchhost' },
       filters: [{ filter_id: 'sites' }, { filter_id: 'hoststate' }],
       include_context: false,

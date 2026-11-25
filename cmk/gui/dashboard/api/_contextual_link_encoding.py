@@ -30,12 +30,14 @@ class EffectiveLink:
     include_context: bool
     include_time_range: bool
     show_filter_form: bool
+    description: str = ""
     # None carries the native click key, a sequence exactly the filters a custom link configures.
     filters: Sequence[ContextFilterConfig] | None = None
 
     def to_api(self) -> ResolvedLink:
         return ResolvedLink(
             title=self.title,
+            description=self.description or ApiOmitted(),
             location=self.location,
             include_context=self.include_context,
             include_time_range=self.include_time_range,

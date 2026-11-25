@@ -59,7 +59,7 @@ _INHERITED = ContextualLinkInherited(
     show_filter_form=False,
 )
 _DOWN_HOSTS = ContextualLink[AggregateHostContextFilter](
-    title="Down hosts",
+    description="Down hosts",
     location=_SEARCHHOST,
     filters=[HostStateContextFilter(filter_id="hoststate")],
     include_context=True,
@@ -126,13 +126,13 @@ def test_custom_resolves_one_link_per_entry_with_its_filters(
         _linked(
             ContextualLinkCustom(
                 type="custom",
-                links=[_DOWN_HOSTS, dataclasses.replace(_DOWN_HOSTS, title="Other")],
+                links=[_DOWN_HOSTS, dataclasses.replace(_DOWN_HOSTS, description="Other")],
             )
         ),
         admin_permissions,
     )
 
-    assert [(link.title, link.filters) for link in links] == [
+    assert [(link.description, link.filters) for link in links] == [
         ("Down hosts", [{"filter_id": "hoststate"}]),
         ("Other", [{"filter_id": "hoststate"}]),
     ]
@@ -158,14 +158,14 @@ def test_a_custom_link_to_a_page_the_viewer_cannot_open_is_left_out(
     admin_permissions: UserPermissions,
 ) -> None:
     gone = dataclasses.replace(
-        _DOWN_HOSTS, title="Gone", location=VisualLocation(type="views", name="no_such_view")
+        _DOWN_HOSTS, description="Gone", location=VisualLocation(type="views", name="no_such_view")
     )
 
     links = _links(
         _linked(ContextualLinkCustom(type="custom", links=[gone, _DOWN_HOSTS])), admin_permissions
     )
 
-    assert [link.title for link in links] == ["Down hosts"]
+    assert [link.description for link in links] == ["Down hosts"]
 
 
 def test_an_inherited_link_takes_the_title_of_its_target(
@@ -174,3 +174,11 @@ def test_an_inherited_link_takes_the_title_of_its_target(
     [link] = _links(_linked(_INHERITED), admin_permissions)
 
     assert link.title == "Host search"
+
+
+def test_a_custom_link_takes_the_title_of_its_target(admin_permissions: UserPermissions) -> None:
+    [link] = _links(
+        _linked(ContextualLinkCustom(type="custom", links=[_DOWN_HOSTS])), admin_permissions
+    )
+
+    assert (link.title, link.description) == ("Host search", "Down hosts")

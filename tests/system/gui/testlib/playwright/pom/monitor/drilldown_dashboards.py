@@ -36,7 +36,7 @@ def inherited_link(location_type: str, name: str) -> dict[str, object]:
 
 
 def custom_link(
-    title: str, location_type: str, name: str, filters: Sequence[Mapping[str, object]]
+    description: str, location_type: str, name: str, filters: Sequence[Mapping[str, object]]
 ) -> dict[str, object]:
     """A custom link with one destination, carrying only the given filters of the clicked
     element."""
@@ -44,7 +44,7 @@ def custom_link(
         "type": "custom",
         "links": [
             {
-                "title": title,
+                "description": description,
                 "location": {"type": location_type, "name": name},
                 "filters": [dict(context_filter) for context_filter in filters],
                 "include_context": False,

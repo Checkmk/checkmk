@@ -40,7 +40,7 @@ _SAME_STATE: dict[str, object] = {
     "type": "custom",
     "links": [
         {
-            "title": "Same state",
+            "description": "Same state",
             "location": {"type": "views", "name": "searchsvc"},
             "filters": [{"filter_id": "svcstate"}],
             "include_context": False,

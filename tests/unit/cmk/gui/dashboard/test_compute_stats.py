@@ -148,7 +148,7 @@ def _custom_link_body(
                     "type": "custom",
                     "links": [
                         {
-                            "title": "Problems",
+                            "description": "Problems",
                             "location": {"type": "views", "name": "allhosts"},
                             "filters": [{"filter_id": filter_id} for filter_id in filter_ids],
                             "include_context": False,

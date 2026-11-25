@@ -74,6 +74,10 @@ defineEmits<{
   &:hover {
     background: rgb(0 0 0 / 8%);
   }
+
+  &:focus-visible {
+    outline: revert;
+  }
 }
 
 .graphing-graph-legend-eye-button__icon {

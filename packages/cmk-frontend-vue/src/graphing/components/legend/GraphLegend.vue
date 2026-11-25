@@ -403,6 +403,10 @@ function toggleLine(name: string) {
   &:hover {
     opacity: 0.7;
   }
+
+  &:focus-visible {
+    outline: revert;
+  }
 }
 
 .graphing-graph-legend__row {
@@ -433,12 +437,10 @@ function toggleLine(name: string) {
     inset 0 calc(2 * var(--legend-divider-gap)) 0 var(--ux-theme-2);
 }
 
-/* The eye button fills its column exactly, so with no cell padding the name cell's own
-   padding is the gap between the two. The element qualifier beats the table's blanket rule. */
 .graphing-graph-legend th.graphing-graph-legend__header--eye,
 .graphing-graph-legend td.graphing-graph-legend__cell--eye {
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: 2px;
+  padding-right: 2px;
   text-align: center;
 }
 

@@ -328,19 +328,19 @@ test-system-mk-oracle-docker() {
 
 test-system-otel() {
     EDITION=ultimate _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/ultimate/otel/" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/otel/nonfree/ultimate/" \
         --session-timeout 1800
 }
 
 test-system-azure() {
     EDITION=ultimate _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/ultimate/azure/" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/azure/nonfree/ultimate/" \
         --session-timeout 1800
 }
 
 test-system-oauth() {
     EDITION=pro _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/system/singlesite")/cmk/gui/oauth/" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/user_management/oauth/" \
         --session-timeout 1800
 }
 

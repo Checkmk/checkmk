@@ -168,7 +168,7 @@ export function activate(context: vscode.ExtensionContext): void {
       vscode.commands.registerCommand('cmk.regenerateMypyConfig', async () => {
         const changed = await generateAndWriteMypyConfig(wsPath)
         if (changed) {
-          notifyInfo('CMK: Regenerated .vscode/.mypy.ini from pyproject.toml')
+          notifyInfo('CMK: Regenerated .vscode/.mypy.ini from the mypy settings')
         } else {
           notifyInfo('CMK: .vscode/.mypy.ini is already up to date')
         }

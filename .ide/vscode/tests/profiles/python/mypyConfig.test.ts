@@ -6,7 +6,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { parseVersion, versionAtLeast } from '../../../src/core/version'
-import { buildMypyIniContent, selectDmypyPidsToKill } from '../../../src/profiles/python/mypyConfig'
+import {
+  buildMypyIniContent,
+  parseMypyIni,
+  selectDmypyPidsToKill
+} from '../../../src/profiles/python/mypyConfig'
 
 describe('parseVersion', () => {
   it('parses three-part version', () => {
@@ -128,6 +132,74 @@ describe('buildMypyIniContent', () => {
     expect(result).toContain('[mypy-tests.*]')
     expect(result).toContain('[mypy-testlib.*]')
     expect(result).toContain('disallow_untyped_defs = false')
+  })
+})
+
+describe('parseMypyIni', () => {
+  const ini = [
+    '# A comment: with a colon',
+    '[mypy]',
+    'mypy_path =',
+    '    $MYPY_CONFIG_FILE_DIR/stubs:',
+    '    $MYPY_CONFIG_FILE_DIR/lib',
+    'plugins = pydantic.mypy',
+    'python_version = 3.15',
+    '; see https://example.com = with a URL',
+    'disallow_any_expr = False',
+    'follow_imports = silent',
+    'warn_unreachable = True',
+    'enable_error_code =',
+    '    deprecated,',
+    '    truthy-bool',
+    '',
+    '[mypy-cmc_proto.*]',
+    'disallow_untyped_calls = False',
+    '',
+    '[mypy-meraki,meraki.*]',
+    'follow_imports = skip',
+    '',
+    '[pydantic-mypy]',
+    'init_typed = True',
+    ''
+  ].join('\n')
+
+  const toml = {
+    mypy_path: '$MYPY_CONFIG_FILE_DIR/stubs:$MYPY_CONFIG_FILE_DIR/lib',
+    plugins: ['pydantic.mypy'],
+    python_version: '3.15',
+    disallow_any_expr: false,
+    follow_imports: 'silent',
+    warn_unreachable: true,
+    enable_error_code: ['deprecated', 'truthy-bool'],
+    overrides: [
+      { module: ['cmc_proto.*'], disallow_untyped_calls: false },
+      { module: ['meraki', 'meraki.*'], follow_imports: 'skip' }
+    ]
+  }
+
+  it('reads booleans, strings and the error code list', () => {
+    const config = parseMypyIni(ini)
+    expect(config.disallow_any_expr).toBe(false)
+    expect(config.warn_unreachable).toBe(true)
+    expect(config.python_version).toBe('3.15')
+    expect(config.enable_error_code).toEqual(['deprecated', 'truthy-bool'])
+  })
+
+  it('turns [mypy-...] sections into overrides', () => {
+    expect(parseMypyIni(ini).overrides).toEqual([
+      { module: ['cmc_proto.*'], disallow_untyped_calls: false },
+      { module: ['meraki', 'meraki.*'], follow_imports: 'skip' }
+    ])
+  })
+
+  it('ignores the sections of mypy plugins', () => {
+    expect(parseMypyIni(ini)).not.toHaveProperty('init_typed')
+  })
+
+  it('generates the same config as the equivalent pyproject.toml settings', () => {
+    expect(buildMypyIniContent('1.20.0', parseMypyIni(ini)).replace(/# Generated:.*\n/, '')).toBe(
+      buildMypyIniContent('1.20.0', toml).replace(/# Generated:.*\n/, '')
+    )
   })
 })
 

@@ -8,6 +8,7 @@ The failing provider is injected the way a real deployment configures one: an AW
 config file pointing at a credential_process. No Checkmk code is patched.
 """
 
+import json
 import stat
 from pathlib import Path
 
@@ -78,13 +79,12 @@ def test_agent_does_not_report_what_a_failing_credential_process_printed(
 
 
 @pytest.mark.usefixtures("failing_credential_process")
-def test_agent_run_writes_an_exceptions_section_for_a_failing_credential_process(
+def test_agent_run_reports_a_failing_credential_process_in_the_agent_info(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     exit_code = agent_aws_main(parse_arguments(KEYLESS_ARGS))
 
-    assert exit_code == 0
-    assert "<<<aws_v2_exceptions>>>" in capsys.readouterr().out
+    assert (exit_code, _agent_info_status(capsys.readouterr().out)) == (0, "error")
 
 
 @pytest.fixture(name="missing_aws_profile")
@@ -106,13 +106,12 @@ def test_connection_test_reports_a_missing_profile(
 
 
 @pytest.mark.usefixtures("missing_aws_profile")
-def test_agent_run_writes_an_exceptions_section_for_a_missing_profile(
+def test_agent_run_reports_a_missing_profile_in_the_agent_info(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     exit_code = agent_aws_main(parse_arguments(KEYLESS_ARGS))
 
-    assert exit_code == 0
-    assert "<<<aws_v2_exceptions>>>" in capsys.readouterr().out
+    assert (exit_code, _agent_info_status(capsys.readouterr().out)) == (0, "error")
 
 
 @pytest.fixture(name="missing_credential_process")
@@ -135,13 +134,12 @@ def test_connection_test_reports_a_missing_credential_process(
 
 
 @pytest.mark.usefixtures("missing_credential_process")
-def test_agent_run_writes_an_exceptions_section_for_a_missing_credential_process(
+def test_agent_run_reports_a_missing_credential_process_in_the_agent_info(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     exit_code = agent_aws_main(parse_arguments(KEYLESS_ARGS))
 
-    assert exit_code == 0
-    assert "<<<aws_v2_exceptions>>>" in capsys.readouterr().out
+    assert (exit_code, _agent_info_status(capsys.readouterr().out)) == (0, "error")
 
 
 def test_connection_test_reports_a_missing_named_profile(
@@ -192,3 +190,8 @@ def test_credential_process_gets_no_proxy_by_default(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     assert _proxy_seen_by_credential_process(tmp_path, monkeypatch, PROXY_ARGS) == ""
+
+
+def _agent_info_status(output: str) -> object:
+    lines = output.splitlines()
+    return json.loads(lines[lines.index("<<<aws_v2_agent_info:sep(0)>>>") + 1])["status"]

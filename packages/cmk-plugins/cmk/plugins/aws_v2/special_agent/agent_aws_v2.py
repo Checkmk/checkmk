@@ -741,11 +741,6 @@ def _test_connection(credentials: AwsCredentials) -> int:
     return 0
 
 
-def _write_access_error(error: AwsAccessError) -> None:
-    sys.stdout.write("<<<aws_v2_exceptions>>>\n")
-    sys.stdout.write("Exception: %s\n" % error)
-
-
 def regions_not_enabled(
     session: boto3.session.Session, region: str, config: botocore.config.Config | None
 ) -> frozenset[str]:
@@ -912,12 +907,8 @@ def _monitored_account_ids(credentials: AwsCredentials) -> Sequence[str]:
         account_ids = credentials.monitored_account_ids()
     except AwsAccessError as ae:
         LOGGER.warning("Cannot list the accounts to monitor: %(error)s", {"error": ae})
-        _write_access_error(ae)
         write_agent_info([AgentInfoRow("error", reason=str(ae))])
         return []
-    if credentials.account_listing_error is not None:
-        # Written before the account output, while the rule host is still the target.
-        _write_access_error(credentials.account_listing_error)
     if not account_ids:
         # Only an organization can leave nothing: every account is excluded or inactive.
         write_agent_info(

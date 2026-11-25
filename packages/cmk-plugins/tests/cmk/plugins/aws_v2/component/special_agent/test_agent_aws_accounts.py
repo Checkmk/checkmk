@@ -327,6 +327,16 @@ def test_failed_listing_is_a_run_error_in_the_agent_info(
     )
 
 
+def test_failed_listing_writes_no_exceptions_section_on_the_rule_host(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The section would only appear on failure, and its service would vanish once AWS recovers."""
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    agent_aws_main(parse_arguments([*NO_LIST_ARGS, "--organization"]))
+
+    assert "<<<aws_v2_exceptions>>>" not in _sections_by_host(capsys.readouterr().out)[None]
+
+
 def test_failed_listing_after_success_is_a_run_error_beside_the_known_accounts(
     fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

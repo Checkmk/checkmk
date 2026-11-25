@@ -26,6 +26,7 @@ py_library(
         "//cmk/gui/watolib",
         "//cmk/utils",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-ec",
         "//packages/cmk-relay-protocols",
         "//tests/testlib/common",
         "//tests/testlib/pytest_helpers",

@@ -19,15 +19,12 @@ from pathlib import Path
 
 import pytest
 
-from cmk.ccc.user import UserId
-from cmk.ec.config import (
-    ECRulePackSpec,
-    EventLimit,
-    Rule,
-    ServiceLevel,
-    State,
+from cmk.ec.config import State
+from tests.testlib.system.event_console import (
+    activate_ec_changes,
+    get_ec_rule_packs,
+    write_ec_rule,
 )
-from cmk.gui.watolib.site_changes import ChangeSpec
 from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
@@ -68,71 +65,6 @@ def _execute_cmd_and_validate_return_code(
         excp.add_note(assert_msg)
         raise excp
     return response.stdout, response.stderr
-
-
-def _get_ec_rule_packs(
-    rule_id: str, title: str, state: State, match: str, limit: int | None = None
-) -> list[ECRulePackSpec]:
-    """EC rule to inject in the test-site, which stops creating events at the limit, if given"""
-    rule = Rule(
-        id=rule_id,
-        description="",
-        comment="",
-        docu_url="",
-        disabled=False,
-        state=state,
-        sl=ServiceLevel(value=0, precedence="message"),
-        actions=[],
-        actions_in_downtime=True,
-        cancel_actions=[],
-        cancel_action_phases="always",
-        autodelete=False,
-        match=match,
-        invert_matching=False,
-    )
-    if limit is not None:
-        rule["event_limit"] = EventLimit(action="stop", limit=limit)
-    return [
-        ECRulePackSpec(
-            id=rule_id,
-            title=title,
-            disabled=False,
-            rules=[rule],
-        )
-    ]
-
-
-def _get_replication_change() -> ChangeSpec:
-    """Replication change to inject in the test-site"""
-    return ChangeSpec(
-        {
-            "id": "",
-            "action_name": "edit-rule-pack",
-            "text": "Modified rule pack test",
-            "object": None,
-            "user_id": UserId("cmkadmin"),
-            "domains": ["ec"],
-            "time": 0,
-            "force_sync": True,
-            "force_restart": True,
-            "force_apache_reload": False,
-            "domain_settings": {},
-            "prevent_discard_changes": False,
-            "diff_text": None,
-        }
-    )
-
-
-def _write_ec_rule(site: Site, rule: list | None) -> None:
-    ec_rules_path = site.path("etc/check_mk/mkeventd.d/wato/rules.mk")
-    site.write_file(str(ec_rules_path), f"rule_packs += {rule}" if rule else "")
-
-
-def _activate_ec_changes(site: Site) -> None:
-    replication_changes_path = site.path(f"var/check_mk/wato/replication_changes_{site.id}.mk")
-    # ABCAppendStore entries are "\0"-terminated; without it the next append concatenates onto ours.
-    site.write_file(str(replication_changes_path), f"{_get_replication_change()}\0")
-    site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
 def _generate_message_via_events_pipe(site: Site, message: str, end_of_line: bool = True) -> None:
@@ -223,19 +155,17 @@ def _setup_ec(site: Site) -> Iterator[tuple[str, str, State]]:
     rule_id = f"test {match}"
     rule_state: State = 1
 
-    _write_ec_rule(
-        site, _get_ec_rule_packs(title="", rule_id=rule_id, state=rule_state, match=match)
-    )
+    write_ec_rule(site, get_ec_rule_packs(title="", rule_id=rule_id, state=rule_state, match=match))
 
     # in order for the EC rule to take effect, we need to inject a change in the EC domain and
     # perform a changes' activation
-    _activate_ec_changes(site)
+    activate_ec_changes(site)
 
     yield match, rule_id, rule_state
 
     # cleanup: remove EC rules and activate changes
-    _write_ec_rule(site, rule=None)
-    _activate_ec_changes(site)
+    write_ec_rule(site, rule=None)
+    activate_ec_changes(site)
 
     # cleanup: archive generated events
     for event_id in _wait_for_queried_column(
@@ -298,13 +228,13 @@ def _enable_snmp_trap_translation(site: Site) -> Iterator[None]:
     logger.info("Enabling SNMP trap translation...")
     ec_global_rules_path = site.path("etc/check_mk/mkeventd.d/wato/9999-test_ec.mk")
     site.write_file(str(ec_global_rules_path), "translate_snmptraps = (True, {})")
-    _activate_ec_changes(site)
+    activate_ec_changes(site)
 
     yield
 
     logger.info("Disabling SNMP trap translation...")
     site.delete_file(str(ec_global_rules_path))
-    _activate_ec_changes(site)
+    activate_ec_changes(site)
 
 
 @pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"

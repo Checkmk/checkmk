@@ -494,11 +494,30 @@ describe('useMapEditor — grid members', () => {
     })
   })
 
+  it('shows the grid being placed where a click puts it, and nothing else', async () => {
+    const { editor, objects } = editorOn([])
+    editor.draft.type = 'host'
+    editor.draft.host_name = 'web'
+    await nextTick()
+    editor.startPlacing()
+    expect(editor.placingGridAt(120.4, 80.6)).toBeNull()
+
+    editor.draft.type = 'grid'
+    await nextTick()
+    editor.startPlacing()
+    const shown = editor.placingGridAt(120.4, 80.6)
+    await editor.placeAt(120.4, 80.6)
+
+    expect(shown).toMatchObject({ type: 'grid', x: objects()[0]!.x, y: objects()[0]!.y })
+    expect(editor.placingGridAt(120.4, 80.6)).toBeNull()
+  })
+
   it('refuses to place a grid on a map that has as many as it takes', async () => {
     const { editor, objects } = editorOn(fullOfGrids())
 
     editor.draft.type = 'grid'
     editor.startPlacing()
+    expect(editor.placingGridAt(120, 80)).toBeNull()
     await editor.placeAt(120, 80)
 
     expect(objects()).toHaveLength(GRID_MAX_PER_MAP)

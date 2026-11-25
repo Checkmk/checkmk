@@ -682,6 +682,20 @@ export function useMapEditor() {
   }
 
   const placing = ref(false)
+  const _placingGrid = computed(() =>
+    placing.value && draft.type === 'grid' && canAddGrid(mapsStore.currentMap.value)
+      ? _draftToObject('placing')
+      : null
+  )
+
+  /** The grid the next click places, where a click at ``x``, ``y`` puts it. */
+  function placingGridAt(x: number, y: number): MapElement | null {
+    return _placingGrid.value && { ..._placingGrid.value, ..._snappedPosition(x, y) }
+  }
+
+  function _snappedPosition(x: number, y: number): { x: number; y: number } {
+    return { x: _snap(Math.round(x)), y: _snap(Math.round(y)) }
+  }
   // Counts the objects placed from the draft. Placing can start and end in the
   // same tick (a geo-located host), so watchers can't rely on `placing` flipping.
   const placedCount = ref(0)
@@ -833,7 +847,7 @@ export function useMapEditor() {
     const existing = mapsStore.currentMap.value?.objects ?? []
     const placePos =
       draft.type === 'line' || draft.type === 'grid'
-        ? { x: _snap(Math.round(x)), y: _snap(Math.round(y)) }
+        ? _snappedPosition(x, y)
         : _avoidOverlap(id, Math.round(x), Math.round(y), existing)
     const base = _draftToObject(id)
     if (!base.label!.text && draft.type === 'image' && draft.image_src) {
@@ -1166,6 +1180,7 @@ export function useMapEditor() {
     moveSelectedLayer,
     deleteAllSelected,
     discardPlaced,
+    placingGridAt,
     lineBindCandidate,
     snapGrid,
     setDragSavedCallback,

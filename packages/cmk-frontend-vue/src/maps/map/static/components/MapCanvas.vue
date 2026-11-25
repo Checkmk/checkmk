@@ -15,7 +15,7 @@ between them.
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, provide, useTemplateRef, watch, watchEffect } from 'vue'
+import { computed, provide, ref, useTemplateRef, watch, watchEffect } from 'vue'
 
 import ContextMenu from '@/maps/map/components/ContextMenu.vue'
 import HoverMenu from '@/maps/map/components/HoverMenu.vue'
@@ -27,6 +27,7 @@ import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
 import { useObjectResize } from '@/maps/map/composables/useObjectResize'
 import { useRovingFocus } from '@/maps/map/composables/useRovingFocus'
 import { providePulseCount } from '@/maps/map/elements/composables/pulseCount'
+import { objectIconSize } from '@/maps/map/objectIconSize'
 import { backgroundLayout, isCentered, spaceFillingPane } from '@/maps/map/static/canvasSpace'
 import { useCanvasBackground } from '@/maps/map/static/composables/useCanvasBackground'
 import { useCanvasExtents } from '@/maps/map/static/composables/useCanvasExtents'
@@ -45,6 +46,7 @@ import { objectDisplayName } from '@/maps/utils/dropdownOptions'
 
 import MapCanvasGrid from './MapCanvasGrid.vue'
 import MapCanvasObject from './MapCanvasObject.vue'
+import MapGridPlacement from './MapGridPlacement.vue'
 import MapLine from './MapLine.vue'
 
 type LineDragMode = 'move' | 'start' | 'end' | 'mid'
@@ -55,6 +57,8 @@ const props = defineProps<{
   editMode: boolean
   /** An object is waiting to be dropped: the next canvas click places it. */
   placing: boolean
+  /** The grid being placed, where a click at a map position puts it. */
+  placingGridAt?: (x: number, y: number) => MapElement | null
   /** Endpoints of the line currently being dragged, from the editor. */
   lineDragPositions: Record<
     string,
@@ -348,7 +352,36 @@ function onPointerDown(event: PointerEvent): void {
   }
 }
 
+const placingAt = ref<{ x: number; y: number } | null>(null)
+
+const placedGrid = computed(() =>
+  props.placing && placingAt.value
+    ? (props.placingGridAt?.(placingAt.value.x, placingAt.value.y) ?? null)
+    : null
+)
+
+watch(
+  () => props.placing,
+  (placing) => {
+    if (!placing) {
+      placingAt.value = null
+    }
+  }
+)
+
+function trackPlacing(event: PointerEvent): void {
+  const at = viewport.mapPositionOf(event)
+  const x = Math.round(at.x)
+  const y = Math.round(at.y)
+  if (x !== placingAt.value?.x || y !== placingAt.value?.y) {
+    placingAt.value = { x, y }
+  }
+}
+
 function onPointerMove(event: PointerEvent): void {
+  if (props.placing && props.placingGridAt) {
+    trackPlacing(event)
+  }
   if (marquee.move(event) || pan.move(event) || resize.move(event) || gridResize.move(event)) {
     return
   }
@@ -486,6 +519,7 @@ defineExpose({
     @pointermove.prevent="onPointerMove"
     @pointerup="onPointerUp"
     @pointercancel="onPointerCancel"
+    @pointerleave="placingAt = null"
     @lostpointercapture="gridResize.cancel()"
     @wheel="viewport.onWheel"
   >
@@ -525,6 +559,13 @@ defineExpose({
         />
       </g>
     </svg>
+
+    <MapGridPlacement
+      v-if="placedGrid"
+      :grid="placedGrid"
+      :icon-size="objectIconSize(placedGrid, iconSizes)"
+      :box-style="layout.objectStyle(placedGrid)"
+    />
 
     <!-- Before the objects, so they stay on top of the frame they share a layer with. -->
     <MapCanvasObject

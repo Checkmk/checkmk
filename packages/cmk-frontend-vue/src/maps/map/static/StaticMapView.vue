@@ -234,6 +234,7 @@ function onObjectDblclick(object: MapElement): void {
         :states="states"
         :edit-mode="editor.editMode.value && !preview"
         :placing="editor.placing.value"
+        :placing-grid-at="editor.placingGridAt"
         :line-drag-positions="editor.lineDragPositions"
         :selected-object-id="editor.selectedObjectId.value"
         :selected-ids="editor.selectedIds.value"

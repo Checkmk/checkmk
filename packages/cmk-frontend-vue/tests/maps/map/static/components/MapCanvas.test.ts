@@ -523,3 +523,36 @@ describe('MapCanvas – a grid outside the editor', () => {
     await waitFor(() => expect(screen.queryByText('Grid · 2 hosts')).toBeNull())
   })
 })
+
+describe('MapCanvas – placing a grid', () => {
+  const placingGridAt = (x: number, y: number) =>
+    anObject({ id: 'placing', type: 'grid', grid_per_row: 8, x, y })
+
+  it('shows where the grid goes under the pointer, until it is placed', async () => {
+    const { rerender } = render(MapCanvas, {
+      props: { ...baseProps, editMode: true, placing: true, placingGridAt },
+      global: mapsGlobal(stubs)
+    })
+    const canvas = screen.getByRole('group', { name: 'Map canvas' })
+    expect(screen.queryByText('8 per row')).toBeNull()
+
+    await fireEvent.pointerMove(canvas, { clientX: 40, clientY: 40 })
+    expect(screen.getByText('8 per row')).toBeInTheDocument()
+
+    await rerender({ placing: false })
+    expect(screen.queryByText('8 per row')).toBeNull()
+  })
+
+  it('shows nothing once the pointer has left the canvas', async () => {
+    render(MapCanvas, {
+      props: { ...baseProps, editMode: true, placing: true, placingGridAt },
+      global: mapsGlobal(stubs)
+    })
+    const canvas = screen.getByRole('group', { name: 'Map canvas' })
+
+    await fireEvent.pointerMove(canvas, { clientX: 40, clientY: 40 })
+    await fireEvent.pointerLeave(canvas)
+
+    expect(screen.queryByText('8 per row')).toBeNull()
+  })
+})

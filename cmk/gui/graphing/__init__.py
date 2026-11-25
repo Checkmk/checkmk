@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.png_renderer import RenderingFailure
 
-from ._autocompleter import monitored_metrics_autocompleter
+from ._autocompleter import LivestatusQueryFunc, metrics_of_query, monitored_metrics_autocompleter
 from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._decoding import context_from_json, ensure_type
 from ._evaluation_options import EvaluationOptions
@@ -164,9 +164,7 @@ from ._user_specific_unit import (
 )
 from ._valuespecs import (
     id_from_unit,
-    LivestatusQueryFunc,
     MetricName,
-    metrics_of_query,
     migrate_graph_render_options_title_format,
     PageVsAutocomplete,
     ValuesWithUnits,

@@ -9,7 +9,7 @@ from cmk.gui.form_specs.visitors import register_visitor_class
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
-from ._autocompleter import monitored_metrics_autocompleter
+from ._autocompleter import LivestatusQueryFunc, monitored_metrics_autocompleter
 from ._graph_codec import COMMUNITY_GRAPH_CODEC, GraphCodec
 from ._graph_dispatch import graph_dispatcher_registry, GraphDispatcherRegistry
 from ._graph_specification import graph_specification_registry
@@ -23,7 +23,7 @@ from ._telemetry_metrics_registry import (
     telemetry_metrics_backend_registry,
     TelemetryMetricsBackend,
 )
-from ._valuespecs import LivestatusQueryFunc, PageVsAutocomplete
+from ._valuespecs import PageVsAutocomplete
 
 
 def _register_graph_dispatchers(registry: GraphDispatcherRegistry, codec: GraphCodec) -> None:

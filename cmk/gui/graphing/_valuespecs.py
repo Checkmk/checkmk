@@ -5,12 +5,11 @@
 
 
 import re
-from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, assert_never, Literal, override, TypedDict
 
 from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
     AutoPrecision,
     DecimalNotation,
@@ -18,24 +17,20 @@ from cmk.graphing_engine import (
     FALLBACK_UNIT,
     IECNotation,
     metric_attributes,
-    parse_performance_data,
     parse_unit,
     SINotation,
     StandardScientificNotation,
     StrictPrecision,
     TimeNotation,
-    translate_metric_names,
     Unit,
 )
-from cmk.graphing_engine import MetricName as EngineMetricName
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.type_defs import GraphTitleFormatVS, VisualContext
+from cmk.gui.type_defs import GraphTitleFormatVS
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Age,
@@ -62,15 +57,10 @@ from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.web.utils.choices import Choice
 from cmk.web.utils.unit_formatter import NotationFormatter, TimeFormatter
 
-from ._decoding import ensure_type
 from ._graph_display_config import GraphDisplayConfigHTML
 from ._metric_spec import registered_metric_ids_and_titles
 from ._plugins import registered_metrics
 from ._user_specific_unit import get_temperature_unit, user_specific_unit
-
-type LivestatusQueryFunc = Callable[
-    [Literal["host", "service"], VisualContext, list[str]], Sequence[Mapping[str, object]]
-]
 
 
 def _title_format(entry: object) -> GraphTitleFormatVS:
@@ -550,64 +540,3 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
                 (value, value.title()),
             )
         ]
-
-
-def _metric_choices(
-    check_command: str,
-    raw_metric_names: Sequence[EngineMetricName],
-    registered_metrics: Mapping[str, metrics_v1.Metric],
-    registered_translations: Sequence[translations_v1.Translation],
-) -> Iterator[Choice]:
-    for metric_name in translate_metric_names(
-        check_command, raw_metric_names, registered_translations
-    ):
-        yield (
-            metric_name,
-            metric_attributes(metric_name, translate_to_current_language, registered_metrics).title,
-        )
-
-
-def _engine_metric_names(raw: object) -> Iterator[EngineMetricName]:
-    for name in ensure_type(raw, list):
-        yield EngineMetricName(ensure_type(name, str))
-
-
-def metrics_of_query(
-    context: VisualContext,
-    registered_metrics: Mapping[str, metrics_v1.Metric],
-    registered_translations: Sequence[translations_v1.Translation],
-    livestatus_query: LivestatusQueryFunc,
-) -> Iterator[Choice]:
-    # Fetch host data with the *same* query. This saves one round trip. And head
-    # host has at least one service
-    columns = [
-        "service_description",
-        "service_check_command",
-        "service_perf_data",
-        "service_metrics",
-        "host_check_command",
-        "host_metrics",
-    ]
-
-    row: Mapping[str, object] = {}
-    for row in livestatus_query("service", context, columns):
-        raw = parse_performance_data(
-            ensure_type(row["service_perf_data"], str),
-            ensure_type(row["service_check_command"], str),
-            debug=active_config.debug,
-            logger=logger,
-        )
-        yield from _metric_choices(
-            raw.check_command,
-            [*raw.values, *_engine_metric_names(row["service_metrics"])],
-            registered_metrics,
-            registered_translations,
-        )
-
-    if row.get("host_check_command"):
-        yield from _metric_choices(
-            str(row["host_check_command"]),
-            list(_engine_metric_names(row["host_metrics"])),
-            registered_metrics,
-            registered_translations,
-        )

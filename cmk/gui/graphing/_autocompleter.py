@@ -4,16 +4,88 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from typing import Literal
 
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import translations as translations_v1
+from cmk.graphing_engine import metric_attributes, parse_performance_data, translate_metric_names
+from cmk.graphing_engine import MetricName as EngineMetricName
 from cmk.gui.autocompleters import AutocompleterFunc
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
+from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.log import logger
+from cmk.gui.type_defs import VisualContext
 from cmk.web.utils.choices import Choice
 
-from ._decoding import context_from_json
+from ._decoding import context_from_json, ensure_type
 from ._metric_spec import registered_metric_ids_and_titles
 from ._plugins import registered_metrics, registered_translations
-from ._valuespecs import LivestatusQueryFunc, metrics_of_query
+
+type LivestatusQueryFunc = Callable[
+    [Literal["host", "service"], VisualContext, list[str]], Sequence[Mapping[str, object]]
+]
+
+
+def _metric_choices(
+    check_command: str,
+    raw_metric_names: Sequence[EngineMetricName],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
+) -> Iterator[Choice]:
+    for metric_name in translate_metric_names(
+        check_command, raw_metric_names, registered_translations
+    ):
+        yield (
+            metric_name,
+            metric_attributes(metric_name, translate_to_current_language, registered_metrics).title,
+        )
+
+
+def _engine_metric_names(raw: object) -> Iterator[EngineMetricName]:
+    for name in ensure_type(raw, list):
+        yield EngineMetricName(ensure_type(name, str))
+
+
+def metrics_of_query(
+    context: VisualContext,
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
+    livestatus_query: LivestatusQueryFunc,
+) -> Iterator[Choice]:
+    # Fetch host data with the *same* query. This saves one round trip. And head
+    # host has at least one service
+    columns = [
+        "service_description",
+        "service_check_command",
+        "service_perf_data",
+        "service_metrics",
+        "host_check_command",
+        "host_metrics",
+    ]
+
+    row: Mapping[str, object] = {}
+    for row in livestatus_query("service", context, columns):
+        raw = parse_performance_data(
+            ensure_type(row["service_perf_data"], str),
+            ensure_type(row["service_check_command"], str),
+            debug=active_config.debug,
+            logger=logger,
+        )
+        yield from _metric_choices(
+            raw.check_command,
+            [*raw.values, *_engine_metric_names(row["service_metrics"])],
+            registered_metrics,
+            registered_translations,
+        )
+
+    if row.get("host_check_command"):
+        yield from _metric_choices(
+            str(row["host_check_command"]),
+            list(_engine_metric_names(row["host_metrics"])),
+            registered_metrics,
+            registered_translations,
+        )
 
 
 def metrics_autocompleter(

@@ -329,3 +329,34 @@ describe.each(GRAPH_WIZARDS)('$name', ({ openWizard, storedContent }) => {
     expect(await submittedLink(handler)).toEqual({ type: 'none' })
   })
 })
+
+describe('useCombinedGraph', () => {
+  const summed: WidgetContentType = {
+    type: 'combined_graph',
+    graph_template: 'cpu',
+    presentation: 'sum',
+    timerange: 'dashboard',
+    graph_render_options: {},
+    contextual_link: INHERITED_GRAPH_LINK
+  }
+
+  it('submits no link while each line sums several services', async () => {
+    const handler = await open(
+      (stored) => useCombinedGraph('cpu', {}, stored && storedSpec(stored)),
+      summed
+    )
+
+    expect(await submittedLink(handler)).toEqual({ type: 'none' })
+  })
+
+  it('keeps the stored link for when the lines show single services again', async () => {
+    const handler = (await open(
+      (stored) => useCombinedGraph('cpu', {}, stored && storedSpec(stored)),
+      summed
+    )) as Awaited<ReturnType<typeof useCombinedGraph>>
+
+    handler.presentation.value = 'lines'
+
+    expect(await submittedLink(handler)).toEqual(INHERITED_GRAPH_LINK)
+  })
+})

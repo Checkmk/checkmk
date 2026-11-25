@@ -52,7 +52,7 @@ function recordTargetRequests(): string[] {
 
 function renderConfig(
   options: ContextualLinkOptions = HOST_STATISTICS_OPTIONS,
-  props: { defaultTarget?: TranslatedString } = {},
+  props: { defaultTarget?: TranslatedString; unavailable?: TranslatedString } = {},
   stored?: HostStatisticsContent['contextual_link']
 ) {
   const handler = useContextualLink<HostStatisticsContent>(options, stored)
@@ -147,6 +147,44 @@ describe('ContextualLinkConfig', () => {
       'aria-pressed',
       'true'
     )
+  })
+
+  it('offers only None, saying why, when the widget cannot link', () => {
+    renderConfig(
+      HOST_STATISTICS_OPTIONS,
+      { unavailable: untranslated('No line has a single service.') },
+      {
+        type: 'inherited',
+        location: { type: 'dashboards', name: 'main' },
+        include_context: true,
+        include_time_range: false,
+        show_filter_form: false
+      }
+    )
+
+    expect(
+      screen.getAllByRole('button', { name: /^Toggle / }).map((button) => button.textContent)
+    ).toEqual(['None'])
+    expect(screen.getByText('No line has a single service.')).toBeInTheDocument()
+    expect(screen.queryByText('Target page')).not.toBeInTheDocument()
+  })
+
+  it('keeps the stored link when None is clicked on a widget that cannot link', async () => {
+    const handler = renderConfig(
+      HOST_STATISTICS_OPTIONS,
+      { unavailable: untranslated('No line has a single service.') },
+      {
+        type: 'inherited',
+        location: { type: 'dashboards', name: 'main' },
+        include_context: true,
+        include_time_range: false,
+        show_filter_form: false
+      }
+    )
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Toggle None' }))
+
+    expect(handler.enabled.value).toBe(true)
   })
 
   it('switches the link off from None', async () => {

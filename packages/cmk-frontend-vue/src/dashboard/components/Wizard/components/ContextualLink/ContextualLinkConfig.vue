@@ -41,9 +41,10 @@ import { linkTargetTitle, useLinkTargets } from './useLinkTargets'
 const { _t } = usei18n()
 
 const handler = defineModel<UseContextualLink<C>>('handler', { required: true })
-const { defaultTarget } = defineProps<{
+const { defaultTarget, unavailable } = defineProps<{
   // The title of the page the widget's built-in link leads to, if it has a single one.
   defaultTarget?: TranslatedString | undefined
+  unavailable?: TranslatedString | undefined
 }>()
 
 const filterDefinitions = useFilterDefinitions()
@@ -72,15 +73,18 @@ const CHOICE_DESCRIPTIONS: Record<Choice, TranslatedString[]> = {
 }
 
 const choiceOptions = computed(() =>
-  (['none', ...handler.value.modes] as Choice[]).map((choice) => ({
+  (unavailable ? ['none'] : ['none', ...handler.value.modes]).map((choice) => ({
     value: choice,
-    label: CHOICE_TITLES[choice]
+    label: CHOICE_TITLES[choice as Choice]
   }))
 )
 
 const selectedChoice = computed<string | null>({
-  get: () => (handler.value.enabled.value ? handler.value.mode.value : 'none'),
+  get: () => (handler.value.enabled.value && !unavailable ? handler.value.mode.value : 'none'),
   set: (value) => {
+    if (unavailable) {
+      return
+    }
     if (value === 'none') {
       handler.value.enabled.value = false
       return
@@ -89,6 +93,10 @@ const selectedChoice = computed<string | null>({
     handler.value.mode.value = value as ConfigurableMode
   }
 })
+
+const choiceDescription = computed(() =>
+  unavailable ? [unavailable] : CHOICE_DESCRIPTIONS[selectedChoice.value as Choice]
+)
 
 function filterTitle(filterId: string) {
   return untranslated(filterDefinitions[filterId]?.title ?? filterId)
@@ -185,7 +193,7 @@ function toggleLink(id: number) {
     />
     <div class="db-contextual-link-config__choice-description">
       <p
-        v-for="(line, index) in CHOICE_DESCRIPTIONS[selectedChoice as Choice]"
+        v-for="(line, index) in choiceDescription"
         :key="index"
         class="db-contextual-link-config__copy"
       >
@@ -194,7 +202,7 @@ function toggleLink(id: number) {
     </div>
 
     <div
-      v-if="handler.enabled.value && handler.mode.value === 'default' && defaultTarget"
+      v-if="selectedChoice === 'default' && defaultTarget"
       class="db-contextual-link-config__mode db-contextual-link-config__field"
     >
       <p>{{ _t('Target page') }}</p>
@@ -206,7 +214,7 @@ function toggleLink(id: number) {
     </div>
 
     <div
-      v-if="handler.enabled.value && handler.mode.value === 'inherited'"
+      v-if="selectedChoice === 'inherited'"
       class="db-contextual-link-config__mode db-contextual-link-config__group"
     >
       <div class="db-contextual-link-config__field">
@@ -236,7 +244,7 @@ function toggleLink(id: number) {
     </div>
 
     <div
-      v-if="handler.enabled.value && handler.mode.value === 'custom'"
+      v-if="selectedChoice === 'custom'"
       class="db-contextual-link-config__mode db-contextual-link-config__links"
     >
       <div v-for="(link, index) in handler.customLinks.value" :key="link.id">
@@ -358,7 +366,7 @@ function toggleLink(id: number) {
     </div>
 
     <CmkInlineValidation
-      v-if="handler.validationErrors.value.length > 0"
+      v-if="!unavailable && handler.validationErrors.value.length > 0"
       :validation="handler.validationErrors.value"
     />
   </div>

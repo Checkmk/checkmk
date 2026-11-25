@@ -5,7 +5,7 @@
  */
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
-import { type Ref, ref, watch } from 'vue'
+import { type ComputedRef, type Ref, computed, ref, watch } from 'vue'
 
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
 import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
@@ -34,12 +34,21 @@ import {
 } from '../../../../../components/GraphRenderOptions/useGraphRenderOptions.ts'
 
 const CONTENT_TYPE = 'combined_graph'
+
+const SERVICE_FOLDING_PRESENTATIONS: CombinedGraphContentPresentation[] = [
+  'sum',
+  'average',
+  'min',
+  'max'
+]
+
 export interface UseCombinedGraph
   extends UseWidgetHandler, UseGraphRenderOptions, UseWidgetVisualizationOptions {
   contextualLink: UseContextualLink<CombinedGraphContent>
   followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
   presentation: Ref<CombinedGraphContentPresentation>
+  foldsServices: ComputedRef<boolean>
 
   widgetProps: Ref<WidgetProps>
 }
@@ -96,11 +105,13 @@ export const useCombinedGraph = async (
     currentContent?.contextual_link
   )
 
+  const foldsServices = computed(() => SERVICE_FOLDING_PRESENTATIONS.includes(presentation.value))
+
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
     const isTitleValid = validateTitle()
-    const isLinkValid = contextualLink.validate()
+    const isLinkValid = foldsServices.value || contextualLink.validate()
     return isTitleValid && isLinkValid
   }
 
@@ -112,7 +123,9 @@ export const useCombinedGraph = async (
 
       graph_template: metric,
       presentation: presentation.value,
-      contextual_link: contextualLink.contextualLink.value ?? { type: 'none' }
+      contextual_link: foldsServices.value
+        ? { type: 'none' }
+        : (contextualLink.contextualLink.value ?? { type: 'none' })
     }
   }
 
@@ -184,6 +197,7 @@ export const useCombinedGraph = async (
     showBurgerMenu,
 
     presentation,
+    foldsServices,
 
     widgetProps: widgetProps as Ref<WidgetProps>,
     getSubmitProps: _computeWidgetProps

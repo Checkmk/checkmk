@@ -101,6 +101,13 @@ const widgetProps = computed(() => handler.value.widgetProps)
       v-model:title-url-enabled="handler.titleUrlEnabled.value"
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
       v-model:contextual-link="handler.contextualLink"
+      :contextual-link-unavailable="
+        handler.foldsServices.value
+          ? _t(
+              'A combined line has no single service to link from. Set Presentation to Lines or Stacked for links.'
+            )
+          : undefined
+      "
     />
   </CmkCatalogPanel>
 

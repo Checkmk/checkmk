@@ -1,5 +1,12 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("//doc/documentation:defs.bzl", "package_docs")
+
+package_docs(
+    name = "docs",
+    index = "docs/arch-comp-automation-helper.rst",
+    visibility = ["//doc/documentation:__pkg__"],
+)
 
 py_library(
     name = "automations",

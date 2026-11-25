@@ -32,6 +32,7 @@ The seven versions after this map draw one use case each and gray out what it do
 
 - **Automation helper:** a long-running process that runs the GUI's automations: config generation on activation, service discovery, and the discovery page's "execute active check".
   When it is switched off, the same automations run as ``cmk --automation`` subprocesses.
+  See :doc:`arch-comp-automation-helper`.
 - **Site disk:** ``var/check_mk/core/``.
   ``config.pb`` is the CMC's config; ``helper_config/<serial>/`` holds the fetcher configs, secrets and CA bundle, and ``relays/<relay id>/`` inside it is one relay's share.
 - **CMC helper pools:** fetcher helpers run ``@cmk`` jobs, checkhelpers run active checks, and checker helpers turn fetched data into service states.

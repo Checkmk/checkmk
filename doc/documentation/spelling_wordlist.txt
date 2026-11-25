@@ -29,6 +29,7 @@ coroutine
 cron
 crontab
 Crontab
+daemonizes
 datasource
 DCD
 de
@@ -40,6 +41,7 @@ deserializes
 deserializing
 doctests
 Encipherment
+FastAPI
 filesystem
 frontend
 gapped
@@ -56,6 +58,7 @@ IdP
 iDRAC
 iLO
 init
+Init
 installable
 integrations
 introspection
@@ -111,6 +114,7 @@ ramdisk
 reachability
 realpath
 Redis
+reloader
 repo
 Reproducibility
 robotmk
@@ -122,6 +126,7 @@ Scalable
 setuid
 sitecustomize
 Solaris
+spooler
 Spooler
 sqlite
 SQLite

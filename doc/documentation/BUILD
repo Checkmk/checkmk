@@ -31,6 +31,7 @@ doc_srcs(
         "**/*.svg",
     ]) + [
         # Pages that live in the package they describe
+        "//cmk/automations:docs",
         "//omd/packages/omd:docs",
         "//packages/cmk-backup:docs",
         "//packages/cmk-check-engine:docs",

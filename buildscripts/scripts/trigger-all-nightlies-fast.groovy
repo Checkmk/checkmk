@@ -115,6 +115,22 @@ void main() {
         }
     }
 
+    stages["build-ai-router-image"] = {
+        smart_stage(
+            name: "Trigger AI Router Image Build",
+            raiseOnError: true,
+        ) {
+            smart_build(
+                use_upstream_build: true,
+                force_build: force_build,
+                relative_job_name: "${branch_base_folder}/builders/build-cmk-ai-router-image",
+                build_params: job_parameters,
+                build_params_no_check: job_parameters_no_check,
+                download: false,
+            );
+        }
+    }
+
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
     }

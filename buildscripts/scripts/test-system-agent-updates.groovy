@@ -90,7 +90,9 @@ void main() {
                     run_tests_script: "non-free/tests/run_tests.sh",
                     test_filter: params.TEST_FILTER,
                     faked_artifacts: fake_artifacts,
-                    timeout: 60,
+                    // Covers the pytest session (--session-timeout 3600 in run_tests.sh) and the setup
+                    // of the container around it.
+                    timeout: 75,
                 ]);
             } finally {
                 stage("Archive / process test reports") {

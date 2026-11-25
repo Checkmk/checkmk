@@ -30,7 +30,6 @@ import PropertySection from '@/maps/map/edit/properties/PropertySection.vue'
 import {
   type ObjectForm,
   boundTypeOf,
-  choosesServiceCounting,
   hasStateOptions
 } from '@/maps/map/edit/properties/objectForm'
 import MapsColorInput from '@/maps/shared/components/MapsColorInput.vue'
@@ -41,6 +40,7 @@ import { noAggregationsHint } from '@/maps/shared/suggestions'
 import type { MapElement, MonitoredObjectType, ObjectState } from '@/maps/types/api'
 import { dyngroupTypeOptions, lineObjectTypeOptions } from '@/maps/utils/dropdownOptions'
 import type { FilterRefusal } from '@/maps/utils/formValidation'
+import { countsHostServices } from '@/maps/utils/model'
 
 const props = defineProps<{
   object: MapElement
@@ -93,7 +93,9 @@ const filterMessages = computed(() => {
 })
 
 const showsStateChecks = computed(() => hasStateOptions(type.value))
-const showsRecognizeServices = computed(() => choosesServiceCounting(type.value, form.value))
+const showsRecognizeServices = computed(() =>
+  countsHostServices(type.value, form.value.object_types)
+)
 </script>
 
 <template>

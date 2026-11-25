@@ -29,6 +29,7 @@ from cmk.maps.rest_api.models.request_models import MapRequest
 from cmk.maps.rest_api.models.response_models import MapObject
 from cmk.maps.rest_api.utils import (
     adopt_map_background,
+    count_host_services_by_default,
     map_etag,
     public_request_from_visibility,
     RW_PERMISSIONS,
@@ -74,6 +75,7 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
     validate_object_ids(body.config)
     validate_pinned_grids(body.config)
     spec = spec_from_map(body.config)
+    count_host_services_by_default(spec)
     validate_map_size(spec)
     validate_object_filters(spec, {})
     if not isinstance(body.visibility, ApiOmitted):

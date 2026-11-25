@@ -25,9 +25,17 @@ from collections.abc import Iterator, Mapping
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cmk.ccc.user import UserId
 from cmk.maps.backend.schemas.map import MapConfig as DaemonMapConfig
+from cmk.maps.gui.pagetype import MapPage
+from cmk.maps.gui.type_defs import map_config_from_spec
 from cmk.maps.rest_api.models.map import MapObjectBinding, MapObjectDisplay
-from cmk.maps.rest_api.utils import map_from_spec, spec_from_map
+from cmk.maps.rest_api.utils import (
+    count_host_services_by_default,
+    map_from_spec,
+    resolved_spec,
+    spec_from_map,
+)
 from cmk.maps.shared.map_payload import MapPayload
 
 # Representative maps exercising every discriminated-union branch (all view
@@ -267,6 +275,20 @@ def test_rest_round_trip_keeps_the_background_layout() -> None:
     stored = spec_from_map(map_from_spec(dense))
 
     assert (stored["background_style"], stored["background_position"]) == ("zoom", "center")
+
+
+def test_a_host_stored_without_counting_services_keeps_that_when_sent_back() -> None:
+    stored = DaemonMapConfig.model_validate(_GRID_MAP).model_dump(
+        mode="json", exclude={"objects": {"__all__": {"recognize_services"}}}
+    )
+    page = MapPage(map_config_from_spec(UserId("alice"), "gridded", stored))
+
+    sent_back = spec_from_map(map_from_spec(resolved_spec(page)))
+    count_host_services_by_default(sent_back)
+
+    objects = sent_back["objects"]
+    assert isinstance(objects, list)
+    assert [o["recognize_services"] for o in objects] == [False, False]
 
 
 def test_rest_model_rejects_object_filter_without_filter_header() -> None:

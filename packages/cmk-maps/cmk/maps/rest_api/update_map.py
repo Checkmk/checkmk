@@ -32,6 +32,7 @@ from cmk.maps.rest_api.models.request_models import MapRequest
 from cmk.maps.rest_api.models.response_models import MapObject
 from cmk.maps.rest_api.utils import (
     adopt_map_background,
+    count_host_services_by_default,
     map_etag,
     permitted_map_or_404,
     public_request_from_visibility,
@@ -94,6 +95,7 @@ def update_map_v1(
             )
         target_owner = user_id
     spec = spec_from_map(body.config)
+    count_host_services_by_default(spec)
     validate_map_size(spec)
     validate_object_filters(spec, page.config.map_spec)
 

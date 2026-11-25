@@ -29,7 +29,7 @@ import { useMaps, useSettings, useToast } from '@/maps/services/context'
 import { type ObjectRefusal, objectRefusalOf } from '@/maps/shared/errorText'
 import type { MapConfig, MapElement, ObjectType } from '@/maps/types/api'
 import { objectDeletedText } from '@/maps/utils/dropdownOptions'
-import { newMapElement } from '@/maps/utils/model'
+import { countsHostServices, newMapElement } from '@/maps/utils/model'
 import { getEffectiveObjectType, getMapElementIdentifier } from '@/maps/utils/naming'
 
 export interface NewObjectDraft {
@@ -774,9 +774,10 @@ export function useMapEditor() {
   // extras stay with the two placement paths (pixel vs. geo).
   function _draftToObject(id: string): MapElement {
     const s = settingsStore.settings.value
+    const type = draft.type as ObjectType
     const element = newMapElement({
       id,
-      type: draft.type as ObjectType,
+      type,
       host_name: draft.host_name || null,
       service_description: draft.service_description || null,
       group_name: draft.group_name || null,
@@ -786,10 +787,7 @@ export function useMapEditor() {
       object_types: draft.type === 'dyngroup' || draft.type === 'grid' ? draft.object_types : null,
       object_filter:
         draft.type === 'dyngroup' || draft.type === 'grid' ? draft.object_filter || null : null,
-      // A host with failing services is not fine, so a new host shows them, as
-      // a NagVis host does by default.
-      recognize_services:
-        draft.type === 'host' || (draft.type === 'grid' && draft.object_types === 'host'),
+      recognize_services: countsHostServices(type, draft.object_types),
       ...(draft.expand_depth ? { expand_depth: draft.expand_depth } : {}),
       label: {
         // As in NagVis, a grid's members show no label until asked to.

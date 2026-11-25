@@ -25,6 +25,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, ungettext
 from cmk.maps.gui._filter_check import check_object_filter
 from cmk.maps.gui._settings import connection_choices, map_object_defaults
+from cmk.maps.shared.defaults import counts_host_services
 from cmk.maps.shared.filters import (
     bound_type_of,
     check_host_member_patterns,
@@ -1029,9 +1030,6 @@ def _apply_type_specific(obj: MapObject, block_type: str, p: dict[str, str]) -> 
         p.get("only_hard_states")
     ):
         obj["only_hard_states"] = True
-    if block_type in ("host", "hostgroup"):
-        # NagVis counts the services of hosts unless told not to.
-        obj["recognize_services"] = _bool(p.get("recognize_services"), True)
     for key in ("exclude_members", "exclude_member_states"):
         if p.get(key):
             obj[key] = p[key]
@@ -1055,8 +1053,8 @@ def _apply_type_specific(obj: MapObject, block_type: str, p: dict[str, str]) -> 
         ot = (p.get("object_types") or "host").strip().lower()
         obj["object_types"] = "service" if ot == "service" else "host"
         obj["object_filter"] = p.get("object_filter") or None
-        if obj["object_types"] == "host":
-            obj["recognize_services"] = _bool(p.get("recognize_services"), True)
+    if counts_host_services(block_type, obj.get("object_types")):
+        obj["recognize_services"] = _bool(p.get("recognize_services"), True)
 
 
 def _handle_monitor_block(
@@ -1330,7 +1328,7 @@ def _apply_member_look(
     if (max_length := _int(p.get("label_maxlen"))) > 0:
         grid["label_maxlen"] = max_length
     grid["only_hard_states"] = _bool(p.get("only_hard_states"))
-    if object_types == "host":
+    if counts_host_services("grid", object_types):
         grid["recognize_services"] = _bool(p.get("recognize_services"), True)
     dropped: tuple[tuple[Literal["exclude_members", "exclude_member_states"], str], ...] = (
         (

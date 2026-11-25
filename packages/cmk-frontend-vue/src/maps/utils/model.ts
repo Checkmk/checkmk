@@ -12,7 +12,7 @@
  * require them all — which is right for what is received and unhelpful for what
  * is built here. These fill in the same defaults the server would.
  */
-import type { FolderTreeView, MapElement, MapView, ObjectState } from '@/maps/types/api'
+import type { FolderTreeView, MapElement, MapView, ObjectState, ObjectType } from '@/maps/types/api'
 
 /** How a grid lays out its members unless it says otherwise: NagVis' dynmap defaults. */
 export const GRID_DEFAULTS = {
@@ -22,6 +22,22 @@ export const GRID_DEFAULTS = {
   grid_sort: 'name',
   grid_order: 'asc'
 } as const
+
+/**
+ * Whether an object bound to `bound` counts the services of its hosts unless
+ * told not to, as NagVis does: a host, a host group, and a dynamic group or a
+ * grid of hosts. The REST API applies the same rule to what a request leaves out.
+ */
+export function countsHostServices(
+  bound: ObjectType,
+  objectTypes: 'host' | 'service' | null | undefined
+): boolean {
+  return (
+    bound === 'host' ||
+    bound === 'hostgroup' ||
+    ((bound === 'dyngroup' || bound === 'grid') && objectTypes !== 'service')
+  )
+}
 
 /** A map object with the defaults an unset field carries server-side. */
 export function newMapElement(

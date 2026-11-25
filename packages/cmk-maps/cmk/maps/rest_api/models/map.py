@@ -672,7 +672,10 @@ class MapObjectBinding:
         description="Use last hard states.", example=False, default_factory=ApiOmitted
     )
     recognize_services: bool | ApiOmitted = api_field(
-        description="Fold service states into the object.",
+        description=(
+            "Fold service states into the object. Left out, a host, a host group and a"
+            " dyngroup or a grid of hosts fold them in, as in NagVis."
+        ),
         example=True,
         default_factory=ApiOmitted,
     )

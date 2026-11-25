@@ -17,6 +17,7 @@ import type {
   ObjectType
 } from '@/maps/types/api'
 import { leavesOutMembers } from '@/maps/utils/memberFilter'
+import { countsHostServices } from '@/maps/utils/model'
 
 /**
  * How a label is aligned. The wire model also knows 'justify', which the card
@@ -131,18 +132,6 @@ const STATEFUL_TYPES: ReadonlySet<ObjectType> = new Set([
 /** Whether an object bound to `bound` offers the hard-state option. */
 export function hasStateOptions(bound: ObjectType): boolean {
   return STATEFUL_TYPES.has(bound)
-}
-
-/**
- * Whether the object may count its hosts' services: a host, a host group,
- * and a dynamic group or a grid of hosts.
- */
-export function choosesServiceCounting(bound: ObjectType, form: ObjectForm): boolean {
-  return (
-    bound === 'host' ||
-    bound === 'hostgroup' ||
-    ((bound === 'dyngroup' || bound === 'grid') && form.object_types !== 'service')
-  )
 }
 
 /** What the object stands for: a line, the object type it shows the state of. */
@@ -363,7 +352,7 @@ export function updatesFromForm(
   if (hasStateOptions(bound)) {
     updates.only_hard_states = form.only_hard_states
   }
-  if (choosesServiceCounting(bound, form)) {
+  if (countsHostServices(bound, form.object_types)) {
     updates.recognize_services = form.recognize_services
   } else if (bound === 'grid') {
     // A grid of services refuses to count services.

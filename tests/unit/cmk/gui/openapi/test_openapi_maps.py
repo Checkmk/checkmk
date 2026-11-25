@@ -525,6 +525,63 @@ def test_an_object_pinned_out_of_a_grid_of_the_map_is_stored(clients: ClientRegi
     clients.Maps.create(config=_map("map1", objects=[grid, host]))
 
 
+@pytest.mark.parametrize(
+    "obj, counts",
+    [
+        pytest.param(_host_object("o", binding={"host_name": "web"}), True, id="host"),
+        pytest.param(
+            _host_object("o", obj_type="hostgroup", binding={"group_name": "linux"}),
+            True,
+            id="host group",
+        ),
+        pytest.param(
+            _host_object("o", obj_type="grid", binding={"object_types": "host"}),
+            True,
+            id="grid of hosts",
+        ),
+        pytest.param(
+            _host_object("o", obj_type="grid", binding={"object_types": "service"}),
+            False,
+            id="grid of services",
+        ),
+        pytest.param(
+            _host_object("o", obj_type="service", binding={"host_name": "web"}),
+            False,
+            id="service",
+        ),
+    ],
+)
+def test_an_object_left_open_counts_the_services_of_its_hosts_as_in_nagvis(
+    clients: ClientRegistry, obj: dict[str, object], counts: bool
+) -> None:
+    clients.Maps.create(config=_map("map1", objects=[obj]))
+
+    binding = clients.Maps.get("map1").json["extensions"]["config"]["objects"][0]["binding"]
+
+    assert binding.get("recognize_services", False) is counts
+
+
+def test_a_save_that_leaves_it_open_counts_as_a_new_map_does(clients: ClientRegistry) -> None:
+    told = _host_object("o", binding={"host_name": "web", "recognize_services": False})
+    clients.Maps.create(config=_map("map1", objects=[told]))
+
+    clients.Maps.edit(
+        "map1", config=_map("map1", objects=[_host_object("o", binding={"host_name": "web"})])
+    )
+
+    binding = clients.Maps.get("map1").json["extensions"]["config"]["objects"][0]["binding"]
+    assert binding["recognize_services"] is True
+
+
+def test_an_object_told_not_to_count_services_keeps_that(clients: ClientRegistry) -> None:
+    host = _host_object("o", binding={"host_name": "web", "recognize_services": False})
+    clients.Maps.create(config=_map("map1", objects=[host]))
+
+    binding = clients.Maps.get("map1").json["extensions"]["config"]["objects"][0]["binding"]
+
+    assert binding["recognize_services"] is False
+
+
 def test_a_map_with_more_grids_than_it_takes_is_refused(clients: ClientRegistry) -> None:
     grids = [
         _host_object(f"g{i}", obj_type="grid", binding={"object_types": "host"})

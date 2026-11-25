@@ -6,6 +6,16 @@
 
 from typing import Literal, TypedDict
 
+
+def counts_host_services(object_type: str, object_types: str | None) -> bool:
+    """Whether an object of ``object_type`` counts the services of its hosts
+    unless told not to, as NagVis does: a host, a host group, and a dynamic group
+    or a grid of hosts."""
+    if object_type in ("host", "hostgroup"):
+        return True
+    return object_type in ("dyngroup", "grid") and object_types != "service"
+
+
 # Seconds. Cold-start Livestatus calls on busy sites can take longer than 10 s.
 DEFAULT_CONNECTION_TIMEOUT = 30
 

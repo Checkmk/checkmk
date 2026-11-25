@@ -131,19 +131,27 @@ describe('useMapEditor placing — services resolved outside setup', () => {
     expect(map.objects[0]).toMatchObject({ type: 'host', host_name: 'heute', x: 120, y: 80 })
   })
 
-  it("has a new host consider its services, as NagVis' hosts do", async () => {
-    const services = fakeMapsServices()
-    const map = emptyMap()
-    services.maps.currentMap.value = map
-    const editor = runWithServices(services, () => useMapEditor())
+  it.each([
+    { draft: { type: 'host', host_name: 'heute' }, counts: true },
+    { draft: { type: 'hostgroup', group_name: 'linux' }, counts: true },
+    { draft: { type: 'dyngroup', object_types: 'host' }, counts: true },
+    { draft: { type: 'dyngroup', object_types: 'service' }, counts: false },
+    { draft: { type: 'servicegroup', group_name: 'web' }, counts: false }
+  ] as const)(
+    "has a new $draft.type count its hosts' services as NagVis does: $counts",
+    async ({ draft, counts }) => {
+      const services = fakeMapsServices()
+      const map = emptyMap()
+      services.maps.currentMap.value = map
+      const editor = runWithServices(services, () => useMapEditor())
 
-    editor.draft.type = 'host'
-    editor.draft.host_name = 'heute'
-    editor.startPlacing()
-    await editor.placeAt(120, 80)
+      Object.assign(editor.draft, draft)
+      editor.startPlacing()
+      await editor.placeAt(120, 80)
 
-    expect(map.objects[0]).toMatchObject({ recognize_services: true })
-  })
+      expect(map.objects[0]).toMatchObject({ recognize_services: counts })
+    }
+  )
 
   it('has a new map link move on in the same tab, as a NagVis map link does', async () => {
     const services = fakeMapsServices()

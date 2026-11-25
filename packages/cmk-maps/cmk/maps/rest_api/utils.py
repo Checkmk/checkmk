@@ -45,6 +45,7 @@ from cmk.maps.rest_api.models.response_models import (
     MapObject,
     MapVisibility,
 )
+from cmk.maps.shared.defaults import counts_host_services
 from cmk.maps.shared.filters import normalize_object_filter
 from cmk.maps.shared.map_payload import (
     AUTO_OBJECT_ID_PREFIX,
@@ -370,6 +371,29 @@ def validate_pinned_grids(config: MapConfig) -> None:
         )
 
 
+def count_host_services_by_default(spec: dict[str, object]) -> None:
+    """Have an object that can count the services of its hosts do so where the
+    request leaves it open, as NagVis and the editor do."""
+    objects = spec.get("objects")
+    if not isinstance(objects, list):
+        return
+    for obj in objects:
+        if (
+            isinstance(obj, dict)
+            and "recognize_services" not in obj
+            and _counts_host_services_by_default(obj)
+        ):
+            obj["recognize_services"] = True
+
+
+def _counts_host_services_by_default(flat: Mapping[str, object]) -> bool:
+    object_type = flat.get("type")
+    object_types = flat.get("object_types")
+    return isinstance(object_type, str) and counts_host_services(
+        object_type, object_types if isinstance(object_types, str) else None
+    )
+
+
 def validate_map_size(spec: Mapping[str, object]) -> None:
     if len(json.dumps(spec, default=str).encode()) > MAP_CONFIG_MAX_BYTES:
         raise RestAPIRequestGeneralException(
@@ -600,7 +624,22 @@ def resolved_spec(page: MapPage) -> dict[str, object]:
     # Fold the authoritative pagetype name into the config, so a stored spec
     # whose ``name`` drifted from the pagetype key (a clone/rename/migration)
     # can't be signed — and thus relayed to the daemon — under a foreign map name.
-    return {**dict(page.config.map_spec), "name": page.config.name}
+    spec: dict[str, object] = {**dict(page.config.map_spec), "name": page.config.name}
+    if isinstance(objects := spec.get("objects"), list):
+        spec["objects"] = [_state_host_service_counting(obj) for obj in objects]
+    return spec
+
+
+def _state_host_service_counting(obj: object) -> object:
+    """Stored without it, such an object counts none, whereas a save that leaves
+    it out counts them: told so, the map sent back unchanged keeps it."""
+    if (
+        isinstance(obj, Mapping)
+        and "recognize_services" not in obj
+        and _counts_host_services_by_default(obj)
+    ):
+        return {**obj, "recognize_services": False}
+    return obj
 
 
 def serialize_map(page: MapPage, *, can_edit: bool, can_delete: bool) -> MapObject:

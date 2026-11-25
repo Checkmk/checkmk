@@ -65,4 +65,6 @@ export interface CmkRankedTableProps {
   placeholder?: RankedTablePlaceholder | undefined
   /** Whether newer rows are being fetched, which assistive tech is told. */
   busy?: boolean
+  /** Prepends each row's position, starting at 1. */
+  showRank?: boolean
 }

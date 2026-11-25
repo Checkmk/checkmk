@@ -45,6 +45,12 @@ export const panelConfig = {
     help: 'Width of the box around the table. Text cells truncate before any figure does. Drag the corner of the preview to change it.',
     initialState: 600
   },
+  showRank: {
+    type: 'boolean' as const,
+    title: 'Show rank',
+    help: "Prepends each row's position, starting at 1.",
+    initialState: true
+  },
   longHostNames: {
     type: 'boolean' as const,
     title: 'Long host names',
@@ -268,6 +274,7 @@ const rows = computed<RankedTableRow[]>(() =>
           :rows="rows"
           :placeholder="placeholder"
           :busy="propState.tableState === 'refreshing'"
+          :show-rank="propState.showRank"
         >
           <template #empty>
             <CmkHeading type="h4">No data</CmkHeading>

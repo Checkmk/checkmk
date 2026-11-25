@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { ContextualLinkEntry } from '@/dashboard/lib/contextualLinkUrl'
@@ -18,7 +19,15 @@ import type {
   RankedTableRow
 } from './types'
 
-const { columns, rows, placeholder, busy = false } = defineProps<CmkRankedTableProps>()
+const {
+  columns,
+  rows,
+  placeholder,
+  busy = false,
+  showRank = false
+} = defineProps<CmkRankedTableProps>()
+
+const { _t } = usei18n()
 
 defineSlots<{
   /** Shown above the faded stand-ins of an `empty` placeholder. */
@@ -112,14 +121,15 @@ function standInWidth(column: RankedTableColumn, rowIndex: number, columnIndex: 
 // Text columns hug their content but give way first; figures never shrink, and the
 // bar column takes the remaining space.
 const gridTemplateColumns = computed(() =>
-  columns
-    .map((column) => {
+  [
+    ...(showRank ? ['max-content'] : []),
+    ...columns.map((column) => {
       if (column.bar) {
         return 'minmax(max-content, 1fr)'
       }
       return truncates(column) ? 'minmax(2.5em, max-content)' : 'max-content'
     })
-    .join(' ')
+  ].join(' ')
 )
 </script>
 
@@ -137,6 +147,14 @@ const gridTemplateColumns = computed(() =>
     >
       <thead role="rowgroup">
         <tr class="db-cmk-ranked-table__row db-cmk-ranked-table__row--head" role="row">
+          <th
+            v-if="showRank"
+            class="db-cmk-ranked-table__th db-cmk-ranked-table__rank"
+            role="columnheader"
+            :aria-label="_t('Rank')"
+          >
+            <span aria-hidden="true">#</span>
+          </th>
           <th
             v-for="column in columns"
             :key="column.key"
@@ -161,6 +179,11 @@ const gridTemplateColumns = computed(() =>
           class="db-cmk-ranked-table__row db-cmk-ranked-table__row--body"
           role="row"
         >
+          <td
+            v-if="showRank"
+            class="db-cmk-ranked-table__td db-cmk-ranked-table__rank"
+            role="cell"
+          />
           <td
             v-for="(column, columnIndex) in columns"
             :key="column.key"
@@ -196,6 +219,9 @@ const gridTemplateColumns = computed(() =>
           class="db-cmk-ranked-table__row db-cmk-ranked-table__row--body"
           role="row"
         >
+          <td v-if="showRank" class="db-cmk-ranked-table__td db-cmk-ranked-table__rank" role="cell">
+            {{ index + 1 }}
+          </td>
           <td
             v-for="column in columns"
             :key="column.key"
@@ -335,6 +361,15 @@ const gridTemplateColumns = computed(() =>
 }
 
 .db-cmk-ranked-table__cell--right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Muted and set against the name that follows it. */
+.db-cmk-ranked-table__rank {
+  padding-right: 0;
+  font-size: var(--font-size-small);
+  color: var(--font-color-muted);
   text-align: right;
   font-variant-numeric: tabular-nums;
 }

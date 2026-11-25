@@ -196,3 +196,37 @@ test('shows no stand-in rows for a negative row count', () => {
 
   expect(getAllByRole('row')).toHaveLength(1)
 })
+
+test('numbers the rows in the order provided, under a "Rank" header', () => {
+  const { getByRole, getAllByRole } = render(CmkRankedTable, {
+    props: { columns: COLUMNS, rows: ROWS, showRank: true }
+  })
+
+  expect(getByRole('columnheader', { name: 'Rank' })).toHaveTextContent('#')
+  const ranks = getAllByRole('row')
+    .slice(1)
+    .map((row) => row.querySelector('td')?.textContent?.trim())
+  expect(ranks).toEqual(['1', '2', '3'])
+})
+
+test('shows no rank column unless asked for', () => {
+  const { queryByRole } = renderTable()
+
+  expect(queryByRole('columnheader', { name: 'Rank' })).toBeNull()
+})
+
+test('leaves the rank of loading rows blank', () => {
+  const { getAllByRole } = render(CmkRankedTable, {
+    props: {
+      columns: COLUMNS,
+      rows: ROWS,
+      showRank: true,
+      placeholder: { kind: 'loading', rows: 2 }
+    }
+  })
+
+  const ranks = getAllByRole('row')
+    .slice(1)
+    .map((row) => row.querySelector('td')?.textContent)
+  expect(ranks).toEqual(['', ''])
+})

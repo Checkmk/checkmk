@@ -53,7 +53,7 @@ Options:
     job_names                List of job names to process.
 
 Example:
-    python perftest_plot.py --dbhost qa.lan.checkmk.net 2.5.0-2025.09.10.ultimate
+    python perftest_plot.py --dbhost qa.lan.checkmk.net 2.4.0-2025.09.10.cee
 """
 
 import argparse
@@ -2037,14 +2037,14 @@ def parse_args() -> PerftestPlotArgs:
         "--branch-version",
         dest="branch_version",
         type=str,
-        default="2.5.0",
+        default="2.4.0",
         help="The default branch version for jobs (default: %(default)s).",
     )
     parser.add_argument(
         "--edition",
         dest="edition",
         type=str,
-        default="pro",
+        default="cee",
         help="The default edition for jobs (default: %(default)s).",
     )
     parser.add_argument(

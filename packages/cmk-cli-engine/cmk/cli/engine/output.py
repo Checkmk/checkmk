@@ -40,7 +40,7 @@ def _sigint_ignored() -> Iterator[None]:
         signal.signal(signal.SIGINT, previous)
 
 
-type RunPager = Callable[[Sequence[str], str, Mapping[str, str]], object]
+type _RunPager = Callable[[Sequence[str], str, Mapping[str, str]], object]
 
 
 def run_pager(command: Sequence[str], txt: str, environ: Mapping[str, str]) -> None:
@@ -52,7 +52,7 @@ class Console:
     stdout: TextIO
     stderr: TextIO
     environ: Mapping[str, str]
-    run_pager: RunPager
+    run_pager: _RunPager
 
     def write_error(self, txt: str) -> None:
         _write(self.stderr, txt)

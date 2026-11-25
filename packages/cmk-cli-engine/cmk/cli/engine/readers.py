@@ -21,12 +21,12 @@ from .options import GetoptOptions, Option, Positional, spellings
 
 
 @dataclass(frozen=True, kw_only=True)
-class Recorded:
+class _Recorded:
     options: Sequence[Option]
     positional: Sequence[Positional]
 
 
-def record(request: Callable[[CLIReader], object]) -> Recorded:
+def record(request: Callable[[CLIReader], object]) -> _Recorded:
     read: list[CLIDeclaration] = []
 
     def given(declaration: CLIDeclaration) -> Sequence[str]:
@@ -34,7 +34,7 @@ def record(request: Callable[[CLIReader], object]) -> Recorded:
         return ()
 
     request(CLIReader(given))
-    return Recorded(
+    return _Recorded(
         options=[
             declaration
             for declaration in read

@@ -16,7 +16,7 @@ import pytest
 
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
-from cmk.cli.engine.discovery import make_command as cli_make_command
+from cmk.cli.engine.discovery import _make_command as _cli_make_command
 from cmk.cli.engine.output import Console as CLIConsole
 from cmk.cli.engine.run import CommandTracer as CLICommandTracer
 from cmk.cli.engine.run import run as cli_run
@@ -230,7 +230,7 @@ def _unloadable() -> NoReturn:
 
 
 def test_a_handler_that_fails_to_load_is_a_crash() -> None:
-    command = cli_make_command(
+    command = _cli_make_command(
         CLICommand(
             name="demo",
             handler=HANDED_IN,

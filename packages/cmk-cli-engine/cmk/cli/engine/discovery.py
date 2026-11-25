@@ -71,10 +71,10 @@ def _reads_one_after_the_remaining(positional: Sequence[Positional]) -> bool:
     return any(isinstance(each, CLIArguments) for each in positional[:-1])
 
 
-type Run[R] = Callable[[CLIContext, R], CLIExitCode]
+type _Run[R] = Callable[[CLIContext, R], CLIExitCode]
 
 
-def _binder[R](command: CLICommand[R], load: Callable[[], Run[R]]) -> Binder:
+def _binder[R](command: CLICommand[R], load: Callable[[], _Run[R]]) -> Binder:
     def bind(reader: CLIReader) -> BoundCommand:
         request = command.request(reader)
         return BoundCommand(request=request, run=lambda context: load()(context, request))
@@ -82,7 +82,9 @@ def _binder[R](command: CLICommand[R], load: Callable[[], Run[R]]) -> Binder:
     return bind
 
 
-def make_command[R](command: CLICommand[R], load: Callable[[], CLIHandler[R]]) -> DiscoveredCommand:
+def _make_command[R](
+    command: CLICommand[R], load: Callable[[], CLIHandler[R]]
+) -> DiscoveredCommand:
     recorded = record(command.request)
     if len({each.placeholder for each in recorded.positional}) < len(recorded.positional):
         raise ValueError(f"{command.name!r} reads a positional argument twice")
@@ -118,7 +120,7 @@ def discover_commands() -> Sequence[DiscoveredCommand]:
         raise_errors=True,
     )
     return tuple(
-        make_command(
+        _make_command(
             _named_after_its_variable(prefixes[CLICommand], location, command),
             partial(_load_handler, command),
         )

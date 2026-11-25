@@ -31,7 +31,7 @@ from .discovery import discover_commands
 from .output import Console, run_pager
 from .run import CommandTracer, run, Runtime
 
-tracer = trace.get_tracer()
+_tracer = trace.get_tracer()
 
 
 def _enable_file_logging(path: Path, logger: logging.Logger) -> None:
@@ -81,7 +81,7 @@ def _tracing(environ: Mapping[str, str]) -> CommandTracer:
                 ),
                 exporter_from_config(exporter_log_level=logging.CRITICAL, config=send_config),
             )
-        with tracer.span(
+        with _tracer.span(
             f"command[{run_command.command.name}]",
             attributes={
                 "cmk.cli.command.name": run_command.command.name,

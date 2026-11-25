@@ -9,7 +9,7 @@ from typing import Final, NoReturn
 
 import pytest
 
-from cmk.cli.engine.arguments import Deprecation as CLIDeprecation
+from cmk.cli.engine.arguments import _Deprecation as CLIDeprecation
 from cmk.cli.engine.arguments import InvalidArguments as CLIInvalidArguments
 from cmk.cli.engine.arguments import parse as cli_parse
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand

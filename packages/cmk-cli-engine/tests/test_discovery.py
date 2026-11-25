@@ -11,8 +11,8 @@ import pytest
 from cmk.cli.engine.arguments import parse as cli_parse
 from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.discovery import _load_handler as _cli_load_handler
+from cmk.cli.engine.discovery import _make_command as _cli_make_command
 from cmk.cli.engine.discovery import _named_after_its_variable as _cli_named_after_its_variable
-from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.internal import Argument as CLIArgument
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
@@ -50,7 +50,7 @@ def test_parsing_a_command_line_does_not_load_the_handler() -> None:
         loaded.append("handler")
         raise AssertionError("loaded")
 
-    command = cli_make_command(
+    command = _cli_make_command(
         CLICommand(
             name="snmpwalk", handler=HANDED_IN, long="snmpwalk", request=_walk_request, help="Walk"
         ),

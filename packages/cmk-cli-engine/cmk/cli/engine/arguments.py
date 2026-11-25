@@ -15,7 +15,7 @@ from .readers import assign, parsed
 
 
 @dataclass(frozen=True)
-class Deprecation:
+class _Deprecation:
     spelling: str
     replacement: str
 
@@ -25,7 +25,7 @@ class RunCommand:
     command: DiscoveredCommand
     global_options: GlobalOptions
     bound: BoundCommand
-    deprecations: Sequence[Deprecation]
+    deprecations: Sequence[_Deprecation]
 
 
 @dataclass(frozen=True)
@@ -55,9 +55,9 @@ def _selected(
     return None
 
 
-def _deprecations(options: GetoptOptions, command: DiscoveredCommand) -> Sequence[Deprecation]:
+def _deprecations(options: GetoptOptions, command: DiscoveredCommand) -> Sequence[_Deprecation]:
     return [
-        Deprecation(spelling=spec, replacement=option.long)
+        _Deprecation(spelling=spec, replacement=option.long)
         for spec, _argument in options
         for option in command.options
         if spec in spellings(option) and spec.lstrip("-") in option.deprecated_names

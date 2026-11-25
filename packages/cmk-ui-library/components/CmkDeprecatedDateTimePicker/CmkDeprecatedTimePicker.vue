@@ -8,7 +8,6 @@ import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
-import { useOpenPopup } from 'cmk-ui-library/lib/openPopups'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { computed, nextTick, ref, watch } from 'vue'
 
@@ -46,7 +45,6 @@ const parsed = parseTime(model.value)
 const hours = ref(parsed?.hours ?? 0)
 const minutes = ref(parsed?.minutes ?? 0)
 const popupOpen = ref(false)
-useOpenPopup(() => popupOpen.value)
 const pendingHours = ref(hours.value)
 const pendingMinutes = ref(minutes.value)
 
@@ -273,7 +271,10 @@ function onPopupKey(e: KeyboardEvent) {
 </script>
 
 <template>
-  <span v-click-outside="() => (popupOpen = false)" class="cmk-deprecated-time-picker">
+  <span
+    v-click-outside="{ open: popupOpen, close: () => (popupOpen = false) }"
+    class="cmk-deprecated-time-picker"
+  >
     <span class="cmk-deprecated-time-picker__field">
       <input
         ref="hoursRef"

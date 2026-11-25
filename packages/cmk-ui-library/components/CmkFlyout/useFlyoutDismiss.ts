@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { markPressDismissing } from 'cmk-ui-library/lib/popupDismissal'
 import { onBeforeUnmount, watch } from 'vue'
 
 export interface FlyoutDismissOptions {
@@ -40,6 +41,7 @@ export function useFlyoutDismiss(options: FlyoutDismissOptions): {
     if (hasOpenChild()) {
       return
     }
+    markPressDismissing()
     onDismiss()
   }
 

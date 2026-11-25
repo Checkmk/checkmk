@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
-import { useOpenPopup } from 'cmk-ui-library/lib/openPopups'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, useTemplateRef } from 'vue'
 
@@ -29,7 +28,6 @@ const { _t } = usei18n()
 useWidgetKeys(_t('Flyout'), [{ combo: ['Escape'], description: _t('Close') }])
 
 const isOpen = (): boolean => props.open
-useOpenPopup(isOpen)
 
 const rootRef = useTemplateRef<HTMLElement>('rootRef')
 const popupRef = useTemplateRef<HTMLElement>('popupRef')

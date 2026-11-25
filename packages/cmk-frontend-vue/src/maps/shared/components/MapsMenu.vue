@@ -128,7 +128,7 @@ function onKeydown(e: KeyboardEvent): void {
 <template>
   <div
     ref="menuEl"
-    v-click-outside="closeOnClickOutside"
+    v-click-outside="{ open: true, close: closeOnClickOutside }"
     class="maps-menu"
     role="menu"
     :aria-label="label"

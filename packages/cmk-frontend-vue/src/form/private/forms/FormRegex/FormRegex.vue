@@ -102,11 +102,12 @@ function onKeyEnter(e: KeyboardEvent) {
   <div class="form-regex__text-input">
     <FormToggleButton v-model="inputType" />
     <div
-      v-click-outside="
-        () => {
+      v-click-outside="{
+        open: suggestionsShown,
+        close: () => {
           if (suggestionsShown) suggestionsShown = false
         }
-      "
+      }"
     >
       <div class="form-regex__input-button-wrap">
         <input

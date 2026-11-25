@@ -129,7 +129,7 @@ function toggleOperatorOptions() {
     </button>
     <div
       v-if="searchUtils.input.searchOperatorSelectActive.value"
-      v-click-outside="hideOperatorOptions"
+      v-click-outside="{ open: true, close: hideOperatorOptions }"
       class="unified-search-operator-select__options"
     >
       <ul class="unified-search-operator-select__option-list">

@@ -105,7 +105,12 @@ const handleClickOutside = () => {
 </script>
 
 <template>
-  <div ref="popup" v-click-outside="handleClickOutside" class="db-icon-popup__popup" :style="style">
+  <div
+    ref="popup"
+    v-click-outside="{ open: true, close: handleClickOutside }"
+    class="db-icon-popup__popup"
+    :style="style"
+  >
     <div v-if="categories.length > 1" class="db-icon-popup__popup-header">
       <CmkToggleButtonGroup
         :model-value="category!"

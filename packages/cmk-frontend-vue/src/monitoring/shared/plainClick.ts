@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { isPopupOpen } from 'cmk-ui-library/lib/openPopups'
+import { pressDismissesPopup } from 'cmk-ui-library/lib/popupDismissal'
 import { onBeforeUnmount } from 'vue'
 
 /**
@@ -35,23 +35,9 @@ const OWN_CLICK_TARGETS = [
  */
 export const DOUBLE_CLICK_MS = 500
 
-/**
- * Whether a popup was open as the press of the current click began. A popup may close on that
- * press already, like a flyout, so the click itself finds it closed. Captured on the document,
- * before any popup's own listener.
- */
-let pressedWithPopupOpen = false
-document.addEventListener(
-  'pointerdown',
-  () => {
-    pressedWithPopupOpen = isPopupOpen()
-  },
-  true
-)
-
 /** Whether the click closes a popup, which then is all it does, as with the action menu. */
 export function closesPopup(event: MouseEvent): boolean {
-  return isPopupOpen() || (event.detail > 0 && pressedWithPopupOpen)
+  return pressDismissesPopup(event)
 }
 
 function hasSelection(): boolean {

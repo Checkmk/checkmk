@@ -116,7 +116,7 @@ defineExpose({
     <span
       v-if="editing"
       ref="editPaneRef"
-      v-click-outside="onOutsideClick"
+      v-click-outside="{ open: true, close: onOutsideClick }"
       class="telemetry-metrics-inline-edit-pill__edit"
       :[scopeMarkerAttr]="''"
       :title="title"

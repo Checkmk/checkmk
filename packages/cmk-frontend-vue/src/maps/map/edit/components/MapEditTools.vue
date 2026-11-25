@@ -162,7 +162,7 @@ const snapEntries = computed<MapEditMenuEntry[]>(() =>
 
     <div
       v-if="editing && offersSnapGrid"
-      v-click-outside="closeSnapMenu"
+      v-click-outside="{ open: snapMenuOpen, close: closeSnapMenu }"
       class="maps-map-edit-tools__anchor"
     >
       <button

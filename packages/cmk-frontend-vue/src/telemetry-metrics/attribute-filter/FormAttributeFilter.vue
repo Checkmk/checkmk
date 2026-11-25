@@ -353,7 +353,7 @@ function onGroupClickOutside(group: ConditionGroup): void {
       </button>
       <template v-if="group.conditions.length > 1">
         <div
-          v-click-outside="() => onGroupClickOutside(group)"
+          v-click-outside="{ open: isEntered(group), close: () => onGroupClickOutside(group) }"
           class="telemetry-metrics-form-attribute-filter__group"
           data-testid="attribute-filter-group"
           :data-af-scope="isEntered(group) ? '' : undefined"

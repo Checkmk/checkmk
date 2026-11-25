@@ -58,7 +58,6 @@ def metrics_of_query(
     # Fetch host data with the *same* query. This saves one round trip. And head
     # host has at least one service
     columns = [
-        "service_description",
         "service_check_command",
         "service_perf_data",
         "service_metrics",

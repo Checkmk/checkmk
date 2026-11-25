@@ -146,9 +146,9 @@ void main() {
         }
     }
 
-    /// The context of the system test image, see its package.Dockerfile: only
-    /// package_download/ with the package. Everything else comes with the
-    /// environment image of the same run.
+    /// The context of the system test image is empty, see its package.Dockerfile:
+    /// the package stays in package_download/ of the checkout, on the workspace
+    /// volume, and is only read during the installation (PACKAGE_DIR).
     smart_stage(
         name: "Prepare system test image context",
         condition: distro == system_test_image,
@@ -176,7 +176,6 @@ void main() {
                 sh("""
                     rm -rf '${system_test_context}'
                     mkdir -p '${system_test_context}'
-                    cp -a package_download '${system_test_context}/'
                 """);
             }
         }
@@ -289,6 +288,8 @@ void main() {
                     + " --build-arg EDITION='${params.EDITION}'"
                     + " --build-arg VERSION='${cmk_version}'"
                     + " --build-arg BRANCH='${safe_branch_name}'"
+                    // read in place, not copied into the image
+                    + " --build-arg PACKAGE_DIR='${checkout_dir}/package_download'"
                     + " --label com.checkmk.git_commit_sha='${system_test_commit}'"
 
                     + " --dockerfile '${checkout_dir}/buildscripts/infrastructure/build-nodes/system-test-image/package.Dockerfile'"

@@ -26,10 +26,10 @@ from cmk.plugins.checkmk.cli.automation import (
 )
 from cmk.plugins.checkmk.cli.output import write_stdout
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
-tracer = trace.get_tracer()
+_tracer = trace.get_tracer()
 
 
 def _automation_error_exit_code(error: AutomationError) -> CLIExitCode:
@@ -50,7 +50,7 @@ def _execute_automation(
     name: AutomationID, args: list[str], *, omd_root: Path, debug: bool
 ) -> AutomationResult | AutomationError:
     automations = Automations(discover_automations(), debug=debug)
-    with tracer.span(
+    with _tracer.span(
         f"mode_automation[{name}]",
         attributes={
             "cmk.automation.name": name,
@@ -66,12 +66,12 @@ def _execute_automation(
                 raw_config = load_raw_config(omd_root=cmk.utils.paths.omd_root)
             automations.update(omd_root, raw_config)
         except (ConfigFileLoadError, MKGeneralException, MKTimeout) as e:
-            logger.error("Loading the configuration failed: %(error)s", {"error": e})  # noqa: TRY400
+            _logger.error("Loading the configuration failed: %(error)s", {"error": e})  # noqa: TRY400
             if debug:
                 raise
             return AutomationError.KNOWN_ERROR
         except Exception:
-            logger.exception("Loading the configuration failed")
+            _logger.exception("Loading the configuration failed")
             if debug:
                 raise
             return AutomationError.UNKNOWN_ERROR

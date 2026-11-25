@@ -22,12 +22,12 @@ from cmk.plugins.checkmk.cli.discovery import (
     DiscoverRequest,
 )
 from cmk.plugins.checkmk.cli.options import (
-    CACHE_FLAG,
+    _CACHE_FLAG,
+    _NO_TCP_FLAG,
     CHECK_PLUGINS_VALUE,
     FAKE_DNS_VALUE,
     FetchRequest,
     FileCacheRequest,
-    NO_TCP_FLAG,
     PluginSelectionRequest,
     SNMP_BACKEND_VALUE,
 )
@@ -35,7 +35,7 @@ from cmk.plugins.checkmk.cli.options import (
 
 def test_the_check_discovery_request_is_read_from_the_command_line() -> None:
     given: Mapping[CLIDeclaration, Sequence[str]] = {
-        CACHE_FLAG: [""],
+        _CACHE_FLAG: [""],
         SNMP_BACKEND_VALUE: ["inline"],
         FAKE_DNS_VALUE: ["1.2.3.4"],
         CLIArgument(placeholder="HOSTNAME", parse=HostAddress): ["myhost"],
@@ -56,7 +56,7 @@ def test_the_check_discovery_request_is_read_from_the_command_line() -> None:
 
 def test_the_discover_request_counts_the_commands_own_option() -> None:
     given: Mapping[CLIDeclaration, Sequence[str]] = {
-        NO_TCP_FLAG: [""],
+        _NO_TCP_FLAG: [""],
         _ONLY_HOST_LABELS_FLAG: [""],
         _DISCOVER_COUNT: ["", ""],
         CHECK_PLUGINS_VALUE: ["df,mem"],

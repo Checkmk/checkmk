@@ -16,20 +16,20 @@ from cmk.plugins.checkmk.cli.inventory import (
     InventoryRequest,
 )
 from cmk.plugins.checkmk.cli.options import (
-    DETECT_SECTIONS_VALUE,
+    _DETECT_SECTIONS_VALUE,
+    _USEWALK_FLAG,
     FetchRequest,
     FileCacheRequest,
     INVENTORY_PLUGINS_VALUE,
     PluginSelectionRequest,
-    USEWALK_FLAG,
 )
 
 
 def test_the_inventory_request_is_read_from_the_command_line() -> None:
     given: Mapping[CLIDeclaration, Sequence[str]] = {
-        USEWALK_FLAG: [""],
+        _USEWALK_FLAG: [""],
         _FORCE_FLAG: [""],
-        DETECT_SECTIONS_VALUE: ["lnx_if"],
+        _DETECT_SECTIONS_VALUE: ["lnx_if"],
         INVENTORY_PLUGINS_VALUE: ["lnx_if"],
         CLIArguments(placeholder="HOST1 HOST2...", parse=str): ["myhost"],
     }

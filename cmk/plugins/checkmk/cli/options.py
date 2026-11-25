@@ -42,24 +42,24 @@ class FileCacheRequest:
     no_tcp: bool
 
 
-CACHE_FLAG: Final = CLIFlag(
+_CACHE_FLAG: Final = CLIFlag(
     long="cache",
     help="Read info from data source cache files when existent, even when it "
     "is outdated. Only contact the data sources when the cache file "
     "is absent",
 )
 
-NO_CACHE_FLAG: Final = CLIFlag(
+_NO_CACHE_FLAG: Final = CLIFlag(
     long="no-cache",
     help="Never use cached information",
 )
 
-NO_TCP_FLAG: Final = CLIFlag(
+_NO_TCP_FLAG: Final = CLIFlag(
     long="no-tcp",
     help="Only use cache files. Skip hosts without cache files.",
 )
 
-USEWALK_FLAG: Final = CLIFlag(
+_USEWALK_FLAG: Final = CLIFlag(
     long="usewalk",
     help="Use snmpwalk stored with --snmpwalk",
 )
@@ -67,9 +67,9 @@ USEWALK_FLAG: Final = CLIFlag(
 
 def file_cache_request(options: CLIReader) -> FileCacheRequest:
     return FileCacheRequest(
-        cache=options.flag(CACHE_FLAG),
-        no_cache=options.flag(NO_CACHE_FLAG),
-        no_tcp=options.flag(NO_TCP_FLAG),
+        cache=options.flag(_CACHE_FLAG),
+        no_cache=options.flag(_NO_CACHE_FLAG),
+        no_tcp=options.flag(_NO_TCP_FLAG),
     )
 
 
@@ -99,7 +99,7 @@ class FetchRequest:
 def fetch_request(options: CLIReader) -> FetchRequest:
     return FetchRequest(
         file_cache=file_cache_request(options),
-        usewalk=options.flag(USEWALK_FLAG),
+        usewalk=options.flag(_USEWALK_FLAG),
         snmp_backend=options.value(SNMP_BACKEND_VALUE),
         fake_dns=options.value(FAKE_DNS_VALUE),
     )
@@ -116,7 +116,7 @@ def _comma_separated[T](parse: Callable[[str], T]) -> Callable[[str], frozenset[
     return parse_each
 
 
-DETECT_SECTIONS_VALUE: Final = CLIValue(
+_DETECT_SECTIONS_VALUE: Final = CLIValue(
     long="detect-sections",
     help=(
         "Comma separated list of sections. The provided sections (but no more) will be"
@@ -143,7 +143,7 @@ CHECK_PLUGINS_VALUE: Final = _plugins_value(CheckPluginName)
 INVENTORY_PLUGINS_VALUE: Final = _plugins_value(InventoryPluginName)
 
 
-DETECT_PLUGINS_VALUE: Final = CLIValue(
+_DETECT_PLUGINS_VALUE: Final = CLIValue(
     long="detect-plugins",
     deprecated_names=frozenset({"checks"}),
     help="Same as '--plugins', but implies a best efford guess for --detect-sections",
@@ -163,7 +163,7 @@ def plugin_selection_request[PluginName: (CheckPluginName, InventoryPluginName)]
     options: CLIReader, plugins: CLIValue[frozenset[PluginName]]
 ) -> PluginSelectionRequest[PluginName]:
     return PluginSelectionRequest(
-        detect_sections=options.value(DETECT_SECTIONS_VALUE),
+        detect_sections=options.value(_DETECT_SECTIONS_VALUE),
         plugins=options.value(plugins),
-        detect_plugins=options.value(DETECT_PLUGINS_VALUE),
+        detect_plugins=options.value(_DETECT_PLUGINS_VALUE),
     )

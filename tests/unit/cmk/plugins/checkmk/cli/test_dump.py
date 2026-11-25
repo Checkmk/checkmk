@@ -19,16 +19,16 @@ from cmk.plugins.checkmk.cli.dump import (
     DumpHostsRequest,
 )
 from cmk.plugins.checkmk.cli.options import (
+    _NO_TCP_FLAG,
     FAKE_DNS_VALUE,
     FileCacheRequest,
-    NO_TCP_FLAG,
     SNMP_BACKEND_VALUE,
 )
 
 
 def test_the_dump_agent_request_is_read_from_the_command_line() -> None:
     given: Mapping[CLIDeclaration, Sequence[str]] = {
-        NO_TCP_FLAG: [""],
+        _NO_TCP_FLAG: [""],
         SNMP_BACKEND_VALUE: ["stored-walk"],
         CLIArgument(placeholder="HOSTNAME|ADDRESS", parse=HostAddress): ["myhost"],
     }

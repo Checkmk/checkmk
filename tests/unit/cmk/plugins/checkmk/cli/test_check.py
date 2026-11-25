@@ -19,29 +19,29 @@ from cmk.plugins.checkmk.cli.check import (
     CheckingRequest,
 )
 from cmk.plugins.checkmk.cli.options import (
+    _DETECT_PLUGINS_VALUE,
+    _DETECT_SECTIONS_VALUE,
+    _NO_CACHE_FLAG,
+    _USEWALK_FLAG,
     CHECK_PLUGINS_VALUE,
-    DETECT_PLUGINS_VALUE,
-    DETECT_SECTIONS_VALUE,
     FAKE_DNS_VALUE,
     FetchRequest,
     FileCacheRequest,
-    NO_CACHE_FLAG,
     PluginSelectionRequest,
     SNMP_BACKEND_VALUE,
-    USEWALK_FLAG,
 )
 
 
 def test_the_checking_request_is_read_from_the_command_line() -> None:
     given: Mapping[CLIDeclaration, Sequence[str]] = {
-        NO_CACHE_FLAG: [""],
-        USEWALK_FLAG: [""],
+        _NO_CACHE_FLAG: [""],
+        _USEWALK_FLAG: [""],
         _NO_SUBMIT_FLAG: [""],
         _PERFDATA_FLAG: [""],
         SNMP_BACKEND_VALUE: ["classic"],
-        DETECT_SECTIONS_VALUE: ["df,mem"],
+        _DETECT_SECTIONS_VALUE: ["df,mem"],
         CHECK_PLUGINS_VALUE: ["df"],
-        DETECT_PLUGINS_VALUE: ["cpu_loads"],
+        _DETECT_PLUGINS_VALUE: ["cpu_loads"],
         FAKE_DNS_VALUE: ["1.2.3.4"],
         CLIArgument(placeholder="HOST", parse=HostName): ["myhost"],
         CLIOptionalArgument(placeholder="IPADDRESS", parse=HostAddress): ["10.0.0.1"],

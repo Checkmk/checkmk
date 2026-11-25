@@ -21,7 +21,7 @@ from cmk.plugins.checkmk.cli.localize import (
 )
 from cmk.utils.log import VERBOSE
 
-logger = logging.getLogger("cmk.base.localize")
+_logger = logging.getLogger("cmk.base.localize")
 
 
 _LanguageName = str
@@ -31,7 +31,7 @@ class _LocalizeException(MKException):
     pass
 
 
-domain = "multisite"
+_domain = "multisite"
 
 
 def _locale_base() -> Path:
@@ -45,15 +45,15 @@ def _pot_file() -> Path:
 
 
 def _builtin_po_file(lang: str) -> Path:
-    return cmk.utils.paths.locale_dir / lang / "LC_MESSAGES" / ("%s.po" % domain)
+    return cmk.utils.paths.locale_dir / lang / "LC_MESSAGES" / ("%s.po" % _domain)
 
 
 def _po_file(lang: str) -> Path:
-    return _locale_base() / lang / f"LC_MESSAGES/{domain}.po"
+    return _locale_base() / lang / f"LC_MESSAGES/{_domain}.po"
 
 
 def _mo_file(lang: str) -> Path:
-    return _locale_base() / lang / f"LC_MESSAGES/{domain}.mo"
+    return _locale_base() / lang / f"LC_MESSAGES/{_domain}.mo"
 
 
 def _alias_file(lang: str) -> Path:
@@ -118,12 +118,12 @@ def _do_localize(args: Sequence[str]) -> CLIExitCode:
             _write_alias(lang, alias)
         except _LocalizeException as e:
             # Expected CLI error, the traceback adds no value here.
-            logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            _logger.error("%(error)s", {"error": e})  # noqa: TRY400
             return CLIExitCode.FAILURE
     else:
         allc = sorted(commands.keys())
         allc = [tty.bold + c + tty.normal for c in allc]
-        logger.error(
+        _logger.error(
             "Invalid localize command. Allowed are: %(commands)s and %(last_command)s.",
             {"commands": ", ".join(allc[:-1]), "last_command": allc[-1]},
         )
@@ -163,7 +163,7 @@ def _get_languages() -> list[_LanguageName]:
 
 def _localize_update_po(lang: _LanguageName) -> None:
     """Merge the current .pot file with a given .po file"""
-    logger.log(VERBOSE, "Merging translations...")
+    _logger.log(VERBOSE, "Merging translations...")
     if (
         subprocess.call(
             ["msgmerge", "-U", _po_file(lang), _pot_file()],
@@ -171,9 +171,9 @@ def _localize_update_po(lang: _LanguageName) -> None:
         )
         != 0
     ):
-        logger.error("Failed!")
+        _logger.error("Failed!")
     else:
-        logger.info("Success! Output: %(output)s", {"output": _po_file(lang)})
+        _logger.info("Success! Output: %(output)s", {"output": _po_file(lang)})
 
 
 def _localize_init_po(lang: _LanguageName) -> None:
@@ -184,12 +184,12 @@ def _localize_init_po(lang: _LanguageName) -> None:
         )
         != 0
     ):
-        logger.error("Failed!\n")
+        _logger.error("Failed!\n")
 
 
 def _localize_sniff() -> None:
     """Dig into the source code and generate a new .pot file"""
-    logger.info("Sniffing source code...")
+    _logger.info("Sniffing source code...")
 
     paths = [
         str(cmk.utils.paths.default_config_dir),
@@ -225,7 +225,7 @@ def _localize_sniff() -> None:
         )
         != 0
     ):
-        logger.error("Failed!\n")
+        _logger.error("Failed!\n")
     else:
         header = r"""# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -246,7 +246,7 @@ msgstr ""
 """
 
         _pot_file().write_text(header + _pot_file().read_text())
-        logger.info("Success! Output: %(output)s", {"output": _pot_file()})
+        _logger.info("Success! Output: %(output)s", {"output": _pot_file()})
 
 
 def _localize_edit(lang: _LanguageName) -> None:
@@ -259,7 +259,7 @@ def _localize_edit(lang: _LanguageName) -> None:
     if subprocess.call([editor, _po_file(lang)]) == 0:
         _localize_compile(lang)
     else:
-        logger.error("Aborted.")
+        _logger.error("Aborted.")
 
 
 def _localize_update(lang: _LanguageName) -> None:
@@ -268,10 +268,10 @@ def _localize_update(lang: _LanguageName) -> None:
     _localize_sniff()
 
     if not _po_file(lang).exists():
-        logger.info("Initializing .po file for language %(lang)s...", {"lang": lang})
+        _logger.info("Initializing .po file for language %(lang)s...", {"lang": lang})
         _localize_init_po(lang)
     else:
-        logger.info("Updating .po file for language %(lang)s...", {"lang": lang})
+        _logger.info("Updating .po file for language %(lang)s...", {"lang": lang})
         _localize_update_po(lang)
 
 
@@ -289,9 +289,9 @@ def _localize_compile(lang: _LanguageName) -> None:
         raise _LocalizeException("The .po file %s does not exist." % po_file)
 
     if subprocess.call(["msgfmt", po_file, "-o", _mo_file(lang)]) != 0:
-        logger.error("Failed!")
+        _logger.error("Failed!")
     else:
-        logger.info("Success! Output: %(output)s", {"output": _mo_file(lang)})
+        _logger.info("Success! Output: %(output)s", {"output": _mo_file(lang)})
 
 
 def _initialize_local_po_file(lang: _LanguageName) -> None:
@@ -304,7 +304,7 @@ def _initialize_local_po_file(lang: _LanguageName) -> None:
             builtin_po_file.read_text(encoding="utf-8"),
             encoding="utf-8",
         )
-        logger.info(
+        _logger.info(
             "Initialize %(po_file)s with the file in the default hierarchy", {"po_file": po_file}
         )
 

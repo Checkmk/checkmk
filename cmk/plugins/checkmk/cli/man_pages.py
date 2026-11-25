@@ -13,10 +13,10 @@ from cmk.cli.internal import OptionalArgument as CLIOptionalArgument
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 
-type Renderer = Literal["console", "nowiki"]
+type _Renderer = Literal["console", "nowiki"]
 
 
-def _parse_renderer(argument: str) -> Renderer:
+def _parse_renderer(argument: str) -> _Renderer:
     match argument:
         case "console":
             return "console"
@@ -37,7 +37,7 @@ _RENDERER_VALUE: Final = CLIValue(
 
 @dataclass(frozen=True, kw_only=True)
 class ManRequest:
-    renderer: Renderer | None
+    renderer: _Renderer | None
     check_type: str | None
 
 

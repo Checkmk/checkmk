@@ -102,13 +102,35 @@ section_cpu() {
 }
 
 section_mem() {
-    echo '<<<mem>>>'
-    echo "MemTotal: $(echo "$(sysctl -n hw.memsize)/1024" | bc) kB"
-    echo "MemFree: $(echo "( $(vm_stat | grep speculative: | awk '{print $3}') + $(vm_stat | grep inactive: | awk '{print $3}') + $(vm_stat | grep free: | awk '{print $3}') ) * $(vm_stat | grep Mach | awk '{print $8}') / 1024" | bc) kB"
-    echo "SwapTotal: 0 kB"
-    echo "SwapFree: 0 kB"
-    # FIXME: Just call vm_stat here, write a check plugin that uses that
-    # navite output of vm_stat
+    # mem_used ("Memory") reads statgrab_mem from Unix agents other than Linux.
+    # The mem section is evaluated for Linux and Windows only.
+    echo '<<<statgrab_mem>>>'
+    vm_stat | awk -v total="$(sysctl -n hw.memsize)" -v swap="$(sysctl -n vm.swapusage)" '
+        function to_bytes(v) {
+            if (v ~ /K$/) return v * 1024
+            if (v ~ /M$/) return v * 1048576
+            if (v ~ /G$/) return v * 1073741824
+            return v + 0
+        }
+        /page size of/ { pagesize = $8 }
+        /^Pages free:/ { free = $3 }
+        /^Pages inactive:/ { inactive = $3 }
+        /^Pages speculative:/ { speculative = $3 }
+        END {
+            n = split(swap, f, " ")
+            for (i = 1; i <= n; i++) {
+                if (f[i] == "total") swap_total = to_bytes(f[i + 2])
+                if (f[i] == "used") swap_used = to_bytes(f[i + 2])
+            }
+            mem_free = (free + inactive + speculative) * pagesize
+            printf "mem.cache 0\n"
+            printf "mem.free %.0f\n", mem_free
+            printf "mem.total %.0f\n", total
+            printf "mem.used %.0f\n", total - mem_free
+            printf "swap.free %.0f\n", swap_total - swap_used
+            printf "swap.total %.0f\n", swap_total
+            printf "swap.used %.0f\n", swap_used
+        }'
 }
 
 section_uptime() {

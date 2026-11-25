@@ -19,6 +19,8 @@ import { gridExtent } from '@/maps/map/static/gridMembers'
 import { gridCaption } from '@/maps/map/static/gridSummary'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 
+import MapGridChip from './MapGridChip.vue'
+
 const i18n = usei18n()
 const { _t } = i18n
 
@@ -47,31 +49,70 @@ const extent = computed(() =>
 )
 
 const box = useTemplateRef<HTMLElement>('box')
-const iconShift = ref({ x: 0, y: 0 })
+
+/**
+ * Where a member's icon is drawn against its slot, and how far its label
+ * reaches beyond the icon on each side, which the frame takes in too.
+ */
+interface MemberShape {
+  x: number
+  y: number
+  left: number
+  right: number
+  top: number
+  bottom: number
+}
+
+const NO_SHAPE: MemberShape = { x: 0, y: 0, left: 0, right: 0, top: 0, bottom: 0 }
+const shape = ref<MemberShape>(NO_SHAPE)
 
 // Measured, not computed: centred with its caption, a member's icon is not on
-// its slot, and how tall the caption is is up to the theme.
-function measuredIconShift(): { x: number; y: number } {
-  const member = props.members[0]
+// its slot, and how large the caption is is up to the theme. The first member
+// drawn stands for all; a filter may hide the others.
+function measuredShape(): MemberShape {
   const canvas = box.value?.closest('.maps-map-canvas')
-  if (!member || !canvas) {
-    return { x: 0, y: 0 }
+  if (!box.value || !canvas) {
+    return NO_SHAPE
   }
-  const own = box.value!.getBoundingClientRect()
-  const drawn = objectIcon(canvas, member.id)?.getBoundingClientRect()
-  if (!drawn || drawn.width === 0) {
-    return { x: 0, y: 0 }
+  for (const member of props.members) {
+    const icon = objectIcon(canvas, member.id)
+    const drawn = icon?.getBoundingClientRect()
+    if (!icon || !drawn || drawn.width === 0) {
+      continue
+    }
+    const own = box.value.getBoundingClientRect()
+    const root = icon.closest('[data-object-id]')
+    // A caption label is placed absolutely, outside its object's box.
+    const reach = [root, root?.querySelector('.maps-map-element-label')]
+      .filter((element) => element instanceof Element)
+      .map((element) => element.getBoundingClientRect())
+    return {
+      x: drawn.left - own.left - (member.x - props.grid.x) * canvasScale.value.sx,
+      y: drawn.top - own.top - (member.y - props.grid.y) * canvasScale.value.sy,
+      left: Math.max(0, ...reach.map((r) => drawn.left - r.left)),
+      right: Math.max(0, ...reach.map((r) => r.right - drawn.right)),
+      top: Math.max(0, ...reach.map((r) => drawn.top - r.top)),
+      bottom: Math.max(0, ...reach.map((r) => r.bottom - drawn.bottom))
+    }
   }
-  return {
-    x: drawn.left - own.left - (member.x - props.grid.x) * canvasScale.value.sx,
-    y: drawn.top - own.top - (member.y - props.grid.y) * canvasScale.value.sy
-  }
+  return NO_SHAPE
+}
+
+function sameShape(a: MemberShape, b: MemberShape): boolean {
+  return (
+    a.x === b.x &&
+    a.y === b.y &&
+    a.left === b.left &&
+    a.right === b.right &&
+    a.top === b.top &&
+    a.bottom === b.bottom
+  )
 }
 
 function remeasure(): void {
-  const shift = measuredIconShift()
-  if (shift.x !== iconShift.value.x || shift.y !== iconShift.value.y) {
-    iconShift.value = shift
+  const measured = measuredShape()
+  if (!sameShape(measured, shape.value)) {
+    shape.value = measured
   }
 }
 
@@ -80,6 +121,9 @@ watch(
   [
     () => props.grid.label,
     () => props.grid.display,
+    // The members' label is as wide as a column.
+    () => props.grid.grid_offset_x,
+    () => props.grid.grid_per_row,
     () => props.members.length > 0,
     () => props.iconSize,
     canvasScale
@@ -92,14 +136,14 @@ onMounted(remeasure)
 // Grows upwards from the frame's bottom edge, so it also takes in the caption
 // above, where the selection's toolbar has to go instead.
 const extentStyle = computed(() => ({
-  left: `calc(-1 * ${FRAME_PADDING})`,
-  bottom: `calc(${props.iconSize - extent.value.height}px - ${FRAME_PADDING})`,
-  transform: `translate(${iconShift.value.x}px, ${iconShift.value.y}px)`
+  left: `calc(${-shape.value.left}px - ${FRAME_PADDING})`,
+  bottom: `calc(${props.iconSize - extent.value.height - shape.value.bottom}px - ${FRAME_PADDING})`,
+  transform: `translate(${shape.value.x}px, ${shape.value.y}px)`
 }))
 
 const frameStyle = computed(() => ({
-  width: `calc(${extent.value.width}px + 2 * ${FRAME_PADDING})`,
-  height: `calc(${extent.value.height}px + 2 * ${FRAME_PADDING})`
+  width: `calc(${extent.value.width + shape.value.left + shape.value.right}px + 2 * ${FRAME_PADDING})`,
+  height: `calc(${extent.value.height + shape.value.top + shape.value.bottom}px + 2 * ${FRAME_PADDING})`
 }))
 
 const caption = computed(() => gridCaption(i18n, props.grid, props.state, props.members.length))
@@ -112,7 +156,7 @@ const caption = computed(() => gridCaption(i18n, props.grid, props.state, props.
     :style="{ width: `${iconSize}px`, height: `${iconSize}px` }"
   >
     <div class="maps-map-grid-frame__extent" data-object-anchor :style="extentStyle">
-      <span class="maps-map-grid-frame__chip">{{ caption }}</span>
+      <MapGridChip class="maps-map-grid-frame__chip">{{ caption }}</MapGridChip>
       <div
         class="maps-map-grid-frame__frame"
         :class="{
@@ -169,12 +213,5 @@ const caption = computed(() => gridCaption(i18n, props.grid, props.state, props.
 
 .maps-map-grid-frame__chip {
   pointer-events: auto;
-  margin-bottom: var(--dimension-2);
-  padding: var(--dimension-1) var(--dimension-3);
-  border-radius: var(--border-radius);
-  background: var(--ux-theme-3);
-  color: var(--font-color);
-  font-size: var(--font-size-small);
-  white-space: nowrap;
 }
 </style>

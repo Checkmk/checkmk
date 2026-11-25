@@ -23,6 +23,7 @@ import MapMarqueeBox from '@/maps/map/components/MapMarqueeBox.vue'
 import MapZoomResetPill from '@/maps/map/components/MapZoomResetPill.vue'
 import { useMapMotion } from '@/maps/map/composables/useMapMotion'
 import { useMapObjectMenus } from '@/maps/map/composables/useMapObjectMenus'
+import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
 import { useObjectResize } from '@/maps/map/composables/useObjectResize'
 import { useRovingFocus } from '@/maps/map/composables/useRovingFocus'
 import { providePulseCount } from '@/maps/map/elements/composables/pulseCount'
@@ -36,6 +37,7 @@ import { useCanvasObjectDrag } from '@/maps/map/static/composables/useCanvasObje
 import { useCanvasPan } from '@/maps/map/static/composables/useCanvasPan'
 import { CANVAS_SCALE, useCanvasViewport } from '@/maps/map/static/composables/useCanvasViewport'
 import { useGridResize } from '@/maps/map/static/composables/useGridResize'
+import { useGridReveal } from '@/maps/map/static/composables/useGridReveal'
 import { editTargetOf, gridLabelWidths, memberLabelWidth } from '@/maps/map/static/gridMembers'
 import { useSettings } from '@/maps/services/context'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
@@ -200,6 +202,11 @@ const drag = useCanvasObjectDrag({
 const resize = useObjectResize({
   surface: () => canvas.value,
   centering: () => ({ x: !classic.value, y: !classic.value })
+})
+
+const gridReveal = useGridReveal({
+  objects: () => props.config.objects,
+  shown: () => layout.placedObjects.value
 })
 
 const gridResize = useGridResize({
@@ -412,6 +419,21 @@ function onObjectPointerDown(event: PointerEvent, object: MapElement): void {
   }
 }
 
+function onObjectHover(object: MapElement, event: MouseEvent, anchor: HoverAnchorRect | null) {
+  if (props.editMode) {
+    return
+  }
+  gridReveal.enter(object)
+  menus.openHover(object, event, { anchorRect: anchor })
+}
+
+function onObjectHoverLeave(): void {
+  gridReveal.leave()
+  if (!props.editMode) {
+    menus.hover.scheduleClose()
+  }
+}
+
 function onObjectActivate(object: MapElement, event?: MouseEvent): void {
   // A press that turned into a real move is not a click on the object.
   if (props.preview || drag.moved()) {
@@ -504,6 +526,19 @@ defineExpose({
       </g>
     </svg>
 
+    <!-- Before the objects, so they stay on top of the frame they share a layer with. -->
+    <MapCanvasObject
+      v-if="gridReveal.grid.value && !editMode && !preview"
+      inert
+      :object="gridReveal.grid.value"
+      :states="states"
+      :config="config"
+      :fallback-icon-size="iconSizes.fallback"
+      :icon-size-override="iconSizeOverride"
+      :box-style="layout.objectStyle(gridReveal.grid.value)"
+      display-only
+    />
+
     <MapCanvasObject
       v-for="object in layout.placedObjects.value"
       :key="object.id"
@@ -524,10 +559,8 @@ defineExpose({
       @activate="onObjectActivate(object, $event)"
       @double-click="emit('object-dblclick', object)"
       @context-menu="menus.openContext(object, $event)"
-      @hover="
-        (event, anchor) => !editMode && menus.openHover(object, event, { anchorRect: anchor })
-      "
-      @hover-leave="!editMode && menus.hover.scheduleClose()"
+      @hover="(event, anchor) => onObjectHover(object, event, anchor)"
+      @hover-leave="onObjectHoverLeave"
       @resize-start="resize.begin($event, object)"
       @grid-resize-start="(event, members) => gridResize.begin(event, object, members)"
       @subtree-enter="

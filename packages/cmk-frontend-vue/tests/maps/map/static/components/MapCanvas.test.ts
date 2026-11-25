@@ -492,3 +492,34 @@ describe('MapCanvas – resizing a grid', () => {
     expect(emitted()['grid-resize-end']).toEqual([['g', 1]])
   })
 })
+
+describe('MapCanvas – a grid outside the editor', () => {
+  const member = (name: string, x: number): MapElement =>
+    anObject({ id: `auto:grid:g:${name}`, type: 'host', host_name: name, grid_id: 'g', x, y: 100 })
+
+  const config = aMap({
+    ...sampleConfig,
+    objects: [
+      anObject({ id: 'g', type: 'grid', x: 100, y: 100, grid_per_row: 2, grid_offset_x: 50 }),
+      member('a', 100),
+      member('b', 150)
+    ]
+  })
+
+  it('shows the frame of a grid while the pointer is on its objects', async () => {
+    const user = userEvent.setup()
+    render(MapCanvas, {
+      props: { ...baseProps, config, states: {} },
+      global: mapsGlobal(overlayStubs)
+    })
+    expect(screen.queryByText('Grid · 2 hosts')).toBeNull()
+    // The pointer is on the object where it is drawn, inside its box.
+    const drawn = screen.getByRole('button', { name: /^a,/ }).firstElementChild!
+
+    await user.hover(drawn)
+    expect(screen.getByText('Grid · 2 hosts')).toBeInTheDocument()
+
+    await user.unhover(drawn)
+    await waitFor(() => expect(screen.queryByText('Grid · 2 hosts')).toBeNull())
+  })
+})

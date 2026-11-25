@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { onUnmounted } from 'vue'
+import { onScopeDispose } from 'vue'
 
 /**
  * Close-grace for hover popups with clickable content (HoverMenu pills):
@@ -39,7 +39,7 @@ export function useHoverGrace(close: () => void, delayMs = 200) {
     close()
   }
 
-  onUnmounted(cancelClose)
+  onScopeDispose(cancelClose)
 
   return { scheduleClose, cancelClose, closeNow }
 }

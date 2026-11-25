@@ -57,6 +57,7 @@ import PositionSection from '@/maps/map/edit/properties/sections/PositionSection
 import TemplatesSection from '@/maps/map/edit/properties/sections/TemplatesSection.vue'
 import TextboxSection from '@/maps/map/edit/properties/sections/TextboxSection.vue'
 import { objectIconSize } from '@/maps/map/objectIconSize'
+import { gridSummary } from '@/maps/map/static/gridSummary'
 import { SETTINGS_DEFAULTS } from '@/maps/services/AuthoringSettingsService'
 import MapsConfirmDialog from '@/maps/shared/components/MapsConfirmDialog.vue'
 import MapsUnsavedChangesDialog from '@/maps/shared/components/MapsUnsavedChangesDialog.vue'
@@ -64,7 +65,7 @@ import { useEscapeClose } from '@/maps/shared/composables/useEscapeClose'
 import { useFocusReturn } from '@/maps/shared/composables/useFocusReturn'
 import type { MapElement, MapViewType, ObjectState } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
-import { objectDeleteTitle, objectTypeLabel } from '@/maps/utils/dropdownOptions'
+import { gridMemberCount, objectDeleteTitle, objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import type { FilterRefusal } from '@/maps/utils/formValidation'
 import { buildCheckmkViewUrl } from '@/maps/utils/mapNavigation'
 import { leavesOutMembers } from '@/maps/utils/memberFilter'
@@ -244,7 +245,17 @@ function discard(): void {
   emit('close', how)
 }
 
-const displayName = computed(() => getMapElementName(props.object) ?? '')
+// A grid has no name of its own; what it shows tells it apart.
+const displayName = computed(() =>
+  props.object.type === 'grid'
+    ? gridSummary(
+        i18n,
+        props.object,
+        props.state,
+        gridMemberCount(props.object, props.mapObjects ?? [])
+      )
+    : (getMapElementName(props.object) ?? '')
+)
 
 /** The object's own page in Checkmk, offered as the link field's default. */
 const autoUrl = computed((): string | null => {

@@ -141,6 +141,15 @@ describe('ObjectPropertiesModal – conditional fields by object type', () => {
     expect(screen.queryByText('dyngroup')).not.toBeInTheDocument()
   })
 
+  it('heads a grid, which has no name, with what it shows', () => {
+    const grid = obj({ type: 'grid', id: 'g' })
+    const member = anObject({ id: 'auto:grid:g:web', type: 'host', host_name: 'web', grid_id: 'g' })
+
+    renderModal(grid, { mapObjects: [grid, member] })
+
+    expect(screen.getByText('1 host')).toBeInTheDocument()
+  })
+
   it('renders the dyngroup host/service choice + livestatus filter fields', () => {
     renderModal(obj({ type: 'dyngroup' }))
 

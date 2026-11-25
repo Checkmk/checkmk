@@ -17,7 +17,8 @@ export function gridCaption(
   return `${objectTypeLabel('grid', i18n._t)} · ${gridSummary(i18n, grid, state, shown)}`
 }
 
-function gridSummary(
+/** What a grid shows: how many objects, or why not. */
+export function gridSummary(
   { _t, _tn }: I18n,
   grid: MapElement,
   state: ObjectState | undefined,

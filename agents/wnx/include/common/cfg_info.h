@@ -13,6 +13,7 @@
 #include <chrono>
 #include <filesystem>
 #include <string>
+#include <string_view>
 
 #include "common/cfg_yaml.h"
 #include "common/yaml.h"
@@ -90,6 +91,16 @@ constexpr int kDefaultPluginTimeout = 60;  // seconds
 constexpr int kDefaultWinPerfTimeout = 10;  // seconds
 constexpr bool kDefaultWinPerfFork = true;
 constexpr bool kDefaultWinPerfTrace = false;
+
+/// The value that removes an entry of a merged sequence
+///
+/// Sequences of named entries, such as the winperf counters, are merged
+/// across the configuration files instead of being overridden, so a later
+/// file cannot drop what an earlier one set. It gives the name this value
+/// instead, and the marker takes the place of the entry of that name. The
+/// consumer of the sequence leaves the marker out. A file read later still
+/// wins: an entry of that name takes the marker back.
+constexpr std::string_view kDisableMarker{"$DISABLE"};
 
 // #TODO Probably deprecated
 constexpr int kDefaultAgentMaxWait = 15;  // max time agent waits for a sections

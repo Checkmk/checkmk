@@ -164,7 +164,8 @@ winperf:
     # Format:
     # - id:name
     # where id is OS counter and name is part of CHECK_MK Header
-    # if name is -, then such counter will be skipped
+    # if name is $DISABLE, then the counter with this id is not monitored,
+    # also when another config file asks for it
     counters:
         - 234: phydisk
         - 510: if

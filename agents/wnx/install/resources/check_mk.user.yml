@@ -199,10 +199,12 @@ winperf:
     # Format:
     # - id:name
     # where id is OS counter and name is part of CHECK_MK Header
+    # if name is $DISABLE, then the counter with this id is not monitored,
+    # also when another config file asks for it
     counters:
         #- 638: tcp_conn
         #- Terminal Services: ts_sessions
-        #- 234: -  # exclude 234 counter from monitoring
+        #- 234: $DISABLE  # exclude the 234 counter from monitoring
 
 _logfiles:
     enabled: no

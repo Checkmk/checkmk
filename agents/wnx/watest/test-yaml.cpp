@@ -1044,6 +1044,111 @@ TEST(AgentConfig, MergeSeqOverride) {
     EXPECT_EQ(table[1], LW_USER_SYS);
 }
 
+namespace {
+/// Merge winperf counter sequences in pairs, as the agent merges the files
+///
+/// Returns the result as "id:name" entries. The caller passes the sequence of
+/// the root config first, then the sequence of every file that follows.
+std::vector<std::string> MergeCounters(
+    const std::vector<std::string> &counter_sequences) {
+    auto target = YAML::Load("counters:\n" + counter_sequences.front());
+    for (size_t i = 1; i < counter_sequences.size(); ++i) {
+        const auto source = YAML::Load("counters:\n" + counter_sequences[i]);
+        details::CombineSequence("counters", target["counters"],
+                                 source["counters"], details::Combine::merge);
+    }
+
+    std::vector<std::string> entries;
+    for (const auto &entry : target["counters"]) {
+        const auto it = entry.begin();
+        entries.emplace_back(it->first.as<std::string>() + ":" +
+                             it->second.as<std::string>());
+    }
+    return entries;
+}
+}  // namespace
+
+TEST(AgentConfig, MergeSeqCombineKeepsTarget) {
+    EXPECT_EQ(MergeCounters({"  - 234: phydisk\n",
+                             "  - 234: disk\n"
+                             "  - 510: if\n"}),
+              (std::vector<std::string>{"234:phydisk", "510:if"}))
+        << "the target wins on a duplicate name, the source only adds";
+}
+
+TEST(AgentConfig, MergeSeqCombineDisableFromSource) {
+    EXPECT_EQ(MergeCounters({"  - 234: phydisk\n"
+                             "  - 238: processor\n",
+                             "  - 234: $DISABLE\n"}),
+              (std::vector<std::string>{"238:processor", "234:$DISABLE"}))
+        << "the source removes the entry of the target, the marker remains";
+}
+
+TEST(AgentConfig, MergeSeqCombineDisableFromTarget) {
+    EXPECT_EQ(MergeCounters({"  - 234: $DISABLE\n"
+                             "  - 238: processor\n",
+                             "  - 234: phydisk\n"}),
+              (std::vector<std::string>{"238:processor", "234:phydisk"}))
+        << "the source takes the marker of the target back";
+}
+
+TEST(AgentConfig, MergeSeqCombineDisableInTargetAlone) {
+    EXPECT_EQ(
+        MergeCounters({"  - 234: $DISABLE\n"
+                       "  - 238: processor\n",
+                       "  - 510: if\n"}),
+        (std::vector<std::string>{"234:$DISABLE", "238:processor", "510:if"}))
+        << "the marker stays when the source does not name it";
+}
+
+TEST(AgentConfig, MergeSeqCombineDisableUnknownName) {
+    EXPECT_EQ(
+        MergeCounters({"  - 238: processor\n",
+                       "  - 234: $DISABLE\n"
+                       "  - 510: if\n"}),
+        (std::vector<std::string>{"238:processor", "234:$DISABLE", "510:if"}))
+        << "a marker for a name nobody defines adds no counter";
+}
+
+TEST(AgentConfig, MergeSeqCombineDisableEverything) {
+    EXPECT_EQ(MergeCounters({"  - 234: phydisk\n", "  - 234: $DISABLE\n"}),
+              (std::vector<std::string>{"234:$DISABLE"}))
+        << "the last counter can be removed too";
+}
+
+TEST(AgentConfig, MergeSeqCombineDisableBesideCounterInSource) {
+    EXPECT_EQ(MergeCounters({"  - 234: phydisk\n",
+                             "  - 234: phydisk\n"
+                             "  - 234: $DISABLE\n"}),
+              (std::vector<std::string>{"234:phydisk", "234:$DISABLE"}))
+        << "a marker of the source reaches the result beside the counter, "
+           "and the consumer drops every entry of a marked name";
+}
+
+TEST(AgentConfig, MergeSeqCombineDisableBeforeCounterInSource) {
+    EXPECT_EQ(MergeCounters({"  - 234: phydisk\n",
+                             "  - 234: $DISABLE\n"
+                             "  - 234: phydisk\n"}),
+              (std::vector<std::string>{"234:$DISABLE"}))
+        << "the order of the entries inside a file does not decide";
+}
+
+TEST(AgentConfig, MergeSeqCombineDisableTakenBackByNextFile) {
+    EXPECT_EQ(MergeCounters({"  - 234: phydisk\n",    // root
+                             "  - 234: $DISABLE\n",   // bakery
+                             "  - 234: phydisk\n"}),  // user
+              (std::vector<std::string>{"234:phydisk"}))
+        << "the file after the marker decides";
+}
+
+TEST(AgentConfig, MergeSeqCombineDisableInLastFileWins) {
+    EXPECT_EQ(MergeCounters({"  - 234: phydisk\n",     // root
+                             "  - 234: phydisk\n",     // bakery
+                             "  - 234: $DISABLE\n"}),  // user
+              (std::vector<std::string>{"234:$DISABLE"}))
+        << "no file follows the marker, so it holds";
+}
+
 static std::string node_text =
     "global:\n"
     "  execute: []\n"  // expected clean

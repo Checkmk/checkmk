@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <ranges>
 #include <string>
+#include <unordered_set>
 
 #include "common/cfg_info.h"
 #include "common/wtools.h"
@@ -230,9 +231,23 @@ void WinPerf::loadFromMainConfig() {
     fork_ = GetWinPerfVal(vars::kWinPerfFork, cfg::kDefaultWinPerfFork);
     trace_ = GetWinPerfVal(vars::kWinPerfTrace, cfg::kDefaultWinPerfTrace);
     enabled_in_cfg_ = GetWinPerfVal(vars::kEnabled, exist_in_cfg_.load());
-    auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
+    const auto counters =
+        GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
+
+    std::unordered_set<std::string> disabled;
     for (const auto &[id, name] : counters) {
-        counters_.emplace_back(id, name);
+        if (name == kDisableMarker) {
+            XLOG::d.i("Counter '{}' is switched off by the config", id);
+            disabled.emplace(id);
+        }
+    }
+
+    for (const auto &[id, name] : counters) {
+        // The marker drops the entry that carries it too, so the name of a
+        // disabled counter never reaches the command line.
+        if (!disabled.contains(id)) {
+            counters_.emplace_back(id, name);
+        }
     }
 }
 

@@ -95,6 +95,61 @@ TEST(WinPerf, BuildCommandLine) {
         << "validate fabric yaml";
 }
 
+namespace {
+/// Build a config that holds nothing but the given 'counters' entries
+std::string MakeWinPerfConfig(std::string_view counters) {
+    return "global:\n"
+           "  enabled: yes\n"
+           "winperf:\n"
+           "  enabled: yes\n"
+           "  counters:\n" +
+           std::string{counters};
+}
+}  // namespace
+
+TEST(WinPerf, DisabledCounterIsNotLoaded) {
+    const auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+    ASSERT_TRUE(
+        temp_fs->loadContent(MakeWinPerfConfig("    - 234: phydisk\n"
+                                               "    - 510: if\n"
+                                               "    - 234: $DISABLE\n")));
+
+    EXPECT_EQ(cfg::groups::g_winperf.countersCount(), 1U)
+        << "the marker drops the entry that carries it too";
+    EXPECT_EQ(cfg::groups::g_winperf.buildCmdLine(), L"510:if");
+}
+
+TEST(WinPerf, DisabledCounterIsNotLoadedWhenMarkerComesFirst) {
+    const auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+    ASSERT_TRUE(
+        temp_fs->loadContent(MakeWinPerfConfig("    - 234: $DISABLE\n"
+                                               "    - 234: phydisk\n"
+                                               "    - 510: if\n")));
+
+    EXPECT_EQ(cfg::groups::g_winperf.buildCmdLine(), L"510:if")
+        << "the files are merged, so the marker may precede the entry";
+}
+
+TEST(WinPerf, DisabledCounterByNameIsNotLoaded) {
+    const auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+    ASSERT_TRUE(temp_fs->loadContent(
+        MakeWinPerfConfig("    - Terminal Services: ts_sessions\n"
+                          "    - Terminal Services: $DISABLE\n")));
+
+    EXPECT_TRUE(cfg::groups::g_winperf.buildCmdLine().empty())
+        << "an id may be a counter name as well as a number";
+}
+
+TEST(WinPerf, MarkerForUnknownCounterChangesNothing) {
+    const auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+    ASSERT_TRUE(
+        temp_fs->loadContent(MakeWinPerfConfig("    - 234: phydisk\n"
+                                               "    - 510: if\n"
+                                               "    - 999: $DISABLE\n")));
+
+    EXPECT_EQ(cfg::groups::g_winperf.buildCmdLine(), L"234:phydisk 510:if");
+}
+
 TEST(WinPerf, MakeWinPerfStamp) {
     const auto x = details::MakeWinPerfStamp(0);
     const auto table = tools::SplitString(x, " ");

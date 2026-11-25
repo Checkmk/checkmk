@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <ranges>
 #include <string>
+#include <unordered_set>
 
 #include "common/cfg_info.h"
 #include "common/object_repo.h"
@@ -1421,6 +1422,96 @@ std::string GetMapNodeName(const YAML::Node &node) {
         return {};
     }
 }
+
+/// Return the value of a single key/value map node, empty when there is none
+std::string GetMapNodeValue(const YAML::Node &node) {
+    try {
+        if (!IsYamlMap(node)) {
+            return {};
+        }
+        return node.begin()->second.as<std::string>();
+    } catch (const std::exception &e) {
+        XLOG::l(XLOG_FUNC + " Exception on conversion '{}'", e.what());
+        return {};
+    }
+}
+
+/// Add the names a sequence gives the disable marker to the set
+void CollectMarkedNames(const YAML::Node &value,
+                        std::unordered_set<std::string> &marked) {
+    for (const auto &entry : value) {
+        if (GetMapNodeValue(entry) != kDisableMarker) {
+            continue;
+        }
+        auto name = GetMapNodeName(entry);
+        if (!name.empty()) {
+            marked.emplace(std::move(name));
+        }
+    }
+}
+
+/// Return the names a sequence defines
+std::unordered_set<std::string> CollectNames(const YAML::Node &value) {
+    std::unordered_set<std::string> names;
+    for (const auto &entry : value) {
+        auto name = GetMapNodeName(entry);
+        if (!name.empty()) {
+            names.emplace(std::move(name));
+        }
+    }
+    return names;
+}
+
+/// Check whether the merged sequence already carries an entry of that name
+bool HasName(const YAML::Node &merged, const std::string &name) {
+    return rs::any_of(merged, [&name](const YAML::Node &node) {
+        return name == GetMapNodeName(node);
+    });
+}
+
+/// Merge two sequences of named entries, honouring the disable marker
+///
+/// An entry the target already carries keeps the value of the target, as
+/// before, and the source only adds a name the target does not have. The
+/// disable marker is the exception: when either file gives a name that
+/// value, the entry of the source replaces the entry of the target. The file
+/// read later therefore decides, and the file that follows a marker can take
+/// the marker back.
+///
+/// A marker of the source always reaches the result, even beside an entry of
+/// the same name that the source lists before it. The order of the entries
+/// inside a file must not decide, and the consumer drops every entry of a
+/// marked name.
+///
+/// The configuration files are merged in pairs, root with bakery and that
+/// result with user, so the marker has to stay in the merged sequence to
+/// reach the second merge. The consumer of the sequence leaves the marker
+/// out, see WinPerf::loadFromMainConfig.
+YAML::Node MergeNamedSequences(const YAML::Node &target_value,
+                               const YAML::Node &source_value) {
+    std::unordered_set<std::string> marked;
+    CollectMarkedNames(target_value, marked);
+    CollectMarkedNames(source_value, marked);
+    const auto source_names = CollectNames(source_value);
+
+    YAML::Node merged{YAML::NodeType::Sequence};
+    for (const auto &entry : target_value) {
+        const auto name = GetMapNodeName(entry);
+        if (!marked.contains(name) || !source_names.contains(name)) {
+            merged.push_back(entry);
+        }
+    }
+
+    for (const auto &entry : source_value) {
+        const auto name = GetMapNodeName(entry);
+        if (name.empty() || (HasName(merged, name) &&
+                             GetMapNodeValue(entry) != kDisableMarker)) {
+            continue;
+        }
+        merged.push_back(entry);
+    }
+    return merged;
+}
 }  // namespace
 
 Combine GetCombineMode(std::string_view name) {
@@ -1461,18 +1552,7 @@ void CombineSequence(std::string_view name, YAML::Node target_value,
         // special case when we are merging some sequences from
         // different files
         case Combine::merge:
-            for (const auto &entry : source_value) {
-                auto s_name = GetMapNodeName(entry);
-                if (s_name.empty()) {
-                    continue;
-                }
-
-                if (rs::none_of(target_value, [s_name](const YAML::Node &node) {
-                        return s_name == GetMapNodeName(node);
-                    })) {
-                    target_value.push_back(entry);
-                }
-            }
+            target_value = MergeNamedSequences(target_value, source_value);
             break;
 
         // by logfiles

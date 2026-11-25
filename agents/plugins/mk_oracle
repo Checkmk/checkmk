@@ -2405,7 +2405,7 @@ do_custom_sqls() {
         else
             if [ -z "$max_cache_age" ]; then
                 local output=
-                output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_custom_sqls" "yes")
+                output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_custom_sqls" "yes" "yes")
                 handle_custom_sql_errors "$output"
             else
                 run_cached "$max_cache_age" do_async_custom_sqls "_custom_sql_${MK_CUSTOM_SQLS_SECTION}" "$section_name"
@@ -2439,7 +2439,7 @@ custom_sql_section() {
 
 do_async_custom_sqls() {
     local output=
-    output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_async_custom_sqls" "yes")
+    output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_async_custom_sqls" "yes" "yes")
     logging "[${MK_SID}] [${MK_CUSTOM_SQLS_SECTION_QUERY}] [do_async_custom_sql]" "Output: $output"
     handle_custom_sql_errors "$output"
 }
@@ -2924,6 +2924,7 @@ mk_ora_sqlplus() {
     function_stdin="$(cat)"
     local from_where="$1"
     local print_elapsed_time="$2"
+    local interpret_backslashes="$3"
     local start_time=
     local elapsed_time=
     local output=
@@ -2964,7 +2965,12 @@ EOM
     fi
 
     if output=$(echo "$pipe_input" | $EXECUTION_MODE "\"$SQLPLUS\" -L -s /nolog"); then
-        echo -e "$output"
+        if [ "$interpret_backslashes" = "yes" ]; then
+            # Custom SQLs may rely on sequences like \n in their output being interpreted.
+            echo -e "$output"
+        else
+            printf '%s\n' "$output"
+        fi
 
         elapsed_time=$(bc <<<"$(perl -MTime::HiRes=time -wle 'print time')-$start_time")
 
@@ -2976,7 +2982,7 @@ EOM
 
     else
         output=$(
-            echo -e "$output" | "${GREP}" -v "^ERROR at line" | tr '\n' ' ' |
+            printf '%s\n' "$output" | "${GREP}" -v "^ERROR at line" | tr '\n' ' ' |
                 sed "s/^/$(echo "$MK_SID" | tr '[:lower:]' '[:upper:]')|FAILURE|/"
             echo
         )
@@ -2985,11 +2991,11 @@ EOM
 
         if $MK_ORA_DEBUG_CONNECT; then
             echo "    Logindetails:           ${MK_DB_CONNECT}" >&2
-            echo -e "    Error Message:          ${output:0:100}"
+            printf '%s\n' "    Error Message:          ${output:0:100}"
             exit 1
         else
             echo '<<<oracle_instance:sep(124)>>>'
-            echo -e "$output"
+            printf '%s\n' "$output"
             echo
         fi
     fi

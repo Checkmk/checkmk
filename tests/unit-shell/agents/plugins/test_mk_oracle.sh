@@ -916,5 +916,71 @@ test_mk_oracle_sid_matches_defined_sids() {
     assertFalse "sid_matches_defined_sids $'some\nprefixed_value\nhere' value"
 }
 
+setup_sqlplus_result() {
+    local exit_code="$1"
+    local sqlplus_output="$2"
+
+    TNS_ADMIN=${SHUNIT_TMPDIR}/tns_admin
+    mkdir -p "${TNS_ADMIN}"
+    touch "${TNS_ADMIN}/sqlnet.ora"
+    # shellcheck disable=SC2034 # variable appears unused
+    NUMERIC_ORACLE_VERSION=190
+    # shellcheck disable=SC2034 # variable appears unused
+    MK_SID="ut_sid"
+    printf '%s\n' "$sqlplus_output" >"${SHUNIT_TMPDIR}/sqlplus_output"
+    cat <<EOF >"${FAKE_SQLPLUS}"
+cat >/dev/null
+cat "${SHUNIT_TMPDIR}/sqlplus_output"
+exit ${exit_code}
+EOF
+}
+
+run_unstubbed() {
+    local command=("$@")
+
+    # oneTimeSetUp replaces some plugin functions with stubs. Sourcing the
+    # plugin again brings the real ones back, so call this in a subshell only.
+    set --
+    # shellcheck disable=SC1090
+    MK_SOURCE_ONLY=true . "$MK_ORACLE_PLUGIN_PATH"
+    "${command[@]}"
+}
+
+test_mk_oracle_sqlplus_output_keeps_backslashes() {
+    local sqlplus_output='<<<oracle_tablespaces:sep(124)>>>
+UT_SID|C:\temp\new\control01.dbf|USERS
+UT_SID|C:\temp\after.dbf|DATA'
+    setup_sqlplus_result 0 "$sqlplus_output"
+
+    local actual
+    actual=$(echo "select 1 from dual;" | run_unstubbed mk_ora_sqlplus "unit_test")
+
+    assertEquals "$sqlplus_output" "$actual"
+}
+
+test_mk_oracle_sqlplus_failure_keeps_backslashes() {
+    local datafile='C:\temp\new\control01.dbf'
+    setup_sqlplus_result 1 "ERROR at line 1:
+ORA-01110: data file 5: '${datafile}'"
+
+    local actual
+    actual=$(echo "select 1 from dual;" | run_unstubbed mk_ora_sqlplus "unit_test")
+
+    assertEquals "<<<oracle_instance:sep(124)>>>
+UT_SID|FAILURE|ORA-01110: data file 5: '${datafile}' " "$actual"
+}
+
+test_mk_oracle_custom_sql_output_interprets_backslashes() {
+    setup_sqlplus_result 0 'details:first\nlong:second'
+    # shellcheck disable=SC2034 # variable appears unused
+    local MK_CUSTOM_SQLS_SECTION_QUERY="select 1 from dual;"
+
+    local actual
+    actual=$(run_unstubbed do_async_custom_sqls | grep -v '^elapsed:')
+
+    assertEquals 'details:first
+long:second' "$actual"
+}
+
 # shellcheck disable=SC1090 # Can't follow
 . "$UNIT_SH_SHUNIT2"

@@ -13,15 +13,19 @@ export type DrillUpTarget = 'history' | URL | null
 export const IFRAME_DASHBOARD_URL_PARAM = 'drill_down_source_url'
 
 /**
- * Back in the tab's history if it has one, else to the referrer, as in a tab the link opened.
- * Without either, the way back is lost. The referrer comes from outside, so only a page of this
- * site qualifies.
+ * Only a click on a page of this site leaves a referrer that qualifies; the referrer comes from
+ * outside, so no other page does. With one, back in the tab's history if it has one, else to the
+ * referrer, as in a tab the link opened. A pasted, typed or bookmarked link has none: whatever
+ * history its tab has leads elsewhere, so it offers no way back.
  */
 export function drillUpTarget(
   historyLength: number,
   referrer: string,
   pageUrl: string
 ): DrillUpTarget {
+  if (sameOriginUrl(referrer, pageUrl) === null) {
+    return null
+  }
   return historyLength > 1 ? 'history' : referringPage(referrer, pageUrl)
 }
 

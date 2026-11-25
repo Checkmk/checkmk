@@ -285,10 +285,11 @@ Code:
 
 - A drill-down URL carries the title of the page it left.
 - The target page then shows a button back to that page in its header.
+- The button shows only when a click on a page of the same site led here. A
+  pasted, typed or bookmarked link shows none.
 - The button goes back in the tab's history.
 - If the drill-down opened a new tab, the button leads to the referring page of
   the same site instead.
-- Without either, the page shows no button.
 - For a column link in an embedded view, the dashboard hands the view its own
   URL, so the way back leads to the dashboard.
 

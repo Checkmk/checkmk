@@ -32,6 +32,14 @@ describe('drillUpTarget', () => {
     expect(drillUpTarget(1, '', PAGE)).toBeNull()
   })
 
+  it('offers no way back from a pasted link, even in a tab with history', () => {
+    expect(drillUpTarget(2, '', PAGE)).toBeNull()
+  })
+
+  it('offers no way back from a link on another site, even in a tab with history', () => {
+    expect(drillUpTarget(2, 'https://evil.example/', PAGE)).toBeNull()
+  })
+
   it('opens no page of another site', () => {
     expect(drillUpTarget(1, 'https://evil.example/', PAGE)).toBeNull()
   })

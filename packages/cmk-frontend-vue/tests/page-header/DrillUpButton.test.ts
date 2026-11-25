@@ -29,8 +29,10 @@ describe('DrillUpButton', () => {
     Object.defineProperty(window, 'location', { configurable: true, value: originalLocation })
   })
 
-  it('goes back in the history of the tab', async () => {
+  it('goes back in the history of a tab a click led to', async () => {
     withHistory(2)
+    referredBy(DASHBOARD)
+    Object.defineProperty(window, 'location', { configurable: true, value: { href: PAGE } })
     const back = vi.spyOn(History.prototype, 'back').mockImplementation(() => {})
     render(DrillUpButton, { props: { title: 'Overview' } })
 

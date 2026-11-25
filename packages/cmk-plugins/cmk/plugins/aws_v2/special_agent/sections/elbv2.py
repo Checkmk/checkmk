@@ -338,6 +338,8 @@ class ELBv2Application(AWSSectionCloudwatch):
         for idx, (load_balancer_dns_name, load_balancer) in enumerate(
             colleague_contents.content.items()
         ):
+            if load_balancer.get("Type") != "application":
+                continue
             load_balancer_dim = _elbv2_load_balancer_arn_to_dim(load_balancer["LoadBalancerArn"])
             for metric_name, stat in [
                 ("ActiveConnectionCount", "Sum"),
@@ -570,6 +572,8 @@ class ELBv2Network(AWSSectionCloudwatch):
         for idx, (load_balancer_dns_name, load_balancer) in enumerate(
             colleague_contents.content.items()
         ):
+            if load_balancer.get("Type") != "network":
+                continue
             load_balancer_dim = _elbv2_load_balancer_arn_to_dim(load_balancer["LoadBalancerArn"])
             for metric_name, stat in [
                 ("ActiveFlowCount", "Average"),

@@ -54,10 +54,26 @@ LOAD_BALANCER_HOSTS = {
     ),
 }
 
+LOAD_BALANCER_TYPES = {
+    "LoadBalancerName-0": "application",
+    "LoadBalancerName-1": "network",
+    "LoadBalancerName-2": "application",
+}
+
+
+def _hosts_of_type(names: Sequence[str], load_balancer_type: str) -> list[TargetHost]:
+    return sorted(
+        LOAD_BALANCER_HOSTS[name]
+        for name in names
+        if LOAD_BALANCER_TYPES[name] == load_balancer_type
+    )
+
 
 class Paginator:
     def paginate(self, Names: Sequence[str] | None = None) -> Iterator[Mapping[str, object]]:
         load_balancers = ELBv2DescribeLoadBalancersIB.create_instances(amount=3)
+        for load_balancer in load_balancers:
+            load_balancer["Type"] = LOAD_BALANCER_TYPES[load_balancer["LoadBalancerName"]]
         if Names is not None:
             load_balancers = [
                 load_balancer
@@ -431,9 +447,10 @@ def test_agent_aws_elbv2_application(
     assert elbv2_application.cache_interval == 300
     assert elbv2_application.period == 600
     assert elbv2_application.name == "elbv2_application"
-    assert len(elbv2_application_results) == len(found_instances)
+    assert sorted(
+        result.piggyback_hostname for result in elbv2_application_results
+    ) == _hosts_of_type(found_instances, "application")
     for result in elbv2_application_results:
-        assert result.piggyback_hostname != ACCOUNT_HOST
         # 20 metrics
         assert len(result.content) == 20
 
@@ -468,9 +485,10 @@ def test_agent_aws_elbv2_network(
     assert elbv2_network.cache_interval == 300
     assert elbv2_network.period == 600
     assert elbv2_network.name == "elbv2_network"
-    assert len(elbv2_network_results) == len(found_instances)
+    assert sorted(result.piggyback_hostname for result in elbv2_network_results) == _hosts_of_type(
+        found_instances, "network"
+    )
     for result in elbv2_network_results:
-        assert result.piggyback_hostname != ACCOUNT_HOST
         # 12 metrics
         assert len(result.content) == 12
 
@@ -546,9 +564,10 @@ def test_agent_aws_elbv2_application_without_limits(
     assert elbv2_application.cache_interval == 300
     assert elbv2_application.period == 600
     assert elbv2_application.name == "elbv2_application"
-    assert len(elbv2_application_results) == len(found_instances)
+    assert sorted(
+        result.piggyback_hostname for result in elbv2_application_results
+    ) == _hosts_of_type(found_instances, "application")
     for result in elbv2_application_results:
-        assert result.piggyback_hostname != ACCOUNT_HOST
         # 20 metrics
         assert len(result.content) == 20
 
@@ -582,9 +601,10 @@ def test_agent_aws_elbv2_network_without_limits(
     assert elbv2_network.cache_interval == 300
     assert elbv2_network.period == 600
     assert elbv2_network.name == "elbv2_network"
-    assert len(elbv2_network_results) == len(found_instances)
+    assert sorted(result.piggyback_hostname for result in elbv2_network_results) == _hosts_of_type(
+        found_instances, "network"
+    )
     for result in elbv2_network_results:
-        assert result.piggyback_hostname != ACCOUNT_HOST
         # 12 metrics
         assert len(result.content) == 12
 
@@ -643,4 +663,5 @@ def test_agent_aws_elbv2_load_balancer_hosts_get_the_resource_labels(
             **(tags if i < 2 else {}),
         }
         for i in range(3)
+        if LOAD_BALANCER_TYPES[f"LoadBalancerName-{i}"] == "application"
     }

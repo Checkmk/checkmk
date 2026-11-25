@@ -1334,8 +1334,10 @@ class RulesAPI(BaseAPI):
         if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
-    def delete(self, rule_id: str) -> None:
+    def delete(self, rule_id: str, ignore_missing: bool = False) -> None:
         response = self.session.delete(f"/objects/rule/{rule_id}")
+        if ignore_missing and response.status_code == HTTPStatus.NOT_FOUND:
+            return
         if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 

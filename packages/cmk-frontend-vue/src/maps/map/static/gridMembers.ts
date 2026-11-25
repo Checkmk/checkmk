@@ -59,6 +59,20 @@ export function gridSpacingFor(
   return { grid_offset_x: offset, grid_offset_y: offset }
 }
 
+/**
+ * How many objects a row of the grid holds once the grip of its frame is
+ * dragged ``dx`` map units sideways from ``columns``: one more or fewer per
+ * spacing X, at least one and no more than the grid has objects.
+ */
+export function gridColumnsAfterDrag(
+  columns: number,
+  offsetX: number,
+  dx: number,
+  members: number
+): number {
+  return Math.min(Math.max(1, members), Math.max(1, columns + Math.round(dx / offsetX)))
+}
+
 // A label holds about a dozen characters at their average width relative to
 // the font size; around it come its padding and margin, the ones
 // ``MapElementLabel`` cuts a label short by, and a gap to the next one.

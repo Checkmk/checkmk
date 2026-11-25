@@ -12,6 +12,7 @@ the members are drawn.
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, inject, onMounted, ref, useTemplateRef, watch } from 'vue'
 
+import MapElementResizeHandle from '@/maps/map/elements/components/MapElementResizeHandle.vue'
 import { objectIcon } from '@/maps/map/static/composables/useCanvasLineAnchors'
 import { CANVAS_SCALE } from '@/maps/map/static/composables/useCanvasViewport'
 import { gridExtent } from '@/maps/map/static/gridMembers'
@@ -19,6 +20,7 @@ import { gridCaption } from '@/maps/map/static/gridSummary'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 
 const i18n = usei18n()
+const { _t } = i18n
 
 const props = defineProps<{
   grid: MapElement
@@ -27,7 +29,11 @@ const props = defineProps<{
   iconSize: number
   selected?: boolean
   focused?: boolean
+  /** Shows the grip that sets how many objects a row holds. */
+  resizable?: boolean
 }>()
+
+const emit = defineEmits<{ 'resize-start': [event: PointerEvent] }>()
 
 const FRAME_PADDING = 'var(--dimension-4)'
 
@@ -115,7 +121,14 @@ const caption = computed(() => gridCaption(i18n, props.grid, props.state, props.
           'maps-map-grid-frame__frame--failed': state?.stale
         }"
         :style="frameStyle"
-      />
+      >
+        <MapElementResizeHandle
+          v-if="resizable"
+          horizontal
+          :title="_t('Drag to change the objects per row')"
+          @start="emit('resize-start', $event)"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -133,6 +146,7 @@ const caption = computed(() => gridCaption(i18n, props.grid, props.state, props.
 }
 
 .maps-map-grid-frame__frame {
+  position: relative;
   box-sizing: border-box;
   border: 1px dashed var(--font-color-dimmed);
   border-radius: var(--border-radius);
@@ -154,6 +168,7 @@ const caption = computed(() => gridCaption(i18n, props.grid, props.state, props.
 }
 
 .maps-map-grid-frame__chip {
+  pointer-events: auto;
   margin-bottom: var(--dimension-2);
   padding: var(--dimension-1) var(--dimension-3);
   border-radius: var(--border-radius);

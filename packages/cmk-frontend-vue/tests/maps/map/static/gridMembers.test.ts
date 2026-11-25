@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  gridColumnsAfterDrag,
   gridLabelWidths,
   gridLayout,
   gridMemberElement,
@@ -146,6 +147,26 @@ describe('memberLabelWidth', () => {
 describe('gridSpacingFor', () => {
   it('leaves half an icon between the icons of a new grid', () => {
     expect(gridSpacingFor(30)).toEqual({ grid_offset_x: 45, grid_offset_y: 45 })
+  })
+})
+
+describe('gridColumnsAfterDrag', () => {
+  it('adds a column for each spacing X the grip is dragged right', () => {
+    expect(gridColumnsAfterDrag(4, 50, 100, 20)).toBe(6)
+  })
+
+  it('takes the nearer column of a grip dragged between two', () => {
+    expect([gridColumnsAfterDrag(4, 50, -24, 20), gridColumnsAfterDrag(4, 50, -26, 20)]).toEqual([
+      4, 3
+    ])
+  })
+
+  it('keeps at least one column', () => {
+    expect(gridColumnsAfterDrag(4, 50, -1000, 20)).toBe(1)
+  })
+
+  it('stops at one row of all the objects', () => {
+    expect(gridColumnsAfterDrag(4, 50, 1000, 20)).toBe(20)
   })
 })
 

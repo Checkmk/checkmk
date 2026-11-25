@@ -436,3 +436,59 @@ describe('MapCanvas – wheel zoom', () => {
     expect(canvas.getAttribute('style') ?? '').not.toContain('zoom')
   })
 })
+
+describe('MapCanvas – resizing a grid', () => {
+  const member = (name: string, x: number): MapElement =>
+    anObject({ id: `auto:grid:g:${name}`, type: 'host', host_name: name, grid_id: 'g', x, y: 100 })
+
+  function renderGrid(props: { editMode: boolean; selectedIds: string[] }) {
+    const config = aMap({
+      ...sampleConfig,
+      objects: [
+        anObject({ id: 'g', type: 'grid', x: 100, y: 100, grid_per_row: 3, grid_offset_x: 50 }),
+        member('a', 100),
+        member('b', 150),
+        member('c', 200)
+      ]
+    })
+    return render(MapCanvas, {
+      props: { ...baseProps, config, states: {}, ...props },
+      global: mapsGlobal(stubs)
+    })
+  }
+
+  const grip = () => screen.queryByTitle('Drag to change the objects per row')
+
+  it('offers the grip on the frame of a grid selected in the editor only', () => {
+    const unselected = renderGrid({ editMode: true, selectedIds: [] })
+    expect(grip()).toBeNull()
+    unselected.unmount()
+
+    renderGrid({ editMode: false, selectedIds: ['g'] })
+    expect(grip()).toBeNull()
+  })
+
+  // Where the last row is full, the last object's label hangs over the grip.
+  it('lifts a grid selected in the editor above its objects', () => {
+    const { container } = renderGrid({ editMode: true, selectedIds: ['g'] })
+    const z = (id: string) =>
+      Number(container.querySelector<HTMLElement>(`[data-object-id="${id}"]`)!.style.zIndex)
+
+    expect(z('g')).toBeGreaterThan(z('auto:grid:g:c'))
+  })
+
+  it('lays the grid out anew while its grip is dragged, and saves it once let go', async () => {
+    const { container, emitted } = renderGrid({ editMode: true, selectedIds: ['g'] })
+    const canvas = container.querySelector<HTMLElement>('.maps-map-canvas')!
+    canvas.setPointerCapture = () => {}
+
+    // jsdom lays nothing out, so how far the pointer goes is beyond measure:
+    // any move to the left takes the grid to a single column.
+    await fireEvent.pointerDown(grip()!, { clientX: 300, pointerId: 1 })
+    await fireEvent.pointerMove(canvas, { clientX: 250, pointerId: 1 })
+    await fireEvent.pointerUp(canvas, { clientX: 250, pointerId: 1 })
+
+    expect(emitted()['grid-resize']).toEqual([['g', 1]])
+    expect(emitted()['grid-resize-end']).toEqual([['g', 1]])
+  })
+})

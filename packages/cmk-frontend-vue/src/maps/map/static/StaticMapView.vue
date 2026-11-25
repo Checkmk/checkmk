@@ -180,6 +180,11 @@ async function onResizeEnd(id: string, width: number, height: number): Promise<v
   }
 }
 
+function onGridResizeEnd(id: string, perRow: number): void {
+  props.editor.updateObjectProperties(id, { grid_per_row: perRow })
+  void lockCanvasSize()
+}
+
 /** Double-click opens the object's properties, a grid member its grid's. */
 function onObjectDblclick(object: MapElement): void {
   if (!props.editor.editMode.value) {
@@ -266,6 +271,8 @@ function onObjectDblclick(object: MapElement): void {
         @line-drag-start="onLineDragStart"
         @canvas-click="(event) => void onCanvasClick(event)"
         @graph-resize-end="(id, width, height) => void onResizeEnd(id, width, height)"
+        @grid-resize="editor.previewGridColumns"
+        @grid-resize-end="onGridResizeEnd"
       />
     </template>
   </div>

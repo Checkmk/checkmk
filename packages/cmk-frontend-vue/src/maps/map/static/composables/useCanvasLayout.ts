@@ -24,7 +24,13 @@ const DRAGGED_Z = 100
  * from, but below the hover card and context menu so it keeps taking clicks
  * while a filter is on.
  */
-const MATCH_Z = 49
+const MATCH_Z = 48
+/**
+ * Least stacking order of the grid selected in the editor: above its objects,
+ * which share its own, where the last one's label would otherwise cover the
+ * grip on its frame.
+ */
+const SELECTED_GRID_Z = 49
 
 type Style = Record<string, string | number | undefined>
 
@@ -58,6 +64,7 @@ export function useCanvasLayout(source: {
   classic: () => boolean
   draggingId: () => string | null
   dragPositions: () => Record<string, { x: number; y: number }>
+  isSelected: (id: string) => boolean
 }): CanvasLayout {
   /**
    * An object with no explicit stacking order takes the map's default — the
@@ -142,9 +149,11 @@ export function useCanvasLayout(source: {
     const z =
       source.draggingId() === object.id
         ? DRAGGED_Z
-        : filtering.value && matches(object)
-          ? MATCH_Z
-          : resolveZ(object)
+        : object.type === 'grid' && source.editMode() && source.isSelected(object.id)
+          ? Math.max(SELECTED_GRID_Z, resolveZ(object) + 1)
+          : filtering.value && matches(object)
+            ? MATCH_Z
+            : resolveZ(object)
     return {
       left: `${(position.x / width) * 100}%`,
       top: `${(position.y / height) * 100}%`,

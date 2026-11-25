@@ -18,7 +18,7 @@ import { computed, ref, useTemplateRef } from 'vue'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
 import MapElement from '@/maps/map/elements/MapElement.vue'
 import { objectIconSize } from '@/maps/map/objectIconSize'
-import { gridMembersOf } from '@/maps/map/static/gridMembers'
+import { gridLayout, gridMembersOf } from '@/maps/map/static/gridMembers'
 import { gridCaption } from '@/maps/map/static/gridSummary'
 import type { MapConfig, MapElement as MapObject, ObjectState } from '@/maps/types/api'
 import { anchorRectOf } from '@/maps/utils/anchorRect'
@@ -62,6 +62,7 @@ const emit = defineEmits<{
   hover: [event: MouseEvent, anchor: HoverAnchorRect | null]
   'hover-leave': []
   'resize-start': [event: PointerEvent]
+  'grid-resize-start': [event: PointerEvent, members: number]
   'subtree-enter': [object: MapObject, state: ObjectState, event: MouseEvent]
   'subtree-leave': []
 }>()
@@ -87,6 +88,8 @@ const gridMembers = computed(() =>
   isGrid.value ? gridMembersOf(props.config.objects, props.object.id) : []
 )
 
+const spacedX = computed(() => isGrid.value && gridLayout(props.object).offsetX > 0)
+
 const ariaLabel = computed(() =>
   isGrid.value
     ? gridCaption(i18n, props.object, state.value, gridMembers.value.length)
@@ -109,7 +112,8 @@ function onKeydown(event: KeyboardEvent): void {
     :class="{
       'maps-map-canvas-object--bind-target': bindTarget,
       'maps-map-canvas-object--selected': editMode && selected && !isGrid,
-      'maps-map-canvas-object--grid': isGrid
+      'maps-map-canvas-object--grid': isGrid,
+      'maps-map-canvas-object--selected-grid': editMode && selected && isGrid
     }"
     :data-object-id="object.id"
     :style="boxStyle"
@@ -133,6 +137,8 @@ function onKeydown(event: KeyboardEvent): void {
       :icon-size="iconSize"
       :selected="selected"
       :focused="gridFocused"
+      :resizable="editMode && selected && !preview && gridMembers.length > 0 && spacedX"
+      @resize-start="emit('grid-resize-start', $event, gridMembers.length)"
     />
     <MapElement
       v-else
@@ -162,6 +168,12 @@ function onKeydown(event: KeyboardEvent): void {
 .maps-map-canvas-object:focus-visible {
   outline: revert;
   outline-offset: 2px;
+}
+
+/* Lifted above its objects, the grid leaves their presses to them; its caption
+   and grip take their own back. */
+.maps-map-canvas-object--selected-grid {
+  pointer-events: none;
 }
 
 .maps-map-canvas-object--grid:focus-visible {

@@ -453,6 +453,16 @@ describe('useMapEditor — grid members', () => {
     expect(objects().map((o) => [o.id, o.grid_id])).toEqual([['pinned', null]])
   })
 
+  it('lays a grid out by its grip without saving it', async () => {
+    const { editor, services, objects } = editorOn([grid(), gridMember()])
+
+    editor.previewGridColumns('g', 4)
+    await services.maps.flushSave()
+
+    expect(objects()[0]!.grid_per_row).toBe(4)
+    expect(services.apis.mapConfig.update).not.toHaveBeenCalled()
+  })
+
   it('puts a duplicated grid below the original, clear of other grids', async () => {
     const { editor, objects } = editorOn([
       grid(),

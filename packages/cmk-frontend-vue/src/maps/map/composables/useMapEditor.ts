@@ -881,6 +881,14 @@ export function useMapEditor() {
     )
   }
 
+  /** Lays a grid out with ``perRow`` objects a row, unsaved, while its grip is dragged. */
+  function previewGridColumns(id: string, perRow: MapElement['grid_per_row']): void {
+    const grid = mapsStore.currentMap.value?.objects.find((o) => o.id === id)
+    if (grid) {
+      grid.grid_per_row = perRow
+    }
+  }
+
   // Group drag on geo maps: persist each moved object's lat/lng.
   async function saveLatLngs(moves: { id: string; lat: number; lng: number }[]) {
     const objects = mapsStore.currentMap.value?.objects ?? []
@@ -1118,6 +1126,7 @@ export function useMapEditor() {
     placeAtLatLng,
     moveObjectToLatLng,
     saveObjectFootprint,
+    previewGridColumns,
     saveLatLngs,
     duplicateSelected,
     bundleSelected,

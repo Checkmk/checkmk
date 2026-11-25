@@ -28,7 +28,8 @@ function layoutOf(
     editMode: () => false,
     classic: () => false,
     draggingId: () => null,
-    dragPositions: () => dragPositions.value
+    dragPositions: () => dragPositions.value,
+    isSelected: () => false
   })
 }
 

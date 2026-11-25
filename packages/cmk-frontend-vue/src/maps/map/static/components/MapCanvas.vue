@@ -35,6 +35,7 @@ import { useCanvasMarqueeSelect } from '@/maps/map/static/composables/useCanvasM
 import { useCanvasObjectDrag } from '@/maps/map/static/composables/useCanvasObjectDrag'
 import { useCanvasPan } from '@/maps/map/static/composables/useCanvasPan'
 import { CANVAS_SCALE, useCanvasViewport } from '@/maps/map/static/composables/useCanvasViewport'
+import { useGridResize } from '@/maps/map/static/composables/useGridResize'
 import { editTargetOf, gridLabelWidths, memberLabelWidth } from '@/maps/map/static/gridMembers'
 import { useSettings } from '@/maps/services/context'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
@@ -92,6 +93,8 @@ const emit = defineEmits<{
   'canvas-click': [event: MouseEvent]
   'marquee-select': [ids: string[], additive: boolean]
   'graph-resize-end': [id: string, width: number, height: number]
+  'grid-resize': [id: string, perRow: MapElement['grid_per_row']]
+  'grid-resize-end': [id: string, perRow: number]
 }>()
 
 const settings = useSettings()
@@ -199,6 +202,12 @@ const resize = useObjectResize({
   centering: () => ({ x: !classic.value, y: !classic.value })
 })
 
+const gridResize = useGridResize({
+  surface: () => canvas.value,
+  pixelsPerUnit: () => viewport.scale.value.sx,
+  onColumns: (id, perRow) => emit('grid-resize', id, perRow)
+})
+
 // A click closing a gesture must not also deselect: pointer capture redirects
 // it to the canvas, where it would read as a click on empty space.
 let swallowNextClick = false
@@ -278,7 +287,8 @@ const layout = useCanvasLayout({
   editMode: () => props.editMode,
   classic: () => classic.value,
   draggingId: drag.draggingId,
-  dragPositions: () => drag.positions
+  dragPositions: () => drag.positions,
+  isSelected
 })
 
 // No ``reveal``: the canvas scrolls, and the browser scrolls a focused object into view.
@@ -332,10 +342,16 @@ function onPointerDown(event: PointerEvent): void {
 }
 
 function onPointerMove(event: PointerEvent): void {
-  if (marquee.move(event) || pan.move(event) || resize.move(event)) {
+  if (marquee.move(event) || pan.move(event) || resize.move(event) || gridResize.move(event)) {
     return
   }
   drag.move(event)
+}
+
+// A grid's preview is taken back rather than saved, as nobody let go of it.
+function onPointerCancel(event: PointerEvent): void {
+  gridResize.cancel()
+  onPointerUp(event)
 }
 
 function onPointerUp(event: PointerEvent): void {
@@ -346,6 +362,14 @@ function onPointerUp(event: PointerEvent): void {
   const resized = resize.end()
   if (resized) {
     emit('graph-resize-end', resized.id, resized.size.width, resized.size.height)
+    return
+  }
+  const gridResized = gridResize.end()
+  if (gridResized) {
+    swallowNextClick = true
+    if (gridResized.changed) {
+      emit('grid-resize-end', gridResized.id, gridResized.perRow)
+    }
     return
   }
   const dragging = drag.draggingId() !== null
@@ -439,7 +463,8 @@ defineExpose({
     @pointerdown="onPointerDown"
     @pointermove.prevent="onPointerMove"
     @pointerup="onPointerUp"
-    @pointercancel="onPointerUp"
+    @pointercancel="onPointerCancel"
+    @lostpointercapture="gridResize.cancel()"
     @wheel="viewport.onWheel"
   >
     <MapCanvasGrid
@@ -504,6 +529,7 @@ defineExpose({
       "
       @hover-leave="!editMode && menus.hover.scheduleClose()"
       @resize-start="resize.begin($event, object)"
+      @grid-resize-start="(event, members) => gridResize.begin(event, object, members)"
       @subtree-enter="
         (node, nodeState, event) => !editMode && menus.openSubtreeHover(node, nodeState, event)
       "

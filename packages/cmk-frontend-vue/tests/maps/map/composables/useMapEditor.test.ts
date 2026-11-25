@@ -513,6 +513,89 @@ describe('useMapEditor — grid members', () => {
     expect(objects().map((o) => o.id)).toEqual(['g'])
   })
 
+  it('puts a deleted grid back on undo, where it was, with what was pinned out of it', async () => {
+    const { editor, services, objects } = editorOn([
+      makeObject({ id: 'core', type: 'host' }),
+      grid(),
+      gridMember(),
+      makeObject({ id: 'pinned', type: 'host', host_name: 'db', grid_id: 'g' })
+    ])
+
+    editor.selectObject('g')
+    await editor.deleteAllSelected()
+    const toast = services.toasts.toasts.value.at(-1)!
+    toast.action!.onClick()
+
+    expect(toast.message).toBe('Deleted the grid of 1 host')
+    expect(objects().map((o) => [o.id, o.grid_id])).toEqual([
+      ['core', undefined],
+      ['g', undefined],
+      ['auto:grid:g:web', 'g'],
+      ['pinned', 'g']
+    ])
+  })
+
+  it('puts back every object deleted together', async () => {
+    const { editor, services, objects } = editorOn([
+      makeObject({ id: 'a', type: 'host' }),
+      makeObject({ id: 'b', type: 'host' }),
+      makeObject({ id: 'c', type: 'host' })
+    ])
+
+    editor.selectObjects(['a', 'c'])
+    await editor.deleteAllSelected()
+    services.toasts.toasts.value.at(-1)!.action!.onClick()
+
+    expect(objects().map((o) => o.id)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('takes back an object just placed without offering to undo it', () => {
+    const { editor, services, objects } = editorOn([makeObject({ id: 'a', type: 'host' })])
+
+    editor.discardPlaced('a')
+
+    expect(objects()).toEqual([])
+    expect(services.toasts.toasts.value).toEqual([])
+  })
+
+  it('puts back what pointed at a deleted object though the map was loaded again', async () => {
+    const { editor, services, objects } = editorOn([
+      makeObject({ id: 'h', type: 'host' }),
+      makeObject({ id: 'l', type: 'line', start_ref: 'h' })
+    ])
+
+    editor.selectObject('h')
+    await editor.deleteAllSelected()
+    const map = services.maps.currentMap.value!
+    services.maps.currentMap.value = { ...map, objects: map.objects.map((o) => ({ ...o })) }
+    services.toasts.toasts.value.at(-1)!.action!.onClick()
+
+    expect(objects().find((o) => o.id === 'l')!.start_ref).toBe('h')
+  })
+
+  it('keeps a deleted grid out on undo where the map took another meanwhile', async () => {
+    const { editor, services, objects } = editorOn(fullOfGrids())
+
+    editor.selectObject('g0')
+    await editor.deleteAllSelected()
+    objects().push(makeObject({ id: 'new', type: 'grid' }))
+    services.toasts.toasts.value.at(-1)!.action!.onClick()
+
+    expect(objects().map((o) => o.id)).not.toContain('g0')
+    expect(services.toasts.toasts.value.at(-1)!.message).toBe('A map takes at most 10 grids.')
+  })
+
+  it('leaves a deletion alone on undo once the map is no longer edited', async () => {
+    const { editor, services, objects } = editorOn([makeObject({ id: 'a', type: 'host' })])
+
+    editor.selectObject('a')
+    await editor.deleteAllSelected()
+    editor.toggleEditMode()
+    services.toasts.toasts.value.at(-1)!.action!.onClick()
+
+    expect(objects()).toEqual([])
+  })
+
   it('leaves a pin alone on undo once the map is no longer edited', async () => {
     const { editor, services, objects } = editorOn([grid(), gridMember()])
     await editor.saveObjectPosition('auto:grid:g:web', 300, 200)

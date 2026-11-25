@@ -80,6 +80,8 @@ const props = defineProps<{
   checkmkUrl?: string | null
   /** Where the object it edits is on screen, for the card to open away from. */
   avoid?: AnchorRect | null
+  /** The map's objects, among them those of the grid it edits. */
+  mapObjects?: readonly MapElement[]
   /** A NagVis-classic map, whose grids keep NagVis' geometry. */
   classic?: boolean
   /** Why the last save was refused; the card stays open to correct it. */
@@ -98,7 +100,8 @@ const emit = defineEmits<{
   detach: []
 }>()
 
-const { _t } = usei18n()
+const i18n = usei18n()
+const { _t } = i18n
 
 const form = ref<ObjectForm>(formFromObject(props.object, { z: props.mapDefaultZ ?? 1 }))
 const graphSource = ref<GraphSource>(graphSourceOf(props.object))
@@ -450,8 +453,7 @@ function onConfirmDelete(): void {
         <MapsConfirmDialog
           :open="confirmDelete"
           variant="error"
-          :title="objectDeleteTitle(object, _t)"
-          :message="_t('This cannot be undone.')"
+          :title="objectDeleteTitle(object, i18n, mapObjects ?? [])"
           :confirm-label="_t('Delete')"
           @confirm="onConfirmDelete"
           @cancel="confirmDelete = false"

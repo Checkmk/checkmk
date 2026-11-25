@@ -21,6 +21,8 @@ export interface Toast {
 }
 
 const SUCCESS_DURATION_MS = 3500
+// Long enough to read what was done and still take it back.
+const ACTION_DURATION_MS = 8000
 const PROBLEM_DURATION_MS = 5000
 
 /**
@@ -37,7 +39,7 @@ export class ToastService {
   private readonly timers = new Set<ReturnType<typeof setTimeout>>()
 
   public success(message: TranslatedString, action?: ToastAction): void {
-    this.show('success', message, SUCCESS_DURATION_MS, action)
+    this.show('success', message, action ? ACTION_DURATION_MS : SUCCESS_DURATION_MS, action)
   }
 
   public error(message: TranslatedString): void {
@@ -63,14 +65,26 @@ export class ToastService {
     action?: ToastAction
   ): void {
     const id = this.nextId++
-    this.toasts.value.push({ id, type, message, ...(action !== undefined ? { action } : {}) })
+    // Done once taken, so it does not linger offering what no longer applies.
+    const taken = action && {
+      ...action,
+      onClick: () => {
+        this.remove(id)
+        action.onClick()
+      }
+    }
+    this.toasts.value.push({ id, type, message, ...(taken ? { action: taken } : {}) })
     const timer = setTimeout(() => {
       this.timers.delete(timer)
-      const index = this.toasts.value.findIndex((toast) => toast.id === id)
-      if (index !== -1) {
-        this.toasts.value.splice(index, 1)
-      }
+      this.remove(id)
     }, duration)
     this.timers.add(timer)
+  }
+
+  private remove(id: number): void {
+    const index = this.toasts.value.findIndex((toast) => toast.id === id)
+    if (index !== -1) {
+      this.toasts.value.splice(index, 1)
+    }
   }
 }

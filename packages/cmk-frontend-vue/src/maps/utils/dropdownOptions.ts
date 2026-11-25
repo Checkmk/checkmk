@@ -7,6 +7,7 @@ import type usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
+import { gridMembersOf } from '@/maps/map/static/gridMembers'
 import type { MapElement, MonitoredObjectType, ObjectState, ObjectType } from '@/maps/types/api'
 import { getEffectiveObjectType, getMapElementName, mapElementCaption } from '@/maps/utils/naming'
 import { LINE_STYLES } from '@/maps/utils/objectOptions'
@@ -79,16 +80,78 @@ export function objectDisplayName(object: MapElement, _t: TranslateFn): Translat
   return name === null ? objectTypeLabel(getEffectiveObjectType(object), _t) : untranslated(name)
 }
 
+/** The translators the texts that count things need. */
+export interface I18n {
+  _t: TranslateFn
+  _tn: PluralTranslateFn
+}
+
+// A grid counts what it shows among the map's objects; before its first states
+// arrive, or while its filter matches nothing, it is asked about by its type.
+export function gridMemberCount(object: MapElement, objects: readonly MapElement[]): number {
+  return object.type === 'grid' ? gridMembersOf(objects, object.id).length : 0
+}
+
 /**
  * The heading of the dialog that asks before an object is removed: what kind of
- * thing it is, and — when it has one — which.
+ * thing it is and, when it has one, which; for a grid, how many of the map's
+ * ``objects`` leave with it.
  */
-export function objectDeleteTitle(object: MapElement, _t: TranslateFn): TranslatedString {
+export function objectDeleteTitle(
+  object: MapElement,
+  { _t, _tn }: I18n,
+  objects: readonly MapElement[]
+): TranslatedString {
+  const n = gridMemberCount(object, objects)
+  if (n > 0) {
+    return object.object_types === 'service'
+      ? _tn('Delete the grid of %{n} service?', 'Delete the grid of %{n} services?', n, { n })
+      : _tn('Delete the grid of %{n} host?', 'Delete the grid of %{n} hosts?', n, { n })
+  }
   const type = objectTypeLabel(getEffectiveObjectType(object), _t)
   const name = getMapElementName(object)
   return name === null
     ? _t('Delete %{type}?', { type })
     : _t('Delete %{type} "%{name}"?', { type, name })
+}
+
+/**
+ * What deleting several of the map's ``objects`` at once takes along beyond
+ * them: the objects the grids among them show; nothing without a grid.
+ */
+export function gridsDeletedAlong(
+  deleted: readonly MapElement[],
+  { _tn }: I18n,
+  objects: readonly MapElement[]
+): TranslatedString | undefined {
+  const n = deleted.reduce((sum, object) => sum + gridMemberCount(object, objects), 0)
+  return n > 0
+    ? _tn(
+        'The %{n} object shown by grids among them goes too.',
+        'The %{n} objects shown by grids among them go too.',
+        n,
+        { n }
+      )
+    : undefined
+}
+
+/** The notice, offering to undo it, that an object was removed from ``objects``. */
+export function objectDeletedText(
+  object: MapElement,
+  { _t, _tn }: I18n,
+  objects: readonly MapElement[]
+): TranslatedString {
+  const n = gridMemberCount(object, objects)
+  if (n > 0) {
+    return object.object_types === 'service'
+      ? _tn('Deleted the grid of %{n} service', 'Deleted the grid of %{n} services', n, { n })
+      : _tn('Deleted the grid of %{n} host', 'Deleted the grid of %{n} hosts', n, { n })
+  }
+  const type = objectTypeLabel(getEffectiveObjectType(object), _t)
+  const name = getMapElementName(object)
+  return name === null
+    ? _t('Deleted %{type}', { type })
+    : _t('Deleted %{type} "%{name}"', { type, name })
 }
 
 /**

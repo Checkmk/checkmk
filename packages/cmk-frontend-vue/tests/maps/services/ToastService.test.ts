@@ -38,9 +38,23 @@ describe('ToastService', () => {
     expect(onClick).toHaveBeenCalledOnce()
   })
 
+  it('takes a message down once its action is taken', () => {
+    toasts.success(untranslated('Deleted'), { label: untranslated('Undo'), onClick: () => {} })
+    toasts.toasts.value[0]?.action?.onClick()
+    expect(toasts.toasts.value).toEqual([])
+  })
+
   it('dismisses a confirmation on its own', () => {
     toasts.success(untranslated('Saved'))
     vi.advanceTimersByTime(3500)
+    expect(toasts.toasts.value).toEqual([])
+  })
+
+  it('leaves time to take back what a message offers to undo', () => {
+    toasts.success(untranslated('Deleted'), { label: untranslated('Undo'), onClick: () => {} })
+    vi.advanceTimersByTime(5000)
+    expect(toasts.toasts.value).toHaveLength(1)
+    vi.advanceTimersByTime(3000)
     expect(toasts.toasts.value).toEqual([])
   })
 

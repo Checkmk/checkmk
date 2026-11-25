@@ -6,19 +6,10 @@
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { MapElement, ObjectState } from '@/maps/types/api'
-import {
-  type PluralTranslateFn,
-  type TranslateFn,
-  objectTypeLabel
-} from '@/maps/utils/dropdownOptions'
-
-interface GridI18n {
-  _t: TranslateFn
-  _tn: PluralTranslateFn
-}
+import { type I18n, objectTypeLabel } from '@/maps/utils/dropdownOptions'
 
 export function gridCaption(
-  i18n: GridI18n,
+  i18n: I18n,
   grid: MapElement,
   state: ObjectState | undefined,
   shown: number
@@ -27,7 +18,7 @@ export function gridCaption(
 }
 
 function gridSummary(
-  { _t, _tn }: GridI18n,
+  { _t, _tn }: I18n,
   grid: MapElement,
   state: ObjectState | undefined,
   shown: number

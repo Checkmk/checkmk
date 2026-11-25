@@ -19,7 +19,7 @@ so every painter below inherits one set of them.
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import {
   computed,
   defineAsyncComponent,
@@ -79,7 +79,11 @@ import { type ObjectRefusal, errorText, objectRefusalOf } from '@/maps/shared/er
 import type { CommandTarget, MapElement, MapRead, ObjectState } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { resolveCheckmkUrl } from '@/maps/utils/deploymentBase'
-import { objectDeleteTitle, objectDisplayName } from '@/maps/utils/dropdownOptions'
+import {
+  gridsDeletedAlong,
+  objectDeleteTitle,
+  objectDisplayName
+} from '@/maps/utils/dropdownOptions'
 import { buildCheckmkUrl, openUrl } from '@/maps/utils/mapNavigation'
 import { derivesItsContent, monitoringObjectId, newMapElement } from '@/maps/utils/model'
 import { asBoundObject } from '@/maps/utils/naming'
@@ -98,7 +102,8 @@ const radarMapView = defineAsyncComponent(() => import('@/maps/map/radar/RadarMa
 const staticMapView = defineAsyncComponent(() => import('@/maps/map/static/StaticMapView.vue'))
 const geoMapView = defineAsyncComponent(() => import('@/maps/map/geo/GeoMapView.vue'))
 
-const { _t } = usei18n()
+const i18n = usei18n()
+const { _t } = i18n
 const toast = useToast()
 const nav = useNavigation()
 const auth = useAuth()
@@ -344,9 +349,19 @@ async function confirmBulkDelete() {
   await editor.deleteAllSelected()
 }
 
+const bulkDeleteAlong = computed(() => {
+  if (!bulkDeleteOpen.value) {
+    return untranslated('')
+  }
+  const objects = mapConfig.value?.objects ?? []
+  const ids = new Set(editor.selectedIds.value)
+  const grids = objects.filter((o) => o.type === 'grid' && ids.has(o.id))
+  return gridsDeletedAlong(grids, i18n, objects) ?? untranslated('')
+})
+
 const deleteDialogTitle = computed(() => {
   const obj = deleteTargetObject.value
-  return obj ? objectDeleteTitle(obj, _t) : _t('Delete object')
+  return obj ? objectDeleteTitle(obj, i18n, mapConfig.value?.objects ?? []) : _t('Delete object')
 })
 
 function openPropsModal(obj: MapElement) {
@@ -385,7 +400,7 @@ async function onPropsModalClose(how: CloseHow) {
   const placed = how === 'cancel' && justPlacedId.value !== null ? propsModalObject.value : null
   _closePropsModal()
   if (placed) {
-    await deleteObject(placed)
+    editor.discardPlaced(placed.id)
   }
 }
 
@@ -1050,7 +1065,6 @@ function closeBulkAckModal(sent: boolean): void {
       :open="!!deleteTargetObject"
       variant="error"
       :title="deleteDialogTitle"
-      :message="_t('This cannot be undone.')"
       :confirm-label="_t('Delete')"
       @confirm="confirmObjectDelete"
       @cancel="deleteTargetObject = null"
@@ -1060,7 +1074,7 @@ function closeBulkAckModal(sent: boolean): void {
       :open="bulkDeleteOpen"
       variant="error"
       :title="_t('Delete %{n} objects?', { n: editor.selectedCount.value })"
-      :message="_t('This cannot be undone.')"
+      :message="bulkDeleteAlong"
       :confirm-label="_t('Delete')"
       @confirm="confirmBulkDelete"
       @cancel="bulkDeleteOpen = false"
@@ -1081,6 +1095,7 @@ function closeBulkAckModal(sent: boolean): void {
         :connection-id="mapConfig?.connection_id ?? ''"
         :map-type="mapConfig?.view.type"
         :map-icon-size="mapConfig?.icon_size ?? settingsStore.settings.value.icon_size"
+        :map-objects="mapConfig?.objects ?? []"
         :classic="mapConfig?.render_mode === 'nagvis_classic'"
         :map-default-z="mapConfig?.default_z ?? 1"
         :checkmk-url="checkmkUrl"

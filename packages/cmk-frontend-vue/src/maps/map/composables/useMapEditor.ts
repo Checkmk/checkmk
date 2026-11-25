@@ -7,6 +7,7 @@
  * Map edit-mode state: drag & drop, line editing, object selection, placing new objects.
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 import { computed, onScopeDispose, reactive, ref, toRaw, watch } from 'vue'
 
@@ -26,7 +27,8 @@ import {
 } from '@/maps/map/static/gridMembers'
 import { useMaps, useSettings, useToast } from '@/maps/services/context'
 import { type ObjectRefusal, objectRefusalOf } from '@/maps/shared/errorText'
-import type { MapElement, ObjectType } from '@/maps/types/api'
+import type { MapConfig, MapElement, ObjectType } from '@/maps/types/api'
+import { objectDeletedText } from '@/maps/utils/dropdownOptions'
 import { newMapElement } from '@/maps/utils/model'
 import { getEffectiveObjectType, getMapElementIdentifier } from '@/maps/utils/naming'
 
@@ -72,7 +74,8 @@ export function useMapEditor() {
   // component is setting up.
   const settingsStore = useSettings()
   const toast = useToast()
-  const { _t } = usei18n()
+  const i18n = usei18n()
+  const { _t } = i18n
 
   const editMode = ref(false)
   function toggleEditMode() {
@@ -153,7 +156,7 @@ export function useMapEditor() {
     mapsStore.scheduleSave()
   }
 
-  async function deleteAllSelected() {
+  async function deleteAllSelected(): Promise<void> {
     const ids = selectedIds.value.length
       ? [...selectedIds.value]
       : selectedObjectId.value
@@ -165,25 +168,92 @@ export function useMapEditor() {
     selectObject(null)
     const current = mapsStore.currentMap.value
     if (current) {
-      current.objects = current.objects.filter((o) => !ids.includes(o.id))
-      _clearDanglingRefs(ids)
+      const text = deletedText(current.objects, ids)
+      const removed = _removeObjects(current, ids)
+      if (text && removed.objects.length) {
+        _offerUndo(text, current.name, (map) => _restoreObjects(map, removed))
+      }
     }
     mapsStore.scheduleSave()
   }
 
-  function _clearDanglingRefs(removedIds: string[]) {
-    for (const o of mapsStore.currentMap.value?.objects ?? []) {
+  /** Takes back an object placed a moment ago, which nothing could point at yet. */
+  function discardPlaced(id: string): void {
+    selectObject(null)
+    const current = mapsStore.currentMap.value
+    if (current) {
+      _removeObjects(current, [id])
+    }
+    mapsStore.scheduleSave()
+  }
+
+  function deletedText(objects: readonly MapElement[], ids: string[]): TranslatedString | null {
+    const deleted = objects.filter((o) => ids.includes(o.id))
+    if (deleted.length > 1) {
+      return i18n._tn('Deleted %{n} object', 'Deleted %{n} objects', deleted.length, {
+        n: deleted.length
+      })
+    }
+    return deleted[0] ? objectDeletedText(deleted[0], i18n, objects) : null
+  }
+
+  type DanglingRef = { holder: string; key: 'grid_id' | 'start_ref' | 'end_ref'; id: string }
+  type Removed = { objects: { object: MapElement; index: number }[]; cleared: DanglingRef[] }
+
+  /** Removes the objects and what pointed at them, and returns both to put back. */
+  function _removeObjects(map: MapConfig, ids: string[]): Removed {
+    const objects = map.objects.flatMap((object, index) =>
+      ids.includes(object.id) ? [{ object, index }] : []
+    )
+    map.objects = map.objects.filter((o) => !ids.includes(o.id))
+    const cleared: DanglingRef[] = []
+    for (const object of map.objects) {
       // A later grid of the same id would leave the host out for no visible reason.
-      if (o.grid_id && removedIds.includes(o.grid_id)) {
-        o.grid_id = null
-      }
-      if (o.start_ref && removedIds.includes(o.start_ref)) {
-        o.start_ref = null
-      }
-      if (o.end_ref && removedIds.includes(o.end_ref)) {
-        o.end_ref = null
+      for (const key of ['grid_id', 'start_ref', 'end_ref'] as const) {
+        const id = object[key]
+        if (id && ids.includes(id)) {
+          object[key] = null
+          cleared.push({ holder: object.id, key, id })
+        }
       }
     }
+    return { objects, cleared }
+  }
+
+  function _restoreObjects(map: MapConfig, removed: Removed): void {
+    const grids = removed.objects.filter(({ object }) => object.type === 'grid').length
+    if (grids && mapGrids(map).length + grids > GRID_MAX_PER_MAP) {
+      toast.error(_t('A map takes at most %{n} grids.', { n: GRID_MAX_PER_MAP }))
+      return
+    }
+    const objects = [...map.objects]
+    for (const { object, index } of removed.objects) {
+      if (!objects.some((o) => o.id === object.id)) {
+        objects.splice(Math.min(index, objects.length), 0, object)
+      }
+    }
+    for (const { holder, key, id } of removed.cleared) {
+      const object = objects.find((o) => o.id === holder)
+      if (object && object[key] === null) {
+        object[key] = id
+      }
+    }
+    map.objects = objects
+  }
+
+  /** Offers to undo what was just done, on the map it was done to while it is still edited. */
+  function _offerUndo(text: TranslatedString, mapName: string, undo: (map: MapConfig) => void) {
+    toast.success(text, {
+      label: _t('Undo'),
+      onClick: () => {
+        const current = mapsStore.currentMap.value
+        if (current?.name !== mapName || !editMode.value) {
+          return
+        }
+        undo(current)
+        mapsStore.scheduleSave()
+      }
+    })
   }
 
   let _onDragSaved: ((id: string) => void) | null = null
@@ -353,20 +423,11 @@ export function useMapEditor() {
     const member = objects[index]!
     const pinned = { ...member, id: `${member.type}_${randomId()}` }
     objects.splice(index, 1, pinned)
-    const mapName = mapsStore.currentMap.value!.name
-    toast.success(
+    _offerUndo(
       _t('Pinned %{name} out of the grid', { name: getMapElementIdentifier(member) ?? '' }),
-      {
-        label: _t('Undo'),
-        onClick: () => {
-          const current = mapsStore.currentMap.value
-          // Left meanwhile, the undo would change another map or one no longer edited.
-          if (current?.name !== mapName || !editMode.value) {
-            return
-          }
-          current.objects = current.objects.filter((o) => o.id !== pinned.id)
-          mapsStore.scheduleSave()
-        }
+      mapsStore.currentMap.value!.name,
+      (map) => {
+        map.objects = map.objects.filter((o) => o.id !== pinned.id)
       }
     )
     return pinned.id
@@ -1084,8 +1145,7 @@ export function useMapEditor() {
     }
     const current = mapsStore.currentMap.value
     if (current) {
-      current.objects = current.objects.filter((o) => o.id !== id)
-      _clearDanglingRefs([id])
+      _removeObjects(current, [id])
     }
     mapsStore.scheduleSave()
     selectObject(null)
@@ -1105,6 +1165,7 @@ export function useMapEditor() {
     selectObjects,
     moveSelectedLayer,
     deleteAllSelected,
+    discardPlaced,
     lineBindCandidate,
     snapGrid,
     setDragSavedCallback,

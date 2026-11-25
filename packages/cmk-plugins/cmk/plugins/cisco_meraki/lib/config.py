@@ -48,7 +48,7 @@ def get_meraki_dashboard(api_key: str, region: str, debug: bool, proxy: str | No
         case "india":
             base_url = "https://api.meraki.in/api/v1"
         case "us_gov":
-            base_url = "https://api.gov-meraki.com/api/"
+            base_url = "https://api.gov-meraki.com/api/v1"
         case _:
             base_url = "https://api.meraki.com/api/v1"
 

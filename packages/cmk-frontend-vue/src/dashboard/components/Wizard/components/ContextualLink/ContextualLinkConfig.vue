@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkCollapsible, { CmkCollapsibleTitle } from 'cmk-ui-library/components/CmkCollapsible'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
+import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
@@ -25,12 +26,17 @@ import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineV
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import ContextualLinkTargetPicker from './ContextualLinkTargetPicker.vue'
-import DeleteContextualLinkPopup from './DeleteContextualLinkPopup.vue'
-import type { ConfigurableMode, FilterKeyOption, LinkedContent } from './contextualLink'
+import type {
+  ConfigurableMode,
+  FilterKeyOption,
+  LinkedContent,
+  VisualLocation
+} from './contextualLink'
 import type { UseContextualLink } from './useContextualLink'
+import { linkTargetTitle, useLinkTargets } from './useLinkTargets'
 
 const { _t } = usei18n()
 
@@ -43,19 +49,43 @@ const { defaultTarget } = defineProps<{
 const filterDefinitions = useFilterDefinitions()
 const filterGroups = useFilterGroups()
 
-const MODE_TITLES = {
+type Choice = 'none' | ConfigurableMode
+
+const CHOICE_TITLES: Record<Choice, TranslatedString> = {
+  none: _t('None'),
   default: _t('Default'),
   inherited: _t('Inherited'),
   custom: _t('Custom')
 }
 
-const modeOptions = computed(() =>
-  handler.value.modes.map((mode) => ({ value: mode, label: MODE_TITLES[mode] }))
+const CHOICE_DESCRIPTIONS: Record<Choice, TranslatedString[]> = {
+  none: [_t('This widget has no links to other pages.')],
+  default: [
+    _t("Opens Checkmk's default page for the clicked item."),
+    _t('No filters or time range are passed on.')
+  ],
+  inherited: [_t('Opens one view or dashboard.'), _t('Always filtered by the clicked item.')],
+  custom: [
+    _t('Opens one or more views or dashboards.'),
+    _t('Matching selected attributes of the clicked item.')
+  ]
+}
+
+const choiceOptions = computed(() =>
+  (['none', ...handler.value.modes] as Choice[]).map((choice) => ({
+    value: choice,
+    label: CHOICE_TITLES[choice]
+  }))
 )
 
-const selectedMode = computed<string | null>({
-  get: () => handler.value.mode.value,
+const selectedChoice = computed<string | null>({
+  get: () => (handler.value.enabled.value ? handler.value.mode.value : 'none'),
   set: (value) => {
+    if (value === 'none') {
+      handler.value.enabled.value = false
+      return
+    }
+    handler.value.enabled.value = true
     handler.value.mode.value = value as ConfigurableMode
   }
 })
@@ -116,7 +146,25 @@ function keyAutocompleter(key: FilterKeyOption): Autocompleter {
   }
 }
 
+const { targets, viewsError, dashboardsError, load: loadTargets } = useLinkTargets()
+watch(
+  selectedChoice,
+  (choice) => {
+    if (choice === 'inherited' || choice === 'custom') {
+      void loadTargets()
+    }
+  },
+  { immediate: true }
+)
+
 const closedLinks = ref(new Set<number>())
+
+// The heading is a flex box, which drops a plain leading space, hence the no-break space.
+function collapsedSummary(target: VisualLocation | null): TranslatedString {
+  return untranslated(
+    `\u00a0· ${target === null ? _t('No target page yet') : linkTargetTitle(targets.value, target)}`
+  )
+}
 
 function toggleLink(id: number) {
   if (closedLinks.value.has(id)) {
@@ -125,114 +173,133 @@ function toggleLink(id: number) {
     closedLinks.value.add(id)
   }
 }
-
-const pendingDelete = ref<number | null>(null)
-
-function confirmDelete() {
-  if (pendingDelete.value !== null) {
-    handler.value.removeCustomLink(pendingDelete.value)
-  }
-  pendingDelete.value = null
-}
 </script>
 
 <template>
-  <CmkCheckbox v-model="handler.enabled.value" :label="_t('Add contextual link')" />
-  <CmkIndent
-    v-if="handler.enabled.value"
-    class="db-contextual-link-config db-contextual-link-config__indent"
-  >
+  <div class="db-contextual-link-config">
     <CmkToggleButtonGroup
-      v-model="selectedMode"
-      :options="modeOptions"
+      v-model="selectedChoice"
+      :options="choiceOptions"
       size="small"
       spacing="none"
     />
-
-    <div v-if="handler.mode.value === 'default'" class="db-contextual-link-config__mode">
-      <div v-if="defaultTarget !== undefined" class="db-contextual-link-config__field">
-        <p>{{ _t('Target page') }}</p>
-        <CmkIndent
-          class="db-contextual-link-config__indent db-contextual-link-config__default-target"
-        >
-          <span class="db-contextual-link-config__target">
-            <CmkMultitoneIcon name="chain" primary-color="font" size="small" aria-hidden="true" />
-            <span class="db-contextual-link-config__target-title">{{ defaultTarget }}</span>
-          </span>
-          <p class="db-contextual-link-config__copy">
-            {{ _t('Redirect to the default page defined by Checkmk.') }}
-          </p>
-        </CmkIndent>
-      </div>
-      <p v-else class="db-contextual-link-config__copy">
-        {{ _t('Redirect to the default page defined by Checkmk.') }}
+    <div class="db-contextual-link-config__choice-description">
+      <p
+        v-for="(line, index) in CHOICE_DESCRIPTIONS[selectedChoice as Choice]"
+        :key="index"
+        class="db-contextual-link-config__copy"
+      >
+        {{ line }}
       </p>
     </div>
 
-    <div v-if="handler.mode.value === 'inherited'" class="db-contextual-link-config__mode">
+    <div
+      v-if="handler.enabled.value && handler.mode.value === 'default' && defaultTarget"
+      class="db-contextual-link-config__mode db-contextual-link-config__field"
+    >
+      <p>{{ _t('Target page') }}</p>
+      <span class="db-contextual-link-config__target">
+        <CmkMultitoneIcon name="chain" primary-color="font" size="small" aria-hidden="true" />
+        <span class="db-contextual-link-config__target-title">{{ defaultTarget }}</span>
+        <span class="db-contextual-link-config__copy">{{ _t('(set by Checkmk)') }}</span>
+      </span>
+    </div>
+
+    <div
+      v-if="handler.enabled.value && handler.mode.value === 'inherited'"
+      class="db-contextual-link-config__mode db-contextual-link-config__group"
+    >
       <div class="db-contextual-link-config__field">
         <p>{{ _t('Target page') }}</p>
-        <CmkIndent class="db-contextual-link-config__indent db-contextual-link-config__group">
-          <div class="db-contextual-link-config__field">
-            <ContextualLinkTargetPicker v-model="handler.inheritedTarget.value" />
-            <CmkCheckbox
-              v-model="handler.inheritedIncludeTimeRange.value"
-              :label="_t('Include current time range')"
-            />
-            <CmkCheckbox
-              v-model="handler.inheritedIncludeContext.value"
-              :label="_t('Include dashboard & widget filters')"
-            />
-          </div>
-          <div class="db-contextual-link-config__field">
-            <p>{{ _t('Always included in the contextual link') }}</p>
-            <ul class="db-contextual-link-config__included">
-              <li>{{ _t('Contextual filter = clicked element') }}</li>
-            </ul>
-          </div>
-        </CmkIndent>
+        <ContextualLinkTargetPicker
+          v-model="handler.inheritedTarget.value"
+          :targets="targets"
+          :views-error="viewsError"
+          :dashboards-error="dashboardsError"
+        />
+      </div>
+      <div class="db-contextual-link-config__field">
+        <p>{{ _t('Pass on to target page') }}</p>
+        <span class="db-contextual-link-config__always">
+          <CmkMultitoneIcon name="checkmark" primary-color="font" size="small" aria-hidden="true" />
+          <span>
+            {{ _t('Filters from the clicked item') }}
+            <span class="db-contextual-link-config__copy">{{ _t('(always passed on)') }}</span>
+          </span>
+        </span>
+        <CmkCheckbox
+          v-model="handler.inheritedIncludeContext.value"
+          :label="_t('Dashboard & widget filters')"
+        />
+        <CmkCheckbox v-model="handler.inheritedIncludeTimeRange.value" :label="_t('Time range')" />
       </div>
     </div>
 
     <div
-      v-if="handler.mode.value === 'custom'"
+      v-if="handler.enabled.value && handler.mode.value === 'custom'"
       class="db-contextual-link-config__mode db-contextual-link-config__links"
     >
       <div v-for="(link, index) in handler.customLinks.value" :key="link.id">
         <div class="db-contextual-link-config__link-header">
           <CmkCollapsibleTitle
             :title="_t('Link %{n}', { n: index + 1 })"
+            v-bind="closedLinks.has(link.id) ? { sideTitle: collapsedSummary(link.target) } : {}"
             :open="!closedLinks.has(link.id)"
             @toggle-open="toggleLink(link.id)"
           />
-          <CmkIconButton
-            name="delete"
-            :title="_t('Delete contextual link')"
-            @click="pendingDelete = index"
-          />
+          <span class="db-contextual-link-config__link-actions">
+            <CmkIconButton
+              name="clone"
+              :title="_t('Duplicate link')"
+              @click="handler.duplicateCustomLink(index)"
+            />
+            <CmkIconButton
+              name="delete"
+              :title="
+                handler.customLinks.value.length === 1
+                  ? _t('At least one link is needed')
+                  : _t('Delete link')
+              "
+              :disabled="handler.customLinks.value.length === 1"
+              @click="handler.removeCustomLink(index)"
+            />
+          </span>
         </div>
         <CmkCollapsible :open="!closedLinks.has(link.id)">
           <CmkIndent
             class="db-contextual-link-config__indent db-contextual-link-config__group db-contextual-link-config__link-body"
           >
             <div class="db-contextual-link-config__field">
-              <p>{{ _t('Link description') }}</p>
-              <CmkInput v-model="link.description" :aria-label="_t('Link description')" />
+              <p>{{ _t('Target page') }}</p>
+              <ContextualLinkTargetPicker
+                v-model="link.target"
+                :targets="targets"
+                :views-error="viewsError"
+                :dashboards-error="dashboardsError"
+              />
             </div>
             <div class="db-contextual-link-config__field">
-              <p>{{ _t('Target page') }}</p>
-              <ContextualLinkTargetPicker v-model="link.target" />
-              <CmkCheckbox
-                v-model="link.includeTimeRange"
-                :label="_t('Include current time range')"
+              <p class="db-contextual-link-config__label">
+                {{ _t('Link description') }}
+                <CmkHelpText
+                  :help="
+                    _t(
+                      'Shown in the link menu when users click an item. Describe how the target page relates to the clicked item, for example: Hosts with the same OS and folder.'
+                    )
+                  "
+                />
+              </p>
+              <CmkInput
+                v-model="link.description"
+                field-size="fill"
+                :aria-label="_t('Link description')"
               />
-              <CmkCheckbox
-                v-model="link.includeContext"
-                :label="_t('Include dashboard & widget filters')"
-              />
+            </div>
+            <div class="db-contextual-link-config__field">
+              <p>{{ _t('Pass on to target page') }}</p>
               <CmkCheckbox
                 v-model="link.includeClickedElement"
-                :label="_t('Include filter context of clicked element')"
+                :label="_t('Filters from the clicked item')"
               />
               <CmkIndent
                 v-if="link.includeClickedElement"
@@ -276,25 +343,25 @@ function confirmDelete() {
                   />
                 </div>
               </CmkIndent>
+              <CmkCheckbox
+                v-model="link.includeContext"
+                :label="_t('Dashboard & widget filters')"
+              />
+              <CmkCheckbox v-model="link.includeTimeRange" :label="_t('Time range')" />
             </div>
           </CmkIndent>
         </CmkCollapsible>
       </div>
       <CmkInlineButton class="db-contextual-link-config__add-link" @click="handler.addCustomLink()">
-        {{ _t('Add contextual link') }}
+        {{ _t('Add another link') }}
       </CmkInlineButton>
-      <DeleteContextualLinkPopup
-        :open="pendingDelete !== null"
-        @confirm="confirmDelete"
-        @close="pendingDelete = null"
-      />
     </div>
 
     <CmkInlineValidation
       v-if="handler.validationErrors.value.length > 0"
       :validation="handler.validationErrors.value"
     />
-  </CmkIndent>
+  </div>
 </template>
 
 <style scoped>
@@ -307,7 +374,12 @@ function confirmDelete() {
   padding-bottom: 0;
 }
 
-.db-contextual-link-config.db-contextual-link-config__indent {
+.db-contextual-link-config {
+  display: flex;
+  flex-direction: column;
+}
+
+.db-contextual-link-config__choice-description {
   margin-top: var(--dimension-4);
 }
 
@@ -344,6 +416,23 @@ function confirmDelete() {
   gap: var(--dimension-4);
 }
 
+.db-contextual-link-config__link-actions {
+  display: flex;
+  gap: var(--dimension-3);
+}
+
+.db-contextual-link-config__label {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-3);
+}
+
+.db-contextual-link-config__always {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-3);
+}
+
 .db-contextual-link-config__link-body.db-contextual-link-config__indent {
   margin-top: var(--dimension-6);
 }
@@ -358,12 +447,6 @@ function confirmDelete() {
 .db-contextual-link-config__add-filter,
 .db-contextual-link-config__add-link {
   align-self: flex-start;
-}
-
-.db-contextual-link-config__default-target {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-7);
 }
 
 .db-contextual-link-config__target {
@@ -384,10 +467,5 @@ function confirmDelete() {
 .db-contextual-link-config__copy {
   margin: 0;
   color: var(--font-color-secondary);
-}
-
-.db-contextual-link-config__included {
-  margin: 0;
-  padding-left: var(--dimension-6);
 }
 </style>

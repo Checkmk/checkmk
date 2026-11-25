@@ -6,56 +6,25 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkMenu, { type CmkMenuCategory, type CmkMenuItem } from 'cmk-ui-library/components/CmkMenu'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, onMounted, ref } from 'vue'
+import { computed } from 'vue'
 
-import { useViewsCollection } from '@/dashboard/composables/api/useViewsCollection'
-
-import { type DashboardTarget, fetchDashboardTargets } from '../WidgetVisualization/api'
 import type { VisualLocation } from './contextualLink'
-
-interface LinkTarget extends VisualLocation {
-  title: string
-  isBuiltIn: boolean
-}
+import { type LinkTarget, linkTargetTitle } from './useLinkTargets'
 
 const { _t } = usei18n()
 
 const target = defineModel<VisualLocation | null>({ required: true })
 
-const { list: views, ensureLoaded: ensureViewsLoaded, error: viewsError } = useViewsCollection()
-const dashboards = ref<DashboardTarget[]>([])
-const dashboardsError = ref<string | null>(null)
-
-onMounted(async () => {
-  try {
-    dashboards.value = await fetchDashboardTargets()
-  } catch (error: unknown) {
-    dashboardsError.value = String(error)
-  }
-})
-onMounted(ensureViewsLoaded)
+const { targets, viewsError, dashboardsError } = defineProps<{
+  targets: LinkTarget[]
+  viewsError: string | null
+  dashboardsError: string | null
+}>()
 
 const categories = computed<CmkMenuCategory[]>(() => [
   { value: 'dashboards', title: _t('Dashboard') },
   { value: 'views', title: _t('View') }
 ])
-
-const targets = computed<LinkTarget[]>(() =>
-  [
-    ...dashboards.value.map(({ name, title, isBuiltIn }) => ({
-      type: 'dashboards' as const,
-      name,
-      title,
-      isBuiltIn
-    })),
-    ...views.value.map((view) => ({
-      type: 'views' as const,
-      name: view.id!,
-      title: view.title!,
-      isBuiltIn: view.extensions.owner === ''
-    }))
-  ].sort((a, b) => a.title.localeCompare(b.title))
-)
 
 function itemValue({ type, name }: VisualLocation): string {
   return `${type}:${name}`
@@ -63,7 +32,7 @@ function itemValue({ type, name }: VisualLocation): string {
 
 // The name tells apart targets of the same title, and lets search find a target by it.
 const items = computed<CmkMenuItem[]>(() =>
-  targets.value.map((linkTarget) => ({
+  targets.map((linkTarget) => ({
     label: [
       { text: linkTarget.title, truncateOrder: 2 },
       { text: linkTarget.name, truncateOrder: 1 }
@@ -74,20 +43,12 @@ const items = computed<CmkMenuItem[]>(() =>
   }))
 )
 
-// A stored target that is no longer listed keeps its name.
-const selectedTitle = computed(() => {
-  if (target.value === null) {
-    return undefined
-  }
-  const { type, name } = target.value
-  return (
-    targets.value.find((linkTarget) => linkTarget.type === type && linkTarget.name === name)
-      ?.title ?? name
-  )
-})
+const selectedTitle = computed(() =>
+  target.value === null ? undefined : linkTargetTitle(targets, target.value)
+)
 
 function select(value: string): void {
-  const linkTarget = targets.value.find((candidate) => itemValue(candidate) === value)
+  const linkTarget = targets.find((candidate) => itemValue(candidate) === value)
   if (linkTarget !== undefined) {
     target.value = { type: linkTarget.type, name: linkTarget.name }
   }

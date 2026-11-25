@@ -52,6 +52,8 @@ export interface UseContextualLink<C extends LinkedContent> extends UseValidate 
   inheritedIncludeContext: Ref<boolean>
   customLinks: Ref<CustomLinkDraft<ContextFilterIdOf<C>>[]>
   addCustomLink: () => void
+  /** Inserts the copy right after the original. */
+  duplicateCustomLink: (index: number) => void
   removeCustomLink: (index: number) => void
   /** A method, so any widget's handler fits UseContextualLink<LinkedContent>. */
   addFilter(link: CustomLinkDraft<ContextFilterIdOf<C>>, filterId: string): void
@@ -281,6 +283,16 @@ export function useContextualLink<C extends LinkedContent>(
     inheritedIncludeContext,
     customLinks,
     addCustomLink: () => customLinks.value.push(newCustomLink<F>()),
+    duplicateCustomLink: (index: number) => {
+      const link = customLinks.value[index]!
+      customLinks.value.splice(index + 1, 0, {
+        ...link,
+        id: nextDraftId++,
+        filters: link.filters.map((filter) =>
+          newFilter(filter.filterId, filter.keyOption, filter.key)
+        )
+      })
+    },
     removeCustomLink: (index: number) => customLinks.value.splice(index, 1),
     addFilter: (link, filterId) =>
       link.filters.push(newFilter(filterId as F, options.filter_keys[filterId])),

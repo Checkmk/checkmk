@@ -11,6 +11,7 @@ import { defineComponent, h, ref } from 'vue'
 
 import ContextualLinkTargetPicker from '@/dashboard/components/Wizard/components/ContextualLink/ContextualLinkTargetPicker.vue'
 import type { VisualLocation } from '@/dashboard/components/Wizard/components/ContextualLink/contextualLink'
+import { useLinkTargets } from '@/dashboard/components/Wizard/components/ContextualLink/useLinkTargets'
 import type { ViewModel } from '@/dashboard/types/api'
 
 import {
@@ -55,11 +56,18 @@ async function openPicker(stored: VisualLocation | null) {
   const target = ref(stored)
   render(
     defineComponent({
-      setup: () => () =>
-        h(ContextualLinkTargetPicker, {
-          modelValue: target.value,
-          'onUpdate:modelValue': (value: VisualLocation | null) => (target.value = value)
-        })
+      setup() {
+        const { targets, viewsError, dashboardsError, load } = useLinkTargets()
+        void load()
+        return () =>
+          h(ContextualLinkTargetPicker, {
+            targets: targets.value,
+            viewsError: viewsError.value,
+            dashboardsError: dashboardsError.value,
+            modelValue: target.value,
+            'onUpdate:modelValue': (value: VisualLocation | null) => (target.value = value)
+          })
+      }
     })
   )
   const trigger = screen.getByRole('button', { name: /^Target page/ })

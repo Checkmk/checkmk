@@ -96,13 +96,13 @@ describe('WidgetInteraction', () => {
     it('are shown when a handler is bound', () => {
       renderWithContextualLink()
 
-      expect(screen.getByText('Contextual links')).toBeInTheDocument()
+      expect(screen.getByText('Links to views and dashboards')).toBeInTheDocument()
     })
 
     it('are hidden when no handler is bound', () => {
       render(WidgetInteraction, { props: controlsProps })
 
-      expect(screen.queryByText('Contextual links')).not.toBeInTheDocument()
+      expect(screen.queryByText('Links to views and dashboards')).not.toBeInTheDocument()
     })
   })
 })

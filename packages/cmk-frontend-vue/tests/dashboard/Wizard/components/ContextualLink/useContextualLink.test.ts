@@ -170,6 +170,15 @@ describe('useContextualLink', () => {
     expect(handler.validate()).toBe(true)
   })
 
+  it('rejects a custom link without a target', () => {
+    const handler = hostStatisticsLink()
+    handler.mode.value = 'custom'
+
+    expect(handler.validate()).toBe(false)
+    expect(handler.validationErrors.value).toEqual(['Every contextual link needs a target.'])
+    expect(handler.contextualLink.value).toBeUndefined()
+  })
+
   it('rejects a custom link without entries', () => {
     const handler = hostStatisticsLink()
     handler.mode.value = 'custom'
@@ -177,6 +186,17 @@ describe('useContextualLink', () => {
     handler.removeCustomLink(0)
 
     expect(handler.validate()).toBe(false)
+  })
+
+  it('gives a duplicated link filters of its own', () => {
+    const handler = hostStateLink()
+    handler.addFilter(handler.customLinks.value[0]!, 'host_labels')
+    handler.customLinks.value[0]!.filters[0]!.key = 'cmk/os_family'
+
+    handler.duplicateCustomLink(0)
+    handler.customLinks.value[1]!.filters[0]!.key = 'cmk/site'
+
+    expect(handler.customLinks.value[0]!.filters[0]!.key).toBe('cmk/os_family')
   })
 
   it('carries a label filter with its key', () => {

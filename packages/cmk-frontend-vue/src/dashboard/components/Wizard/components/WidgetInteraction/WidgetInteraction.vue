@@ -93,7 +93,7 @@ const { contextualLinkDefaultTarget } = defineProps<{
     </TableFormRow>
 
     <TableFormRow v-if="contextualLink !== undefined">
-      <FieldDescription>{{ _t('Contextual links') }}</FieldDescription>
+      <FieldDescription>{{ _t('Links to views and dashboards') }}</FieldDescription>
       <FieldComponent>
         <ContextualLinkConfig
           v-model:handler="contextualLink"

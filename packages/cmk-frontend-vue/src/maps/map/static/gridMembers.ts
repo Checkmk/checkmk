@@ -59,6 +59,54 @@ export function gridSpacingFor(
   return { grid_offset_x: offset, grid_offset_y: offset }
 }
 
+// A label holds about a dozen characters at their average width relative to
+// the font size; around it come its padding and margin, the ones
+// ``MapElementLabel`` cuts a label short by, and a gap to the next one.
+const GRID_LABEL_CHARS = 12
+const LABEL_CHAR_WIDTH = 0.6
+const GRID_LABEL_EXTRA = 16
+
+/**
+ * How far apart a grid places objects that show their label: room beside each
+ * icon for the label, and below it for the label's line.
+ */
+export function gridLabelSpacingFor(
+  iconSize: number,
+  labelSize: number
+): Required<Pick<MapElement, 'grid_offset_x' | 'grid_offset_y'>> {
+  return {
+    grid_offset_x:
+      Math.max(iconSize, Math.round(labelSize * LABEL_CHAR_WIDTH * GRID_LABEL_CHARS)) +
+      GRID_LABEL_EXTRA,
+    grid_offset_y: Math.round(iconSize + 2 * labelSize) + GRID_LABEL_EXTRA
+  }
+}
+
+/**
+ * How wide the label of each of the map's grid objects may be, in map units,
+ * by grid id: the room to the next object in the row, so it does not run under
+ * that object's label. A grid of one column leaves its labels as they are.
+ */
+export function gridLabelWidths(map: MapConfig): Map<string, number> {
+  const widths = new Map<string, number>()
+  for (const grid of mapGrids(map)) {
+    const layout = gridLayout(grid)
+    if (layout.perRow > 1 && layout.offsetX > 0) {
+      widths.set(grid.id, layout.offsetX)
+    }
+  }
+  return widths
+}
+
+/** The label width of a grid's object out of ``gridLabelWidths``; none for any other. */
+export function memberLabelWidth(
+  widths: ReadonlyMap<string, number>,
+  object: MapElement
+): number | undefined {
+  const gridId = gridIdOfMember(object.id)
+  return gridId === null ? undefined : widths.get(gridId)
+}
+
 /** NagVis' default state weights; ``asc`` puts the heaviest first. */
 export function nagvisStateWeight(state: ObjectState): number {
   const handled = state.acknowledged || state.in_downtime

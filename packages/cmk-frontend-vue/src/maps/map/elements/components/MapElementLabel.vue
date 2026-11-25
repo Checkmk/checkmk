@@ -27,6 +27,8 @@ const props = defineProps<{
   placement: 'stacked' | 'caption' | 'plain'
   /** The NagVis-compatible renderer, which pins the label absolutely. */
   classic?: boolean
+  /** In map units, which the canvas scales; a longer label ends in an ellipsis. */
+  maxWidth?: number | undefined
 }>()
 
 /**
@@ -60,6 +62,11 @@ const configuredStyle = computed(() => {
     wordBreak: width ? ('break-word' as const) : undefined,
     // An outline, so a border does not grow the layout the label sits in.
     outline: props.object.label_border ? `1px solid ${props.object.label_border}` : undefined,
+    // Its padding and a gap keep it apart from the label beside it.
+    maxWidth:
+      props.maxWidth === undefined
+        ? undefined
+        : `calc(${props.maxWidth}px * var(--maps-canvas-scale-x, 1) - var(--dimension-2) - 2 * var(--dimension-4))`,
     ...position.value
   }
 })
@@ -68,7 +75,13 @@ const configuredStyle = computed(() => {
 <template>
   <div
     class="maps-map-element-label"
-    :class="[`maps-map-element-label--${placement}`, { 'maps-map-element-label--pinned': classic }]"
+    :class="[
+      `maps-map-element-label--${placement}`,
+      {
+        'maps-map-element-label--pinned': classic,
+        'maps-map-element-label--fitted': maxWidth !== undefined
+      }
+    ]"
     :style="configuredStyle"
   >
     {{ text }}
@@ -94,6 +107,11 @@ const configuredStyle = computed(() => {
 
 .maps-map-element-label--stacked {
   margin-top: var(--dimension-4);
+}
+
+.maps-map-element-label--fitted {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Placed at the label's own offset from the object, not after the icon. */

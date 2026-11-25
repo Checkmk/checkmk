@@ -26,6 +26,9 @@ const props = defineProps<{ object: MapElement }>()
 
 const form = defineModel<ObjectForm>('form', { required: true })
 
+/** The label is now shown, or shown at another size; or shown no longer. */
+const emit = defineEmits<{ shown: []; hidden: [] }>()
+
 const { _t } = usei18n()
 
 const showAdvanced = ref(false)
@@ -39,7 +42,11 @@ watch(
 <template>
   <PropertySection :title="_t('Label')" :empty="!form.label.show">
     <template #title-control>
-      <CmkCheckbox v-model="form.label.show" :aria-label="_t('Show label')" />
+      <CmkCheckbox
+        v-model="form.label.show"
+        :aria-label="_t('Show label')"
+        @update:model-value="(shown: boolean) => (shown ? emit('shown') : emit('hidden'))"
+      />
     </template>
 
     <PropertyRow
@@ -56,7 +63,15 @@ watch(
       />
     </PropertyRow>
     <PropertyRow v-slot="{ id }" labels-control :label="_t('Font size')">
-      <CmkInput :id="id" v-model="form.label.size" type="number" min="8" max="72" unit="px" />
+      <CmkInput
+        :id="id"
+        v-model="form.label.size"
+        type="number"
+        min="8"
+        max="72"
+        unit="px"
+        @update:model-value="form.label.show && emit('shown')"
+      />
     </PropertyRow>
     <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Color')">
       <MapsColorInput

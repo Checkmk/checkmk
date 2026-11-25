@@ -9,6 +9,8 @@ import {
   formFromObject,
   gridOrderChoice,
   gridSortAndOrder,
+  makeGridLabelRoom,
+  takeBackGridLabelRoom,
   updatesFromForm,
   weatherColorNeedsMetric
 } from '@/maps/map/edit/properties/objectForm'
@@ -325,5 +327,67 @@ describe('the order of a grid', () => {
 
   it('reads an order by name as by name, whichever way it is turned', () => {
     expect(gridOrderChoice({ grid_sort: 'name', grid_order: 'desc' })).toBe('name')
+  })
+})
+
+describe('makeGridLabelRoom', () => {
+  it('widens a grid for a name of about a dozen characters and its line', () => {
+    const grid = obj({ type: 'grid', grid_offset_x: 45, grid_offset_y: 45 })
+    const form = formOf(grid)
+
+    makeGridLabelRoom(form, grid, 30)
+
+    expect([form.grid_offset_x, form.grid_offset_y]).toEqual([95, 68])
+  })
+
+  it('gives an icon wider than the label its own width', () => {
+    const grid = obj({ type: 'grid', grid_offset_x: 45, grid_offset_y: 45 })
+    const form = formOf(grid)
+
+    makeGridLabelRoom(form, grid, 120)
+
+    expect(form.grid_offset_x).toBe(136)
+  })
+
+  it('reads an emptied spacing field as the stored spacing', () => {
+    const grid = obj({ type: 'grid', grid_offset_x: 200, grid_offset_y: 120 })
+    const form = formOf(grid)
+    form.grid_offset_x = EMPTIED
+
+    makeGridLabelRoom(form, grid, 30)
+
+    expect(form.grid_offset_x).toBe(200)
+  })
+
+  it('never narrows a grid that already gives more', () => {
+    const grid = obj({ type: 'grid', grid_offset_x: 200, grid_offset_y: 120 })
+    const form = formOf(grid)
+
+    makeGridLabelRoom(form, grid, 30)
+
+    expect([form.grid_offset_x, form.grid_offset_y]).toEqual([200, 120])
+  })
+})
+
+describe('takeBackGridLabelRoom', () => {
+  const grid = () => obj({ type: 'grid', grid_offset_x: 45, grid_offset_y: 45 })
+
+  it('gives a grid back the spacing it had before its label', () => {
+    const form = formOf(grid())
+    const room = makeGridLabelRoom(form, grid(), 30)
+
+    takeBackGridLabelRoom(form, room)
+
+    expect([form.grid_offset_x, form.grid_offset_y]).toEqual([45, 45])
+  })
+
+  it('keeps a spacing set by hand since', () => {
+    const form = formOf(grid())
+    const room = makeGridLabelRoom(form, grid(), 30)
+    form.grid_offset_x = 300
+
+    takeBackGridLabelRoom(form, room)
+
+    expect([form.grid_offset_x, form.grid_offset_y]).toEqual([300, 68])
   })
 })

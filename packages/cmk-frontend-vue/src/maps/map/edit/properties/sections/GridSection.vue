@@ -70,7 +70,7 @@ function pickOrder(value: string | null): void {
     <p class="maps-grid-section__note">
       {{
         _t(
-          'Label and appearance apply to each object of the grid. Drag an object out of the grid, or use "Pin out of the grid" in its context menu, to place it on its own.'
+          'Label and appearance apply to each object of the grid. Showing the label widens the spacing for it; a label wider than spacing X is cut off, except on a NagVis-classic map. Drag an object out of the grid, or use "Pin out of the grid" in its context menu, to place it on its own.'
         )
       }}
     </p>

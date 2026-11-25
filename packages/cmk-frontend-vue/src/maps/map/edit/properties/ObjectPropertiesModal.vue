@@ -33,9 +33,14 @@ import {
   graphSourceOf
 } from '@/maps/map/edit/properties/graphSource'
 import {
+  type GridLabelRoom,
   type ObjectForm,
   boundTypeOf,
   formFromObject,
+  makeGridLabelRoom,
+  optionalNumber,
+  sameGridSpacing,
+  takeBackGridLabelRoom,
   updatesFromForm,
   weatherColorNeedsMetric
 } from '@/maps/map/edit/properties/objectForm'
@@ -51,6 +56,8 @@ import LinkSection from '@/maps/map/edit/properties/sections/LinkSection.vue'
 import PositionSection from '@/maps/map/edit/properties/sections/PositionSection.vue'
 import TemplatesSection from '@/maps/map/edit/properties/sections/TemplatesSection.vue'
 import TextboxSection from '@/maps/map/edit/properties/sections/TextboxSection.vue'
+import { objectIconSize } from '@/maps/map/objectIconSize'
+import { SETTINGS_DEFAULTS } from '@/maps/services/AuthoringSettingsService'
 import MapsConfirmDialog from '@/maps/shared/components/MapsConfirmDialog.vue'
 import MapsUnsavedChangesDialog from '@/maps/shared/components/MapsUnsavedChangesDialog.vue'
 import { useEscapeClose } from '@/maps/shared/composables/useEscapeClose'
@@ -73,6 +80,8 @@ const props = defineProps<{
   checkmkUrl?: string | null
   /** Where the object it edits is on screen, for the card to open away from. */
   avoid?: AnchorRect | null
+  /** A NagVis-classic map, whose grids keep NagVis' geometry. */
+  classic?: boolean
   /** Why the last save was refused; the card stays open to correct it. */
   saveError?: TranslatedString | null
   /** The filter the last save was refused for, told at the filter field. */
@@ -100,6 +109,9 @@ const updates = () => JSON.stringify(updatesFromForm(form.value, props.object, p
 const pristine = ref(updates())
 const dirty = computed(() => updates() !== pristine.value)
 
+// How the dialog widened a grid for its label, to take back with the label.
+let labelRoom: GridLabelRoom | null = null
+
 // Another object may be selected while the card is open, so the form follows
 // whatever it is showing.
 watch(
@@ -108,8 +120,44 @@ watch(
     form.value = formFromObject(object, { z: props.mapDefaultZ ?? 1 })
     graphSource.value = graphSourceOf(object)
     pristine.value = updates()
+    labelRoom = null
   }
 )
+
+function onLabelShown(): void {
+  if (props.object.type !== 'grid' || props.classic) {
+    return
+  }
+  const { display } = form.value
+  const shown = {
+    ...props.object,
+    display: {
+      ...props.object.display,
+      mode: display.mode,
+      image_size: optionalNumber(display.image_size)
+    }
+  }
+  const iconSize = objectIconSize(shown, {
+    map: null,
+    override: undefined,
+    fallback: props.mapIconSize ?? SETTINGS_DEFAULTS.icon_size
+  })
+  const room = makeGridLabelRoom(form.value, props.object, iconSize)
+  // A larger label widens again; switched off, it goes back past both, unless
+  // the spacing was set by hand in between.
+  const earlier = labelRoom
+  labelRoom = {
+    before: earlier && sameGridSpacing(room.before, earlier.after) ? earlier.before : room.before,
+    after: room.after
+  }
+}
+
+function onLabelHidden(): void {
+  if (labelRoom) {
+    takeBackGridLabelRoom(form.value, labelRoom)
+    labelRoom = null
+  }
+}
 
 function setGraphSource(source: GraphSource): void {
   graphSource.value = source
@@ -367,7 +415,12 @@ function onConfirmDelete(): void {
         />
         <template v-if="!isLine">
           <PositionSection v-model:form="form" :map-type="mapType" />
-          <LabelSection v-model:form="form" :object="object" />
+          <LabelSection
+            v-model:form="form"
+            :object="object"
+            @shown="onLabelShown"
+            @hidden="onLabelHidden"
+          />
         </template>
         <AppearanceSection
           v-if="showsAppearance"

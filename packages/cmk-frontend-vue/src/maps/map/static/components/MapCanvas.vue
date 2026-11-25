@@ -15,7 +15,7 @@ between them.
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, provide, useTemplateRef, watch } from 'vue'
+import { computed, provide, useTemplateRef, watch, watchEffect } from 'vue'
 
 import ContextMenu from '@/maps/map/components/ContextMenu.vue'
 import HoverMenu from '@/maps/map/components/HoverMenu.vue'
@@ -35,7 +35,7 @@ import { useCanvasMarqueeSelect } from '@/maps/map/static/composables/useCanvasM
 import { useCanvasObjectDrag } from '@/maps/map/static/composables/useCanvasObjectDrag'
 import { useCanvasPan } from '@/maps/map/static/composables/useCanvasPan'
 import { CANVAS_SCALE, useCanvasViewport } from '@/maps/map/static/composables/useCanvasViewport'
-import { editTargetOf } from '@/maps/map/static/gridMembers'
+import { editTargetOf, gridLabelWidths, memberLabelWidth } from '@/maps/map/static/gridMembers'
 import { useSettings } from '@/maps/services/context'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 import { objectDisplayName } from '@/maps/utils/dropdownOptions'
@@ -138,6 +138,15 @@ const viewport = useCanvasViewport({
   backgroundUrl: () => background.url.value,
   backgroundSize: () => (classic.value ? background.naturalSize.value : null),
   backgroundLayout: () => backgroundBox.value
+})
+
+// The NagVis-compatible renderer keeps NagVis' labels whole.
+const labelWidths = computed(() =>
+  classic.value ? new Map<string, number>() : gridLabelWidths(props.config)
+)
+// Set on the element rather than bound, so a resize does not re-render every object.
+watchEffect(() => {
+  canvas.value?.style.setProperty('--maps-canvas-scale-x', String(viewport.scale.value.sx))
 })
 
 /**
@@ -483,6 +492,7 @@ defineExpose({
       :bind-target="object.id === lineBindCandidate"
       :resize-override="resize.sizes[object.id]"
       :box-style="layout.objectStyle(object)"
+      :caption-width="memberLabelWidth(labelWidths, object)"
       :preview="preview"
       :tab-stop="roving.isTabStop(object.id)"
       @pointer-down="onObjectPointerDown($event, object)"

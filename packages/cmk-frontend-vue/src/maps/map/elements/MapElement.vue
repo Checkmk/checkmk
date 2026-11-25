@@ -38,6 +38,8 @@ const props = defineProps<{
   editMode?: boolean
   /** Live size while the operator is dragging the resize grip. */
   resizeOverride?: { width: number; height: number } | undefined
+  /** In map units; a longer label is cut off. */
+  captionWidth?: number | undefined
   connectionId?: string | undefined
   renderMode?: 'default' | 'nagvis_classic'
 }>()
@@ -159,6 +161,7 @@ const showsCaption = computed(
       :text="objectCaption(object, state, _t)"
       placement="stacked"
       :classic="classic"
+      :max-width="captionWidth"
     />
   </div>
 </template>

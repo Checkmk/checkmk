@@ -66,6 +66,36 @@ describe('MapElement caption', () => {
     expect(label.style.left).toBe('50%')
     expect(label.style.transform).toBe('translateX(calc(-50% + 30px))')
   })
+
+  function shownLabel(extra: { captionWidth?: number } = {}): HTMLElement {
+    const label = { show: true, text: 'web01', x: 0, y: 0, size: 11, color: '#000000' }
+    render(MapElement, {
+      props: {
+        object: aHost({ label: { ...label, background: 'transparent' } }),
+        state: aState({ object_id: 'host', type: 'host', state: 'UP' }),
+        iconSize: 30,
+        ...extra
+      },
+      global: mapsGlobal(ringStub)
+    })
+    return screen.getByText('web01')
+  }
+
+  it('cuts its label off short of the width it is given', () => {
+    const label = shownLabel({ captionWidth: 44 })
+
+    expect(label.style.maxWidth).toBe(
+      'calc(44px * var(--maps-canvas-scale-x, 1) - var(--dimension-2) - 2 * var(--dimension-4))'
+    )
+    expect(label).toHaveClass('maps-map-element-label--fitted')
+  })
+
+  it('lets its label run as long as it is without a width', () => {
+    const label = shownLabel()
+
+    expect(label.style.maxWidth).toBe('')
+    expect(label).not.toHaveClass('maps-map-element-label--fitted')
+  })
 })
 
 describe('MapElement problem pulse', () => {

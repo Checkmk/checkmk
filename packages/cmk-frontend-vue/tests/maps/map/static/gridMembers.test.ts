@@ -6,15 +6,17 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  gridLabelWidths,
   gridLayout,
   gridMemberElement,
   gridOrder,
   gridPosition,
-  gridSpacingFor
+  gridSpacingFor,
+  memberLabelWidth
 } from '@/maps/map/static/gridMembers'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 
-import { aState, anObject } from '../../support/fixtures'
+import { aMap, aState, anObject } from '../../support/fixtures'
 
 function member(host: string, state = 'UP', extra: Partial<ObjectState> = {}): ObjectState {
   return aState({
@@ -110,6 +112,34 @@ describe('gridLayout', () => {
       sort: 'name',
       order: 'asc'
     })
+  })
+})
+
+describe('gridLabelWidths', () => {
+  it('gives the labels of a grid the room to the next object in the row', () => {
+    const map = aMap({
+      objects: [grid({ grid_offset_x: 60 }), anObject({ id: 'h', type: 'host' })]
+    })
+
+    expect(gridLabelWidths(map)).toEqual(new Map([['g', 60]]))
+  })
+
+  it('leaves the labels of a grid of one column as they are', () => {
+    expect(gridLabelWidths(aMap({ objects: [grid({ grid_per_row: 1 })] }))).toEqual(new Map())
+  })
+})
+
+describe('memberLabelWidth', () => {
+  const widths = new Map([['g', 60]])
+
+  it("gives a grid's object its grid's label width", () => {
+    expect(memberLabelWidth(widths, anObject({ id: 'auto:grid:g:web01', type: 'host' }))).toBe(60)
+  })
+
+  it('gives an object pinned out of the grid none', () => {
+    expect(memberLabelWidth(widths, anObject({ id: 'host_1', type: 'host', grid_id: 'g' }))).toBe(
+      undefined
+    )
   })
 })
 

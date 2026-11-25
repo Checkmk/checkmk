@@ -9,6 +9,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref } from 'vue'
 
 import ObjectPropertiesModal from '@/maps/map/edit/properties/ObjectPropertiesModal.vue'
+import { gridLabelSpacingFor } from '@/maps/map/static/gridMembers'
 import type { MapElement, ObjectType } from '@/maps/types/api'
 
 import { aState, anObject } from '../../../support/fixtures'
@@ -234,6 +235,107 @@ describe('ObjectPropertiesModal – field names', () => {
     await userEvent.click(screen.getByRole('checkbox', { name: 'Show label' }))
 
     expect(screen.getByLabelText('Font size')).toBeInTheDocument()
+  })
+})
+
+describe('ObjectPropertiesModal – grid labels', () => {
+  const spacing = (name: string) =>
+    Number((screen.getByRole('spinbutton', { name }) as HTMLInputElement).value)
+
+  it('widens the grid when its label is switched on', async () => {
+    const user = userEvent.setup()
+    renderModal(obj({ type: 'grid', grid_offset_x: 45, grid_offset_y: 45 }), { mapIconSize: 30 })
+
+    await user.click(screen.getByRole('checkbox', { name: 'Show label' }))
+
+    expect(spacing('Spacing X')).toBeGreaterThan(45)
+    expect(spacing('Spacing Y')).toBeGreaterThan(45)
+  })
+
+  it('widens the grid again for a larger label', async () => {
+    const user = userEvent.setup()
+    renderModal(obj({ type: 'grid', grid_offset_x: 45, grid_offset_y: 45 }), { mapIconSize: 30 })
+    await user.click(screen.getByRole('checkbox', { name: 'Show label' }))
+    const before = spacing('Spacing X')
+
+    const size = screen.getByRole('spinbutton', { name: 'Font size' })
+    await user.clear(size)
+    await user.type(size, '24')
+
+    expect(spacing('Spacing X')).toBeGreaterThan(before)
+  })
+
+  it('narrows the grid again when its label is switched off', async () => {
+    const user = userEvent.setup()
+    renderModal(obj({ type: 'grid', grid_offset_x: 45, grid_offset_y: 45 }), { mapIconSize: 30 })
+    const show = screen.getByRole('checkbox', { name: 'Show label' })
+
+    await user.click(show)
+    await user.click(show)
+
+    expect([spacing('Spacing X'), spacing('Spacing Y')]).toEqual([45, 45])
+  })
+
+  it('narrows the grid back past a widening for a larger label', async () => {
+    const user = userEvent.setup()
+    renderModal(obj({ type: 'grid', grid_offset_x: 45, grid_offset_y: 45 }), { mapIconSize: 30 })
+    const show = screen.getByRole('checkbox', { name: 'Show label' })
+    await user.click(show)
+    const size = screen.getByRole('spinbutton', { name: 'Font size' })
+    await user.clear(size)
+    await user.type(size, '24')
+
+    await user.click(show)
+
+    expect([spacing('Spacing X'), spacing('Spacing Y')]).toEqual([45, 45])
+  })
+
+  it('keeps a spacing set by hand between two widenings when the label goes', async () => {
+    const user = userEvent.setup()
+    renderModal(obj({ type: 'grid', grid_offset_x: 45, grid_offset_y: 45 }), { mapIconSize: 30 })
+    const show = screen.getByRole('checkbox', { name: 'Show label' })
+    await user.click(show)
+    const x = screen.getByRole('spinbutton', { name: 'Spacing X' })
+    await user.clear(x)
+    await user.type(x, '300')
+    const size = screen.getByRole('spinbutton', { name: 'Font size' })
+    await user.clear(size)
+    await user.type(size, '24')
+
+    await user.click(show)
+
+    expect(spacing('Spacing X')).toBe(300)
+  })
+
+  it('widens the grid for the map icon size once its own size is emptied', async () => {
+    const user = userEvent.setup()
+    renderModal(
+      obj({
+        type: 'grid',
+        grid_offset_x: 45,
+        grid_offset_y: 45,
+        display: { mode: 'icon', image: null, image_size: 20 },
+        label: { show: false, x: 0, y: 0, size: 11, color: '#fff', background: 'transparent' }
+      }),
+      { mapIconSize: 60 }
+    )
+    await user.clear(screen.getByRole('spinbutton', { name: 'Size' }))
+
+    await user.click(screen.getByRole('checkbox', { name: 'Show label' }))
+
+    expect(spacing('Spacing Y')).toBe(gridLabelSpacingFor(60, 11).grid_offset_y)
+  })
+
+  it('keeps the NagVis geometry of a grid on a NagVis-classic map', async () => {
+    const user = userEvent.setup()
+    renderModal(obj({ type: 'grid', grid_offset_x: 45, grid_offset_y: 45 }), {
+      mapIconSize: 30,
+      classic: true
+    })
+
+    await user.click(screen.getByRole('checkbox', { name: 'Show label' }))
+
+    expect([spacing('Spacing X'), spacing('Spacing Y')]).toEqual([45, 45])
   })
 })
 

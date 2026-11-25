@@ -293,6 +293,33 @@ describe('MapCanvas – smoke with real MapElement', () => {
     expect(await pulsesRest()).toBe(false)
   })
 
+  it("cuts the label of a grid's object off at the next object in the row", () => {
+    const label = { show: true, x: 0, y: 0, size: 10, color: '#ffffff', background: 'transparent' }
+    const config = aMap({
+      ...sampleConfig,
+      objects: [
+        anObject({ id: 'g', type: 'grid', x: 0, y: 0, grid_offset_x: 50, label }),
+        anObject({
+          id: 'auto:grid:g:web01',
+          type: 'host',
+          x: 0,
+          y: 0,
+          host_name: 'web01',
+          grid_id: 'g',
+          label
+        })
+      ]
+    })
+    render(MapCanvas, {
+      props: { ...baseProps, config, states: {} },
+      global: mapsGlobal(overlayStubs)
+    })
+
+    expect(screen.getByText('web01').style.maxWidth).toBe(
+      'calc(50px * var(--maps-canvas-scale-x, 1) - var(--dimension-2) - 2 * var(--dimension-4))'
+    )
+  })
+
   it('renders host icon and textbox content', () => {
     const { container } = render(MapCanvas, {
       props: { ...baseProps, config: smokeConfig },

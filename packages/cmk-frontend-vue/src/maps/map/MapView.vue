@@ -1081,6 +1081,7 @@ function closeBulkAckModal(sent: boolean): void {
         :connection-id="mapConfig?.connection_id ?? ''"
         :map-type="mapConfig?.view.type"
         :map-icon-size="mapConfig?.icon_size ?? settingsStore.settings.value.icon_size"
+        :classic="mapConfig?.render_mode === 'nagvis_classic'"
         :map-default-z="mapConfig?.default_z ?? 1"
         :checkmk-url="checkmkUrl"
         :avoid="selectedObjectAnchor"

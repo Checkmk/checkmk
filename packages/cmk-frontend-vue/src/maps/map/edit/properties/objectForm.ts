@@ -3,7 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { GRID_MEMBER_LIMIT, GRID_OFFSET_MAX, gridLayout } from '@/maps/map/static/gridMembers'
+import {
+  GRID_MEMBER_LIMIT,
+  GRID_OFFSET_MAX,
+  gridLabelSpacingFor,
+  gridLayout
+} from '@/maps/map/static/gridMembers'
 import type {
   LinePerfdataLabel,
   MapElement,
@@ -434,8 +439,53 @@ function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value)
 }
 
-function optionalNumber(value: number | undefined): number | null {
+/** A number field's value, ``null`` when emptied. */
+export function optionalNumber(value: number | undefined): number | null {
   return isNumber(value) ? value : null
+}
+
+type GridSpacing = Pick<ObjectForm, 'grid_offset_x' | 'grid_offset_y'>
+
+/** The spacing a grid had before the dialog widened it for its label, and after. */
+export interface GridLabelRoom {
+  before: GridSpacing
+  after: GridSpacing
+}
+
+/**
+ * Widens a grid for its label, as the form now shows it; what the grid already
+ * gives, an emptied field meaning the stored spacing, is never narrowed.
+ */
+export function makeGridLabelRoom(
+  form: ObjectForm,
+  grid: MapElement,
+  iconSize: number
+): GridLabelRoom {
+  const before = spacingOf(form)
+  const room = gridLabelSpacingFor(iconSize, numberOr(form.label.size, DEFAULT_LABEL_SIZE))
+  const layout = gridLayout(grid)
+  form.grid_offset_x = Math.max(numberOr(form.grid_offset_x, layout.offsetX), room.grid_offset_x)
+  form.grid_offset_y = Math.max(numberOr(form.grid_offset_y, layout.offsetY), room.grid_offset_y)
+  return { before, after: spacingOf(form) }
+}
+
+/**
+ * Takes back the widening for a label shown no longer, unless the spacing was
+ * set by hand since.
+ */
+export function takeBackGridLabelRoom(form: ObjectForm, room: GridLabelRoom): void {
+  if (sameGridSpacing(spacingOf(form), room.after)) {
+    Object.assign(form, room.before)
+  }
+}
+
+/** Whether two spacings of a grid are the same. */
+export function sameGridSpacing(a: GridSpacing, b: GridSpacing): boolean {
+  return a.grid_offset_x === b.grid_offset_x && a.grid_offset_y === b.grid_offset_y
+}
+
+function spacingOf(form: ObjectForm): GridSpacing {
+  return { grid_offset_x: form.grid_offset_x, grid_offset_y: form.grid_offset_y }
 }
 
 function numberOr<T>(value: number, stored: T): number | T {

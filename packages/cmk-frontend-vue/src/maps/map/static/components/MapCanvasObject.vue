@@ -45,6 +45,7 @@ const props = defineProps<{
   resizeOverride?: { width: number; height: number } | undefined
   /** Placement and dimming, from the canvas layout. */
   boxStyle: Record<string, string | number | undefined>
+  captionWidth?: number | undefined
   /** The settings preview is not interactive. */
   preview?: boolean
   tabStop?: boolean
@@ -141,6 +142,7 @@ function onKeydown(event: KeyboardEvent): void {
       :selected="selected"
       :edit-mode="editMode"
       :resize-override="resizeOverride"
+      :caption-width="captionWidth"
       :connection-id="config.connection_id"
       :render-mode="config.render_mode ?? 'default'"
       @hover="emit('hover', $event, anchorRectOf(root))"

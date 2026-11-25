@@ -31,7 +31,13 @@ function topList(overrides: Partial<ComputedTopList> = {}): ComputedTopList {
         site_id: 'heute',
         host_name: 'host-b',
         service_description: 'CPU load',
-        metric: { value: 20, formatted: '20.00', color: '#ff0000' },
+        metric: {
+          value: 20,
+          formatted: '20.00 %',
+          value_text: '20.00',
+          unit: '%',
+          color: '#ff0000'
+        },
         host_link_properties: { links: [] },
         service_link_properties: { links: [] }
       },
@@ -39,7 +45,13 @@ function topList(overrides: Partial<ComputedTopList> = {}): ComputedTopList {
         site_id: 'heute',
         host_name: 'host-a',
         service_description: 'CPU load',
-        metric: { value: 5, formatted: '5.00', color: '#00ff00' },
+        metric: {
+          value: 5,
+          formatted: '5.00 %',
+          value_text: '5.00',
+          unit: '%',
+          color: '#00ff00'
+        },
         host_link_properties: { links: [] },
         service_link_properties: { links: [] }
       }
@@ -161,7 +173,7 @@ describe('DashboardContentTopList', () => {
 
   it('shows the pre-formatted metric value', async () => {
     await renderWidget()
-    expect(screen.getByText('20.00')).toBeInTheDocument()
+    expect(screen.getByText('20.00 %')).toBeInTheDocument()
   })
 
   it('links hosts and services to their monitoring views', async () => {

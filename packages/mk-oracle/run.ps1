@@ -257,18 +257,6 @@ function Invoke-RemoteComponentTest {
     # on an already-open agent/ControlMaster session.
     $ssh_opts = @("-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=accept-new")
     $ssh_keyfile = $null
-    if (-not [string]::IsNullOrEmpty($env:CI_ORA_WIN_SSH_KEYFILE)) {
-        # Windows OpenSSH rejects key files with permissive ACLs, and Jenkins
-        # materialises the credential with inherited workspace permissions, so
-        # use a private copy restricted to the current user.
-        $ssh_keyfile = Join-Path ([System.IO.Path]::GetTempPath()) "mk-oracle-ssh-key-$PID"
-        Copy-Item $env:CI_ORA_WIN_SSH_KEYFILE $ssh_keyfile -Force
-        & icacls $ssh_keyfile /inheritance:r /grant:r "$($env:USERNAME):R" | Out-Null
-        if ($LASTEXITCODE -ne 0) {
-            Write-Error "Failed to restrict ACL on $ssh_keyfile" -ErrorAction Stop
-        }
-        $ssh_opts += @("-i", $ssh_keyfile)
-    }
 
     # 1. Build the component-test binaries for the Windows target without running them.
     Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target "--no-run"
@@ -307,7 +295,22 @@ foreach (`$exe in @($exe_list)) {
 exit 0
 "@ | Set-Content -Path $remote_script -Encoding utf8BOM
 
+    $succeeded = $false
     try {
+        if (-not [string]::IsNullOrEmpty($env:CI_ORA_WIN_SSH_KEYFILE)) {
+            # Windows OpenSSH rejects key files with permissive ACLs, and Jenkins
+            # materialises the credential with inherited workspace permissions, so
+            # use a private copy restricted to the current user.
+            $ssh_keyfile = Join-Path ([System.IO.Path]::GetTempPath()) "mk-oracle-ssh-key-$(New-Guid)"
+            Copy-Item $env:CI_ORA_WIN_SSH_KEYFILE $ssh_keyfile -Force
+            # Read-only access would keep the cleanup below from deleting the copy.
+            & icacls $ssh_keyfile /inheritance:r /grant:r "$($env:USERNAME):F" | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+                Write-Error "Failed to restrict ACL on $ssh_keyfile" -ErrorAction Stop
+            }
+            $ssh_opts += @("-i", $ssh_keyfile)
+        }
+
         # 3. Stage binaries, fixtures and runner on the remote host.
         & ssh @ssh_opts $target "powershell -NoProfile -Command `"New-Item -ItemType Directory -Force -Path '$remote_dir\tests' | Out-Null`""
         if ($LASTEXITCODE -ne 0) { Write-Error "Failed to create remote dir on $target" -ErrorAction Stop }
@@ -328,13 +331,16 @@ exit 0
         Write-Host "Remote component test on $target ($remote_dir) ..." -ForegroundColor White
         & ssh @ssh_opts $target "powershell -NoProfile -ExecutionPolicy Bypass -File `"$remote_dir\mk-oracle-remote-run.ps1`""
         if ($LASTEXITCODE -ne 0) { Write-Error "Remote component tests failed with code $LASTEXITCODE" -ErrorAction Stop }
+        $succeeded = $true
     }
     finally {
         # The runner embeds the password; remove it from both ends.
         Remove-Item $remote_script -ErrorAction SilentlyContinue
         & ssh @ssh_opts $target "powershell -NoProfile -Command `"Remove-Item -Recurse -Force -Path '$remote_dir' -ErrorAction SilentlyContinue`"" 2>$null
-        if ($null -ne $ssh_keyfile) {
-            Remove-Item $ssh_keyfile -Force -ErrorAction SilentlyContinue
+        if ($null -ne $ssh_keyfile -and (Test-Path -LiteralPath $ssh_keyfile)) {
+            # A terminating error here would replace the one leaving the try block.
+            $on_error = if ($succeeded) { "Stop" } else { "Continue" }
+            Remove-Item -LiteralPath $ssh_keyfile -Force -ErrorAction $on_error
         }
     }
 }

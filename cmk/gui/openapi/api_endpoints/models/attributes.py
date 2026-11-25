@@ -913,12 +913,6 @@ class MetricsAssociationFilterGroupModel:
     data_point_attributes: Sequence[MetricsAssociationAttributeFilterModel] = api_field(
         description="A list of data point attribute filters."
     )
-    host_name_template: str | ApiOmitted = api_field(
-        description="Optional. The host name template of this host name lookup rule (macros "
-        "$RESOURCE_ATTR.<key>$, $SCOPE_ATTR.<key>$, $DATA_POINT_ATTR.<key>$), resolved at query "
-        "time to select this rule's series.",
-        default_factory=ApiOmitted,
-    )
     attribute_filter: Mapping[str, object] | ApiOmitted = api_field(
         description="Optional. The recursive attribute filter the Setup GUI persists for a rule. "
         "When present it takes precedence over the three attribute lists. Only an AND of 'equals' "
@@ -1007,8 +1001,6 @@ def _lookup_rule_to_internal(
             for f in rule.data_point_attributes
         ],
     )
-    if not isinstance(rule.host_name_template, ApiOmitted):
-        internal["host_name_template"] = rule.host_name_template
     if not isinstance(rule.attribute_filter, ApiOmitted):
         _validate_wire_filter(rule.attribute_filter)
         internal["attribute_filter"] = rule.attribute_filter
@@ -1047,7 +1039,6 @@ def _lookup_rule_from_internal(
             MetricsAssociationAttributeFilterModel(key=f["key"], value=f["value"])
             for f in rule["data_point_attributes"]
         ],
-        host_name_template=rule.get("host_name_template", ApiOmitted()),
         attribute_filter=rule.get("attribute_filter", ApiOmitted()),
     )
 

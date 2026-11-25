@@ -87,7 +87,7 @@ def test_metrics_association_multi_rule_request_maps_to_lookup_rules(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A request carrying several host name lookup rules validates and maps to the internal
-    ``host_name_lookup_rules`` list, preserving each rule's template."""
+    ``host_name_lookup_rules`` list."""
     monkeypatch.setattr(
         "cmk.gui.openapi.framework.model.restrict_editions.edition",
         lambda _omd_root: Edition.ULTIMATE,
@@ -101,13 +101,11 @@ def test_metrics_association_multi_rule_request_maps_to_lookup_rules(
                         "resource_attributes": [{"key": "k8s.pod.name", "value": "pod-a"}],
                         "scope_attributes": [],
                         "data_point_attributes": [],
-                        "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
                     },
                     {
                         "resource_attributes": [{"key": "k8s.pod.name", "value": "pod-b"}],
                         "scope_attributes": [],
                         "data_point_attributes": [],
-                        "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
                     },
                 ],
             },
@@ -126,13 +124,11 @@ def test_metrics_association_multi_rule_request_maps_to_lookup_rules(
                     "resource_attributes": [{"key": "k8s.pod.name", "value": "pod-a"}],
                     "scope_attributes": [],
                     "data_point_attributes": [],
-                    "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
                 },
                 {
                     "resource_attributes": [{"key": "k8s.pod.name", "value": "pod-b"}],
                     "scope_attributes": [],
                     "data_point_attributes": [],
-                    "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
                 },
             ],
         },
@@ -168,7 +164,6 @@ def test_metrics_association_wire_attribute_filter_reads_back_as_written(
                 },
             ],
         },
-        "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
     }
     request = TypeAdapter(  # astrein: disable=pydantic-type-adapter
         HostAttributeRequestModel
@@ -248,9 +243,9 @@ def test_metrics_association_empty_lookup_rules_request_is_rejected(
         ).validate_python(payload)
 
 
-def test_metrics_association_view_multi_rule_exposes_all_rules_with_templates() -> None:
+def test_metrics_association_view_multi_rule_exposes_all_rules() -> None:
     """A host stored with several lookup rules is exposed as one ``host_name_lookup_rules`` entry
-    per rule, each carrying its template."""
+    per rule."""
     internal_value = {
         "metrics_association": (
             "enabled",
@@ -260,13 +255,11 @@ def test_metrics_association_view_multi_rule_exposes_all_rules_with_templates() 
                         "resource_attributes": [{"key": "k8s.pod.name", "value": "pod-a"}],
                         "scope_attributes": [],
                         "data_point_attributes": [],
-                        "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
                     },
                     {
                         "resource_attributes": [{"key": "k8s.pod.name", "value": "pod-b"}],
                         "scope_attributes": [],
                         "data_point_attributes": [],
-                        "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
                     },
                 ],
             },
@@ -282,4 +275,3 @@ def test_metrics_association_view_multi_rule_exposes_all_rules_with_templates() 
     rules = config.host_name_lookup_rules
     assert [(f.key, f.value) for f in rules[0].resource_attributes] == [("k8s.pod.name", "pod-a")]
     assert [(f.key, f.value) for f in rules[1].resource_attributes] == [("k8s.pod.name", "pod-b")]
-    assert rules[1].host_name_template == "$RESOURCE_ATTR.k8s.pod.name$"

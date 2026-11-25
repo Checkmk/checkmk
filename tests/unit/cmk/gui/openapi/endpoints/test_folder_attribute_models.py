@@ -70,13 +70,11 @@ def test_metrics_association_enabled_multi_rule_validates_and_exposes_rules(
                         "resource_attributes": [{"key": "k8s.pod.name", "value": "pod-a"}],
                         "scope_attributes": [],
                         "data_point_attributes": [],
-                        "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
                     },
                     {
                         "resource_attributes": [{"key": "k8s.pod.name", "value": "pod-b"}],
                         "scope_attributes": [],
                         "data_point_attributes": [],
-                        "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
                     },
                 ],
             },
@@ -94,7 +92,6 @@ def test_metrics_association_enabled_multi_rule_validates_and_exposes_rules(
     rules = config.host_name_lookup_rules
     assert [(f.key, f.value) for f in rules[0].resource_attributes] == [("k8s.pod.name", "pod-a")]
     assert [(f.key, f.value) for f in rules[1].resource_attributes] == [("k8s.pod.name", "pod-b")]
-    assert rules[1].host_name_template == "$RESOURCE_ATTR.k8s.pod.name$"
 
 
 def test_metrics_association_disabled_validates(monkeypatch: pytest.MonkeyPatch) -> None:

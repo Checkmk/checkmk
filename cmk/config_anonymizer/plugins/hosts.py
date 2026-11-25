@@ -427,11 +427,6 @@ def _anonymize_metrics_association_lookup_rule(
             for attribute_filter in rule["data_point_attributes"]
         ],
     }
-    if "host_name_template" in rule:
-        anonymized["host_name_template"] = anon_interface.get_generic_mapping(
-            rule["host_name_template"],
-            "metrics_association",
-        )
     if "attribute_filter" in rule:
         anonymized["attribute_filter"] = _anonymize_metrics_association_wire_filter(
             anon_interface, rule["attribute_filter"]

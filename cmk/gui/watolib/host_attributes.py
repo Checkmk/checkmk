@@ -144,10 +144,6 @@ class MetricsAssociationHostNameLookupRule(TypedDict):
     resource_attributes: Sequence[MetricsAssociationAttributeFilter]
     scope_attributes: Sequence[MetricsAssociationAttributeFilter]
     data_point_attributes: Sequence[MetricsAssociationAttributeFilter]
-    # Optional: a host name template (e.g. "$RESOURCE_ATTR.service.name$") that resolves to the
-    # host's own name. Resolved into concrete attribute filters at fetch time. A rule without a
-    # template selects its series by the attribute filters alone.
-    host_name_template: NotRequired[str]
     # Optional: the recursive wire attribute filter a dynamic host management connection sends.
     # Takes precedence over the three lists above.
     attribute_filter: NotRequired[Mapping[str, object]]

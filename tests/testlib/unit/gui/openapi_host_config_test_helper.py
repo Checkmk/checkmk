@@ -110,4 +110,21 @@ INVALID_METRICS_ASSOCIATION_PARAMS = [
         "Field required",
         id="filter_item_missing_key",
     ),
+    pytest.param(
+        [
+            "enabled",
+            {
+                "host_name_lookup_rules": [
+                    {
+                        "resource_attributes": [{"key": "k", "value": "v"}],
+                        "scope_attributes": [],
+                        "data_point_attributes": [],
+                        "host_name_template": "$RESOURCE_ATTR.service.name$",
+                    },
+                ],
+            },
+        ],
+        "Unexpected keyword argument",
+        id="rule_host_name_template_rejected",
+    ),
 ]

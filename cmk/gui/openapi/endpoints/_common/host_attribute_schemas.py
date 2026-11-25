@@ -146,24 +146,12 @@ class AttributeFiltersSchema(BaseSchema):
     )
 
 
-class AttributeFilterGroupSchema(AttributeFiltersSchema):
-    host_name_template = fields.String(
-        required=False,
-        minLength=1,
-        example="$RESOURCE_ATTR.service.name$",
-        description="Optional. The host name template of this host name lookup rule, using the "
-        "macros $RESOURCE_ATTR.<key>$, $SCOPE_ATTR.<key>$ and $DATA_POINT_ATTR.<key>$, resolved at "
-        "query time to select this rule's series.",
-    )
-
-
 class MetricsAssociationConfig(BaseSchema):
     host_name_lookup_rules = fields.List(
-        fields.Nested(AttributeFilterGroupSchema),
+        fields.Nested(AttributeFiltersSchema),
         required=True,
         description="One entry per host name lookup rule that produced this host. The host's "
-        "series are the union of all rules. A host always has at least one rule. Each entry "
-        "carries the 'host_name_template' it was resolved from.",
+        "series are the union of all rules. A host always has at least one rule.",
     )
 
 

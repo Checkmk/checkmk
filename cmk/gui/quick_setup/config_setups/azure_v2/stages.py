@@ -366,8 +366,8 @@ def _otel_routing_rules(
 
 
 def _otel_dcd_host_attributes(params: Mapping[str, object]) -> Sequence[tuple[str, object]]:
-    """The attribute "OpenTelemetry data" with one host name lookup rule without filters and
-    without a host name template, so the routing rule selects the data by the identity labels."""
+    """The attribute "OpenTelemetry data" with one host name lookup rule without filters, so the
+    routing rule selects the data by the identity labels."""
     if not _otel_enabled(params):
         return ()
     return [

@@ -126,9 +126,8 @@ bazel_dep(name = "clang-resource-headers", version = "21.1.8.cmk.1", dev_depende
 # rules_coreutils.
 bazel_dep(name = "ape", version = "1.0.1", dev_dependency = True)
 
-archive_override(
+single_version_override(
     module_name = "rules_mypy",
-    integrity = "sha256-rf/7qI1Atf//4SlJfQWhsyAt+SaZjQoYDKRZ93TXQBQ=",
     patch_strip = 1,
     patches = [
         "bazel/patches/rules_mypy.patch",
@@ -137,8 +136,6 @@ archive_override(
         "bazel/patches/rules_mypy-exec_cfg_types.patch",
         "bazel/patches/rules_mypy-bin_dir_in_mypypath.patch",
     ],
-    strip_prefix = "rules_mypy-cda38312dbdc003592818d667c68346acea5672d",  # v0.37.0
-    urls = ["https://github.com/bazel-contrib/rules_mypy/archive/cda38312dbdc003592818d667c68346acea5672d.tar.gz"],
 )
 
 single_version_override(

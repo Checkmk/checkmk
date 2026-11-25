@@ -518,7 +518,7 @@ defineExpose({
       :resize-override="resize.sizes[object.id]"
       :box-style="layout.objectStyle(object)"
       :caption-width="memberLabelWidth(labelWidths, object)"
-      :preview="preview"
+      :display-only="preview"
       :tab-stop="roving.isTabStop(object.id)"
       @pointer-down="onObjectPointerDown($event, object)"
       @activate="onObjectActivate(object, $event)"

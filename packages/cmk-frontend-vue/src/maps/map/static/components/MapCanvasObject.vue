@@ -46,8 +46,8 @@ const props = defineProps<{
   /** Placement and dimming, from the canvas layout. */
   boxStyle: Record<string, string | number | undefined>
   captionWidth?: number | undefined
-  /** The settings preview is not interactive. */
-  preview?: boolean
+  /** Drawn to be looked at, not used: no tab stop, no grip. */
+  displayOnly?: boolean
   tabStop?: boolean
 }>()
 
@@ -117,7 +117,7 @@ function onKeydown(event: KeyboardEvent): void {
     }"
     :data-object-id="object.id"
     :style="boxStyle"
-    :tabindex="!preview && tabStop ? 0 : -1"
+    :tabindex="!displayOnly && tabStop ? 0 : -1"
     role="button"
     :aria-label="ariaLabel"
     @pointerdown="emit('pointer-down', $event)"
@@ -137,7 +137,7 @@ function onKeydown(event: KeyboardEvent): void {
       :icon-size="iconSize"
       :selected="selected"
       :focused="gridFocused"
-      :resizable="editMode && selected && !preview && gridMembers.length > 0 && spacedX"
+      :resizable="editMode && selected && !displayOnly && gridMembers.length > 0 && spacedX"
       @resize-start="emit('grid-resize-start', $event, gridMembers.length)"
     />
     <MapElement

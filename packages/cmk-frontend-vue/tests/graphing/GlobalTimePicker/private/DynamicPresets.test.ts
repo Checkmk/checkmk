@@ -28,7 +28,6 @@ function chipNames(): string[] {
 function renderPresets(
   props: {
     activePresetId?: string | null
-    includeCustomEntry?: boolean
     variant?: 'extended' | 'condensed'
   } = {}
 ) {
@@ -37,7 +36,6 @@ function renderPresets(
     props: {
       presets: PRESETS,
       activePresetId: props.activePresetId ?? null,
-      includeCustomEntry: props.includeCustomEntry ?? false,
       ...(props.variant ? { variant: props.variant } : {}),
       onApply: (preset: CustomPreset) => emitted.push(preset)
     }
@@ -45,24 +43,14 @@ function renderPresets(
   return { ...view, emitted }
 }
 
-describe('DynamicPresets includeCustomEntry', () => {
-  test('defaults to false: no "Custom range" entry is added', () => {
+describe('DynamicPresets custom entry', () => {
+  test('appends a trailing "Custom range" entry', () => {
     renderPresets()
-    expect(chipNames()).toEqual(['Last 4 hours', 'Last 25 hours'])
-  })
-
-  test('false explicitly: still no "Custom range" entry', () => {
-    renderPresets({ includeCustomEntry: false })
-    expect(chipNames()).toEqual(['Last 4 hours', 'Last 25 hours'])
-  })
-
-  test('true: appends a trailing "Custom range" entry', () => {
-    renderPresets({ includeCustomEntry: true })
     expect(chipNames()).toEqual(['Last 4 hours', 'Last 25 hours', 'Custom range'])
   })
 
-  test('true and activePresetId null: the Custom chip shows pressed, the others do not', () => {
-    renderPresets({ includeCustomEntry: true, activePresetId: null })
+  test('activePresetId null: the Custom chip shows pressed, the others do not', () => {
+    renderPresets({ activePresetId: null })
     expect(screen.getByRole('button', { name: 'Custom range' })).toHaveAttribute(
       'aria-pressed',
       'true'
@@ -73,8 +61,8 @@ describe('DynamicPresets includeCustomEntry', () => {
     )
   })
 
-  test('true and a real preset active: the Custom chip shows unpressed', () => {
-    renderPresets({ includeCustomEntry: true, activePresetId: 'p1' })
+  test('a real preset active: the Custom chip shows unpressed', () => {
+    renderPresets({ activePresetId: 'p1' })
     expect(screen.getByRole('button', { name: 'Custom range' })).toHaveAttribute(
       'aria-pressed',
       'false'
@@ -82,7 +70,7 @@ describe('DynamicPresets includeCustomEntry', () => {
   })
 
   test('clicking the Custom chip emits apply with id null', async () => {
-    const { emitted } = renderPresets({ includeCustomEntry: true })
+    const { emitted } = renderPresets()
     await fireEvent.click(screen.getByRole('button', { name: 'Custom range' }))
     expect(emitted).toEqual([{ id: null, label: untranslated('Custom range'), totalSeconds: 0 }])
   })
@@ -91,7 +79,7 @@ describe('DynamicPresets includeCustomEntry', () => {
 describe('DynamicPresets variant', () => {
   test('condensed: the dropdown offers every preset, including the Custom entry', async () => {
     const user = userEvent.setup()
-    renderPresets({ variant: 'condensed', includeCustomEntry: true })
+    renderPresets({ variant: 'condensed' })
     await user.click(screen.getByRole('combobox', { name: 'Time ranges' }))
     await screen.findByRole('option', { name: 'Last 4 hours' })
     await screen.findByRole('option', { name: 'Last 25 hours' })

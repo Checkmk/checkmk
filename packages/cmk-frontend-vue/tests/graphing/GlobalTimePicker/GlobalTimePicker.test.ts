@@ -173,11 +173,17 @@ describe('GlobalTimePicker', () => {
     }
   )
 
-  test('the chips are exactly the configured ranges, in configured order', () => {
-    // The extended (default) variant already shows a "Custom time range" chip on the trigger,
-    // so DynamicPresets does not get its own trailing Custom entry.
+  test('the chips are the configured ranges in order, then the custom range', () => {
     const { container } = renderPicker(rangeOfSeconds(99))
-    expect(presetChipNames(container)).toEqual(['Last 4 hours', 'Last 25 hours'])
+    expect(presetChipNames(container)).toEqual(['Last 4 hours', 'Last 25 hours', 'Custom range'])
+  })
+
+  test('the custom range chip is selected while no configured range is active', () => {
+    renderPicker(rangeOfSeconds(99))
+    expect(screen.getByRole('button', { name: 'Custom range' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
   })
 
   test('a hand-typed range replaces the model and is what the trigger then reads', async () => {
@@ -201,8 +207,8 @@ describe('GlobalTimePicker', () => {
     expect(summary).toContain('08:15')
     expect(summary).toContain('02.03.2026')
     expect(summary).toContain('17:45')
-    // A hand-typed window is nobody's preset, so no chip stays highlighted.
-    expect(view.container.querySelectorAll('[aria-pressed="true"]')).toHaveLength(0)
+    const pressed = view.container.querySelectorAll('[aria-pressed="true"]')
+    expect(Array.from(pressed, (chip) => chip.textContent?.trim())).toEqual(['Custom range'])
   })
 
   // Digits, not a fixed date: the host's zone shifts the calendar day. Separator and section

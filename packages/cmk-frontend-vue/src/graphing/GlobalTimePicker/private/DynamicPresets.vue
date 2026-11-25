@@ -22,11 +22,10 @@ const props = withDefaults(
   defineProps<{
     presets: CustomPreset[]
     activePresetId: string | null
-    includeCustomEntry?: boolean
     /** `condensed` drops the chips and offers every preset from the dropdown alone. */
     variant?: 'extended' | 'condensed'
   }>(),
-  { includeCustomEntry: false, variant: 'extended' }
+  { variant: 'extended' }
 )
 
 const emit = defineEmits<{ apply: [preset: CustomPreset] }>()
@@ -48,9 +47,11 @@ const customPreset = computed<CustomPreset>(() => ({
   totalSeconds: 0
 }))
 const items = computed<PresetItem[]>(() =>
-  (props.includeCustomEntry ? [...props.presets, customPreset.value] : props.presets).map(
-    (preset) => ({ name: toPresetName(preset.id), title: preset.label, preset })
-  )
+  [...props.presets, customPreset.value].map((preset) => ({
+    name: toPresetName(preset.id),
+    title: preset.label,
+    preset
+  }))
 )
 
 const itemByName = computed(() => new Map(items.value.map((item) => [item.name, item])))

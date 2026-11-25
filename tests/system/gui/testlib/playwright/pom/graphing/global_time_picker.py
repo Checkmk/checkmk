@@ -59,7 +59,7 @@ class GlobalTimePicker:
 
     @property
     def active_preset_chip(self) -> Locator:
-        """The highlighted preset; empty once the window is a custom one.
+        """The highlighted preset chip; "Custom range" once the window is a custom one.
 
         Safe as a CSS locator despite the measurement replica: those chips are never selected.
         """

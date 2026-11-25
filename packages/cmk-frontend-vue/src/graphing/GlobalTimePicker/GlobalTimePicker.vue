@@ -12,10 +12,8 @@ import {
   type DateTimePickerSettings,
   type DateTimeRange
 } from 'cmk-ui-library/components/date-time'
-import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
-import TimeRangeChip from './presets/TimeRangeChip.vue'
 import DynamicPresets from './private/DynamicPresets.vue'
 import { firstDayOfWeekAsWeekday } from './private/firstDayOfWeek.ts'
 import { type CustomPreset, useCustomPresets } from './private/useCustomPresets.ts'
@@ -36,8 +34,6 @@ const props = withDefaults(
 
 const range = defineModel<DateTimeRange>({ required: true })
 
-const { _t } = usei18n()
-
 const firstDayOfWeek = computed(() => firstDayOfWeekAsWeekday(props.firstDayOfWeek))
 // Checkmk reads and writes 24-hour times. The start of week follows the user's preference; an
 // omitted one leaves it to the browser locale.
@@ -54,11 +50,9 @@ const {
   applyPreset
 } = useCustomPresets(() => props.customTimeRanges, range)
 
-const isExtendedVariant = computed(() => props.variant === 'extended')
-
 const isFlyoutOpen = ref(false)
 
-// The condensed dropdown's "Custom range" entry has no window of its own: it opens the flyout to
+// The "Custom range" chip / dropdown entry has no window of its own: it opens the flyout to
 // pick one, leaving the current range until that is applied.
 function onApplyPreset(preset: CustomPreset): void {
   if (props.disabled) {
@@ -102,26 +96,13 @@ function onApplyPreset(preset: CustomPreset): void {
           v-bind="aria"
         >
           <CmkTimeRangeDisplay :from="fields.from" :to="fields.to" :settings="triggerSettings" />
-          <div class="graphing-global-time-picker__trigger-chip" aria-hidden="true">
-            <template v-if="isExtendedVariant">
-              <TimeRangeChip as-div :selected="activePresetId === null">
-                <div class="graphing-global-time-picker__trigger-chip-content">
-                  <CmkMultitoneIcon name="user-interface" primary-color="font" size="small" />
-                  {{ _t('Custom time range') }}
-                </div>
-              </TimeRangeChip>
-            </template>
-            <template v-else>
-              <div class="graphing-global-time-picker__trigger-icon-button">
-                <CmkMultitoneIcon
-                  name="user-interface"
-                  primary-color="font"
-                  size="small"
-                  :aria-label="_t('Custom time range')"
-                />
-              </div>
-            </template>
-          </div>
+          <CmkMultitoneIcon
+            class="graphing-global-time-picker__trigger-icon"
+            name="user-interface"
+            primary-color="font"
+            size="small"
+            aria-hidden="true"
+          />
         </button>
       </template>
     </CmkTimeRangePicker>
@@ -136,7 +117,6 @@ function onApplyPreset(preset: CustomPreset): void {
         :presets="customPresets"
         :active-preset-id="activePresetId"
         :variant="variant"
-        :include-custom-entry="!isExtendedVariant"
         @apply="onApplyPreset"
       >
         <template v-if="$slots.trailing" #trailing>
@@ -185,30 +165,8 @@ function onApplyPreset(preset: CustomPreset): void {
   cursor: not-allowed;
 }
 
-/* the trigger's From/To rows are 32px high, align to them */
-.graphing-global-time-picker__trigger-chip {
-  display: flex;
-  align-items: center;
-  height: var(--dimension-10);
-}
-
-.graphing-global-time-picker__trigger-chip-content {
-  display: flex;
-  align-items: center;
-  gap: var(--dimension-3);
-}
-
-/* Visual echo of CmkButton's icon-only/optional variant, without a nested <button>. */
-.graphing-global-time-picker__trigger-icon-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--dimension-7);
-  height: var(--dimension-7);
-  border: 1px solid var(--button-optional-border-color);
-  border-radius: var(--border-radius);
-  background-color: var(--default-button-optional-color);
-  color: var(--button-optional-text-color);
+.graphing-global-time-picker__trigger-icon {
+  align-self: center;
 }
 
 .graphing-global-time-picker__band {

@@ -67,8 +67,8 @@ def test_x_drag_zooms_every_graph_and_reset_returns(
         ).not_to_have_text(window_before)
     expect(
         service_graphs.active_preset_chip,
-        "The picker still highlights a preset although the window is now a custom one",
-    ).to_have_count(0)
+        "The picker did not switch to the custom range although the window is now a custom one",
+    ).to_have_text("Custom range")
     assert _document_survived(service_graphs), "Zooming reloaded the page instead of redrawing"
     zoomed_windows = service_graphs.time_windows()
 

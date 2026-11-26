@@ -30,6 +30,7 @@ filegroup(
 py_binary(
     name = "astrein_bin",
     srcs = ["cmk/astrein/cli.py"],
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     imports = ["."],
     main = "cmk/astrein/cli.py",
     visibility = ["//visibility:public"],

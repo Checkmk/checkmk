@@ -6,6 +6,8 @@ load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 exports_files([
+    # The compiler behind py_stdlib_bytecode() (py_stdlib_bytecode.bzl).
+    "py_compile_bytecode.py",
     # The shared runner behind rust_wine_test() (xcomp/rust_wine_test.bzl).
     "xcomp/rust-test-wine.sh",
     # Sourced by the scripts of package_msi.bzl rules.
@@ -174,6 +176,13 @@ py_cmk_test(
         ":set_runpath_tree",
         ":set_runpath_whl",
     ],
+)
+
+# Lets the linters see the compiler of py_stdlib_bytecode(), which runs it with the exec Python of
+# rules_python's exec tools toolchain. Nothing depends on this target.
+py_library(
+    name = "py_compile_bytecode",
+    srcs = ["py_compile_bytecode.py"],
 )
 
 # Lets shellcheck see these scripts. Nothing depends on this target.

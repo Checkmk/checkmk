@@ -15,6 +15,7 @@ load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("//:bazel_variables.bzl", "UV_PIP_COMPILE_ARGS")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
+load("//bazel/rules:py_stdlib_bytecode.bzl", "py_stdlib_bytecode")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 load("//bazel/tools:starlark_files.bzl", "STARLARK_EXCLUDED", "STARLARK_NAMES")
 load(":mypy_version.bzl", "MYPY_VERSION")
@@ -119,9 +120,22 @@ mypy_cli(
     ],
 )
 
+# Bytecode for the Python tools that Bazel actions run, which otherwise compile every module they
+# import in every action, the standard library included. pyc_collection adds the bytecode of their
+# dependencies.
+py_stdlib_bytecode(
+    name = "python_stdlib_bytecode",
+    visibility = [
+        "//packages/cmk-astrein:__pkg__",
+        "//packages/cmk-repo-checks:__pkg__",
+    ],
+)
+
 py_console_script_binary(
     name = "bandit",
+    data = [":python_stdlib_bytecode"],
     pkg = requirement("bandit"),
+    pyc_collection = "include_pyc",
     tags = [
         "manual",
         "no-mypy",
@@ -130,7 +144,9 @@ py_console_script_binary(
 
 py_console_script_binary(
     name = "py-import-cycles",
+    data = [":python_stdlib_bytecode"],
     pkg = requirement("py-import-cycles"),
+    pyc_collection = "include_pyc",
     script = "py_import_cycles",
     tags = [
         "manual",

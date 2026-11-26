@@ -21,6 +21,7 @@ py_library(
 py_binary(
     name = "deballast_bin",
     srcs = ["cmk/repo_checks/deballast.py"],
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     imports = ["."],
     main = "cmk/repo_checks/deballast.py",
     visibility = ["//visibility:public"],
@@ -32,6 +33,7 @@ py_binary(
 py_binary(
     name = "license_header_checker_bin",
     srcs = ["cmk/repo_checks/license_header_checker.py"],
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     imports = ["."],
     main = "cmk/repo_checks/license_header_checker.py",
     visibility = ["//visibility:public"],
@@ -43,6 +45,7 @@ py_binary(
 py_binary(
     name = "python_extension_checker_bin",
     srcs = ["cmk/repo_checks/python_extension_checker.py"],
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     imports = ["."],
     main = "cmk/repo_checks/python_extension_checker.py",
     visibility = ["//visibility:public"],

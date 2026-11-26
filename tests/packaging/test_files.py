@@ -253,30 +253,6 @@ def _get_file_from_package(package_path: str, version_rel_path: str) -> bytes:
     raise NotImplementedError
 
 
-# In case packages grow/shrink this check has to be changed.
-@pytest.mark.parametrize(
-    "pkg_format,min_size,max_size",
-    [
-        ("rpm", 196 * 1024 * 1024, 229 * 1024 * 1024),
-        ("deb", 150 * 1024 * 1024, 165 * 1024 * 1024),
-        ("cma", 290 * 1024 * 1024, 302 * 1024 * 1024),
-        ("tar.gz", 350 * 1024 * 1024, 380 * 1024 * 1024),
-    ],
-)
-@pytest.mark.skip("skip for now until our build chaos has settled...")
-def test_package_sizes(package_path: str, pkg_format: str, min_size: int, max_size: int) -> None:
-    if not package_path.endswith(".%s" % pkg_format):
-        pytest.skip("%s is another package type" % os.path.basename(package_path))
-
-    if not os.path.basename(package_path).startswith("check-mk-pro-"):
-        pytest.skip("only testing pro packages")
-
-    size = os.stat(package_path).st_size
-    assert min_size <= size <= max_size, (
-        f"Package {package_path} size {size} not between {min_size} and {max_size} bytes."
-    )
-
-
 def test_files_not_in_version_path(package_path: str) -> None:
     if not package_path.endswith(".rpm") and not package_path.endswith(".deb"):
         pytest.skip("%s is another package type" % os.path.basename(package_path))

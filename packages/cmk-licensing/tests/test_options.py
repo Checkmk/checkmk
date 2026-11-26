@@ -70,6 +70,6 @@ def test_cloud() -> None:
         gcp_extended=LicenseFlag(enabled=True),
         azure_extended=LicenseFlag(enabled=True),
         agent_registration=LicenseFlag(enabled=True),
-        synthetic_monitoring=LicenseFlag(enabled=True),
+        synthetic_monitoring=LicenseFlag(enabled=False),
         real_time_checks=LicenseFlag(enabled=False),
     )

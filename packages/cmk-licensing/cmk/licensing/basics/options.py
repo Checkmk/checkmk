@@ -130,7 +130,8 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
             )
 
         case Edition.CLOUD:
-            # Cloud runs no real-time checks.
+            # Cloud runs no real-time checks and has no synthetic monitoring on the
+            # data backend.
             return LicenseOptions(
                 bakery=LicenseFlag(enabled=True),
                 telemetry=LicenseFlag(enabled=True),
@@ -140,7 +141,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 gcp_extended=LicenseFlag(enabled=True),
                 azure_extended=LicenseFlag(enabled=True),
                 agent_registration=LicenseFlag(enabled=True),
-                synthetic_monitoring=LicenseFlag(enabled=True),
+                synthetic_monitoring=LicenseFlag(enabled=False),
                 real_time_checks=LicenseFlag(enabled=False),
             )
 

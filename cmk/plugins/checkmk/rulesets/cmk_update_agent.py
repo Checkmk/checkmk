@@ -45,9 +45,9 @@ _LEGACY_UPDATER_GROUP = DictGroupExtended(
     title=Title("Options of the legacy updater"),
     help_text=Help(
         "Only the legacy updater uses these options. The entries <i>Enable agent updates "
-        "using the Agent Controller (fallback to legacy updater in case of problems)</i> and "
-        "<i>Enable agent updates using the legacy updater (deprecated)</i> of "
-        "<i>Activation</i> deploy it. The entry <i>Enable agent updates using the Agent "
+        "with both the Agent Controller and the legacy updater</i> and "
+        "<i>Enable agent updates with the legacy updater</i> of "
+        "<i>Activation</i> deploy it. The entry <i>Enable agent updates with the Agent "
         "Controller</i> deploys it on Solaris only. <i>Do not enable agent updates</i> "
         "ignores these options."
     ),
@@ -293,13 +293,13 @@ def _valuespec_activation() -> SingleChoice:
         title=Title("Activation"),
         help_text=Help(
             "Choose which updater keeps the agents up to date.<br>"
-            "<b>Enable agent updates using the Agent Controller</b>: The Agent Controller "
+            "<b>Enable agent updates with the Agent Controller</b>: The Agent Controller "
             "updates the agents for Linux and Windows. Baking fails for Linux agents without "
             "the Agent Controller. Baking also fails for hosts that the rule set <i>Use classic "
             "file deployment</i> keeps on the classic file deployment. Solaris agents get the "
             "legacy updater.<br>"
-            "<b>Enable agent updates using the Agent Controller (fallback to legacy updater in "
-            "case of problems)</b>: The agents get both updaters, and both run side by side, "
+            "<b>Enable agent updates with both the Agent Controller and the legacy updater</b>: "
+            "The agents get both updaters, and both run side by side, "
             "independently of each other. Both install the agent package that is baked for the "
             "host, so it does not matter which of them updates an agent first. If the Agent "
             "Controller fails to update an agent, the legacy updater still keeps it up to date. "
@@ -307,7 +307,7 @@ def _valuespec_activation() -> SingleChoice:
             "agents, and Linux agents without the Agent Controller or without the single "
             "directory deployment. Rules that enabled agent updates before Checkmk 3.0 use this "
             "entry after the update.<br>"
-            "<b>Enable agent updates using the legacy updater (deprecated)</b>: Only the legacy "
+            "<b>Enable agent updates with the legacy updater</b>: Only the legacy "
             "updater updates the agents.<br>"
             "<br>"
             "Do not forget to enable agent updates in at least one of your rules. "
@@ -324,18 +324,17 @@ def _valuespec_activation() -> SingleChoice:
             ),
             SingleChoiceElement(
                 name="integrated_only",
-                title=Title("Enable agent updates using the Agent Controller"),
+                title=Title("Enable agent updates with the Agent Controller"),
             ),
             SingleChoiceElement(
                 name="compatible",
                 title=Title(
-                    "Enable agent updates using the Agent Controller"
-                    " (fallback to legacy updater in case of problems)"
+                    "Enable agent updates with both the Agent Controller and the legacy updater"
                 ),
             ),
             SingleChoiceElement(
                 name="legacy",
-                title=Title("Enable agent updates using the legacy updater (deprecated)"),
+                title=Title("Enable agent updates with the legacy updater"),
             ),
         ],
         prefill=DefaultValue("disabled"),

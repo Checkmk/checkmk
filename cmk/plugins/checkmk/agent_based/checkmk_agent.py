@@ -403,7 +403,7 @@ def _check_cmk_agent_update(
         return
 
     yield Result(
-        state=State.OK, notice="Agent updates: Agent Controller with fallback to the legacy updater"
+        state=State.OK, notice="Agent updates: Agent Controller and legacy updater run in parallel"
     )
     if integrated.last_check is None:
         yield from _check_updater(params, legacy)
@@ -418,7 +418,7 @@ def _check_cmk_agent_update(
         state=State.OK,
         notice=(
             "Agent Controller: the setup of agent updates is complete."
-            ' Setting "Activation" to "Enable agent updates using the Agent Controller"'
+            ' Setting "Activation" to "Enable agent updates with the Agent Controller"'
             ' in the ruleset "Agent updater (Linux, Windows, Solaris)"'
             " removes the legacy updater."
         ),

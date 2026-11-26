@@ -837,7 +837,7 @@ def test_in_fallback_the_legacy_updater_decides_until_the_first_update_check() -
     assert results == [
         Result(
             state=State.OK,
-            notice="Agent updates: Agent Controller with fallback to the legacy updater",
+            notice="Agent updates: Agent Controller and legacy updater run in parallel",
         ),
         Result(state=State.OK, notice="Time since last update check: 1 hour 0 minutes"),
         Result(state=State.OK, notice="Last update check: 2026-10-30 11:00:00"),
@@ -861,7 +861,7 @@ def test_in_fallback_the_integrated_updater_decides_after_its_first_update_check
     assert results == [
         Result(
             state=State.OK,
-            notice="Agent updates: Agent Controller with fallback to the legacy updater",
+            notice="Agent updates: Agent Controller and legacy updater run in parallel",
         ),
         Result(state=State.OK, notice="Time since last update check: 1 hour 0 minutes"),
         Result(state=State.OK, notice="Last update check: 2026-10-30 11:00:00"),
@@ -870,7 +870,7 @@ def test_in_fallback_the_integrated_updater_decides_after_its_first_update_check
             state=State.OK,
             notice=(
                 "Agent Controller: the setup of agent updates is complete."
-                ' Setting "Activation" to "Enable agent updates using the Agent Controller"'
+                ' Setting "Activation" to "Enable agent updates with the Agent Controller"'
                 ' in the ruleset "Agent updater (Linux, Windows, Solaris)"'
                 " removes the legacy updater."
             ),

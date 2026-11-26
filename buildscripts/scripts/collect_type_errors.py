@@ -22,9 +22,13 @@ class TypeErrorLine:
     message: str
 
 
+# The column is optional: mypy prints none for some findings even with
+# --show-column-numbers, e.g. for an unused "type: ignore" comment.
 MYPY_ERROR_RE = re.compile(
-    r"^(?P<file>[^:]+):(?P<line>\d+):(?P<column>\d+): (?P<kind>error|note|warning): (?P<msg>.*)$"
+    r"^(?P<file>[^:]+):(?P<line>\d+)(?::(?P<column>\d+))?: (?P<kind>error|note|warning): (?P<msg>.*)$"
 )
+# mypy's summary when it found errors, e.g. "Found 1 error in 1 file (checked 2 source files)"
+MYPY_FOUND_ERRORS_RE = re.compile(r"^Found \d+ errors? in \d+ files?")
 
 TSC_ERROR_RE = re.compile(
     r"^(?:(?P<file>.+)\((?P<line>\d+),(?P<column>\d+)\): )?(?P<kind>error|warning|message) (?P<msg>TS\d+: .*)$"
@@ -36,17 +40,33 @@ VUE_TSC_SUFFIX = "_vue_tsc.log"
 
 
 def parse_mypy_output(lines: Iterable[str]) -> Iterator[TypeErrorLine]:
-    """Parse mypy output"""
+    """Parse mypy output
+
+    If mypy reports errors but none of its lines parse, yield one finding with
+    the whole output, so that a format this parser does not know still fails
+    the target instead of passing as "no errors".
+    """
+    lines = list(lines)
+    parsed = False
     for line in lines:
         m = MYPY_ERROR_RE.match(line)
         if m:
+            parsed = True
             yield TypeErrorLine(
                 file=m.group("file"),
                 line=int(m.group("line")),
-                column=int(m.group("column")),
+                column=int(m.group("column") or 0),
                 kind=m.group("kind"),
                 message=m.group("msg"),
             )
+    if not parsed and any(MYPY_FOUND_ERRORS_RE.match(line) for line in lines):
+        yield TypeErrorLine(
+            file="(unparsed mypy output)",
+            line=0,
+            column=0,
+            kind="error",
+            message="mypy found errors that could not be parsed:\n" + "\n".join(lines),
+        )
 
 
 def parse_tsc_output(lines: Iterable[str], package: str) -> Iterator[TypeErrorLine]:

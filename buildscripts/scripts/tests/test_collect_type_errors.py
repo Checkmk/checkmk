@@ -46,6 +46,42 @@ def test_each_mypy_finding_becomes_a_failing_testcase(
     assert failure.text == "cmk/foo.py:12:5: Incompatible return value type  [return-value]"
 
 
+def test_mypy_finding_without_column_becomes_a_failing_testcase(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    bin_root = tmp_path / "bin"
+    bin_root.mkdir()
+    (bin_root / "lib.mypy_stdout").write_text(
+        'cmk/foo.py:28: error: Unused "type: ignore" comment  [unused-ignore]\n'
+        "Found 1 error in 1 file (checked 2 source files)\n"
+    )
+
+    _run([str(bin_root)], monkeypatch)
+
+    root = ET.fromstring(capsys.readouterr().out)
+    assert root.attrib == {"tests": "1", "failures": "1"}
+    assert [tc.get("name") for tc in root.iter("testcase")] == ["cmk/foo.py:28:0:error"]
+
+
+def test_mypy_errors_in_an_unknown_format_still_fail_the_target(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    bin_root = tmp_path / "bin"
+    bin_root.mkdir()
+    (bin_root / "lib.mypy_stdout").write_text(
+        "cmk/foo.py, line 28: something new went wrong\n"
+        "Found 1 error in 1 file (checked 2 source files)\n"
+    )
+
+    _run([str(bin_root)], monkeypatch)
+
+    root = ET.fromstring(capsys.readouterr().out)
+    assert root.attrib == {"tests": "1", "failures": "1"}
+    failure = root.find("testsuite/testcase/failure")
+    assert failure is not None
+    assert "cmk/foo.py, line 28: something new went wrong" in failure.get("message", "")
+
+
 def test_vue_tsc_log_reports_as_the_target_it_belongs_to(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

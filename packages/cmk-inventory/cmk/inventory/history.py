@@ -22,7 +22,7 @@ from .paths import (
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
 )
-from .raw_store import load_tree_from_tree_path
+from .raw_store import load_tree
 from .serialization import (
     deserialize_delta_cache_entry,
     SDRawDeltaCacheEntry,
@@ -40,7 +40,7 @@ class HistoryDeltaPath:
 
 @dataclass(frozen=True)
 class _HistoryPath:
-    tree_path: Path
+    file_path: Path
     timestamp: int
 
 
@@ -151,7 +151,7 @@ class HistoryStore:
             try:
                 yield OK(
                     _HistoryPath(
-                        tree_path=file_path,
+                        file_path=file_path,
                         timestamp=parse_archive_timestamp(file_path),
                     )
                 )
@@ -160,7 +160,7 @@ class HistoryStore:
 
         tree_path = self.inv_paths.inventory_tree(host_name)
         if (timestamp := file_mtime(tree_path)) is not None:
-            yield OK(_HistoryPath(tree_path=tree_path, timestamp=timestamp))
+            yield OK(_HistoryPath(file_path=tree_path, timestamp=timestamp))
 
     def _collect_history_paths(
         self, *, host_name: HostName
@@ -198,9 +198,9 @@ class HistoryStore:
         if path is None:
             return ImmutableTree()
 
-        if path.tree_path not in self._lookup:
-            self._lookup[path.tree_path] = load_tree_from_tree_path(path.tree_path)
-        return self._lookup[path.tree_path]
+        if path.file_path not in self._lookup:
+            self._lookup[path.file_path] = load_tree(path.file_path)
+        return self._lookup[path.file_path]
 
     def _load_history_entry(
         self, *, host_name: HostName, path: HistoryDeltaPath | HistoryArchivePath
@@ -234,11 +234,11 @@ class HistoryStore:
                 )
 
                 if entry.new or entry.changed or entry.removed:
-                    if path.current.tree_path != self.inv_paths.inventory_tree(host_name):
+                    if path.current.file_path != self.inv_paths.inventory_tree(host_name):
                         self._save_history_entry(host_name=host_name, history_entry=entry)
                     return OK(entry)
 
-                return Error([path.current.tree_path])
+                return Error([path.current.file_path])
 
     def _save_history_entry(self, *, host_name: HostName, history_entry: HistoryEntry) -> None:
         delta_cache_tree = self.inv_paths.delta_cache_tree(

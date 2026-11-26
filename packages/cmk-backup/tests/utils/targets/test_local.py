@@ -59,6 +59,24 @@ class TestLocalTarget:
                 },
             ).check_ready()
 
+    def test_check_ready_mountpoint_ok(self, tmp_path: Path) -> None:
+        LocalTarget(
+            TargetId(""), {"path": "/proc", "is_mountpoint": True}, site_root=tmp_path
+        ).check_ready()
+
+    def test_check_ready_mountpoint_rejects_root_filesystem(self, tmp_path: Path) -> None:
+        with pytest.raises(MKGeneralException, match="root filesystem"):
+            LocalTarget(
+                TargetId(""), {"path": "/", "is_mountpoint": True}, site_root=tmp_path
+            ).check_ready()
+
+    def test_check_ready_mountpoint_rejects_site_filesystem(self) -> None:
+        # Using procfs, as the root filesystem check would trigger first
+        with pytest.raises(MKGeneralException, match="site's filesystem"):
+            LocalTarget(
+                TargetId(""), {"path": "/proc/sys", "is_mountpoint": True}, site_root=Path("/proc")
+            ).check_ready()
+
     def test_list_backups_skips_unreadable_backup_info(self, tmp_path: Path) -> None:
         # Crash group 3971: an interrupted backup left an empty mkbackup.info behind
         (tmp_path / "broken").mkdir()

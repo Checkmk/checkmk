@@ -1361,8 +1361,9 @@ class ABCBackupTargetRemote[TRemoteParams: Mapping[str, object], TRemoteStorage:
                     title=Title("Temporary local destination"),
                     help_text=Help(
                         "This directory will be used for temporarily storing backups before "
-                        "uploading and after downloading. You can for example use the <tt>/tmp</tt> "
-                        "directory. Please note that Checkmk will not clean up this directory."
+                        "uploading and after downloading. If you want to use a directory on the "
+                        "local disk, for example <tt>/tmp</tt>, disable the mount point option "
+                        "below. Please note that Checkmk will not clean up this directory."
                     ),
                 ),
             ),
@@ -1607,11 +1608,13 @@ def _local_directory_configuration_elements(
             required=True,
             parameter_form=BooleanChoice(
                 title=Title("Mount point"),
-                label=Label("Is mount point"),
+                label=Label("Require target below a mount point"),
                 help_text=Help(
-                    "When this is checked, the backup ensures that the configured path "
-                    "is a mount point. If there is no active mount on the path, "
-                    "the backup fails with an error message."
+                    "When enabled, the backup checks before each run that the target path is "
+                    "the mount point, or a directory below one. The root filesystem and the "
+                    "site's filesystem are not allowed. If the path resolves to one of them, "
+                    "for example because a network share is not mounted, the backup fails "
+                    "instead of writing to the local disk."
                 ),
                 prefill=DefaultValue(True),
             ),

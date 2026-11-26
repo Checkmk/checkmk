@@ -44,10 +44,13 @@ def archive_suffix(config: JobConfig) -> str:
 
 
 class LocalTarget:
-    def __init__(self, target_id: TargetId, params: LocalTargetParams) -> None:
+    def __init__(
+        self, target_id: TargetId, params: LocalTargetParams, *, site_root: Path | None = None
+    ) -> None:
         self.id = target_id
         self.path = Path(params["path"])
         self.is_mountpoint = bool(params["is_mountpoint"])
+        self._site_root = site_root
 
     def check_ready(self) -> None:
         if not _is_canonical_directory(str(self.path)):
@@ -56,10 +59,9 @@ class LocalTarget:
             raise MKGeneralException(
                 f"Local target path does not exist or is not a directory: {self.path}"
             )
-        if self.is_mountpoint and not os.path.ismount(self.path):
-            raise MKGeneralException(
-                "The backup target path is configured to be a mountpoint, but nothing is mounted: "
-                f"{self.path}"
+        if self.is_mountpoint:
+            _check_on_dedicated_filesystem(
+                self.path, self._site_root or Path(os.environ["OMD_ROOT"])
             )
         if is_cma() and not str(self.path).startswith("/mnt/"):
             raise MKGeneralException(
@@ -128,3 +130,17 @@ def _is_canonical_directory(directory: str) -> bool:
         os.path.isabs(directory)
         and os.path.commonprefix([os.path.realpath(directory) + "/", directory]) == directory
     )
+
+
+def _check_on_dedicated_filesystem(path: Path, site_root: Path) -> None:
+    device = path.stat().st_dev
+    if device == Path("/").stat().st_dev:
+        raise MKGeneralException(
+            "The backup target path is required to be below a mount point, "
+            f"but it is on the root filesystem: {path}"
+        )
+    if device == site_root.stat().st_dev:
+        raise MKGeneralException(
+            "The backup target path is required to be below a mount point, "
+            f"but it is on the site's filesystem: {path}"
+        )

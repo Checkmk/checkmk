@@ -1618,6 +1618,7 @@ allows = [
   "cmk.ccc.log",
   "cmk.ccc.site",
   "cmk.ccc.store",
+  "cmk.ccc.version",
   "cmk.ccc.version_info",
   "cmk.product_usage.site_id",
   "cmk.utils.http_proxy_config",

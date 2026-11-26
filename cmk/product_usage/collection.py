@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import cmk.product_usage.collectors.agent_updater as agent_updater_collector
+import cmk.product_usage.collectors.agents as agents_collector
 import cmk.product_usage.collectors.audit_log as audit_log_collector
 import cmk.product_usage.collectors.checks as checks_collector
 import cmk.product_usage.collectors.distributed_monitoring as distributed_monitoring_collector
@@ -24,6 +25,7 @@ import cmk.product_usage.collectors.users as users_collector
 from cmk.ccc.site import omd_site
 from cmk.product_usage.collectors.user_store import load_users_with_profiles, StoredUser
 from cmk.product_usage.schema import (
+    AgentsData,
     AgentUpdaterData,
     AuditLog,
     CloudTrialPayload,
@@ -68,6 +70,7 @@ def collect_data(
         languages=_collect_languages(users, default_config_dir, locale_dir, now, logger),
         grafana=grafana_collector.collect(var_dir),
         agent_updater=_collect_agent_updater(omd_root, logger),
+        agents=_collect_agents(logger),
     )
 
 
@@ -77,6 +80,14 @@ def _collect_agent_updater(omd_root: Path, logger: logging.Logger) -> AgentUpdat
         return agent_updater_collector.collect(omd_root, omd_site(), logger)
     except Exception:
         logger.exception("Could not collect the agent updater usage, sending no counts")
+        return None
+
+
+def _collect_agents(logger: logging.Logger) -> AgentsData | None:
+    try:
+        return agents_collector.collect()
+    except Exception:
+        logger.exception("Could not collect the agents, sending no agent counts")
         return None
 
 

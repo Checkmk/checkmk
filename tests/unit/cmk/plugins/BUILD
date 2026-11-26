@@ -23,6 +23,7 @@ py_cmk_test(
         "//cmk/plugins",
         "//cmk/plugins/diagnostics/cli",
         "//cmk/plugins/diagnostics/cli/handlers",
+        "//cmk/product_usage",
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugins:azure_deprecated",

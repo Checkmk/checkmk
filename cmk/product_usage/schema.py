@@ -203,6 +203,44 @@ class AgentUpdaterData(pydantic.BaseModel):
     )
 
 
+class AgentsData(pydantic.BaseModel):
+    by_version: dict[str, dict[str, int]] = pydantic.Field(
+        description=(
+            'The number of hosts per release series of the Checkmk agent, such as "2.4.0"'
+            " for every patch release of 2.4.0, and operating system family of the agent"
+            ' (host label "cmk/os_family"). Betas, release candidates and daily builds of a'
+            " stable branch count towards its release series. An agent version without a release"
+            ' series, such as a daily build of the master branch, counts as "other". A missing'
+            ' label or version counts as "unknown". Host label rules can override the label.'
+        ),
+        examples=[
+            {
+                "2.4.0": {"linux": 142, "windows": 38, "unknown": 2},
+                "2.3.0": {"linux": 31, "windows": 12},
+                "other": {"linux": 1},
+                "unknown": {"linux": 4},
+            }
+        ],
+    )
+    by_os: dict[str, dict[str, int]] = pydantic.Field(
+        description=(
+            'The number of hosts per operating system name (host label "cmk/os_name") and'
+            ' operating system version (host label "cmk/os_version") as reported by the'
+            ' Checkmk agent. The version is cut to its first two parts, split at "." and'
+            ' "-". A missing label counts as "unknown". Host label rules can override the'
+            " labels, the values are then the ones the rules set."
+        ),
+        examples=[
+            {
+                "Ubuntu": {"24.04": 90, "22.04": 40},
+                "Microsoft Windows Server 2019 Standard": {"10.0": 30},
+                "AIX": {"7200-05": 3},
+                "unknown": {"unknown": 6},
+            }
+        ],
+    )
+
+
 class DistributedMonitoring(pydantic.BaseModel):
     is_remote_setup_site: bool = pydantic.Field(
         description=(
@@ -455,6 +493,24 @@ class ProductUsageData(SiteInfo):
                 "count_hosts_legacy_only": 5,
                 "count_hosts_both_installed_by_controller": 12,
                 "count_hosts_both_installed_by_legacy": 1,
+            }
+        ],
+    )
+    agents: AgentsData | None = pydantic.Field(
+        default=None,
+        description=(
+            "The Checkmk agents of the hosts monitored by this site: their operating systems"
+            " and release series. Both histograms count the same hosts, the hosts with a"
+            ' "Check_MK Agent" service. No host names are collected.'
+        ),
+        examples=[
+            {
+                "by_version": {"2.4.0": {"linux": 142, "windows": 38}, "2.3.0": {"linux": 31}},
+                "by_os": {
+                    "Ubuntu": {"24.04": 90, "22.04": 40},
+                    "Microsoft Windows Server 2019 Standard": {"10.0": 38},
+                    "Red Hat Enterprise Linux": {"9.4": 43},
+                },
             }
         ],
     )

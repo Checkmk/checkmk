@@ -56,6 +56,10 @@ def _product_usage_data() -> dict[str, object]:
             "count_hosts_both_installed_by_controller": 12,
             "count_hosts_both_installed_by_legacy": 1,
         },
+        "agents": {
+            "by_version": {"2.4.0": {"linux": 2}, "unknown": {"unknown": 1}},
+            "by_os": {"Ubuntu": {"24.04": 2}, "unknown": {"unknown": 1}},
+        },
         "checks": {
             "df": {
                 "count": 1,

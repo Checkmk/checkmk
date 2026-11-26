@@ -46,10 +46,4 @@ common:ci --@cmk//distro=UNSET
 common:ci --@cmk//optimize=True
 common:ci --@cmk//strip=True
 
-# Don't require system python for bootstrapping
-# See: https://github.com/bazelbuild/rules_python/commit/f5b19dce7bc0837396ac03a425cdb9b64643cf61
-# TODO: should be dropped as soon as this becomes the default
-# TODO: this should be the overall default, see discussions in
-# https://tribe29.slack.com/archives/C03PW9280U9/p1728303949973099
-common:ci --@rules_python//python/config_settings:bootstrap_impl=script
 common:ci --noshow_progress

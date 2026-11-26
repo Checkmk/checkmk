@@ -50,3 +50,11 @@ common:linux --action_env=PATH="/usr/bin:/bin"
 common:linux --host_action_env=PATH="/usr/bin:/bin"
 common:windows --action_env=PATH="c:\\Windows;c:\\Windows\\system32;C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit"
 common:windows --host_action_env=PATH="c:\\Windows;c:\\Windows\\system32;C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit"
+
+# Start rules_python's binaries with its shell script launcher. The default one is a Python script,
+# which needs a system Python and costs its start, about 20 ms per run of each Python tool. On
+# Windows, rules_python keeps the default one.
+# See: https://github.com/bazelbuild/rules_python/commit/f5b19dce7bc0837396ac03a425cdb9b64643cf61
+# and https://tribe29.slack.com/archives/C03PW9280U9/p1728303949973099
+# TODO: should be dropped as soon as this becomes the default
+common --@rules_python//python/config_settings:bootstrap_impl=script

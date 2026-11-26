@@ -193,7 +193,6 @@ def test_create_view_basics() -> None:
     assert view.only_sites is None
 
 
-@pytest.mark.xfail(strict=True, raises=RecursionError, reason="Crash group 5018: RecursionError")
 def test_a_view_on_an_unknown_data_source_names_it() -> None:
     view_spec = multisite_builtin_views["allhosts"].copy()
     view_spec["datasource"] = "no_such_data_source"

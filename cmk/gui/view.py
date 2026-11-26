@@ -92,7 +92,7 @@ class View:
                     "The view '%(view_name)s' using the data source '%(data_source)s' can not be rendered "
                     "because the data source does not exist."
                 )
-                % {"view_name": self.name, "data_source": self.datasource},
+                % {"view_name": self.name, "data_source": self.spec["datasource"]},
             )
 
     @property

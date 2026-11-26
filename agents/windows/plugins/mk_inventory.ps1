@@ -79,6 +79,19 @@ function GetTimeUntil {
     return $epoch + $script:delay + 300
 }
 
+# Render a timestamp with the invariant culture.
+#
+# In a custom .NET format string "/" and ":" are the date and time separator
+# placeholders. Without an explicit culture they become the separators of the
+# host locale, so 'M/d/yyyy' yields "11.26.2026" on a German host.
+function FormatMkDateTime {
+    param (
+        [datetime]$dateTime,
+        [string]$format
+    )
+    return $dateTime.ToString($format, [cultureinfo]::InvariantCulture)
+}
+
 function StartSection {
     param (
         [string]$name,
@@ -281,7 +294,7 @@ function GetUpdates {
         $installedOn = $_.InstalledOn
         if ($installedOn -is [datetime]) {
             # Remove leading zeros using 'M/d/yyyy'
-            $installedOn = $installedOn.ToString("M/d/yyyy")
+            $installedOn = FormatMkDateTime $installedOn 'M/d/yyyy'
         }
         Write-Output "$computerName,$($_.Description),$($_.HotFixID),$($installedOn)"
     }
@@ -358,7 +371,8 @@ function RecurseFolderForExecs {
             $fileVersion = (Get-Item $_.FullName).VersionInfo.FileVersionRaw
 
             # Output file details
-            Write-Output ("$($_.FullName)|$(Get-Date $_.LastWriteTime -Format 'M/d/yyyy HH:mm:ss')|$($_.Length)||$fileVersion|")
+            $writeTime = FormatMkDateTime $_.LastWriteTime 'M/d/yyyy HH:mm:ss'
+            Write-Output ("$($_.FullName)|$writeTime|$($_.Length)||$fileVersion|")
         }
     }
 

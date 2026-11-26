@@ -163,9 +163,6 @@ def test_state_of_service_rejects_invalid_regex(host_regex: str, service_regex: 
         )
 
 
-@pytest.mark.xfail(
-    strict=True, raises=AssertionError, reason="Crash report 2dce3d06: AssertionError"
-)
 @pytest.mark.usefixtures("request_context")
 def test_bi_rules_without_a_pack_is_a_user_error() -> None:
     mode = ModeBIRules(
@@ -183,7 +180,6 @@ def test_bi_rules_without_a_pack_is_a_user_error() -> None:
         mode.title()
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Crash group 5031: AssertionError")
 @pytest.mark.usefixtures("request_context")
 def test_bi_edit_rule_without_a_pack_is_a_user_error() -> None:
     request.set_var("id", "some_rule")

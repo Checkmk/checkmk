@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.testlib.system.agent_dumps import create_agent_dump_rule
 from tests.testlib.system.mock_server import MockEndpoint, MockMethod, MockResponse, MockServer
 from tests.testlib.system.site import Site
 
@@ -49,6 +50,57 @@ def default_cfg(site: Site) -> Generator[None]:
             site.openapi.hosts.delete(f"test-host-pt{i + 1}")
         for i in range(EXPECTED_FOLDER_COUNT):
             site.openapi.folders.delete(f"/test_folder_pt{i + 1}")
+        site.openapi.changes.activate_and_wait_for_completion()
+
+
+AGENT_HOSTS_FOLDER = "product_usage_agents"
+# The "check_mk" section of each agent host: the agent version and the operating system.
+# The counts cover all hosts of the site, so the OS values are ones no real agent reports.
+AGENT_HOST_SECTIONS = {
+    "usage-agent-linux": (
+        "Version: 2.4.0p12\nAgentOS: usagetestlinux\nOSType: linux\n"
+        "OSName: ProductUsageTestOS\nOSVersion: 99.1.7\n"
+    ),
+    "usage-agent-windows": (
+        "Version: 2.3.0p30\nAgentOS: usagetestwindows\nOSType: windows\n"
+        "OSName: ProductUsageTestOS Windows\nOSVersion: 98.0.17763\n"
+    ),
+}
+
+
+@pytest.fixture
+def agent_hosts(site: Site) -> Iterator[None]:
+    """Hosts that send a fixed "check_mk" section, discovered and checked once
+
+    The hosts and the rule that feeds them their agent output live in a folder of their
+    own, so the other hosts of the site keep their data source. Deleting the folder
+    deletes the hosts and the rule as well.
+    """
+    site.ensure_running()
+    site.openapi.folders.create(AGENT_HOSTS_FOLDER)
+    dumps_path: Path | None = None
+    try:
+        _rule_id, dumps_path = create_agent_dump_rule(site, rule_folder=f"/{AGENT_HOSTS_FOLDER}")
+        site.makedirs(dumps_path)
+        for host_name, section in AGENT_HOST_SECTIONS.items():
+            site.write_file(dumps_path / host_name, f"<<<check_mk>>>\n{section}")
+            site.openapi.hosts.create(
+                host_name, folder=f"/{AGENT_HOSTS_FOLDER}", attributes={"ipaddress": "127.0.0.1"}
+            )
+        site.openapi.changes.activate_and_wait_for_completion()
+        site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
+            list(AGENT_HOST_SECTIONS)
+        )
+        site.openapi.changes.activate_and_wait_for_completion()
+        for host_name in AGENT_HOST_SECTIONS:
+            site.schedule_check(host_name, "Check_MK")
+        yield
+    finally:
+        if dumps_path is not None:
+            for host_name in AGENT_HOST_SECTIONS:
+                if site.file_exists(dumps_path / host_name):
+                    site.delete_file(dumps_path / host_name)
+        site.openapi.folders.delete(f"/{AGENT_HOSTS_FOLDER}")
         site.openapi.changes.activate_and_wait_for_completion()
 
 
@@ -254,6 +306,18 @@ def test_product_usage_json_has_a_value_for_every_field_the_site_can_collect(sit
     assert [name for name in null_fields if name not in may_be_null] == [], (
         "A collector failed, see var/log/product_usage_analytics.log"
     )
+
+
+@pytest.mark.usefixtures("agent_hosts")
+def test_product_usage_json_counts_the_agents_by_release_and_os(site: Site) -> None:
+    """The agent version is read from the output of the "Check_MK Agent" service"""
+    run_product_usage_collection(site)
+
+    agents = json.loads(get_product_usage_json_content(site))["data"]["agents"]
+    assert agents["by_version"]["2.4.0"]["usagetestlinux"] == 1
+    assert agents["by_version"]["2.3.0"]["usagetestwindows"] == 1
+    assert agents["by_os"]["ProductUsageTestOS"] == {"99.1": 1}
+    assert agents["by_os"]["ProductUsageTestOS Windows"] == {"98.0": 1}
 
 
 @pytest.mark.usefixtures("default_cfg")

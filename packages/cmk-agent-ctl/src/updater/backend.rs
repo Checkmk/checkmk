@@ -113,13 +113,18 @@ impl UpdaterConfig {
     /// # Returns
     ///
     /// `None` if the file does not exist, which means that agent updates are
-    /// not configured for this host. An inaccessible file counts as absent.
+    /// not configured for this host.
     ///
     /// # Errors
     ///
-    /// Returns an error if the file exists but cannot be read or parsed.
+    /// Returns an error if the file cannot be reached, read or parsed. A
+    /// configuration the controller is not allowed to look at is not the same
+    /// as a host without one, so only a `NotFound` counts as absent and every
+    /// other error of the existence check is propagated.
     pub fn load_if_configured(path: &Path) -> AnyhowResult<Option<Self>> {
-        if !path.exists() {
+        if !path.try_exists().context(format!(
+            "Failed to access the updater configuration at {path:?}"
+        ))? {
             return Ok(None);
         }
         Ok(Some(<Self as TOMLLoader>::load(path).context(format!(
@@ -1802,6 +1807,10 @@ impl Updater {
     /// ours. It follows TD(4.9): a failure of the integrated updater has to
     /// stay visible. Omitting the entry would let the check report the Python
     /// updater as healthy while the integrated one is broken.
+    ///
+    /// The entry reports the failure, it does not raise it. `status` marks
+    /// every problem it finds and exits 0, failing only when the report
+    /// itself cannot be built; `update` is what exits 1 on a broken config.
     pub fn agent_updates(&self, registry: &Registry) -> Option<section::AgentUpdates> {
         let config_error = match &self.config {
             ConfigLoadOutcome::Absent => return None,
@@ -1926,6 +1935,23 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
                 .unwrap()
                 .is_none()
         );
+    }
+
+    /// CMK-41889: Failure to read configuration metadata must not be
+    /// interpreted as a missing configuration.
+    ///
+    /// In production, this may result from EACCES. The test uses a symlink
+    /// loop to trigger ELOOP instead, making it independent of user permissions.
+    #[cfg(unix)]
+    #[test]
+    fn test_load_config_unreachable_file_is_an_error() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let path = dir.path().join("config.toml");
+        std::os::unix::fs::symlink("config.toml", &path).unwrap();
+        assert!(UpdaterConfig::load_if_configured(&path)
+            .unwrap_err()
+            .to_string()
+            .contains("Failed to access the updater configuration"));
     }
 
     #[test]

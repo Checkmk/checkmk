@@ -3,10 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
 import pytest
 import requests
 
-from cmk.automations.backends.helper import AutomationHelperUnavailable, HelperExecutor
+from cmk.automations.backends.helper import (
+    automation_helper_enabled,
+    AutomationHelperUnavailable,
+    HelperExecutor,
+)
 from cmk.automations.internal import AutomationID
 
 
@@ -76,3 +82,20 @@ def test_helper_that_does_not_answer_in_time_is_reported_unavailable(
         HelperExecutor().execute(
             AutomationID("restart"), [], "", timeout=100, for_cmk_version="2.4.0"
         )
+
+
+@pytest.mark.parametrize(
+    ["setting", "expected"],
+    [
+        pytest.param("on", True, id="enabled"),
+        pytest.param("off", False, id="disabled"),
+    ],
+)
+def test_the_automation_helper_follows_the_site_configuration(
+    tmp_path: Path, setting: str, expected: bool
+) -> None:
+    site_conf = tmp_path / "etc" / "omd" / "site.conf"
+    site_conf.parent.mkdir(parents=True)
+    site_conf.write_text(f"CONFIG_CORE='cmc'\nCONFIG_AUTOMATION_HELPER='{setting}'\n")
+
+    assert automation_helper_enabled(tmp_path) is expected

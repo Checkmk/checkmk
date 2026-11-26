@@ -30,10 +30,11 @@ from requests import RequestException
 import cmk.ccc.version as cmk_version
 from cmk import trace
 from cmk.automations.backends import AutomationExecutor, HelperExecutor, SubprocessExecutor
+from cmk.automations.backends.helper import automation_helper_enabled
 from cmk.automations.internal import AutomationID
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import get_omd_config, SiteId
+from cmk.ccc.site import SiteId
 from cmk.ccc.store import RealIo
 from cmk.ccc.user import UserId
 from cmk.gui import hooks
@@ -894,4 +895,4 @@ AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
 
 @functools.cache
 def _automation_helper_enabled_in_omd_config() -> bool:
-    return get_omd_config(paths.omd_root)["CONFIG_AUTOMATION_HELPER"] == "on"
+    return automation_helper_enabled(paths.omd_root)

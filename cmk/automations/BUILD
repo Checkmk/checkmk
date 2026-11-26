@@ -26,6 +26,7 @@ py_library(
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:i18n",
         "//packages/cmk-ccc:log",
+        "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:timeout",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:helper-interface",

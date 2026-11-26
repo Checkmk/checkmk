@@ -7,6 +7,7 @@
 
 import logging
 from collections.abc import Sequence
+from pathlib import Path
 from typing import assert_never, Final, override
 
 import requests
@@ -25,10 +26,15 @@ from cmk.automations.models.helper import (
 )
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
+from cmk.ccc.site import get_omd_config
 from cmk.utils import paths
 from cmk.utils.unixsocket_http import make_session as make_unixsocket_session
 
 logger = logging.getLogger(__name__)
+
+
+def automation_helper_enabled(omd_root: Path) -> bool:
+    return get_omd_config(omd_root)["CONFIG_AUTOMATION_HELPER"] == "on"
 
 
 class AutomationHelperUnavailable(MKGeneralException):

@@ -94,6 +94,30 @@ Context "mk_inventory.ps1 Tests" {
         }
     }
 
+    Describe "FormatMkDateTime" {
+        BeforeEach {
+            $script:savedCulture = [System.Threading.Thread]::CurrentThread.CurrentCulture
+            [System.Threading.Thread]::CurrentThread.CurrentCulture = [cultureinfo]"de-DE"
+        }
+
+        AfterEach {
+            [System.Threading.Thread]::CurrentThread.CurrentCulture = $script:savedCulture
+        }
+
+        It "writes the separators of the format, not those of the host culture" {
+            FormatMkDateTime ([datetime]"2026-11-26T14:05:03") "M/d/yyyy HH:mm:ss" |
+                Should -Be "11/26/2026 14:05:03"
+        }
+
+        It "writes month and day without leading zeros" {
+            FormatMkDateTime ([datetime]"2024-06-01T12:00:00") "M/d/yyyy" | Should -Be "6/1/2024"
+        }
+
+        It "guards the test: without an explicit culture the separators change" {
+            Get-Date ([datetime]"2026-11-26T14:05:03") -Format "M/d/yyyy" | Should -Be "11.26.2026"
+        }
+    }
+
     Describe "StartSection" {
         It "outputs the correct section header" {
             $name = "test_section"

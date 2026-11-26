@@ -20,9 +20,10 @@ from cmk.base.app import make_app
 from cmk.base.config import load, load_all_pluginX
 from cmk.ccc import store
 from cmk.ccc.site import omd_site
-from cmk.ccc.version import edition
+from cmk.ccc.version import __version__, edition
 from cmk.checkengine.plugin_backend import extract_known_discovery_rulesets
 from cmk.config_anonymizer.interface import AnonInterface
+from cmk.config_anonymizer.metadata import Metadata, write_metadata
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui import main_modules as main_modules
 from cmk.gui.config import active_config
@@ -194,6 +195,11 @@ def main(argv: Sequence[str]) -> None:
                     builtin_host_labels,
                     logger.getChild("" + type(plugin).__name__),
                 )
+
+            write_metadata(
+                interface.target_dir,
+                Metadata(edition=edition(paths.omd_root), version=__version__),
+            )
 
             _warn_about_modifications(watched_dirs, mtimes_before, interface.target_dir, logger)
     except Exception as e:

@@ -179,6 +179,7 @@ filegroup(
 filegroup(
     name = "miscellaneous",
     srcs = [
+        "config_anonymizer/default_rule_values.mk",
         "gui/wsgi/applications/index.wsgi",
         "utils/werks/announce/templates/announce.md.jinja2",
         "utils/werks/announce/templates/announce.txt.jinja2",

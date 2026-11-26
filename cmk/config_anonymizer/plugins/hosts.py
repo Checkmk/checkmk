@@ -5,8 +5,9 @@
 import json
 import logging
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, cast, Self
 
 from cmk.base.config import LoadingResult
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -20,6 +21,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     StandardWATOInfoStorage,
     WATOFolderInfo,
 )
+from cmk.gui.watolib.tags import load_tag_config_read_only
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils.host_storage import (
     ContactGroupsField,
@@ -31,6 +33,48 @@ from cmk.utils.labels import Labels
 from cmk.utils.tags import BuiltinTagConfig, TagGroupID, TagID
 
 KNOWN_EXPLICIT_BUILTIN_ATTRS = ["cmk_agent_connection", "alias", "parents", "metrics_association"]
+
+
+@dataclass(frozen=True)
+class TagIDs:
+    """The tag IDs that decide how a host tag has to be anonymized"""
+
+    # Tag groups and auxiliary tags shipped with Checkmk. They are kept as they are.
+    builtin: frozenset[str]
+    # Auxiliary tags of the user. A host carries them as "<aux tag ID>: <aux tag ID>".
+    custom_aux: frozenset[str]
+
+    @classmethod
+    def load(cls) -> Self:
+        builtin_tag_config = BuiltinTagConfig()
+        return cls(
+            builtin=frozenset(
+                {str(tag_group.id) for tag_group in builtin_tag_config.get_tag_groups()}
+                | {str(tag_id) for tag_id in builtin_tag_config.aux_tag_list.get_tag_ids()}
+            ),
+            custom_aux=frozenset(
+                str(tag_id) for tag_id in load_tag_config_read_only().aux_tag_list.get_tag_ids()
+            ),
+        )
+
+
+def _anonymize_host_tag(
+    anon_interface: AnonInterface, tag_ids: TagIDs, tag_key: str, tag_value: str
+) -> tuple[str, str]:
+    """Anonymize one entry of the host tags
+
+    The result has to use the IDs the host tags step writes to the tag configuration.
+    Otherwise the tags of the hosts would be unknown to the anonymized site and no rule
+    would match them.
+    """
+    if tag_key in tag_ids.builtin:
+        return tag_key, tag_value
+    if tag_key == "site":
+        return tag_key, anon_interface.get_site(tag_value)
+    if tag_key in tag_ids.custom_aux:
+        anon_aux_tag_id = anon_interface.get_id_of_aux_tag(tag_key)
+        return anon_aux_tag_id, anon_aux_tag_id
+    return anon_interface.get_id_of_tag_group(tag_key), anon_interface.get_id_of_tag(tag_value)
 
 
 def _anonymize_snmp_credentials(
@@ -215,7 +259,7 @@ def _anonymize_host_and_folder_attribute(
     anon_interface: AnonInterface,
     attr_name: str,
     attr_value: Any,
-    builtin_tag_group_ids: list[TagGroupID],
+    tag_ids: TagIDs,
 ) -> tuple[str, object]:
     match attr_name:
         case "alias":
@@ -283,12 +327,12 @@ def _anonymize_host_and_folder_attribute(
         case str() if attr_name.startswith("tag_"):
             tag_key = attr_name[len("tag_") :]
 
-            if tag_key in builtin_tag_group_ids:
+            if tag_key in tag_ids.builtin:
                 return attr_name, attr_value
-            else:
-                return anon_interface.get_id_of_tag_group(tag_key), anon_interface.get_tag_value(
-                    attr_value
-                )
+            # A tag group without a tag selected is stored with the value None
+            return f"tag_{anon_interface.get_id_of_tag_group(tag_key)}", (
+                None if attr_value is None else anon_interface.get_id_of_tag(attr_value)
+            )
         case "locked_attributes":
             # only built-in attributes can be locked
             return "locked_attributes", attr_value.copy()
@@ -318,14 +362,14 @@ def _anonymize_host_and_folder_attribute(
 
 def _anonymize_single_host_and_folder_attributes(
     anon_interface: AnonInterface,
-    builtin_tag_group_ids: list[TagGroupID],
+    tag_ids: TagIDs,
     attributes: dict[str, object],
 ) -> dict[str, object]:
     anon_attributes: dict[str, object] = {}
 
     for attr_name, attr_value in attributes.items():
         anonymized_attr_name, anonymized_attr_value = _anonymize_host_and_folder_attribute(
-            anon_interface, attr_name, attr_value, builtin_tag_group_ids
+            anon_interface, attr_name, attr_value, tag_ids
         )
         anon_attributes[anonymized_attr_name] = anonymized_attr_value
 
@@ -334,15 +378,13 @@ def _anonymize_single_host_and_folder_attributes(
 
 def _anonymize_host_attributes(
     anon_interface: AnonInterface,
-    builtin_tag_group_ids: list[TagGroupID],
+    tag_ids: TagIDs,
     data: HostsStorageData,
 ) -> dict[HostName, object]:
     anon_host_attributes: dict[HostName, object] = {}
     for host, attributes in list(data.host_attributes.items()):
         anon_host_attributes[HostName(anon_interface.get_host(host))] = (
-            _anonymize_single_host_and_folder_attributes(
-                anon_interface, builtin_tag_group_ids, attributes
-            )
+            _anonymize_single_host_and_folder_attributes(anon_interface, tag_ids, attributes)
         )
     return anon_host_attributes
 
@@ -441,7 +483,9 @@ def _anonymize_explicit_host_conf(
     return anon_explicit_host_conf
 
 
-def _anonymize(anon_interface: AnonInterface, data: HostsStorageData) -> HostsStorageData:
+def _anonymize(
+    anon_interface: AnonInterface, tag_ids: TagIDs, data: HostsStorageData
+) -> HostsStorageData:
     anon_locked_hosts = data.locked_hosts
     anon_all_hosts = [HostAddress(anon_interface.get_host(host)) for host in data.all_hosts]
     anon_clusters: dict[HostAddress, Sequence[HostAddress]] = {
@@ -466,24 +510,13 @@ def _anonymize(anon_interface: AnonInterface, data: HostsStorageData) -> HostsSt
         ]
 
     anon_host_tags: dict[HostName, dict[TagGroupID, TagID]] = {}
-    builtin_tag_group_ids = [tag_group.id for tag_group in BuiltinTagConfig().get_tag_groups()]
     for host, host_tags in data.host_tags.items():
         anon_host = anon_interface.get_host(host)
         anon_host_tags[HostName(anon_host)] = {}
 
         for tag_key, tag_value in host_tags.items():
-            if tag_key in builtin_tag_group_ids:
-                anon_host_tags[HostName(anon_host)][tag_key] = (
-                    tag_value  # keep builtin tags unchanged
-                )
-                continue
-            if tag_key == "site":
-                anon_host_tags[HostName(anon_host)][TagGroupID(tag_key)] = TagID(
-                    anon_interface.get_site(tag_value)
-                )
-                continue
-            anon_key, anon_value = anon_interface.get_tags(tag_key, tag_value)
-            anon_host_tags[HostName(anon_host)].update({TagGroupID(anon_key): TagID(anon_value)})
+            anon_key, anon_value = _anonymize_host_tag(anon_interface, tag_ids, tag_key, tag_value)
+            anon_host_tags[HostName(anon_host)][TagGroupID(anon_key)] = TagID(anon_value)
 
     anon_host_labels: dict[HostAddress, dict[str, str]] = {}
     for host, host_label in data.host_labels.items():
@@ -496,7 +529,7 @@ def _anonymize(anon_interface: AnonInterface, data: HostsStorageData) -> HostsSt
     anon_contact_groups = _anonymize_contact_groups(anon_interface, data)
     anon_explicit_host_conf = _anonymize_explicit_host_conf(anon_interface, data)
 
-    anon_host_attributes = _anonymize_host_attributes(anon_interface, builtin_tag_group_ids, data)
+    anon_host_attributes = _anonymize_host_attributes(anon_interface, tag_ids, data)
 
     anon_folder_attributes: dict[str, FolderAttributesForBase] = {}
     for folder_path, folder_attrs in data.folder_attributes.items():
@@ -523,7 +556,7 @@ def _anonymize(anon_interface: AnonInterface, data: HostsStorageData) -> HostsSt
 
 
 def _anonymize_folder_attributes(
-    anon_interface: AnonInterface, data: WATOFolderInfo
+    anon_interface: AnonInterface, tag_ids: TagIDs, data: WATOFolderInfo
 ) -> WATOFolderInfo:
     anon_data = WATOFolderInfo()
     if "__id" in data:
@@ -531,11 +564,10 @@ def _anonymize_folder_attributes(
     if "title" in data:
         anon_data["title"] = anon_interface.get_generic_mapping(data["title"], "folder_title")
     if "attributes" in data:
-        builtin_tag_group_ids = [tag_group.id for tag_group in BuiltinTagConfig().get_tag_groups()]
         anon_data["attributes"] = cast(
             HostAttributes,
             _anonymize_single_host_and_folder_attributes(
-                anon_interface, builtin_tag_group_ids, cast(dict[str, object], data["attributes"])
+                anon_interface, tag_ids, cast(dict[str, object], data["attributes"])
             ),
         )
     if "num_hosts" in data:
@@ -548,9 +580,10 @@ def _anonymize_folder_attributes(
 
 
 class AnonHostsStorage(StandardHostsStorage):
-    def __init__(self, anon_interface: AnonInterface) -> None:
+    def __init__(self, anon_interface: AnonInterface, tag_ids: TagIDs) -> None:
         super().__init__()
         self.anon_interface = anon_interface
+        self.tag_ids = tag_ids
 
     def _write(
         self,
@@ -567,7 +600,9 @@ class AnonHostsStorage(StandardHostsStorage):
         )
 
         super()._write(
-            anon_hosts_mk_file_path, _anonymize(self.anon_interface, data), value_formatter
+            anon_hosts_mk_file_path,
+            _anonymize(self.anon_interface, self.tag_ids, data),
+            value_formatter,
         )
 
     def _read(self, file_path: Path) -> str:
@@ -575,9 +610,10 @@ class AnonHostsStorage(StandardHostsStorage):
 
 
 class AnonFolderAttributesStorage(StandardWATOInfoStorage):
-    def __init__(self, anon_interface: AnonInterface) -> None:
+    def __init__(self, anon_interface: AnonInterface, tag_ids: TagIDs) -> None:
         super().__init__()
         self.anon_interface = anon_interface
+        self.tag_ids = tag_ids
 
     def write(self, file_path: Path, data: WATOFolderInfo) -> None:
         folders_path = str(file_path).removeprefix(str(wato_root_dir())).removesuffix(".wato")
@@ -585,7 +621,10 @@ class AnonFolderAttributesStorage(StandardWATOInfoStorage):
         anon_wato_file_path = self.anon_interface.relative_to_anon_dir(
             Path(f"{wato_root_dir()}/{anon_folders_path}/.wato")
         )
-        super().write(anon_wato_file_path, _anonymize_folder_attributes(self.anon_interface, data))
+        super().write(
+            anon_wato_file_path,
+            _anonymize_folder_attributes(self.anon_interface, self.tag_ids, data),
+        )
 
     def read(self, file_path: Path) -> WATOFolderInfo:
         raise NotImplementedError()
@@ -602,13 +641,14 @@ class HostsSteps(AnonymizeStep):
         logger: logging.Logger,
     ) -> None:
         logger.warning("Process hosts")
+        tag_ids = TagIDs.load()
 
         for folder_rel_path, folder in folder_tree().all_folders().items():
             folder._save_hosts_file(
-                storage_list=[AnonHostsStorage(anon_interface)], pprint_value=False
+                storage_list=[AnonHostsStorage(anon_interface, tag_ids)], pprint_value=False
             )
             folder._save_folder_attributes(
-                storage_list=[AnonFolderAttributesStorage(anon_interface)]
+                storage_list=[AnonFolderAttributesStorage(anon_interface, tag_ids)]
             )
 
 

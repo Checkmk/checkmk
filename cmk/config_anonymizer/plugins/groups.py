@@ -33,6 +33,10 @@ def _anonymize_groups(
                                 anon_all_groups_spec["host"][anon_group_name]["alias"] = (
                                     anon_interface.get_host_group_alias(group_spec_value)
                                 )
+                            case "customer":
+                                anon_all_groups_spec["host"][anon_group_name]["customer"] = (
+                                    anon_interface.get_customer(group_spec_value)
+                                )
                             case _:
                                 raise ValueError(
                                     f"Unknown host group spec {group_spec_key} in {group_specs=}"
@@ -47,6 +51,10 @@ def _anonymize_groups(
                             case "alias":
                                 anon_all_groups_spec["service"][anon_group_name]["alias"] = (
                                     anon_interface.get_service_group_alias(group_spec_value)
+                                )
+                            case "customer":
+                                anon_all_groups_spec["service"][anon_group_name]["customer"] = (
+                                    anon_interface.get_customer(group_spec_value)
                                 )
                             case _:
                                 raise ValueError(

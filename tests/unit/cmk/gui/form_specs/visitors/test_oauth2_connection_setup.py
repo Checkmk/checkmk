@@ -151,7 +151,7 @@ class _RequestWithJson:
     def __init__(self, payload: dict[str, object]) -> None:
         self._payload = payload
 
-    def get_json(self) -> dict[str, object]:
+    def get_json(self, silent: bool = False) -> dict[str, object]:
         return self._payload
 
 

@@ -8,6 +8,7 @@ from typing import cast, override
 import requests
 
 from cmk.gui import userdb
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import (
     get_visitor,
     RawDiskData,
@@ -52,7 +53,9 @@ def register(page_registry: PageRegistry) -> None:
 class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        result = ctx.request.get_json()
+        result = ctx.request.get_json(silent=True)
+        if not isinstance(result, dict) or not isinstance(form_data := result.get("data"), dict):
+            raise MKUserError(None, _("The request does not contain the OAuth2 connection data."))
         form_spec = get_oauth2_connection_form_spec()
         visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
         editable_by: tuple[str, str | None]
@@ -70,7 +73,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
                 }
             editable_by = ("contact_group", option_id(user_contact_groups[0]))
         frontend_data = RawFrontendData(
-            value=result["data"]
+            value=form_data
             | {
                 "title": "dummy",
                 "editable_by": editable_by,

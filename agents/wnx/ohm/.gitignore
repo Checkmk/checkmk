@@ -1,0 +1,5 @@
+# Build output of the LibreHardwareMonitor based OpenHardwareMonitorCLI
+/external/
+/dist/
+/OpenHardwareMonitorCLI/bin/
+/OpenHardwareMonitorCLI/obj/

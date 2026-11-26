@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-import json
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -215,9 +214,6 @@ def test_validation(
     assert (len(visitor.validate(value)) == 0) == valid
 
 
-@pytest.mark.xfail(
-    strict=True, raises=json.JSONDecodeError, reason="Crash report 7c221dea: JSONDecodeError"
-)
 @pytest.mark.usefixtures("request_context")
 def test_form_data_that_is_no_json_is_a_user_error() -> None:
     request.set_var("selected_filename", "2025-11-20")

@@ -123,7 +123,12 @@ def render_form_spec(
 def read_data_from_frontend(field_id: str) -> RawFrontendData:
     if not request.has_var(field_id):
         raise MKGeneralException("Formular data is missing in request")
-    return RawFrontendData(json.loads(request.get_str_input_mandatory(field_id)))
+    try:
+        return RawFrontendData(json.loads(request.get_str_input_mandatory(field_id)))
+    except json.JSONDecodeError as exc:
+        raise MKUserError(
+            field_id, _("The submitted form data is invalid: %(error)s") % {"error": exc}
+        ) from exc
 
 
 def parse_and_validate_frontend_data(form_spec: FormSpec[T], data: RawFrontendData) -> object:

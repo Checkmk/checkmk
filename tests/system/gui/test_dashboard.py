@@ -234,7 +234,7 @@ def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[s
         custom_dashboard.check_widget_is_present(widget_title)
 
         for host_name in custom_dashboard.get_widget_table_column_cells(
-            widget_title, column_index=1
+            widget_title, column_index=2
         ).all():
             assert host_name.text_content() in linux_hosts, (
                 f"Unexpected host name found in widget '{widget_title}': "

@@ -15,6 +15,7 @@ import cmk.gui.views
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config, Config
 from cmk.gui.data_source import ABCDataSource, RowTable
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import vs_graph_render_option_elements
 from cmk.gui.logged_in import user
 from cmk.gui.painter import (
@@ -190,6 +191,22 @@ def test_create_view_basics() -> None:
     assert view.user_sorters is None
     assert view.want_checkboxes is False
     assert view.only_sites is None
+
+
+@pytest.mark.xfail(strict=True, raises=RecursionError, reason="Crash group 5018: RecursionError")
+def test_a_view_on_an_unknown_data_source_names_it() -> None:
+    view_spec = multisite_builtin_views["allhosts"].copy()
+    view_spec["datasource"] = "no_such_data_source"
+    view = View(
+        "allhosts",
+        view_spec,
+        {},
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        RequestCache(Config()),
+    )
+
+    with pytest.raises(MKUserError, match="data source 'no_such_data_source' can not be rendered"):
+        _ = view.datasource
 
 
 @pytest.mark.usefixtures("request_context")

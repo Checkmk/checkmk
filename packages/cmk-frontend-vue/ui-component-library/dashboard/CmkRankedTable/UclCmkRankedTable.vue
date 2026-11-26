@@ -166,9 +166,10 @@ import {
   UclPropertiesPanel,
   UclResizablePreview
 } from '@ucl/_ucl/components/detail-page'
+import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import CmkRankedTable, {
   type RankedTableColumn,
@@ -267,14 +268,37 @@ const ZERO_AND_TINY = [
   { host: '10.0.9.7', flows: 0 }
 ]
 
-const rows = computed<RankedTableRow[]>(() =>
-  [
-    ...HOSTS.slice(0, Math.max(0, propState.value.rowCount)),
-    ...(propState.value.zeroAndTinyValues ? ZERO_AND_TINY : [])
-  ].map((entry, index) => {
-    const host = propState.value.longHostNames ? (LONG_HOST_NAMES[index] ?? entry.host) : entry.host
-    return {
-      host: propState.value.linkedHosts ? { value: host, href: '#' } : host,
+// Each refresh scales every value by its own factor and ranks the rows anew.
+const refreshes = ref(0)
+
+function refreshed(entries: typeof HOSTS): typeof HOSTS {
+  if (refreshes.value === 0) {
+    return entries
+  }
+  return entries
+    .map((entry, index) => ({
+      ...entry,
+      flows: Math.round(entry.flows * (0.4 + (((index + refreshes.value) * 7) % 13) / 10))
+    }))
+    .sort((a, b) => b.flows - a.flows)
+}
+
+function hostOf(row: RankedTableRow): string {
+  const host = row.host!
+  return String(typeof host === 'object' ? host.value : host)
+}
+
+const rows = computed<RankedTableRow[]>(() => {
+  const ranked = HOSTS.slice(0, Math.max(0, propState.value.rowCount))
+  const named = [...ranked, ...(propState.value.zeroAndTinyValues ? ZERO_AND_TINY : [])].map(
+    (entry, index) => ({
+      ...entry,
+      host: propState.value.longHostNames ? (LONG_HOST_NAMES[index] ?? entry.host) : entry.host
+    })
+  )
+  return [...refreshed(named.slice(0, ranked.length)), ...named.slice(ranked.length)].map(
+    (entry, index) => ({
+      host: propState.value.linkedHosts ? { value: entry.host, href: '#' } : entry.host,
       service: 'Interface 1',
       flows: {
         value: entry.flows,
@@ -282,9 +306,9 @@ const rows = computed<RankedTableRow[]>(() =>
         ...(propState.value.units ? { unit: 'flows/s' } : {}),
         ...(propState.value.perRowColor ? { color: ROW_COLORS[index % ROW_COLORS.length]! } : {})
       }
-    }
-  })
-)
+    })
+  )
+})
 </script>
 
 <template>
@@ -309,6 +333,7 @@ const rows = computed<RankedTableRow[]>(() =>
           :busy="propState.tableState === 'refreshing'"
           :show-rank="propState.showRank"
           :label="propState.label"
+          :row-key="hostOf"
         >
           <template #empty>
             <CmkHeading type="h4">No data</CmkHeading>
@@ -321,6 +346,10 @@ const rows = computed<RankedTableRow[]>(() =>
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />
+        <div class="ucl-cmk-ranked-table__refresh">
+          <CmkButton @click="refreshes += 1">Refresh data</CmkButton>
+          <CmkParagraph>New values and a new ranking, to see the refresh animation.</CmkParagraph>
+        </div>
       </template>
     </UclDetailPageComponent>
 
@@ -329,3 +358,13 @@ const rows = computed<RankedTableRow[]>(() =>
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>
 </template>
+
+<style scoped>
+.ucl-cmk-ranked-table__refresh {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--dimension-3);
+  margin-top: var(--dimension-6);
+}
+</style>

@@ -150,7 +150,9 @@ def copy_dumps(
         run(["bash", "-c", f'cp -f {source_path} "{target_path}"'], sudo=True)
 
 
-def inject_dumps(site: Site, dumps_dir: Path, check_dumps_up_to_date: bool = True) -> str:
+def inject_dumps(
+    site: Site, dumps_dir: Path, check_dumps_up_to_date: bool = True, prefix: str = "agent-"
+) -> str:
     """Create dump rule and copy agent dumps from dumps_dir to site.
 
     The rule is the datasource program 'cat "<site dumps dir>/$HOSTNAME$"', so each host is fed
@@ -167,7 +169,7 @@ def inject_dumps(site: Site, dumps_dir: Path, check_dumps_up_to_date: bool = Tru
         _dumps_up_to_date(dumps_dir, get_min_version())
 
     rule_id, site_dumps_path = create_agent_dump_rule(site)
-    copy_dumps(site, dumps_dir, site_dumps_path)
+    copy_dumps(site, dumps_dir, site_dumps_path, prefix=prefix)
 
     return rule_id
 

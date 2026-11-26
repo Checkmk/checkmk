@@ -405,7 +405,7 @@ def _create_node_sections(
                     last_sync=repl["last_sync"],
                     last_try=repl["last_try"],
                     next_sync=repl["next_sync"],
-                    duration=repl["duration"],
+                    duration=repl.get("duration"),
                     error=repl.get("error"),
                 )
                 for repl in replications.get(node["node"], [])

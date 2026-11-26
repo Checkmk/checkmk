@@ -712,9 +712,6 @@ def test_create_vm_sections_unknown_uptime() -> None:
     assert section["uptime"] is None
 
 
-@pytest.mark.xfail(
-    strict=True, raises=KeyError, reason="Crash report 8576bbca: KeyError 'duration'"
-)
 def test_create_node_sections_reports_a_replication_job_without_a_duration() -> None:
     job = {
         "id": "100-0",

@@ -10,13 +10,21 @@ from collections.abc import Mapping
 import pytest
 from pytest import param
 
-from cmk.gui.bi._config import ModeBIEditRule
+from cmk.ccc.version import Edition
+from cmk.gui.bi._config import ModeBIEditRule, ModeBIRules
 from cmk.gui.bi._valuespecs import (
     _convert_bi_rule_from_vs,
     _convert_bi_rule_to_vs,
     BIConfigStateOfServiceAction,
 )
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.http import request
+from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 
 from . import bi_test_data as sample_config
 from .bi_mocks import MockBIAggregationPack
@@ -152,4 +160,42 @@ def test_state_of_service_rejects_invalid_regex(host_regex: str, service_regex: 
     with pytest.raises(MKUserError, match="Invalid regular expression"):
         BIConfigStateOfServiceAction.valuespec().validate_value(
             {"host_regex": host_regex, "service_regex": service_regex}, "vs"
+        )
+
+
+@pytest.mark.xfail(
+    strict=True, raises=AssertionError, reason="Crash report 2dce3d06: AssertionError"
+)
+@pytest.mark.usefixtures("request_context")
+def test_bi_rules_without_a_pack_is_a_user_error() -> None:
+    mode = ModeBIRules(
+        Edition.COMMUNITY,
+        PageContext(
+            config=Config(),
+            request=request,
+            transactions=transactions,
+            session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+        ),
+    )
+
+    with pytest.raises(MKUserError):
+        mode.title()
+
+
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Crash group 5031: AssertionError")
+@pytest.mark.usefixtures("request_context")
+def test_bi_edit_rule_without_a_pack_is_a_user_error() -> None:
+    request.set_var("id", "some_rule")
+
+    with pytest.raises(MKUserError):
+        ModeBIEditRule(
+            Edition.COMMUNITY,
+            PageContext(
+                config=Config(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+            ),
         )

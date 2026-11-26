@@ -11,6 +11,7 @@ from http import HTTPStatus
 
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.form_specs import (
+    FormSpecValidationError,
     get_visitor,
     process_validation_messages,
     RawFrontendData,
@@ -34,6 +35,7 @@ from cmk.gui.watolib.rulesets import (
 )
 from cmk.gui.watolib.rulespecs import is_rulespec_for_service, Rulespec, rulespec_registry
 from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 def _check_edit_permissions(name: str, user: LoggedInUser) -> None:
@@ -108,7 +110,21 @@ def save_rule_form_spec_from_slidein_schema(
     if not isinstance(data.value, dict):
         raise TypeError(data.value)
 
-    rule_id = data.value["properties"]["id"]
+    properties = data.value.get("properties")
+    if (
+        not isinstance(properties, dict)
+        or not isinstance(rule_id := properties.get("id"), str)
+        or not rule_id
+    ):
+        raise FormSpecValidationError(
+            [
+                shared_type_defs.ValidationMessage(
+                    location=["properties", "id"],
+                    message=_("The rule data must contain the rule properties with a rule ID."),
+                    replacement_value="",
+                )
+            ]
+        )
     rule_spec, form_spec = _get_rule_spec_and_form_spec(
         RuleIdentifier(id=rule_id, name=name), tree, user
     )

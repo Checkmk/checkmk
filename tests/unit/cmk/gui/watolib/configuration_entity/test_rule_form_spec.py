@@ -8,15 +8,34 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.ccc.site import SiteId
-from cmk.gui.config import Config
-from cmk.gui.form_specs import FormSpecValidationError, RawFrontendData
+from cmk.gui.form_specs import (
+    FormSpecValidationError,
+    get_visitor,
+    RawDiskData,
+    RawFrontendData,
+    VisitorOptions,
+)
 from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.watolib.configuration_entity._rule_form_spec import (
+    get_rule_form_spec_slidein_schema,
     save_rule_form_spec_from_slidein_schema,
 )
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
+from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.livestatus_client import SiteConfigurations
+
+RULESET_NAME = "only_hosts"
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
 
 
 @pytest.mark.parametrize(
@@ -25,43 +44,69 @@ from cmk.livestatus_client import SiteConfigurations
         pytest.param(
             {},
             id="no properties",
-            marks=pytest.mark.xfail(
-                strict=True, raises=KeyError, reason="Crash group 5037: KeyError"
-            ),
         ),
         pytest.param(
             {"properties": {}},
             id="no rule ID",
-            marks=pytest.mark.xfail(
-                strict=True, raises=KeyError, reason="Crash group 5037: KeyError"
-            ),
         ),
         pytest.param(
             {"properties": "x"},
             id="properties not a dictionary",
-            marks=pytest.mark.xfail(
-                strict=True, raises=TypeError, reason="Crash group 5037: TypeError"
-            ),
         ),
+        pytest.param({"properties": {"id": 5}}, id="rule ID not a string"),
+        pytest.param({"properties": {"id": ""}}, id="empty rule ID"),
     ],
 )
 @pytest.mark.usefixtures("with_admin_login")
-def test_rule_data_without_a_rule_id_is_a_validation_error(rule_data: Mapping[str, object]) -> None:
+def test_rule_data_without_a_rule_id_is_a_validation_error(
+    tree: FolderTree, rule_data: Mapping[str, object]
+) -> None:
     with pytest.raises(FormSpecValidationError) as excinfo:
         save_rule_form_spec_from_slidein_schema(
-            "special_agents:elasticsearch",
+            RULESET_NAME,
             RawFrontendData(dict(rule_data)),
-            make_folder_tree(Config()),
+            tree,
             LoggedInSuperUser(),
-            pending_changes=PendingChanges(
-                activation_sites=SiteConfigurations({}),
-                local_site=SiteId("NO_SITE"),
-                acting_user=None,
-                store=NoopPendingChangesStore(),
-                hooks=(),
-            ),
+            pending_changes=_noop_pending_changes(),
             pprint_value=False,
             debug=False,
         )
 
     assert [message.location for message in excinfo.value.messages] == [["properties", "id"]]
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_valid_rule_data_saves_the_rule_with_its_rule_id(tree: FolderTree) -> None:
+    visitor = get_visitor(
+        get_rule_form_spec_slidein_schema(RULESET_NAME, tree, LoggedInSuperUser()),
+        VisitorOptions(migrate_values=True, mask_values=False),
+    )
+    _, data = visitor.to_vue(
+        RawDiskData(
+            {
+                "properties": {
+                    "description": "",
+                    "comment": "",
+                    "docu_url": "",
+                    "disabled": False,
+                },
+                "value": {"value": True},
+                "conditions": {"type": ("explicit", {"folder_path": ""})},
+            }
+        )
+    )
+    assert isinstance(data, dict)
+    rule_id = data["properties"]["id"]
+
+    save_rule_form_spec_from_slidein_schema(
+        RULESET_NAME,
+        RawFrontendData(data),
+        tree,
+        LoggedInSuperUser(),
+        pending_changes=_noop_pending_changes(),
+        pprint_value=False,
+        debug=False,
+    )
+
+    ruleset = FolderRulesets.load_folder_rulesets(tree.root_folder()).get(RULESET_NAME)
+    assert ruleset.get_rule_by_id(rule_id).id == rule_id

@@ -361,6 +361,16 @@ def test_cloud_trial_payload_counts_the_user_who_logged_in(site: Site) -> None:
     assert count_users == {"business": 1, "non_business": 0}
 
 
+@dataclass(frozen=True)
+class CloudTrialScenario:
+    session_count_before: int
+    """The number of sessions in the Cloud trial payload before the login."""
+    started_at: int
+    """Unix time in seconds before the scenario acts on the site, which runs on this host."""
+    config_changed_at: int
+    """Unix time in seconds before the logged-in user changes the configuration."""
+
+
 @pytest.mark.skip_if_not_edition("cloud")
 def test_cloud_trial_payload_counts_the_session_of_the_login(
     site: Site, cloud_trial_scenario: CloudTrialScenario
@@ -428,16 +438,6 @@ def cloud_trial_scenario(site: Site) -> CloudTrialScenario:
         started_at=started_at,
         config_changed_at=config_changed_at,
     )
-
-
-@dataclass(frozen=True)
-class CloudTrialScenario:
-    session_count_before: int
-    """The number of sessions in the Cloud trial payload before the login."""
-    started_at: int
-    """Unix time in seconds before the scenario acts on the site, which runs on this host."""
-    config_changed_at: int
-    """Unix time in seconds before the logged-in user changes the configuration."""
 
 
 @pytest.fixture

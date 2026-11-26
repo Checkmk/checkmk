@@ -9,6 +9,7 @@ from unittest import mock
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.form_specs import (
     get_visitor,
     RawDiskData,
@@ -20,7 +21,9 @@ from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
 from cmk.gui.oauth2_connections.wato import _modes as oauth2_modes
 from cmk.gui.session import UserContext
 from cmk.gui.utils.roles import UserPermissions
+from cmk.rulesets.v1.form_specs import CascadingSingleChoice
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
+from tests.unit.cmk.gui.users import create_and_destroy_user
 
 
 def test_oauth2_connection_setup_to_disk(
@@ -120,3 +123,22 @@ def test_oauth2_connection_setup_to_vue(
             )[0],
             shared_type_defs.Oauth2ConnectionSetup,
         )
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash report 387b0036: ValueError")
+@pytest.mark.usefixtures("request_context")
+def test_oauth2_connection_form_for_a_user_without_contact_groups(
+    monkeypatch: pytest.MonkeyPatch, load_config: Config
+) -> None:
+    monkeypatch.setattr(oauth2_modes, "get_configured_site_choices", list)
+    with (
+        create_and_destroy_user(
+            automation=False, config=load_config, custom_attrs={"contactgroups": []}
+        ) as (user_id, _password),
+        UserContext(user_id, UserPermissions({}, {}, {}, [])),
+    ):
+        form_spec = oauth2_modes.get_oauth2_connection_form_spec()
+
+    editable_by = form_spec.elements["editable_by"].parameter_form
+    assert isinstance(editable_by, CascadingSingleChoice)
+    assert [element.name for element in editable_by.elements] == ["contact_group"]

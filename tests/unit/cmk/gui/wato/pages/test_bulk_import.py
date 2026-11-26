@@ -376,9 +376,6 @@ def test_host_rows_to_bulk(
             ["host_name", "no_such_attribute"],
             "no_such_attribute",
             id="unknown attribute",
-            marks=pytest.mark.xfail(
-                strict=True, raises=KeyError, reason="Crash group 5041: KeyError"
-            ),
         ),
     ],
 )

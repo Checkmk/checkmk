@@ -201,7 +201,12 @@ def _host_rows_to_bulk(
                 # Don't import / No select
                 del entry[attr_name]
             elif attr_name != "alias":
-                host_attribute_inst = host_attributes[attr_name]
+                if (host_attribute_inst := host_attributes.get(attr_name)) is None:
+                    raise MKUserError(
+                        None,
+                        _('The attribute "%(attr_name)s" assigned to a column does not exist.')
+                        % {"attr_name": attr_name},
+                    )
 
                 if not attr_value.isascii():
                     raise MKUserError(

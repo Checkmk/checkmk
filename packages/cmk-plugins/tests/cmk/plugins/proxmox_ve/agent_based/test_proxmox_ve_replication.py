@@ -5,6 +5,7 @@
 import json
 
 import pytest
+from pydantic import ValidationError
 
 from cmk.agent_based.v2 import (
     CheckResult,
@@ -339,3 +340,40 @@ def test_check_replications_with_no_errors(
         )
         == expected_result
     )
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValidationError,
+    reason="Crash group 5019: replication job without 'duration' fails section parsing",
+)
+def test_a_replication_job_without_a_duration_is_checked() -> None:
+    raw = {
+        "node": "node1",
+        "cluster": "cluster1",
+        "replications": [
+            {
+                "id": "100-0",
+                "source": "node1",
+                "target": "node2",
+                "schedule": "*/15",
+                "last_sync": 1700000000,
+                "last_try": 1700000000,
+                "next_sync": 1700000900,
+                "fail_count": 0,
+            },
+        ],
+        "cluster_has_replications": True,
+    }
+
+    results = list(
+        check_proxmox_ve_replication(
+            Params(
+                time_since_last_replication=("no_levels", None),
+                no_replications_state=0,
+            ),
+            parse_proxmox_ve_replication([[json.dumps(raw)]]),
+        )
+    )
+
+    assert results[0] == Result(state=State.OK, summary="All replications OK")

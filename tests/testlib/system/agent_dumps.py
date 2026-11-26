@@ -46,7 +46,7 @@ def create_agent_dump_rule(
     dumps_path = dumps_path or site.path("var/check_mk/dumps")
     ruleset_name = "datasource_programs"
     rule_value = f'cat "{dumps_path.as_posix()}/$HOSTNAME$"'
-    if site.is_dir(dumps_path):
+    if not site.is_dir(dumps_path):
         logger.info('Creating folder "%s"...', dumps_path)
         _ = site.run(["mkdir", "-p", dumps_path.as_posix()])
     logger.info('Creating rule "%s"...', ruleset_name)

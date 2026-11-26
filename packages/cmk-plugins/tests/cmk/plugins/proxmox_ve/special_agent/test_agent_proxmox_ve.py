@@ -11,8 +11,11 @@ from pathlib import Path
 
 import pytest
 
+from cmk.plugins.proxmox_ve.lib.ha_manager_status import SectionHaManagerCurrent
+from cmk.plugins.proxmox_ve.lib.replication import SectionReplication
 from cmk.plugins.proxmox_ve.special_agent.agent_proxmox_ve import (
     _backup_timezone,
+    _create_node_sections,
     _create_vm_sections,
     hostname_matches_node,
     node_piggyback_host,
@@ -707,3 +710,37 @@ def test_create_vm_sections_unknown_uptime() -> None:
     assert section_name == "proxmox_ve_vm_info"
     assert isinstance(section, dict)
     assert section["uptime"] is None
+
+
+@pytest.mark.xfail(
+    strict=True, raises=KeyError, reason="Crash report 8576bbca: KeyError 'duration'"
+)
+def test_create_node_sections_reports_a_replication_job_without_a_duration() -> None:
+    job = {
+        "id": "100-0",
+        "source": "pve1",
+        "target": "pve2",
+        "schedule": "*/15",
+        "last_sync": 1700000000,
+        "last_try": 1700000000,
+        "next_sync": 1700000900,
+        "fail_count": 0,
+    }
+
+    section = next(
+        section
+        for name, section in _create_node_sections(
+            node={"node": "pve1", "status": "online", "version": {}, "subscription": {}},
+            all_vms={},
+            node_cluster_mapping={"pve1": "cluster1"},
+            replications={"pve1": [job]},
+            all_storages={},
+            node_storage={},
+            ha_manager_status=SectionHaManagerCurrent(lrm_nodes={}),
+            data={"cluster": {"replication": [job]}},
+        )
+        if name == "proxmox_ve_replication"
+    )
+
+    assert isinstance(section, str)
+    assert [r.id for r in SectionReplication.model_validate_json(section).replications] == ["100-0"]

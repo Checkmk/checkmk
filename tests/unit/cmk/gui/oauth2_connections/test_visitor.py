@@ -122,7 +122,6 @@ def test_oauth2_connection_setup_to_vue(with_user: tuple[UserId, str]) -> None:
         )
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash report 387b0036: ValueError")
 @pytest.mark.usefixtures("request_context")
 def test_oauth2_connection_form_for_a_user_without_contact_groups(
     monkeypatch: pytest.MonkeyPatch, load_config: Config

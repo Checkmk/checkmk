@@ -74,6 +74,8 @@ py_library(
         "__init__.py",
         "conf.py",
     ],
+    # Sphinx configuration: no behaviour a package test could check.
+    tags = ["exclude-from-test-coverage"],
 )
 
 build_test(

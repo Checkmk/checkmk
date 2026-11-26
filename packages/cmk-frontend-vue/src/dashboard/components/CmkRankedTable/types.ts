@@ -73,4 +73,9 @@ export interface CmkRankedTableProps {
   showRank?: boolean
   /** Accessible name of the table, e.g. the widget title. */
   label?: string | undefined
+  /**
+   * Identifies a row across updates, so that a refresh animates each row from its own previous
+   * value and keyboard focus follows it when it moves. Defaults to the row's position.
+   */
+  rowKey?: (row: RankedTableRow, index: number) => string
 }

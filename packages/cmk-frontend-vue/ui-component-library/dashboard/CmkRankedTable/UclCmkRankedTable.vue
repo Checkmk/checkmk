@@ -132,7 +132,10 @@ export const panelConfig = {
     help: 'Cells with an `href` render as links.',
     initialState: false
   }
-} satisfies PanelConfigFor<typeof CmkRankedTable, 'rows' | 'columns' | 'placeholder' | 'busy'> & {
+} satisfies PanelConfigFor<
+  typeof CmkRankedTable,
+  'rows' | 'columns' | 'placeholder' | 'busy' | 'rowKey'
+> & {
   units: BoolPropDef
   zeroAndTinyValues: BoolPropDef
   tableState: ListPropDef<TableState>
@@ -178,7 +181,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 const propState = new PanelStateCreator<
   typeof CmkRankedTable,
-  'rows' | 'columns' | 'placeholder' | 'busy'
+  'rows' | 'columns' | 'placeholder' | 'busy' | 'rowKey'
 >().createRef(panelConfig)
 
 // Pre-ranked sample data; the panel decides how many of these rows are shown.

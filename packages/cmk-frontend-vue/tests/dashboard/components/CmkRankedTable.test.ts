@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, within } from '@testing-library/vue'
+import { nextTick } from 'vue'
 
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable/CmkRankedTable.vue'
 import type {
@@ -307,4 +308,204 @@ test('leaves the rows of an unranked table to be named by their cells', () => {
   const { getAllByRole } = renderTable()
 
   expect(getAllByRole('row').every((row) => !row.hasAttribute('aria-label'))).toBe(true)
+})
+
+describe('on a refresh', () => {
+  const VALUE: RankedTableColumn = {
+    key: 'value',
+    title: 'Value',
+    render: 'count',
+    bar: true,
+    barRange: [0, 100]
+  }
+  const COLUMNS_WITH_VALUE: RankedTableColumn[] = [
+    { key: 'host', title: 'Host', render: 'text', bar: false },
+    VALUE
+  ]
+
+  function entry(host: string, formatted: string, unit = '%'): RankedTableRow {
+    return {
+      host: { value: host, href: `view.py?host=${host}` },
+      value: { value: Number(formatted) || 0, formatted, unit }
+    }
+  }
+
+  const byHost = (row: RankedTableRow) => String((row.host as RankedTableCell).value)
+
+  // The tween runs on animation frames; driving them by hand keeps the tests deterministic.
+  let frames = new Map<number, FrameRequestCallback>()
+  let nextFrameHandle = 0
+  let now = 0
+
+  beforeEach(() => {
+    frames = new Map()
+    nextFrameHandle = 0
+    now = 0
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frames.set(++nextFrameHandle, callback)
+      return nextFrameHandle
+    })
+    vi.stubGlobal('cancelAnimationFrame', (handle: number) => frames.delete(handle))
+    vi.spyOn(performance, 'now').mockImplementation(() => now)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+    delete (Element.prototype as Partial<Element>).scrollIntoView
+  })
+
+  async function renderFrame(elapsedMs: number): Promise<void> {
+    now += elapsedMs
+    const pending = [...frames.values()]
+    frames.clear()
+    pending.forEach((callback) => callback(now))
+    await nextTick()
+  }
+
+  function renderRefreshable(rows: RankedTableRow[]) {
+    return render(CmkRankedTable, {
+      props: { columns: COLUMNS_WITH_VALUE, rows, rowKey: byHost }
+    })
+  }
+
+  function barWidths(container: Element): string[] {
+    return [...container.querySelectorAll<HTMLElement>('.db-cmk-ranked-table__bar-fill')].map(
+      (el) => el.style.width
+    )
+  }
+
+  function shownValue(container: Element): string | undefined {
+    const cell = container.querySelector('tbody td:last-child')!
+    const counting = cell.querySelector('[aria-hidden="true"]')
+    return (counting ?? cell.querySelector('.db-cmk-ranked-table__text'))?.textContent?.trim()
+  }
+
+  test('draws the first rows without animating', () => {
+    const { container } = renderRefreshable([entry('A', '40')])
+
+    expect(barWidths(container)).toEqual(['40%'])
+  })
+
+  test('starts a refresh from the bar and value that were shown', async () => {
+    const { container, rerender } = renderRefreshable([entry('A', '40.0')])
+
+    await rerender({ rows: [entry('A', '80.0')] })
+
+    expect([barWidths(container), shownValue(container)]).toEqual([['40%'], '40.0'])
+  })
+
+  test('counts through the values in between, in the decimals of the new value', async () => {
+    const { container, rerender } = renderRefreshable([entry('A', '40.0')])
+    await rerender({ rows: [entry('A', '80.0')] })
+
+    await renderFrame(100)
+
+    expect(shownValue(container)).toMatch(/^(4[1-9]|[5-7]\d)\.\d$/)
+  })
+
+  test('ends a refresh on the given text and bar', async () => {
+    const { container, rerender } = renderRefreshable([entry('A', '40.0')])
+    await rerender({ rows: [entry('A', '80.0')] })
+
+    await renderFrame(200)
+
+    expect([barWidths(container), shownValue(container)]).toEqual([['80%'], '80.0 %'])
+  })
+
+  test('shows no value from before the refresh for a frame timed before its start', async () => {
+    const { container, rerender } = renderRefreshable([entry('A', '40')])
+    await rerender({ rows: [entry('A', '80')] })
+
+    await renderFrame(-50)
+
+    expect(shownValue(container)).toBe('40')
+  })
+
+  test('gives assistive tech only the final value while counting', async () => {
+    const { container, getAllByRole, rerender } = renderRefreshable([entry('A', '40')])
+
+    await rerender({ rows: [entry('A', '80')] })
+
+    const valueCell = within(getAllByRole('cell').at(-1)!)
+    const audible = { ignore: '[aria-hidden="true"]' }
+    expect(valueCell.queryByText('40', audible)).toBeNull()
+    expect(valueCell.getByText('80', audible)).toBeInTheDocument()
+    expect(shownValue(container)).toBe('40')
+  })
+
+  test('counts from the old value as shown, with the decimals of either end', async () => {
+    const { container, rerender } = renderRefreshable([entry('A', '40.5')])
+
+    await rerender({ rows: [entry('A', '80')] })
+
+    expect(shownValue(container)).toBe('40.5')
+  })
+
+  test('switches the value at once when its unit changes', async () => {
+    const { container, rerender } = renderRefreshable([entry('A', '900', 'MB')])
+
+    await rerender({ rows: [entry('A', '1.2', 'GB')] })
+
+    expect(shownValue(container)).toBe('1.2 GB')
+  })
+
+  test('animates nothing when the reader prefers reduced motion', async () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: true }))
+    const { container, rerender } = renderRefreshable([entry('A', '40')])
+
+    await rerender({ rows: [entry('A', '80')] })
+
+    expect(barWidths(container)).toEqual(['80%'])
+    expect(shownValue(container)).toBe('80 %')
+  })
+
+  test('keeps each row with its key when the ranking changes', async () => {
+    const { container, rerender } = renderRefreshable([entry('A', '80'), entry('B', '40')])
+    const rowOfA = container.querySelector('tbody tr')
+
+    await rerender({ rows: [entry('B', '90'), entry('A', '30')] })
+
+    expect(container.querySelectorAll('tbody tr')[1]).toBe(rowOfA)
+    expect(barWidths(container)).toEqual(['40%', '80%'])
+  })
+
+  function stubScrolling() {
+    // jsdom does no layout, so it has no scrolling either.
+    const scrollIntoView = vi.fn()
+    Element.prototype.scrollIntoView = scrollIntoView
+    return scrollIntoView
+  }
+
+  test('keeps keyboard focus on the same host when the ranking changes', async () => {
+    stubScrolling()
+    const { getByRole, rerender } = renderRefreshable([entry('A', '80'), entry('B', '40')])
+    getByRole('link', { name: 'B' }).focus()
+
+    await rerender({ rows: [entry('B', '90'), entry('A', '30')] })
+
+    expect(getByRole('link', { name: 'B' })).toHaveFocus()
+  })
+
+  // jsdom has no layout to scroll, so the call to scroll is all there is to observe.
+  test('does not scroll to a row whose focus only followed it', async () => {
+    const scrollIntoView = stubScrolling()
+    const { getByRole, rerender } = renderRefreshable([entry('A', '80'), entry('B', '40')])
+    getByRole('link', { name: 'B' }).focus()
+    scrollIntoView.mockClear()
+
+    await rerender({ rows: [entry('B', '90'), entry('A', '30')] })
+
+    expect(scrollIntoView).not.toHaveBeenCalled()
+  })
+
+  test('hands the focus of a row that left to the row in its place', async () => {
+    stubScrolling()
+    const { getByRole, rerender } = renderRefreshable([entry('A', '80'), entry('B', '40')])
+    getByRole('link', { name: 'B' }).focus()
+
+    await rerender({ rows: [entry('A', '80'), entry('C', '30')] })
+
+    expect(getByRole('link', { name: 'C' })).toHaveFocus()
+  })
 })

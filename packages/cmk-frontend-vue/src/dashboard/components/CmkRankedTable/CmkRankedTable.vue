@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed } from 'vue'
+import { computed, onBeforeUpdate, onUpdated, useTemplateRef } from 'vue'
 
 import type { ContextualLinkEntry } from '@/dashboard/lib/contextualLinkUrl'
 
@@ -18,6 +18,7 @@ import type {
   RankedTableColumn,
   RankedTableRow
 } from './types'
+import { type BarTarget, useRankedTableTween } from './useRankedTableTween'
 
 const {
   columns,
@@ -25,7 +26,8 @@ const {
   placeholder,
   busy = false,
   showRank = false,
-  label
+  label,
+  rowKey = (_row, index) => String(index)
 } = defineProps<CmkRankedTableProps>()
 
 const { _t } = usei18n()
@@ -120,6 +122,96 @@ const isBusy = computed(() => busy || placeholder?.kind === 'loading')
 
 // A row count from configuration may be anything; `v-for` throws on a negative one.
 const standInRowCount = computed(() => Math.max(0, Math.floor(placeholder?.rows ?? 0)))
+
+function barKey(rowKeyValue: string, column: RankedTableColumn): string {
+  return `${rowKeyValue}\u0000${column.key}`
+}
+
+const bars = useRankedTableTween(() => {
+  const targets = new Map<string, BarTarget>()
+  rows.forEach((row, index) => {
+    for (const column of columns) {
+      if (column.bar) {
+        targets.set(barKey(rowKey(row, index), column), {
+          percent: barPercent(column, row),
+          text: cellText(column, row),
+          unit: cell(column, row).unit
+        })
+      }
+    }
+  })
+  return targets
+})
+
+function shownBarPercent(column: RankedTableColumn, row: RankedTableRow, index: number): number {
+  return bars.value.get(barKey(rowKey(row, index), column))?.percent ?? barPercent(column, row)
+}
+
+/** The value as it counts towards its new one; `undefined` once it has arrived. */
+function countingText(
+  column: RankedTableColumn,
+  row: RankedTableRow,
+  index: number
+): string | undefined {
+  if (!column.bar) {
+    return undefined
+  }
+  const text = bars.value.get(barKey(rowKey(row, index), column))?.text
+  return text === undefined || text === cellText(column, row) ? undefined : text
+}
+
+const tbody = useTemplateRef<HTMLElement>('tbody')
+
+// Re-ranked rows move in the DOM, which drops the focus they hold: put it back where it was. A
+// row that left the table hands its focus to the row now in its place.
+let focusedCell: { element: HTMLElement; row: string; position: number; column: string } | undefined
+let restoringFocus = false
+
+function bodyRows(): HTMLElement[] {
+  return [...(tbody.value?.querySelectorAll<HTMLElement>('[data-row-key]') ?? [])]
+}
+
+onBeforeUpdate(() => {
+  focusedCell = undefined
+  const element = document.activeElement
+  if (!(element instanceof HTMLElement) || !tbody.value?.contains(element)) {
+    return
+  }
+  const tr = element.closest<HTMLElement>('[data-row-key]')
+  const column = element.closest<HTMLElement>('[data-column-key]')?.dataset.columnKey
+  if (tr?.dataset.rowKey !== undefined && column !== undefined) {
+    focusedCell = { element, row: tr.dataset.rowKey, position: bodyRows().indexOf(tr), column }
+  }
+})
+
+onUpdated(() => {
+  if (focusedCell === undefined || document.activeElement === focusedCell.element) {
+    return
+  }
+  const { row, position, column } = focusedCell
+  const trs = bodyRows()
+  const tr =
+    trs.find((candidate) => candidate.dataset.rowKey === row) ??
+    trs[Math.min(position, trs.length - 1)]
+  const target = tr?.querySelector<HTMLElement>(`[data-column-key="${CSS.escape(column)}"] a`)
+  // Focus that only follows its row must not scroll a page the reader has moved on from.
+  restoringFocus = true
+  target?.focus({ preventScroll: true })
+  restoringFocus = false
+})
+
+// The sticky header would cover a row focused at the top edge.
+function revealFocusedRow(event: FocusEvent): void {
+  if (restoringFocus || !(event.target instanceof Element)) {
+    return
+  }
+  const row = event.target.closest<HTMLElement>('[data-row-key]')
+  const header = row?.closest('table')?.querySelector<HTMLElement>('thead tr')
+  if (row && header) {
+    row.style.scrollMarginTop = `${header.offsetHeight}px`
+    row.scrollIntoView({ block: 'nearest' })
+  }
+}
 
 // Varied widths make the stand-in rows read as text rather than as a grid of boxes.
 const STAND_IN_TEXT_WIDTHS = ['9em', '6.5em', '11em', '7.5em', '10em']
@@ -227,13 +319,14 @@ const gridTemplateColumns = computed(() => {
           </template>
         </tr>
       </tbody>
-      <tbody v-else role="rowgroup">
+      <tbody v-else ref="tbody" role="rowgroup" @focusin="revealFocusedRow">
         <tr
           v-for="(row, index) in rows"
-          :key="index"
+          :key="rowKey(row, index)"
           class="db-cmk-ranked-table__row db-cmk-ranked-table__row--body"
           role="row"
           :aria-label="showRank ? _t('Rank %{rank}', { rank: `${index + 1}` }) : undefined"
+          :data-row-key="rowKey(row, index)"
         >
           <td v-if="showRank" class="db-cmk-ranked-table__td db-cmk-ranked-table__rank" role="cell">
             {{ index + 1 }}
@@ -244,7 +337,7 @@ const gridTemplateColumns = computed(() => {
                 <span
                   class="db-cmk-ranked-table__bar-fill"
                   :style="{
-                    width: `${barPercent(column, row)}%`,
+                    width: `${shownBarPercent(column, row, index)}%`,
                     backgroundColor: cell(column, row).color
                   }"
                 />
@@ -254,6 +347,7 @@ const gridTemplateColumns = computed(() => {
               class="db-cmk-ranked-table__td"
               :class="cellClasses(column)"
               :title="plainTextTooltip(column, row)"
+              :data-column-key="column.key"
               role="cell"
             >
               <ContextualLinkAnchor
@@ -271,8 +365,13 @@ const gridTemplateColumns = computed(() => {
                 <ContextualLinkArrow v-if="several" />
               </ContextualLinkAnchor>
               <span v-else class="db-cmk-ranked-table__text"
-                >{{ cellText(column, row)
-                }}<span v-if="cell(column, row).unit" class="db-cmk-ranked-table__unit">{{
+                ><template v-if="countingText(column, row, index) !== undefined"
+                  ><span aria-hidden="true">{{ countingText(column, row, index) }}</span
+                  ><span class="db-cmk-ranked-table__visually-hidden">{{
+                    cellText(column, row)
+                  }}</span></template
+                ><template v-else>{{ cellText(column, row) }}</template
+                ><span v-if="cell(column, row).unit" class="db-cmk-ranked-table__unit">{{
                   ` ${cell(column, row).unit}`
                 }}</span></span
               >
@@ -424,6 +523,23 @@ const gridTemplateColumns = computed(() => {
 .db-cmk-ranked-table__bar {
   display: block;
   height: var(--dimension-3);
+}
+
+.db-cmk-ranked-table__visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Only the keyboard's focus is marked; a click is its own feedback. The menu of several links
+   renders its anchor inside a child component, hence `:deep`. */
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+.db-cmk-ranked-table__row--body :deep(a:focus-visible) {
+  outline: 2px solid var(--success);
+  outline-offset: 2px;
 }
 
 .db-cmk-ranked-table__stand-in {

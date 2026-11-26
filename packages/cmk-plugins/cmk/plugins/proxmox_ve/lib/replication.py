@@ -16,7 +16,7 @@ class Replication(BaseModel, frozen=True):
     last_sync: int
     last_try: int
     next_sync: int
-    duration: float
+    duration: float | None = Field(default=None)
     error: str | None = Field(default=None)
 
 

@@ -5,7 +5,6 @@
 import json
 
 import pytest
-from pydantic import ValidationError
 
 from cmk.agent_based.v2 import (
     CheckResult,
@@ -342,11 +341,6 @@ def test_check_replications_with_no_errors(
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValidationError,
-    reason="Crash group 5019: replication job without 'duration' fails section parsing",
-)
 def test_a_replication_job_without_a_duration_is_checked() -> None:
     raw = {
         "node": "node1",

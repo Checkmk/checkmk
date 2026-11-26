@@ -112,7 +112,8 @@ pip_compile(
 mypy_cli(
     name = "mypy_cli_original",
     mypy_requirement = mypy_requirement("mypy"),
-    python_version = "3.15",
+    # the default Python version, like the bytecode of the standard library for :mypy_cli
+    python_version = None,
     tags = ["no-mypy"],
     deps = [
         # for `plugins = ["pydantic.mypy"]`
@@ -154,11 +155,15 @@ py_console_script_binary(
     ],
 )
 
-# Custom mypy wrapper that filters problematic MYPYPATH entries.
+# Custom mypy wrapper that filters problematic MYPYPATH entries. mypy imports from its runfiles,
+# so the bytecode of the standard library goes here: mypy_cli() above takes no data.
 sh_binary(
     name = "mypy_cli",
     srcs = ["mypy_wrapper.sh"],
-    data = [":mypy_cli_original"],
+    data = [
+        ":mypy_cli_original",
+        ":python_stdlib_bytecode",
+    ],
 )
 
 filegroup(

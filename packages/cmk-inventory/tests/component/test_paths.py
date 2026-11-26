@@ -14,32 +14,8 @@ from cmk.inventory.paths import (
     file_mtime,
     has_archive,
     has_history,
-    has_inventory_tree,
-    has_status_data_tree,
     InventoryPaths,
 )
-
-
-def test_has_inventory_tree(tmp_path: Path) -> None:
-    inv_paths = InventoryPaths(tmp_path)
-    inv_paths.inventory_dir.mkdir(parents=True)
-    inv_paths.inventory_tree(HostName("host")).touch()
-    assert has_inventory_tree(inv_paths, HostName("host"))
-
-
-def test_has_no_inventory_tree(tmp_path: Path) -> None:
-    assert not has_inventory_tree(InventoryPaths(tmp_path), HostName("host"))
-
-
-def test_has_status_data_tree(tmp_path: Path) -> None:
-    inv_paths = InventoryPaths(tmp_path)
-    inv_paths.status_data_dir.mkdir(parents=True)
-    inv_paths.status_data_tree(HostName("host")).touch()
-    assert has_status_data_tree(inv_paths, HostName("host"))
-
-
-def test_has_no_status_data_tree(tmp_path: Path) -> None:
-    assert not has_status_data_tree(InventoryPaths(tmp_path), HostName("host"))
 
 
 def test_has_archive(tmp_path: Path) -> None:

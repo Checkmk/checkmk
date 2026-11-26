@@ -12,6 +12,7 @@ from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.top_heading import top_heading
+from cmk.shared_typing.drill_up_button import DrillUpButton
 
 
 def make_header(
@@ -33,6 +34,7 @@ def make_header(
     inline_help_as_text: bool,
     hide_suggestions: bool,
     user_role_ids: Sequence[str],
+    drill_up: DrillUpButton | None = None,
 ) -> None:
     if writer.output_format != "html":
         return
@@ -74,6 +76,7 @@ def make_header(
             debug=debug,
             hide_suggestions=hide_suggestions,
             user_role_ids=user_role_ids,
+            drill_up=drill_up,
         )
 
     writer.begin_page_content(enable_scrollbar=enable_main_page_scrollbar)

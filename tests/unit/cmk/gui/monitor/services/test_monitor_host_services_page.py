@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -32,6 +33,9 @@ from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.web.htmllib.builder import HtmlBuilder
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 
 class _SetupGrantingAll:
@@ -215,3 +219,37 @@ def test_page_menu_offers_no_up_entry_for_the_host_the_header_already_names() ->
         for topic in dropdown.topics
         for entry in topic.entries
     )
+
+
+def _host_services_page(
+    wsgi_app: WebTestAppForCMK, live: MockLiveStatusConnection, query: str = ""
+) -> str:
+    live.set_sites(["NO_SITE"])
+    live.add_table("hosts", [{"name": "web-1", "labels": {}, "structured_status": b""}])
+    live.expect_query("GET hosts\nColumns: labels\nFilter: name = web-1")
+    live.expect_query("GET hosts\nColumns: host_structured_status\nFilter: host_name = web-1")
+    with live:
+        return wsgi_app.get(
+            f"/NO_SITE/check_mk/monitor_host_services.py?host=web-1&site=NO_SITE{query}",
+            status=HTTPStatus.OK,
+        ).text
+
+
+@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")
+def test_page_offers_the_way_back_to_the_page_a_drill_down_came_from(
+    logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    page = _host_services_page(logged_in_admin_wsgi_app, mock_livestatus, "&_drilled_from=Overview")
+
+    assert (
+        str(HtmlBuilder.render_vue_component("cmk-drill-up-button", {"title": "Overview"})) in page
+    )
+
+
+@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")
+def test_page_offers_no_way_back_without_a_drill_down(
+    logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    page = _host_services_page(logged_in_admin_wsgi_app, mock_livestatus)
+
+    assert "<cmk-drill-up-button" not in page

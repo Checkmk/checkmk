@@ -44,6 +44,7 @@ from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.monitor.shared import any_custom_icons
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.top_heading import requested_drill_up
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.monitoring.host_services import (
     AcknowledgeDefaults,
@@ -159,6 +160,7 @@ class MonitorHostServicesPage(Page):
             inline_help_as_text=user.inline_help_as_text,
             hide_suggestions=not user.get_tree_state("suggestions", "all", True),
             user_role_ids=user.role_ids,
+            drill_up=requested_drill_up(ctx.request),
         )
 
         # The option states and durations the dialogs start from, as the settings the panes

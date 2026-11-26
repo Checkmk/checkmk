@@ -163,6 +163,7 @@ mssql_waittypes = [
     "HADR_WORK_POOL",
     "HADR_WORK_QUEUE",
     "HADR_XRF_STACK_ACCESS",
+    "HTDELETE",
     "HTTP_ENUMERATION",
     "HTTP_START",
     "IMPPROV_IOWAIT",

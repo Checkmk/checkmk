@@ -21,10 +21,10 @@ from .config import (
 )
 from .paths import (
     collect_files,
+    file_mtime,
     InventoryPaths,
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
-    tree_mtime,
 )
 
 
@@ -193,13 +193,6 @@ class _FilePathsOfHost:
     delta_cache_file_paths: Sequence[Path]
 
 
-def _compute_timestamp_from_file_path(file_path: Path) -> int | None:
-    try:
-        return int(file_path.stat().st_mtime)
-    except FileNotFoundError:
-        return None
-
-
 def _compute_timestamp_from_archive_file_name(file_path: Path) -> int | None:
     try:
         return parse_archive_timestamp(file_path)
@@ -279,7 +272,7 @@ def _collect_abandoned_tree_files_by_host(
     abandoned_tree_files_by_host: dict[str, list[_File]] = {}
     for raw_host_name in raw_host_names:
         for file_path in inventory_paths.host_tree_files(HostName(raw_host_name)):
-            if (timestamp := _compute_timestamp_from_file_path(file_path)) is not None:
+            if (timestamp := file_mtime(file_path)) is not None:
                 abandoned_tree_files_by_host.setdefault(raw_host_name, []).append(
                     _File(path=file_path, timestamp=timestamp)
                 )
@@ -299,7 +292,7 @@ def _collect_remaining_abandoned_files(
             .difference(fp for fps in file_paths_by_host.values() for fp in fps.tree_file_paths)
             .difference(f.path for fs in abandoned_tree_files_by_host.values() for f in fs)
         )
-        if (timestamp := _compute_timestamp_from_file_path(file_path)) is not None
+        if (timestamp := file_mtime(file_path)) is not None
     ]
 
 
@@ -345,7 +338,7 @@ def _compute_classified_history_files(
     archive_file_paths: Sequence[Path],
     delta_cache_file_paths: Sequence[Path],
 ) -> _ClassifiedHistoryFiles:
-    inventory_tree_ts = tree_mtime(inventory_tree)
+    inventory_tree_ts = file_mtime(inventory_tree)
     archive_file_paths_by_ts = {
         ts: fp
         for fp in archive_file_paths

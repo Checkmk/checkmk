@@ -17,11 +17,11 @@ from .delta import compare_trees, ImmutableDeltaTree
 from .filtering import filter_delta_tree, SDFilterChoice
 from .paths import (
     collect_files,
+    file_mtime,
     InventoryPaths,
     is_json_tree_file,
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
-    tree_mtime,
 )
 from .raw_store import load_tree_from_tree_path
 from .serialization import (
@@ -166,7 +166,7 @@ class HistoryStore:
                 yield Error(file_path)
 
         tree_path = self.inv_paths.inventory_tree(host_name)
-        if (timestamp := tree_mtime(tree_path)) is not None:
+        if (timestamp := file_mtime(tree_path)) is not None:
             yield OK(_HistoryPath(tree_path=tree_path, timestamp=timestamp))
 
     def _collect_history_paths(

@@ -11,12 +11,12 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.paths import (
+    file_mtime,
     has_archive,
     has_history,
     has_inventory_tree,
     has_status_data_tree,
     InventoryPaths,
-    tree_mtime,
 )
 
 
@@ -80,13 +80,13 @@ def test_has_no_history(tmp_path: Path) -> None:
     assert not has_history(InventoryPaths(tmp_path), HostName("host"))
 
 
-def test_tree_mtime(tmp_path: Path) -> None:
+def test_file_mtime(tmp_path: Path) -> None:
     tree_path = InventoryPaths(tmp_path).inventory_tree(HostName("host"))
     tree_path.parent.mkdir(parents=True)
     tree_path.touch()
     os.utime(tree_path, (100, 100))
-    assert tree_mtime(tree_path) == 100
+    assert file_mtime(tree_path) == 100
 
 
-def test_tree_mtime_without_a_tree_file(tmp_path: Path) -> None:
-    assert tree_mtime(InventoryPaths(tmp_path).inventory_tree(HostName("host"))) is None
+def test_file_mtime_without_a_file(tmp_path: Path) -> None:
+    assert file_mtime(InventoryPaths(tmp_path).inventory_tree(HostName("host"))) is None

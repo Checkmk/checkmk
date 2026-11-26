@@ -371,6 +371,15 @@ def test_host_rows_to_bulk(
             "host name attribute",
             id="host_name not assigned",
         ),
+        pytest.param(
+            CSV_WITH_TITLE_LINE,
+            ["host_name", "no_such_attribute"],
+            "no_such_attribute",
+            id="unknown attribute",
+            marks=pytest.mark.xfail(
+                strict=True, raises=KeyError, reason="Crash group 5041: KeyError"
+            ),
+        ),
     ],
 )
 @pytest.mark.usefixtures("request_context")

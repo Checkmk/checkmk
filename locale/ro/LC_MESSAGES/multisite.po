@@ -849,9 +849,9 @@ msgstr "%(days)d zile în urmă"
 
 #, python-format
 msgid ""
-"%(description)s<br><br>This is a temporary experimental flag. It is "
-"scheduled for removal in version %(remove_after)s and must not be relied on "
-"for permanent configuration."
+"%(description)s<br><br>This is a temporary experimental flag. It will be "
+"removed in a future version and must not be relied on for permanent "
+"configuration."
 msgstr ""
 
 #, fuzzy, python-format
@@ -4519,6 +4519,12 @@ msgstr "Accesul analizează configurația"
 msgid "Access by remote sites"
 msgstr "Adăugați o instanță la distanță"
 
+#, fuzzy
+msgid ""
+"Access by remote sites was disabled on the data backend instance of the "
+"central site."
+msgstr "Checkmk poate fi configurat numai pe site-ul central al managerilor."
+
 msgid ""
 "Access is restricted, but no contact groups are assigned in the host's "
 "permissions."
@@ -5536,9 +5542,6 @@ msgstr ""
 msgid "Add element"
 msgstr "Adaugă element"
 
-msgid "Add elements to your sidebar"
-msgstr "Adăugați elemente la bara laterală"
-
 #, fuzzy
 msgid "Add event"
 msgstr "Adaugă element"
@@ -5946,9 +5949,6 @@ msgstr "Adaugă nume de senzor"
 # georgem ##############
 msgid "Add service group"
 msgstr "Adăugați grupul de servicii"
-
-msgid "Add sidebar element"
-msgstr "Adăugați elementul sidebar"
 
 msgid "Add site connection"
 msgstr "Adăugați o conexiune de site"
@@ -8394,6 +8394,10 @@ msgstr "Reclasificarea statului complet"
 
 msgid "Always fetch data from Meraki API."
 msgstr ""
+
+#, fuzzy
+msgid "Always filtered by the clicked item."
+msgstr "Ștergeți acest element"
 
 #, fuzzy
 msgid "Always included"
@@ -14913,6 +14917,9 @@ msgstr "Șasiu"
 msgid "Check"
 msgstr "Verificat"
 
+msgid "Check \"Make these changes\" to save and make them."
+msgstr ""
+
 msgid "Check / Uncheck all"
 msgstr "Bifați / Debifați toate"
 
@@ -21266,6 +21273,10 @@ msgstr "Raport zilnic"
 msgid "Dangerous"
 msgstr "Periculos"
 
+#, fuzzy
+msgid "Dashboard & widget filters"
+msgstr "Filtre aplicate:"
+
 msgid "Dashboard element"
 msgstr "Element de tablou de bord"
 
@@ -25440,22 +25451,6 @@ msgstr "Timpii de întrerupere a gazdei"
 msgid "Downtimes of service"
 msgstr "Întreruperi de serviciu"
 
-#, fuzzy
-msgid "Drill down to dashboard (custom)"
-msgstr "Legătura cu tabloul de bord"
-
-#, fuzzy
-msgid "Drill down to dashboard (inherited)"
-msgstr "Legătura cu tabloul de bord"
-
-#, fuzzy
-msgid "Drill down to view (custom)"
-msgstr "Legătură pentru a vizualiza"
-
-#, fuzzy
-msgid "Drill down to view (inherited)"
-msgstr "Legătură pentru a vizualiza"
-
 msgid "Drive"
 msgstr "Conducere"
 
@@ -25914,6 +25909,16 @@ msgid ""
 msgstr ""
 "Fiecare condiție predefinită este deținută de un grup de utilizatori care "
 "pot edita, șterge și utiliza condițiile predefinite existente."
+
+#. weblate-flags: read-only, domain-specific
+#, python-format
+msgid ""
+"Each process logs into its own file: the GUI and the activation of changes "
+"into <tt>%(web_log)s</tt> and <tt>%(job_scheduler_log)s</tt>, the check "
+"helpers into <tt>%(core_log)s</tt>, up to the level of \"Checkmk check "
+"helpers\" of the core, and the dynamic configuration into <tt>%(dcd_log)s</"
+"tt>."
+msgstr ""
 
 #, fuzzy
 msgid "Each project must be unique and cannot be used multiple times."
@@ -26959,6 +26964,11 @@ msgstr ""
 msgid ""
 "Enable the local data backend instance to store these features locally: "
 "%(features)s"
+msgstr ""
+
+msgid ""
+"Enable the local data backend instance to store this feature locally, or "
+"choose another location."
 msgstr ""
 
 #, fuzzy
@@ -30154,6 +30164,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Filters from the clicked item"
+msgstr "Ștergeți acest element"
+
+#, fuzzy
 msgid ""
 "Filters hosts or services assigned to the selected contact groups. This "
 "filter only works with Checkmk Micro Core (CMC). If you are not using CMC, "
@@ -30162,10 +30176,6 @@ msgstr ""
 "Gazda/serviciul trebuie să se afle într-unul dintre grupurile de contacte "
 "selectate. Acest lucru funcționează numai cu Checkmk Micro Core. Dacă nu "
 "folosiți CMC, acest filtru nu se va aplica."
-
-#, fuzzy
-msgid "Filters of the clicked element"
-msgstr "Ștergeți acest element"
 
 msgid "Final notification result"
 msgstr "Rezultatul notificării finale"
@@ -38742,6 +38752,9 @@ msgstr "Controale programate imediat"
 msgid "Impact"
 msgstr "Impact"
 
+msgid "Implied changes of the data backend setting:"
+msgstr ""
+
 msgid "Import"
 msgstr "Import"
 
@@ -39348,14 +39361,6 @@ msgstr "Includeți toate subfolderele"
 msgid "Include both service and non-service times"
 msgstr "Includeți atât orele de serviciu, cât și cele care nu sunt de serviciu"
 
-#, fuzzy
-msgid "Include current time range"
-msgstr "Activat în intervalul de timp"
-
-#, fuzzy
-msgid "Include dashboard and widget filters"
-msgstr "Filtre aplicate:"
-
 msgid "Include empty pools into the monitoring"
 msgstr "Includeți bazinele goale în monitorizare"
 
@@ -39740,6 +39745,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Inherit settings from"
+msgstr "Moștenit din "
+
+#, fuzzy
+msgid "Inherited"
 msgstr "Moștenit din "
 
 msgid "Inherited from "
@@ -43871,6 +43880,10 @@ msgstr ""
 msgid "Link to dashboard"
 msgstr "Legătura cu tabloul de bord"
 
+#, fuzzy
+msgid "Link to dashboard or view"
+msgstr "Legătura cu tabloul de bord"
+
 msgid "Link to view"
 msgstr "Legătură pentru a vizualiza"
 
@@ -44301,6 +44314,10 @@ msgstr "Verificări locale: versiuni"
 msgid "Local count requests"
 msgstr "Cereri locale de numărare"
 
+#, fuzzy
+msgid "Local data backend"
+msgstr "Configurația stilului selectat"
+
 #, fuzzy, python-format
 msgid "Local data backend (site %(site)s)"
 msgstr "Instanțe Oracle"
@@ -44454,6 +44471,10 @@ msgstr "Jurnal"
 
 msgid "Log all messages into Syslog-like log files"
 msgstr "Înregistrați toate mesajele în fișiere jurnal de tip syslog"
+
+#, fuzzy
+msgid "Log at debug level"
+msgstr "Nivelul de jurnal"
 
 msgid "Log backup"
 msgstr "Copie de rezervă a jurnalului"
@@ -44794,6 +44815,20 @@ msgstr "Logout"
 
 msgid "Logs"
 msgstr "Bușteni"
+
+#. weblate-flags: read-only, domain-specific
+#, python-format
+msgid ""
+"Logs every statement Checkmk sends to the data backend at debug level, "
+"whatever the general log level. During an update the statements end up in "
+"<tt>%(update_log)s</tt>, during a restore in the output of <tt>omd restore</"
+"tt>. "
+msgstr ""
+
+msgid ""
+"Logs how long each read takes and which sites it covers at debug level, "
+"whatever the general log level. "
+msgstr ""
 
 #, fuzzy
 msgid "Logs refused by the Event Console"
@@ -46539,6 +46574,10 @@ msgstr "Potrivirea este inversată în această regulă"
 
 msgid "Matching nodes"
 msgstr "Noduri de potrivire"
+
+#, fuzzy
+msgid "Matching selected attributes of the clicked item."
+msgstr "Ștergeți acest element"
 
 msgid "Matrix"
 msgstr "Matrice"
@@ -53887,9 +53926,6 @@ msgstr "Deschideți acest tabel pentru filtrare / sortare"
 msgid "Open vSwitch (ovs) bonding interface status"
 msgstr "Starea interfeței de conectare OVS"
 
-msgid "Open/close this element"
-msgstr "Deschideți/închideți acest element"
-
 #, fuzzy
 msgid "OpenAI"
 msgstr "Deschideți"
@@ -60582,6 +60618,10 @@ msgstr "Citire de octeți pe operațiune"
 msgid "Read capacity"
 msgstr "Capacitatea de citire"
 
+#, fuzzy
+msgid "Read duration and sites"
+msgstr "Operațiuni de citire /s"
+
 msgid "Read hits"
 msgstr "Citiți hiturile"
 
@@ -61817,14 +61857,6 @@ msgid ""
 "name or IP address, without protocol or port."
 msgstr ""
 
-#. weblate-flags: read-only, domain-specific
-#, python-brace-format
-msgid ""
-"Remote sites store data in this data backend instance: {sites}. Change where "
-"they store their data before you disable the instance or its access by "
-"remote sites."
-msgstr ""
-
 msgid "Remote: Send events to remote syslog host"
 msgstr "La distanță: Trimiteți evenimente la o gazdă syslog la distanță"
 
@@ -61979,9 +62011,6 @@ msgstr "Eliminarea condiției de etichetare"
 #, python-format
 msgid "Remove this %(what_s)s from the extension packages module"
 msgstr "Eliminați acest %(what_s)s din modulul de pachete de extensii"
-
-msgid "Remove this element"
-msgstr "Eliminați acest element"
 
 msgid "Remove this endpoint"
 msgstr "Înlătură acest punct final"
@@ -64567,6 +64596,10 @@ msgstr "Versiunea șoferului"
 msgid "SQL database user credentials"
 msgstr "Credențiale de utilizator pentru baza de date SQL"
 
+#, fuzzy
+msgid "SQL statements"
+msgstr "Declarație"
+
 msgid "SQL-Server to connect to"
 msgstr "SQL-Server la care să se conecteze"
 
@@ -64812,6 +64845,10 @@ msgstr "Setări salvate numai pentru citire"
 msgid "Saved space"
 msgstr "Spațiu economisit"
 
+#, fuzzy
+msgid "Saving license"
+msgstr "Gestionarea licențelor"
+
 msgid "Saving the result..."
 msgstr ""
 
@@ -64922,6 +64959,10 @@ msgstr "Programați o perioadă de pauză?"
 #, python-format
 msgid "Scheduling report in background failed: %(e)s"
 msgstr "Programarea raportului în fundal a eșuat: %(e)s."
+
+#, fuzzy
+msgid "Schema management"
+msgstr "Managementul site-ului"
 
 msgid "Schema, revision and footprint of the data backend database"
 msgstr ""
@@ -67052,6 +67093,9 @@ msgstr ""
 "Aici puteți seta o etichetă personalizată pentru noile probleme. Dacă nu "
 "este setată, se va folosi 'monitorizare'."
 
+msgid "Set accept_implied_changes to make them."
+msgstr ""
+
 msgid "Set an individual idle timeout"
 msgstr "Setați un timp de așteptare individual pentru inactivitate"
 
@@ -68719,6 +68763,19 @@ msgstr "Sirenă"
 
 msgid "Site"
 msgstr "Site"
+
+#, python-format
+msgid ""
+"Site %(site)s: \"%(feature)s\" is set from \"%(previous)s\" to "
+"\"%(disabled)s\"."
+msgstr ""
+
+#, python-format
+msgid ""
+"Site %(site)s: the data backend instance is enabled, with the native "
+"protocol SSL/TLS port %(tls_port)s, the HTTP SSL/TLS port %(https_port)s and "
+"a memory limit of %(memory_limit)s of the total available memory."
+msgstr ""
 
 #, python-format
 msgid "Site %(site_id)s"
@@ -74776,6 +74833,12 @@ msgid ""
 "The OMD site configuration ('omd config show') and the files below etc/omd"
 msgstr ""
 
+#, python-format
+msgid ""
+"The OpenTelemetry Collector of site %(site)s keeps running, but the metrics "
+"it receives are no longer stored."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The Oracle System Identifier (SID) that identifies a specific database "
@@ -76198,6 +76261,14 @@ msgid ""
 "upgrade fails, please contact Checkmk support."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "The data backend instance of site %(site)s was disabled."
+msgstr "Instanțe Oracle"
+
+#, fuzzy
+msgid "The data backend instance of the central site was disabled."
+msgstr "Instanțe Oracle"
+
 #. weblate-flags: read-only, domain-specific
 msgid "The data backend is busy. Try again in a few minutes."
 msgstr ""
@@ -76588,6 +76659,12 @@ msgid ""
 "For further information visit our "
 msgstr ""
 
+#, python-format
+msgid ""
+"The feature location \"%(local)s\" was chosen for %(features)s of site "
+"%(site)s while the site ran no data backend instance."
+msgstr ""
+
 msgid ""
 "The fetcher usage is below 50%, you may decrease the number of fetchers to "
 "reduce the memory consumption."
@@ -76637,6 +76714,10 @@ msgstr ""
 
 msgid "The file_id has to be alphanumeric."
 msgstr "ID-ul fișierului trebuie să fie alfanumeric."
+
+#, python-format
+msgid "The filter %(filter)s works only with a view as the target page."
+msgstr ""
 
 msgid ""
 "The first choice of a tag group will be its default value. If a tag group "
@@ -77576,6 +77657,26 @@ msgid "The log level for user authentication related log entries."
 msgstr ""
 "Nivelul de jurnal pentru intrările de jurnal legate de autentificarea "
 "utilizatorului."
+
+msgid ""
+"The log level of the data backend outside the areas below, for example of "
+"retried connections. "
+msgstr ""
+
+#. weblate-flags: read-only, domain-specific
+#, python-format
+msgid ""
+"The log level of the decisions of the schema management. It logs on "
+"activation of changes into <tt>%(web_log)s</tt> and "
+"<tt>%(job_scheduler_log)s</tt>, during an update into <tt>%(update_log)s</"
+"tt> and during a restore into the output of <tt>omd restore</tt>."
+msgstr ""
+
+msgid ""
+"The logging of the data backend, independent of the log level of the "
+"processes that use the data backend. Debug logging is verbose, so do not "
+"leave it on indefinitely."
+msgstr ""
 
 msgid "The login is currently locked"
 msgstr "Conectarea este blocată în prezent"
@@ -83741,6 +83842,9 @@ msgstr ""
 "își va amesteca elementele cu alte rapoarte care moștenesc din acest model. "
 "Paginarea paginilor de pe prima pagină utilizează numerotarea romană. Prima "
 "pagină generează întotdeauna un număr total par de pagini."
+
+msgid "This request also makes these implied changes:"
+msgstr ""
 
 msgid "This role does not exist."
 msgstr "Acest rol nu există."
@@ -104606,6 +104710,9 @@ msgstr ""
 msgid "No data in this timeframe."
 msgstr "Nu există încă metrici în acest grafic."
 
+msgid "Rank"
+msgstr ""
+
 #, fuzzy
 msgid "Embedded page"
 msgstr "Imagine încorporată"
@@ -104660,6 +104767,21 @@ msgid ""
 "    You can use these examples to identify hosts and services that must be "
 "filtered out in the top list configuration to resolve the problem."
 msgstr ""
+
+#, fuzzy
+msgid "Nothing matches the widget filter in the selected time frame."
+msgstr "Recunoașteți problemele"
+
+msgid "Last successful update less than a minute ago."
+msgstr ""
+
+#, fuzzy
+msgid "Last successful update %{n} min ago."
+msgstr "Ultima sincronizare reușită %(seconds)d acum câteva secunde."
+
+#, fuzzy
+msgid "Data could not be loaded"
+msgstr "DN-ul de bază al grupului nu a putut fi găsit."
 
 #, fuzzy
 msgid "Widget data could not be loaded."
@@ -105204,15 +105326,15 @@ msgid "Select option"
 msgstr "Conexiuni respinse"
 
 #, fuzzy
-msgid "Inherited"
-msgstr "Moștenit din "
-
-#, fuzzy
 msgid "Add contextual link"
 msgstr "Adăugați conținut"
 
 msgid "Redirect to the default page defined by Checkmk."
 msgstr ""
+
+#, fuzzy
+msgid "Include current time range"
+msgstr "Activat în intervalul de timp"
 
 #, fuzzy
 msgid "Include dashboard & widget filters"
@@ -105749,10 +105871,6 @@ msgid ""
 msgstr ""
 "Aceste macrocomenzi pot fi combinate cu elemente de text arbitrare, de "
 "exemplu \"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\"."
-
-#, fuzzy
-msgid "Appearance"
-msgstr "Aparatură"
 
 #, fuzzy
 msgid "Show title background"
@@ -106624,6 +106742,13 @@ msgstr "Parola"
 msgid "Pending"
 msgstr "În așteptare"
 
+msgid "This also makes these implied changes:"
+msgstr ""
+
+#, fuzzy
+msgid "Make these changes"
+msgstr "Schimbare de stare"
+
 msgid ""
 "Changes submitted through this form will be immediately applied to your "
 "configuration. However, you may still need to activate them for them to take "
@@ -107017,6 +107142,14 @@ msgid "All metrics are hidden"
 msgstr "Toți părinții sunt în jos"
 
 #, fuzzy
+msgid "Checkmk has no graphs for this host."
+msgstr "Alte jurnale pentru acest serviciu"
+
+#, fuzzy
+msgid "Checkmk has no graphs for this service."
+msgstr "Alte jurnale pentru acest serviciu"
+
+#, fuzzy
 msgid "Resolution %{resolution}"
 msgstr "Setați rezoluția"
 
@@ -107078,6 +107211,14 @@ msgstr "Detalii gazdă"
 #, fuzzy
 msgid "Show details for %{metric}"
 msgstr "Afișează detalii despre o gazdă."
+
+#, fuzzy
+msgid "Resource"
+msgstr "Surse"
+
+#, fuzzy
+msgid "Data point"
+msgstr "Date trimise"
 
 #, fuzzy
 msgid "Attribute name"
@@ -107808,6 +107949,18 @@ msgid "Custom time range"
 msgstr "Personalizați intervalul de timp"
 
 #, fuzzy
+msgid "More time ranges"
+msgstr "Formatul intervalelor de timp"
+
+#, fuzzy
+msgid "More ranges"
+msgstr "Mai multe opțiuni"
+
+#, fuzzy
+msgid "Time ranges"
+msgstr "Interval de timp"
+
+#, fuzzy
 msgid "Custom range"
 msgstr "Personalizați intervalul de timp"
 
@@ -107859,18 +108012,6 @@ msgstr ""
 #, fuzzy
 msgid "undocumented"
 msgstr "URL de documentare"
-
-#, fuzzy
-msgid "More time ranges"
-msgstr "Formatul intervalelor de timp"
-
-#, fuzzy
-msgid "More ranges"
-msgstr "Mai multe opțiuni"
-
-#, fuzzy
-msgid "Time ranges"
-msgstr "Interval de timp"
 
 #, fuzzy
 msgid "Loading content..."
@@ -108049,8 +108190,9 @@ msgstr ""
 msgid "Place objects on a blank canvas or a picture, such as a floor plan"
 msgstr ""
 
-msgid "Show hosts, services and groups at their locations on a world map"
-msgstr ""
+#, fuzzy
+msgid "Show hosts, services and groups at their geographic locations"
+msgstr "Căutați servicii și afișați graficele acestora"
 
 msgid "Lay out all hosts automatically by how they are connected"
 msgstr ""
@@ -109101,6 +109243,10 @@ msgid "Traffic light"
 msgstr "Trafic trimis"
 
 #, fuzzy
+msgid "Appearance"
+msgstr "Aparatură"
+
+#, fuzzy
 msgid "Gadget default"
 msgstr "Editarea valorilor implicite"
 
@@ -109498,6 +109644,84 @@ msgstr "Eliminați filtrul"
 msgid "Add site…"
 msgstr "Adăugați sortator"
 
+#, fuzzy
+msgid "None, place objects manually"
+msgstr "Se execută numai manual"
+
+#, fuzzy
+msgid "All hosts with geo coordinates"
+msgstr "Toate gazdele site-ului"
+
+#, fuzzy
+msgid "Hosts in host group…"
+msgstr "Gazda este în grup"
+
+#, fuzzy
+msgid "Hosts hosting a service in service group…"
+msgstr "Atribuirea serviciilor la grupurile de servicii"
+
+#, fuzzy
+msgid "Map view"
+msgstr "Vizualizare clonă"
+
+#, fuzzy
+msgid "Latitude"
+msgstr "Cel mai lung"
+
+msgid "Between -90 and 90."
+msgstr ""
+
+#, fuzzy
+msgid "Longitude"
+msgstr "Cel mai lung"
+
+msgid "Between -180 and 180."
+msgstr ""
+
+msgid ""
+"Pan/zoom the map first, then reopen settings to capture the current view."
+msgstr ""
+
+msgid "A whole number from 0 to %{max}."
+msgstr ""
+
+msgid "Closes settings and switches the map to picker mode."
+msgstr ""
+
+#, fuzzy
+msgid "Pick from map"
+msgstr "Moștenit din "
+
+msgid ""
+"Leave empty for the site default. Only OpenStreetMap and the tile server "
+"configured in the global settings can be reached — tiles from anywhere else "
+"are blocked by the browser."
+msgstr ""
+
+msgid "This server is not allowed by the site, its tiles would not load."
+msgstr ""
+
+#, fuzzy
+msgid "Map saturation (%)"
+msgstr "Durata de actualizare"
+
+msgid "Left empty, the map shows at 100 %, in its full colors."
+msgstr ""
+
+#, fuzzy
+msgid "Automatic object placement"
+msgstr "Actualizări automate ale agenților"
+
+msgid ""
+"Hosts are auto-discovered from monitoring data via maps_lat/maps_lng labels "
+"or LAT/LONG custom variables. They show up alongside any objects you place "
+"manually."
+msgstr ""
+
+#, fuzzy
+msgid "Pick a group to discover hosts from."
+msgstr "Nu s-au găsit gazde care să poată fi descoperite"
+
 msgid ""
 "Control who can see this map and whether it is listed in the Monitor menu. "
 "You can always see your own maps."
@@ -109588,84 +109812,6 @@ msgstr ""
 #, fuzzy
 msgid "Background color"
 msgstr "Locuri de muncă de fond"
-
-#, fuzzy
-msgid "None, place objects manually"
-msgstr "Se execută numai manual"
-
-#, fuzzy
-msgid "All hosts with geo coordinates"
-msgstr "Toate gazdele site-ului"
-
-#, fuzzy
-msgid "Hosts in host group…"
-msgstr "Gazda este în grup"
-
-#, fuzzy
-msgid "Hosts hosting a service in service group…"
-msgstr "Atribuirea serviciilor la grupurile de servicii"
-
-#, fuzzy
-msgid "Map view"
-msgstr "Vizualizare clonă"
-
-#, fuzzy
-msgid "Latitude"
-msgstr "Cel mai lung"
-
-msgid "Between -90 and 90."
-msgstr ""
-
-#, fuzzy
-msgid "Longitude"
-msgstr "Cel mai lung"
-
-msgid "Between -180 and 180."
-msgstr ""
-
-msgid ""
-"Pan/zoom the map first, then reopen settings to capture the current view."
-msgstr ""
-
-msgid "A whole number from 0 to %{max}."
-msgstr ""
-
-msgid "Closes settings and switches the map to picker mode."
-msgstr ""
-
-#, fuzzy
-msgid "Pick from map"
-msgstr "Moștenit din "
-
-msgid ""
-"Leave empty for the site default. Only OpenStreetMap and the tile server "
-"configured in the global settings can be reached — tiles from anywhere else "
-"are blocked by the browser."
-msgstr ""
-
-msgid "This server is not allowed by the site, its tiles would not load."
-msgstr ""
-
-#, fuzzy
-msgid "Map saturation (%)"
-msgstr "Durata de actualizare"
-
-msgid "Left empty, the map shows at 100 %, in its full colors."
-msgstr ""
-
-#, fuzzy
-msgid "Automatic object placement"
-msgstr "Actualizări automate ale agenților"
-
-msgid ""
-"Hosts are auto-discovered from monitoring data via maps_lat/maps_lng labels "
-"or LAT/LONG custom variables. They show up alongside any objects you place "
-"manually."
-msgstr ""
-
-#, fuzzy
-msgid "Pick a group to discover hosts from."
-msgstr "Nu s-au găsit gazde care să poată fi descoperite"
 
 #, fuzzy
 msgid "%{field} is required."
@@ -110033,6 +110179,37 @@ msgid "FLAP"
 msgstr ""
 
 msgid "Too many to draw here"
+msgstr ""
+
+#, fuzzy
+msgid "Geo map canvas"
+msgstr "Date cartografiate"
+
+msgid ""
+"No hosts with geo coordinates found. Set the maps_lat and maps_lng labels on "
+"hosts to show them here."
+msgstr ""
+
+msgctxt ""
+"%{link} is a button that opens the \"Automatic object placement\" setting"
+msgid ""
+"No objects yet. Use the Edit button at the bottom right to place some, or "
+"turn on %{link} to place hosts by their maps_lat and maps_lng labels."
+msgstr ""
+
+#, fuzzy
+msgid "This map has no objects yet"
+msgstr "Acest grup nu există."
+
+#, fuzzy
+msgid "Loading hosts…"
+msgstr "Opțiuni de etichetare"
+
+#, fuzzy
+msgid "Save current view as default"
+msgstr "Activarea regulii"
+
+msgid "Pan/zoom the map, then apply."
 msgstr ""
 
 #, fuzzy
@@ -110625,39 +110802,8 @@ msgid "No objects yet. Use the Edit button at the bottom right to add some."
 msgstr ""
 
 #, fuzzy
-msgid "This map has no objects yet"
-msgstr "Acest grup nu există."
-
-#, fuzzy
 msgid "No hosts or services match the grids on this map."
 msgstr "Note privind serviciile personalizate"
-
-#, fuzzy
-msgid "Geo map canvas"
-msgstr "Date cartografiate"
-
-msgid ""
-"No hosts with geo coordinates found. Set the maps_lat and maps_lng labels on "
-"hosts to show them here."
-msgstr ""
-
-msgctxt ""
-"%{link} is a button that opens the \"Automatic object placement\" setting"
-msgid ""
-"No objects yet. Use the Edit button at the bottom right to place some, or "
-"turn on %{link} to place hosts by their maps_lat and maps_lng labels."
-msgstr ""
-
-#, fuzzy
-msgid "Loading hosts…"
-msgstr "Opțiuni de etichetare"
-
-#, fuzzy
-msgid "Save current view as default"
-msgstr "Activarea regulii"
-
-msgid "Pan/zoom the map, then apply."
-msgstr ""
 
 #, fuzzy
 msgid "Failed to load connections"
@@ -111157,6 +111303,10 @@ msgstr "Alte jurnale pentru acest serviciu"
 msgid "Services to be created"
 msgstr "Statele serviciilor"
 
+#, fuzzy
+msgid "Updating…"
+msgstr "Încărcare..."
+
 msgid ""
 "Enter a service name and select a host or enter a host name template to see "
 "the services to be created."
@@ -111179,8 +111329,25 @@ msgid "Target host:"
 msgstr "Obiective"
 
 #, fuzzy
-msgid "(new host)"
-msgstr "(fără elemente)"
+msgid "To be created"
+msgstr "Fișier creat"
+
+#, fuzzy
+msgid "Existing"
+msgstr "Testare"
+
+#, fuzzy
+msgid "Folder:"
+msgstr "Dosar"
+
+#, fuzzy
+msgid "Folder of %{host}"
+msgstr "Dosar: %s"
+
+msgid ""
+"The folders you may create hosts in could not be looked up, so new hosts go "
+"to the Main folder. Saving fails if you may not create hosts there."
+msgstr ""
 
 #, fuzzy
 msgid "Showing the first %{shown} of %{total} services."
@@ -111196,6 +111363,50 @@ msgid "%{count} more service names clash."
 msgstr "Servicii executate silit"
 
 msgid "Series appearing after saving add services that are not shown here."
+msgstr ""
+
+#, fuzzy
+msgid "%{n} more new host is created in"
+msgid_plural "%{n} more new hosts are created in"
+msgstr[0] "Crearea gazdei"
+msgstr[1] "Crearea gazdei"
+msgstr[2] "Crearea gazdei"
+
+#, fuzzy
+msgid "%{n} new host is created in"
+msgid_plural "%{n} new hosts are created in"
+msgstr[0] "Crearea gazdei"
+msgstr[1] "Crearea gazdei"
+msgstr[2] "Crearea gazdei"
+
+# georgem ##############
+#, fuzzy
+msgid "Several folders"
+msgstr "Filtre de service"
+
+#, fuzzy
+msgid "Folder of the other new hosts"
+msgstr "Culoarea punctelor împrăștiate"
+
+msgid ""
+"You may not create hosts: you lack the permission \"Add & remove hosts\". "
+"Saving is refused while the template resolves to new hosts."
+msgstr ""
+
+msgid ""
+"You may not create hosts in any folder: you have neither \"Write access to "
+"all hosts and folders\" nor membership in a contact group permitted on a "
+"folder. Saving is refused while the template resolves to new hosts."
+msgstr ""
+
+msgid ""
+"You may not create hosts in any folder: the hosts are locked in every folder "
+"you may write to. Saving is refused while the template resolves to new hosts."
+msgstr ""
+
+msgid ""
+"You may not create hosts in any folder. Saving is refused while the template "
+"resolves to new hosts."
 msgstr ""
 
 #, fuzzy
@@ -111216,7 +111427,7 @@ msgid "Target hosts:"
 msgstr "Obiective"
 
 #, fuzzy
-msgid "New hosts, created in the Main folder on saving:"
+msgid "New hosts, created on saving:"
 msgstr "Gazde de creat în fiecare dosar"
 
 msgid ""
@@ -113307,6 +113518,10 @@ msgid "Select service %{name}"
 msgstr "Ștergeți utilizatorul"
 
 #, fuzzy
+msgid "Open graphs"
+msgstr "Modul deschis"
+
+#, fuzzy
 msgid "Show service details"
 msgstr "Detalii despre serviciul BI"
 
@@ -113956,6 +114171,10 @@ msgid "No actions available"
 msgstr "Nu există informații disponibile"
 
 #, fuzzy
+msgid "Open details"
+msgstr "Detalii despre eveniment"
+
+#, fuzzy
 msgid "Toggle details"
 msgstr "Comutați detaliile rezultatului"
 
@@ -114119,14 +114338,6 @@ msgstr "Starea gazdei"
 #, fuzzy
 msgid "Show the graphs of service %{name}"
 msgstr "Numele serviciului"
-
-#, fuzzy
-msgid "Checkmk has no graphs for this host."
-msgstr "Alte jurnale pentru acest serviciu"
-
-#, fuzzy
-msgid "Checkmk has no graphs for this service."
-msgstr "Alte jurnale pentru acest serviciu"
 
 #, fuzzy
 msgid "The graphs could not be loaded."
@@ -114602,6 +114813,9 @@ msgstr "Parametrii pentru această gazdă"
 msgid "Close & run service discovery"
 msgstr "Salvați & rulați descoperirea serviciilor"
 
+msgid "Add sidebar element"
+msgstr "Adăugați elementul sidebar"
+
 msgid "Add snap-in ${props.name}"
 msgstr ""
 
@@ -114710,14 +114924,6 @@ msgstr "Nu se termină cu \"%s\"."
 
 msgid "does not exist"
 msgstr "Nu există"
-
-#, fuzzy
-msgid "Resource"
-msgstr "Surse"
-
-#, fuzzy
-msgid "Data point"
-msgstr "Date trimise"
 
 #, fuzzy
 msgid "Last recorded value"
@@ -116063,6 +116269,39 @@ msgid "To explore"
 msgstr "Procesul a expirat"
 
 #, fuzzy
+#~ msgid "Drill down to dashboard (custom)"
+#~ msgstr "Legătura cu tabloul de bord"
+
+#, fuzzy
+#~ msgid "Drill down to dashboard (inherited)"
+#~ msgstr "Legătura cu tabloul de bord"
+
+#, fuzzy
+#~ msgid "Drill down to view (custom)"
+#~ msgstr "Legătură pentru a vizualiza"
+
+#, fuzzy
+#~ msgid "Drill down to view (inherited)"
+#~ msgstr "Legătură pentru a vizualiza"
+
+#, fuzzy
+#~ msgid "Include dashboard and widget filters"
+#~ msgstr "Filtre aplicate:"
+
+#~ msgid "Add elements to your sidebar"
+#~ msgstr "Adăugați elemente la bara laterală"
+
+#~ msgid "Open/close this element"
+#~ msgstr "Deschideți/închideți acest element"
+
+#~ msgid "Remove this element"
+#~ msgstr "Eliminați acest element"
+
+#, fuzzy
+#~ msgid "(new host)"
+#~ msgstr "(fără elemente)"
+
+#, fuzzy
 #~ msgid "Legacy updater installed the package"
 #~ msgstr "Instalați întotdeauna Python cu agentul"
 
@@ -116081,49 +116320,6 @@ msgstr "Procesul a expirat"
 #, fuzzy
 #~ msgid "Contextual link"
 #~ msgstr "Informații de context"
-
-#, fuzzy
-#~ msgid "Updating…"
-#~ msgstr "Încărcare..."
-
-#, fuzzy
-#~ msgid "To be created"
-#~ msgstr "Fișier creat"
-
-#, fuzzy
-#~ msgid "Existing"
-#~ msgstr "Testare"
-
-#, fuzzy
-#~ msgid "Folder:"
-#~ msgstr "Dosar"
-
-#, fuzzy
-#~ msgid "Folder of %{host}"
-#~ msgstr "Dosar: %s"
-
-#, fuzzy
-#~ msgid "%{n} more new host is created in"
-#~ msgid_plural "%{n} more new hosts are created in"
-#~ msgstr[0] "Crearea gazdei"
-#~ msgstr[1] "Crearea gazdei"
-#~ msgstr[2] "Crearea gazdei"
-
-#, fuzzy
-#~ msgid "%{n} new host is created in"
-#~ msgid_plural "%{n} new hosts are created in"
-#~ msgstr[0] "Crearea gazdei"
-#~ msgstr[1] "Crearea gazdei"
-#~ msgstr[2] "Crearea gazdei"
-
-# georgem ##############
-#, fuzzy
-#~ msgid "Several folders"
-#~ msgstr "Filtre de service"
-
-#, fuzzy
-#~ msgid "Folder of the other new hosts"
-#~ msgstr "Culoarea punctelor împrăștiate"
 
 #~ msgid ""
 #~ "Choose time levels (in seconds) for which a unit is allowed to be in a "

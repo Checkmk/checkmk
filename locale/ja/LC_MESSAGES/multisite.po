@@ -794,11 +794,11 @@ msgstr "%(days)d 日"
 msgid "%(days)d days ago"
 msgstr "%(days)d 日前"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"%(description)s<br><br>This is a temporary experimental flag. It is "
-"scheduled for removal in version %(remove_after)s and must not be relied on "
-"for permanent configuration."
+"%(description)s<br><br>This is a temporary experimental flag. It will be "
+"removed in a future version and must not be relied on for permanent "
+"configuration."
 msgstr ""
 "%(description)s<br><br>これは一時的な実験的なフラグです。バージョ"
 "ン%(remove_after)sで削除されるスケジュールがあり、恒久的な設定として依存しな"
@@ -4318,6 +4318,14 @@ msgstr "アクセス解析設定"
 msgid "Access by remote sites"
 msgstr "リモートサイトからのアクセス"
 
+#, fuzzy
+msgid ""
+"Access by remote sites was disabled on the data backend instance of the "
+"central site."
+msgstr ""
+"これらの機能をローカルに保存するには、ローカルデータバックエンドインスタンス"
+"を有効にしてください：%(features)s"
+
 msgid ""
 "Access is restricted, but no contact groups are assigned in the host's "
 "permissions."
@@ -5272,9 +5280,6 @@ msgstr ""
 msgid "Add element"
 msgstr "エレメントを追加"
 
-msgid "Add elements to your sidebar"
-msgstr "サイドバーに要素を追加する"
-
 msgid "Add event"
 msgstr "イベント追加"
 
@@ -5650,9 +5655,6 @@ msgstr "センサー名を追加"
 
 msgid "Add service group"
 msgstr "サービスグループを追加"
-
-msgid "Add sidebar element"
-msgstr "サイドバー要素を追加する"
 
 msgid "Add site connection"
 msgstr "サイト接続を追加する"
@@ -7976,6 +7978,10 @@ msgstr "常にレートを計算する（ヒストグラムを除く）"
 
 msgid "Always fetch data from Meraki API."
 msgstr "常にMeraki APIからデータを取得してください。"
+
+#, fuzzy
+msgid "Always filtered by the clicked item."
+msgstr "このエレメントを削除します"
 
 msgid "Always included"
 msgstr "常に含まれているもの"
@@ -13954,6 +13960,9 @@ msgstr "シャーシ"
 
 msgid "Check"
 msgstr "チェック"
+
+msgid "Check \"Make these changes\" to save and make them."
+msgstr ""
 
 msgid "Check / Uncheck all"
 msgstr "すべてチェック/チェックしない"
@@ -19936,6 +19945,10 @@ msgstr "日報"
 msgid "Dangerous"
 msgstr "危険な"
 
+#, fuzzy
+msgid "Dashboard & widget filters"
+msgstr "ダッシュボードにフォルダー %{n} を準備しました"
+
 msgid "Dashboard element"
 msgstr "ダッシュボード要素"
 
@@ -23832,22 +23845,6 @@ msgstr "ホストのダウンタイム"
 msgid "Downtimes of service"
 msgstr "サービスのダウンタイム"
 
-#, fuzzy
-msgid "Drill down to dashboard (custom)"
-msgstr "ダッシュボードへのドリルダウン"
-
-#, fuzzy
-msgid "Drill down to dashboard (inherited)"
-msgstr "ダッシュボードへのドリルダウン"
-
-#, fuzzy
-msgid "Drill down to view (custom)"
-msgstr "ビューへのドリルダウン"
-
-#, fuzzy
-msgid "Drill down to view (inherited)"
-msgstr "ビューへのドリルダウン"
-
 msgid "Drive"
 msgstr "ドライバ"
 
@@ -24301,6 +24298,16 @@ msgid ""
 msgstr ""
 "事前定義された各条件は、既存の事前定義された条件を編集、削除、および使用でき"
 "るユーザーのグループによって所有されます。"
+
+#. weblate-flags: read-only, domain-specific
+#, python-format
+msgid ""
+"Each process logs into its own file: the GUI and the activation of changes "
+"into <tt>%(web_log)s</tt> and <tt>%(job_scheduler_log)s</tt>, the check "
+"helpers into <tt>%(core_log)s</tt>, up to the level of \"Checkmk check "
+"helpers\" of the core, and the dynamic configuration into <tt>%(dcd_log)s</"
+"tt>."
+msgstr ""
 
 msgid "Each project must be unique and cannot be used multiple times."
 msgstr ""
@@ -25309,6 +25316,14 @@ msgstr ""
 msgid ""
 "Enable the local data backend instance to store these features locally: "
 "%(features)s"
+msgstr ""
+"これらの機能をローカルに保存するには、ローカルデータバックエンドインスタンス"
+"を有効にしてください：%(features)s"
+
+#, fuzzy
+msgid ""
+"Enable the local data backend instance to store this feature locally, or "
+"choose another location."
 msgstr ""
 "これらの機能をローカルに保存するには、ローカルデータバックエンドインスタンス"
 "を有効にしてください：%(features)s"
@@ -28363,6 +28378,10 @@ msgstr ""
 "少なくとも1つのコンタクトグループメンバーが割り当てられているホストまたはサー"
 "ビスのフィルター。"
 
+#, fuzzy
+msgid "Filters from the clicked item"
+msgstr "このエレメントを削除します"
+
 msgid ""
 "Filters hosts or services assigned to the selected contact groups. This "
 "filter only works with Checkmk Micro Core (CMC). If you are not using CMC, "
@@ -28371,10 +28390,6 @@ msgstr ""
 "選択したコンタクトグループに割り当てられたホスト、またはサービスをフィルタリ"
 "ングします。このフィルタは、Checkmk Micro Core (CMC)のみで機能します。CMCを使"
 "用していない場合、フィルタは機能しません。"
-
-#, fuzzy
-msgid "Filters of the clicked element"
-msgstr "このエレメントを削除します"
 
 msgid "Final notification result"
 msgstr "最終通知結果"
@@ -36304,6 +36319,9 @@ msgstr "すぐにスケジュールされたチェック"
 msgid "Impact"
 msgstr "影響"
 
+msgid "Implied changes of the data backend setting:"
+msgstr ""
+
 msgid "Import"
 msgstr "インポート"
 
@@ -36877,14 +36895,6 @@ msgstr "すべてのサブフォルダーを含める"
 msgid "Include both service and non-service times"
 msgstr "サービス時間と非サービス時間の両方を含める"
 
-#, fuzzy
-msgid "Include current time range"
-msgstr "時間範囲で有効"
-
-#, fuzzy
-msgid "Include dashboard and widget filters"
-msgstr "ダッシュボードにフォルダー %{n} を準備しました"
-
 msgid "Include empty pools into the monitoring"
 msgstr "空のプールを監視に含める"
 
@@ -37252,6 +37262,9 @@ msgstr "レポートの時間範囲から継承(レポートのみ)"
 
 msgid "Inherit settings from"
 msgstr "設定を継承する"
+
+msgid "Inherited"
+msgstr "から継承"
 
 msgid "Inherited from "
 msgstr "から継承 "
@@ -41098,6 +41111,10 @@ msgstr ""
 msgid "Link to dashboard"
 msgstr "ダッシュボードにリンクする"
 
+#, fuzzy
+msgid "Link to dashboard or view"
+msgstr "ダッシュボードにリンクする"
+
 msgid "Link to view"
 msgstr "表示するためのリンク"
 
@@ -41504,6 +41521,10 @@ msgstr "ローカルチェック: バージョン"
 msgid "Local count requests"
 msgstr "ローカルカウントリクエスト"
 
+#, fuzzy
+msgid "Local data backend"
+msgstr "中央データバックエンド"
+
 #, python-format
 msgid "Local data backend (site %(site)s)"
 msgstr "ローカルデータバックエンド（サイト %(site)s）"
@@ -41658,6 +41679,10 @@ msgstr "ログ"
 
 msgid "Log all messages into Syslog-like log files"
 msgstr "すべてのメッセージをsyslogのようなログファイルに記録します"
+
+#, fuzzy
+msgid "Log at debug level"
+msgstr "ログレベル"
 
 msgid "Log backup"
 msgstr "ログバックアップ"
@@ -41995,6 +42020,20 @@ msgstr "ログアウト"
 
 msgid "Logs"
 msgstr "ログ"
+
+#. weblate-flags: read-only, domain-specific
+#, python-format
+msgid ""
+"Logs every statement Checkmk sends to the data backend at debug level, "
+"whatever the general log level. During an update the statements end up in "
+"<tt>%(update_log)s</tt>, during a restore in the output of <tt>omd restore</"
+"tt>. "
+msgstr ""
+
+msgid ""
+"Logs how long each read takes and which sites it covers at debug level, "
+"whatever the general log level. "
+msgstr ""
 
 msgid "Logs refused by the Event Console"
 msgstr "イベントコンソールによって拒否されたログ"
@@ -43619,6 +43658,10 @@ msgstr "このルールではマッチングが逆になります"
 
 msgid "Matching nodes"
 msgstr "一致するノード"
+
+#, fuzzy
+msgid "Matching selected attributes of the clicked item."
+msgstr "このエレメントを削除します"
 
 msgid "Matrix"
 msgstr "マトリックス"
@@ -50456,9 +50499,6 @@ msgstr "この表を開いてフィルタリング/ソートする"
 msgid "Open vSwitch (ovs) bonding interface status"
 msgstr "Open vSwitch (ovs) ボンディング インターフェースの状態"
 
-msgid "Open/close this element"
-msgstr "この要素を開く/閉じる"
-
 msgid "OpenAI"
 msgstr "OpenAI"
 
@@ -56571,6 +56611,10 @@ msgstr "操作ごとの読み取りバイト"
 msgid "Read capacity"
 msgstr "読み取り容量"
 
+#, fuzzy
+msgid "Read duration and sites"
+msgstr "読み取り操作 /s"
+
 msgid "Read hits"
 msgstr "ヒットを読む"
 
@@ -57711,14 +57755,6 @@ msgid ""
 "name or IP address, without protocol or port."
 msgstr ""
 
-#. weblate-flags: read-only, domain-specific
-#, python-brace-format
-msgid ""
-"Remote sites store data in this data backend instance: {sites}. Change where "
-"they store their data before you disable the instance or its access by "
-"remote sites."
-msgstr ""
-
 msgid "Remote: Send events to remote syslog host"
 msgstr "リモート:リモートsyslogホストにイベントを送信します"
 
@@ -57865,9 +57901,6 @@ msgstr "タグ条件を削除します"
 #, python-format
 msgid "Remove this %(what_s)s from the extension packages module"
 msgstr "この%(what_s)sを拡張パッケージモジュールから削除する"
-
-msgid "Remove this element"
-msgstr "この要素を削除します"
 
 msgid "Remove this endpoint"
 msgstr "このエンドポイントを削除する"
@@ -60317,6 +60350,10 @@ msgstr "SQL Serverのバージョン"
 msgid "SQL database user credentials"
 msgstr "データベースユーザー資格情報"
 
+#, fuzzy
+msgid "SQL statements"
+msgstr "ステートメント"
+
 msgid "SQL-Server to connect to"
 msgstr "接続するSQL-Server"
 
@@ -60549,6 +60586,10 @@ msgstr "保存された読み取り専用設定"
 msgid "Saved space"
 msgstr "保存スペース"
 
+#, fuzzy
+msgid "Saving license"
+msgstr "ライセンスの管理"
+
 msgid "Saving the result..."
 msgstr "結果を保存中..."
 
@@ -60653,6 +60694,10 @@ msgstr "スケジューラプラン設定"
 #, python-format
 msgid "Scheduling report in background failed: %(e)s"
 msgstr "バックグラウンドでのレポートのスケジュールに失敗しました: %(e)s"
+
+#, fuzzy
+msgid "Schema management"
+msgstr "サイト管理"
 
 msgid "Schema, revision and footprint of the data backend database"
 msgstr ""
@@ -62655,6 +62700,9 @@ msgstr ""
 "新しい問題にカスタムラベルを設定します。設定されていない場合、\"監視\"が使用"
 "されます。<br><br>%(macro_help)s"
 
+msgid "Set accept_implied_changes to make them."
+msgstr ""
+
 msgid "Set an individual idle timeout"
 msgstr "個別のアイドルタイムアウトを設定する"
 
@@ -64247,6 +64295,19 @@ msgstr "Siren"
 
 msgid "Site"
 msgstr "サイト"
+
+#, python-format
+msgid ""
+"Site %(site)s: \"%(feature)s\" is set from \"%(previous)s\" to "
+"\"%(disabled)s\"."
+msgstr ""
+
+#, python-format
+msgid ""
+"Site %(site)s: the data backend instance is enabled, with the native "
+"protocol SSL/TLS port %(tls_port)s, the HTTP SSL/TLS port %(https_port)s and "
+"a memory limit of %(memory_limit)s of the total available memory."
+msgstr ""
 
 #, python-format
 msgid "Site %(site_id)s"
@@ -69915,6 +69976,12 @@ msgid ""
 "The OMD site configuration ('omd config show') and the files below etc/omd"
 msgstr "OMDサイト設定（「omd config show」）およびetc/omd以下のファイル"
 
+#, python-format
+msgid ""
+"The OpenTelemetry Collector of site %(site)s keeps running, but the metrics "
+"it receives are no longer stored."
+msgstr ""
+
 msgid ""
 "The Oracle System Identifier (SID) that identifies a specific database "
 "instance on the host. "
@@ -71380,6 +71447,16 @@ msgstr ""
 "manager upgrade --config default HEAD`アップグレードに失敗した場合は、Checkmk"
 "サポートまでご連絡ください。"
 
+#, fuzzy, python-format
+msgid "The data backend instance of site %(site)s was disabled."
+msgstr "サイト %(site_id)s のデータバックエンドは無効化されています"
+
+#, fuzzy
+msgid "The data backend instance of the central site was disabled."
+msgstr ""
+"これらの機能をローカルに保存するには、ローカルデータバックエンドインスタンス"
+"を有効にしてください：%(features)s"
+
 #. weblate-flags: read-only, domain-specific
 msgid "The data backend is busy. Try again in a few minutes."
 msgstr ""
@@ -71789,6 +71866,12 @@ msgstr ""
 "前に事実の正確性について人間が慎重にチェックしてください。詳細については当社"
 "へ "
 
+#, python-format
+msgid ""
+"The feature location \"%(local)s\" was chosen for %(features)s of site "
+"%(site)s while the site ran no data backend instance."
+msgstr ""
+
 msgid ""
 "The fetcher usage is below 50%, you may decrease the number of fetchers to "
 "reduce the memory consumption."
@@ -71840,6 +71923,10 @@ msgstr "<i>File </i> または <i>Folder </i>で始まるファイルシステ�
 
 msgid "The file_id has to be alphanumeric."
 msgstr "file_idは英数字でなければなりません。"
+
+#, python-format
+msgid "The filter %(filter)s works only with a view as the target page."
+msgstr ""
 
 msgid ""
 "The first choice of a tag group will be its default value. If a tag group "
@@ -72786,6 +72873,26 @@ msgstr "Checkmk Micro Core内で通知を処理するためのログレベル"
 
 msgid "The log level for user authentication related log entries."
 msgstr "ユーザー認証関連のログエントリのログレベル。"
+
+msgid ""
+"The log level of the data backend outside the areas below, for example of "
+"retried connections. "
+msgstr ""
+
+#. weblate-flags: read-only, domain-specific
+#, python-format
+msgid ""
+"The log level of the decisions of the schema management. It logs on "
+"activation of changes into <tt>%(web_log)s</tt> and "
+"<tt>%(job_scheduler_log)s</tt>, during an update into <tt>%(update_log)s</"
+"tt> and during a restore into the output of <tt>omd restore</tt>."
+msgstr ""
+
+msgid ""
+"The logging of the data backend, independent of the log level of the "
+"processes that use the data backend. Debug logging is verbose, so do not "
+"leave it on indefinitely."
+msgstr ""
 
 msgid "The login is currently locked"
 msgstr "ログインは現在ロックされています"
@@ -78875,6 +78982,9 @@ msgstr ""
 "キュメントとして扱われるため、その要素がこのテンプレートから継承する他のレ"
 "ポートと混在することはありません。前書きのページ付けにはローマ数字が使用され"
 "ます。フロントマターは常に偶数のページ数を生成します。"
+
+msgid "This request also makes these implied changes:"
+msgstr ""
 
 msgid "This role does not exist."
 msgstr "この役割は存在しません。"
@@ -98400,6 +98510,9 @@ msgstr "最新のデータはありません — 最後のサンプル %{time}"
 msgid "No data in this timeframe."
 msgstr "このグラフにはまだ指標がありません。"
 
+msgid "Rank"
+msgstr ""
+
 #, fuzzy
 msgid "Embedded page"
 msgstr "埋め込み画像"
@@ -98458,6 +98571,21 @@ msgstr ""
 "ンドによって引き起こされます。n\n"
 "    これらの例を使用して、問題を解決するためにトップリスト設定で除外する必要"
 "があるホストとサービスを特定できます。"
+
+#, fuzzy
+msgid "Nothing matches the widget filter in the selected time frame."
+msgstr "問題を承認する"
+
+msgid "Last successful update less than a minute ago."
+msgstr ""
+
+#, fuzzy
+msgid "Last successful update %{n} min ago."
+msgstr "最後に同期が行われたのは%(seconds)d 秒前です。"
+
+#, fuzzy
+msgid "Data could not be loaded"
+msgstr "グループベースDNが見つかりませんでした。"
 
 #, fuzzy
 msgid "Widget data could not be loaded."
@@ -98928,15 +99056,16 @@ msgstr "サービスメトリックの選択"
 msgid "Select option"
 msgstr "オプション選択"
 
-msgid "Inherited"
-msgstr "から継承"
-
 #, fuzzy
 msgid "Add contextual link"
 msgstr "コンテキストヘルプアイコン"
 
 msgid "Redirect to the default page defined by Checkmk."
 msgstr ""
+
+#, fuzzy
+msgid "Include current time range"
+msgstr "時間範囲で有効"
 
 #, fuzzy
 msgid "Include dashboard & widget filters"
@@ -99448,9 +99577,6 @@ msgid ""
 msgstr ""
 "これらのマクロは、\"一部のテキスト<tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\"な"
 "どの任意のテキスト要素と組み合わせることができます。"
-
-msgid "Appearance"
-msgstr "外観"
 
 msgid "Show title background"
 msgstr "タイトルのバックグラウンドを表示"
@@ -100256,6 +100382,13 @@ msgstr "パスワード"
 msgid "Pending"
 msgstr "保留中"
 
+msgid "This also makes these implied changes:"
+msgstr ""
+
+#, fuzzy
+msgid "Make these changes"
+msgstr "変更を保存"
+
 msgid ""
 "Changes submitted through this form will be immediately applied to your "
 "configuration. However, you may still need to activate them for them to take "
@@ -100643,6 +100776,13 @@ msgid "All metrics are hidden"
 msgstr "すべての親がダウンしています"
 
 #, fuzzy
+msgid "Checkmk has no graphs for this host."
+msgstr "Checkmkには、このサービスに関するグラフはありません。"
+
+msgid "Checkmk has no graphs for this service."
+msgstr "Checkmkには、このサービスに関するグラフはありません。"
+
+#, fuzzy
 msgid "Resolution %{resolution}"
 msgstr "解像度を設定する"
 
@@ -100701,6 +100841,12 @@ msgstr "メトリクス"
 
 msgid "Show details for %{metric}"
 msgstr "%{metric}の詳細を表示"
+
+msgid "Resource"
+msgstr "ソース"
+
+msgid "Data point"
+msgstr "データポイント"
 
 msgid "Attribute name"
 msgstr "属性名"
@@ -101418,6 +101564,18 @@ msgid "Custom time range"
 msgstr "時間範囲をカスタマイズ"
 
 #, fuzzy
+msgid "More time ranges"
+msgstr "時間範囲をフォーマットする"
+
+#, fuzzy
+msgid "More ranges"
+msgstr "その他のオプション"
+
+#, fuzzy
+msgid "Time ranges"
+msgstr "時間範囲"
+
+#, fuzzy
 msgid "Custom range"
 msgstr "時間範囲をカスタマイズ"
 
@@ -101469,18 +101627,6 @@ msgstr ""
 #, fuzzy
 msgid "undocumented"
 msgstr "ドキュメント"
-
-#, fuzzy
-msgid "More time ranges"
-msgstr "時間範囲をフォーマットする"
-
-#, fuzzy
-msgid "More ranges"
-msgstr "その他のオプション"
-
-#, fuzzy
-msgid "Time ranges"
-msgstr "時間範囲"
 
 #, fuzzy
 msgid "Loading content..."
@@ -101665,8 +101811,9 @@ msgstr "Alt + k"
 msgid "Place objects on a blank canvas or a picture, such as a floor plan"
 msgstr ""
 
-msgid "Show hosts, services and groups at their locations on a world map"
-msgstr ""
+#, fuzzy
+msgid "Show hosts, services and groups at their geographic locations"
+msgstr "サービスを検索してグラフを表示する"
 
 msgid "Lay out all hosts automatically by how they are connected"
 msgstr ""
@@ -102716,6 +102863,9 @@ msgstr "レポートのプロパティ"
 msgid "Traffic light"
 msgstr "送信されたトラフィック"
 
+msgid "Appearance"
+msgstr "外観"
+
 #, fuzzy
 msgid "Gadget default"
 msgstr "デフォルトを編集する"
@@ -103112,6 +103262,88 @@ msgstr "フィルタを取り外します"
 msgid "Add site…"
 msgstr "サイトの追加…"
 
+#, fuzzy
+msgid "None, place objects manually"
+msgstr "手動でのみ実行"
+
+#, fuzzy
+msgid "All hosts with geo coordinates"
+msgstr "サイトのすべてのホスト"
+
+msgid "Hosts in host group…"
+msgstr "ホストグループ内のホスト…"
+
+msgid "Hosts hosting a service in service group…"
+msgstr "サービスグループでサービスをホストしているホスト…"
+
+#, fuzzy
+msgid "Map view"
+msgstr "クローン ビュー"
+
+msgid "Latitude"
+msgstr "緯度"
+
+msgid "Between -90 and 90."
+msgstr ""
+
+#, fuzzy
+msgid "Longitude"
+msgstr "最長"
+
+msgid "Between -180 and 180."
+msgstr ""
+
+msgid ""
+"Pan/zoom the map first, then reopen settings to capture the current view."
+msgstr ""
+"先に地図を移動・拡大縮小（パン/ズーム）してから、設定を再度開いて現在の表示範"
+"囲を保存してください。"
+
+msgid "A whole number from 0 to %{max}."
+msgstr ""
+
+msgid "Closes settings and switches the map to picker mode."
+msgstr "設定を閉じ、マップをピッカーモードのスイッチに切り替えます。"
+
+msgid "Pick from map"
+msgstr "マップから選択"
+
+msgid ""
+"Leave empty for the site default. Only OpenStreetMap and the tile server "
+"configured in the global settings can be reached — tiles from anywhere else "
+"are blocked by the browser."
+msgstr ""
+"サイトのデフォルト設定を使用する場合は、空欄のままにしてください。アクセスで"
+"きるのは、OpenStreetMap およびグローバル設定で設定されたタイルサーバーのみで"
+"す。それ以外の場所からのタイルは、ブラウザによってブロックされます。"
+
+msgid "This server is not allowed by the site, its tiles would not load."
+msgstr ""
+"このサーバーはサイトによって許可されておらず、そのタイルは読み込まれません。"
+
+#, fuzzy
+msgid "Map saturation (%)"
+msgstr "更新時間"
+
+msgid "Left empty, the map shows at 100 %, in its full colors."
+msgstr ""
+
+#, fuzzy
+msgid "Automatic object placement"
+msgstr "エージェントの自動更新"
+
+msgid ""
+"Hosts are auto-discovered from monitoring data via maps_lat/maps_lng labels "
+"or LAT/LONG custom variables. They show up alongside any objects you place "
+"manually."
+msgstr ""
+"ホストは、maps_lat/maps_lng ラベルまたは LAT/LONG カスタム変数を通じて、監視"
+"データから自動的に検出されます。これらは、手動で配置したオブジェクトと並んで"
+"表示されます。"
+
+msgid "Pick a group to discover hosts from."
+msgstr "ホストを検索するグループを選択してください。"
+
 msgid ""
 "Control who can see this map and whether it is listed in the Monitor menu. "
 "You can always see your own maps."
@@ -103208,88 +103440,6 @@ msgstr ""
 #, fuzzy
 msgid "Background color"
 msgstr "バックグラウンドジョブ"
-
-#, fuzzy
-msgid "None, place objects manually"
-msgstr "手動でのみ実行"
-
-#, fuzzy
-msgid "All hosts with geo coordinates"
-msgstr "サイトのすべてのホスト"
-
-msgid "Hosts in host group…"
-msgstr "ホストグループ内のホスト…"
-
-msgid "Hosts hosting a service in service group…"
-msgstr "サービスグループでサービスをホストしているホスト…"
-
-#, fuzzy
-msgid "Map view"
-msgstr "クローン ビュー"
-
-msgid "Latitude"
-msgstr "緯度"
-
-msgid "Between -90 and 90."
-msgstr ""
-
-#, fuzzy
-msgid "Longitude"
-msgstr "最長"
-
-msgid "Between -180 and 180."
-msgstr ""
-
-msgid ""
-"Pan/zoom the map first, then reopen settings to capture the current view."
-msgstr ""
-"先に地図を移動・拡大縮小（パン/ズーム）してから、設定を再度開いて現在の表示範"
-"囲を保存してください。"
-
-msgid "A whole number from 0 to %{max}."
-msgstr ""
-
-msgid "Closes settings and switches the map to picker mode."
-msgstr "設定を閉じ、マップをピッカーモードのスイッチに切り替えます。"
-
-msgid "Pick from map"
-msgstr "マップから選択"
-
-msgid ""
-"Leave empty for the site default. Only OpenStreetMap and the tile server "
-"configured in the global settings can be reached — tiles from anywhere else "
-"are blocked by the browser."
-msgstr ""
-"サイトのデフォルト設定を使用する場合は、空欄のままにしてください。アクセスで"
-"きるのは、OpenStreetMap およびグローバル設定で設定されたタイルサーバーのみで"
-"す。それ以外の場所からのタイルは、ブラウザによってブロックされます。"
-
-msgid "This server is not allowed by the site, its tiles would not load."
-msgstr ""
-"このサーバーはサイトによって許可されておらず、そのタイルは読み込まれません。"
-
-#, fuzzy
-msgid "Map saturation (%)"
-msgstr "更新時間"
-
-msgid "Left empty, the map shows at 100 %, in its full colors."
-msgstr ""
-
-#, fuzzy
-msgid "Automatic object placement"
-msgstr "エージェントの自動更新"
-
-msgid ""
-"Hosts are auto-discovered from monitoring data via maps_lat/maps_lng labels "
-"or LAT/LONG custom variables. They show up alongside any objects you place "
-"manually."
-msgstr ""
-"ホストは、maps_lat/maps_lng ラベルまたは LAT/LONG カスタム変数を通じて、監視"
-"データから自動的に検出されます。これらは、手動で配置したオブジェクトと並んで"
-"表示されます。"
-
-msgid "Pick a group to discover hosts from."
-msgstr "ホストを検索するグループを選択してください。"
 
 #, fuzzy
 msgid "%{field} is required."
@@ -103635,6 +103785,35 @@ msgstr "FLAP"
 
 msgid "Too many to draw here"
 msgstr "多すぎるため、ここには表示できません"
+
+msgid "Geo map canvas"
+msgstr "ジオマップキャンバス"
+
+msgid ""
+"No hosts with geo coordinates found. Set the maps_lat and maps_lng labels on "
+"hosts to show them here."
+msgstr ""
+
+msgctxt ""
+"%{link} is a button that opens the \"Automatic object placement\" setting"
+msgid ""
+"No objects yet. Use the Edit button at the bottom right to place some, or "
+"turn on %{link} to place hosts by their maps_lat and maps_lng labels."
+msgstr ""
+
+msgid "This map has no objects yet"
+msgstr "このマップにはまだオブジェクトがありません"
+
+#, fuzzy
+msgid "Loading hosts…"
+msgstr "オプションを読み込んでいます…"
+
+#, fuzzy
+msgid "Save current view as default"
+msgstr "完全アクティベーションページをデフォルトに設定"
+
+msgid "Pan/zoom the map, then apply."
+msgstr "地図をパンまたはズームしてから、適用してください。"
 
 #, fuzzy
 msgid "Delete object"
@@ -104213,38 +104392,9 @@ msgstr ""
 "まだオブジェクトはありません — 追加するには、[編集] ボタン（右下）をクリック"
 "してください"
 
-msgid "This map has no objects yet"
-msgstr "このマップにはまだオブジェクトがありません"
-
 #, fuzzy
 msgid "No hosts or services match the grids on this map."
 msgstr "この名前に一致するカスタムサービスはありません。"
-
-msgid "Geo map canvas"
-msgstr "ジオマップキャンバス"
-
-msgid ""
-"No hosts with geo coordinates found. Set the maps_lat and maps_lng labels on "
-"hosts to show them here."
-msgstr ""
-
-msgctxt ""
-"%{link} is a button that opens the \"Automatic object placement\" setting"
-msgid ""
-"No objects yet. Use the Edit button at the bottom right to place some, or "
-"turn on %{link} to place hosts by their maps_lat and maps_lng labels."
-msgstr ""
-
-#, fuzzy
-msgid "Loading hosts…"
-msgstr "オプションを読み込んでいます…"
-
-#, fuzzy
-msgid "Save current view as default"
-msgstr "完全アクティベーションページをデフォルトに設定"
-
-msgid "Pan/zoom the map, then apply."
-msgstr "地図をパンまたはズームしてから、適用してください。"
 
 #, fuzzy
 msgid "Failed to load connections"
@@ -104733,6 +104883,10 @@ msgstr "このサービスに関する他のログ"
 msgid "Services to be created"
 msgstr "サービスの状態"
 
+#, fuzzy
+msgid "Updating…"
+msgstr "読み込んでいます…"
+
 msgid ""
 "Enter a service name and select a host or enter a host name template to see "
 "the services to be created."
@@ -104754,8 +104908,25 @@ msgid "Target host:"
 msgstr "ターゲットホスト："
 
 #, fuzzy
-msgid "(new host)"
-msgstr "(ホストなし)"
+msgid "To be created"
+msgstr " | 作成"
+
+#, fuzzy
+msgid "Existing"
+msgstr "テスト"
+
+#, fuzzy
+msgid "Folder:"
+msgstr "フォルダ"
+
+#, fuzzy
+msgid "Folder of %{host}"
+msgstr "フォルダ: %s"
+
+msgid ""
+"The folders you may create hosts in could not be looked up, so new hosts go "
+"to the Main folder. Saving fails if you may not create hosts there."
+msgstr ""
 
 #, fuzzy
 msgid "Showing the first %{shown} of %{total} services."
@@ -104771,6 +104942,45 @@ msgid "%{count} more service names clash."
 msgstr "施行されたサービス"
 
 msgid "Series appearing after saving add services that are not shown here."
+msgstr ""
+
+#, fuzzy
+msgid "%{n} more new host is created in"
+msgid_plural "%{n} more new hosts are created in"
+msgstr[0] "ホスト作成"
+
+#, fuzzy
+msgid "%{n} new host is created in"
+msgid_plural "%{n} new hosts are created in"
+msgstr[0] "ホスト作成"
+
+#, fuzzy
+msgid "Several folders"
+msgstr "サービスフォルダ"
+
+#, fuzzy
+msgid "Folder of the other new hosts"
+msgstr "散らばった点の色"
+
+msgid ""
+"You may not create hosts: you lack the permission \"Add & remove hosts\". "
+"Saving is refused while the template resolves to new hosts."
+msgstr ""
+
+msgid ""
+"You may not create hosts in any folder: you have neither \"Write access to "
+"all hosts and folders\" nor membership in a contact group permitted on a "
+"folder. Saving is refused while the template resolves to new hosts."
+msgstr ""
+
+msgid ""
+"You may not create hosts in any folder: the hosts are locked in every folder "
+"you may write to. Saving is refused while the template resolves to new hosts."
+msgstr ""
+
+msgid ""
+"You may not create hosts in any folder. Saving is refused while the template "
+"resolves to new hosts."
 msgstr ""
 
 #, fuzzy
@@ -104791,7 +105001,7 @@ msgid "Target hosts:"
 msgstr "ターゲットホスト："
 
 #, fuzzy
-msgid "New hosts, created in the Main folder on saving:"
+msgid "New hosts, created on saving:"
 msgstr "各フォルダに作成するホスト"
 
 msgid ""
@@ -106967,6 +107177,10 @@ msgid "Select service %{name}"
 msgstr "(サービスを選択)"
 
 #, fuzzy
+msgid "Open graphs"
+msgstr "オープンモード"
+
+#, fuzzy
 msgid "Show service details"
 msgstr "BIサービスの詳細"
 
@@ -107529,6 +107743,10 @@ msgid "No actions available"
 msgstr "利用可能なオプションはありません"
 
 #, fuzzy
+msgid "Open details"
+msgstr "イベントの詳細"
+
+#, fuzzy
 msgid "Toggle details"
 msgstr "結果の詳細を切り替える"
 
@@ -107688,13 +107906,6 @@ msgstr "ホストのステータス"
 #, fuzzy
 msgid "Show the graphs of service %{name}"
 msgstr "サービス名を表示"
-
-#, fuzzy
-msgid "Checkmk has no graphs for this host."
-msgstr "Checkmkには、このサービスに関するグラフはありません。"
-
-msgid "Checkmk has no graphs for this service."
-msgstr "Checkmkには、このサービスに関するグラフはありません。"
 
 #, fuzzy
 msgid "The graphs could not be loaded."
@@ -108200,6 +108411,9 @@ msgstr "このホストのパラメーター"
 msgid "Close & run service discovery"
 msgstr "サービスディスカバリの実行と保存"
 
+msgid "Add sidebar element"
+msgstr "サイドバー要素を追加する"
+
 msgid "Add snap-in ${props.name}"
 msgstr "スナップイン ${props.name} を追加"
 
@@ -108309,12 +108523,6 @@ msgstr "\"%s\"で終わることはできません"
 
 msgid "does not exist"
 msgstr "存在しない"
-
-msgid "Resource"
-msgstr "ソース"
-
-msgid "Data point"
-msgstr "データポイント"
 
 #, fuzzy
 msgid "Last recorded value"
@@ -109768,6 +109976,39 @@ msgid "To explore"
 msgstr "取り上げるトピック"
 
 #, fuzzy
+#~ msgid "Drill down to dashboard (custom)"
+#~ msgstr "ダッシュボードへのドリルダウン"
+
+#, fuzzy
+#~ msgid "Drill down to dashboard (inherited)"
+#~ msgstr "ダッシュボードへのドリルダウン"
+
+#, fuzzy
+#~ msgid "Drill down to view (custom)"
+#~ msgstr "ビューへのドリルダウン"
+
+#, fuzzy
+#~ msgid "Drill down to view (inherited)"
+#~ msgstr "ビューへのドリルダウン"
+
+#, fuzzy
+#~ msgid "Include dashboard and widget filters"
+#~ msgstr "ダッシュボードにフォルダー %{n} を準備しました"
+
+#~ msgid "Add elements to your sidebar"
+#~ msgstr "サイドバーに要素を追加する"
+
+#~ msgid "Open/close this element"
+#~ msgstr "この要素を開く/閉じる"
+
+#~ msgid "Remove this element"
+#~ msgstr "この要素を削除します"
+
+#, fuzzy
+#~ msgid "(new host)"
+#~ msgstr "(ホストなし)"
+
+#, fuzzy
 #~ msgid "Legacy updater installed the package"
 #~ msgstr "すでにエージェントはインストール済？"
 
@@ -109793,44 +110034,6 @@ msgstr "取り上げるトピック"
 #~ msgstr ""
 #~ "1つ以上の %{filter} 行（各行はリテラル %{newline} で終了）。%{query} に対"
 #~ "して、Livestatus にそのまま転送されます。"
-
-#, fuzzy
-#~ msgid "Updating…"
-#~ msgstr "読み込んでいます…"
-
-#, fuzzy
-#~ msgid "To be created"
-#~ msgstr " | 作成"
-
-#, fuzzy
-#~ msgid "Existing"
-#~ msgstr "テスト"
-
-#, fuzzy
-#~ msgid "Folder:"
-#~ msgstr "フォルダ"
-
-#, fuzzy
-#~ msgid "Folder of %{host}"
-#~ msgstr "フォルダ: %s"
-
-#, fuzzy
-#~ msgid "%{n} more new host is created in"
-#~ msgid_plural "%{n} more new hosts are created in"
-#~ msgstr[0] "ホスト作成"
-
-#, fuzzy
-#~ msgid "%{n} new host is created in"
-#~ msgid_plural "%{n} new hosts are created in"
-#~ msgstr[0] "ホスト作成"
-
-#, fuzzy
-#~ msgid "Several folders"
-#~ msgstr "サービスフォルダ"
-
-#, fuzzy
-#~ msgid "Folder of the other new hosts"
-#~ msgstr "散らばった点の色"
 
 #~ msgid ""
 #~ "Choose time levels (in seconds) for which a unit is allowed to be in a "

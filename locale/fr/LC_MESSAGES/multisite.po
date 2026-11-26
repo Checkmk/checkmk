@@ -818,9 +818,9 @@ msgstr "Il y a %(days)d jours"
 
 #, python-format
 msgid ""
-"%(description)s<br><br>This is a temporary experimental flag. It is "
-"scheduled for removal in version %(remove_after)s and must not be relied on "
-"for permanent configuration."
+"%(description)s<br><br>This is a temporary experimental flag. It will be "
+"removed in a future version and must not be relied on for permanent "
+"configuration."
 msgstr ""
 
 #, fuzzy, python-format
@@ -4510,6 +4510,13 @@ msgstr "Accès à la configuration de l'analyse"
 msgid "Access by remote sites"
 msgstr "Ajouter une instance distante"
 
+#, fuzzy
+msgid ""
+"Access by remote sites was disabled on the data backend instance of the "
+"central site."
+msgstr ""
+"Checkmk ne peut être configuré que sur le site central du gestionnaire."
+
 msgid ""
 "Access is restricted, but no contact groups are assigned in the host's "
 "permissions."
@@ -5533,9 +5540,6 @@ msgstr ""
 msgid "Add element"
 msgstr "Ajouter un élément"
 
-msgid "Add elements to your sidebar"
-msgstr "Ajouter des éléments à votre barre latérale"
-
 #, fuzzy
 msgid "Add event"
 msgstr "Ajouter un élément"
@@ -5948,9 +5952,6 @@ msgstr "Ajouter le nom du capteur"
 
 msgid "Add service group"
 msgstr "Ajouter un groupe de service"
-
-msgid "Add sidebar element"
-msgstr "Ajouter un élément de barre latérale"
 
 msgid "Add site connection"
 msgstr "Ajouter une connexion au site"
@@ -8411,6 +8412,10 @@ msgstr "Reclasser l'état complet"
 
 msgid "Always fetch data from Meraki API."
 msgstr ""
+
+#, fuzzy
+msgid "Always filtered by the clicked item."
+msgstr "Supprimer cet élément"
 
 #, fuzzy
 msgid "Always included"
@@ -14916,6 +14921,9 @@ msgstr "Châssis"
 msgid "Check"
 msgstr "Vérifié"
 
+msgid "Check \"Make these changes\" to save and make them."
+msgstr ""
+
 msgid "Check / Uncheck all"
 msgstr "Cocher / Décocher tout"
 
@@ -21326,6 +21334,10 @@ msgstr "Rapport quotidien"
 msgid "Dangerous"
 msgstr "Dangereux"
 
+#, fuzzy
+msgid "Dashboard & widget filters"
+msgstr "Filtres appliqués :"
+
 msgid "Dashboard element"
 msgstr "Élément du tableau de bord"
 
@@ -25510,22 +25522,6 @@ msgid "Downtimes of service"
 msgstr "Temps d'arrêt du service"
 
 #, fuzzy
-msgid "Drill down to dashboard (custom)"
-msgstr "Lien vers le tableau de bord"
-
-#, fuzzy
-msgid "Drill down to dashboard (inherited)"
-msgstr "Lien vers le tableau de bord"
-
-#, fuzzy
-msgid "Drill down to view (custom)"
-msgstr "Lien vers le site"
-
-#, fuzzy
-msgid "Drill down to view (inherited)"
-msgstr "Lien vers le site"
-
-#, fuzzy
 msgid "Drive"
 msgstr "Conducteur"
 
@@ -25988,6 +25984,16 @@ msgstr ""
 "Chaque condition prédéfinie est la propriété d'un groupe d'utilisateurs qui "
 "peuvent modifier, supprimer et utiliser les conditions prédéfinies "
 "existantes."
+
+#. weblate-flags: read-only, domain-specific
+#, python-format
+msgid ""
+"Each process logs into its own file: the GUI and the activation of changes "
+"into <tt>%(web_log)s</tt> and <tt>%(job_scheduler_log)s</tt>, the check "
+"helpers into <tt>%(core_log)s</tt>, up to the level of \"Checkmk check "
+"helpers\" of the core, and the dynamic configuration into <tt>%(dcd_log)s</"
+"tt>."
+msgstr ""
 
 #, fuzzy
 msgid "Each project must be unique and cannot be used multiple times."
@@ -27038,6 +27044,11 @@ msgstr ""
 msgid ""
 "Enable the local data backend instance to store these features locally: "
 "%(features)s"
+msgstr ""
+
+msgid ""
+"Enable the local data backend instance to store this feature locally, or "
+"choose another location."
 msgstr ""
 
 #, fuzzy
@@ -30228,6 +30239,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Filters from the clicked item"
+msgstr "Supprimer cet élément"
+
+#, fuzzy
 msgid ""
 "Filters hosts or services assigned to the selected contact groups. This "
 "filter only works with Checkmk Micro Core (CMC). If you are not using CMC, "
@@ -30236,10 +30251,6 @@ msgstr ""
 "L'hôte/le service doit faire partie de l'un des groupes de contacts "
 "sélectionnés. Ceci ne fonctionne qu'avec Checkmk Micro Core. Si vous "
 "n'utilisez pas le CMC, ce filtre ne s'appliquera pas"
-
-#, fuzzy
-msgid "Filters of the clicked element"
-msgstr "Supprimer cet élément"
 
 msgid "Final notification result"
 msgstr "Résultat de la notification finale"
@@ -38873,6 +38884,9 @@ msgstr "Contrôles immédiatement programmés"
 msgid "Impact"
 msgstr "Impact"
 
+msgid "Implied changes of the data backend setting:"
+msgstr ""
+
 msgid "Import"
 msgstr "Importation"
 
@@ -39478,14 +39492,6 @@ msgstr "Inclure tous les sous-dossiers"
 msgid "Include both service and non-service times"
 msgstr "Inclure les heures de service et de non service"
 
-#, fuzzy
-msgid "Include current time range"
-msgstr "Activé dans la plage de temps"
-
-#, fuzzy
-msgid "Include dashboard and widget filters"
-msgstr "Filtres appliqués :"
-
 msgid "Include empty pools into the monitoring"
 msgstr "Inclure les piscines vides dans le suivi"
 
@@ -39871,6 +39877,10 @@ msgstr "Hériter de la plage horaire du rapport (Reporting uniquement)"
 
 #, fuzzy
 msgid "Inherit settings from"
+msgstr "Hérité de "
+
+#, fuzzy
+msgid "Inherited"
 msgstr "Hérité de "
 
 msgid "Inherited from "
@@ -44030,6 +44040,10 @@ msgstr ""
 msgid "Link to dashboard"
 msgstr "Lien vers le tableau de bord"
 
+#, fuzzy
+msgid "Link to dashboard or view"
+msgstr "Lien vers le tableau de bord"
+
 msgid "Link to view"
 msgstr "Lien vers le site"
 
@@ -44466,6 +44480,10 @@ msgstr "Contrôles locaux : versions"
 msgid "Local count requests"
 msgstr "Demandes de comptage local"
 
+#, fuzzy
+msgid "Local data backend"
+msgstr "Ajouter une configuration d'état"
+
 #, fuzzy, python-format
 msgid "Local data backend (site %(site)s)"
 msgstr "Instances Oracle"
@@ -44622,6 +44640,10 @@ msgstr "Journal de bord"
 msgid "Log all messages into Syslog-like log files"
 msgstr ""
 "Enregistrer tous les messages dans des fichiers journaux de type syslog"
+
+#, fuzzy
+msgid "Log at debug level"
+msgstr "Niveau du journal"
 
 msgid "Log backup"
 msgstr "Sauvegarde du journal"
@@ -44965,6 +44987,20 @@ msgstr "Déconnexion"
 
 msgid "Logs"
 msgstr "Bûches"
+
+#. weblate-flags: read-only, domain-specific
+#, python-format
+msgid ""
+"Logs every statement Checkmk sends to the data backend at debug level, "
+"whatever the general log level. During an update the statements end up in "
+"<tt>%(update_log)s</tt>, during a restore in the output of <tt>omd restore</"
+"tt>. "
+msgstr ""
+
+msgid ""
+"Logs how long each read takes and which sites it covers at debug level, "
+"whatever the general log level. "
+msgstr ""
 
 #, fuzzy
 msgid "Logs refused by the Event Console"
@@ -46717,6 +46753,10 @@ msgstr "L'appariement est inversé dans cette règle"
 #, fuzzy
 msgid "Matching nodes"
 msgstr "Correspond à tous les nœuds"
+
+#, fuzzy
+msgid "Matching selected attributes of the clicked item."
+msgstr "Supprimer cet élément"
 
 msgid "Matrix"
 msgstr "Matrice"
@@ -54093,9 +54133,6 @@ msgstr "Ouvrez ce tableau pour filtrer / trier"
 msgid "Open vSwitch (ovs) bonding interface status"
 msgstr "Interfaces de liaison"
 
-msgid "Open/close this element"
-msgstr "Ouvrir/fermer cet élément"
-
 #, fuzzy
 msgid "OpenAI"
 msgstr "Ouvrir"
@@ -60851,6 +60888,10 @@ msgstr "Octets de lecture par opération"
 msgid "Read capacity"
 msgstr "Capacité de lecture"
 
+#, fuzzy
+msgid "Read duration and sites"
+msgstr "Opérations de lecture /s"
+
 msgid "Read hits"
 msgstr "Lire les articles"
 
@@ -62095,14 +62136,6 @@ msgid ""
 "name or IP address, without protocol or port."
 msgstr ""
 
-#. weblate-flags: read-only, domain-specific
-#, python-brace-format
-msgid ""
-"Remote sites store data in this data backend instance: {sites}. Change where "
-"they store their data before you disable the instance or its access by "
-"remote sites."
-msgstr ""
-
 msgid "Remote: Send events to remote syslog host"
 msgstr "À distance : Envoyer les événements à un hôte syslog distant"
 
@@ -62259,9 +62292,6 @@ msgstr "Suppression de la condition d'étiquetage"
 #, python-format
 msgid "Remove this %(what_s)s from the extension packages module"
 msgstr "Supprimer ce %(what_s)s du module des paquets d'extension"
-
-msgid "Remove this element"
-msgstr "Retirer cet élément"
 
 #, fuzzy
 msgid "Remove this endpoint"
@@ -64882,6 +64912,10 @@ msgstr "Version du pilote"
 msgid "SQL database user credentials"
 msgstr "Accréditations des utilisateurs de la base de données"
 
+#, fuzzy
+msgid "SQL statements"
+msgstr "Déclaration"
+
 msgid "SQL-Server to connect to"
 msgstr "SQL-Server auquel se connecter"
 
@@ -65128,6 +65162,10 @@ msgstr "Sauvegarde des paramètres en lecture seule"
 msgid "Saved space"
 msgstr "Espace économisé"
 
+#, fuzzy
+msgid "Saving license"
+msgstr "Gestion des licences"
+
 msgid "Saving the result..."
 msgstr ""
 
@@ -65238,6 +65276,10 @@ msgstr "Planifier un temps d'arrêt ?"
 #, python-format
 msgid "Scheduling report in background failed: %(e)s"
 msgstr "La planification du rapport en arrière-plan a échoué : %(e)s"
+
+#, fuzzy
+msgid "Schema management"
+msgstr "Gestion du site"
 
 msgid "Schema, revision and footprint of the data backend database"
 msgstr ""
@@ -67327,6 +67369,9 @@ msgstr ""
 "Vous pouvez définir ici une étiquette personnalisée pour les nouveaux "
 "problèmes. S'il n'est pas défini, \"monitoring\" sera utilisé."
 
+msgid "Set accept_implied_changes to make them."
+msgstr ""
+
 msgid "Set an individual idle timeout"
 msgstr "Définir un délai d'inactivité individuel"
 
@@ -68999,6 +69044,19 @@ msgstr "Sirène"
 
 msgid "Site"
 msgstr "Site"
+
+#, python-format
+msgid ""
+"Site %(site)s: \"%(feature)s\" is set from \"%(previous)s\" to "
+"\"%(disabled)s\"."
+msgstr ""
+
+#, python-format
+msgid ""
+"Site %(site)s: the data backend instance is enabled, with the native "
+"protocol SSL/TLS port %(tls_port)s, the HTTP SSL/TLS port %(https_port)s and "
+"a memory limit of %(memory_limit)s of the total available memory."
+msgstr ""
 
 #, python-format
 msgid "Site %(site_id)s"
@@ -75086,6 +75144,12 @@ msgid ""
 "The OMD site configuration ('omd config show') and the files below etc/omd"
 msgstr ""
 
+#, python-format
+msgid ""
+"The OpenTelemetry Collector of site %(site)s keeps running, but the metrics "
+"it receives are no longer stored."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The Oracle System Identifier (SID) that identifies a specific database "
@@ -76518,6 +76582,14 @@ msgid ""
 "upgrade fails, please contact Checkmk support."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "The data backend instance of site %(site)s was disabled."
+msgstr "Instances Oracle"
+
+#, fuzzy
+msgid "The data backend instance of the central site was disabled."
+msgstr "Instances Oracle"
+
 #. weblate-flags: read-only, domain-specific
 msgid "The data backend is busy. Try again in a few minutes."
 msgstr ""
@@ -76905,6 +76977,12 @@ msgid ""
 "For further information visit our "
 msgstr ""
 
+#, python-format
+msgid ""
+"The feature location \"%(local)s\" was chosen for %(features)s of site "
+"%(site)s while the site ran no data backend instance."
+msgstr ""
+
 msgid ""
 "The fetcher usage is below 50%, you may decrease the number of fetchers to "
 "reduce the memory consumption."
@@ -76955,6 +77033,10 @@ msgstr ""
 
 msgid "The file_id has to be alphanumeric."
 msgstr "Le file_id doit être alphanumérique."
+
+#, python-format
+msgid "The filter %(filter)s works only with a view as the target page."
+msgstr ""
 
 msgid ""
 "The first choice of a tag group will be its default value. If a tag group "
@@ -77892,6 +77974,26 @@ msgid "The log level for user authentication related log entries."
 msgstr ""
 "Le niveau de journal pour les entrées de journal liées à l'authentification "
 "des utilisateurs."
+
+msgid ""
+"The log level of the data backend outside the areas below, for example of "
+"retried connections. "
+msgstr ""
+
+#. weblate-flags: read-only, domain-specific
+#, python-format
+msgid ""
+"The log level of the decisions of the schema management. It logs on "
+"activation of changes into <tt>%(web_log)s</tt> and "
+"<tt>%(job_scheduler_log)s</tt>, during an update into <tt>%(update_log)s</"
+"tt> and during a restore into the output of <tt>omd restore</tt>."
+msgstr ""
+
+msgid ""
+"The logging of the data backend, independent of the log level of the "
+"processes that use the data backend. Debug logging is verbose, so do not "
+"leave it on indefinitely."
+msgstr ""
 
 msgid "The login is currently locked"
 msgstr "Le login est actuellement verrouillé"
@@ -84052,6 +84154,9 @@ msgstr ""
 "pas ses éléments avec d'autres rapports qui héritent de ce modèle. La "
 "pagination de l'avant-propos utilise la numérotation romaine. La première "
 "page génère toujours un nombre total de pages pair."
+
+msgid "This request also makes these implied changes:"
+msgstr ""
 
 msgid "This role does not exist."
 msgstr "Ce rôle n'existe pas."
@@ -105110,6 +105215,9 @@ msgstr ""
 msgid "No data in this timeframe."
 msgstr "Pas encore de métrique dans ce graphique."
 
+msgid "Rank"
+msgstr ""
+
 #, fuzzy
 msgid "Embedded page"
 msgstr "Image intégrée"
@@ -105164,6 +105272,21 @@ msgid ""
 "    You can use these examples to identify hosts and services that must be "
 "filtered out in the top list configuration to resolve the problem."
 msgstr ""
+
+#, fuzzy
+msgid "Nothing matches the widget filter in the selected time frame."
+msgstr "Reconnaître les problèmes"
+
+msgid "Last successful update less than a minute ago."
+msgstr ""
+
+#, fuzzy
+msgid "Last successful update %{n} min ago."
+msgstr "Dernière synchronisation réussie il y a %(seconds)d secondes."
+
+#, fuzzy
+msgid "Data could not be loaded"
+msgstr "Le DN de base du groupe n'a pas pu être trouvé."
 
 #, fuzzy
 msgid "Widget data could not be loaded."
@@ -105698,15 +105821,15 @@ msgid "Select option"
 msgstr "Connexions rejetées"
 
 #, fuzzy
-msgid "Inherited"
-msgstr "Hérité de "
-
-#, fuzzy
 msgid "Add contextual link"
 msgstr "Ajouter du contenu"
 
 msgid "Redirect to the default page defined by Checkmk."
 msgstr ""
+
+#, fuzzy
+msgid "Include current time range"
+msgstr "Activé dans la plage de temps"
 
 #, fuzzy
 msgid "Include dashboard & widget filters"
@@ -106245,10 +106368,6 @@ msgid ""
 msgstr ""
 "Ces macros peuvent être combinées avec des éléments de texte arbitraires, "
 "par exemple \"un texte <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\"."
-
-#, fuzzy
-msgid "Appearance"
-msgstr "Appareils électroménagers"
 
 #, fuzzy
 msgid "Show title background"
@@ -107120,6 +107239,13 @@ msgstr "Mot de passe"
 msgid "Pending"
 msgstr "En attente"
 
+msgid "This also makes these implied changes:"
+msgstr ""
+
+#, fuzzy
+msgid "Make these changes"
+msgstr "A changé"
+
 msgid ""
 "Changes submitted through this form will be immediately applied to your "
 "configuration. However, you may still need to activate them for them to take "
@@ -107517,6 +107643,14 @@ msgid "All metrics are hidden"
 msgstr "Tous les parents sont en bas"
 
 #, fuzzy
+msgid "Checkmk has no graphs for this host."
+msgstr "Autres journaux pour ce service"
+
+#, fuzzy
+msgid "Checkmk has no graphs for this service."
+msgstr "Autres journaux pour ce service"
+
+#, fuzzy
 msgid "Resolution %{resolution}"
 msgstr "Définir la résolution"
 
@@ -107577,6 +107711,14 @@ msgstr "Détails sur l'hôte"
 #, fuzzy
 msgid "Show details for %{metric}"
 msgstr "Affiche les détails d'un hôte."
+
+#, fuzzy
+msgid "Resource"
+msgstr "Sources"
+
+#, fuzzy
+msgid "Data point"
+msgstr "Données envoyées"
 
 #, fuzzy
 msgid "Attribute name"
@@ -108301,6 +108443,18 @@ msgid "Custom time range"
 msgstr "Personnaliser la plage horaire"
 
 #, fuzzy
+msgid "More time ranges"
+msgstr "Formatage des plages horaires"
+
+#, fuzzy
+msgid "More ranges"
+msgstr "Options de montage"
+
+#, fuzzy
+msgid "Time ranges"
+msgstr "Plage de temps"
+
+#, fuzzy
 msgid "Custom range"
 msgstr "Personnaliser la plage horaire"
 
@@ -108352,18 +108506,6 @@ msgstr ""
 #, fuzzy
 msgid "undocumented"
 msgstr "URL de la documentation"
-
-#, fuzzy
-msgid "More time ranges"
-msgstr "Formatage des plages horaires"
-
-#, fuzzy
-msgid "More ranges"
-msgstr "Options de montage"
-
-#, fuzzy
-msgid "Time ranges"
-msgstr "Plage de temps"
 
 #, fuzzy
 msgid "Loading content..."
@@ -108543,8 +108685,9 @@ msgstr ""
 msgid "Place objects on a blank canvas or a picture, such as a floor plan"
 msgstr ""
 
-msgid "Show hosts, services and groups at their locations on a world map"
-msgstr ""
+#, fuzzy
+msgid "Show hosts, services and groups at their geographic locations"
+msgstr "Rechercher des services et afficher leurs graphiques"
 
 msgid "Lay out all hosts automatically by how they are connected"
 msgstr ""
@@ -109589,6 +109732,10 @@ msgid "Traffic light"
 msgstr "Trafic envoyé"
 
 #, fuzzy
+msgid "Appearance"
+msgstr "Appareils électroménagers"
+
+#, fuzzy
 msgid "Gadget default"
 msgstr "Est par défaut"
 
@@ -109985,6 +110132,84 @@ msgstr "Supprimer le filtre"
 msgid "Add site…"
 msgstr "Ajouter un trieur"
 
+#, fuzzy
+msgid "None, place objects manually"
+msgstr "Exécution manuelle uniquement"
+
+#, fuzzy
+msgid "All hosts with geo coordinates"
+msgstr "Tous les hôtes du site"
+
+#, fuzzy
+msgid "Hosts in host group…"
+msgstr "L'hôte est dans le groupe"
+
+#, fuzzy
+msgid "Hosts hosting a service in service group…"
+msgstr "Affectation des services aux groupes de services"
+
+#, fuzzy
+msgid "Map view"
+msgstr "Vue clonée"
+
+#, fuzzy
+msgid "Latitude"
+msgstr "Le plus long"
+
+msgid "Between -90 and 90."
+msgstr ""
+
+#, fuzzy
+msgid "Longitude"
+msgstr "Le plus long"
+
+msgid "Between -180 and 180."
+msgstr ""
+
+msgid ""
+"Pan/zoom the map first, then reopen settings to capture the current view."
+msgstr ""
+
+msgid "A whole number from 0 to %{max}."
+msgstr ""
+
+msgid "Closes settings and switches the map to picker mode."
+msgstr ""
+
+#, fuzzy
+msgid "Pick from map"
+msgstr "Hérité de "
+
+msgid ""
+"Leave empty for the site default. Only OpenStreetMap and the tile server "
+"configured in the global settings can be reached — tiles from anywhere else "
+"are blocked by the browser."
+msgstr ""
+
+msgid "This server is not allowed by the site, its tiles would not load."
+msgstr ""
+
+#, fuzzy
+msgid "Map saturation (%)"
+msgstr "Durée de la mise à jour"
+
+msgid "Left empty, the map shows at 100 %, in its full colors."
+msgstr ""
+
+#, fuzzy
+msgid "Automatic object placement"
+msgstr "Mises à jour automatiques des agents"
+
+msgid ""
+"Hosts are auto-discovered from monitoring data via maps_lat/maps_lng labels "
+"or LAT/LONG custom variables. They show up alongside any objects you place "
+"manually."
+msgstr ""
+
+#, fuzzy
+msgid "Pick a group to discover hosts from."
+msgstr "Aucun hôte découvrable trouvé"
+
 msgid ""
 "Control who can see this map and whether it is listed in the Monitor menu. "
 "You can always see your own maps."
@@ -110075,84 +110300,6 @@ msgstr ""
 #, fuzzy
 msgid "Background color"
 msgstr "Emplois de base"
-
-#, fuzzy
-msgid "None, place objects manually"
-msgstr "Exécution manuelle uniquement"
-
-#, fuzzy
-msgid "All hosts with geo coordinates"
-msgstr "Tous les hôtes du site"
-
-#, fuzzy
-msgid "Hosts in host group…"
-msgstr "L'hôte est dans le groupe"
-
-#, fuzzy
-msgid "Hosts hosting a service in service group…"
-msgstr "Affectation des services aux groupes de services"
-
-#, fuzzy
-msgid "Map view"
-msgstr "Vue clonée"
-
-#, fuzzy
-msgid "Latitude"
-msgstr "Le plus long"
-
-msgid "Between -90 and 90."
-msgstr ""
-
-#, fuzzy
-msgid "Longitude"
-msgstr "Le plus long"
-
-msgid "Between -180 and 180."
-msgstr ""
-
-msgid ""
-"Pan/zoom the map first, then reopen settings to capture the current view."
-msgstr ""
-
-msgid "A whole number from 0 to %{max}."
-msgstr ""
-
-msgid "Closes settings and switches the map to picker mode."
-msgstr ""
-
-#, fuzzy
-msgid "Pick from map"
-msgstr "Hérité de "
-
-msgid ""
-"Leave empty for the site default. Only OpenStreetMap and the tile server "
-"configured in the global settings can be reached — tiles from anywhere else "
-"are blocked by the browser."
-msgstr ""
-
-msgid "This server is not allowed by the site, its tiles would not load."
-msgstr ""
-
-#, fuzzy
-msgid "Map saturation (%)"
-msgstr "Durée de la mise à jour"
-
-msgid "Left empty, the map shows at 100 %, in its full colors."
-msgstr ""
-
-#, fuzzy
-msgid "Automatic object placement"
-msgstr "Mises à jour automatiques des agents"
-
-msgid ""
-"Hosts are auto-discovered from monitoring data via maps_lat/maps_lng labels "
-"or LAT/LONG custom variables. They show up alongside any objects you place "
-"manually."
-msgstr ""
-
-#, fuzzy
-msgid "Pick a group to discover hosts from."
-msgstr "Aucun hôte découvrable trouvé"
 
 #, fuzzy
 msgid "%{field} is required."
@@ -110510,6 +110657,37 @@ msgid "FLAP"
 msgstr ""
 
 msgid "Too many to draw here"
+msgstr ""
+
+#, fuzzy
+msgid "Geo map canvas"
+msgstr "Données cartographiées"
+
+msgid ""
+"No hosts with geo coordinates found. Set the maps_lat and maps_lng labels on "
+"hosts to show them here."
+msgstr ""
+
+msgctxt ""
+"%{link} is a button that opens the \"Automatic object placement\" setting"
+msgid ""
+"No objects yet. Use the Edit button at the bottom right to place some, or "
+"turn on %{link} to place hosts by their maps_lat and maps_lng labels."
+msgstr ""
+
+#, fuzzy
+msgid "This map has no objects yet"
+msgstr "Ce groupe n'existe pas."
+
+#, fuzzy
+msgid "Loading hosts…"
+msgstr "Options d'étiquetage"
+
+#, fuzzy
+msgid "Save current view as default"
+msgstr "Activation de la règle"
+
+msgid "Pan/zoom the map, then apply."
 msgstr ""
 
 #, fuzzy
@@ -111100,39 +111278,8 @@ msgid "No objects yet. Use the Edit button at the bottom right to add some."
 msgstr ""
 
 #, fuzzy
-msgid "This map has no objects yet"
-msgstr "Ce groupe n'existe pas."
-
-#, fuzzy
 msgid "No hosts or services match the grids on this map."
 msgstr "Notes sur les services personnalisés"
-
-#, fuzzy
-msgid "Geo map canvas"
-msgstr "Données cartographiées"
-
-msgid ""
-"No hosts with geo coordinates found. Set the maps_lat and maps_lng labels on "
-"hosts to show them here."
-msgstr ""
-
-msgctxt ""
-"%{link} is a button that opens the \"Automatic object placement\" setting"
-msgid ""
-"No objects yet. Use the Edit button at the bottom right to place some, or "
-"turn on %{link} to place hosts by their maps_lat and maps_lng labels."
-msgstr ""
-
-#, fuzzy
-msgid "Loading hosts…"
-msgstr "Options d'étiquetage"
-
-#, fuzzy
-msgid "Save current view as default"
-msgstr "Activation de la règle"
-
-msgid "Pan/zoom the map, then apply."
-msgstr ""
 
 #, fuzzy
 msgid "Failed to load connections"
@@ -111627,6 +111774,10 @@ msgstr "Autres journaux pour ce service"
 msgid "Services to be created"
 msgstr "États des services"
 
+#, fuzzy
+msgid "Updating…"
+msgstr "Chargement..."
+
 msgid ""
 "Enter a service name and select a host or enter a host name template to see "
 "the services to be created."
@@ -111649,8 +111800,25 @@ msgid "Target host:"
 msgstr "Cibles"
 
 #, fuzzy
-msgid "(new host)"
-msgstr "(pas d'hôtes)"
+msgid "To be created"
+msgstr "Fichier créé"
+
+#, fuzzy
+msgid "Existing"
+msgstr "Essais"
+
+#, fuzzy
+msgid "Folder:"
+msgstr "Dossier"
+
+#, fuzzy
+msgid "Folder of %{host}"
+msgstr "Dossier : %s"
+
+msgid ""
+"The folders you may create hosts in could not be looked up, so new hosts go "
+"to the Main folder. Saving fails if you may not create hosts there."
+msgstr ""
 
 #, fuzzy
 msgid "Showing the first %{shown} of %{total} services."
@@ -111666,6 +111834,47 @@ msgid "%{count} more service names clash."
 msgstr "Services forcés"
 
 msgid "Series appearing after saving add services that are not shown here."
+msgstr ""
+
+#, fuzzy
+msgid "%{n} more new host is created in"
+msgid_plural "%{n} more new hosts are created in"
+msgstr[0] "Création d'un hôte"
+msgstr[1] "Création d'un hôte"
+
+#, fuzzy
+msgid "%{n} new host is created in"
+msgid_plural "%{n} new hosts are created in"
+msgstr[0] "Création d'un hôte"
+msgstr[1] "Création d'un hôte"
+
+#, fuzzy
+msgid "Several folders"
+msgstr "Filtres de service"
+
+#, fuzzy
+msgid "Folder of the other new hosts"
+msgstr "Couleur des points dispersés"
+
+msgid ""
+"You may not create hosts: you lack the permission \"Add & remove hosts\". "
+"Saving is refused while the template resolves to new hosts."
+msgstr ""
+
+msgid ""
+"You may not create hosts in any folder: you have neither \"Write access to "
+"all hosts and folders\" nor membership in a contact group permitted on a "
+"folder. Saving is refused while the template resolves to new hosts."
+msgstr ""
+
+msgid ""
+"You may not create hosts in any folder: the hosts are locked in every folder "
+"you may write to. Saving is refused while the template resolves to new hosts."
+msgstr ""
+
+msgid ""
+"You may not create hosts in any folder. Saving is refused while the template "
+"resolves to new hosts."
 msgstr ""
 
 #, fuzzy
@@ -111686,7 +111895,7 @@ msgid "Target hosts:"
 msgstr "Cibles"
 
 #, fuzzy
-msgid "New hosts, created in the Main folder on saving:"
+msgid "New hosts, created on saving:"
 msgstr "Hôtes à créer dans chaque dossier"
 
 msgid ""
@@ -113745,6 +113954,10 @@ msgid "Select service %{name}"
 msgstr "Supprimer un utilisateur"
 
 #, fuzzy
+msgid "Open graphs"
+msgstr "Mode ouvert"
+
+#, fuzzy
 msgid "Show service details"
 msgstr "Détails du service BI"
 
@@ -114338,6 +114551,10 @@ msgid "No actions available"
 msgstr "Aucune information disponible"
 
 #, fuzzy
+msgid "Open details"
+msgstr "Détails de l'événement"
+
+#, fuzzy
 msgid "Toggle details"
 msgstr "Basculer les détails du résultat"
 
@@ -114501,14 +114718,6 @@ msgstr "Statut de l'hôte"
 #, fuzzy
 msgid "Show the graphs of service %{name}"
 msgstr "Le nom du service"
-
-#, fuzzy
-msgid "Checkmk has no graphs for this host."
-msgstr "Autres journaux pour ce service"
-
-#, fuzzy
-msgid "Checkmk has no graphs for this service."
-msgstr "Autres journaux pour ce service"
 
 #, fuzzy
 msgid "The graphs could not be loaded."
@@ -114978,6 +115187,9 @@ msgstr "Paramètres pour cet hôte"
 msgid "Close & run service discovery"
 msgstr "Sauvegarder & ; lancer la découverte des services"
 
+msgid "Add sidebar element"
+msgstr "Ajouter un élément de barre latérale"
+
 msgid "Add snap-in ${props.name}"
 msgstr ""
 
@@ -115086,14 +115298,6 @@ msgstr "Ne se termine pas par %s"
 
 msgid "does not exist"
 msgstr "N'existe pas"
-
-#, fuzzy
-msgid "Resource"
-msgstr "Sources"
-
-#, fuzzy
-msgid "Data point"
-msgstr "Données envoyées"
 
 #, fuzzy
 msgid "Last recorded value"
@@ -116436,6 +116640,39 @@ msgid "To explore"
 msgstr "Essai expiré"
 
 #, fuzzy
+#~ msgid "Drill down to dashboard (custom)"
+#~ msgstr "Lien vers le tableau de bord"
+
+#, fuzzy
+#~ msgid "Drill down to dashboard (inherited)"
+#~ msgstr "Lien vers le tableau de bord"
+
+#, fuzzy
+#~ msgid "Drill down to view (custom)"
+#~ msgstr "Lien vers le site"
+
+#, fuzzy
+#~ msgid "Drill down to view (inherited)"
+#~ msgstr "Lien vers le site"
+
+#, fuzzy
+#~ msgid "Include dashboard and widget filters"
+#~ msgstr "Filtres appliqués :"
+
+#~ msgid "Add elements to your sidebar"
+#~ msgstr "Ajouter des éléments à votre barre latérale"
+
+#~ msgid "Open/close this element"
+#~ msgstr "Ouvrir/fermer cet élément"
+
+#~ msgid "Remove this element"
+#~ msgstr "Retirer cet élément"
+
+#, fuzzy
+#~ msgid "(new host)"
+#~ msgstr "(pas d'hôtes)"
+
+#, fuzzy
 #~ msgid "Legacy updater installed the package"
 #~ msgstr "Toujours installer Python avec l'agent"
 
@@ -116454,46 +116691,6 @@ msgstr "Essai expiré"
 #, fuzzy
 #~ msgid "Contextual link"
 #~ msgstr "Informations sur le contexte"
-
-#, fuzzy
-#~ msgid "Updating…"
-#~ msgstr "Chargement..."
-
-#, fuzzy
-#~ msgid "To be created"
-#~ msgstr "Fichier créé"
-
-#, fuzzy
-#~ msgid "Existing"
-#~ msgstr "Essais"
-
-#, fuzzy
-#~ msgid "Folder:"
-#~ msgstr "Dossier"
-
-#, fuzzy
-#~ msgid "Folder of %{host}"
-#~ msgstr "Dossier : %s"
-
-#, fuzzy
-#~ msgid "%{n} more new host is created in"
-#~ msgid_plural "%{n} more new hosts are created in"
-#~ msgstr[0] "Création d'un hôte"
-#~ msgstr[1] "Création d'un hôte"
-
-#, fuzzy
-#~ msgid "%{n} new host is created in"
-#~ msgid_plural "%{n} new hosts are created in"
-#~ msgstr[0] "Création d'un hôte"
-#~ msgstr[1] "Création d'un hôte"
-
-#, fuzzy
-#~ msgid "Several folders"
-#~ msgstr "Filtres de service"
-
-#, fuzzy
-#~ msgid "Folder of the other new hosts"
-#~ msgstr "Couleur des points dispersés"
 
 #~ msgid ""
 #~ "Choose time levels (in seconds) for which a unit is allowed to be in a "

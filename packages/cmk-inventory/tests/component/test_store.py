@@ -219,6 +219,20 @@ def test_load_previous_inventory_tree_prefers_the_current_tree(tmp_path: Path) -
     assert tree == deserialize_tree(raw_tree("current"))
 
 
+def test_load_previous_inventory_tree_skips_an_unknown_archive_file(tmp_path: Path) -> None:
+    cmk.ccc.store.save_text_to_file(
+        tmp_path / "var/check_mk/inventory_archive/hostname/123.json",
+        json.dumps(raw_tree("archived")),
+    )
+    cmk.ccc.store.save_text_to_file(
+        tmp_path / "var/check_mk/inventory_archive/hostname/456", json.dumps(raw_tree("unknown"))
+    )
+
+    tree = InventoryStore(tmp_path).load_previous_inventory_tree(host_name=HostName("hostname"))
+
+    assert tree == deserialize_tree(raw_tree("archived"))
+
+
 def test_load_previous_inventory_tree_without_any_tree_is_empty(tmp_path: Path) -> None:
     assert not InventoryStore(tmp_path).load_previous_inventory_tree(host_name=HostName("hostname"))
 

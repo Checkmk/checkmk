@@ -11,7 +11,7 @@ from cmk.ccc.hostaddress import HostName
 
 from .filtering import filter_tree, SDFilterChoice
 from .merging import merge_trees
-from .paths import InventoryPaths, is_json_tree_file, parse_archive_timestamp
+from .paths import collect_files, InventoryPaths, parse_archive_timestamp
 from .raw_store import (
     archive_inventory_tree,
     load_tree_from_tree_path,
@@ -63,6 +63,18 @@ def _get_save_tree_actions(
         do_archive=has_changed,
         do_save=(has_changed or len(update_results) > 0),
         messages=messages,
+    )
+
+
+def _latest_archive_tree(file_paths: Sequence[Path]) -> Path | None:
+    file_paths_by_timestamp: dict[int, Path] = {}
+    for file_path in file_paths:
+        try:
+            file_paths_by_timestamp[parse_archive_timestamp(file_path)] = file_path
+        except ValueError:
+            continue
+    return (
+        file_paths_by_timestamp[max(file_paths_by_timestamp)] if file_paths_by_timestamp else None
     )
 
 
@@ -126,15 +138,10 @@ class InventoryStore:
         if tree := load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name)):
             return tree
 
-        try:
-            latest_archive_tree = max(
-                self.inv_paths.archive_host(host_name).iterdir(),
-                key=parse_archive_timestamp,
-            )
-        except FileNotFoundError, ValueError:
-            return ImmutableTree()
-
-        if not is_json_tree_file(latest_archive_tree):
+        latest_archive_tree = _latest_archive_tree(
+            collect_files(self.inv_paths.archive_host(host_name))
+        )
+        if latest_archive_tree is None:
             return ImmutableTree()
         return load_tree_from_tree_path(latest_archive_tree)
 

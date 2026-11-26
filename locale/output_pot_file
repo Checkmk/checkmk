@@ -32,8 +32,8 @@ xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 \
 
 VUE_POT_FILE_RELATIVE=$(
     cd "${TOP_DIR}/packages/cmk-frontend-vue"
-    bazel build :extract_pot_file 1>/dev/null
-    bazel cquery --output=files :extract_pot_file
+    bazel build --cmk_edition=ultimate :extract_pot_file 1>/dev/null
+    bazel cquery --cmk_edition=ultimate --output=files :extract_pot_file
 )
 VUE_POT_FILE="${TOP_DIR}/${VUE_POT_FILE_RELATIVE}"
 

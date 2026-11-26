@@ -16,6 +16,7 @@ from cmk.livestatus_client import MKLivestatusSocketError
 from cmk.product_usage.collection import collect_cloud_trial_data, collect_data
 from cmk.product_usage.collectors.host_services import ServicesPerHostReader
 from cmk.product_usage.schema import (
+    AgentsData,
     AuditLog,
     AuditLogActorClass,
     CloudTrialPayload,
@@ -230,6 +231,47 @@ def fixture_mock_checkmk_info(mocker: MockerFixture) -> None:
 
 
 @pytest.mark.usefixtures("mock_checkmk_info")
+def test_payload_carries_the_agent_counts_of_the_site(
+    tmp_path: Path, local_connection: MockType
+) -> None:
+    labels = {"cmk/os_family": "linux", "cmk/os_name": "Ubuntu", "cmk/os_version": "24.04"}
+
+    payload = _collect_product_usage(
+        tmp_path, local_connection, agent_services=[[labels, "Version: 2.4.0p12, OS: linux"]]
+    )
+
+    assert payload.agents == AgentsData(
+        by_version={"2.4.0": {"linux": 1}}, by_os={"Ubuntu": {"24.04": 1}}
+    )
+
+
+@pytest.mark.usefixtures("mock_checkmk_info")
+def test_payload_has_no_agent_counts_when_livestatus_fails(
+    tmp_path: Path, local_connection: MockType
+) -> None:
+    payload = _collect_product_usage(
+        tmp_path, local_connection, agent_services=MKLivestatusSocketError("core stopped")
+    )
+
+    assert payload.agents is None
+    assert (payload.count_hosts, payload.count_services, payload.checks) == (10, 20, {})
+
+
+@pytest.mark.usefixtures("mock_checkmk_info")
+def test_failed_agents_collection_logs_the_error(
+    tmp_path: Path, local_connection: MockType, caplog: pytest.LogCaptureFixture
+) -> None:
+    _collect_product_usage(
+        tmp_path, local_connection, agent_services=MKLivestatusSocketError("core stopped")
+    )
+
+    assert ("ERROR", "Could not collect the agents, sending no agent counts", True) in [
+        (record.levelname, record.getMessage(), record.exc_info is not None)
+        for record in caplog.records
+    ]
+
+
+@pytest.mark.usefixtures("mock_checkmk_info")
 def test_payload_has_no_distributed_monitoring_role_when_the_site_config_is_broken(
     tmp_path: Path, local_connection: MockType
 ) -> None:
@@ -299,14 +341,25 @@ def test_payload_has_no_users_but_languages_when_the_users_cannot_be_counted(
 
 
 def _collect_product_usage(
-    site_dir: Path, local_connection: MockType, *, locale_dir: Path | None = None
+    site_dir: Path,
+    local_connection: MockType,
+    *,
+    locale_dir: Path | None = None,
+    agent_services: list[list[object]] | Exception | None = None,
 ) -> ProductUsagePayload:
     """Collect the product usage data of a test site: 10 hosts, 20 services, nothing else
 
-    The four Livestatus answers are the site status, the services, the disabled services
-    and the hosts with inventory data, in the order 'collect_data' asks for them.
+    The five Livestatus answers are the site status, the services, the disabled services,
+    the hosts with inventory data and the "Check_MK Agent" services, in the order
+    'collect_data' asks for them. An exception as 'agent_services' fails the last query.
     """
-    local_connection.query.side_effect = [[[10, 20]], [], [], []]
+    local_connection.query.side_effect = [
+        [[10, 20]],
+        [],
+        [],
+        [],
+        [] if agent_services is None else agent_services,
+    ]
     (site_dir / "wato").mkdir(parents=True, exist_ok=True)
 
     return collect_data(

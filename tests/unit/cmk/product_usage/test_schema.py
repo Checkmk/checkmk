@@ -48,6 +48,10 @@ def _product_usage_data() -> dict[str, object]:
             "version": "2.3.4",
             "is_grafana_cloud": False,
         },
+        "agents": {
+            "by_version": {"2.4.0": {"linux": 2}, "unknown": {"unknown": 1}},
+            "by_os": {"Ubuntu": {"24.04": 2}, "unknown": {"unknown": 1}},
+        },
         "checks": {
             "df": {
                 "count": 1,

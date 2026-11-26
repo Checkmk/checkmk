@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from werkzeug.exceptions import UnsupportedMediaType
 from werkzeug.test import EnvironBuilder
 
 from cmk.gui.config import Config
@@ -31,14 +30,12 @@ def _page_context(data: str, content_type: str) -> PageContext:
     )
 
 
-@pytest.mark.xfail(strict=True, raises=UnsupportedMediaType, reason="Crash group 5023")
 @pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_an_access_token_request_without_json_is_a_user_error() -> None:
     with pytest.raises(MKUserError):
         PageRequestAndSaveMsGraphAccessToken().page(_page_context("x", "text/plain"))
 
 
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 5025")
 @pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_an_access_token_request_without_form_data_is_a_user_error(
     monkeypatch: pytest.MonkeyPatch,

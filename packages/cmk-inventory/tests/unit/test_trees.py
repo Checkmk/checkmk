@@ -305,7 +305,7 @@ def test_rows_with_retentions() -> None:
             "Table": {
                 "KeyColumns": ["id"],
                 "Rows": [{"id": "1", "value": "x"}],
-                "Retentions": {("1",): {"value": (1, 2, 3)}},
+                "Retentions": [(["1"], {"value": (1, 2, 3)})],
             },
             "Nodes": {},
         }

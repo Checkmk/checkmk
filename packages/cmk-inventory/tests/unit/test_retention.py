@@ -169,7 +169,7 @@ def _tree_with_updated_row(
                 "Table": {
                     "KeyColumns": ["kc"],
                     "Rows": [{"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"}],
-                    "Retentions": {("KC",): {"c1": (1, 2, 3), "c2": (1, 2, 3)}},
+                    "Retentions": [(["KC"], {"c1": (1, 2, 3), "c2": (1, 2, 3)})],
                 },
                 "Nodes": {},
             }
@@ -245,7 +245,7 @@ def test_update_from_previous_restores_nothing_of_a_row_present_again() -> None:
             "Table": {
                 "KeyColumns": ["kc"],
                 "Rows": [{"kc": "KC", "c1": "C1: prev"}],
-                "Retentions": {("KC",): {"c1": (1, 2, 3)}},
+                "Retentions": [(["KC"], {"c1": (1, 2, 3)})],
             },
             "Nodes": {},
         }

@@ -112,6 +112,7 @@ pip_compile(
 mypy_cli(
     name = "mypy_cli_original",
     mypy_requirement = mypy_requirement("mypy"),
+    pyc_collection = "include_pyc",
     # the default Python version, like the bytecode of the standard library for :mypy_cli
     python_version = None,
     tags = ["no-mypy"],

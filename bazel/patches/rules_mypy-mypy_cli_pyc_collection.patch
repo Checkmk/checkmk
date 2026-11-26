@@ -1,0 +1,27 @@
+diff --git a/mypy/private/mypy.bzl b/mypy/private/mypy.bzl
+--- a/mypy/private/mypy.bzl
++++ b/mypy/private/mypy.bzl
+@@ -312,7 +312,7 @@
+         } | additional_attrs,
+     )
+ 
+-def mypy_cli(name, deps = None, mypy_requirement = None, python_version = "3.12", tags = None):
++def mypy_cli(name, deps = None, mypy_requirement = None, python_version = "3.12", tags = None, pyc_collection = "inherit"):
+     """
+     Produce a custom mypy executable for use with the mypy build rule.
+ 
+@@ -326,6 +326,8 @@
+               Pass None to use the default
+               (defaults to a rules_mypy specified version, currently Python 3.12)
+         tags: (optional) tags to include in the binary target
++        pyc_collection: (optional) the pyc_collection of the binary target, e.g. "include_pyc" to
++              include the bytecode of mypy and of the other dependencies
+     """
+ 
+     deps = deps or []
+@@ -339,4 +341,5 @@
+         deps = [mypy_requirement] + deps,
+         python_version = python_version,
+         tags = tags,
++        pyc_collection = pyc_collection,
+     )

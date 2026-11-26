@@ -136,6 +136,7 @@ py_library(
 py_binary(
     name = "set_runpath_tree",
     srcs = ["set_runpath_tree.py"],
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     visibility = ["//visibility:public"],
     deps = [":runpath_patch"],
 )
@@ -143,6 +144,7 @@ py_binary(
 py_binary(
     name = "set_runpath_whl",
     srcs = ["set_runpath_whl.py"],
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     visibility = ["//visibility:public"],
     deps = [":runpath_patch"],
 )
@@ -150,12 +152,14 @@ py_binary(
 py_binary(
     name = "console_scripts_gen",
     srcs = ["console_scripts_gen.py"],
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     visibility = ["//visibility:public"],
 )
 
 py_binary(
     name = "deb_installed_size",
     srcs = ["deb_installed_size.py"],
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     visibility = ["//visibility:public"],
 )
 
@@ -163,6 +167,7 @@ py_binary(
 py_binary(
     name = "crlf_files",
     srcs = ["crlf_files.py"],
+    data = ["//bazel/tools:python_stdlib_bytecode"],
 )
 
 py_cmk_test(

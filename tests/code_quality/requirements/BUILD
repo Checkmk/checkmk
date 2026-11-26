@@ -60,6 +60,7 @@ py_binary(
     name = "generate_requirements_mapping",
     testonly = True,
     srcs = ["generate_requirements_mapping.py"],
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     main = "generate_requirements_mapping.py",
     deps = [
         ":requirements_utils",

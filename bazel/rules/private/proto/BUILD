@@ -4,7 +4,9 @@ load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_cons
 
 py_console_script_binary(
     name = "protoc-gen-mypy",
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     pkg = requirement("mypy-protobuf"),
+    pyc_collection = "include_pyc",
     script = "protoc-gen-mypy",
     tags = [
         "manual",

@@ -30,7 +30,9 @@ py_library(
 
 py_console_script_binary(
     name = "datamodel_codegen",
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     pkg = requirement("datamodel-code-generator"),
+    pyc_collection = "include_pyc",
     script = "datamodel-codegen",
     tags = ["no-mypy"],
     visibility = [

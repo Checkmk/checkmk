@@ -32,7 +32,9 @@ _PY_WIN_RESOLVER_RUNTIME = "@python_{}_x86_64-unknown-linux-gnu//:py3_runtime".f
 py_binary(
     name = "pack_cab",
     srcs = ["pack_cab.py"],
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     main = "pack_cab.py",
+    pyc_collection = "include_pyc",
     visibility = ["//visibility:public"],
     deps = ["@cabarchive"],
 )
@@ -44,6 +46,7 @@ py_binary(
 py_binary(
     name = "pip_offline",
     srcs = ["pip_offline.py"],
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     main = "pip_offline.py",
     visibility = ["//visibility:public"],
 )
@@ -54,6 +57,7 @@ py_binary(
 py_binary(
     name = "make_exe_wrappers",
     srcs = ["make_exe_wrappers.py"],
+    data = ["//bazel/tools:python_stdlib_bytecode"],
     main = "make_exe_wrappers.py",
     visibility = ["//visibility:public"],
 )

@@ -128,8 +128,13 @@ mypy_cli(
 py_stdlib_bytecode(
     name = "python_stdlib_bytecode",
     visibility = [
+        "//agents/modules/windows:__pkg__",
+        "//bazel/rules:__pkg__",
+        "//bazel/rules/private/proto:__pkg__",
+        "//bazel/tools/shared_typing:__pkg__",
         "//packages/cmk-astrein:__pkg__",
         "//packages/cmk-repo-checks:__pkg__",
+        "//tests/code_quality/requirements:__pkg__",
     ],
 )
 
@@ -212,6 +217,7 @@ py_library(
 py_binary(
     name = "extract_os_packages",
     srcs = ["extract_os_packages.py"],
+    data = [":python_stdlib_bytecode"],
     main = "extract_os_packages.py",
     visibility = ["//visibility:public"],
 )

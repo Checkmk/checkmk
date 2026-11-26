@@ -12,13 +12,14 @@ from collections.abc import Mapping
 import pytest
 from pytest import param
 
-from cmk.gui.bi._config import ModeBIEditRule
+from cmk.gui.bi._config import ModeBIEditRule, ModeBIRules
 from cmk.gui.bi._valuespecs import (
     _convert_bi_rule_from_vs,
     _convert_bi_rule_to_vs,
     BIConfigStateOfServiceAction,
 )
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.http import request
 from tests.unit.cmk.bi.bi_mocks import MockBIAggregationPack
 from tests.unit.cmk.bi.bi_test_data import sample_config
 
@@ -154,3 +155,21 @@ def test_state_of_service_rejects_invalid_regex(host_regex: str, service_regex: 
         BIConfigStateOfServiceAction.valuespec().validate_value(
             {"host_regex": host_regex, "service_regex": service_regex}, "vs"
         )
+
+
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Crash group 5031: AssertionError")
+@pytest.mark.usefixtures("request_context")
+def test_bi_rules_without_a_pack_is_a_user_error() -> None:
+    mode = ModeBIRules()
+
+    with pytest.raises(MKUserError):
+        mode.title()
+
+
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Crash group 5027: AssertionError")
+@pytest.mark.usefixtures("request_context")
+def test_bi_edit_rule_without_a_pack_is_a_user_error() -> None:
+    request.set_var("id", "some_rule")
+
+    with pytest.raises(MKUserError):
+        ModeBIEditRule()

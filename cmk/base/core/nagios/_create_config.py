@@ -1286,6 +1286,9 @@ def _make_ping_only_spec(
     )
 
 
+_LINE_BREAKS = str.maketrans({"\n": " ", "\r": " "})
+
+
 def _format_nagios_object(object_type: str, object_spec: Mapping[str, object]) -> str:
     lines = ["define %s {" % object_type]
     for key, val in sorted(object_spec.items(), key=lambda x: x[0]):
@@ -1297,10 +1300,22 @@ def _format_nagios_object(object_type: str, object_spec: Mapping[str, object]) -
                 if key.startswith(prefix):
                     key = prefix + _b16encode(key[len(prefix) :])
                     val = _b16encode(str(val))
-        lines.append("  %-29s %s" % (key, val))
+        value = str(val)
+        # A line break would end the attribute and continue as Nagios config.
+        if (single_line := value.translate(_LINE_BREAKS)) != value:
+            name = object_spec.get(f"{object_type}_name", object_spec.get("service_description"))
+            config_warnings.warn(
+                f'Replaced line breaks in "{key}" of {object_type} "{name}" for Nagios.'
+            )
+        lines.append("  %-29s %s" % (key, _encode_nagios_value(single_line)))
     lines.append("}")
 
     return "\n".join(lines) + "\n\n"
+
+
+def _encode_nagios_value(value: str) -> str:
+    r"""Nagios continues a line that ends in a single \; \\ at the end is a literal \."""
+    return value + "\\" if value.endswith("\\") else value
 
 
 def _b16encode(b: str) -> str:

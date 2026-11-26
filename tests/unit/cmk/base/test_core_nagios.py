@@ -54,7 +54,7 @@ from cmk.checkengine.plugins import (
 from cmk.discover_plugins import PluginLocation
 from cmk.ruleset_matcher.labels import ABCLabelConfig, LabelManager, Labels
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
-from cmk.utils import ip_lookup
+from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.servicename import ServiceName
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.testlib.unit.empty_config import EMPTY_CONFIG, EMPTY_NAGIOS_CORE_CONFIG
@@ -134,6 +134,42 @@ def test_format_nagios_object() -> None:
 """
         % tuple(itertools.chain(*sorted(spec.items(), key=lambda x: x[0])))
     )
+
+
+def test_format_nagios_object_keeps_a_line_break_in_a_value_on_its_line() -> None:
+    lines = _format_nagios_object("host", {"alias": "Web\n}\ndefine command {"}).splitlines()
+    assert lines[1] == "  alias                         Web } define command {"
+
+
+@pytest.mark.parametrize("line_break", ["\n", "\r"])
+def test_format_nagios_object_warns_about_replaced_line_breaks(line_break: str) -> None:
+    config_warnings.initialize()
+    _format_nagios_object("host", {"alias": f"Web{line_break}Server", "host_name": "web01"})
+    assert config_warnings.get_configuration(additional_warnings=()) == [
+        'Replaced line breaks in "alias" of host "web01" for Nagios.'
+    ]
+
+
+def test_format_nagios_object_doubles_a_single_trailing_backslash() -> None:
+    lines = _format_nagios_object("host", {"alias": "C:\\"}).splitlines()  # C:\
+    assert lines[1] == "  alias                         C:\\\\"  # C:\\
+
+
+def test_format_nagios_object_replaces_a_carriage_return_after_a_trailing_backslash() -> None:
+    lines = _format_nagios_object("host", {"alias": "C:\\\r"}).splitlines()  # C:\ + CR
+    assert lines[1] == "  alias                         C:\\ "  # C:\ + space
+
+
+@pytest.mark.parametrize(
+    "alias",
+    [
+        "C:\\Program Files",  # C:\Program Files
+        "\\\\fileserver\\share",  # \\fileserver\share
+    ],
+)
+def test_format_nagios_object_keeps_other_backslashes_as_they_are(alias: str) -> None:
+    lines = _format_nagios_object("host", {"alias": alias}).splitlines()
+    assert lines[1] == "  alias                         " + alias
 
 
 @pytest.mark.parametrize(

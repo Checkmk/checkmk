@@ -24,10 +24,10 @@ from cmk.plugins.prism.agent_based.prism_cluster_cpu import discovery_prism_clus
 from cmk.plugins.prism.agent_based.prism_cluster_io import discovery_prism_cluster_io
 from cmk.plugins.prism.agent_based.prism_cluster_mem import discovery_prism_cluster_mem
 from cmk.plugins.prism.agent_based.prism_info import (
-    agent_section_prism_info_v2,
+    agent_section_prism_info_v4,
     check_prism_info,
     discovery_prism_info,
-    parse_prism_info_v2,
+    parse_prism_info_v4,
 )
 
 SECTION = {
@@ -105,7 +105,7 @@ def test_check_prism_info(  # type: ignore[misc]
 def test_v4_cluster_shows_its_name_patch_version_and_nodes(
     v4_cluster_section: Callable[[str], StringTable],
 ) -> None:
-    section = parse_prism_info_v2(v4_cluster_section("cluster-a"))
+    section = parse_prism_info_v4(v4_cluster_section("cluster-a"))
 
     assert list(check_prism_info(section)) == [
         Result(state=State.OK, summary="Name: cluster-a, Version: 7.5.0.6, Nodes: 3")
@@ -119,7 +119,7 @@ def test_v4_cluster_without_a_release_in_its_full_version_shows_the_build_versio
         "nodes": {"numberOfNodes": 3},
     }
 
-    section = parse_prism_info_v2([[json.dumps(cluster)]])
+    section = parse_prism_info_v4([[json.dumps(cluster)]])
 
     assert list(check_prism_info(section)) == [
         Result(state=State.OK, summary="Name: cluster-a, Version: 7.5, Nodes: 3")
@@ -129,7 +129,7 @@ def test_v4_cluster_without_a_release_in_its_full_version_shows_the_build_versio
 def test_v4_prism_central_shows_its_version_like_the_legacy_api(
     v4_cluster_section: Callable[[str], StringTable],
 ) -> None:
-    section = parse_prism_info_v2(v4_cluster_section("prism-central"))
+    section = parse_prism_info_v4(v4_cluster_section("prism-central"))
 
     assert list(check_prism_info(section)) == [
         Result(state=State.OK, summary="Name: prism-central, Version: pc.7.5.1.1, Nodes: 1")
@@ -140,11 +140,11 @@ def test_v4_prism_central_shows_its_version_like_the_legacy_api(
 def test_v4_cluster_and_prism_central_are_labelled_as_control_plane(
     name: str, v4_cluster_section: Callable[[str], StringTable]
 ) -> None:
-    section = parse_prism_info_v2(v4_cluster_section(name))
+    section = parse_prism_info_v4(v4_cluster_section(name))
     # The section takes the label function without parameters
     label_function = cast(
         Callable[[Mapping[str, Any]], HostLabelGenerator],
-        agent_section_prism_info_v2.host_label_function,
+        agent_section_prism_info_v4.host_label_function,
     )
 
     assert list(label_function(section)) == [HostLabel("cmk/nutanix/object", "control_plane")]
@@ -161,6 +161,6 @@ def test_v4_cluster_and_prism_central_are_labelled_as_control_plane(
 def test_v4_cluster_without_stats_gets_no_stats_service(  # type: ignore[misc]
     discover: Callable[[Mapping[str, Any]], DiscoveryResult],
 ) -> None:
-    section = parse_prism_info_v2([[json.dumps({"name": "cluster-a"})]])
+    section = parse_prism_info_v4([[json.dumps({"name": "cluster-a"})]])
 
     assert not list(discover(section))

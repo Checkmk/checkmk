@@ -20,7 +20,7 @@ from cmk.plugins.prism.agent_based.prism_hosts import (
     DEFAULT,
     discovery_prism_hosts,
     parse_prism_hosts,
-    parse_prism_hosts_v2,
+    parse_prism_hosts_v4,
 )
 
 SECTION = {
@@ -226,12 +226,12 @@ V4_HOST = {
 
 
 def _check_v4(host: Mapping[str, object]) -> list[object]:
-    section = parse_prism_hosts_v2([[json.dumps([host])]])
+    section = parse_prism_hosts_v4([[json.dumps([host])]])
     return list(check_prism_hosts("host-3", DEFAULT, section))
 
 
 def test_v4_host_is_discovered_by_its_name() -> None:
-    assert list(discovery_prism_hosts(parse_prism_hosts_v2([[json.dumps([V4_HOST])]]))) == [
+    assert list(discovery_prism_hosts(parse_prism_hosts_v4([[json.dumps([V4_HOST])]]))) == [
         Service(item="host-3")
     ]
 

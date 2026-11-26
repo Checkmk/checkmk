@@ -17,7 +17,7 @@ from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.prism.agent_based.prism_storage_pools import (
     check_prism_storage_pools,
     discovery_prism_storage_pools,
-    parse_prism_storage_pools_v2,
+    parse_prism_storage_pools_v4,
 )
 
 
@@ -137,7 +137,7 @@ RECORDED_V4_SECTION = [
             Path(__file__).parent.parent
             / "special_agent"
             / "v4_fixtures"
-            / "section_prism_storage_pools_v2.json"
+            / "section_prism_storage_pools_v4.json"
         ).read_text()
     ]
 ]
@@ -183,14 +183,14 @@ def _v4_results(section: Mapping[str, Any]) -> list[Result]:
 
 
 def test_v4_pool_is_discovered_by_the_start_of_its_id() -> None:
-    section = parse_prism_storage_pools_v2(RECORDED_V4_SECTION)
+    section = parse_prism_storage_pools_v4(RECORDED_V4_SECTION)
 
     assert list(discovery_prism_storage_pools(section)) == [Service(item="64b62dc3")]
 
 
 @pytest.mark.usefixtures("empty_value_store")
 def test_v4_pool_shows_the_sum_of_its_disks() -> None:
-    section = parse_prism_storage_pools_v2(RECORDED_V4_SECTION)
+    section = parse_prism_storage_pools_v4(RECORDED_V4_SECTION)
 
     assert _v4_results(section) == [
         Result(state=State.OK, summary="Used: 14.35% - 8.39 TiB of 58.5 TiB"),
@@ -200,7 +200,7 @@ def test_v4_pool_shows_the_sum_of_its_disks() -> None:
 
 @pytest.mark.usefixtures("empty_value_store")
 def test_v4_pool_shows_each_tier_and_counts_other_tiers_only_in_the_total() -> None:
-    section = parse_prism_storage_pools_v2(
+    section = parse_prism_storage_pools_v4(
         _v4_pool(
             ("SSD_SATA", 4 * 1024**4, 3 * 1024**4),
             ("DAS_SATA", 8 * 1024**4, 2 * 1024**4),

@@ -17,7 +17,7 @@ from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.prism.agent_based.prism_containers import (
     check_prism_container,
     discovery_prism_container,
-    parse_prism_containers_v2,
+    parse_prism_containers_v4,
 )
 
 
@@ -580,7 +580,7 @@ RECORDED_V4_SECTION = [
             Path(__file__).parent.parent
             / "special_agent"
             / "v4_fixtures"
-            / "section_prism_containers_v2.json"
+            / "section_prism_containers_v4.json"
         ).read_text()
     ]
 ]
@@ -624,7 +624,7 @@ def _results(section: Mapping[str, Any], item: str) -> list[Result]:
 
 
 def test_v4_containers_are_discovered_by_name() -> None:
-    section = parse_prism_containers_v2(RECORDED_V4_SECTION)
+    section = parse_prism_containers_v4(RECORDED_V4_SECTION)
 
     services = list(discovery_prism_container(section))
 
@@ -637,7 +637,7 @@ def test_v4_containers_are_discovered_by_name() -> None:
 
 @pytest.mark.usefixtures("empty_value_store")
 def test_v4_container_shows_the_usable_space_of_one_replica() -> None:
-    section = parse_prism_containers_v2(RECORDED_V4_SECTION)
+    section = parse_prism_containers_v4(RECORDED_V4_SECTION)
 
     results = _results(section, "default")
 
@@ -646,7 +646,7 @@ def test_v4_container_shows_the_usable_space_of_one_replica() -> None:
 
 @pytest.mark.usefixtures("empty_value_store")
 def test_v4_container_with_dedup_on_shows_the_newest_dedup_ratio() -> None:
-    section = parse_prism_containers_v2(_v4_container("ON", [1211709]))
+    section = parse_prism_containers_v4(_v4_container("ON", [1211709]))
 
     results = _results(section, "ctr")
 
@@ -655,7 +655,7 @@ def test_v4_container_with_dedup_on_shows_the_newest_dedup_ratio() -> None:
 
 @pytest.mark.usefixtures("empty_value_store")
 def test_v4_container_with_dedup_on_and_no_dedup_sample_shows_no_dedup_ratio() -> None:
-    section = parse_prism_containers_v2(_v4_container("ON", []))
+    section = parse_prism_containers_v4(_v4_container("ON", []))
 
     results = _results(section, "ctr")
 
@@ -664,7 +664,7 @@ def test_v4_container_with_dedup_on_and_no_dedup_sample_shows_no_dedup_ratio() -
 
 @pytest.mark.usefixtures("empty_value_store")
 def test_v4_container_with_dedup_off_shows_no_dedup_ratio() -> None:
-    section = parse_prism_containers_v2(_v4_container("OFF", [1211709]))
+    section = parse_prism_containers_v4(_v4_container("OFF", [1211709]))
 
     results = _results(section, "ctr")
 

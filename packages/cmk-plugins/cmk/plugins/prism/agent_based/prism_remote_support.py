@@ -34,15 +34,15 @@ agent_section_prism_remote_support = AgentSection(
 )
 
 
-def parse_prism_remote_support_v2(string_table: StringTable) -> Section:
+def parse_prism_remote_support_v4(string_table: StringTable) -> Section:
     cluster = ClusterRemoteSupport.model_validate_json(string_table[0][0])
     return {"enable": {"enabled": cluster.config.is_remote_support_enabled}}
 
 
-agent_section_prism_remote_support_v2 = AgentSection(
-    name="prism_remote_support_v2",
+agent_section_prism_remote_support_v4 = AgentSection(
+    name="prism_remote_support_v4",
     parsed_section_name="prism_remote_support",
-    parse_function=parse_prism_remote_support_v2,
+    parse_function=parse_prism_remote_support_v4,
 )
 
 

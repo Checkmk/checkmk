@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.prism.agent_based.prism_ha import (
     check_prism_ha,
     discovery_prism_ha,
-    parse_prism_ha_v2,
+    parse_prism_ha_v4,
 )
 
 SECTION = {
@@ -88,7 +88,7 @@ RECORDED_V4_SECTION = [
             Path(__file__).parent.parent
             / "special_agent"
             / "v4_fixtures"
-            / "section_prism_ha_v2.json"
+            / "section_prism_ha_v4.json"
         ).read_text()
     ]
 ]
@@ -105,13 +105,13 @@ def _ahv(state: str) -> Mapping[str, str]:
 def _v4_results(string_table: StringTable) -> list[Result]:
     return [
         result
-        for result in check_prism_ha(section=parse_prism_ha_v2(string_table))
+        for result in check_prism_ha(section=parse_prism_ha_v4(string_table))
         if isinstance(result, Result)
     ]
 
 
 def test_v4_cluster_with_normal_hosts_is_best_effort() -> None:
-    section = parse_prism_ha_v2(RECORDED_V4_SECTION)
+    section = parse_prism_ha_v4(RECORDED_V4_SECTION)
 
     assert (list(discovery_prism_ha(section)), list(check_prism_ha(section=section))) == (
         [Service()],
@@ -211,4 +211,4 @@ def test_v4_host_without_a_state_is_ignored() -> None:
     ],
 )
 def test_v4_cluster_that_is_not_only_ahv_has_no_service(string_table: StringTable) -> None:
-    assert list(discovery_prism_ha(parse_prism_ha_v2(string_table))) == []
+    assert list(discovery_prism_ha(parse_prism_ha_v4(string_table))) == []

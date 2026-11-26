@@ -99,7 +99,7 @@ _ROLLUP_UNITS = {
 }
 
 
-def parse_prism_protection_policies(string_table: StringTable) -> Section:
+def parse_prism_protection_policies_v4(string_table: StringTable) -> Section:
     if not string_table:
         return {}
     policies = ProtectionPolicies.model_validate_json(string_table[0][0]).root
@@ -123,9 +123,10 @@ def _replications(policy: ProtectionPolicy) -> list[Replication]:
     ]
 
 
-agent_section_prism_protection_policies = AgentSection(
-    name="prism_protection_policies",
-    parse_function=parse_prism_protection_policies,
+agent_section_prism_protection_policies_v4 = AgentSection(
+    name="prism_protection_policies_v4",
+    parsed_section_name="prism_protection_policies",
+    parse_function=parse_prism_protection_policies_v4,
 )
 
 

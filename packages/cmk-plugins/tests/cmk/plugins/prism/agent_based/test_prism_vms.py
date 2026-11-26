@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.prism.agent_based.prism_vms import (
     check_prism_vms,
     discovery_prism_vms,
-    parse_prism_vms_v2,
+    parse_prism_vms_v4,
 )
 
 SECTION = {
@@ -129,14 +129,14 @@ RECORDED_V4_SECTION = [
             Path(__file__).parent.parent
             / "special_agent"
             / "v4_fixtures"
-            / "section_prism_vms_v2.json"
+            / "section_prism_vms_v4.json"
         ).read_text()
     ]
 ]
 
 
 def test_v4_vms_sharing_a_name_get_a_service_each() -> None:
-    section = parse_prism_vms_v2(RECORDED_V4_SECTION)
+    section = parse_prism_vms_v4(RECORDED_V4_SECTION)
 
     items = [service.item or "" for service in discovery_prism_vms(section)]
 
@@ -147,7 +147,7 @@ def test_v4_vms_sharing_a_name_get_a_service_each() -> None:
 
 
 def test_v4_running_vm_shows_its_host() -> None:
-    section = parse_prism_vms_v2(RECORDED_V4_SECTION)
+    section = parse_prism_vms_v4(RECORDED_V4_SECTION)
 
     assert list(check_prism_vms("vm-001 (1f195358)", {"system_state": "on"}, section)) == [
         Result(state=State.OK, summary="with status on - on Host host-2"),
@@ -157,7 +157,7 @@ def test_v4_running_vm_shows_its_host() -> None:
 
 
 def test_v4_vm_that_is_off_runs_on_no_host() -> None:
-    section = parse_prism_vms_v2(RECORDED_V4_SECTION)
+    section = parse_prism_vms_v4(RECORDED_V4_SECTION)
 
     results = list(check_prism_vms("vm-018 (1e187b3a)", {"system_state": "on"}, section))
 
@@ -175,7 +175,7 @@ def _v4_vm(power_state: str) -> StringTable:
 
 
 def test_v4_undetermined_power_state_is_unknown() -> None:
-    section = parse_prism_vms_v2(_v4_vm("UNDETERMINED"))
+    section = parse_prism_vms_v4(_v4_vm("UNDETERMINED"))
 
     results = list(check_prism_vms("vm (1f195358)", {"system_state": "on"}, section))
 

@@ -16,7 +16,7 @@ from cmk.plugins.prism.agent_based.prism_remote_support import (
     check_prism_remote_support,
     discovery_prism_remote_support,
     parse_prism_remote_support,
-    parse_prism_remote_support_v2,
+    parse_prism_remote_support_v4,
 )
 
 SECTION = {"enable": {"duration": 0, "enabled": False}}
@@ -107,7 +107,7 @@ def test_check_prism_remote_support(  # type: ignore[misc]
 
 
 def _parse_v4(enabled: bool) -> Mapping[str, Any]:
-    return parse_prism_remote_support_v2(
+    return parse_prism_remote_support_v4(
         [[json.dumps({"config": {"isRemoteSupportEnabled": enabled}})]]
     )
 

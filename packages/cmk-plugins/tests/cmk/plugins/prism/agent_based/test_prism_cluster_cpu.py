@@ -15,7 +15,7 @@ from cmk.plugins.prism.agent_based.prism_cluster_cpu import (
     check_prism_cluster_cpu,
     discovery_prism_cluster_cpu,
 )
-from cmk.plugins.prism.agent_based.prism_info import parse_prism_info_v2
+from cmk.plugins.prism.agent_based.prism_info import parse_prism_info_v4
 
 
 @pytest.fixture
@@ -138,7 +138,7 @@ def test_check_prism_cluster_cpu_crit() -> None:
 def test_v4_cluster_cpu_is_its_newest_sample(
     v4_cluster_section: Callable[[str], StringTable],
 ) -> None:
-    section = parse_prism_info_v2(v4_cluster_section("cluster-a"))
+    section = parse_prism_info_v4(v4_cluster_section("cluster-a"))
 
     assert list(check_prism_cluster_cpu(params={}, section=section)) == [
         Result(state=State.OK, summary="Total CPU: 46.53%"),

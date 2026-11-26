@@ -86,7 +86,7 @@ def _context(alert: Alert) -> dict[str, Any]:
     return context
 
 
-def parse_prism_alerts_v2(string_table: StringTable) -> Section:
+def parse_prism_alerts_v4(string_table: StringTable) -> Section:
     return [
         _alert(
             _context(alert),
@@ -98,10 +98,10 @@ def parse_prism_alerts_v2(string_table: StringTable) -> Section:
     ]
 
 
-agent_section_prism_alerts_v2 = AgentSection(
-    name="prism_alerts_v2",
+agent_section_prism_alerts_v4 = AgentSection(
+    name="prism_alerts_v4",
     parsed_section_name="prism_alerts",
-    parse_function=parse_prism_alerts_v2,
+    parse_function=parse_prism_alerts_v4,
 )
 
 

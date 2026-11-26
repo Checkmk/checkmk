@@ -57,7 +57,7 @@ _KNOWN_STATES = (
 )
 
 
-def _ha_state_v2(
+def _ha_state_v4(
     states: Collection[str],
 ) -> Literal["HighlyAvailable", "Healing", "BestEffort", "Unknown"]:
     if not states:
@@ -70,7 +70,7 @@ def _ha_state_v2(
     return "BestEffort"
 
 
-def parse_prism_ha_v2(string_table: StringTable) -> Section:
+def parse_prism_ha_v4(string_table: StringTable) -> Section:
     if not string_table:
         return {}
     hosts = HaHosts.model_validate_json(string_table[0][0]).root
@@ -82,7 +82,7 @@ def parse_prism_ha_v2(string_table: StringTable) -> Section:
         for host in hosts
         if (state := host.hypervisor.state) is not None and state in _KNOWN_STATES
     ]
-    ha_state = _ha_state_v2(states)
+    ha_state = _ha_state_v4(states)
     return {
         # v4 can't tell whether HA is enabled
         "failover_enabled": True,
@@ -97,10 +97,10 @@ def parse_prism_ha_v2(string_table: StringTable) -> Section:
     }
 
 
-agent_section_prism_ha_v2 = AgentSection(
-    name="prism_ha_v2",
+agent_section_prism_ha_v4 = AgentSection(
+    name="prism_ha_v4",
     parsed_section_name="prism_ha",
-    parse_function=parse_prism_ha_v2,
+    parse_function=parse_prism_ha_v4,
 )
 
 

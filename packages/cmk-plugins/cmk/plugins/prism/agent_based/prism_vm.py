@@ -67,7 +67,7 @@ def _legacy_guest_tools(tools: GuestTools | None) -> dict[str, object]:
     }
 
 
-def parse_prism_vm_v2(string_table: StringTable) -> Section:
+def parse_prism_vm_v4(string_table: StringTable) -> Section:
     if not string_table:
         return {}
     vm = VmDetails.model_validate_json(string_table[0][0])
@@ -108,9 +108,9 @@ agent_section_prism_vm = AgentSection(
     host_label_function=host_label_prism_vm,
 )
 
-agent_section_prism_vm_v2 = AgentSection(
-    name="prism_vm_v2",
+agent_section_prism_vm_v4 = AgentSection(
+    name="prism_vm_v4",
     parsed_section_name="prism_vm",
-    parse_function=parse_prism_vm_v2,
+    parse_function=parse_prism_vm_v4,
     host_label_function=host_label_prism_vm,
 )

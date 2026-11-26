@@ -9,17 +9,17 @@ from pathlib import Path
 import pytest
 
 from cmk.agent_based.v2 import Service
-from cmk.plugins.prism.agent_based.prism_host import parse_prism_host_v2
+from cmk.plugins.prism.agent_based.prism_host import parse_prism_host_v4
 from cmk.plugins.prism.agent_based.prism_host_disks import discovery_prism_host_disks
 from cmk.plugins.prism.agent_based.prism_host_stats import discovery_prism_host_stats
 
 RECORDED_SECTION = (
-    Path(__file__).parent.parent / "special_agent" / "v4_fixtures" / "section_prism_host_v2.json"
+    Path(__file__).parent.parent / "special_agent" / "v4_fixtures" / "section_prism_host_v4.json"
 )
 
 
 def _parse(node: object) -> dict[str, object]:
-    return parse_prism_host_v2([[json.dumps(node)]])
+    return parse_prism_host_v4([[json.dumps(node)]])
 
 
 def _sample(value: int) -> list[dict[str, object]]:

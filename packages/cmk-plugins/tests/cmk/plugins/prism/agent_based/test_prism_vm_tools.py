@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.prism.agent_based.prism_vm import parse_prism_vm_v2
+from cmk.plugins.prism.agent_based.prism_vm import parse_prism_vm_v4
 from cmk.plugins.prism.agent_based.prism_vm_tools import (
     check_prism_vm_tools,
     discovery_prism_vm_tools,
@@ -112,7 +112,7 @@ def _v4_section(guest_tools: Mapping[str, object]) -> Mapping[str, Any]:
         "memorySizeBytes": 8589934592,
         "guestTools": guest_tools,
     }
-    return parse_prism_vm_v2([[json.dumps(vm)]])
+    return parse_prism_vm_v4([[json.dumps(vm)]])
 
 
 DEFAULT_PARAMS = {"tools_install": "installed", "tools_enabled": "enabled"}

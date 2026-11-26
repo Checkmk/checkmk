@@ -17,6 +17,6 @@ def _v4_cluster_section() -> Callable[[str], StringTable]:
     """What the v4 agent writes for a cluster of a Prism Central 7.5 lab, by cluster name"""
 
     def load(name: str) -> StringTable:
-        return [[(V4_FIXTURES / f"section_prism_info_v2_{name}.json").read_text()]]
+        return [[(V4_FIXTURES / f"section_prism_info_v4_{name}.json").read_text()]]
 
     return load

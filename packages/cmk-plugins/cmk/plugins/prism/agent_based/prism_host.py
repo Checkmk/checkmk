@@ -53,7 +53,7 @@ def _legacy_value(value: int | None) -> str:
     return str(-1 if value is None else value)
 
 
-def _stats_v2(stats: HostStats) -> dict[str, str]:
+def _stats_v4(stats: HostStats) -> dict[str, str]:
     legacy: dict[str, str] = {}
     for legacy_key, samples in (
         ("controller_avg_io_latency_usecs", stats.controller_avg_io_latency_usecs),
@@ -83,7 +83,7 @@ def _stats_v2(stats: HostStats) -> dict[str, str]:
     return legacy
 
 
-def _usage_stats_v2(node: Node) -> dict[str, str]:
+def _usage_stats_v4(node: Node) -> dict[str, str]:
     legacy: dict[str, str] = {}
     for legacy_key, samples in (
         ("storage.capacity_bytes", node.stats.storage_capacity_bytes),
@@ -95,7 +95,7 @@ def _usage_stats_v2(node: Node) -> dict[str, str]:
     )
 
 
-def _disk_hardware_config_v2(disk: NodeDisk) -> dict[str, object] | None:
+def _disk_hardware_config_v4(disk: NodeDisk) -> dict[str, object] | None:
     """None, like the legacy API for an empty slot, if the check can't tell the mount state"""
     advance_config = disk.config.disk_advance_config
     if advance_config.is_mounted is None:
@@ -108,7 +108,7 @@ def _disk_hardware_config_v2(disk: NodeDisk) -> dict[str, object] | None:
     }
 
 
-def parse_prism_host_v2(string_table: StringTable) -> Section:
+def parse_prism_host_v4(string_table: StringTable) -> Section:
     if not string_table:
         return {}
     node = Node.model_validate_json(string_table[0][0])
@@ -123,20 +123,20 @@ def parse_prism_host_v2(string_table: StringTable) -> Section:
         )
         if value is not None
     }
-    parsed["stats"] = _stats_v2(node.stats)
-    parsed["usage_stats"] = _usage_stats_v2(node)
+    parsed["stats"] = _stats_v4(node.stats)
+    parsed["usage_stats"] = _usage_stats_v4(node)
     # The legacy API names the disks by slot, v4 by location
     parsed["disk_hardware_configs"] = {
-        str(disk.config.location): _disk_hardware_config_v2(disk)
+        str(disk.config.location): _disk_hardware_config_v4(disk)
         for disk in node.disks
         if disk.config.location is not None
     }
     return parsed
 
 
-agent_section_prism_host_v2 = AgentSection(
-    name="prism_host_v2",
+agent_section_prism_host_v4 = AgentSection(
+    name="prism_host_v4",
     parsed_section_name="prism_host",
-    parse_function=parse_prism_host_v2,
+    parse_function=parse_prism_host_v4,
     host_label_function=host_label_prism_host,
 )

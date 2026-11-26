@@ -48,7 +48,7 @@ agent_section_prism_containers = AgentSection(
 )
 
 
-def _usage_stats_v2(stats: StorageContainerStats) -> dict[str, str]:
+def _usage_stats_v4(stats: StorageContainerStats) -> dict[str, str]:
     # v4 counts every replica, the legacy API only what is usable
     replication_factor = newest(stats.storage_replication_factor)
     dedup = newest(stats.data_reduction_dedup_saving_ratio_ppm)
@@ -63,23 +63,23 @@ def _usage_stats_v2(stats: StorageContainerStats) -> dict[str, str]:
     return usage_stats
 
 
-def parse_prism_containers_v2(string_table: StringTable) -> Section:
+def parse_prism_containers_v4(string_table: StringTable) -> Section:
     if not string_table:
         return {}
     # Nutanix keeps container names unique within a cluster, and each cluster has its own host
     return {
         container.name: {
-            "usageStats": _usage_stats_v2(container.stats),
+            "usageStats": _usage_stats_v4(container.stats),
             "fingerPrintOnWrite": "on" if container.cache_deduplication == "ON" else "off",
         }
         for container in StorageContainersWithStats.model_validate_json(string_table[0][0]).root
     }
 
 
-agent_section_prism_containers_v2 = AgentSection(
-    name="prism_containers_v2",
+agent_section_prism_containers_v4 = AgentSection(
+    name="prism_containers_v4",
     parsed_section_name="prism_containers",
-    parse_function=parse_prism_containers_v2,
+    parse_function=parse_prism_containers_v4,
 )
 
 

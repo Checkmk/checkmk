@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import Result, State
 from cmk.plugins.prism.agent_based.prism_alerts import (
     check_prism_alerts,
     parse_prism_alerts,
-    parse_prism_alerts_v2,
+    parse_prism_alerts_v4,
 )
 
 SECTION = [
@@ -237,7 +237,7 @@ V4_CLUSTER_ALERT = {
 
 
 def _parse_v4(*alerts: Mapping[str, object]) -> Sequence[Mapping[Any, Any]]:
-    return parse_prism_alerts_v2([[json.dumps(alerts)]])
+    return parse_prism_alerts_v4([[json.dumps(alerts)]])
 
 
 def test_v4_alert_gives_the_same_section_as_legacy() -> None:

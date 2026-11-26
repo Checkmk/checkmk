@@ -44,7 +44,7 @@ _ACROPOLIS_CONNECTION_STATES = {
 }
 
 
-def parse_prism_hosts_v2(string_table: StringTable) -> Section:
+def parse_prism_hosts_v4(string_table: StringTable) -> Section:
     parsed: dict[str, dict[str, Any]] = {}
     for host in Hosts.model_validate_json(string_table[0][0]).root:
         acropolis_state = host.hypervisor.acropolis_connection_state or ""
@@ -64,10 +64,10 @@ def parse_prism_hosts_v2(string_table: StringTable) -> Section:
     return parsed
 
 
-agent_section_prism_hosts_v2 = AgentSection(
-    name="prism_hosts_v2",
+agent_section_prism_hosts_v4 = AgentSection(
+    name="prism_hosts_v4",
     parsed_section_name="prism_hosts",
-    parse_function=parse_prism_hosts_v2,
+    parse_function=parse_prism_hosts_v4,
 )
 
 

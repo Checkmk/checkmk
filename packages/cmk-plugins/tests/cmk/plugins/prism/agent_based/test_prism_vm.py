@@ -6,7 +6,7 @@
 import json
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.prism.agent_based.prism_vm import parse_prism_vm_v2
+from cmk.plugins.prism.agent_based.prism_vm import parse_prism_vm_v4
 
 # vm-006 as the v4 agent writes it, recorded on a Prism Central 7.5 lab
 RUNNING_VM = {
@@ -55,7 +55,7 @@ def _section(vm: dict[str, object]) -> StringTable:
 
 def test_running_vm_has_the_fields_of_the_legacy_section() -> None:
     # The legacy agent reported the same values for this VM at the same time
-    assert parse_prism_vm_v2(_section(RUNNING_VM)) == {
+    assert parse_prism_vm_v4(_section(RUNNING_VM)) == {
         "vmName": "vm-006",
         "powerState": "on",
         "hostName": "host-2",
@@ -79,7 +79,7 @@ def test_running_vm_has_the_fields_of_the_legacy_section() -> None:
 
 
 def test_stats_prism_central_has_not_collected_are_minus_one_as_in_legacy() -> None:
-    stats = parse_prism_vm_v2(_section(VM_THAT_IS_OFF))["stats"]
+    stats = parse_prism_vm_v4(_section(VM_THAT_IS_OFF))["stats"]
 
     assert (stats["controller_avg_io_latency_usecs"], stats["hypervisor.cpu_ready_time_ppm"]) == (
         "-1",
@@ -88,7 +88,7 @@ def test_stats_prism_central_has_not_collected_are_minus_one_as_in_legacy() -> N
 
 
 def test_vm_without_guest_tools_has_them_not_installed_and_disabled_as_in_legacy() -> None:
-    section = parse_prism_vm_v2(_section(VM_THAT_IS_OFF))
+    section = parse_prism_vm_v4(_section(VM_THAT_IS_OFF))
 
     assert section["nutanixGuestTools"] == {"installedVersion": None, "enabled": False}
 
@@ -96,7 +96,7 @@ def test_vm_without_guest_tools_has_them_not_installed_and_disabled_as_in_legacy
 def test_guest_tools_set_up_but_not_installed_have_no_version() -> None:
     vm = {**RUNNING_VM, "guestTools": {"isInstalled": False, "isEnabled": True}}
 
-    section = parse_prism_vm_v2(_section(vm))
+    section = parse_prism_vm_v4(_section(vm))
 
     assert section["nutanixGuestTools"] == {"installedVersion": None, "enabled": True}
 
@@ -110,16 +110,16 @@ def test_newest_sample_of_each_stat_counts() -> None:
         ],
     }
 
-    assert parse_prism_vm_v2(_section(vm))["stats"]["hypervisor_cpu_usage_ppm"] == "2"
+    assert parse_prism_vm_v4(_section(vm))["stats"]["hypervisor_cpu_usage_ppm"] == "2"
 
 
 def test_esxi_vm_has_no_guest_memory_usage() -> None:
     vm = {**RUNNING_VM, "hypervisor": "ESXI"}
 
-    assert "guest.memory_usage_ppm" not in parse_prism_vm_v2(_section(vm))["stats"]
+    assert "guest.memory_usage_ppm" not in parse_prism_vm_v4(_section(vm))["stats"]
 
 
 def test_vm_has_no_stats_if_prism_central_could_not_list_them() -> None:
     vm = {key: value for key, value in RUNNING_VM.items() if key != "stats"}
 
-    assert "stats" not in parse_prism_vm_v2(_section(vm))
+    assert "stats" not in parse_prism_vm_v4(_section(vm))

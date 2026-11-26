@@ -39,7 +39,7 @@ agent_section_prism_vms = AgentSection(
 )
 
 
-def parse_prism_vms_v2(string_table: StringTable) -> Section:
+def parse_prism_vms_v4(string_table: StringTable) -> Section:
     if not string_table:
         return {}
     # Prism doesn't keep VM names unique, the start of the extId tells VMs apart
@@ -56,10 +56,10 @@ def parse_prism_vms_v2(string_table: StringTable) -> Section:
     }
 
 
-agent_section_prism_vms_v2 = AgentSection(
-    name="prism_vms_v2",
+agent_section_prism_vms_v4 = AgentSection(
+    name="prism_vms_v4",
     parsed_section_name="prism_vms",
-    parse_function=parse_prism_vms_v2,
+    parse_function=parse_prism_vms_v4,
 )
 
 

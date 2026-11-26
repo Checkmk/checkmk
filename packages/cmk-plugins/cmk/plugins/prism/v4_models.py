@@ -5,7 +5,7 @@
 
 """Entities of the Nutanix v4 API, reduced to the fields the checks read
 
-The v4 agent writes them to the prism_*_v2 sections, the parse functions read them back.
+The v4 agent writes them to the prism_*_v4 sections, the parse functions read them back.
 """
 
 from collections.abc import Sequence
@@ -54,7 +54,7 @@ class HaHypervisor(V4Model):
 
 
 class HaHost(V4Model):
-    """The hypervisor of a host, as written to prism_ha_v2"""
+    """The hypervisor of a host, as written to prism_ha_v4"""
 
     hypervisor: HaHypervisor = HaHypervisor()
 
@@ -382,7 +382,7 @@ class NodeDisk(V4Model):
 
 
 class Node(V4Model):
-    """A host with its stats and disks, as written to prism_host_v2"""
+    """A host with its stats and disks, as written to prism_host_v4"""
 
     config: NodeConfig
     stats: HostStats
@@ -395,7 +395,7 @@ class PoolDisk(V4Model):
 
 
 class StoragePool(V4Model):
-    """A storage pool with its disks, as written to prism_storage_pools_v2"""
+    """A storage pool with its disks, as written to prism_storage_pools_v4"""
 
     ext_id: str = Field(alias="extId")
     disks: list[PoolDisk] = []
@@ -455,7 +455,7 @@ class VmDetails(V4Model):
 
 
 class HostNic(V4Model):
-    """A physical NIC of a host, as written to prism_host_networks_v2"""
+    """A physical NIC of a host, as written to prism_host_networks_v4"""
 
     name: str | None = None
     mac_address: str | None = Field(None, alias="macAddress")
@@ -547,7 +547,7 @@ class ProtectedVm(V4Model):
 
 
 class ProtectionPolicy(V4Model):
-    """A protection policy with the VMs it protects, as written to prism_protection_policies"""
+    """A protection policy with the VMs it protects, as written to prism_protection_policies_v4"""
 
     ext_id: str = Field(alias="extId")
     name: str

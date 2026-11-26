@@ -72,7 +72,7 @@ def _version(config: ClusterConfig) -> str | None:
     return f"pc.{version}" if version and config.is_prism_central else version
 
 
-def _stats_v2(stats: ClusterStats) -> dict[str, str]:
+def _stats_v4(stats: ClusterStats) -> dict[str, str]:
     # Strings like the legacy API, so a value of 0 is reported as well
     return {
         legacy_key: str(value)
@@ -87,21 +87,21 @@ def _stats_v2(stats: ClusterStats) -> dict[str, str]:
     }
 
 
-def parse_prism_info_v2(string_table: StringTable) -> Section:
+def parse_prism_info_v4(string_table: StringTable) -> Section:
     cluster = ClusterWithStats.model_validate_json(string_table[0][0])
     parsed: dict[str, Any] = {
         "name": cluster.name,
         "version": _version(cluster.config),
         "num_nodes": cluster.nodes.number_of_nodes,
-        "stats": _stats_v2(cluster.stats or ClusterStats()),
+        "stats": _stats_v4(cluster.stats or ClusterStats()),
     }
     return {key: value for key, value in parsed.items() if value is not None}
 
 
-agent_section_prism_info_v2 = AgentSection(
-    name="prism_info_v2",
+agent_section_prism_info_v4 = AgentSection(
+    name="prism_info_v4",
     parsed_section_name="prism_info",
-    parse_function=parse_prism_info_v2,
+    parse_function=parse_prism_info_v4,
     # The host of each cluster takes over from the host of its Prism Element, so it is labelled
     # like the Prism Central host
     host_label_function=host_label_prism_info,

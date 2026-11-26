@@ -206,13 +206,13 @@ def _host_sections_by_cluster(
 
 
 def fetch_hosts(context: FetchContext) -> Sequence[Section]:
-    return _host_sections_by_cluster(context, "prism_hosts_v2", Host)
+    return _host_sections_by_cluster(context, "prism_hosts_v4", Host)
 
 
 def fetch_ha(context: FetchContext) -> Sequence[Section]:
     """v4 has no HA object: the parse function derives the HA state from the hypervisors of
     the cluster's hosts"""
-    return _host_sections_by_cluster(context, "prism_ha_v2", HaHost)
+    return _host_sections_by_cluster(context, "prism_ha_v4", HaHost)
 
 
 def fetch_alerts(context: FetchContext) -> Sequence[Section]:
@@ -229,7 +229,7 @@ def fetch_alerts(context: FetchContext) -> Sequence[Section]:
             else Unroutable("alerts without a cluster")
         )
         by_target.setdefault(target, []).append(Alert.model_validate(alert).to_section())
-    return [Section("prism_alerts_v2", alerts, target) for target, alerts in by_target.items()]
+    return [Section("prism_alerts_v4", alerts, target) for target, alerts in by_target.items()]
 
 
 def _fields(model: type[BaseModel]) -> list[str]:
@@ -378,7 +378,7 @@ def fetch_containers(context: FetchContext) -> Sequence[Section]:
             ).to_section()
         )
     return [
-        Section("prism_containers_v2", cluster_containers, context.routing.host_for(cluster_id))
+        Section("prism_containers_v4", cluster_containers, context.routing.host_for(cluster_id))
         for cluster_id, cluster_containers in by_cluster.items()
     ]
 
@@ -388,7 +388,7 @@ def fetch_remote_support(context: FetchContext) -> Sequence[Section]:
     as a cluster, so its own state goes to the Prism Central host."""
     return [
         Section(
-            "prism_remote_support_v2",
+            "prism_remote_support_v4",
             ClusterRemoteSupport.model_validate(cluster).to_section(),
             context.routing.host_for(ext_id)
             if isinstance(ext_id := cluster.get("extId"), str)
@@ -433,7 +433,7 @@ def fetch_clusters(context: FetchContext) -> Sequence[Section]:
     }
     return [
         Section(
-            "prism_info_v2",
+            "prism_info_v4",
             ClusterWithStats(
                 name=cluster.name,
                 config=cluster.config,
@@ -543,7 +543,7 @@ def _vm_details(
     stats: Mapping[str, object] | None,
 ) -> Section:
     return Section(
-        "prism_vm_v2",
+        "prism_vm_v4",
         VmDetails.model_validate(
             {
                 "extId": vm.ext_id,
@@ -588,7 +588,7 @@ def fetch_vms(context: FetchContext) -> Sequence[Section]:
             ).to_section()
         )
     sections = [
-        Section("prism_vms_v2", cluster_vms, context.routing.host_for(cluster_id))
+        Section("prism_vms_v4", cluster_vms, context.routing.host_for(cluster_id))
         for cluster_id, cluster_vms in by_cluster.items()
     ]
 
@@ -696,7 +696,7 @@ def fetch_nodes(context: FetchContext) -> Sequence[Section]:
         )
     return [
         Section(
-            "prism_host_v2",
+            "prism_host_v4",
             Node(
                 config=NodeConfig.model_validate(host.to_section()),
                 stats=stats,
@@ -735,7 +735,7 @@ def fetch_host_nics(context: FetchContext) -> Sequence[Section]:
         )
     sections = [
         Section(
-            "prism_host_networks_v2",
+            "prism_host_networks_v4",
             by_host[host.ext_id],
             Unroutable("hosts without a name") if host.host_name is None else host.host_name,
         )
@@ -743,7 +743,7 @@ def fetch_host_nics(context: FetchContext) -> Sequence[Section]:
     ]
     if unknown:
         sections.append(
-            Section("prism_host_networks_v2", unknown, Unroutable("host NICs without a known host"))
+            Section("prism_host_networks_v4", unknown, Unroutable("host NICs without a known host"))
         )
     return sections
 
@@ -763,7 +763,7 @@ def fetch_storage_pools(context: FetchContext) -> Sequence[Section]:
         ).append(PoolDisk.model_validate({"storageTier": disk.storage_tier, "stats": stats}))
     return [
         Section(
-            "prism_storage_pools_v2",
+            "prism_storage_pools_v4",
             [
                 StoragePool.model_validate({"extId": pool_id, "disks": pool_disks}).to_section()
                 for pool_id, pool_disks in pools.items()
@@ -984,7 +984,7 @@ def fetch_protection_policies(context: FetchContext) -> Sequence[Section]:
 
     return [
         Section(
-            "prism_protection_policies",
+            "prism_protection_policies_v4",
             [
                 policy.model_copy(
                     update={"vms": [protected_vm(vm) for vm in vms_by_policy[policy.ext_id]]}

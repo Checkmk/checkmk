@@ -180,7 +180,7 @@ def _serve_recorded_vm_stats(api: responses.RequestsMock) -> None:
 
 def _vm_sections(sections: Sequence[Section]) -> dict[object, object]:
     return {
-        section.target: section.payload for section in sections if section.name == "prism_vm_v2"
+        section.target: section.payload for section in sections if section.name == "prism_vm_v4"
     }
 
 
@@ -296,7 +296,7 @@ def _serve_cluster_stats(api: responses.RequestsMock, status: HTTPStatus = HTTPS
 
 def _cluster_section(name: str) -> dict[str, object]:
     """What the v4 agent writes for a cluster of the lab"""
-    return _recorded(f"section_prism_info_v2_{name}.json")
+    return _recorded(f"section_prism_info_v4_{name}.json")
 
 
 def _cluster_section_without_stats(name: str) -> dict[str, object]:
@@ -354,7 +354,7 @@ def _buggy(_context: FetchContext) -> Sequence[Section]:
 
 
 def _slow_data() -> Fetcher:
-    return Fetcher("disks", lambda _context: [Section("prism_disks_v2", {})], timedelta(minutes=10))
+    return Fetcher("disks", lambda _context: [Section("prism_disks_v4", {})], timedelta(minutes=10))
 
 
 def _v4_args() -> list[str]:
@@ -417,16 +417,16 @@ def test_sections_are_written_to_their_hosts() -> None:
 
     write_sections(
         [
-            Section("prism_info_v2", {"a": 1}, "cluster-a"),
-            Section("prism_alerts_v2", [], None, persist_until=2000),
+            Section("prism_info_v4", {"a": 1}, "cluster-a"),
+            Section("prism_alerts_v4", [], None, persist_until=2000),
         ],
         stream,
         AgentMessages(),
     )
 
     assert stream.getvalue() == (
-        "<<<prism_alerts_v2:sep(0):persist(2000)>>>\n[]\n"
-        '<<<<cluster-a>>>>\n<<<prism_info_v2:sep(0)>>>\n{"a": 1}\n<<<<>>>>\n'
+        "<<<prism_alerts_v4:sep(0):persist(2000)>>>\n[]\n"
+        '<<<<cluster-a>>>>\n<<<prism_info_v4:sep(0)>>>\n{"a": 1}\n<<<<>>>>\n'
     )
 
 
@@ -435,12 +435,12 @@ def test_unroutable_sections_are_dropped_with_a_warning() -> None:
     messages = AgentMessages()
 
     write_sections(
-        [Section("prism_info_v2", {}, Unroutable("unknown cluster c9"))], stream, messages
+        [Section("prism_info_v4", {}, Unroutable("unknown cluster c9"))], stream, messages
     )
 
     assert (stream.getvalue(), list(messages)) == (
         "",
-        [("warning", "Dropped prism_info_v2: unknown cluster c9")],
+        [("warning", "Dropped prism_info_v4: unknown cluster c9")],
     )
 
 
@@ -449,14 +449,14 @@ def test_second_section_of_a_name_on_one_host_is_dropped_with_a_warning() -> Non
     messages = AgentMessages()
 
     write_sections(
-        [Section("prism_info_v2", 1, "cluster-a"), Section("prism_info_v2", 2, "cluster-a")],
+        [Section("prism_info_v4", 1, "cluster-a"), Section("prism_info_v4", 2, "cluster-a")],
         stream,
         messages,
     )
 
     assert (stream.getvalue(), list(messages)) == (
-        "<<<<cluster-a>>>>\n<<<prism_info_v2:sep(0)>>>\n1\n<<<<>>>>\n",
-        [("warning", "Dropped a second prism_info_v2 section for cluster-a")],
+        "<<<<cluster-a>>>>\n<<<prism_info_v4:sep(0)>>>\n1\n<<<<>>>>\n",
+        [("warning", "Dropped a second prism_info_v4 section for cluster-a")],
     )
 
 
@@ -478,14 +478,14 @@ def test_failing_fetcher_loses_only_its_own_sections(
 
     result = run_fetchers(
         _context(),
-        [Fetcher("VMs", fetch), _sections_of(Section("prism_info_v2", {}))],
+        [Fetcher("VMs", fetch), _sections_of(Section("prism_info_v4", {}))],
         FetchSchedule(FakeStorage(), "9440-monitoring", FakeClock()),
         messages,
         debug=False,
     )
 
     assert (result.sections, list(messages)) == (
-        [Section("prism_info_v2", {})],
+        [Section("prism_info_v4", {})],
         [("warning", warning)],
     )
 
@@ -506,7 +506,7 @@ def test_fetched_slow_data_is_persisted_for_two_refresh_intervals() -> None:
 
     result = run_fetchers(_context(), [_slow_data()], schedule, AgentMessages(), debug=False)
 
-    assert result.sections == [Section("prism_disks_v2", {}, persist_until=1000 + 2 * 600)]
+    assert result.sections == [Section("prism_disks_v4", {}, persist_until=1000 + 2 * 600)]
 
 
 def test_fetching_records_nothing_before_the_output_is_written() -> None:
@@ -546,7 +546,7 @@ def test_failed_slow_data_is_due_again_on_the_next_run() -> None:
 def test_hosts_go_to_their_cluster_with_only_the_checked_fields() -> None:
     assert fetch_hosts(_context(hosts=_recorded_host_list())) == [
         Section(
-            "prism_hosts_v2",
+            "prism_hosts_v4",
             [
                 {
                     "hostName": f"host-{number}",
@@ -583,7 +583,7 @@ def test_failed_host_listing_is_reported_by_the_hosts_fetcher() -> None:
 
 def test_hypervisors_go_to_their_cluster_for_the_ha_state() -> None:
     assert fetch_ha(_context(hosts=_recorded_host_list())) == [
-        Section("prism_ha_v2", _recorded("section_prism_ha_v2.json"), CLUSTER_HOST)
+        Section("prism_ha_v4", _recorded("section_prism_ha_v4.json"), CLUSTER_HOST)
     ]
 
 
@@ -605,7 +605,7 @@ def test_failed_host_listing_is_reported_by_the_ha_fetcher() -> None:
 def _alerts_by_target(sections: Sequence[Section]) -> dict[object, list[object]]:
     by_target: dict[object, list[object]] = {}
     for section in sections:
-        assert section.name == "prism_alerts_v2"
+        assert section.name == "prism_alerts_v4"
         assert isinstance(section.payload, list)
         by_target[section.target] = [alert["message"] for alert in section.payload]
     return by_target
@@ -668,7 +668,7 @@ def test_prism_central_gets_an_alerts_section_even_if_not_listed_as_cluster(
     api.get(v4_url(ALERTS_PATH), json=page([], has_next=False), match=[page_matcher(0)])
     context = FetchContext(_context().client, [], ClusterRouting({}), AgentMessages())
 
-    assert fetch_alerts(context) == [Section("prism_alerts_v2", [], None)]
+    assert fetch_alerts(context) == [Section("prism_alerts_v4", [], None)]
 
 
 def test_alert_keeps_only_the_checked_fields(api: responses.RequestsMock) -> None:
@@ -769,8 +769,8 @@ def test_containers_section_holds_the_monitored_series_per_cluster(
 
     assert sections == [
         Section(
-            "prism_containers_v2",
-            json.loads((FIXTURES / "section_prism_containers_v2.json").read_text()),
+            "prism_containers_v4",
+            json.loads((FIXTURES / "section_prism_containers_v4.json").read_text()),
             CLUSTER_HOST,
         )
     ]
@@ -920,10 +920,10 @@ def test_vms_section_holds_only_the_monitored_fields_per_cluster(
 
     sections = fetch_vms(_context(hosts=_recorded_host_list()))
 
-    assert [section for section in sections if section.name == "prism_vms_v2"] == [
+    assert [section for section in sections if section.name == "prism_vms_v4"] == [
         Section(
-            "prism_vms_v2",
-            json.loads((FIXTURES / "section_prism_vms_v2.json").read_text()),
+            "prism_vms_v4",
+            json.loads((FIXTURES / "section_prism_vms_v4.json").read_text()),
             CLUSTER_HOST,
         )
     ]
@@ -1203,9 +1203,9 @@ def test_remote_support_goes_to_its_cluster_or_prism_central_with_only_the_check
 
     assert sections == [
         Section(
-            "prism_remote_support_v2", {"config": {"isRemoteSupportEnabled": True}}, CLUSTER_HOST
+            "prism_remote_support_v4", {"config": {"isRemoteSupportEnabled": True}}, CLUSTER_HOST
         ),
-        Section("prism_remote_support_v2", {"config": {"isRemoteSupportEnabled": False}}, None),
+        Section("prism_remote_support_v4", {"config": {"isRemoteSupportEnabled": False}}, None),
     ]
 
 
@@ -1247,11 +1247,11 @@ def test_each_node_goes_to_a_host_of_its_name_with_only_the_checked_fields(
     sections = fetch_nodes(_context(hosts=_recorded_host_list()))
 
     assert [(section.name, section.target) for section in sections] == [
-        ("prism_host_v2", "host-3"),
-        ("prism_host_v2", "host-1"),
-        ("prism_host_v2", "host-2"),
+        ("prism_host_v4", "host-3"),
+        ("prism_host_v4", "host-1"),
+        ("prism_host_v4", "host-2"),
     ]
-    assert _payload_of("host-2", sections) == _recorded("section_prism_host_v2.json")
+    assert _payload_of("host-2", sections) == _recorded("section_prism_host_v4.json")
 
 
 def test_node_gets_the_disks_of_its_own(api: responses.RequestsMock) -> None:
@@ -1424,11 +1424,11 @@ def test_each_host_gets_its_nics_with_only_the_checked_fields(
 
     sections = fetch_host_nics(_context(hosts=_recorded_host_list()))
 
-    assert {section.name for section in sections} == {"prism_host_networks_v2"}
+    assert {section.name for section in sections} == {"prism_host_networks_v4"}
     assert _nic_names(sections) == dict.fromkeys(
         ("host-1", "host-2", "host-3"), [f"eth{number}" for number in range(8)]
     )
-    assert _payload_of("host-2", sections) == _recorded("section_prism_host_networks_v2.json")
+    assert _payload_of("host-2", sections) == _recorded("section_prism_host_networks_v4.json")
 
 
 def test_host_without_nics_gets_an_empty_section(api: responses.RequestsMock) -> None:
@@ -1518,8 +1518,8 @@ def test_storage_pool_goes_to_the_host_of_its_cluster_with_its_disks(
 
     assert fetch_storage_pools(_context()) == [
         Section(
-            "prism_storage_pools_v2",
-            _recorded("section_prism_storage_pools_v2.json"),
+            "prism_storage_pools_v4",
+            _recorded("section_prism_storage_pools_v4.json"),
             CLUSTER_HOST,
         )
     ]
@@ -1586,8 +1586,8 @@ def test_cluster_info_goes_to_its_cluster_or_prism_central_with_only_the_checked
     sections = fetch_clusters(_cluster_context())
 
     assert sections == [
-        Section("prism_info_v2", _cluster_section("cluster-a"), CLUSTER_HOST),
-        Section("prism_info_v2", _cluster_section("prism-central"), None),
+        Section("prism_info_v4", _cluster_section("cluster-a"), CLUSTER_HOST),
+        Section("prism_info_v4", _cluster_section("prism-central"), None),
     ]
 
 
@@ -1660,8 +1660,8 @@ def test_failing_cluster_stats_cost_only_that_cluster_its_stats_with_a_warning(
 
     assert (sections, list(messages)) == (
         [
-            Section("prism_info_v2", _cluster_section_without_stats("cluster-a"), CLUSTER_HOST),
-            Section("prism_info_v2", _cluster_section("prism-central"), None),
+            Section("prism_info_v4", _cluster_section_without_stats("cluster-a"), CLUSTER_HOST),
+            Section("prism_info_v4", _cluster_section("prism-central"), None),
         ],
         [
             (
@@ -1814,7 +1814,7 @@ def test_lab_policies_protect_no_vms_so_no_recovery_points_are_fetched(
         [policy["vms"] for policy in section.payload],
         [call.request.path_url.split("?")[0] for call in api.calls],
     ) == (
-        "prism_protection_policies",
+        "prism_protection_policies_v4",
         None,
         [[], []],
         [
@@ -2216,18 +2216,22 @@ def test_no_policies_means_no_vm_call(api: responses.RequestsMock) -> None:
         v4_url(PROTECTION_POLICIES_PATH), json=page([], has_next=False), match=[page_matcher(0)]
     )
 
-    assert fetch_protection_policies(_context()) == [Section("prism_protection_policies", [], None)]
+    assert fetch_protection_policies(_context()) == [
+        Section("prism_protection_policies_v4", [], None)
+    ]
 
 
 def test_recorded_policies_give_the_recorded_section(api: responses.RequestsMock) -> None:
-    """section_prism_protection_policies.json is what the check plugin tests read"""
+    """section_prism_protection_policies_v4.json is what the check plugin tests read"""
     _serve_recorded_protection_policies(api)
     _serve_recorded_vms(api)
     api.assert_all_requests_are_fired = False
 
     assert fetch_protection_policies(_context()) == [
         Section(
-            "prism_protection_policies", _recorded("section_prism_protection_policies.json"), None
+            "prism_protection_policies_v4",
+            _recorded("section_prism_protection_policies_v4.json"),
+            None,
         )
     ]
 

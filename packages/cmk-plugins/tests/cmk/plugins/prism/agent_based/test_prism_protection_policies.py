@@ -15,7 +15,7 @@ from cmk.plugins.prism.agent_based.prism_protection_policies import (
     DEFAULT_PARAMS,
     discovery_prism_protection_policies,
     Params,
-    parse_prism_protection_policies,
+    parse_prism_protection_policies_v4,
     Replication,
 )
 
@@ -27,7 +27,7 @@ RECORDED_SECTION: StringTable = [
             Path(__file__).parents[1]
             / "special_agent"
             / "v4_fixtures"
-            / "section_prism_protection_policies.json"
+            / "section_prism_protection_policies_v4.json"
         ).read_text()
     ]
 ]
@@ -78,7 +78,7 @@ def _run_check(
     return check_protection_policy(
         item,
         params,
-        parse_prism_protection_policies(string_table),
+        parse_prism_protection_policies_v4(string_table),
         {} if value_store is None else value_store,
         NOW.timestamp(),
     )
@@ -118,7 +118,7 @@ def _vm(name: str, newest: str | None) -> dict[str, object]:
 
 def test_every_recorded_policy_gets_a_service() -> None:
     assert list(
-        discovery_prism_protection_policies(parse_prism_protection_policies(RECORDED_SECTION))
+        discovery_prism_protection_policies(parse_prism_protection_policies_v4(RECORDED_SECTION))
     ) == [Service(item="pts-pp (c589036a)"), Service(item=CROSS_CLUSTER)]
 
 
@@ -339,7 +339,7 @@ def test_vm_missing_from_one_run_keeps_its_grace_period() -> None:
         check_protection_policy(
             HOURLY,
             DEFAULT_PARAMS,
-            parse_prism_protection_policies(_section(_policy([_vm("new", None)]))),
+            parse_prism_protection_policies_v4(_section(_policy([_vm("new", None)]))),
             store,
             NOW.timestamp() - 1.75 * HOUR,
         )
@@ -353,7 +353,7 @@ def test_vm_missing_from_one_run_keeps_its_grace_period() -> None:
 
 
 def test_every_item_ends_with_the_end_of_the_policy_id() -> None:
-    section = parse_prism_protection_policies(
+    section = parse_prism_protection_policies_v4(
         _section(
             _policy([], name="daily", ext_id="aaaaaaaa-0000-0000-0000-000000000001"),
             _policy([], name="daily", ext_id="bbbbbbbb-0000-0000-0000-000000000002"),
@@ -456,7 +456,7 @@ def test_policy_whose_recovery_points_are_all_unknown_has_no_age_metric() -> Non
 
 
 def test_empty_section_discovers_nothing() -> None:
-    assert list(discovery_prism_protection_policies(parse_prism_protection_policies([]))) == []
+    assert list(discovery_prism_protection_policies(parse_prism_protection_policies_v4([]))) == []
 
 
 def _replicated_vm(*replications: tuple[str, str], name: str = "app") -> dict[str, object]:
@@ -500,7 +500,7 @@ def test_replication_states_of_a_vm_are_shown_per_remote_location() -> None:
 
 
 def test_parse_translates_the_replication_status() -> None:
-    section = parse_prism_protection_policies(
+    section = parse_prism_protection_policies_v4(
         _section(_policy([_replicated_vm(("pc-c", "OUT_OF_SYNC"), ("pc-f", "$UNKNOWN"))]))
     )
 

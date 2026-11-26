@@ -136,7 +136,7 @@ agent_section_prism_host_networks = AgentSection(
 )
 
 
-def parse_prism_host_networks_v2(
+def parse_prism_host_networks_v4(
     string_table: StringTable,
 ) -> interfaces.Section[interfaces.InterfaceWithRates]:
     """The v4 API has no traffic counters, so the interfaces come without rates"""
@@ -159,10 +159,10 @@ def parse_prism_host_networks_v2(
     )
 
 
-agent_section_prism_host_networks_v2 = AgentSection(
-    name="prism_host_networks_v2",
+agent_section_prism_host_networks_v4 = AgentSection(
+    name="prism_host_networks_v4",
     parsed_section_name="prism_host_networks",
-    parse_function=parse_prism_host_networks_v2,
+    parse_function=parse_prism_host_networks_v4,
 )
 
 

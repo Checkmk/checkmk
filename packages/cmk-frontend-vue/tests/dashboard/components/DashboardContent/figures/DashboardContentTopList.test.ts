@@ -10,8 +10,8 @@ import {
   resizeObserverReporting,
   useFakeResizeObserver
 } from 'cmk-ui-library/vitest.resize-observer'
-import { describe, expect, it } from 'vitest'
-import { defineComponent, h, ref, shallowRef } from 'vue'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { defineComponent, h, nextTick, ref, shallowRef } from 'vue'
 
 import DashboardContentTopList from '@/dashboard/components/DashboardContent/figures/DashboardContentTopList.vue'
 import { useProvideDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
@@ -91,6 +91,10 @@ const endpoint = useComputeWidgetEndpoint(
   topList()
 )
 useFakeResizeObserver(resizeObserverReporting(400, 200))
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 async function renderWidget(
   content: Partial<TopListContent> = {},
@@ -367,6 +371,67 @@ describe('DashboardContentTopList', () => {
     componentProps.value = { ...componentProps.value, tick: 1 }
 
     await waitFor(() => expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true'))
+  })
+
+  async function renderRefreshable() {
+    const componentProps = shallowRef(props())
+    render(defineComponent({ setup: () => () => h(DashboardContentTopList, componentProps.value) }))
+    await screen.findByText('host-a')
+    return componentProps
+  }
+
+  async function refresh(componentProps: Awaited<ReturnType<typeof renderRefreshable>>) {
+    componentProps.value = { ...componentProps.value, tick: componentProps.value.tick + 1 }
+    await waitFor(() => expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true'))
+    await waitFor(() => expect(screen.getByRole('table')).not.toHaveAttribute('aria-busy'))
+  }
+
+  it('keeps the table through a refresh', async () => {
+    const componentProps = await renderRefreshable()
+    const table = screen.getByRole('table')
+
+    await refresh(componentProps)
+
+    expect(screen.getByRole('table')).toBe(table)
+  })
+
+  it('replaces the table on a configuration change', async () => {
+    const componentProps = await renderRefreshable()
+    const table = screen.getByRole('table')
+
+    componentProps.value = { ...props({ limit_to: 5 }), tick: 0 }
+
+    await waitFor(() => expect(screen.getByRole('table')).not.toBe(table))
+  })
+
+  it('keeps each entry in its row when a refresh swaps their ranks', async () => {
+    const componentProps = await renderRefreshable()
+    const rowOfHostA = screen.getByText('host-a').closest('tr')
+    const [first, second] = topList().entries
+    endpoint.answerInThisTest(topList({ entries: [second!, first!] }))
+
+    await refresh(componentProps)
+
+    expect(screen.getAllByRole('row')[1]).toBe(rowOfHostA)
+  })
+
+  it('draws the shown entries with the configuration they were fetched for', async () => {
+    // Without motion, a change of the bars shows at once instead of easing in from the old ones.
+    vi.stubGlobal('matchMedia', () => ({ matches: true }))
+    endpoint.answerInThisTest(topList({ value_range: { min_value: 0, max_value: 40 } }))
+    const componentProps = await renderRefreshable()
+    const widths = () =>
+      [...document.querySelectorAll<HTMLElement>('[class*="bar-fill"]')].map(
+        (fill) => fill.style.width
+      )
+
+    componentProps.value = {
+      ...props({ display_range: { type: 'fixed', unit: '', minimum: 0, maximum: 40 } }),
+      tick: 0
+    }
+    await nextTick()
+
+    expect(widths()).toEqual(['100%', '25%'])
   })
 
   it('tells that the data could not be loaded', async () => {

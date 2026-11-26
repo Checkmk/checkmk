@@ -8,7 +8,6 @@ import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecat
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed } from 'vue'
 
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
 import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable'
@@ -37,10 +36,29 @@ const props = defineProps<ContentProps<TopListContent>>()
 const isPublicDashboard = useInjectIsPublicDashboard()
 const drillDownSource = useInjectDrillDownSource()
 const timeRange = useTimeRangeVariables()
+// A refresh animates from the rows on display, a changed configuration or filter starts afresh:
+// each top list is drawn with the configuration it was fetched for, and keys its table by it.
+interface FetchedFor {
+  key: string
+  content: TopListContent
+}
+const fetchedFor = new WeakMap<ComputedTopList, FetchedFor>()
 const { state, retry, fetching, lastSuccessAt } = useComputedWidget(
   props,
-  dashboardAPI.computeTopList
+  async (body, headers) => {
+    const input = {
+      key: JSON.stringify([props.content, props.effective_filter_context]),
+      content: props.content
+    }
+    const response = await dashboardAPI.computeTopList(body, headers)
+    fetchedFor.set(response.value, input)
+    return response
+  }
 )
+
+function contentOf(topList: ComputedTopList): TopListContent {
+  return fetchedFor.get(topList)?.content ?? props.content
+}
 
 const errorMessage: string = _t(
   `Due to a limitation in how Checkmk handles metrics internally, the results contain conflicting metrics and this top list may be incorrect or incomplete.\n
@@ -111,15 +129,17 @@ function contextualLink(
   return entries.length === 1 ? { href: entries[0]!.href } : { choices: entries }
 }
 
-const showRank = computed(() => props.content.columns.show_rank_numbers !== false)
+function showRank(content: TopListContent): boolean {
+  return content.columns.show_rank_numbers !== false
+}
 
 // Without a top list yet, the value column has no title and no range.
-function columns(topList?: ComputedTopList): RankedTableColumn[] {
-  const showBar = props.content.columns.show_bar_visualization !== false
+function columns(content: TopListContent, topList?: ComputedTopList): RankedTableColumn[] {
+  const showBar = content.columns.show_bar_visualization !== false
   const result: RankedTableColumn[] = [
     { key: 'host', title: _t('Host'), render: 'text', bar: false }
   ]
-  if (props.content.columns.show_service_description === true) {
+  if (content.columns.show_service_description === true) {
     result.push({
       key: 'service',
       title: _t('Service'),
@@ -135,7 +155,7 @@ function columns(topList?: ComputedTopList): RankedTableColumn[] {
     bar: showBar
   }
   // A fixed display range scales the bars; without one, they grow from zero by their size.
-  if (showBar && topList && props.content.display_range !== 'automatic') {
+  if (showBar && topList && content.display_range !== 'automatic') {
     value.barRange = [topList.value_range.min_value, topList.value_range.max_value]
   }
   result.push(value)
@@ -145,6 +165,7 @@ function columns(topList?: ComputedTopList): RankedTableColumn[] {
 // The backend delivers the entries pre-ranked, pre-formatted and colored by metric.
 function rows(topList: ComputedTopList): RankedTableRow[] {
   return topList.entries.map((entry) => ({
+    [ENTRY_KEY]: JSON.stringify([entry.site_id, entry.host_name, entry.service_description]),
     host: {
       value: entry.host_name,
       ...contextualLink(topList, hostServicesUrl(entry), entry.host_link_properties)
@@ -160,6 +181,13 @@ function rows(topList: ComputedTopList): RankedTableRow[] {
       color: entry.metric.color
     }
   }))
+}
+
+// Rows carry their entry's identity in a cell no column shows.
+const ENTRY_KEY = 'entry'
+
+function entryKey(row: RankedTableRow): string {
+  return String(row[ENTRY_KEY])
 }
 
 const errorColumns: RankedTableColumn[] = [
@@ -188,10 +216,10 @@ function errorRows(topList: ComputedTopList): RankedTableRow[] {
       <div class="db-content-top-list__scroll">
         <div class="db-content-top-list__fill">
           <CmkRankedTable
-            :columns="columns()"
+            :columns="columns(content)"
             :rows="[]"
             :placeholder="{ kind: 'loading', rows: content.limit_to }"
-            :show-rank="showRank"
+            :show-rank="showRank(content)"
             :label="effectiveTitle"
           />
         </div>
@@ -210,18 +238,20 @@ function errorRows(topList: ComputedTopList): RankedTableRow[] {
         >
           <CmkRankedTable
             v-if="value.entries.length"
-            :columns="columns(value)"
+            :key="fetchedFor.get(value)?.key ?? ''"
+            :columns="columns(contentOf(value), value)"
             :rows="rows(value)"
+            :row-key="entryKey"
             :busy="fetching"
-            :show-rank="showRank"
+            :show-rank="showRank(contentOf(value))"
             :label="effectiveTitle"
           />
           <CmkRankedTable
             v-else
-            :columns="columns(value)"
+            :columns="columns(contentOf(value), value)"
             :rows="[]"
             :placeholder="{ kind: 'empty', rows: content.limit_to }"
-            :show-rank="showRank"
+            :show-rank="showRank(contentOf(value))"
           >
             <template #empty>
               <CmkHeading type="h4">{{ _t('No data') }}</CmkHeading>

@@ -4,12 +4,13 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CalendarDateTime, toZoned } from '@internationalized/date'
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen } from '@testing-library/vue'
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import SharedDashboardMenuHeader from '@/dashboard/components/DashboardMenuHeader/SharedDashboardMenuHeader.vue'
+import { resetGlobalTimeState } from '@/graphing/GlobalTimePicker/globalTimeState'
 
 const TZ = 'Europe/Berlin'
 
@@ -31,52 +32,72 @@ const testGlobalTimePicker: GlobalTimePickerProps = {
   }
 }
 
+const TIME_PICKER_TOGGLE = 'Show date time picker'
+const REFRESH_TOGGLE = 'Show live refresh'
+
 function renderSharedHeader(props: { dashboardTitle: string }) {
   return render(SharedDashboardMenuHeader, {
     props: { ...props, globalTimePicker: testGlobalTimePicker, range: testRange }
   })
 }
 
+function timePicker(): Element | null {
+  return document.querySelector('.graphing-global-time-picker')
+}
+
+function refreshControl(): Element | null {
+  return document.querySelector('.graphing-global-refresh-control')
+}
+
+async function clickMenuItem(label: string) {
+  await fireEvent.click(screen.getByLabelText('Settings Menu'))
+  await fireEvent.click(screen.getByText(label))
+}
+
 describe('SharedDashboardMenuHeader', () => {
+  // The global time/refresh state is a module-level singleton.
+  beforeEach(() => {
+    resetGlobalTimeState()
+  })
+
+  afterEach(() => {
+    resetGlobalTimeState()
+  })
+
   describe('rendering', () => {
     it('renders the dashboard title', () => {
       renderSharedHeader({ dashboardTitle: 'My Shared Dashboard' })
       expect(screen.getByText('My Shared Dashboard')).toBeInTheDocument()
     })
 
-    it('renders UTC date and time elements', async () => {
+    it('shows the time picker and the live refresh by default', () => {
       renderSharedHeader({ dashboardTitle: 'Test' })
-      const dateEl = document.querySelector('.db-shared-dashboard-menu-header__utc-date')
-      const timeEl = document.querySelector('.db-shared-dashboard-menu-header__utc-time-only')
-      expect(dateEl).not.toBeNull()
-      await waitFor(() => {
-        expect(dateEl!.textContent).toMatch(/^\d{4}-\d{2}-\d{2}$/)
-      })
-      expect(timeEl).not.toBeNull()
-      expect(timeEl!.textContent).toContain('UTC')
+      expect(timePicker()).not.toBeNull()
+      expect(refreshControl()).not.toBeNull()
     })
   })
 
   describe('settings menu', () => {
     it('does not show menu by default', () => {
       renderSharedHeader({ dashboardTitle: 'Test' })
-      expect(screen.queryByText('Show date and time')).not.toBeInTheDocument()
+      expect(screen.queryByText(TIME_PICKER_TOGGLE)).not.toBeInTheDocument()
+      expect(screen.queryByText(REFRESH_TOGGLE)).not.toBeInTheDocument()
     })
 
     it('opens settings menu when menu button is clicked', async () => {
       renderSharedHeader({ dashboardTitle: 'Test' })
-      const menuButton = screen.getByLabelText('Settings Menu')
-      await fireEvent.click(menuButton)
-      expect(screen.getByText('Show date and time')).toBeInTheDocument()
+      await fireEvent.click(screen.getByLabelText('Settings Menu'))
+      expect(screen.getByText(TIME_PICKER_TOGGLE)).toBeInTheDocument()
+      expect(screen.getByText(REFRESH_TOGGLE)).toBeInTheDocument()
     })
 
     it('closes settings menu when menu button is clicked again', async () => {
       renderSharedHeader({ dashboardTitle: 'Test' })
       const menuButton = screen.getByLabelText('Settings Menu')
       await fireEvent.click(menuButton)
-      expect(screen.getByText('Show date and time')).toBeInTheDocument()
+      expect(screen.getByText(TIME_PICKER_TOGGLE)).toBeInTheDocument()
       await fireEvent.click(menuButton)
-      expect(screen.queryByText('Show date and time')).not.toBeInTheDocument()
+      expect(screen.queryByText(TIME_PICKER_TOGGLE)).not.toBeInTheDocument()
     })
 
     it('sets aria-expanded correctly on menu toggle', async () => {
@@ -86,29 +107,61 @@ describe('SharedDashboardMenuHeader', () => {
       await fireEvent.click(menuButton)
       expect(menuButton).toHaveAttribute('aria-expanded', 'true')
     })
+
+    it('closes the menu after selecting an item', async () => {
+      renderSharedHeader({ dashboardTitle: 'Test' })
+      await clickMenuItem(TIME_PICKER_TOGGLE)
+      expect(screen.queryByText(TIME_PICKER_TOGGLE)).not.toBeInTheDocument()
+    })
   })
 
-  describe('date/time toggle', () => {
-    it('hides date/time section when toggle is clicked', async () => {
-      renderSharedHeader({ dashboardTitle: 'Test' })
-      expect(document.querySelector('.db-shared-dashboard-menu-header__utc-time')).not.toBeNull()
-
-      await fireEvent.click(screen.getByLabelText('Settings Menu'))
-      await fireEvent.click(screen.getByText('Show date and time'))
-
-      expect(document.querySelector('.db-shared-dashboard-menu-header__utc-time')).toBeNull()
-    })
-
-    it('shows date/time again when toggle is clicked twice', async () => {
+  describe('time picker toggle', () => {
+    it('hides the time picker and keeps the live refresh', async () => {
       renderSharedHeader({ dashboardTitle: 'Test' })
 
-      await fireEvent.click(screen.getByLabelText('Settings Menu'))
-      await fireEvent.click(screen.getByText('Show date and time'))
-      expect(document.querySelector('.db-shared-dashboard-menu-header__utc-time')).toBeNull()
+      await clickMenuItem(TIME_PICKER_TOGGLE)
 
-      await fireEvent.click(screen.getByLabelText('Settings Menu'))
-      await fireEvent.click(screen.getByText('Show date and time'))
-      expect(document.querySelector('.db-shared-dashboard-menu-header__utc-time')).not.toBeNull()
+      expect(timePicker()).toBeNull()
+      expect(refreshControl()).not.toBeNull()
     })
+
+    it('shows the time picker again when toggled twice', async () => {
+      renderSharedHeader({ dashboardTitle: 'Test' })
+
+      await clickMenuItem(TIME_PICKER_TOGGLE)
+      await clickMenuItem(TIME_PICKER_TOGGLE)
+
+      expect(timePicker()).not.toBeNull()
+    })
+  })
+
+  describe('live refresh toggle', () => {
+    it('hides the live refresh and keeps the time picker', async () => {
+      renderSharedHeader({ dashboardTitle: 'Test' })
+
+      await clickMenuItem(REFRESH_TOGGLE)
+
+      expect(refreshControl()).toBeNull()
+      expect(timePicker()).not.toBeNull()
+    })
+
+    it('shows the live refresh again when toggled twice', async () => {
+      renderSharedHeader({ dashboardTitle: 'Test' })
+
+      await clickMenuItem(REFRESH_TOGGLE)
+      await clickMenuItem(REFRESH_TOGGLE)
+
+      expect(refreshControl()).not.toBeNull()
+    })
+  })
+
+  it('hides both controls when both toggles are switched off', async () => {
+    renderSharedHeader({ dashboardTitle: 'Test' })
+
+    await clickMenuItem(TIME_PICKER_TOGGLE)
+    await clickMenuItem(REFRESH_TOGGLE)
+
+    expect(timePicker()).toBeNull()
+    expect(refreshControl()).toBeNull()
   })
 })

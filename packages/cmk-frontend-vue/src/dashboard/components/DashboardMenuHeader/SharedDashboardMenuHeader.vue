@@ -9,10 +9,9 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import { renderDate, renderTimeOfDay } from 'cmk-ui-library/lib/renderTime'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { ref } from 'vue'
 
 import DashboardRefreshControl from '@/dashboard/components/DashboardRefreshControl.vue'
 import GlobalTimePicker from '@/graphing/GlobalTimePicker/GlobalTimePicker.vue'
@@ -30,45 +29,26 @@ const range = defineModel<DateTimeRange>('range', { required: true })
 
 const vClickOutside = useClickOutside()
 
-// UTC time state
-const currentUtcDate = ref('')
-const currentUtcTime = ref('')
-const showDateTime = ref(true)
-let intervalId: number | null = null
-
 const menuShown = ref(false)
 
-const updateUtcTime = () => {
-  const now = new Date()
-  currentUtcDate.value = renderDate(now, 'UTC')
-  currentUtcTime.value = renderTimeOfDay(now, 'UTC')
+const showTimePicker = ref(true)
+const showRefresh = ref(true)
+
+const toggleTimePicker = () => {
+  showTimePicker.value = !showTimePicker.value
 }
 
-const toggleDateTime = () => {
-  showDateTime.value = !showDateTime.value
+const toggleRefresh = () => {
+  showRefresh.value = !showRefresh.value
 }
 
 const toggleMenu = () => {
   menuShown.value = !menuShown.value
-  if (!menuShown.value) {
-    return
-  }
 }
 
 const hideMenu = () => {
   menuShown.value = false
 }
-
-onMounted(() => {
-  updateUtcTime()
-  intervalId = window.setInterval(updateUtcTime, 1000)
-})
-
-onUnmounted(() => {
-  if (intervalId !== null) {
-    clearInterval(intervalId)
-  }
-})
 </script>
 
 <template>
@@ -81,6 +61,7 @@ onUnmounted(() => {
 
     <div class="db-shared-dashboard-menu-header__time-range-section">
       <GlobalTimePicker
+        v-if="showTimePicker"
         v-model="range"
         class="db-shared-dashboard-menu-header__time-picker"
         :custom-time-ranges="props.globalTimePicker.custom_time_ranges"
@@ -91,26 +72,15 @@ onUnmounted(() => {
     </div>
     <div class="db-shared-dashboard-menu-header__refresh-control-section">
       <DashboardRefreshControl
+        v-if="showRefresh"
         :default-time-range="props.globalTimePicker.default_time_range"
         :interval-choices-seconds="props.globalTimePicker.refresh.interval_choices_seconds"
       />
     </div>
 
     <div class="db-shared-dashboard-menu-header__menu-section">
-      <div v-if="showDateTime" class="db-shared-dashboard-menu-header__utc-time">
-        <span class="db-shared-dashboard-menu-header__utc-date">{{ currentUtcDate }}</span>
-        <span class="db-shared-dashboard-menu-header__utc-time-only"
-          >{{ currentUtcTime }} {{ untranslated('UTC') }}</span
-        >
-      </div>
-
       <div
-        v-click-outside="{
-          open: menuShown,
-          close: () => {
-            menuShown = false
-          }
-        }"
+        v-click-outside="{ open: menuShown, close: hideMenu }"
         class="db-shared-dashboard-menu-header__icon-dropdown-menu"
       >
         <button
@@ -135,15 +105,29 @@ onUnmounted(() => {
                 class="db-shared-dashboard-menu-header__menu-item"
                 @click="
                   () => {
-                    toggleDateTime()
+                    toggleTimePicker()
                     hideMenu()
                   }
                 "
               >
                 <div class="db-shared-dashboard-menu-header__menu-label">
-                  {{ _t('Show date and time') }}
+                  {{ _t('Show date time picker') }}
                 </div>
-                <CmkIcon :name="showDateTime ? 'toggle-on' : 'toggle-off'" />
+                <CmkIcon :name="showTimePicker ? 'toggle-on' : 'toggle-off'" />
+              </a>
+              <a
+                class="db-shared-dashboard-menu-header__menu-item"
+                @click="
+                  () => {
+                    toggleRefresh()
+                    hideMenu()
+                  }
+                "
+              >
+                <div class="db-shared-dashboard-menu-header__menu-label">
+                  {{ _t('Show live refresh') }}
+                </div>
+                <CmkIcon :name="showRefresh ? 'toggle-on' : 'toggle-off'" />
               </a>
             </div>
           </div>
@@ -170,7 +154,6 @@ onUnmounted(() => {
 .db-shared-dashboard-menu-header__title-section {
   display: flex;
   align-items: center;
-  gap: var(--dimension-4);
   flex: 0 1 auto;
 }
 
@@ -188,7 +171,6 @@ onUnmounted(() => {
 
 .db-shared-dashboard-menu-header__refresh-control-section {
   display: flex;
-  align-items: center;
   flex: 0 0 auto;
   margin-left: auto;
 }
@@ -196,21 +178,6 @@ onUnmounted(() => {
 .db-shared-dashboard-menu-header__dashboard-title {
   display: flex;
   align-items: center;
-  gap: var(--dimension-4);
-}
-
-.db-shared-dashboard-menu-header__utc-time {
-  color: var(--font-color);
-  font-size: var(--font-size-normal);
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: var(--dimension-2);
-  min-width: 155px;
-}
-
-.db-shared-dashboard-menu-header__utc-date {
-  font-weight: var(--font-weight-bold);
 }
 
 .db-shared-dashboard-menu-header__dropdown-menu-items {
@@ -250,9 +217,8 @@ onUnmounted(() => {
 .db-shared-dashboard-menu-header__menu-section {
   display: flex;
   align-items: center;
-  gap: var(--dimension-5);
   flex: 0 0 auto;
-  margin-left: var(--dimension-8);
+  margin-left: var(--dimension-5);
 }
 
 .db-shared-dashboard-menu-header__icon-dropdown-menu {

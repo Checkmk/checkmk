@@ -2994,7 +2994,12 @@ def ping_target(
     target: str,
     run_ping: Callable[[Sequence[str]], subprocess.CompletedProcess[str]] = _run_ping,
 ) -> tuple[int, str]:
-    completed = run_ping([*ping_command, "-n", "-A", "-i", "0.2", "-c", "2", "-W", "5", target])
+    command = [*ping_command, "-n", "-A", "-i", "0.2", "-c", "2", "-W", "5", target]
+    completed = run_ping(command)
+    # Echo replies to another process with the same ICMP identifier can end
+    # ping before the target answers. A second ping runs with a new identifier.
+    if completed.returncode == 0 and not _replied_from_target(completed.stdout):
+        completed = run_ping(command)
     if completed.returncode != 0:
         return completed.returncode, completed.stdout
     if not _replied_from_target(completed.stdout):

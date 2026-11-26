@@ -995,15 +995,7 @@ def test_get_configuration_reports_an_unreadable_config_file_as_known_error(
     assert result is AutomationError.KNOWN_ERROR
 
 
-def _ping_printing(output: str) -> Callable[[Sequence[str]], CompletedProcess[str]]:
-    def run_ping(command: Sequence[str]) -> CompletedProcess[str]:
-        return CompletedProcess(command, 0, stdout=output)
-
-    return run_ping
-
-
-def test_ping_answered_only_by_another_host_fails() -> None:
-    output = """\
+_FOREIGN_REPLIES_ONLY = """\
 PING 10.255.255.1 (10.255.255.1) 56(84) bytes of data.
 64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.032 ms (DIFFERENT ADDRESS!)
 64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.033 ms (DIFFERENT ADDRESS!)
@@ -1013,9 +1005,40 @@ PING 10.255.255.1 (10.255.255.1) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.032/0.032/0.033/0.000 ms
 """
 
-    status, _output = checkmk.ping_target(["ping"], "10.255.255.1", _ping_printing(output))
+
+def _ping_printing(*outputs: str) -> Callable[[Sequence[str]], CompletedProcess[str]]:
+    remaining = iter(outputs)
+
+    def run_ping(command: Sequence[str]) -> CompletedProcess[str]:
+        return CompletedProcess(command, 0, stdout=next(remaining))
+
+    return run_ping
+
+
+def test_ping_answered_only_by_another_host_fails() -> None:
+    status, _output = checkmk.ping_target(
+        ["ping"], "10.255.255.1", _ping_printing(_FOREIGN_REPLIES_ONLY, _FOREIGN_REPLIES_ONLY)
+    )
 
     assert status == 1
+
+
+def test_ping_answered_by_the_target_after_a_run_with_only_foreign_replies_succeeds() -> None:
+    target_answers = """\
+PING 10.255.255.1 (10.255.255.1) 56(84) bytes of data.
+64 bytes from 10.255.255.1: icmp_seq=1 ttl=64 time=0.031 ms
+64 bytes from 10.255.255.1: icmp_seq=2 ttl=64 time=0.029 ms
+
+--- 10.255.255.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 201ms
+rtt min/avg/max/mdev = 0.029/0.030/0.031/0.001 ms
+"""
+
+    status, _output = checkmk.ping_target(
+        ["ping"], "10.255.255.1", _ping_printing(_FOREIGN_REPLIES_ONLY, target_answers)
+    )
+
+    assert status == 0
 
 
 def test_ping_answered_by_the_target_among_foreign_replies_succeeds() -> None:

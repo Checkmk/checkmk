@@ -246,7 +246,8 @@ class ABCBIMode(WatoMode):
 
     @property
     def bi_pack(self) -> BIAggregationPack:
-        assert self._bi_pack is not None
+        if self._bi_pack is None:
+            raise MKUserError("pack", _("Please choose a BI pack."))
         return self._bi_pack
 
     def verify_pack_permission(self, bi_pack: BIAggregationPack) -> None:

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from typing import cast
 from unittest import mock
 
 import pytest
@@ -18,7 +19,10 @@ from cmk.gui.form_specs import (
 )
 from cmk.gui.form_specs.unstable.oauth2_connection_setup import OAuth2ConnectionSetup
 from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
+from cmk.gui.http import Request
 from cmk.gui.oauth2_connections.wato import _modes as oauth2_modes
+from cmk.gui.oauth2_connections.wato._pages import PageRequestAndSaveMsGraphAccessToken
+from cmk.gui.pages import PageContext
 from cmk.gui.session import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice
@@ -125,7 +129,6 @@ def test_oauth2_connection_setup_to_vue(
         )
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash report 387b0036: ValueError")
 @pytest.mark.usefixtures("request_context")
 def test_oauth2_connection_form_for_a_user_without_contact_groups(
     monkeypatch: pytest.MonkeyPatch, load_config: Config
@@ -142,3 +145,34 @@ def test_oauth2_connection_form_for_a_user_without_contact_groups(
     editable_by = form_spec.elements["editable_by"].parameter_form
     assert isinstance(editable_by, CascadingSingleChoice)
     assert [element.name for element in editable_by.elements] == ["contact_group"]
+
+
+class _RequestWithJson:
+    def __init__(self, payload: dict[str, object]) -> None:
+        self._payload = payload
+
+    def get_json(self) -> dict[str, object]:
+        return self._payload
+
+
+@pytest.mark.usefixtures("request_context")
+def test_ms_graph_access_token_page_rejects_a_user_without_contact_groups(
+    monkeypatch: pytest.MonkeyPatch, load_config: Config
+) -> None:
+    monkeypatch.setattr(oauth2_modes, "get_configured_site_choices", list)
+    ctx = PageContext(config=load_config, request=cast(Request, _RequestWithJson({"data": {}})))
+    with (
+        create_and_destroy_user(
+            automation=False, config=load_config, custom_attrs={"contactgroups": []}
+        ) as (user_id, _password),
+        UserContext(user_id, UserPermissions({}, {}, {}, [])),
+    ):
+        result = PageRequestAndSaveMsGraphAccessToken().page(ctx)
+
+    assert result == {
+        "status": "error",
+        "message": (
+            "You need to be a member of at least one contact group to be able to "
+            "create an OAuth2 connection."
+        ),
+    }

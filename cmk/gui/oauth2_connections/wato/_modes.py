@@ -135,27 +135,28 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
         )
         editable_by_default_value = DefaultValue("administrators")
     user_contact_groups = userdb.contactgroups_of_user(user.id) if user.id else []
-    if user_contact_groups:
-        editable_by_elements.append(
-            CascadingSingleChoiceElement(
-                name="contact_group",
-                title=Title("Members of the contact group"),
-                parameter_form=SingleChoiceExtended(
-                    title=Title("Select contact group"),
-                    help_text=Help(
-                        "Select the contact group that can edit this OAuth2 connection."
-                    ),
-                    elements=[
-                        SingleChoiceElementExtended(
-                            name=name,
-                            title=Title("%s") % title,
-                        )
-                        for name, title in sorted_contact_group_choices()
-                        if name in user_contact_groups
-                    ],
+    editable_by_elements.append(
+        CascadingSingleChoiceElement(
+            name="contact_group",
+            title=Title("Members of the contact group"),
+            parameter_form=SingleChoiceExtended(
+                title=Title("Select contact group"),
+                help_text=Help("Select the contact group that can edit this OAuth2 connection."),
+                elements=[
+                    SingleChoiceElementExtended(
+                        name=name,
+                        title=Title("%s") % title,
+                    )
+                    for name, title in sorted_contact_group_choices()
+                    if name in user_contact_groups
+                ],
+                no_elements_text=Message(
+                    "You are not a member of any contact group, so you cannot assign this "
+                    "OAuth2 connection to a contact group."
                 ),
             ),
-        )
+        ),
+    )
     configured_site_choices = get_configured_site_choices()
     return TwoColumnDictionary(
         title=Title("Define OAuth parameters"),

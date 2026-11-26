@@ -15,6 +15,7 @@ from cmk.gui.form_specs import (
     VisitorOptions,
 )
 from cmk.gui.form_specs.visitors._utils import option_id
+from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.wato._modes import get_oauth2_connection_form_spec
 from cmk.gui.oauth2_connections.watolib.store import extract_password_store_entry
@@ -59,7 +60,15 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
             editable_by = ("administrators", None)
         else:
             assert user.id
-            editable_by = ("contact_group", option_id(userdb.contactgroups_of_user(user.id)[0]))
+            if not (user_contact_groups := userdb.contactgroups_of_user(user.id)):
+                return {
+                    "status": "error",
+                    "message": _(
+                        "You need to be a member of at least one contact group to be able to "
+                        "create an OAuth2 connection."
+                    ),
+                }
+            editable_by = ("contact_group", option_id(user_contact_groups[0]))
         frontend_data = RawFrontendData(
             value=result["data"]
             | {

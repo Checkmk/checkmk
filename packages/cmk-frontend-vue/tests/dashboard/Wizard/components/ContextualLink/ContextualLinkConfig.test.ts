@@ -52,7 +52,11 @@ function recordTargetRequests(): string[] {
 
 function renderConfig(
   options: ContextualLinkOptions = HOST_STATISTICS_OPTIONS,
-  props: { defaultTarget?: TranslatedString; unavailable?: TranslatedString } = {},
+  props: {
+    defaultTarget?: TranslatedString
+    defaultCarries?: TranslatedString
+    unavailable?: TranslatedString
+  } = {},
   stored?: HostStatisticsContent['contextual_link']
 ) {
   const handler = useContextualLink<HostStatisticsContent>(options, stored)
@@ -185,6 +189,14 @@ describe('ContextualLinkConfig', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: 'Toggle None' }))
 
     expect(handler.enabled.value).toBe(true)
+  })
+
+  it('says what the widget names its default link to pass on', () => {
+    renderConfig(HOST_STATISTICS_OPTIONS, {
+      defaultCarries: untranslated('Only the host filter is passed on.')
+    })
+
+    expect(screen.getByText('Only the host filter is passed on.')).toBeInTheDocument()
   })
 
   it('switches the link off from None', async () => {

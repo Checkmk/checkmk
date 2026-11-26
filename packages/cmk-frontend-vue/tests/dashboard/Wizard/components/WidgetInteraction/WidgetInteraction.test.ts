@@ -5,6 +5,8 @@
  */
 import { render, screen } from '@testing-library/vue'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'
 
@@ -15,7 +17,7 @@ import type { HostStatisticsContent } from '@/dashboard/components/Wizard/types'
 const controlsProps = { clickToPlacePin: true, showBurgerMenu: false }
 const titleProps = { titleUrlEnabled: false, titleUrl: '' }
 
-function renderWithContextualLink() {
+function renderWithContextualLink(props: { contextualLinkDefaultCarries?: TranslatedString } = {}) {
   const contextualLink = useContextualLink<HostStatisticsContent>(
     { modes: ['default'], filters: [], filter_keys: {} },
     undefined
@@ -24,7 +26,7 @@ function renderWithContextualLink() {
     defineComponent({
       setup() {
         useProvideFilterDefinitions({ definitions: {}, groups: {} })
-        return () => h(WidgetInteraction, { contextualLink })
+        return () => h(WidgetInteraction, { contextualLink, ...props })
       }
     })
   )
@@ -97,6 +99,14 @@ describe('WidgetInteraction', () => {
       renderWithContextualLink()
 
       expect(screen.getByText('Links to views and dashboards')).toBeInTheDocument()
+    })
+
+    it('pass on what the default link carries', () => {
+      renderWithContextualLink({
+        contextualLinkDefaultCarries: untranslated('Only the host filter is passed on.')
+      })
+
+      expect(screen.getByText('Only the host filter is passed on.')).toBeInTheDocument()
     })
 
     it('are hidden when no handler is bound', () => {

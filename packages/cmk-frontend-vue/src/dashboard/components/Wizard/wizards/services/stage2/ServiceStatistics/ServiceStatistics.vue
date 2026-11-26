@@ -10,6 +10,7 @@ import { computed } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
+import { defaultLinkPassesFilters } from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
 import WidgetInteraction from '@/dashboard/components/Wizard/components/WidgetInteraction/WidgetInteraction.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp } from '@/dashboard/components/Wizard/types'
@@ -56,6 +57,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
       v-model:contextual-link="handler.contextualLink"
       :contextual-link-default-target="_t('All services')"
+      :contextual-link-default-carries="defaultLinkPassesFilters()"
     />
   </CmkCatalogPanel>
 

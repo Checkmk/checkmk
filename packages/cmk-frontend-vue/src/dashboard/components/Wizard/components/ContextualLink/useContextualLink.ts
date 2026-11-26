@@ -20,6 +20,14 @@ import type {
 
 const { _t } = usei18n()
 
+export function defaultLinkPassesFilters(): TranslatedString {
+  return _t('Dashboard & widget filters are passed on, but no time range.')
+}
+
+export function defaultLinkPassesNothing(): TranslatedString {
+  return _t('No dashboard & widget filters or time range are passed on.')
+}
+
 export interface FilterDraft<F> {
   id: number
   filterId: F

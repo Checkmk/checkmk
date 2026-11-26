@@ -12,6 +12,10 @@ import { computed } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
+import {
+  defaultLinkPassesFilters,
+  defaultLinkPassesNothing
+} from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
 import RadioButton from '@/dashboard/components/Wizard/components/RadioButton.vue'
 import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
@@ -39,6 +43,16 @@ const defaultTarget = computed(() => {
       return _t('Site')
     default:
       return _t('Site or host, depending on context')
+  }
+})
+const defaultCarries = computed(() => {
+  switch (handler.value.showStateOf.value) {
+    case 'hosts':
+      return defaultLinkPassesNothing()
+    case 'sites':
+      return defaultLinkPassesFilters()
+    default:
+      return undefined
   }
 })
 const hexagonSizeHelpText = _t(
@@ -132,6 +146,7 @@ const hexagonSizeHelpText = _t(
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
       v-model:contextual-link="handler.contextualLink"
       :contextual-link-default-target="defaultTarget"
+      :contextual-link-default-carries="defaultCarries"
     />
   </CmkCatalogPanel>
 

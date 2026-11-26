@@ -41,9 +41,10 @@ import { linkTargetTitle, useLinkTargets } from './useLinkTargets'
 const { _t } = usei18n()
 
 const handler = defineModel<UseContextualLink<C>>('handler', { required: true })
-const { defaultTarget, unavailable } = defineProps<{
+const { defaultTarget, defaultCarries, unavailable } = defineProps<{
   // The title of the page the widget's built-in link leads to, if it has a single one.
   defaultTarget?: TranslatedString | undefined
+  defaultCarries?: TranslatedString | undefined
   unavailable?: TranslatedString | undefined
 }>()
 
@@ -61,10 +62,7 @@ const CHOICE_TITLES: Record<Choice, TranslatedString> = {
 
 const CHOICE_DESCRIPTIONS: Record<Choice, TranslatedString[]> = {
   none: [_t('This widget has no links to other pages.')],
-  default: [
-    _t("Opens Checkmk's default page for the clicked item."),
-    _t('No filters or time range are passed on.')
-  ],
+  default: [_t("Opens Checkmk's default page for the clicked item.")],
   inherited: [_t('Opens one view or dashboard.'), _t('Always filtered by the clicked item.')],
   custom: [
     _t('Opens one or more views or dashboards.'),
@@ -94,9 +92,15 @@ const selectedChoice = computed<string | null>({
   }
 })
 
-const choiceDescription = computed(() =>
-  unavailable ? [unavailable] : CHOICE_DESCRIPTIONS[selectedChoice.value as Choice]
-)
+const choiceDescription = computed(() => {
+  if (unavailable) {
+    return [unavailable]
+  }
+  const choice = selectedChoice.value as Choice
+  return choice === 'default'
+    ? [...CHOICE_DESCRIPTIONS.default, ...(defaultCarries ? [defaultCarries] : [])]
+    : CHOICE_DESCRIPTIONS[choice]
+})
 
 function filterTitle(filterId: string) {
   return untranslated(filterDefinitions[filterId]?.title ?? filterId)

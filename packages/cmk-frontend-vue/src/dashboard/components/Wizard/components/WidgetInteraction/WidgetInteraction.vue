@@ -39,10 +39,12 @@ const contextualLink = defineModel<UseContextualLink<C> | undefined>('contextual
   default: undefined
 })
 
-const { contextualLinkDefaultTarget, contextualLinkUnavailable } = defineProps<{
-  contextualLinkDefaultTarget?: TranslatedString
-  contextualLinkUnavailable?: TranslatedString | undefined
-}>()
+const { contextualLinkDefaultTarget, contextualLinkDefaultCarries, contextualLinkUnavailable } =
+  defineProps<{
+    contextualLinkDefaultTarget?: TranslatedString
+    contextualLinkDefaultCarries?: TranslatedString | undefined
+    contextualLinkUnavailable?: TranslatedString | undefined
+  }>()
 </script>
 
 <template>
@@ -99,6 +101,7 @@ const { contextualLinkDefaultTarget, contextualLinkUnavailable } = defineProps<{
         <ContextualLinkConfig
           v-model:handler="contextualLink"
           :default-target="contextualLinkDefaultTarget"
+          :default-carries="contextualLinkDefaultCarries"
           :unavailable="contextualLinkUnavailable"
         />
       </FieldComponent>

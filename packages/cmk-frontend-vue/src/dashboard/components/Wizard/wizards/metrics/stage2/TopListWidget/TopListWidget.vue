@@ -13,6 +13,7 @@ import { computed } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
+import { defaultLinkPassesNothing } from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
 import DataRangeInput from '@/dashboard/components/Wizard/components/DataRangeInput/DataRangeInput.vue'
 import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
@@ -137,6 +138,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
       v-model:title-url="handler.titleUrl.value"
       v-model:title-url-enabled="handler.titleUrlEnabled.value"
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
+      :contextual-link-default-carries="defaultLinkPassesNothing()"
     />
   </CmkCatalogPanel>
 

@@ -8,6 +8,7 @@ import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
+import { defaultLinkPassesNothing } from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
 import WidgetInteraction from '@/dashboard/components/Wizard/components/WidgetInteraction/WidgetInteraction.vue'
 
 import WidgetVisualization from '../../../../components/WidgetVisualization/WidgetVisualization.vue'
@@ -44,6 +45,7 @@ function validate(): boolean {
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
       v-model:contextual-link="handler.contextualLink"
       :contextual-link-default-target="_t('Inventory of host')"
+      :contextual-link-default-carries="defaultLinkPassesNothing()"
     />
   </CmkCatalogPanel>
 

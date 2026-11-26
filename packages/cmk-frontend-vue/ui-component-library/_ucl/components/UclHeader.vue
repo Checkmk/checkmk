@@ -5,12 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref } from 'vue'
-
 import iconUrl from '../assets/images/checkmk_logo.svg'
 import UclGlobalTheme from './UclGlobalTheme.vue'
-
-const selectedTheme = ref<'facelift' | 'modern-dark'>('facelift')
 </script>
 
 <template>
@@ -22,7 +18,7 @@ const selectedTheme = ref<'facelift' | 'modern-dark'>('facelift')
       </div>
     </div>
     <div class="ucl-header__item">
-      <UclGlobalTheme v-model:theme="selectedTheme" />
+      <UclGlobalTheme />
     </div>
   </div>
 </template>

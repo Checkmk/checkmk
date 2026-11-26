@@ -71,11 +71,13 @@ class _FakeNotify:
 def _notify_command(
     *,
     edition: Edition = Edition.PRO,
+    automation_helper_enabled: bool = True,
     execute_automation: _FakeExecuteNotifyAutomation | _UnavailableNotifyAutomation | None = None,
     notify: _FakeNotify | None = None,
 ) -> _NotifyCommand:
     return _NotifyCommand(
         edition_of=_FakeEditionOf(edition),
+        automation_helper_enabled=lambda _omd_root: automation_helper_enabled,
         execute_automation=execute_automation or _FakeExecuteNotifyAutomation(),
         notify=notify or _FakeNotify(),
     )
@@ -152,7 +154,22 @@ def test_a_spool_file_of_a_community_site_is_notified_locally() -> None:
     assert notify.asked == [(_SPOOLFILE, _OMD_ROOT, Edition.COMMUNITY, False, False, False)]
 
 
-def test_a_spool_file_fails_without_the_automation_helper() -> None:
+def test_a_spool_file_is_notified_locally_when_the_automation_helper_is_disabled() -> None:
+    execute = _FakeExecuteNotifyAutomation()
+    notify = _FakeNotify()
+    notification = _notify_command(
+        automation_helper_enabled=False, execute_automation=execute, notify=notify
+    )
+
+    notification.run(_context(), _request(*_SPOOLFILE))
+
+    assert (execute.asked, notify.asked) == (
+        [],
+        [(_SPOOLFILE, _OMD_ROOT, Edition.PRO, False, False, False)],
+    )
+
+
+def test_a_spool_file_fails_when_the_enabled_automation_helper_is_unreachable() -> None:
     notification = _notify_command(execute_automation=_UnavailableNotifyAutomation())
 
     assert notification.run(_context(), _request(*_SPOOLFILE)) == CLIExitCode.FAILURE

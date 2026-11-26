@@ -13,7 +13,11 @@ from typing import Protocol
 
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
-from cmk.automations.backends.helper import AutomationHelperUnavailable, HelperExecutor
+from cmk.automations.backends.helper import (
+    automation_helper_enabled,
+    AutomationHelperUnavailable,
+    HelperExecutor,
+)
 from cmk.automations.internal import AutomationID
 from cmk.base import config
 from cmk.base.notify import (
@@ -50,6 +54,9 @@ def _notification_exit_code(returncode: object) -> CLIExitCode:
 
 
 type _EditionOf = Callable[[Path], Edition]
+
+
+type _AutomationHelperEnabled = Callable[[Path], bool]
 
 
 type _ExecuteNotifyAutomation = Callable[[Sequence[str]], str]
@@ -155,6 +162,7 @@ def _do_notify_via_automation(
 @dataclass(frozen=True, kw_only=True)
 class _NotifyCommand:
     edition_of: _EditionOf
+    automation_helper_enabled: _AutomationHelperEnabled
     execute_automation: _ExecuteNotifyAutomation
     notify: _Notify
 
@@ -162,7 +170,11 @@ class _NotifyCommand:
         try:
             edition = self.edition_of(context.omd_root)
             community_edition = edition is Edition.COMMUNITY
-            if not community_edition and "spoolfile" in request.arguments:
+            if (
+                not community_edition
+                and "spoolfile" in request.arguments
+                and self.automation_helper_enabled(context.omd_root)
+            ):
                 return _do_notify_via_automation(
                     self.execute_automation,
                     context,
@@ -197,6 +209,7 @@ cli_handler_notify = CLIHandler(
     command=cli_command_notify,
     run=_NotifyCommand(
         edition_of=edition_of_site,
+        automation_helper_enabled=automation_helper_enabled,
         execute_automation=_execute_notify_automation,
         notify=_notify,
     ).run,

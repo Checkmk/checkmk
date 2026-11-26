@@ -46,7 +46,11 @@ ProvisionedConcurrencyConfigs = Mapping[str, Sequence[Mapping[str, str]]]
 
 
 def _lambda_resource(function_arn: str) -> AwsResource:
-    """The resource of a function host. Its only label beyond the service is the ARN."""
+    """The resource of a function host as the sections after the summary know it
+
+    These sections know only the ARN. The summary gives the full resource, and the runner
+    merges the labels of all sections of a host.
+    """
     return AwsResource(service="lambda", arn=function_arn)
 
 
@@ -193,7 +197,15 @@ class LambdaSummary(AWSSection):
                     )
                 ),
                 [function],
-                _lambda_resource(function["FunctionArn"]),
+                # A function has no ID of its own. AWS identifies it by its name.
+                AwsResource(
+                    service="lambda",
+                    name=function["FunctionName"],
+                    resource_id=function["FunctionName"],
+                    region=self._region,
+                    tags=function["TagsForCmkLabels"],
+                    arn=function["FunctionArn"],
+                ),
             )
             for function in computed_content.content
         ]

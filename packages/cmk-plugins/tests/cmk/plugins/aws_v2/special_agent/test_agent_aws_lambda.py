@@ -456,6 +456,34 @@ def test_agent_aws_lambda_region_limits_go_to_the_account_and_each_function_host
     }
 
 
+def test_agent_aws_lambda_summary_gives_the_function_hosts_the_resource_labels() -> None:
+    _lambda_limits, lambda_summary, *_ = get_lambda_sections(None, (None, None))
+
+    results = lambda_summary.run().results
+
+    # Only the first function has tags.
+    function_arn = "arn:aws:lambda:eu-central-1:123456789:function:FunctionName"
+    assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
+        FUNCTION_HOSTS["FunctionName-0"]: {
+            "cmk/aws/service": "lambda",
+            "cmk/aws/name": "FunctionName-0",
+            "cmk/aws/resource_id": "FunctionName-0",
+            "cmk/aws/region": "region",
+            "cmk/aws/arn": f"{function_arn}-0",
+            "cmk/aws/tag/Tag-0": "Value-0",
+            "cmk/aws/tag/Tag-1": "Value-1",
+            "cmk/aws/tag/Tag-2": "Value-2",
+        },
+        FUNCTION_HOSTS["FunctionName-1"]: {
+            "cmk/aws/service": "lambda",
+            "cmk/aws/name": "FunctionName-1",
+            "cmk/aws/resource_id": "FunctionName-1",
+            "cmk/aws/region": "region",
+            "cmk/aws/arn": f"{function_arn}-1",
+        },
+    }
+
+
 def test_agent_aws_lambda_function_hosts_get_the_function_arn() -> None:
     (
         _lambda_limits,
@@ -464,9 +492,9 @@ def test_agent_aws_lambda_function_hosts_get_the_function_arn() -> None:
         lambda_cloudwatch,
         lambda_cloudwatch_insights,
     ) = get_lambda_sections(None, (None, None))
+    lambda_summary.run()
 
     results = [
-        *lambda_summary.run().results,
         *lambda_provisioned_concurrency_configuration.run().results,
         *lambda_cloudwatch.run().results,
         *lambda_cloudwatch_insights.run().results,

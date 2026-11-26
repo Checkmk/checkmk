@@ -28,8 +28,7 @@ class AwsResource:
     are the AWS tags of the resource that the rule imports, as process_tags_for_cmk_labels
     gives them. The ARN is the ARN as AWS gives it. The label has it unchanged, because a
     label value can have colons. A resource whose AWS data has no ARN, such as an EC2
-    instance or an S3 bucket, has no ARN label. The ARN does not need a resource ID: a
-    Lambda function has only its ARN.
+    instance or an S3 bucket, has no ARN label. The ARN does not need a resource ID.
 
     Of a resource that is gone from its summary since its metrics were cached, only the
     service is known. Every other resource has its ID.

@@ -7,7 +7,7 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-__version__ = "2.5.0p22"
+__version__ = "2.5.0p23"
 
 import os
 import signal

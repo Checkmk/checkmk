@@ -16,10 +16,10 @@ Uses COM objects to interact with Windows Update.
 Requires administrative privileges to run.
 
 Date: 2025-02-19
-Version: 2.5.0p22
+Version: 2.5.0p23
 #>
 
-$CMK_VERSION = "2.5.0p22"
+$CMK_VERSION = "2.5.0p23"
 
 # Output UTF-16 BOM
 [Console]::OutputEncoding = [System.Text.Encoding]::Unicode

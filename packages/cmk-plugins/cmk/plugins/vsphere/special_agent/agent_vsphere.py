@@ -43,7 +43,7 @@ from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, Stor
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-__version__ = "2.5.0p22"
+__version__ = "2.5.0p23"
 
 AGENT_NAME = "vsphere"
 

@@ -100,7 +100,7 @@ RUN set -e \
     && if getent passwd ubuntu >/dev/null; then userdel --remove ubuntu; fi
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="2.5.0p22"
+ARG CMK_VERSION="2.5.0p23"
 ARG CMK_EDITION
 # Distro codename is used to find the corresponding .deb package
 ARG DISTRO_CODENAME="jammy"

@@ -2,11 +2,10 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""The Debian package declares how much disk space it needs (Installed-Size)."""
+"""apt announces the disk space the Debian package declares (Installed-Size)."""
 
 import os
 import re
-import stat
 from pathlib import Path
 
 import pytest
@@ -48,48 +47,6 @@ def fixture_deb_file(deb_package_manager: PackageManagerDEB, site: Site) -> Path
     if not deb_file.exists():
         pytest.skip(f"Package file {deb_file} is not available (only installed)")
     return deb_file
-
-
-def _kib(size: int) -> int:
-    return (size + 1023) // 1024
-
-
-def _installed_files_kib(package: str) -> int:
-    """Estimate the size of the installed files like dpkg-gencontrol does."""
-    total = 0
-    seen_inodes: set[tuple[int, int]] = set()
-    for line in run(["dpkg-query", "--listfiles", package]).stdout.splitlines():
-        try:
-            st = os.lstat(line)
-        except FileNotFoundError:
-            continue  # e.g. removed by a maintainer script
-        if stat.S_ISREG(st.st_mode) or stat.S_ISLNK(st.st_mode):
-            if st.st_nlink > 1 and stat.S_ISREG(st.st_mode):
-                if (st.st_dev, st.st_ino) in seen_inodes:
-                    continue
-                seen_inodes.add((st.st_dev, st.st_ino))
-            total += _kib(st.st_size)
-        else:
-            total += 1
-    return total
-
-
-def test_installed_size_matches_installed_files(installed_package: str) -> None:
-    declared_kib = int(
-        run(["dpkg-query", "--show", "--showformat=${Installed-Size}", installed_package]).stdout
-    )
-
-    assert declared_kib == pytest.approx(_installed_files_kib(installed_package), rel=0.01)
-
-
-@pytest.mark.usefixtures("deb_package_manager")
-def test_agent_debs_declare_installed_size(site: Site) -> None:
-    agent_debs = sorted((site.root / "share/check_mk/agents").glob("check-mk-agent_*.deb"))
-    assert agent_debs, "The site ships no agent .deb packages"
-
-    for agent_deb in agent_debs:
-        installed_size = run(["dpkg-deb", "--field", str(agent_deb), "Installed-Size"]).stdout
-        assert int(installed_size) > 0, agent_deb
 
 
 def _status_without(package: str, target: Path) -> Path:

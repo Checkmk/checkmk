@@ -83,7 +83,6 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-ec",
         "//packages/cmk-flags:gui",
-        "//packages/cmk-inventory:paths",
         "//packages/cmk-maps:migration",
         "//packages/cmk-mkp-tool",
         "//packages/cmk-plugin-apis:agent_based",

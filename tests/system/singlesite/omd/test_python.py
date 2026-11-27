@@ -6,6 +6,7 @@
 
 import json
 import subprocess
+from collections.abc import Iterator
 from importlib.util import cache_from_source
 from pathlib import Path
 from subprocess import check_output
@@ -46,6 +47,28 @@ SUPPORTED_PIP_CMDS: tuple[PipCommand, ...] = (
 
 def _local_package_installation_path(site: Site) -> Path:
     return Path(f"{site.root}", "local/lib/python3")
+
+
+@pytest.fixture(name="local_python_lib_restored")
+def fixture_local_python_lib_restored(site: Site) -> Iterator[None]:
+    """Remove whatever the test adds below local/lib/python3.
+
+    pip uninstall does not remove everything an install brought in: the
+    dependencies stay, and so do the console scripts that an install with
+    --target puts into local/lib/python3/bin. To every later test of the
+    site they are unpackaged files, which e.g. the mkp tests trip over.
+    """
+    before = _local_python_lib_entries(site)
+    yield
+    for added in sorted(_local_python_lib_entries(site) - before):
+        site.delete_dir(added)
+
+
+def _local_python_lib_entries(site: Site) -> set[Path]:
+    output = site.check_output(
+        ["find", _local_package_installation_path(site).as_posix(), "-mindepth", "1"]
+    )
+    return {Path(line) for line in output.splitlines()}
 
 
 def assert_local_package_install_path(
@@ -137,6 +160,7 @@ def test_03_pip_interpreter_version(site: Site, pip_cmd: PipCommand) -> None:
     assert version.startswith("pip 26.2.2")
 
 
+@pytest.mark.usefixtures("local_python_lib_restored")
 def test_04_pip_user_can_install_non_wheel_packages(site: Site) -> None:
     # regex has a mandatory C extension without any external library dependencies, so building it
     # from source verifies that pip finds the Python headers and the compiler toolchain works.
@@ -158,6 +182,7 @@ def test_04_pip_user_can_install_non_wheel_packages(site: Site) -> None:
     assert_uninstall_and_purge_cache(pip_cmd, package_name, site)
 
 
+@pytest.mark.usefixtures("local_python_lib_restored")
 @pytest.mark.parametrize("pip_cmd", SUPPORTED_PIP_CMDS)
 def test_05_pip_user_can_install_wheel_packages(site: Site, pip_cmd: PipCommand) -> None:
     package_name = "trickkiste"

@@ -1,0 +1,24 @@
+diff --git a/py/private/transitions.bzl b/py/private/transitions.bzl
+--- a/py/private/transitions.bzl
++++ b/py/private/transitions.bzl
+@@ -17,12 +17,16 @@
+ def _python_transition_impl(settings, attr):
+     acc = {}
+     if attr.python_version:
+-        version = str(attr.python_version)
++        ours = str(attr.python_version)
++        rpy = ours
+     else:
+-        version = settings[PYTHON_VERSION_FLAG] or settings[_RPY_VERSION_FLAG]
++        # No pin: our flag stays as inherited; resolving rules_python's default
++        # into it would fork the whole closure.
++        ours = settings[PYTHON_VERSION_FLAG]
++        rpy = ours or settings[_RPY_VERSION_FLAG]
+ 
+-    acc[PYTHON_VERSION_FLAG] = version
+-    acc[_RPY_VERSION_FLAG] = version
++    acc[PYTHON_VERSION_FLAG] = ours
++    acc[_RPY_VERSION_FLAG] = rpy
+ 
+     # Set the venv transition
+     if attr.venv:

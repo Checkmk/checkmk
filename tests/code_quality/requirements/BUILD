@@ -17,6 +17,19 @@ py_library(
     ],
 )
 
+# Not a select() in the data below: rules_py's py_test calls list() on its data.
+filegroup(
+    name = "nonfree_python_requirements",
+    testonly = True,
+    srcs = select({
+        "@//:gpl+nonfree_repo": [
+            "//non-free/packages:dev_python_requirements",
+            "//non-free/packages:python_requirements",
+        ],
+        "@//:gpl_repo": [],
+    }),
+)
+
 py_cmk_test(
     name = "requirements_files",
     size = "small",
@@ -26,6 +39,7 @@ py_cmk_test(
         "test_windows_python_version.py",
     ],
     data = [
+        ":nonfree_python_requirements",
         "//:constraints.txt",
         "//:package_versions.bzl",
         "//:requirements.txt",
@@ -41,13 +55,7 @@ py_cmk_test(
         "//packages:python_requirements",
         "//scripts:requirements.in",
         "//tests:dev-requirements.in",
-    ] + select({
-        "@//:gpl+nonfree_repo": [
-            "//non-free/packages:dev_python_requirements",
-            "//non-free/packages:python_requirements",
-        ],
-        "@//:gpl_repo": [],
-    }),
+    ],
     env_inherit = ["GERRIT_BRANCH"],
     tags = ["requirements"],
     deps = [

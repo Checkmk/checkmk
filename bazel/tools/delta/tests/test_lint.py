@@ -124,6 +124,34 @@ def test_files_of_the_root_package_are_repo_paths() -> None:
     assert set(owning_targets(query, ["setup.py"]).rules) == {"setup.py"}
 
 
+def test_rules_py_helpers_listing_the_srcs_of_a_test_own_nothing() -> None:
+    query = _fake_query(
+        {
+            ('set("cmk/test_a.py")', "label"): "//cmk:test_a.py\n",
+            (
+                'same_pkg_direct_rdeps(set("//cmk:test_a.py"))',
+                "streamed_jsonproto",
+            ): "\n".join(
+                [
+                    _rule("//cmk:test", ["//cmk:test_a.py"], kind="py_test"),
+                    _rule("//cmk:test.pytest_paths", ["//cmk:test_a.py"], kind="pytest_paths"),
+                    _rule(
+                        "//cmk:test.venv",
+                        ["//cmk:test_a.py"],
+                        kind="_py_venv_binary",
+                        tags=["manual"],
+                    ),
+                ]
+            ),
+        }
+    )
+
+    owning = owning_targets(query, ["cmk/test_a.py"])
+
+    assert owning.targets == ["//cmk:test"]
+    assert owning.rules == {"cmk/test_a.py": [OwningRule("py_test", frozenset())]}
+
+
 def test_files_in_no_package_have_no_targets() -> None:
     owning = owning_targets(_fake_query({}), ["notes.txt"])
     assert owning.targets == []

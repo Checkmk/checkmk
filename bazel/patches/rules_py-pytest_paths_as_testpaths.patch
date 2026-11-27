@@ -1,0 +1,47 @@
+diff --git a/py/private/pytest_main.py b/py/private/pytest_main.py
+--- a/py/private/pytest_main.py
++++ b/py/private/pytest_main.py
+@@ -14,7 +14,9 @@
+ # limitations under the License.
+ 
+ import sys
++import glob
+ import os
++import shlex
+ from pathlib import Path
+ from typing import List
+ 
+@@ -105,8 +107,14 @@
+     # Read the pytest paths args file written by the pytest_paths rule.
+     # Contains directories (one per line) where pytest should search for tests,
+     # relative to the workspace root (which is CWD at test time).  When present,
+-    # these are passed as positional args so pytest collects only from those
+-    # directories instead of autodiscovering from CWD.
++    # these become pytest's testpaths so pytest collects only from those
++    # directories instead of autodiscovering from CWD.  Unlike positional args,
++    # testpaths give way to paths in the args, e.g. a test file to run alone.
++    # pytest only uses testpaths with CWD as its rootdir, which it otherwise puts
++    # at the directory of its config file, e.g. the execroot's pyproject.toml
++    # outside the sandbox.  Both go first, so that the args can override them,
++    # but a --rootdir there other than CWD turns the testpaths off.  pytest globs
++    # testpaths, so the directories are escaped.
+     target_name = os.environ.get("BAZEL_TARGET_NAME", "")
+     target = os.environ.get("BAZEL_TARGET", "")
+     if target:
+@@ -114,12 +122,10 @@
+         paths_file = os.path.join(package, target_name + ".pytest_paths")
+         if os.path.isfile(paths_file):
+             with open(paths_file) as f:
+-                for line in f:
+-                    d = line.strip()
+-                    if not d:
+-                        continue
+-                    if os.path.isdir(d):
+-                        args.append(d)
++                dirs = [d for d in (line.strip() for line in f) if d and os.path.isdir(d)]
++            if dirs:
++                testpaths = shlex.join(glob.escape(d) for d in dirs)
++                args[:0] = ["--rootdir=.", "-o", "testpaths=" + testpaths]
+ 
+     exit_code = pytest.main(args, plugins=plugins)
+ 

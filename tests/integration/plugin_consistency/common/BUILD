@@ -1,6 +1,13 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
+filegroup(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["test_*.py"]),
+    visibility = ["//tests/integration/plugin_consistency:__subpackages__"],
+)
+
 py_library(
     name = "common",
     testonly = True,

@@ -1,7 +1,7 @@
-diff --git a/py/private/pytest.py.tmpl b/py/private/pytest.py.tmpl
---- a/py/private/pytest.py.tmpl
-+++ b/py/private/pytest.py.tmpl
-@@ -109,7 +109,13 @@ if __name__ == "__main__":
+diff --git a/py/private/pytest_main.py b/py/private/pytest_main.py
+--- a/py/private/pytest_main.py
++++ b/py/private/pytest_main.py
+@@ -132,7 +132,13 @@ if __name__ == "__main__":
          coverage_output_file = os.getenv("COVERAGE_OUTPUT_FILE")
  
          unfixed_dat = coverage_output_file + ".tmp"

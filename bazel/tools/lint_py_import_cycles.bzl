@@ -29,6 +29,21 @@ def _resolve_import_root(package, import_rel):
             parts.append(component)
     return "/".join(parts)
 
+def _import_root_of(file, import_roots):
+    """The first of the module roots that a source file lies below.
+
+    Args:
+        file: A File object whose .path is relative to the execroot.
+        import_roots: The resolved module roots (empty for the workspace root).
+
+    Returns:
+        The module root, or None if the file lies below none of them.
+    """
+    for import_root in import_roots:
+        if not import_root or file.path.startswith(import_root + "/"):
+            return import_root
+    return None
+
 def _format_src(file, import_root):
     """Format a source file path as import_root::module_relative_path.
 
@@ -145,30 +160,33 @@ def _py_import_cycles_aspect_impl(target, ctx):
                 for import_path in src[PyInfo].imports.to_list():
                     import_paths["external/" + import_path] = True
 
-    files_to_lint = filter_srcs(ctx.rule)
-    py_files = [f for f in files_to_lint if f.extension == "py"]
+    # Compute the module roots from the target's imports attribute so we can
+    # pass paths as "root::module_path" to py-import-cycles. Without imports,
+    # the BUILD file's directory is the module root.
+    import_roots = [
+        _resolve_import_root(ctx.label.package, import_rel)
+        for import_rel in getattr(ctx.rule.attr, "imports", None) or ["."]
+    ]
+
+    # Tests shared from another package lie outside the module roots and have
+    # no module path relative to them. A target of their own package checks them.
+    py_files = []
+    formatted_srcs = []
+    for f in filter_srcs(ctx.rule):
+        if f.extension != "py":
+            continue
+        import_root = _import_root_of(f, import_roots)
+        if import_root != None:
+            py_files.append(f)
+            formatted_srcs.append(_format_src(f, import_root))
+        elif f.owner.package == ctx.label.package:
+            fail("%s lies outside the module roots %s of %s, set by its imports" % (f.path, import_roots, ctx.label))
 
     outputs, info = output_files(_MNEMONIC, target, ctx)
 
     if not py_files:
         noop_lint_action(ctx, outputs)
         return [info]
-
-    # Compute the module root from the target's imports attribute so we can
-    # pass paths as "root::module_path" to py-import-cycles.
-    import_root = ""
-    if hasattr(ctx.rule.attr, "imports") and ctx.rule.attr.imports:
-        import_root = _resolve_import_root(
-            ctx.label.package,
-            ctx.rule.attr.imports[0],
-        )
-    else:
-        # Relative to the BUILD file if `imports` is unset.
-        import_root = _resolve_import_root(
-            ctx.label.package,
-            ".",
-        )
-    formatted_srcs = [_format_src(f, import_root) for f in py_files]
 
     # Pass transitive sources to py_import_cycles_action so it can resolve imports from dependencies
     transitive_srcs_depset = depset(transitive = transitive_sources)

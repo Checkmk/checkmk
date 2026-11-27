@@ -117,8 +117,8 @@ Scope them to your change and leave `//...` to CI.
 # The package that owns a file
 $ bazel query packages/cmk-ccc/cmk/ccc/regex.py --output=package
 
-# The test target of a test file: search its package, or //tests/unit/...
-$ bazel query "kind('.*_test', rdeps(//packages/cmk-ccc/..., packages/cmk-ccc/tests/test_regex.py, 1))"
+# The test targets of a test file, also those that get it through a filegroup
+$ bazel query "kind('.*_test', rdeps(//..., packages/cmk-ccc/tests/test_regex.py, 2))"
 
 # The Python targets whose mypy results your change can affect
 $ bazel query --keep_going \

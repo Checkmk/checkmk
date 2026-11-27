@@ -8,7 +8,7 @@ py_binary(
     name = "sphinx_build",
     srcs = ["@rules_sphinx//sphinx/tools:sphinx_build_wrapper.py"],
     data = ["@plantuml"],
-    main = "sphinx_build_wrapper.py",
+    main = "@rules_sphinx//sphinx/tools:sphinx_build_wrapper.py",
     tags = [
         "no-deballast",  # deps are imported at runtime by sphinx autodoc, not in srcs
         "no-mypy",

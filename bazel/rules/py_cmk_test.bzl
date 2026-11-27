@@ -14,10 +14,13 @@ def py_cmk_test(
 
     Always sets --import-mode=importlib so tests are isolated from each other
     and work correctly with namespace packages and duplicate test filenames.
-    Always keeps pytest from collecting the generated runner, see below.
     Always disables pytest's legacypath plugin (tmpdir and other py.path APIs).
     Always enables the built-in pytest entry-point and makes pytest and
-    coverage available as deps.
+    coverage available as deps. pytest collects tests only from the
+    directories of srcs and below, so list shared test files in srcs (e.g.
+    via a filegroup), not in deps or data. Paths in args or --test_arg
+    replace those directories, so --test_arg=<test file> only narrows a run
+    if args holds no path.
 
     Args:
         name: Name of the test target.
@@ -26,7 +29,8 @@ def py_cmk_test(
             standalone packages that ship as separate wheels and must remain
             usable outside the monorepo.
         args: Additional pytest arguments (appended after the defaults).
-        data: Additional data files.
+        data: Additional data files. rules_py's py_test needs plain lists for data
+            and deps, so put a select() into a filegroup or py_library and list that.
         deps: Additional dependencies.
         **kwargs: Passed through to py_test unchanged.
     """
@@ -40,16 +44,8 @@ def py_cmk_test(
     py_test(
         name = name,
         pytest_main = True,
-        # --ignore-glob keeps pytest from collecting the runner rules_py generates
-        # for this target. It lands in the runfiles next to the sources as
-        # <name>.pytest_main.py, which matches pytest's own test_*.py glob
-        # whenever the target is named test_*. Collecting it re-imports the
-        # runner mid-session, and its module-level coverage.start() then pushes a
-        # second collector that the outer cov.stop() trips over -- so the target
-        # passes under `bazel test` and fails under `bazel coverage`.
         args = [
             "--import-mode=importlib",
-            "--ignore-glob=*pytest_main.py",
             # Keep the py.path based tmpdir/testdir fixtures out, use tmp_path.
             "-p",
             "no:legacypath",

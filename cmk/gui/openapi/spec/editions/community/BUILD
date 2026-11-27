@@ -45,7 +45,7 @@ py_binary(
     name = "generate_api_spec",
     srcs = ["//cmk/gui/openapi/spec/spec_generator:generate_api_spec.py"],
     imports = ["../../../../../.."],
-    main = "generate_api_spec.py",
+    main = "//cmk/gui/openapi/spec/spec_generator:generate_api_spec.py",
     visibility = ["//:__subpackages__"],
     deps = [
         ":community",

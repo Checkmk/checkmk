@@ -15,7 +15,7 @@ bazel_dep(name = "aspect_rules_js", version = "3.4.1")
 # Both of the next two are pinned by a single_version_override below, which wins
 # unconditionally, so these versions have to match it or they merely mislead.
 bazel_dep(name = "aspect_rules_lint", version = "2.9.1")
-bazel_dep(name = "aspect_rules_py", version = "1.5.2")
+bazel_dep(name = "aspect_rules_py", version = "1.13.0")
 bazel_dep(name = "aspect_rules_ts", version = "3.10.1")
 bazel_dep(name = "aspect_rules_webpack", version = "0.18.0")
 
@@ -168,16 +168,25 @@ single_version_override(
     version = "2.9.1",
 )
 
+# rules_py also registers CPython 3.13 toolchains of its own. Its interpreter
+# toolchains only apply when a configuration selects Python 3.13, which ours never
+# do, and its exec tools toolchains only serve its uv, which we don't use.
 single_version_override(
     module_name = "aspect_rules_py",
     patch_strip = 1,
     patches = [
-        # https://github.com/aspect-build/rules_py/pull/577
-        "//bazel/patches:rules_py-no_mypy_for_py_pytest_main.patch",
         # Fixed upstream in 2.x, see CMK-40567
         "//bazel/patches:rules_py-tolerate_no_coverage_data.patch",
+        # Backport of upstream #1375 (2.x): without it, every py_binary and
+        # py_test lands in a k8-fastbuild-ST-* tree, where CI finds neither
+        # their test results (bazel-testlogs) nor their mypy results
+        # (bazel-out/k8-fastbuild/bin).
+        "//bazel/patches:rules_py-no_python_version_fork.patch",
+        # The directories of srcs become testpaths instead of positional
+        # arguments, so that --test_arg=<test file> runs that file alone.
+        "//bazel/patches:rules_py-pytest_paths_as_testpaths.patch",
     ],
-    version = "1.5.2",
+    version = "1.13.0",
 )
 
 single_version_override(

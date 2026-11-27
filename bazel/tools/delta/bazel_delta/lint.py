@@ -202,10 +202,15 @@ def _rules(streamed_jsonproto: str) -> list[_Rule]:
     ]
 
 
+# rules_py's py_binary and py_test add <name>.venv and <name>.pytest_paths next to
+# themselves, which also list their srcs. Linting the py_binary or py_test covers those.
+_RULES_PY_HELPERS = frozenset({"_py_venv_binary", "pytest_paths"})
+
+
 def owning_targets(query: Query, files: Sequence[str]) -> OwningTargets:
     """The targets in the files' packages that list them in their srcs or hdrs,
     also through a filegroup in srcs, as rules_lint lints the files of those
-    too. Files in no package are left out."""
+    too. Files in no package are left out, and so are rules_py's helper targets."""
     if not files:
         return OwningTargets([], {})
     # Without escapes for non-ASCII characters, which bazel query does not decode
@@ -217,6 +222,8 @@ def owning_targets(query: Query, files: Sequence[str]) -> OwningTargets:
     owner_names: dict[str, set[str]] = {}
 
     def own(rule: _Rule, owned: set[str]) -> None:
+        if rule["ruleClass"] in _RULES_PY_HELPERS:
+            return
         owners[rule["name"]] = OwningRule(rule["ruleClass"], frozenset(_string_lists(rule, "tags")))
         for label in owned:
             owner_names.setdefault(label, set()).add(rule["name"])

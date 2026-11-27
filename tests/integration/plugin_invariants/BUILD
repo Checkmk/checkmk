@@ -8,6 +8,13 @@ load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 # ship (see nonfree/BUILD). Tests that depend on what a particular edition
 # ships belong to plugin_consistency or edition_scope.
 
+filegroup(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["test_*.py"]),
+    visibility = ["//tests/integration/plugin_invariants/nonfree:__pkg__"],
+)
+
 py_library(
     name = "plugin_invariants",
     testonly = True,
@@ -35,7 +42,8 @@ py_library(
 # The community repository has no non-free code, so it needs its own target.
 py_cmk_test(
     name = "community",
-    srcs = [],
+    # rules_py only collects tests from the directories of srcs.
+    srcs = [":tests"],
     deps = [
         ":plugin_invariants",
         "//:pyproject-toml",

@@ -36,19 +36,42 @@ def test_tree_paths(raw_host_name: str) -> None:
     ) == (
         TreePath(
             path=_OMD_ROOT / f"var/check_mk/inventory/{raw_host_name}.json",
+            legacy=_OMD_ROOT / f"var/check_mk/inventory/{raw_host_name}",
         ),
         TreePathGz(
             path=_OMD_ROOT / f"var/check_mk/inventory/{raw_host_name}.json.gz",
+            legacy=_OMD_ROOT / f"var/check_mk/inventory/{raw_host_name}.gz",
         ),
         TreePath(
             path=_OMD_ROOT / f"tmp/check_mk/status_data/{raw_host_name}.json",
+            legacy=_OMD_ROOT / f"tmp/check_mk/status_data/{raw_host_name}",
         ),
         TreePath(
             path=_OMD_ROOT / f"var/check_mk/inventory_archive/{raw_host_name}/123.json",
+            legacy=_OMD_ROOT / f"var/check_mk/inventory_archive/{raw_host_name}/123",
         ),
         TreePath(
             path=_OMD_ROOT / f"var/check_mk/inventory_delta_cache/{raw_host_name}/123_456.json",
+            legacy=_OMD_ROOT / f"var/check_mk/inventory_delta_cache/{raw_host_name}/123_456",
         ),
+    )
+
+
+@pytest.mark.parametrize(
+    "raw_host_name", ["hostname", "hostname.", "hostname.domain", "hostname.json"]
+)
+@pytest.mark.parametrize(
+    "directory, file_name", [("inventory_archive", "123"), ("inventory_delta_cache", "123_456")]
+)
+@pytest.mark.parametrize("suffix", ["", ".json"])
+def test_tree_path_from_archive_or_delta_cache_file_path(
+    raw_host_name: str, directory: str, file_name: str, suffix: str
+) -> None:
+    assert TreePath.from_archive_or_delta_cache_file_path(
+        _OMD_ROOT / f"var/check_mk/{directory}/{raw_host_name}/{file_name}{suffix}"
+    ) == TreePath(
+        path=_OMD_ROOT / f"var/check_mk/{directory}/{raw_host_name}/{file_name}.json",
+        legacy=_OMD_ROOT / f"var/check_mk/{directory}/{raw_host_name}/{file_name}",
     )
 
 
@@ -60,11 +83,10 @@ def test_tree_paths(raw_host_name: str) -> None:
     ],
 )
 def test_delta_cache_tree(previous: int, current: int, expected_name: str) -> None:
+    file_path = _OMD_ROOT / f"var/check_mk/inventory_delta_cache/hostname/{expected_name}"
     assert InventoryPaths(_OMD_ROOT).delta_cache_tree(
         HostName("hostname"), previous, current
-    ) == TreePath(
-        path=_OMD_ROOT / f"var/check_mk/inventory_delta_cache/hostname/{expected_name}.json"
-    )
+    ) == TreePath(path=file_path.with_suffix(".json"), legacy=file_path)
 
 
 @pytest.mark.parametrize(
@@ -112,19 +134,20 @@ def test_parse_delta_cache_timestamps_of_an_unknown_file() -> None:
 
 def test_tree_path_rejects_a_path_without_json_suffix() -> None:
     with pytest.raises(ValueError):
-        TreePath(path=Path("hostname.gz"))
+        TreePath(path=Path("hostname.gz"), legacy=Path("hostname"))
 
 
 @pytest.mark.parametrize(
-    "path",
+    "path, legacy",
     [
-        pytest.param(Path("hostname.json"), id="not-gzipped"),
-        pytest.param(Path("hostname.gz"), id="without-json"),
+        pytest.param(Path("hostname.json"), Path("hostname.gz"), id="path-not-gzipped"),
+        pytest.param(Path("hostname.gz"), Path("hostname.gz"), id="path-without-json"),
+        pytest.param(Path("hostname.json.gz"), Path("hostname"), id="legacy-not-gzipped"),
     ],
 )
-def test_tree_path_gz_rejects_a_misnamed_path(path: Path) -> None:
+def test_tree_path_gz_rejects_a_misnamed_path(path: Path, legacy: Path) -> None:
     with pytest.raises(ValueError):
-        TreePathGz(path=path)
+        TreePathGz(path=path, legacy=legacy)
 
 
 @pytest.mark.parametrize(
@@ -153,6 +176,9 @@ def test_host_tree_files() -> None:
         for p in InventoryPaths(_OMD_ROOT).host_tree_files(HostName("host"))
     ] == [
         "var/check_mk/inventory/host.json",
+        "var/check_mk/inventory/host",
         "var/check_mk/inventory/host.json.gz",
+        "var/check_mk/inventory/host.gz",
         "tmp/check_mk/status_data/host.json",
+        "tmp/check_mk/status_data/host",
     ]

@@ -33,13 +33,18 @@ from cmk.inventory.trees import (
     SDNodeName,
 )
 
-from ._fixtures import file_names, gzipped_json, inventory_store, raw_tree
+from ._fixtures import file_names, gzipped_json, gzipped_repr, inventory_store, raw_tree
 
 
-def test_load_inventory_tree_ignores_a_legacy_tree(tmp_path: Path) -> None:
-    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", raw_tree("val"))
+def test_load_inventory_tree_legacy(tmp_path: Path) -> None:
+    host_name = HostName("hostname")
+    tree = raw_tree("val")
+    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", tree)
 
-    assert not InventoryStore(tmp_path).load_inventory_tree(host_name=HostName("hostname"))
+    assert (
+        InventoryStore(tmp_path).load_inventory_tree(host_name=host_name),
+        file_names(tmp_path / "var/check_mk/inventory"),
+    ) == (deserialize_tree(tree), ["hostname"])
 
 
 def test_load_inventory_tree(tmp_path: Path) -> None:
@@ -58,6 +63,9 @@ def test_load_inventory_tree(tmp_path: Path) -> None:
 def test_save_inventory_tree(tmp_path: Path) -> None:
     host_name = HostName("hostname")
     tree = raw_tree("val")
+    gzipped = gzipped_repr(tree)
+    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", tree)
+    cmk.ccc.store.save_bytes_to_file(tmp_path / "var/check_mk/inventory/hostname.gz", gzipped)
 
     inv_store = InventoryStore(tmp_path)
     inv_store.save_inventory_tree(
@@ -75,6 +83,11 @@ def test_save_inventory_tree(tmp_path: Path) -> None:
 def test_remove_inventory_tree(tmp_path: Path) -> None:
     host_name = HostName("hostname")
     tree = raw_tree("val")
+    gzipped_as_repr = gzipped_repr(tree)
+    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", tree)
+    cmk.ccc.store.save_bytes_to_file(
+        tmp_path / "var/check_mk/inventory/hostname.gz", gzipped_as_repr
+    )
     gzipped_as_json = gzipped_json(tree)
     cmk.ccc.store.save_text_to_file(
         tmp_path / "var/check_mk/inventory/hostname.json", json.dumps(tree)
@@ -88,12 +101,15 @@ def test_remove_inventory_tree(tmp_path: Path) -> None:
     assert file_names(tmp_path / "var/check_mk/inventory") == []
 
 
-def test_load_status_data_tree_ignores_a_legacy_tree(tmp_path: Path) -> None:
-    cmk.ccc.store.save_object_to_file(
-        tmp_path / "tmp/check_mk/status_data/hostname", raw_tree("val")
-    )
+def test_load_status_data_tree_legacy(tmp_path: Path) -> None:
+    host_name = HostName("hostname")
+    tree = raw_tree("val")
+    cmk.ccc.store.save_object_to_file(tmp_path / "tmp/check_mk/status_data/hostname", tree)
 
-    assert not InventoryStore(tmp_path).load_status_data_tree(host_name=HostName("hostname"))
+    assert (
+        InventoryStore(tmp_path).load_status_data_tree(host_name=host_name),
+        file_names(tmp_path / "tmp/check_mk/status_data"),
+    ) == (deserialize_tree(tree), ["hostname"])
 
 
 def test_load_status_data_tree(tmp_path: Path) -> None:
@@ -112,6 +128,7 @@ def test_load_status_data_tree(tmp_path: Path) -> None:
 def test_save_status_data_tree(tmp_path: Path) -> None:
     host_name = HostName("hostname")
     tree = raw_tree("val")
+    cmk.ccc.store.save_object_to_file(tmp_path / "tmp/check_mk/status_data/hostname", tree)
 
     inv_store = InventoryStore(tmp_path)
     inv_store.save_status_data_tree(host_name=host_name, tree=deserialize_tree(tree))
@@ -121,6 +138,7 @@ def test_save_status_data_tree(tmp_path: Path) -> None:
 def test_remove_status_data_tree(tmp_path: Path) -> None:
     host_name = HostName("hostname")
     tree = raw_tree("val")
+    cmk.ccc.store.save_object_to_file(tmp_path / "tmp/check_mk/status_data/hostname", tree)
     cmk.ccc.store.save_text_to_file(
         tmp_path / "tmp/check_mk/status_data/hostname.json", json.dumps(tree)
     )
@@ -133,14 +151,14 @@ def test_remove_status_data_tree(tmp_path: Path) -> None:
 def test_load_previous_inventory_tree(tmp_path: Path) -> None:
     host_name = HostName("hostname")
     tree = raw_tree("val")
-    cmk.ccc.store.save_text_to_file(
-        tmp_path / "var/check_mk/inventory_archive/hostname/123.json", json.dumps(tree)
+    cmk.ccc.store.save_object_to_file(
+        tmp_path / "var/check_mk/inventory_archive/hostname/123", tree
     )
 
     assert (
         InventoryStore(tmp_path).load_previous_inventory_tree(host_name=host_name),
         file_names(tmp_path / "var/check_mk/inventory_archive/hostname"),
-    ) == (deserialize_tree(tree), ["123.json"])
+    ) == (deserialize_tree(tree), ["123"])
 
 
 @pytest.mark.parametrize(

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import urllib.parse
 from collections.abc import Mapping
 from http import HTTPStatus
@@ -84,27 +83,25 @@ def test_openapi_get_inventory_trees(
         ],
         sites=["NO_SITE"],
     )
-    cmk.ccc.store.save_text_to_file(
-        cmk.utils.paths.omd_root / "var/check_mk/inventory/hostname1.json",
-        json.dumps(
-            {
-                "Attributes": {"Pairs": {"key": "value1"}},
-                "Table": {
-                    "KeyColumns": ["column"],
-                    "Rows": [{"column": "col-value2"}],
-                },
-                "Nodes": {
-                    "nodename": {
-                        "Attributes": {"Pairs": {"n-key": "n-value3"}},
-                        "Table": {
-                            "KeyColumns": ["n-column"],
-                            "Rows": [{"n-column": "n-col-value4"}],
-                        },
-                        "Nodes": {},
-                    }
-                },
-            }
-        ),
+    cmk.ccc.store.save_object_to_file(
+        cmk.utils.paths.omd_root / "var/check_mk/inventory/hostname1",
+        {
+            "Attributes": {"Pairs": {"key": "value1"}},
+            "Table": {
+                "KeyColumns": ["column"],
+                "Rows": [{"column": "col-value2"}],
+            },
+            "Nodes": {
+                "nodename": {
+                    "Attributes": {"Pairs": {"n-key": "n-value3"}},
+                    "Table": {
+                        "KeyColumns": ["n-column"],
+                        "Rows": [{"n-column": "n-col-value4"}],
+                    },
+                    "Nodes": {},
+                }
+            },
+        },
     )
 
     with live():

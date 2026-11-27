@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from operator import attrgetter
 from pathlib import Path
 from typing import Literal
 
@@ -18,12 +19,22 @@ from cmk.inventory.config import (
     InvCleanupParamsCombined,
     InvCleanupParamsOfHosts,
 )
-from cmk.inventory.paths import InventoryPaths
+from cmk.inventory.paths import InventoryPaths, TreePath, TreePathGz
 
 from ._logger import null_logger
 
+type _FileOf = Callable[[TreePath | TreePathGz], Path]
+
 _NOW = 101
 _TIMESTAMP = 100
+
+_FILE_KINDS = pytest.mark.parametrize(
+    "file_of",
+    [
+        pytest.param(attrgetter("path"), id="json"),
+        pytest.param(attrgetter("legacy"), id="legacy"),
+    ],
+)
 
 
 def _for_hostname(parameters: InvCleanupParamsChoice) -> InvCleanupParams:
@@ -63,38 +74,42 @@ def _create(file_path: Path) -> Path:
     return file_path
 
 
-def _create_tree_files(omd_root: Path, host_name: HostName, *, mtime: int) -> Mapping[str, Path]:
+def _create_tree_files(
+    omd_root: Path, host_name: HostName, file_of: _FileOf, *, mtime: int
+) -> Mapping[str, Path]:
     inv_paths = InventoryPaths(omd_root)
     files = {
-        "inventory": _create(inv_paths.inventory_tree(host_name).path),
-        "inventory gz": _create(inv_paths.inventory_tree_gz(host_name).path),
-        "status data": _create(inv_paths.status_data_tree(host_name).path),
+        "inventory": _create(file_of(inv_paths.inventory_tree(host_name))),
+        "inventory gz": _create(file_of(inv_paths.inventory_tree_gz(host_name))),
+        "status data": _create(file_of(inv_paths.status_data_tree(host_name))),
     }
     for file_path in files.values():
         os.utime(file_path, (mtime, mtime))
     return files
 
 
-def _create_one_archive_file(omd_root: Path) -> Mapping[str, Path]:
+def _create_one_archive_file(omd_root: Path, file_of: _FileOf) -> Mapping[str, Path]:
     archive_tree = InventoryPaths(omd_root).archive_tree(HostName("hostname"), _TIMESTAMP - 1)
     return {
-        **_create_tree_files(omd_root, HostName("hostname"), mtime=_TIMESTAMP),
-        "archive 99": _create(archive_tree.path),
+        **_create_tree_files(omd_root, HostName("hostname"), file_of, mtime=_TIMESTAMP),
+        "archive 99": _create(file_of(archive_tree)),
     }
 
 
-def _create_history_files(omd_root: Path, host_name: HostName) -> Mapping[str, Path]:
+def _create_history_files(
+    omd_root: Path, host_name: HostName, file_of: _FileOf
+) -> Mapping[str, Path]:
     inv_paths = InventoryPaths(omd_root)
     archive_files = {
-        f"archive {ts}": _create(inv_paths.archive_tree(host_name, ts).path)
+        f"archive {ts}": _create(file_of(inv_paths.archive_tree(host_name, ts)))
         for ts in range(96, 100)
     }
     delta_cache_files = {
-        f"delta {ts}_{ts + 1}": _create(inv_paths.delta_cache_tree(host_name, ts, ts + 1).path)
+        f"delta {ts}_{ts + 1}": _create(file_of(inv_paths.delta_cache_tree(host_name, ts, ts + 1)))
         for ts in range(95, 100)
     }
     return {
-        **_create_tree_files(omd_root, host_name, mtime=_TIMESTAMP),
+        **_create_tree_files(omd_root, host_name, file_of, mtime=_TIMESTAMP),
         **archive_files,
         **delta_cache_files,
         "archive dir": inv_paths.archive_host(host_name),
@@ -131,6 +146,7 @@ def test_cleanup_leaves_the_history_directories_as_they_are(
     assert [name for name, directory in directories.items() if directory.exists()] == created
 
 
+@_FILE_KINDS
 @pytest.mark.parametrize(
     "params, removed",
     [
@@ -144,9 +160,9 @@ def test_cleanup_leaves_the_history_directories_as_they_are(
     ],
 )
 def test_cleanup_of_a_single_archive_file(
-    tmp_path: Path, params: InvCleanupParams, removed: Sequence[str]
+    tmp_path: Path, file_of: _FileOf, params: InvCleanupParams, removed: Sequence[str]
 ) -> None:
-    files = _create_one_archive_file(tmp_path)
+    files = _create_one_archive_file(tmp_path, file_of)
 
     _run(tmp_path, params, host_names=[HostName("hostname")])
 
@@ -157,6 +173,7 @@ _TOO_OLD = ["archive 96", "archive 97", "delta 95_96", "delta 96_97", "delta 97_
 _BEYOND_NUMBER = ["archive 96", "delta 95_96", "delta 96_97"]
 
 
+@_FILE_KINDS
 @pytest.mark.parametrize(
     "params, removed",
     [
@@ -171,33 +188,40 @@ _BEYOND_NUMBER = ["archive 96", "delta 95_96", "delta 96_97"]
     ],
 )
 def test_cleanup_of_a_history(
-    tmp_path: Path, params: InvCleanupParams, removed: Sequence[str]
+    tmp_path: Path, file_of: _FileOf, params: InvCleanupParams, removed: Sequence[str]
 ) -> None:
-    files = _create_history_files(tmp_path, HostName("hostname"))
+    files = _create_history_files(tmp_path, HostName("hostname"), file_of)
 
     _run(tmp_path, params, host_names=[HostName("hostname")])
 
     assert _removed(files) == [*removed, "delta 99_100"]
 
 
-def test_cleanup_removes_an_abandoned_host_whose_youngest_file_is_too_old(tmp_path: Path) -> None:
-    known = _create_history_files(tmp_path, HostName("known"))
-    unknown = _create_history_files(tmp_path, HostName("unknown"))
+@_FILE_KINDS
+def test_cleanup_removes_an_abandoned_host_whose_youngest_file_is_too_old(
+    tmp_path: Path, file_of: _FileOf
+) -> None:
+    known = _create_history_files(tmp_path, HostName("known"), file_of)
+    unknown = _create_history_files(tmp_path, HostName("unknown"), file_of)
 
     _run(tmp_path, _abandoned_only(1), host_names=[HostName("known")])
 
     assert (_removed(known), _removed(unknown)) == ([], list(unknown))
 
 
-def test_cleanup_keeps_an_abandoned_host_whose_youngest_file_is_not_too_old(tmp_path: Path) -> None:
-    known = _create_history_files(tmp_path, HostName("known"))
-    unknown = _create_history_files(tmp_path, HostName("unknown"))
+@_FILE_KINDS
+def test_cleanup_keeps_an_abandoned_host_whose_youngest_file_is_not_too_old(
+    tmp_path: Path, file_of: _FileOf
+) -> None:
+    known = _create_history_files(tmp_path, HostName("known"), file_of)
+    unknown = _create_history_files(tmp_path, HostName("unknown"), file_of)
 
     _run(tmp_path, _abandoned_only(2), host_names=[HostName("known")])
 
     assert (_removed(known), _removed(unknown)) == ([], [])
 
 
+@_FILE_KINDS
 @pytest.mark.parametrize(
     "mtime, removed",
     [
@@ -206,11 +230,11 @@ def test_cleanup_keeps_an_abandoned_host_whose_youngest_file_is_not_too_old(tmp_
     ],
 )
 def test_cleanup_of_the_tree_files_of_an_abandoned_host_without_history(
-    tmp_path: Path, mtime: int, removed: Sequence[str]
+    tmp_path: Path, file_of: _FileOf, mtime: int, removed: Sequence[str]
 ) -> None:
-    _create_history_files(tmp_path, HostName("known"))
-    _create_history_files(tmp_path, HostName("unknown"))
-    files = _create_tree_files(tmp_path, HostName("unknown-no-history"), mtime=mtime)
+    _create_history_files(tmp_path, HostName("known"), file_of)
+    _create_history_files(tmp_path, HostName("unknown"), file_of)
+    files = _create_tree_files(tmp_path, HostName("unknown-no-history"), file_of, mtime=mtime)
 
     _run(tmp_path, _abandoned_only(2), host_names=[HostName("known")])
 

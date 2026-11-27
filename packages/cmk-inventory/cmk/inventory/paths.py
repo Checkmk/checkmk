@@ -7,26 +7,41 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Self
 
 from cmk.ccc.hostaddress import HostName, HostNameValidationError
 
 
+# TODO CMK-23408
 @dataclass(frozen=True, kw_only=True)
 class TreePath:
     path: Path
+    legacy: Path
 
     def __post_init__(self) -> None:
         if self.path.suffix != ".json":
             raise ValueError(self.path)
 
+    @classmethod
+    def from_archive_or_delta_cache_file_path(cls, file_path: Path) -> Self:
+        return (
+            cls(path=file_path, legacy=file_path.with_suffix(""))
+            if file_path.suffix == ".json"
+            else cls(path=Path(f"{file_path}.json"), legacy=file_path)
+        )
 
+
+# TODO CMK-23408
 @dataclass(frozen=True, kw_only=True)
 class TreePathGz:
     path: Path
+    legacy: Path
 
     def __post_init__(self) -> None:
         if self.path.suffixes[-2:] != [".json", ".gz"]:
             raise ValueError(self.path)
+        if self.legacy.suffix != ".gz":
+            raise ValueError(self.legacy)
 
 
 def _file_name(host_name: HostName) -> str:
@@ -48,30 +63,48 @@ class InventoryPaths:
         return self.inventory_dir / ".last"
 
     def inventory_tree(self, host_name: HostName) -> TreePath:
-        return TreePath(path=self.inventory_dir / f"{_file_name(host_name)}.json")
+        return TreePath(
+            path=self.inventory_dir / f"{_file_name(host_name)}.json",
+            legacy=self.inventory_dir / _file_name(host_name),
+        )
 
     def inventory_tree_gz(self, host_name: HostName) -> TreePathGz:
-        return TreePathGz(path=self.inventory_dir / f"{_file_name(host_name)}.json.gz")
+        return TreePathGz(
+            path=self.inventory_dir / f"{_file_name(host_name)}.json.gz",
+            legacy=self.inventory_dir / f"{_file_name(host_name)}.gz",
+        )
 
     @property
     def status_data_marker_file(self) -> Path:
         return self.status_data_dir / ".last"
 
     def status_data_tree(self, host_name: HostName) -> TreePath:
-        return TreePath(path=self.status_data_dir / f"{_file_name(host_name)}.json")
+        return TreePath(
+            path=self.status_data_dir / f"{_file_name(host_name)}.json",
+            legacy=self.status_data_dir / _file_name(host_name),
+        )
 
     def host_tree_files(self, host_name: HostName) -> Sequence[Path]:
+        inventory_tree = self.inventory_tree(host_name)
+        inventory_tree_gz = self.inventory_tree_gz(host_name)
+        status_data_tree = self.status_data_tree(host_name)
         return [
-            self.inventory_tree(host_name).path,
-            self.inventory_tree_gz(host_name).path,
-            self.status_data_tree(host_name).path,
+            inventory_tree.path,
+            inventory_tree.legacy,
+            inventory_tree_gz.path,
+            inventory_tree_gz.legacy,
+            status_data_tree.path,
+            status_data_tree.legacy,
         ]
 
     def archive_host(self, host_name: HostName) -> Path:
         return self.archive_dir / _file_name(host_name)
 
     def archive_tree(self, host_name: HostName, timestamp: int) -> TreePath:
-        return TreePath(path=self.archive_host(host_name) / f"{timestamp}.json")
+        return TreePath(
+            path=self.archive_host(host_name) / f"{timestamp}.json",
+            legacy=self.archive_host(host_name) / str(timestamp),
+        )
 
     def delta_cache_host(self, host_name: HostName) -> Path:
         return self.delta_cache_dir / _file_name(host_name)
@@ -80,7 +113,10 @@ class InventoryPaths:
         if previous < -1 or previous >= current:
             raise ValueError(previous)
         previous_name = "None" if previous == -1 else str(previous)
-        return TreePath(path=self.delta_cache_host(host_name) / f"{previous_name}_{current}.json")
+        return TreePath(
+            path=self.delta_cache_host(host_name) / f"{previous_name}_{current}.json",
+            legacy=self.delta_cache_host(host_name) / f"{previous_name}_{current}",
+        )
 
 
 def collect_files(directory: Path) -> Sequence[Path]:
@@ -91,18 +127,22 @@ def collect_files(directory: Path) -> Sequence[Path]:
 
 
 def tree_mtime(tree_path: TreePath) -> int | None:
-    try:
-        return int(tree_path.path.stat().st_mtime)
-    except FileNotFoundError:
-        return None
+    for file_path in (tree_path.path, tree_path.legacy):
+        try:
+            return int(file_path.stat().st_mtime)
+        except FileNotFoundError:
+            continue
+    return None
 
 
 def has_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> bool:
-    return inv_paths.inventory_tree(host_name).path.exists()
+    tree_path = inv_paths.inventory_tree(host_name)
+    return tree_path.path.exists() or tree_path.legacy.exists()
 
 
 def has_status_data_tree(inv_paths: InventoryPaths, host_name: HostName) -> bool:
-    return inv_paths.status_data_tree(host_name).path.exists()
+    tree_path = inv_paths.status_data_tree(host_name)
+    return tree_path.path.exists() or tree_path.legacy.exists()
 
 
 def _has_files(directory: Path) -> bool:

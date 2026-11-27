@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable
+from operator import attrgetter
 from pathlib import Path
 
 import pytest
@@ -17,13 +18,23 @@ from cmk.inventory.paths import (
     has_status_data_tree,
     InventoryPaths,
     tree_mtime,
+    TreePath,
+)
+
+_FILE_KINDS = pytest.mark.parametrize(
+    "file_of",
+    [
+        pytest.param(attrgetter("path"), id="json"),
+        pytest.param(attrgetter("legacy"), id="legacy"),
+    ],
 )
 
 
-def test_has_inventory_tree(tmp_path: Path) -> None:
+@_FILE_KINDS
+def test_has_inventory_tree(tmp_path: Path, file_of: Callable[[TreePath], Path]) -> None:
     inv_paths = InventoryPaths(tmp_path)
     inv_paths.inventory_dir.mkdir(parents=True)
-    inv_paths.inventory_tree(HostName("host")).path.touch()
+    file_of(inv_paths.inventory_tree(HostName("host"))).touch()
     assert has_inventory_tree(inv_paths, HostName("host"))
 
 
@@ -31,10 +42,11 @@ def test_has_no_inventory_tree(tmp_path: Path) -> None:
     assert not has_inventory_tree(InventoryPaths(tmp_path), HostName("host"))
 
 
-def test_has_status_data_tree(tmp_path: Path) -> None:
+@_FILE_KINDS
+def test_has_status_data_tree(tmp_path: Path, file_of: Callable[[TreePath], Path]) -> None:
     inv_paths = InventoryPaths(tmp_path)
     inv_paths.status_data_dir.mkdir(parents=True)
-    inv_paths.status_data_tree(HostName("host")).path.touch()
+    file_of(inv_paths.status_data_tree(HostName("host"))).touch()
     assert has_status_data_tree(inv_paths, HostName("host"))
 
 
@@ -80,13 +92,25 @@ def test_has_no_history(tmp_path: Path) -> None:
     assert not has_history(InventoryPaths(tmp_path), HostName("host"))
 
 
-def test_tree_mtime(tmp_path: Path) -> None:
+def _touch_tree_files(
+    tmp_path: Path, *, json_mtime: int | None, legacy_mtime: int | None
+) -> TreePath:
     tree_path = InventoryPaths(tmp_path).inventory_tree(HostName("host"))
     tree_path.path.parent.mkdir(parents=True)
-    tree_path.path.touch()
-    os.utime(tree_path.path, (100, 100))
-    assert tree_mtime(tree_path) == 100
+    for file_path, mtime in ((tree_path.path, json_mtime), (tree_path.legacy, legacy_mtime)):
+        if mtime is not None:
+            file_path.touch()
+            os.utime(file_path, (mtime, mtime))
+    return tree_path
+
+
+def test_tree_mtime_prefers_the_json_file(tmp_path: Path) -> None:
+    assert tree_mtime(_touch_tree_files(tmp_path, json_mtime=100, legacy_mtime=200)) == 100
+
+
+def test_tree_mtime_falls_back_to_the_legacy_file(tmp_path: Path) -> None:
+    assert tree_mtime(_touch_tree_files(tmp_path, json_mtime=None, legacy_mtime=200)) == 200
 
 
 def test_tree_mtime_without_a_tree_file(tmp_path: Path) -> None:
-    assert tree_mtime(InventoryPaths(tmp_path).inventory_tree(HostName("host"))) is None
+    assert tree_mtime(_touch_tree_files(tmp_path, json_mtime=None, legacy_mtime=None)) is None

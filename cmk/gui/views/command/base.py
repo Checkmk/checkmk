@@ -51,6 +51,7 @@ class Command:
         ident: str,
         title: LazyString,
         permission: Permission,
+        additional_permissions: Sequence[Permission] = (),
         tables: Sequence[str],
         render: Callable[[str], None],
         action: Callable[
@@ -83,6 +84,8 @@ class Command:
         self.deny_button = deny_button
         self.deny_popup_id = deny_popup_id
         self.permission = permission
+        # Checked inside the action; listed here so pages can hide the command up front.
+        self.additional_permissions = additional_permissions
         self.tables = tables
         self.render = render
         self._action = action

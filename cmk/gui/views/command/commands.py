@@ -2333,6 +2333,7 @@ CommandRemoveDowntimesHostServicesTable = Command(
     confirm_title=_l("Remove scheduled downtimes?"),
     confirm_button=_l("Remove"),
     permission=PermissionActionDowntimes,
+    additional_permissions=(PermissionRemoveAllDowntimes,),
     group=CommandGroupDowntimes,
     tables=["host", "service", "aggr"],
     is_shortcut=False,

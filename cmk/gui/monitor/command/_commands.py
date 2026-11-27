@@ -115,7 +115,10 @@ class MonitorCommands:
             title=command.title,
             icon=MonitorCommands._icon_of(command),
             object_types=object_types,
-            permission_name=command.permission.name,
+            permission_names=tuple(
+                permission.name
+                for permission in (command.permission, *command.additional_permissions)
+            ),
             is_prominent=command.is_shortcut or command.is_suggested,
             is_enabled=command.enabled,
         )

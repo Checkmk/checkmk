@@ -6,6 +6,8 @@
 from collections.abc import Callable, Iterable, Sequence
 from typing import cast
 
+import pytest
+
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.monitor.command import (
     MonitorCommand,
@@ -13,6 +15,7 @@ from cmk.gui.monitor.command import (
     MonitorCommands,
     MonitorObjectType,
 )
+from cmk.gui.views.command import command_registry
 from cmk.web.utils.speaklater import LazyString
 
 
@@ -41,6 +44,7 @@ class _LegacyCommand:
         self.icon_name = icon_name
         self.tables = tables
         self.permission = _LegacyPermission(permission)
+        self.additional_permissions: Sequence[_LegacyPermission] = ()
         self.is_shortcut = is_shortcut
         self.is_suggested = is_suggested
         self.enabled: Callable[[], bool] = lambda: enabled
@@ -80,7 +84,7 @@ def _native(
         title=cast(LazyString, title),
         icon=icon,
         object_types=frozenset(object_types),
-        permission_name=permission,
+        permission_names=(permission,),
         is_prominent=False,
         is_enabled=lambda: True,
     )
@@ -156,6 +160,31 @@ def test_unpermitted_command_is_excluded() -> None:
     source = _LegacySource([_LegacyCommand(ident="acknowledge")])
 
     assert _idents(_commands(source), set(), ["acknowledge"]) == []
+
+
+@pytest.mark.parametrize("object_type", ["host", "service"])
+@pytest.mark.parametrize(
+    "granted, offered",
+    [
+        pytest.param(set(), [], id="without remove all downtimes"),
+        pytest.param(
+            {"action.remove_all_downtimes"},
+            ["remove_downtimes_hosts_services"],
+            id="with remove all downtimes",
+        ),
+    ],
+)
+def test_removing_downtimes_of_a_row_needs_remove_all_downtimes(
+    object_type: MonitorObjectType, granted: set[str], offered: list[str]
+) -> None:
+    """Removing downtimes from a host or service row removes all of its downtimes."""
+    commands = MonitorCommands(MonitorCommandRegistry())
+    commands.use_legacy_source(command_registry)
+    user = cast(LoggedInUser, _StubUser({"general.act", "action.downtimes"} | granted))
+
+    permitted = commands.permitted_actions(user, object_type, ["remove_downtimes_hosts_services"])
+
+    assert [command.ident for command in permitted] == offered
 
 
 def test_disabled_command_is_excluded() -> None:

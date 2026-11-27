@@ -28,7 +28,7 @@ class MonitorCommand:
     title: LazyString
     icon: str
     object_types: frozenset[MonitorObjectType]
-    permission_name: str
+    permission_names: tuple[str, ...]
     is_prominent: bool
     is_enabled: Callable[[], bool]
 
@@ -36,7 +36,7 @@ class MonitorCommand:
         return object_type in self.object_types
 
     def is_permitted_for(self, user: LoggedInUser) -> bool:
-        return self.is_enabled() and user.may(self.permission_name)
+        return self.is_enabled() and all(user.may(name) for name in self.permission_names)
 
 
 class MonitorCommandRegistry(Registry[MonitorCommand]):

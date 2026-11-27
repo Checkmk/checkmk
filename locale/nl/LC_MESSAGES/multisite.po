@@ -13786,6 +13786,10 @@ msgstr "Checkmk"
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Checkmk $PERIODNAME$ '$TITLE$'"
 
+#, fuzzy
+msgid "Checkmk AI Router"
+msgstr "Checkmk: BI"
+
 #. weblate-flags: read-only
 #, fuzzy
 msgid "Checkmk AI feature usage notice"
@@ -54328,6 +54332,10 @@ msgstr ""
 msgid "Please choose"
 msgstr "Kies een PNG afbeelding."
 
+#, fuzzy
+msgid "Please choose a BI pack."
+msgstr "Geef uw wachtwoord."
+
 msgid "Please choose a PNG image."
 msgstr "Kies een PNG afbeelding."
 
@@ -70608,6 +70616,10 @@ msgstr ""
 msgid "The aspect of the image is preserved."
 msgstr "Het aspect van het beeld blijft behouden."
 
+#, fuzzy, python-format
+msgid "The attribute \"%(attr_name)s\" assigned to a column does not exist."
+msgstr "Het hostnaam-attribuut moet aan een kolom worden toegewezen."
+
 #, python-format
 msgid ""
 "The attribute \"%s\" is assigned to multiple columns. You can not populate "
@@ -74466,6 +74478,10 @@ msgid ""
 msgstr ""
 "De submap <i>%s</i> heeft de expliciete site <i>%s</i> ingesteld, die "
 "toebehoort aan klant <i>%s</i>. Dit is in strijd met de CME map hiërarchie."
+
+#, python-format
+msgid "The submitted form data is invalid: %(error)s"
+msgstr ""
 
 #, fuzzy
 msgid "The subscription tag"

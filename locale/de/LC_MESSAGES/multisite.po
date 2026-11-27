@@ -13382,6 +13382,10 @@ msgstr "Checkmk"
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Checkmk $PERIODNAME$ '$TITLE$'"
 
+#, fuzzy
+msgid "Checkmk AI Router"
+msgstr "Checkmk: API: Bytes"
+
 #. weblate-flags: read-only
 msgid "Checkmk AI feature usage notice"
 msgstr "Hinweis zur Nutzung von Checkmk AI"
@@ -52189,6 +52193,10 @@ msgstr ""
 msgid "Please choose"
 msgstr "Bitte wählen Sie"
 
+#, fuzzy
+msgid "Please choose a BI pack."
+msgstr "Bitte ein Passwort wählen."
+
 msgid "Please choose a PNG image."
 msgstr "Bitte wählen Sie ein PNG-Bild."
 
@@ -68044,6 +68052,10 @@ msgstr ""
 msgid "The aspect of the image is preserved."
 msgstr "Das Seitenverhältnis des Bildes wird erhalten."
 
+#, fuzzy, python-format
+msgid "The attribute \"%(attr_name)s\" assigned to a column does not exist."
+msgstr "Das Host-Name-Attribut muss einer Spalte zugeordnet sein."
+
 #, python-format
 msgid ""
 "The attribute \"%s\" is assigned to multiple columns. You can not populate "
@@ -72118,6 +72130,10 @@ msgstr ""
 "Der Unterordner <i>%s</i> hat die explizite Instanz <i>%s</i> gesetzt, "
 "welche dem Kunden <i>%s</i> gehört. Dies gefährdet die Ordnerhierarchie für "
 "Multi-Tenancy."
+
+#, python-format
+msgid "The submitted form data is invalid: %(error)s"
+msgstr ""
 
 msgid "The subscription tag"
 msgstr "Das Subskriptionsmerkmal"

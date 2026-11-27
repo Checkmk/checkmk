@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-11-25 16:57+0000\n"
+"PO-Revision-Date: 2026-11-27 09:07+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -13794,6 +13794,10 @@ msgstr "Checkmk"
 
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Checkmk $PERIODNAME$ '$TITLE$'"
+
+#, fuzzy
+msgid "Checkmk AI Router"
+msgstr "Checkmk: BI"
 
 #. weblate-flags: read-only
 #, fuzzy
@@ -54322,6 +54326,10 @@ msgstr ""
 msgid "Please choose"
 msgstr "Por favor, escolha uma imagem PNG."
 
+#, fuzzy
+msgid "Please choose a BI pack."
+msgstr "Por favor, especifique a sua senha."
+
 msgid "Please choose a PNG image."
 msgstr "Por favor, escolha uma imagem PNG."
 
@@ -70632,6 +70640,10 @@ msgstr ""
 msgid "The aspect of the image is preserved."
 msgstr "O aspecto da imagem é preservado."
 
+#, fuzzy, python-format
+msgid "The attribute \"%(attr_name)s\" assigned to a column does not exist."
+msgstr "O atributo do nome do host precisa ser atribuído a uma coluna."
+
 #, python-format
 msgid ""
 "The attribute \"%s\" is assigned to multiple columns. You can not populate "
@@ -74465,6 +74477,10 @@ msgid ""
 msgstr ""
 "A subpasta <i>%s</i> tem o site explícito <i>%s</i> definido, que pertence "
 "ao cliente <i>%s</i>. Isto viola a hierarquia de pastas CME."
+
+#, python-format
+msgid "The submitted form data is invalid: %(error)s"
+msgstr ""
 
 #, fuzzy
 msgid "The subscription tag"
@@ -94945,6 +94961,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -95466,6 +95483,7 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""

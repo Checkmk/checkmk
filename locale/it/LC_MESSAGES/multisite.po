@@ -13608,6 +13608,10 @@ msgstr "Checkmk"
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Checkmk $PERIODNAME$ '$TITLE$'"
 
+#, fuzzy
+msgid "Checkmk AI Router"
+msgstr "Checkmk: BI"
+
 #. weblate-flags: read-only
 #, fuzzy
 msgid "Checkmk AI feature usage notice"
@@ -54104,6 +54108,10 @@ msgstr ""
 msgid "Please choose"
 msgstr "Scegliere"
 
+#, fuzzy
+msgid "Please choose a BI pack."
+msgstr "Si prega di specificare la password."
+
 msgid "Please choose a PNG image."
 msgstr "Per favore scegli un'immagine PNG."
 
@@ -70364,6 +70372,10 @@ msgstr ""
 msgid "The aspect of the image is preserved."
 msgstr "L'aspetto dell'immagine è conservato."
 
+#, fuzzy, python-format
+msgid "The attribute \"%(attr_name)s\" assigned to a column does not exist."
+msgstr "L'attributo del nome dell'host deve essere assegnato a una colonna."
+
 #, python-format
 msgid ""
 "The attribute \"%s\" is assigned to multiple columns. You can not populate "
@@ -74278,6 +74290,10 @@ msgstr ""
 "La sottocartella <i>%s</i> ha il sito esplicito <i>%s</i> impostato, che "
 "appartiene al cliente <i>%s</i>. Questo viola la gerarchia delle cartelle "
 "CME."
+
+#, python-format
+msgid "The submitted form data is invalid: %(error)s"
+msgstr ""
 
 #, fuzzy
 msgid "The subscription tag"

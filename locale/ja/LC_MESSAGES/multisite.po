@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-11-06 06:06+0000\n"
+"PO-Revision-Date: 2026-11-27 01:02+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.11.1\n"
+"X-Generator: Weblate 2026.11.2\n"
 
 msgid " "
 msgstr " "
@@ -12978,6 +12978,10 @@ msgstr "Checkmk"
 
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Checkmk $PERIODNAME$ '$TITLE$'"
+
+#, fuzzy
+msgid "Checkmk AI Router"
+msgstr "Checkmk: API: bytes"
 
 #. weblate-flags: read-only
 msgid "Checkmk AI feature usage notice"
@@ -51275,6 +51279,10 @@ msgstr ""
 msgid "Please choose"
 msgstr "選択してください"
 
+#, fuzzy
+msgid "Please choose a BI pack."
+msgstr "パスワードを指定してください。"
+
 msgid "Please choose a PNG image."
 msgstr "PNG画像を選択してください。"
 
@@ -66873,6 +66881,10 @@ msgstr ""
 msgid "The aspect of the image is preserved."
 msgstr "画像のアスペクトは保持されます。"
 
+#, fuzzy, python-format
+msgid "The attribute \"%(attr_name)s\" assigned to a column does not exist."
+msgstr "ホスト名属性を列に割り当てる必要があります。"
+
 #, python-format
 msgid ""
 "The attribute \"%s\" is assigned to multiple columns. You can not populate "
@@ -70709,6 +70721,10 @@ msgid ""
 msgstr ""
 "サブフォルダ <i>%s</i> には明示的なサイト <i>%s</i> が設定されていて、これは"
 "カスタマー <i>%s</i>に属します。これは、CMEフォルダー階層に違反します。"
+
+#, python-format
+msgid "The submitted form data is invalid: %(error)s"
+msgstr ""
 
 #, fuzzy
 msgid "The subscription tag"
@@ -94180,9 +94196,8 @@ msgid ""
 "Successfully activated %{numberOfChanges} pending %{changeWord} on %"
 "{numberOfSuccessfullyActivatedSites} %{siteWord}"
 msgstr ""
-"%{numberOfChanges}件の変更が正常に有効化されました。%"
-"{numberOfSuccessfullyActivatedSites}件の%{siteWord}で、%{changeWord}が保留中"
-"です"
+"%{numberOfSuccessfullyActivatedSites}件の%{siteWord}で、%{numberOfChanges}件"
+"の保留中の%{changeWord}を正常に有効化しました"
 
 msgid "change"
 msgid_plural "changes"

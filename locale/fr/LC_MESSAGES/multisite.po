@@ -13879,6 +13879,10 @@ msgstr "Checkmk"
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Checkmk $PERIODNAME$ '$TITLE$'"
 
+#, fuzzy
+msgid "Checkmk AI Router"
+msgstr "Checkmk : BI"
+
 #. weblate-flags: read-only
 #, fuzzy
 msgid "Checkmk AI feature usage notice"
@@ -54753,6 +54757,10 @@ msgstr ""
 msgid "Please choose"
 msgstr "Veuillez choisir"
 
+#, fuzzy
+msgid "Please choose a BI pack."
+msgstr "Veuillez préciser votre mot de passe."
+
 msgid "Please choose a PNG image."
 msgstr "Veuillez choisir une image PNG."
 
@@ -71206,6 +71214,10 @@ msgstr ""
 msgid "The aspect of the image is preserved."
 msgstr "L'aspect de l'image est préservé."
 
+#, fuzzy, python-format
+msgid "The attribute \"%(attr_name)s\" assigned to a column does not exist."
+msgstr "L'attribut de nom d'hôte doit être affecté à une colonne."
+
 #, python-format
 msgid ""
 "The attribute \"%s\" is assigned to multiple columns. You can not populate "
@@ -75095,6 +75107,10 @@ msgstr ""
 "Le sous-dossier <i>%s</i> possède le site explicite <i>%s</i> défini, qui "
 "appartient au client <i>%s</i>. Cela constitue une violation de la "
 "hiérarchie des dossiers de l'MEC."
+
+#, python-format
+msgid "The submitted form data is invalid: %(error)s"
+msgstr ""
 
 #, fuzzy
 msgid "The subscription tag"

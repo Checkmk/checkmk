@@ -395,7 +395,6 @@ STAGES:
           trap "rm -f $CHANGED_FILES_WITH_MODE_FILE" EXIT
           CHANGED_FILES_WITH_MODE_FILE=$CHANGED_FILES_WITH_MODE_FILE RESULTS_FILE=${RESULTS}/python-extensions.txt make test-py-extensions
       BAZEL_LOCKS_AMOUNT: 1
-      RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python-extensions.txt"
       JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality/test_py_extensions/"
 

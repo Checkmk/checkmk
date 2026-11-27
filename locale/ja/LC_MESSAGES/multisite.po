@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-11-06 06:02+0000\n"
+"PO-Revision-Date: 2026-11-27 01:02+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.11.1\n"
+"X-Generator: Weblate 2026.11.2\n"
 
 msgid " "
 msgstr " "
@@ -575,8 +575,32 @@ msgid_plural "%(count)d discovery parameters removed"
 msgstr[0] "%(count)d 検出パラメータの削除"
 
 #, python-format
+msgid ""
+"%(count)d entry of geomap/%(name)s.csv has no valid coordinates and was left "
+"out: %(entries)s"
+msgid_plural ""
+"%(count)d entries of geomap/%(name)s.csv have no valid coordinates and were "
+"left out: %(entries)s"
+msgstr[0] ""
+
+#, python-format
+msgid "%(count)d entry of worldmap.db is unreadable and was left out."
+msgid_plural ""
+"%(count)d entries of worldmap.db are unreadable and were left out."
+msgstr[0] ""
+
+#, python-format
 msgid "%(count)d hosts looked at."
 msgstr "%(count)d 調査対象のホスト。"
+
+#, python-format
+msgid ""
+"%(count)d line end follows a line or an object that was left out. Maps binds "
+"a line end only to an object, so it stays where it is."
+msgid_plural ""
+"%(count)d line ends follow a line or an object that was left out. Maps binds "
+"a line end only to an object, so they stay where they are."
+msgstr[0] ""
 
 #, python-format
 msgid ""
@@ -625,6 +649,12 @@ msgid ""
 msgid_plural ""
 "%(count)d objects have a hover URL. Maps keeps them, but does not show them "
 "on hover. Put the content into a hover template."
+msgstr[0] ""
+
+#, python-format
+msgid "%(count)d object has no valid coordinates and was left out: %(objects)s"
+msgid_plural ""
+"%(count)d objects have no valid coordinates and were left out: %(objects)s"
 msgstr[0] ""
 
 #, python-format
@@ -3308,6 +3338,10 @@ msgstr ""
 "スケジューラージョブは、Oracle データベース内のオブジェクトであり、Unixのcron"
 "ジョブに相当するものです。"
 
+#, fuzzy
+msgid "A section cannot be disabled and enabled at the same time."
+msgstr "セクションの無効化と有効化を同時に行うことはできません。"
+
 msgid ""
 "A separate notification is sent to every recipient. Recipients cannot see "
 "which other recipients were notified."
@@ -5960,6 +5994,10 @@ msgstr "追加のヘッダー行"
 
 msgid "Additional rules for outliers"
 msgstr "外れ値の追加ルール"
+
+#, fuzzy
+msgid "Additional services (extended Veeam permissions required)"
+msgstr "マクロ名は必須"
 
 msgid "Additional text prefixed to the output"
 msgstr "出力の前に追加されるテキスト"
@@ -10442,6 +10480,10 @@ msgstr "Azure Recovery Services Vault バックアップ"
 msgid "Azure resource group"
 msgstr "Azure リソースグループ"
 
+#, fuzzy
+msgid "Azure services"
+msgstr "Azureサービスを発見しました！"
+
 msgid "Azure services found!"
 msgstr "Azureサービスを発見しました！"
 
@@ -14362,6 +14404,10 @@ msgstr "Checkmk"
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Checkmk $PERIODNAME$ '$TITLE$'"
 
+#, fuzzy
+msgid "Checkmk AI Router"
+msgstr "Checkmk: API: bytes"
+
 #. weblate-flags: read-only, legal-decision
 msgid "Checkmk AI feature usage notice"
 msgstr "Checkmk AI機能の使用状況に関するお知らせ"
@@ -15165,27 +15211,27 @@ msgstr ""
 
 msgid ""
 "Choose which updater keeps the agents up to date.<br><b>Enable agent updates "
-"using the Agent Controller</b>: The Agent Controller updates the agents for "
+"with the Agent Controller</b>: The Agent Controller updates the agents for "
 "Linux and Windows. Baking fails for Linux agents without the Agent "
 "Controller. Baking also fails for hosts that the rule set <i>Use classic "
 "file deployment</i> keeps on the classic file deployment. Solaris agents get "
-"the legacy updater.<br><b>Enable agent updates using the Agent Controller "
-"(fallback to legacy updater in case of problems)</b>: The agents get both "
-"updaters, and both run side by side, independently of each other. Both "
-"install the agent package that is baked for the host, so it does not matter "
-"which of them updates an agent first. If the Agent Controller fails to "
-"update an agent, the legacy updater still keeps it up to date. Agents that "
-"cannot use the Agent Controller get the legacy updater only: Solaris agents, "
-"and Linux agents without the Agent Controller or without the single "
-"directory deployment. Rules that enabled agent updates before Checkmk 3.0 "
-"use this entry after the update.<br><b>Enable agent updates using the legacy "
-"updater (deprecated)</b>: Only the legacy updater updates the agents."
-"<br><br>Do not forget to enable agent updates in at least one of your rules. "
-"It can be useful to create rules that are only partially filled out. Since "
-"the rule execution is done on a <i>per parameter</i> base you can for "
-"example create one rule at the top of your list that just sets the "
-"activation to <i>Do not enable agent updates</i> for just some of your hosts "
-"without setting any of the other parameters."
+"the legacy updater.<br><b>Enable agent updates with both the Agent "
+"Controller and the legacy updater</b>: The agents get both updaters, and "
+"both run side by side, independently of each other. Both install the agent "
+"package that is baked for the host, so it does not matter which of them "
+"updates an agent first. If the Agent Controller fails to update an agent, "
+"the legacy updater still keeps it up to date. Agents that cannot use the "
+"Agent Controller get the legacy updater only: Solaris agents, and Linux "
+"agents without the Agent Controller or without the single directory "
+"deployment. Rules that enabled agent updates before Checkmk 3.0 use this "
+"entry after the update.<br><b>Enable agent updates with the legacy updater</"
+"b>: Only the legacy updater updates the agents.<br><br>Do not forget to "
+"enable agent updates in at least one of your rules. It can be useful to "
+"create rules that are only partially filled out. Since the rule execution is "
+"done on a <i>per parameter</i> base you can for example create one rule at "
+"the top of your list that just sets the activation to <i>Do not enable agent "
+"updates</i> for just some of your hosts without setting any of the other "
+"parameters."
 msgstr ""
 
 msgid ""
@@ -22477,6 +22523,10 @@ msgstr "無効化された拡張パッケージ%(name)s %(version)s"
 msgid "Disabled or enabled sections (SNMP)"
 msgstr "無効または有効なセクション(SNMP)"
 
+#, fuzzy
+msgid "Disabled or enabled sections (Telemetry)"
+msgstr "無効または有効なセクション(SNMP)"
+
 msgid "Disabled paths"
 msgstr "無効なパス"
 
@@ -25125,17 +25175,20 @@ msgstr ""
 "ホストでのエージェント更新を有効化し、監視エージェントをダウンロードする"
 
 #, fuzzy
-msgid "Enable agent updates using the Agent Controller"
+msgid ""
+"Enable agent updates with both the Agent Controller and the legacy updater"
 msgstr ""
 "ローカルエージェントのデータアクセスをエージェントコントローラに制限する"
 
-msgid ""
-"Enable agent updates using the Agent Controller (fallback to legacy updater "
-"in case of problems)"
+#, fuzzy
+msgid "Enable agent updates with the Agent Controller"
 msgstr ""
+"ローカルエージェントのデータアクセスをエージェントコントローラに制限する"
 
-msgid "Enable agent updates using the legacy updater (deprecated)"
+#, fuzzy
+msgid "Enable agent updates with the legacy updater"
 msgstr ""
+"ローカルエージェントのデータアクセスをエージェントコントローラに制限する"
 
 msgid "Enable all"
 msgstr "全て有効"
@@ -29788,6 +29841,10 @@ msgstr "汎用プラグイン表示オプション"
 
 msgid "Generic rate"
 msgstr "一般的なレート"
+
+#, fuzzy
+msgid "Generic services"
+msgstr "(サービスを選択)"
 
 msgid "Generic string"
 msgstr "一般的な文字列"
@@ -43417,10 +43474,11 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Maps renders objects centered on their coordinates. NagVis-classic places "
-"them as NagVis does, anchored top-left, with labels at their own offset and "
-"the background at its own size, in the same look. It is selected "
-"automatically for an imported NagVis .cfg map."
+"Maps renders objects centered on their coordinates, but hangs a text box on "
+"a geo map by its top-left corner. NagVis-classic places them as NagVis does, "
+"in the same look: on a static map anchored top-left, with labels at their "
+"own offset and the background at its own size; on a geo map with text boxes "
+"centered. It is selected automatically for a map imported from NagVis."
 msgstr ""
 
 msgid "Maps settings"
@@ -45523,10 +45581,10 @@ msgid ""
 "Monitor a Veeam Backup & Replication server through its REST API. Nothing is "
 "installed on the backup server, so this also works for the Veeam software "
 "appliance, where the Checkmk agent cannot run. Use a dedicated account with "
-"the least privileged role that can read the services you need. Some services "
-"can only be read with an administrator account. Such an account can also "
-"delete backups and start restores, so only use one if you need these "
-"services."
+"the least privileged role that can read the services you need. The Veeam "
+"Backup Viewer role is enough for the services selected by default. The "
+"\"Additional services\" need a more privileged role, which can also delete "
+"backups or start restores, so only grant it if you need these services."
 msgstr ""
 "Veeam Backup & Replication サーバーは、その REST API を通じて監視できます。"
 "バックアップサーバーには何もインストールされないため、Checkmkエージェントを実"
@@ -46452,9 +46510,19 @@ msgid ""
 "every site of the connection."
 msgstr ""
 
+msgid ""
+"NagVis fits the section of the map to the hosts it finds. Maps opens the map "
+"with the section it was saved with. Adjust it in the editor if needed."
+msgstr ""
+
 #, fuzzy
 msgid "NagVis is disabled"
 msgstr "サイトが無効になっています"
+
+msgid ""
+"NagVis keeps the objects of a worldmap in worldmap.db, which is not part of "
+"the map file. Add the objects in the editor."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -46467,6 +46535,27 @@ msgstr "NagVisマップ"
 
 msgid "NagVis maps"
 msgstr "NagVisマップ"
+
+#, python-format
+msgid ""
+"NagVis shows %(count)d object only at some zoom levels. Maps shows it at "
+"every zoom level."
+msgid_plural ""
+"NagVis shows %(count)d objects only at some zoom levels. Maps shows them at "
+"every zoom level."
+msgstr[0] ""
+
+#, python-format
+msgid ""
+"NagVis shows only the hosts of the host group %(group)s on the map. Maps "
+"shows every host of its location file."
+msgstr ""
+
+#, python-format
+msgid ""
+"NagVis takes the hosts of the map from geomap/%(name)s.csv, which is not "
+"part of the map file. Add the hosts in the editor."
+msgstr ""
 
 msgid "NagVis-classic"
 msgstr "NagVis-classic"
@@ -50379,11 +50468,11 @@ msgstr "strとunicode値のみが許可される、%(type)sを取得"
 
 msgid ""
 "Only the legacy updater uses these options. The entries <i>Enable agent "
-"updates using the Agent Controller (fallback to legacy updater in case of "
-"problems)</i> and <i>Enable agent updates using the legacy updater "
-"(deprecated)</i> of <i>Activation</i> deploy it. The entry <i>Enable agent "
-"updates using the Agent Controller</i> deploys it on Solaris only. <i>Do not "
-"enable agent updates</i> ignores these options."
+"updates with both the Agent Controller and the legacy updater</i> and "
+"<i>Enable agent updates with the legacy updater</i> of <i>Activation</i> "
+"deploy it. The entry <i>Enable agent updates with the Agent Controller</i> "
+"deploys it on Solaris only. <i>Do not enable agent updates</i> ignores these "
+"options."
 msgstr ""
 
 msgid "Only time"
@@ -54019,6 +54108,10 @@ msgstr ""
 msgid "Please choose"
 msgstr "選択してください"
 
+#, fuzzy
+msgid "Please choose a BI pack."
+msgstr "パスワードを指定してください。"
+
 msgid "Please choose a PNG image."
 msgstr "PNG画像を選択してください。"
 
@@ -56266,6 +56359,10 @@ msgid ""
 msgstr ""
 "RCC プロファイルの設定：RCCプロファイルは、例えばプロキシ設定など、この特定の"
 "RCC環境の設定を定義することができます。"
+
+#, fuzzy
+msgid "RED services"
+msgstr "サービス"
 
 msgid "REST API"
 msgstr "REST API"
@@ -61215,6 +61312,10 @@ msgstr ""
 msgid "Select at least one element"
 msgstr "少なくとも1つの要素を選択してください"
 
+#, fuzzy
+msgid "Select at least one service to fetch."
+msgstr "少なくとも1つのサイトを選択してください。"
+
 msgid "Select contact group"
 msgstr "連絡先グループを選択"
 
@@ -61645,17 +61746,15 @@ msgstr ""
 "ラクチャの特定の側面を監視します。"
 
 msgid ""
-"Select which data the special agent fetches from the backup server. Deselect "
-"services you do not need, for example ones your monitoring account has no "
-"permission for. A selected service the account may not read is left out, and "
-"the Check_MK service shows a warning naming it, so that you can correct the "
-"selection or the permissions. Any other error while fetching makes the agent "
-"fail. Most services are created on the host this rule applies to. "
-"\"Backups\" and \"Restore points\" are instead delivered via piggyback to "
-"one host per protected machine, named after the machine in its Veeam backup "
-"chain. Create these hosts, for example with the dynamic host management, or "
-"map the names to existing hosts with the rule \"Host name translation for "
-"piggybacked hosts\". Without such a host, these services are not created."
+"Select which data the special agent fetches from the backup server. An "
+"account with the read-only Veeam Backup Viewer role can read all of these "
+"services. Deselect the ones you do not need. Most services are created on "
+"the host this rule applies to. \"Backups\" and \"Restore points\" are "
+"instead delivered via piggyback to one host per protected machine, named "
+"after the machine in its Veeam backup chain. Create these hosts, for example "
+"with the dynamic host management, or map the names to existing hosts with "
+"the rule \"Host name translation for piggybacked hosts\". Without such a "
+"host, these services are not created."
 msgstr ""
 
 msgid "Selected"
@@ -62644,8 +62743,8 @@ msgstr ""
 "構成されたチェック間隔に従って、あまりにも長い間チェックされていないサービ"
 "ス。"
 
-msgid "Services to fetch"
-msgstr "取得するサービス"
+msgid "Services to fetch (Veeam Backup Viewer role)"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -68355,6 +68454,10 @@ msgstr "System 3 の最大消費電力（ワット）"
 msgid "System 3 minimum consumed watts"
 msgstr "システム3の最小消費電力（ワット）"
 
+#, fuzzy
+msgid "System Apache configuration up to date"
+msgstr "カスタムサービス構成の更新"
+
 msgid "System Events on APX Inrow Devices"
 msgstr "APX Inrowデバイスのシステムイベント"
 
@@ -70558,6 +70661,10 @@ msgstr ""
 msgid "The aspect of the image is preserved."
 msgstr "画像のアスペクトは保持されます。"
 
+#, fuzzy, python-format
+msgid "The attribute \"%(attr_name)s\" assigned to a column does not exist."
+msgstr "グローバル設定 \"%(varname)s\" は存在しません。"
+
 #, python-format
 msgid ""
 "The attribute \"%(name)s\" is assigned to multiple columns. You can not "
@@ -72693,7 +72800,7 @@ msgstr "メトリックバックエンドの、認可済みアクティブな時
 msgid ""
 "The legacy agent updater will be deprecated in an upcoming Checkmk version. "
 "Its replacement is integrated into the Agent Controller. To use it, set the "
-"activation mode to <i>Enable agent updates using the Agent Controller</i> in "
+"activation mode to <i>Enable agent updates with the Agent Controller</i> in "
 "the rule set <a href=\"%(url)s\">Agent updater (Linux, Windows, Solaris)</"
 "a>. We recommend switching before the legacy updater is removed.<br><br>The "
 "counts include only hosts whose baked agent has agent updates enabled:"
@@ -72793,6 +72900,12 @@ msgstr "クラスターには少なくとも1つの要素が必要です"
 msgid ""
 "The list shows only the rules the search finds, so please clear the search "
 "to move a rule."
+msgstr ""
+
+#, python-format
+msgid ""
+"The location file geomap/%(name)s.csv is missing or unreadable, so the map "
+"has no hosts."
 msgstr ""
 
 msgid "The log file"
@@ -72924,6 +73037,15 @@ msgstr "このマップには、%(limit)dを超えるオブジェクトが含ま
 
 #, python-format
 msgid ""
+"The map has %(count)d objects, more than the %(limit)d a map holds. The last "
+"%(left_out)d were left out."
+msgstr ""
+
+msgid "The map names no location file, so it has no hosts."
+msgstr ""
+
+#, python-format
+msgid ""
 "The map names several NagVis backends (%(backends)s). Maps reads from one "
 "monitoring connection only; the others are ignored."
 msgstr ""
@@ -72935,9 +73057,20 @@ msgstr ""
 
 #, python-format
 msgid ""
+"The map takes its hosts from the unknown source type %(type)s. It has no "
+"hosts."
+msgstr ""
+
+#, python-format
+msgid ""
 "The map takes objects from NagVis sources Maps does not have: %(sources)s. "
 "Add these objects in the editor, for example as a grid with a Livestatus "
 "filter."
+msgstr ""
+
+msgid ""
+"The map takes objects from worldmap.db and from a location file. Maps takes "
+"those of worldmap.db only."
 msgstr ""
 
 #, python-format
@@ -75237,6 +75370,10 @@ msgstr ""
 "<i>%(site_alias)s</i> が設定されていて、これはカスタマー <i>%(customer)s</i>."
 "に属します。これは、マルチテナントのフォルダ階層に違反しています。"
 
+#, fuzzy, python-format
+msgid "The submitted form data is invalid: %(error)s"
+msgstr "指定されたLDAPフィルター \"%(filter)s\"は無効です(%(error)s)"
+
 msgid "The subscription tag"
 msgstr "サブスクリプションタブ"
 
@@ -75261,6 +75398,37 @@ msgstr ""
 
 msgid "The syslog tag"
 msgstr "Syslogタグ"
+
+#, fuzzy
+msgid "The system Apache configuration matches the site settings"
+msgstr "オペレーティングシステムおよびサイトのApache設定"
+
+#, fuzzy
+msgid "The system Apache configuration of this site could not be read."
+msgstr "このサイトのステータスはまだ決定されていません。"
+
+#, python-format
+msgid ""
+"The system Apache configuration of this site does not match its settings "
+"(expected: %(settings)s). Run 'omd update-apache-config %(site)s' as root to "
+"update it."
+msgstr ""
+
+#, python-format
+msgid ""
+"The system Apache configuration of this site was generated by an older "
+"version of Checkmk. Run 'omd update-apache-config %(site)s' as root to "
+"update it."
+msgstr ""
+
+msgid ""
+"The system Apache reaches the site through a configuration file that "
+"<tt>omd</tt> generates from the site's <tt>APACHE_*</tt> settings. Only root "
+"writes this file. If the settings were changed without updating it, for "
+"example with <tt>omd config</tt>, by editing <tt>etc/omd/site.conf</tt> or "
+"by restoring a backup, the system Apache keeps using the old settings. Run "
+"<tt>omd update-apache-config SITE</tt> as root to update it."
+msgstr ""
 
 msgid ""
 "The tablespace levels will never be raise above these values, when using the "
@@ -76342,6 +76510,18 @@ msgid ""
 msgstr ""
 "これらのサービスは、いわゆるアクティブチェックによって提供されます。カスタム"
 "nagiosプラグインを統合することもできます。"
+
+msgid ""
+"These services cannot be read with the Veeam Backup Viewer role. License, "
+"Configuration backup and Server information require the Veeam Backup "
+"Administrator role. Replicas, Agent protection groups and WAN accelerators "
+"require the Veeam Backup Administrator or the Veeam Restore Operator role. A "
+"selected service the account may not read is left out, and the Check_MK "
+"service shows a warning naming it, so that you can correct the selection or "
+"the permissions. While this warning is shown, the automatic service "
+"discovery skips the host. Any other error while fetching makes the agent "
+"fail."
+msgstr ""
 
 msgid ""
 "These services do not use the Checkmk agent or Checkmk SNMP engine but "
@@ -88171,6 +88351,23 @@ msgstr ""
 "ファイルシステムスペースの消費量が増える可能性があります。これは、必要なオブ"
 "ジェクトに対してのみ有効にする必要があります。"
 
+msgid ""
+"Use this rule set to stop fetching the telemetry data of a kind of service. "
+"Its services then vanish at the next service discovery. Custom services are "
+"not affected.<br><br><b>Generic services</b>: one service 'Metric <i>name</"
+"i>' for each metric the host receives, whatever its source. These also cover "
+"metrics that the RED or Azure services already monitor.<br><b>RED services</"
+"b>: the request rate, error rate and latency of the host's HTTP and RPC "
+"servers and of its traces, computed from the metrics "
+"'http.server.request.duration', 'rpc.server.duration' and "
+"'traces.span.metrics.duration'.<br><b>Azure services</b>: the Azure Monitor "
+"metrics of an Azure resource, collected by the Azure Monitor receiver of an "
+"OpenTelemetry collector. All statistics of an Azure metric are shown in one "
+"service.<br><br>All matching rules apply. If several of them list the same "
+"section, the first one decides whether the section is disabled or enabled. "
+"Sections that no rule lists stay enabled."
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "Use this rule to enable the use of SNMP version 2c instead of the default "
@@ -92501,6 +92698,13 @@ msgid ""
 msgstr ""
 "この設定では、特別なエージェントは、指定されたポートで同じシステム上のCheckmk"
 "エージェントにも接続します。"
+
+#, python-format
+msgid ""
+"With what their templates and the global settings pass on, the objects of "
+"the map take more than %(limit)d characters. The last %(left_out)d were left "
+"out."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -97467,6 +97671,10 @@ msgstr "パスワードなし/禁止パスワード(キーベース)"
 msgid "words/s"
 msgstr "words/s"
 
+#, fuzzy, python-format
+msgid "worldmap.db cannot be read: %(error)s"
+msgstr "生成されたルールは読み取れません：%(reason)s"
+
 msgid "worst state"
 msgstr "最悪の状態"
 
@@ -98018,12 +98226,20 @@ msgid "From time"
 msgstr "ノータイム"
 
 #, fuzzy
+msgid "Choose start time"
+msgstr "すべて選択する"
+
+#, fuzzy
 msgid "To date"
 msgstr "データなし"
 
 #, fuzzy
 msgid "To time"
 msgstr "ノータイム"
+
+#, fuzzy
+msgid "Choose end time"
+msgstr "すべて選択する"
 
 #, fuzzy
 msgid "Quick range presets"
@@ -98083,14 +98299,15 @@ msgstr "来年の始まり"
 msgid "not set"
 msgstr "現在ではない"
 
-msgid "Timezone"
-msgstr "タイムゾーン"
+msgid "Timezone: %{region} (%{zone})"
+msgstr ""
 
-msgid "Timezone:"
-msgstr "タイムゾーン："
+#, fuzzy
+msgid "Server time: %{time}"
+msgstr "サーバー時間"
 
-msgid "Current server time:"
-msgstr "現在のサーバー時刻："
+msgid "Server time: %{date}, %{time} (%{zone})"
+msgstr ""
 
 #, fuzzy
 msgid "Save & apply"
@@ -98514,6 +98731,10 @@ msgid "Rank"
 msgstr ""
 
 #, fuzzy
+msgid "Rank %{rank}"
+msgstr "日付範囲"
+
+#, fuzzy
 msgid "Embedded page"
 msgstr "埋め込み画像"
 
@@ -98521,9 +98742,8 @@ msgstr "埋め込み画像"
 msgid "Invalid URL"
 msgstr "無効なURLが指定されました"
 
-#, fuzzy
-msgid "Not applied to this table: %{filters}"
-msgstr "適用されたフィルター:"
+msgid "Some filters not supported yet: %{filters}"
+msgstr ""
 
 msgid "Not available on shared dashboards"
 msgstr "共有ダッシュボードでは利用できません"
@@ -98575,6 +98795,10 @@ msgstr ""
 #, fuzzy
 msgid "Nothing matches the widget filter in the selected time frame."
 msgstr "問題を承認する"
+
+#, fuzzy
+msgid "Services with conflicting metrics"
+msgstr "通知期間中のサービス"
 
 msgid "Last successful update less than a minute ago."
 msgstr ""
@@ -98748,8 +98972,13 @@ msgstr "名無しダッシュボード"
 msgid "Settings Menu"
 msgstr "設定メニュー"
 
-msgid "Show date and time"
+#, fuzzy
+msgid "Show date time picker"
 msgstr "日付と時刻を表示"
+
+#, fuzzy
+msgid "Show live refresh"
+msgstr "リフレッシュ"
 
 #, fuzzy
 msgid "Public sharing"
@@ -100168,6 +100397,10 @@ msgid "Show bar visualization"
 msgstr "バーの表示"
 
 #, fuzzy
+msgid "Show rank numbers"
+msgstr "ポート番号"
+
+#, fuzzy
 msgid "Data configuration"
 msgstr "デフォルト設定"
 
@@ -100836,6 +101069,13 @@ msgid "Toggle attributes of %{metric}"
 msgstr "設定するホスト属性"
 
 #, fuzzy
+msgid "Scroll legend back"
+msgstr "凡例を表示"
+
+msgid "Scroll legend forward"
+msgstr ""
+
+#, fuzzy
 msgid "Graph metrics"
 msgstr "メトリクス"
 
@@ -100862,6 +101102,10 @@ msgstr "プラグインを追加"
 #, fuzzy
 msgid "Remove pin"
 msgstr "名前を削除する"
+
+#, fuzzy
+msgid "Hold to zoom the value axis"
+msgstr "値のID"
 
 #, fuzzy
 msgid "Maximum zoom reached"
@@ -101560,10 +101804,6 @@ msgid "Resume"
 msgstr "再開可能"
 
 #, fuzzy
-msgid "Custom time range"
-msgstr "時間範囲をカスタマイズ"
-
-#, fuzzy
 msgid "More time ranges"
 msgstr "時間範囲をフォーマットする"
 
@@ -101647,9 +101887,8 @@ msgid ""
 "Successfully activated %{numberOfChanges} pending %{changeWord} on %"
 "{numberOfSuccessfullyActivatedSites} %{siteWord}"
 msgstr ""
-"%{numberOfChanges}件の変更が正常に有効化されました。%"
-"{numberOfSuccessfullyActivatedSites}件の%{siteWord}で、%{changeWord}が保留中"
-"です"
+"%{numberOfSuccessfullyActivatedSites}件の%{siteWord}で、%{numberOfChanges}件"
+"の保留中の%{changeWord}を正常に有効化しました"
 
 msgid "change"
 msgid_plural "changes"
@@ -102526,13 +102765,18 @@ msgstr "オブジェクトを制限する"
 msgid "Reset to fit"
 msgstr "デフォルトにリセット"
 
-msgid "Pinned %{name} out of the grid"
+#, fuzzy
+msgid "Deleted %{n} object"
+msgid_plural "Deleted %{n} objects"
+msgstr[0] "%{n} 個のオブジェクトを削除しますか？"
+
+msgid "A map takes at most %{n} grids."
 msgstr ""
 
 msgid "Undo"
 msgstr "元に戻す"
 
-msgid "A map takes at most %{n} grids."
+msgid "Pinned %{name} out of the grid"
 msgstr ""
 
 #, fuzzy
@@ -102984,9 +103228,10 @@ msgid "Spacing Y"
 msgstr "スペースの節約"
 
 msgid ""
-"Label and appearance apply to each object of the grid. Drag an object out of "
-"the grid, or use \"Pin out of the grid\" in its context menu, to place it on "
-"its own."
+"Label and appearance apply to each object of the grid. Showing the label "
+"widens the spacing for it; a label wider than spacing X is cut off, except "
+"on a NagVis-classic map. Drag an object out of the grid, or use \"Pin out of "
+"the grid\" in its context menu, to place it on its own."
 msgstr ""
 
 msgid ""
@@ -103820,10 +104065,6 @@ msgid "Delete object"
 msgstr "ジョブを削除"
 
 #, fuzzy
-msgid "Save failed"
-msgstr "ログインが無効です"
-
-#, fuzzy
 msgid "Live update failed"
 msgstr "フェッチに失敗しました"
 
@@ -104361,6 +104602,14 @@ msgstr "プレビューは一部のみ表示 — %{hidden} 以上の内容は表
 msgid "Map canvas"
 msgstr "マップされたデータ"
 
+msgid "Drag to change the objects per row"
+msgstr ""
+
+#, fuzzy
+msgid "%{n} per row"
+msgid_plural "%{n} per row"
+msgstr[0] "行あたりのエントリー"
+
 #, fuzzy
 msgid "Could not read the matching services"
 msgstr "証明書を読み取ることができませんでした。"
@@ -104452,6 +104701,10 @@ msgstr ""
 msgid "Someone else saved the map meanwhile."
 msgstr ""
 
+#, fuzzy
+msgid "Save failed"
+msgstr "ログインが無効です"
+
 msgid ""
 "No BI aggregations available. Either you are not permitted to see them or no "
 "BI aggregation is configured."
@@ -104490,11 +104743,46 @@ msgid "Checkmk label"
 msgstr "Checkmkエージェント"
 
 #, fuzzy
+msgid "Delete the grid of %{n} service?"
+msgid_plural "Delete the grid of %{n} services?"
+msgstr[0] "このカスタムサービスを削除する"
+
+#, fuzzy
+msgid "Delete the grid of %{n} host?"
+msgid_plural "Delete the grid of %{n} hosts?"
+msgstr[0] "メトリック %{names} を削除しますか？"
+
+#, fuzzy
 msgid "Delete %{type}?"
 msgstr "%{ids}を削除？"
 
 msgid "Delete %{type} \"%{name}\"?"
 msgstr "%{type} \"%{name}\" を削除しますか？"
+
+msgid "The %{n} object shown by grids among them goes too."
+msgid_plural "The %{n} objects shown by grids among them go too."
+msgstr[0] ""
+
+#, fuzzy
+msgid "Deleted the grid of %{n} service"
+msgid_plural "Deleted the grid of %{n} services"
+msgstr[0] "このカスタムサービスを削除する"
+
+#, fuzzy
+msgid "Deleted the grid of %{n} host"
+msgid_plural "Deleted the grid of %{n} hosts"
+msgstr[0] "期間%(name)sを削除しました"
+
+#, fuzzy
+msgid "Deleted %{type}"
+msgstr "%{ids}を削除？"
+
+#, fuzzy
+msgid "Deleted %{type} \"%{name}\""
+msgstr "%{type} \"%{name}\" を削除しますか？"
+
+msgid "Grid (a map takes at most %{n})"
+msgstr ""
 
 msgid "Percent"
 msgstr "パーセント"
@@ -107799,6 +108087,9 @@ msgstr "列に表示"
 msgid "Clear the filter on %{column} before hiding it"
 msgstr "%{column} を非表示にする前に、そのフィルターをクリアしてください"
 
+msgid "%{column} column hidden, filter is active"
+msgstr ""
+
 #, fuzzy
 msgid "AND"
 msgstr "警告"
@@ -107900,6 +108191,10 @@ msgid "Exact match. Editing searches by substring."
 msgstr ""
 
 #, fuzzy
+msgid "Regular expression. Editing searches by substring."
+msgstr "プロセスパスに一致する正規表現"
+
+#, fuzzy
 msgid "Show the graphs of host %{name}"
 msgstr "ホストのステータス"
 
@@ -107954,6 +108249,14 @@ msgstr "検索結果を広げるには、1つ以上のフィルタを解除し�
 
 msgid "Dismiss"
 msgstr "閉じる"
+
+msgid ""
+"Some filters not supported yet: %{filters}; others active in hidden columns"
+msgstr ""
+
+#, fuzzy
+msgid "Filters active in hidden columns"
+msgstr "%{columns} のソート順をAで拡張"
 
 msgid "Show:"
 msgstr "Show:"
@@ -109974,6 +110277,26 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "取り上げるトピック"
+
+#~ msgid "Services to fetch"
+#~ msgstr "取得するサービス"
+
+#~ msgid "Timezone"
+#~ msgstr "タイムゾーン"
+
+#~ msgid "Timezone:"
+#~ msgstr "タイムゾーン："
+
+#~ msgid "Current server time:"
+#~ msgstr "現在のサーバー時刻："
+
+#, fuzzy
+#~ msgid "Not applied to this table: %{filters}"
+#~ msgstr "適用されたフィルター:"
+
+#, fuzzy
+#~ msgid "Custom time range"
+#~ msgstr "時間範囲をカスタマイズ"
 
 #, fuzzy
 #~ msgid "Drill down to dashboard (custom)"
@@ -113203,10 +113526,6 @@ msgstr "取り上げるトピック"
 #, python-format
 #~ msgid "Site-specific global configuration for %(site_id)s"
 #~ msgstr "%(site_id)sのサイト固有のグローバル構成"
-
-#, python-format
-#~ msgid "The global setting \"%(varname)s\" does not exist."
-#~ msgstr "グローバル設定 \"%(varname)s\" は存在しません。"
 
 #~ msgid "The requested global setting does not exist."
 #~ msgstr "要求されたグローバル設定は存在しません。"

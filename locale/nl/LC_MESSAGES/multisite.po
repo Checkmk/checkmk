@@ -585,9 +585,36 @@ msgid_plural "%(count)d discovery parameters removed"
 msgstr[0] "Algemene eigenschappen"
 msgstr[1] "Algemene eigenschappen"
 
+#, python-format
+msgid ""
+"%(count)d entry of geomap/%(name)s.csv has no valid coordinates and was left "
+"out: %(entries)s"
+msgid_plural ""
+"%(count)d entries of geomap/%(name)s.csv have no valid coordinates and were "
+"left out: %(entries)s"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "%(count)d entry of worldmap.db is unreadable and was left out."
+msgid_plural ""
+"%(count)d entries of worldmap.db are unreadable and were left out."
+msgstr[0] ""
+msgstr[1] ""
+
 #, fuzzy, python-format
 msgid "%(count)d hosts looked at."
 msgstr "Niet geselecteerd"
+
+#, python-format
+msgid ""
+"%(count)d line end follows a line or an object that was left out. Maps binds "
+"a line end only to an object, so it stays where it is."
+msgid_plural ""
+"%(count)d line ends follow a line or an object that was left out. Maps binds "
+"a line end only to an object, so they stay where they are."
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-format
 msgid ""
@@ -641,6 +668,13 @@ msgid ""
 msgid_plural ""
 "%(count)d objects have a hover URL. Maps keeps them, but does not show them "
 "on hover. Put the content into a hover template."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "%(count)d object has no valid coordinates and was left out: %(objects)s"
+msgid_plural ""
+"%(count)d objects have no valid coordinates and were left out: %(objects)s"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -3342,6 +3376,11 @@ msgid ""
 msgstr ""
 "Een scheduler job is een object in een ORACLE database dat kan worden "
 "vergeleken met een cron job op Unix. "
+
+#, fuzzy
+msgid "A section cannot be disabled and enabled at the same time."
+msgstr ""
+"Sectie(s) kunnen niet tegelijkertijd worden uitgeschakeld en ingeschakeld:"
 
 #, fuzzy
 msgid ""
@@ -6214,6 +6253,10 @@ msgstr "Extra kopregels"
 
 msgid "Additional rules for outliers"
 msgstr "Aanvullende regels voor uitschieters"
+
+#, fuzzy
+msgid "Additional services (extended Veeam permissions required)"
+msgstr "als macro met de naam"
 
 msgid "Additional text prefixed to the output"
 msgstr "Extra tekst als voorvoegsel bij de uitvoer"
@@ -11101,6 +11144,10 @@ msgid "Azure resource group"
 msgstr "Bronnengroep toevoegen"
 
 #, fuzzy
+msgid "Azure services"
+msgstr "Geen hosts/services gevonden."
+
+#, fuzzy
 msgid "Azure services found!"
 msgstr "Geen hosts/services gevonden."
 
@@ -15250,6 +15297,10 @@ msgstr "Checkmk"
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Checkmk $PERIODNAME$ '$TITLE$'"
 
+#, fuzzy
+msgid "Checkmk AI Router"
+msgstr "Checkmk: BI"
+
 #. weblate-flags: read-only, legal-decision
 #, fuzzy
 msgid "Checkmk AI feature usage notice"
@@ -16110,27 +16161,27 @@ msgstr ""
 
 msgid ""
 "Choose which updater keeps the agents up to date.<br><b>Enable agent updates "
-"using the Agent Controller</b>: The Agent Controller updates the agents for "
+"with the Agent Controller</b>: The Agent Controller updates the agents for "
 "Linux and Windows. Baking fails for Linux agents without the Agent "
 "Controller. Baking also fails for hosts that the rule set <i>Use classic "
 "file deployment</i> keeps on the classic file deployment. Solaris agents get "
-"the legacy updater.<br><b>Enable agent updates using the Agent Controller "
-"(fallback to legacy updater in case of problems)</b>: The agents get both "
-"updaters, and both run side by side, independently of each other. Both "
-"install the agent package that is baked for the host, so it does not matter "
-"which of them updates an agent first. If the Agent Controller fails to "
-"update an agent, the legacy updater still keeps it up to date. Agents that "
-"cannot use the Agent Controller get the legacy updater only: Solaris agents, "
-"and Linux agents without the Agent Controller or without the single "
-"directory deployment. Rules that enabled agent updates before Checkmk 3.0 "
-"use this entry after the update.<br><b>Enable agent updates using the legacy "
-"updater (deprecated)</b>: Only the legacy updater updates the agents."
-"<br><br>Do not forget to enable agent updates in at least one of your rules. "
-"It can be useful to create rules that are only partially filled out. Since "
-"the rule execution is done on a <i>per parameter</i> base you can for "
-"example create one rule at the top of your list that just sets the "
-"activation to <i>Do not enable agent updates</i> for just some of your hosts "
-"without setting any of the other parameters."
+"the legacy updater.<br><b>Enable agent updates with both the Agent "
+"Controller and the legacy updater</b>: The agents get both updaters, and "
+"both run side by side, independently of each other. Both install the agent "
+"package that is baked for the host, so it does not matter which of them "
+"updates an agent first. If the Agent Controller fails to update an agent, "
+"the legacy updater still keeps it up to date. Agents that cannot use the "
+"Agent Controller get the legacy updater only: Solaris agents, and Linux "
+"agents without the Agent Controller or without the single directory "
+"deployment. Rules that enabled agent updates before Checkmk 3.0 use this "
+"entry after the update.<br><b>Enable agent updates with the legacy updater</"
+"b>: Only the legacy updater updates the agents.<br><br>Do not forget to "
+"enable agent updates in at least one of your rules. It can be useful to "
+"create rules that are only partially filled out. Since the rule execution is "
+"done on a <i>per parameter</i> base you can for example create one rule at "
+"the top of your list that just sets the activation to <i>Do not enable agent "
+"updates</i> for just some of your hosts without setting any of the other "
+"parameters."
 msgstr ""
 
 #, fuzzy
@@ -23847,6 +23898,10 @@ msgstr "Uitgeschakeld uitbreidingspakket %(name)s %(version)s"
 msgid "Disabled or enabled sections (SNMP)"
 msgstr "Uitgeschakelde of ingeschakelde secties (SNMP)"
 
+#, fuzzy
+msgid "Disabled or enabled sections (Telemetry)"
+msgstr "Uitgeschakelde of ingeschakelde secties (SNMP)"
+
 msgid "Disabled paths"
 msgstr "Uitgeschakelde paden"
 
@@ -26639,16 +26694,17 @@ msgid "Enable agent updates on hosts & download monitoring agents"
 msgstr "Registreer alle hosts & download alle monitoring agents"
 
 #, fuzzy
-msgid "Enable agent updates using the Agent Controller"
+msgid ""
+"Enable agent updates with both the Agent Controller and the legacy updater"
 msgstr "Beperk de toegang tot lokale agentgegevens tot de agentcontroller"
 
-msgid ""
-"Enable agent updates using the Agent Controller (fallback to legacy updater "
-"in case of problems)"
-msgstr ""
+#, fuzzy
+msgid "Enable agent updates with the Agent Controller"
+msgstr "Beperk de toegang tot lokale agentgegevens tot de agentcontroller"
 
-msgid "Enable agent updates using the legacy updater (deprecated)"
-msgstr ""
+#, fuzzy
+msgid "Enable agent updates with the legacy updater"
+msgstr "Beperk de toegang tot lokale agentgegevens tot de agentcontroller"
 
 msgid "Enable all"
 msgstr "Alles inschakelen"
@@ -31471,6 +31527,10 @@ msgstr "Generieke plugin weergave opties"
 
 msgid "Generic rate"
 msgstr "Algemeen tarief"
+
+#, fuzzy
+msgid "Generic services"
+msgstr "Gebruikers verwijderen"
 
 msgid "Generic string"
 msgstr "Generieke string"
@@ -46128,10 +46188,11 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Maps renders objects centered on their coordinates. NagVis-classic places "
-"them as NagVis does, anchored top-left, with labels at their own offset and "
-"the background at its own size, in the same look. It is selected "
-"automatically for an imported NagVis .cfg map."
+"Maps renders objects centered on their coordinates, but hangs a text box on "
+"a geo map by its top-left corner. NagVis-classic places them as NagVis does, "
+"in the same look: on a static map anchored top-left, with labels at their "
+"own offset and the background at its own size; on a geo map with text boxes "
+"centered. It is selected automatically for a map imported from NagVis."
 msgstr ""
 
 #, fuzzy
@@ -48368,10 +48429,10 @@ msgid ""
 "Monitor a Veeam Backup & Replication server through its REST API. Nothing is "
 "installed on the backup server, so this also works for the Veeam software "
 "appliance, where the Checkmk agent cannot run. Use a dedicated account with "
-"the least privileged role that can read the services you need. Some services "
-"can only be read with an administrator account. Such an account can also "
-"delete backups and start restores, so only use one if you need these "
-"services."
+"the least privileged role that can read the services you need. The Veeam "
+"Backup Viewer role is enough for the services selected by default. The "
+"\"Additional services\" need a more privileged role, which can also delete "
+"backups or start restores, so only grant it if you need these services."
 msgstr ""
 
 msgid "Monitor all files in folder"
@@ -49385,9 +49446,19 @@ msgid ""
 "every site of the connection."
 msgstr ""
 
+msgid ""
+"NagVis fits the section of the map to the hosts it finds. Maps opens the map "
+"with the section it was saved with. Adjust it in the editor if needed."
+msgstr ""
+
 #, fuzzy
 msgid "NagVis is disabled"
 msgstr "Site is uitgeschakeld"
+
+msgid ""
+"NagVis keeps the objects of a worldmap in worldmap.db, which is not part of "
+"the map file. Add the objects in the editor."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -49400,6 +49471,28 @@ msgstr "NagVis kaart"
 
 msgid "NagVis maps"
 msgstr "NagVis kaarten"
+
+#, python-format
+msgid ""
+"NagVis shows %(count)d object only at some zoom levels. Maps shows it at "
+"every zoom level."
+msgid_plural ""
+"NagVis shows %(count)d objects only at some zoom levels. Maps shows them at "
+"every zoom level."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid ""
+"NagVis shows only the hosts of the host group %(group)s on the map. Maps "
+"shows every host of its location file."
+msgstr ""
+
+#, python-format
+msgid ""
+"NagVis takes the hosts of the map from geomap/%(name)s.csv, which is not "
+"part of the map file. Add the hosts in the editor."
+msgstr ""
 
 #, fuzzy
 msgid "NagVis-classic"
@@ -53592,11 +53685,11 @@ msgstr "Alleen str en unicode waarden zijn toegestaan, got %s"
 
 msgid ""
 "Only the legacy updater uses these options. The entries <i>Enable agent "
-"updates using the Agent Controller (fallback to legacy updater in case of "
-"problems)</i> and <i>Enable agent updates using the legacy updater "
-"(deprecated)</i> of <i>Activation</i> deploy it. The entry <i>Enable agent "
-"updates using the Agent Controller</i> deploys it on Solaris only. <i>Do not "
-"enable agent updates</i> ignores these options."
+"updates with both the Agent Controller and the legacy updater</i> and "
+"<i>Enable agent updates with the legacy updater</i> of <i>Activation</i> "
+"deploy it. The entry <i>Enable agent updates with the Agent Controller</i> "
+"deploys it on Solaris only. <i>Do not enable agent updates</i> ignores these "
+"options."
 msgstr ""
 
 msgid "Only time"
@@ -57608,6 +57701,10 @@ msgstr ""
 msgid "Please choose"
 msgstr "Kies een PNG afbeelding."
 
+#, fuzzy
+msgid "Please choose a BI pack."
+msgstr "Geef uw wachtwoord."
+
 msgid "Please choose a PNG image."
 msgstr "Kies een PNG afbeelding."
 
@@ -60025,6 +60122,10 @@ msgid ""
 "RCC profile configuration: RCC profiles can define settings for this "
 "specific RCC environment, for example proxy settings."
 msgstr ""
+
+#, fuzzy
+msgid "RED services"
+msgstr "diensten"
 
 msgid "REST API"
 msgstr "REST-API"
@@ -65293,6 +65394,10 @@ msgid "Select at least one element"
 msgstr "Selecteer ten minste één element"
 
 #, fuzzy
+msgid "Select at least one service to fetch."
+msgstr "Selecteer ten minste één element"
+
+#, fuzzy
 msgid "Select contact group"
 msgstr "Regel contactgroepen"
 
@@ -65675,17 +65780,15 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Select which data the special agent fetches from the backup server. Deselect "
-"services you do not need, for example ones your monitoring account has no "
-"permission for. A selected service the account may not read is left out, and "
-"the Check_MK service shows a warning naming it, so that you can correct the "
-"selection or the permissions. Any other error while fetching makes the agent "
-"fail. Most services are created on the host this rule applies to. "
-"\"Backups\" and \"Restore points\" are instead delivered via piggyback to "
-"one host per protected machine, named after the machine in its Veeam backup "
-"chain. Create these hosts, for example with the dynamic host management, or "
-"map the names to existing hosts with the rule \"Host name translation for "
-"piggybacked hosts\". Without such a host, these services are not created."
+"Select which data the special agent fetches from the backup server. An "
+"account with the read-only Veeam Backup Viewer role can read all of these "
+"services. Deselect the ones you do not need. Most services are created on "
+"the host this rule applies to. \"Backups\" and \"Restore points\" are "
+"instead delivered via piggyback to one host per protected machine, named "
+"after the machine in its Veeam backup chain. Create these hosts, for example "
+"with the dynamic host management, or map the names to existing hosts with "
+"the rule \"Host name translation for piggybacked hosts\". Without such a "
+"host, these services are not created."
 msgstr ""
 
 msgid "Selected"
@@ -66759,9 +66862,8 @@ msgstr ""
 "Diensten die te lang niet zijn gecontroleerd volgens de geconfigureerde "
 "controle-intervallen."
 
-#, fuzzy
-msgid "Services to fetch"
-msgstr "Diensten van gastheer"
+msgid "Services to fetch (Veeam Backup Viewer role)"
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -72743,6 +72845,10 @@ msgstr ""
 msgid "System 3 minimum consumed watts"
 msgstr ""
 
+#, fuzzy
+msgid "System Apache configuration up to date"
+msgstr "Regel voor gastheer- en dienstconfiguratie"
+
 msgid "System Events on APX Inrow Devices"
 msgstr "Systeem Gebeurtenissen op APX Inrow Toestellen"
 
@@ -75053,6 +75159,10 @@ msgid "The aspect of the image is preserved."
 msgstr "Het aspect van het beeld blijft behouden."
 
 #, fuzzy, python-format
+msgid "The attribute \"%(attr_name)s\" assigned to a column does not exist."
+msgstr "De globale instelling \"%(varname)s\" bestaat niet."
+
+#, fuzzy, python-format
 msgid ""
 "The attribute \"%(name)s\" is assigned to multiple columns. You can not "
 "populate one attribute from multiple columns. The column-to-attribute "
@@ -77150,7 +77260,7 @@ msgstr ""
 msgid ""
 "The legacy agent updater will be deprecated in an upcoming Checkmk version. "
 "Its replacement is integrated into the Agent Controller. To use it, set the "
-"activation mode to <i>Enable agent updates using the Agent Controller</i> in "
+"activation mode to <i>Enable agent updates with the Agent Controller</i> in "
 "the rule set <a href=\"%(url)s\">Agent updater (Linux, Windows, Solaris)</"
 "a>. We recommend switching before the legacy updater is removed.<br><br>The "
 "counts include only hosts whose baked agent has agent updates enabled:"
@@ -77234,6 +77344,12 @@ msgstr "Het cluster moet ten minste één knooppunt hebben"
 msgid ""
 "The list shows only the rules the search finds, so please clear the search "
 "to move a rule."
+msgstr ""
+
+#, python-format
+msgid ""
+"The location file geomap/%(name)s.csv is missing or unreadable, so the map "
+"has no hosts."
 msgstr ""
 
 #, fuzzy
@@ -77379,6 +77495,15 @@ msgstr "Uw query heeft meer dan %(limit)d resultaten opgeleverd. "
 
 #, python-format
 msgid ""
+"The map has %(count)d objects, more than the %(limit)d a map holds. The last "
+"%(left_out)d were left out."
+msgstr ""
+
+msgid "The map names no location file, so it has no hosts."
+msgstr ""
+
+#, python-format
+msgid ""
 "The map names several NagVis backends (%(backends)s). Maps reads from one "
 "monitoring connection only; the others are ignored."
 msgstr ""
@@ -77390,9 +77515,20 @@ msgstr ""
 
 #, python-format
 msgid ""
+"The map takes its hosts from the unknown source type %(type)s. It has no "
+"hosts."
+msgstr ""
+
+#, python-format
+msgid ""
 "The map takes objects from NagVis sources Maps does not have: %(sources)s. "
 "Add these objects in the editor, for example as a grid with a Livestatus "
 "filter."
+msgstr ""
+
+msgid ""
+"The map takes objects from worldmap.db and from a location file. Maps takes "
+"those of worldmap.db only."
 msgstr ""
 
 #, python-format
@@ -79637,6 +79773,10 @@ msgstr ""
 "De submap <i>%s</i> heeft de expliciete site <i>%s</i> ingesteld, die "
 "toebehoort aan klant <i>%s</i>. Dit is in strijd met de CME map hiërarchie."
 
+#, fuzzy, python-format
+msgid "The submitted form data is invalid: %(error)s"
+msgstr "Het opgegeven ldap filter \"%(filter)s\" is ongeldig (%(error)s)"
+
 #, fuzzy
 msgid "The subscription tag"
 msgstr "Abonnementen op evenementen"
@@ -79660,6 +79800,37 @@ msgstr ""
 
 msgid "The syslog tag"
 msgstr "De syslog tag"
+
+#, fuzzy
+msgid "The system Apache configuration matches the site settings"
+msgstr "Exacte naam van de gebruiker van het besturingssysteem"
+
+#, fuzzy
+msgid "The system Apache configuration of this site could not be read."
+msgstr "De status van dit gebied is nog niet vastgesteld."
+
+#, python-format
+msgid ""
+"The system Apache configuration of this site does not match its settings "
+"(expected: %(settings)s). Run 'omd update-apache-config %(site)s' as root to "
+"update it."
+msgstr ""
+
+#, python-format
+msgid ""
+"The system Apache configuration of this site was generated by an older "
+"version of Checkmk. Run 'omd update-apache-config %(site)s' as root to "
+"update it."
+msgstr ""
+
+msgid ""
+"The system Apache reaches the site through a configuration file that "
+"<tt>omd</tt> generates from the site's <tt>APACHE_*</tt> settings. Only root "
+"writes this file. If the settings were changed without updating it, for "
+"example with <tt>omd config</tt>, by editing <tt>etc/omd/site.conf</tt> or "
+"by restoring a backup, the system Apache keeps using the old settings. Run "
+"<tt>omd update-apache-config SITE</tt> as root to update it."
+msgstr ""
 
 msgid ""
 "The tablespace levels will never be raise above these values, when using the "
@@ -80729,6 +80900,18 @@ msgid ""
 msgstr ""
 "Deze diensten worden geleverd door zogenaamde actieve controles. U kunt ook "
 "aangepaste Nagios-plugins integreren."
+
+msgid ""
+"These services cannot be read with the Veeam Backup Viewer role. License, "
+"Configuration backup and Server information require the Veeam Backup "
+"Administrator role. Replicas, Agent protection groups and WAN accelerators "
+"require the Veeam Backup Administrator or the Veeam Restore Operator role. A "
+"selected service the account may not read is left out, and the Check_MK "
+"service shows a warning naming it, so that you can correct the selection or "
+"the permissions. While this warning is shown, the automatic service "
+"discovery skips the host. Any other error while fetching makes the agent "
+"fail."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -93513,6 +93696,23 @@ msgstr ""
 "uitvoer zetten. U dient dit alleen in te schakelen voor de objecten waar u "
 "het voor nodig heeft."
 
+msgid ""
+"Use this rule set to stop fetching the telemetry data of a kind of service. "
+"Its services then vanish at the next service discovery. Custom services are "
+"not affected.<br><br><b>Generic services</b>: one service 'Metric <i>name</"
+"i>' for each metric the host receives, whatever its source. These also cover "
+"metrics that the RED or Azure services already monitor.<br><b>RED services</"
+"b>: the request rate, error rate and latency of the host's HTTP and RPC "
+"servers and of its traces, computed from the metrics "
+"'http.server.request.duration', 'rpc.server.duration' and "
+"'traces.span.metrics.duration'.<br><b>Azure services</b>: the Azure Monitor "
+"metrics of an Azure resource, collected by the Azure Monitor receiver of an "
+"OpenTelemetry collector. All statistics of an Azure metric are shown in one "
+"service.<br><br>All matching rules apply. If several of them list the same "
+"section, the first one decides whether the section is disabled or enabled. "
+"Sections that no rule lists stay enabled."
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "Use this rule to enable the use of SNMP version 2c instead of the default "
@@ -98071,6 +98271,13 @@ msgid ""
 msgstr ""
 "Met deze instelling zal de special agent ook contact opnemen met de Check_MK "
 "agent op hetzelfde systeem op de gespecificeerde poort."
+
+#, python-format
+msgid ""
+"With what their templates and the global settings pass on, the objects of "
+"the map take more than %(limit)d characters. The last %(left_out)d were left "
+"out."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -103210,6 +103417,10 @@ msgstr "zonder-paswoord/verbieden-paswoord (Sleutel gebaseerd)"
 msgid "words/s"
 msgstr "woorden/"
 
+#, fuzzy, python-format
+msgid "worldmap.db cannot be read: %(error)s"
+msgstr "Kan %(type_name)s niet laden: %(error)s"
+
 msgid "worst state"
 msgstr "ergste staat"
 
@@ -103775,12 +103986,20 @@ msgid "From time"
 msgstr "geen tijd"
 
 #, fuzzy
+msgid "Choose start time"
+msgstr "Kies alle"
+
+#, fuzzy
 msgid "To date"
 msgstr "Geen gegevens"
 
 #, fuzzy
 msgid "To time"
 msgstr "geen tijd"
+
+#, fuzzy
+msgid "Choose end time"
+msgstr "Kies alle"
 
 #, fuzzy
 msgid "Quick range presets"
@@ -103842,17 +104061,15 @@ msgstr "Begin volgend jaar"
 msgid "not set"
 msgstr "niet aanwezig"
 
-#, fuzzy
-msgid "Timezone"
-msgstr "Tijdshorizon"
+msgid "Timezone: %{region} (%{zone})"
+msgstr ""
 
 #, fuzzy
-msgid "Timezone:"
-msgstr "Tijdshorizon"
+msgid "Server time: %{time}"
+msgstr "Server tijd"
 
-#, fuzzy
-msgid "Current server time:"
-msgstr "Actuele gebeurtenissen"
+msgid "Server time: %{date}, %{time} (%{zone})"
+msgstr ""
 
 #, fuzzy
 msgid "Save & apply"
@@ -104306,6 +104523,10 @@ msgid "Rank"
 msgstr ""
 
 #, fuzzy
+msgid "Rank %{rank}"
+msgstr "Datumbereik"
+
+#, fuzzy
 msgid "Embedded page"
 msgstr "Ingesloten afbeelding"
 
@@ -104313,9 +104534,8 @@ msgstr "Ingesloten afbeelding"
 msgid "Invalid URL"
 msgstr "Ongeldige URL gegeven"
 
-#, fuzzy
-msgid "Not applied to this table: %{filters}"
-msgstr "Toegepaste filters:"
+msgid "Some filters not supported yet: %{filters}"
+msgstr ""
 
 #, fuzzy
 msgid "Not available on shared dashboards"
@@ -104363,6 +104583,10 @@ msgstr ""
 #, fuzzy
 msgid "Nothing matches the widget filter in the selected time frame."
 msgstr "Erken problemen"
+
+#, fuzzy
+msgid "Services with conflicting metrics"
+msgstr "Dienst in kennisgevingsperiode"
 
 msgid "Last successful update less than a minute ago."
 msgstr ""
@@ -104560,8 +104784,12 @@ msgid "Settings Menu"
 msgstr "Instellingen"
 
 #, fuzzy
-msgid "Show date and time"
+msgid "Show date time picker"
 msgstr "Eindtijd downtime"
+
+#, fuzzy
+msgid "Show live refresh"
+msgstr "Vernieuwen"
 
 #, fuzzy
 msgid "Public sharing"
@@ -106098,6 +106326,10 @@ msgid "Show bar visualization"
 msgstr "BI-visualisatie"
 
 #, fuzzy
+msgid "Show rank numbers"
+msgstr "Poort nummers"
+
+#, fuzzy
 msgid "Data configuration"
 msgstr "Standaard configuratie"
 
@@ -106779,6 +107011,13 @@ msgid "Toggle attributes of %{metric}"
 msgstr "Host attributen om in te stellen"
 
 #, fuzzy
+msgid "Scroll legend back"
+msgstr "Toon legende"
+
+msgid "Scroll legend forward"
+msgstr ""
+
+#, fuzzy
 msgid "Graph metrics"
 msgstr "Gastheer Details"
 
@@ -106809,6 +107048,10 @@ msgstr "Plugin toevoegen"
 #, fuzzy
 msgid "Remove pin"
 msgstr "Verwijder alle"
+
+#, fuzzy
+msgid "Hold to zoom the value axis"
+msgstr "Identificatie van de waarde"
 
 #, fuzzy
 msgid "Maximum zoom reached"
@@ -107511,10 +107754,6 @@ msgstr "Vernieuwen"
 #, fuzzy
 msgid "Resume"
 msgstr "Resumables"
-
-#, fuzzy
-msgid "Custom time range"
-msgstr "Timerbereik aanpassen"
 
 #, fuzzy
 msgid "More time ranges"
@@ -108475,13 +108714,19 @@ msgstr "Objecten beperken"
 msgid "Reset to fit"
 msgstr "Terugzetten naar standaard"
 
-msgid "Pinned %{name} out of the grid"
+#, fuzzy
+msgid "Deleted %{n} object"
+msgid_plural "Deleted %{n} objects"
+msgstr[0] "Op geselecteerde objecten"
+msgstr[1] "Op geselecteerde objecten"
+
+msgid "A map takes at most %{n} grids."
 msgstr ""
 
 msgid "Undo"
 msgstr ""
 
-msgid "A map takes at most %{n} grids."
+msgid "Pinned %{name} out of the grid"
 msgstr ""
 
 #, fuzzy
@@ -108926,9 +109171,10 @@ msgid "Spacing Y"
 msgstr "Ruimtebesparing"
 
 msgid ""
-"Label and appearance apply to each object of the grid. Drag an object out of "
-"the grid, or use \"Pin out of the grid\" in its context menu, to place it on "
-"its own."
+"Label and appearance apply to each object of the grid. Showing the label "
+"widens the spacing for it; a label wider than spacing X is cut off, except "
+"on a NagVis-classic map. Drag an object out of the grid, or use \"Pin out of "
+"the grid\" in its context menu, to place it on its own."
 msgstr ""
 
 msgid ""
@@ -109765,10 +110011,6 @@ msgid "Delete object"
 msgstr "Functie verwijderen"
 
 #, fuzzy
-msgid "Save failed"
-msgstr "Inloggen uitgeschakeld"
-
-#, fuzzy
 msgid "Live update failed"
 msgstr "Fetch mislukt"
 
@@ -110318,6 +110560,15 @@ msgstr ""
 msgid "Map canvas"
 msgstr "In kaart gebrachte gegevens"
 
+msgid "Drag to change the objects per row"
+msgstr ""
+
+#, fuzzy
+msgid "%{n} per row"
+msgid_plural "%{n} per row"
+msgstr[0] "Inzendingen"
+msgstr[1] "Inzendingen"
+
 #, fuzzy
 msgid "Could not read the matching services"
 msgstr "Configuratie toestand toevoegen"
@@ -110404,6 +110655,10 @@ msgstr ""
 msgid "Someone else saved the map meanwhile."
 msgstr ""
 
+#, fuzzy
+msgid "Save failed"
+msgstr "Inloggen uitgeschakeld"
+
 msgid ""
 "No BI aggregations available. Either you are not permitted to see them or no "
 "BI aggregation is configured."
@@ -110444,12 +110699,52 @@ msgid "Checkmk label"
 msgstr "Checkmk agent"
 
 #, fuzzy
+msgid "Delete the grid of %{n} service?"
+msgid_plural "Delete the grid of %{n} services?"
+msgstr[0] "Verwijder deze klant"
+msgstr[1] "Verwijder deze klant"
+
+#, fuzzy
+msgid "Delete the grid of %{n} host?"
+msgid_plural "Delete the grid of %{n} hosts?"
+msgstr[0] "Gebruikers verwijderen"
+msgstr[1] "Gebruikers verwijderen"
+
+#, fuzzy
 msgid "Delete %{type}?"
 msgstr "Verwijder %s"
 
 #, fuzzy
 msgid "Delete %{type} \"%{name}\"?"
 msgstr "Hosts verwijderen"
+
+msgid "The %{n} object shown by grids among them goes too."
+msgid_plural "The %{n} objects shown by grids among them go too."
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy
+msgid "Deleted the grid of %{n} service"
+msgid_plural "Deleted the grid of %{n} services"
+msgstr[0] "Verwijder deze klant"
+msgstr[1] "Verwijder deze klant"
+
+#, fuzzy
+msgid "Deleted the grid of %{n} host"
+msgid_plural "Deleted the grid of %{n} hosts"
+msgstr[0] "Gewiste periode %(name)s"
+msgstr[1] "Gewiste periode %(name)s"
+
+#, fuzzy
+msgid "Deleted %{type}"
+msgstr "Verwijder %s"
+
+#, fuzzy
+msgid "Deleted %{type} \"%{name}\""
+msgstr "Hosts verwijderen"
+
+msgid "Grid (a map takes at most %{n})"
+msgstr ""
 
 msgid "Percent"
 msgstr "procent"
@@ -113666,6 +113961,9 @@ msgstr "Toon in kolom"
 msgid "Clear the filter on %{column} before hiding it"
 msgstr ""
 
+msgid "%{column} column hidden, filter is active"
+msgstr ""
+
 #, fuzzy
 msgid "AND"
 msgstr "WARN"
@@ -113770,6 +114068,10 @@ msgid "Exact match. Editing searches by substring."
 msgstr ""
 
 #, fuzzy
+msgid "Regular expression. Editing searches by substring."
+msgstr "Reguliere expressie die overeenkomt met het procespad"
+
+#, fuzzy
 msgid "Show the graphs of host %{name}"
 msgstr "Status van gastheer"
 
@@ -113821,6 +114123,13 @@ msgid "Remove one or more filters to widen the results."
 msgstr ""
 
 msgid "Dismiss"
+msgstr ""
+
+msgid ""
+"Some filters not supported yet: %{filters}; others active in hidden columns"
+msgstr ""
+
+msgid "Filters active in hidden columns"
 msgstr ""
 
 #, fuzzy
@@ -115693,6 +116002,30 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Proef vervallen"
+
+#, fuzzy
+#~ msgid "Services to fetch"
+#~ msgstr "Diensten van gastheer"
+
+#, fuzzy
+#~ msgid "Timezone"
+#~ msgstr "Tijdshorizon"
+
+#, fuzzy
+#~ msgid "Timezone:"
+#~ msgstr "Tijdshorizon"
+
+#, fuzzy
+#~ msgid "Current server time:"
+#~ msgstr "Actuele gebeurtenissen"
+
+#, fuzzy
+#~ msgid "Not applied to this table: %{filters}"
+#~ msgstr "Toegepaste filters:"
+
+#, fuzzy
+#~ msgid "Custom time range"
+#~ msgstr "Timerbereik aanpassen"
 
 #, fuzzy
 #~ msgid "Drill down to dashboard (custom)"
@@ -118341,10 +118674,6 @@ msgstr "Proef vervallen"
 #, python-format
 #~ msgid "Site-specific global configuration for %(site_id)s"
 #~ msgstr "Locatiespecifieke globale configuratie voor %(site_id)s"
-
-#, python-format
-#~ msgid "The global setting \"%(varname)s\" does not exist."
-#~ msgstr "De globale instelling \"%(varname)s\" bestaat niet."
 
 #~ msgid "The requested global setting does not exist."
 #~ msgstr "De gevraagde globale instelling bestaat niet."

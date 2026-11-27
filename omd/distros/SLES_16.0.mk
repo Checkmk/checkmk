@@ -8,6 +8,7 @@ OS_PACKAGES    += apache2
 OS_PACKAGES    += apache2-utils # required for htpasswd2
 OS_PACKAGES    += bind-utils # check_dns
 OS_PACKAGES    += curl
+OS_PACKAGES    += hostname # used by the otel-collector init script
 OS_PACKAGES    += dialog
 OS_PACKAGES    += libgd3
 OS_PACKAGES    += graphviz

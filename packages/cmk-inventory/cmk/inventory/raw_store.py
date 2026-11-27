@@ -15,7 +15,7 @@ from typing import Literal
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 
-from .paths import InventoryPaths, tree_mtime
+from .paths import InventoryPaths, tree_mtime, TreePath, TreePathGz
 from .serialization import deserialize_tree, SDMetaAndRawTree, SDRawTree
 from .trees import ImmutableTree
 
@@ -55,23 +55,23 @@ def rename(
     return list(actions)
 
 
-def load_tree_from_tree_path(tree_path: Path) -> ImmutableTree:
-    if raw_tree := store.load_text_from_file(tree_path):
+def load_tree_from_tree_path(tree_path: TreePath) -> ImmutableTree:
+    if raw_tree := store.load_text_from_file(tree_path.path):
         return deserialize_tree(json.loads(raw_tree))
     return ImmutableTree()
 
 
-def save_raw_tree(tree_path: Path, raw_tree: SDRawTree) -> None:
-    tree_path.parent.mkdir(parents=True, exist_ok=True)
-    store.save_text_to_file(tree_path, json.dumps(raw_tree) + "\n")
+def save_raw_tree(tree_path: TreePath, raw_tree: SDRawTree) -> None:
+    tree_path.path.parent.mkdir(parents=True, exist_ok=True)
+    store.save_text_to_file(tree_path.path, json.dumps(raw_tree) + "\n")
 
 
-def save_raw_tree_gz(tree_path_gz: Path, meta_and_raw_tree: SDMetaAndRawTree) -> None:
-    tree_path_gz.parent.mkdir(parents=True, exist_ok=True)
+def save_raw_tree_gz(tree_path_gz: TreePathGz, meta_and_raw_tree: SDMetaAndRawTree) -> None:
+    tree_path_gz.path.parent.mkdir(parents=True, exist_ok=True)
     buf = io.BytesIO()
     with gzip.GzipFile(fileobj=buf, mode="wb") as f:
         f.write((json.dumps(meta_and_raw_tree) + "\n").encode("utf-8"))
-    store.save_bytes_to_file(tree_path_gz, buf.getvalue())
+    store.save_bytes_to_file(tree_path_gz.path, buf.getvalue())
 
 
 def archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> None:
@@ -83,8 +83,8 @@ def archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> No
     archive_tree = inv_paths.archive_tree(host_name, mtime)
 
     inv_paths.archive_host(host_name).mkdir(parents=True, exist_ok=True)
-    tree_path.rename(archive_tree)
-    tree_path_gz.unlink(missing_ok=True)
+    tree_path.path.rename(archive_tree.path)
+    tree_path_gz.path.unlink(missing_ok=True)
 
 
 class RawInventoryStore:
@@ -96,11 +96,11 @@ class RawInventoryStore:
     ) -> None:
         tree_path = self.inv_paths.inventory_tree(host_name)
         save_raw_tree(tree_path, meta_and_raw_tree["raw_tree"])
-        os.utime(tree_path, (timestamp, timestamp))
+        os.utime(tree_path.path, (timestamp, timestamp))
 
         tree_path_gz = self.inv_paths.inventory_tree_gz(host_name)
         save_raw_tree_gz(tree_path_gz, meta_and_raw_tree)
-        os.utime(tree_path_gz, (timestamp, timestamp))
+        os.utime(tree_path_gz.path, (timestamp, timestamp))
 
     def archive_inventory_tree(self, *, host_name: HostName) -> None:
         archive_inventory_tree(self.inv_paths, host_name)

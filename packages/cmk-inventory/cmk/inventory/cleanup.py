@@ -25,6 +25,7 @@ from .paths import (
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
     tree_mtime,
+    TreePath,
 )
 
 
@@ -187,7 +188,7 @@ def _compute_host_params(
 
 @dataclass(frozen=True, kw_only=True)
 class _FilePathsOfHost:
-    inventory_tree: Path
+    inventory_tree: TreePath
     tree_file_paths: Sequence[Path]
     archive_file_paths: Sequence[Path]
     delta_cache_file_paths: Sequence[Path]
@@ -341,7 +342,7 @@ class _ClassifiedHistoryFiles:
 
 def _compute_classified_history_files(
     *,
-    inventory_tree: Path,
+    inventory_tree: TreePath,
     archive_file_paths: Sequence[Path],
     delta_cache_file_paths: Sequence[Path],
 ) -> _ClassifiedHistoryFiles:

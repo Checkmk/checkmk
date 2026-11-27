@@ -12,9 +12,10 @@ import pytest
 from cmk.ccc.hostaddress import HostName, HostNameValidationError
 from cmk.inventory.paths import (
     InventoryPaths,
-    is_json_tree_file,
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
+    TreePath,
+    TreePathGz,
 )
 
 _OMD_ROOT = Path("/omd_root")
@@ -33,11 +34,21 @@ def test_tree_paths(raw_host_name: str) -> None:
         inv_paths.archive_tree(host_name, 123),
         inv_paths.delta_cache_tree(host_name, 123, 456),
     ) == (
-        _OMD_ROOT / f"var/check_mk/inventory/{raw_host_name}.json",
-        _OMD_ROOT / f"var/check_mk/inventory/{raw_host_name}.json.gz",
-        _OMD_ROOT / f"tmp/check_mk/status_data/{raw_host_name}.json",
-        _OMD_ROOT / f"var/check_mk/inventory_archive/{raw_host_name}/123.json",
-        _OMD_ROOT / f"var/check_mk/inventory_delta_cache/{raw_host_name}/123_456.json",
+        TreePath(
+            path=_OMD_ROOT / f"var/check_mk/inventory/{raw_host_name}.json",
+        ),
+        TreePathGz(
+            path=_OMD_ROOT / f"var/check_mk/inventory/{raw_host_name}.json.gz",
+        ),
+        TreePath(
+            path=_OMD_ROOT / f"tmp/check_mk/status_data/{raw_host_name}.json",
+        ),
+        TreePath(
+            path=_OMD_ROOT / f"var/check_mk/inventory_archive/{raw_host_name}/123.json",
+        ),
+        TreePath(
+            path=_OMD_ROOT / f"var/check_mk/inventory_delta_cache/{raw_host_name}/123_456.json",
+        ),
     )
 
 
@@ -49,8 +60,10 @@ def test_tree_paths(raw_host_name: str) -> None:
     ],
 )
 def test_delta_cache_tree(previous: int, current: int, expected_name: str) -> None:
-    assert InventoryPaths(_OMD_ROOT).delta_cache_tree(HostName("hostname"), previous, current) == (
-        _OMD_ROOT / f"var/check_mk/inventory_delta_cache/hostname/{expected_name}.json"
+    assert InventoryPaths(_OMD_ROOT).delta_cache_tree(
+        HostName("hostname"), previous, current
+    ) == TreePath(
+        path=_OMD_ROOT / f"var/check_mk/inventory_delta_cache/hostname/{expected_name}.json"
     )
 
 
@@ -97,16 +110,21 @@ def test_parse_delta_cache_timestamps_of_an_unknown_file() -> None:
         parse_delta_cache_timestamps(Path("/var/check_mk/inventory_delta_cache/hostname/2.json"))
 
 
+def test_tree_path_rejects_a_path_without_json_suffix() -> None:
+    with pytest.raises(ValueError):
+        TreePath(path=Path("hostname.gz"))
+
+
 @pytest.mark.parametrize(
-    "file_name, expected",
+    "path",
     [
-        pytest.param("123.json", True, id="json"),
-        pytest.param("123", False, id="legacy"),
-        pytest.param("hostname.json.gz", False, id="gzipped"),
+        pytest.param(Path("hostname.json"), id="not-gzipped"),
+        pytest.param(Path("hostname.gz"), id="without-json"),
     ],
 )
-def test_is_json_tree_file(file_name: str, expected: bool) -> None:
-    assert is_json_tree_file(Path(file_name)) is expected
+def test_tree_path_gz_rejects_a_misnamed_path(path: Path) -> None:
+    with pytest.raises(ValueError):
+        TreePathGz(path=path)
 
 
 @pytest.mark.parametrize(

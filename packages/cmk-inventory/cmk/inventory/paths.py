@@ -5,15 +5,28 @@
 
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName, HostNameValidationError
 
-_JSON_SUFFIX = ".json"
+
+@dataclass(frozen=True, kw_only=True)
+class TreePath:
+    path: Path
+
+    def __post_init__(self) -> None:
+        if self.path.suffix != ".json":
+            raise ValueError(self.path)
 
 
-def is_json_tree_file(file_path: Path) -> bool:
-    return file_path.suffix == _JSON_SUFFIX
+@dataclass(frozen=True, kw_only=True)
+class TreePathGz:
+    path: Path
+
+    def __post_init__(self) -> None:
+        if self.path.suffixes[-2:] != [".json", ".gz"]:
+            raise ValueError(self.path)
 
 
 def _file_name(host_name: HostName) -> str:
@@ -34,40 +47,40 @@ class InventoryPaths:
     def inventory_marker_file(self) -> Path:
         return self.inventory_dir / ".last"
 
-    def inventory_tree(self, host_name: HostName) -> Path:
-        return self.inventory_dir / f"{_file_name(host_name)}{_JSON_SUFFIX}"
+    def inventory_tree(self, host_name: HostName) -> TreePath:
+        return TreePath(path=self.inventory_dir / f"{_file_name(host_name)}.json")
 
-    def inventory_tree_gz(self, host_name: HostName) -> Path:
-        return self.inventory_dir / f"{_file_name(host_name)}{_JSON_SUFFIX}.gz"
+    def inventory_tree_gz(self, host_name: HostName) -> TreePathGz:
+        return TreePathGz(path=self.inventory_dir / f"{_file_name(host_name)}.json.gz")
 
     @property
     def status_data_marker_file(self) -> Path:
         return self.status_data_dir / ".last"
 
-    def status_data_tree(self, host_name: HostName) -> Path:
-        return self.status_data_dir / f"{_file_name(host_name)}{_JSON_SUFFIX}"
+    def status_data_tree(self, host_name: HostName) -> TreePath:
+        return TreePath(path=self.status_data_dir / f"{_file_name(host_name)}.json")
 
     def host_tree_files(self, host_name: HostName) -> Sequence[Path]:
         return [
-            self.inventory_tree(host_name),
-            self.inventory_tree_gz(host_name),
-            self.status_data_tree(host_name),
+            self.inventory_tree(host_name).path,
+            self.inventory_tree_gz(host_name).path,
+            self.status_data_tree(host_name).path,
         ]
 
     def archive_host(self, host_name: HostName) -> Path:
         return self.archive_dir / _file_name(host_name)
 
-    def archive_tree(self, host_name: HostName, timestamp: int) -> Path:
-        return self.archive_host(host_name) / f"{timestamp}{_JSON_SUFFIX}"
+    def archive_tree(self, host_name: HostName, timestamp: int) -> TreePath:
+        return TreePath(path=self.archive_host(host_name) / f"{timestamp}.json")
 
     def delta_cache_host(self, host_name: HostName) -> Path:
         return self.delta_cache_dir / _file_name(host_name)
 
-    def delta_cache_tree(self, host_name: HostName, previous: int, current: int) -> Path:
+    def delta_cache_tree(self, host_name: HostName, previous: int, current: int) -> TreePath:
         if previous < -1 or previous >= current:
             raise ValueError(previous)
         previous_name = "None" if previous == -1 else str(previous)
-        return self.delta_cache_host(host_name) / f"{previous_name}_{current}{_JSON_SUFFIX}"
+        return TreePath(path=self.delta_cache_host(host_name) / f"{previous_name}_{current}.json")
 
 
 def collect_files(directory: Path) -> Sequence[Path]:
@@ -77,19 +90,19 @@ def collect_files(directory: Path) -> Sequence[Path]:
         return []
 
 
-def tree_mtime(tree_path: Path) -> int | None:
+def tree_mtime(tree_path: TreePath) -> int | None:
     try:
-        return int(tree_path.stat().st_mtime)
+        return int(tree_path.path.stat().st_mtime)
     except FileNotFoundError:
         return None
 
 
 def has_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> bool:
-    return inv_paths.inventory_tree(host_name).exists()
+    return inv_paths.inventory_tree(host_name).path.exists()
 
 
 def has_status_data_tree(inv_paths: InventoryPaths, host_name: HostName) -> bool:
-    return inv_paths.status_data_tree(host_name).exists()
+    return inv_paths.status_data_tree(host_name).path.exists()
 
 
 def _has_files(directory: Path) -> bool:

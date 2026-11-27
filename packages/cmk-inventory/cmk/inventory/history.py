@@ -18,10 +18,10 @@ from .filtering import filter_delta_tree, SDFilterChoice
 from .paths import (
     collect_files,
     InventoryPaths,
-    is_json_tree_file,
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
     tree_mtime,
+    TreePath,
 )
 from .raw_store import load_tree_from_tree_path
 from .serialization import (
@@ -41,7 +41,7 @@ class HistoryDeltaPath:
 
 @dataclass(frozen=True)
 class _HistoryPath:
-    tree_path: Path
+    tree_path: TreePath
     timestamp: int
 
 
@@ -126,7 +126,7 @@ class HistoryStore:
         self, host_name: HostName
     ) -> Iterator[Result[HistoryDeltaPath, Path]]:
         for file_path in collect_files(self.inv_paths.delta_cache_host(host_name)):
-            if not is_json_tree_file(file_path):
+            if file_path.suffix != ".json":
                 yield Error(file_path)
                 continue
             try:
@@ -152,13 +152,10 @@ class HistoryStore:
             return
 
         for file_path in file_paths:
-            if not is_json_tree_file(file_path):
-                yield Error(file_path)
-                continue
             try:
                 yield OK(
                     _HistoryPath(
-                        tree_path=file_path,
+                        tree_path=TreePath(path=file_path),
                         timestamp=parse_archive_timestamp(file_path),
                     )
                 )
@@ -205,9 +202,9 @@ class HistoryStore:
         if path is None:
             return ImmutableTree()
 
-        if path.tree_path not in self._lookup:
-            self._lookup[path.tree_path] = load_tree_from_tree_path(path.tree_path)
-        return self._lookup[path.tree_path]
+        if path.tree_path.path not in self._lookup:
+            self._lookup[path.tree_path.path] = load_tree_from_tree_path(path.tree_path)
+        return self._lookup[path.tree_path.path]
 
     def _load_history_entry(
         self, *, host_name: HostName, path: HistoryDeltaPath | HistoryArchivePath
@@ -245,7 +242,7 @@ class HistoryStore:
                         self._save_history_entry(host_name=host_name, history_entry=entry)
                     return OK(entry)
 
-                return Error([path.current.tree_path])
+                return Error([path.current.tree_path.path])
 
     def _save_history_entry(self, *, host_name: HostName, history_entry: HistoryEntry) -> None:
         delta_cache_tree = self.inv_paths.delta_cache_tree(
@@ -255,7 +252,7 @@ class HistoryStore:
         )
         self.inv_paths.delta_cache_host(host_name).mkdir(parents=True, exist_ok=True)
         store.save_text_to_file(
-            delta_cache_tree,
+            delta_cache_tree.path,
             json.dumps(
                 serialize_delta_cache_entry(
                     new=history_entry.new,

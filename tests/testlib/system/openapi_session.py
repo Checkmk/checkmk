@@ -791,7 +791,7 @@ class FoldersAPI(BaseAPI):
         if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
-    def get(self, folder: str) -> tuple[dict[Any, str], str] | None:
+    def get(self, folder: str) -> tuple[dict[str, Any], str] | None:
         """
         Returns
             a tuple with the folder details and the Etag header if the folder was found

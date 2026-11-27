@@ -1,8 +1,8 @@
 ---
-status: accepted
+status: superseded
 date: 2026-11-10
 supersedes:
-superseded_by:
+superseded_by: '0003'
 ---
 
 # cmk-dev-site Moves Into Checkmk Unchanged and Unpublished

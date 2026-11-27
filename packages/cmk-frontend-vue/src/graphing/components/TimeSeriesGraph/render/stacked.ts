@@ -89,20 +89,19 @@ function upperEdgeOf(column: StackedColumn): TimeValuePoint[] {
   return column.vertices.map((vertex) => ({ time: vertex.time, value: vertex.upper }))
 }
 
+const BAND_FILL_OPACITY = 0.35
+
 export function drawStackedBand(
   ctx: CanvasRenderingContext2D,
   series: AreaSeries,
   xScale: ScaleTime<number, number>,
   yScale: ScaleLinear<number, number>,
   color: string,
-  style: { fillOpacity?: number | undefined; strokeWidth?: number | undefined } = {}
+  strokeWidth: number = 2
 ): void {
-  const fillOpacity = style.fillOpacity ?? 0.45
-  const strokeWidth = style.strokeWidth ?? 1
   const pixelX = (vertex: StackedVertex): number => xScale(new Date(vertex.time * 1000))
 
-  for (const vertices of bandOutlines(series)) {
-    ctx.beginPath()
+  function traceUpperEdge(vertices: StackedVertex[]): void {
     vertices.forEach((vertex, index) => {
       if (index === 0) {
         ctx.moveTo(pixelX(vertex), yScale(vertex.upper))
@@ -110,14 +109,24 @@ export function drawStackedBand(
         ctx.lineTo(pixelX(vertex), yScale(vertex.upper))
       }
     })
+  }
+
+  ctx.fillStyle = colorWithAlpha(color, BAND_FILL_OPACITY)
+  ctx.strokeStyle = color
+  ctx.lineWidth = strokeWidth
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  for (const vertices of bandOutlines(series)) {
+    ctx.beginPath()
+    traceUpperEdge(vertices)
     for (const vertex of [...vertices].reverse()) {
       ctx.lineTo(pixelX(vertex), yScale(vertex.lower))
     }
     ctx.closePath()
-    ctx.fillStyle = colorWithAlpha(color, fillOpacity)
     ctx.fill()
-    ctx.strokeStyle = color
-    ctx.lineWidth = strokeWidth
+
+    ctx.beginPath()
+    traceUpperEdge(vertices)
     ctx.stroke()
   }
 }

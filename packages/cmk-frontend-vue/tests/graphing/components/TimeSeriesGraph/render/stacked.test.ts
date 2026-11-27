@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ScaleLinear, ScaleTime } from 'd3-scale'
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 import { m4 } from '@/graphing/components/TimeSeriesGraph/decimation/decimate'
 import type { M4Bucket } from '@/graphing/components/TimeSeriesGraph/decimation/types'
@@ -166,18 +166,57 @@ describe('computeStackedSeries', () => {
   })
 })
 
-function makeSpyCtx() {
-  return {
-    beginPath: vi.fn(),
-    moveTo: vi.fn(),
-    lineTo: vi.fn(),
-    closePath: vi.fn(),
-    fill: vi.fn(),
-    stroke: vi.fn(),
+type PathCommand = ['moveTo' | 'lineTo', number, number] | ['closePath']
+
+interface FilledPath {
+  commands: PathCommand[]
+  fillStyle: string
+}
+
+interface StrokedPath {
+  commands: PathCommand[]
+  strokeStyle: string
+  lineWidth: number
+  lineCap: CanvasLineCap
+  lineJoin: CanvasLineJoin
+}
+
+function makeRecordingCtx() {
+  let commands: PathCommand[] = []
+  const filled: FilledPath[] = []
+  const stroked: StrokedPath[] = []
+  const recorder = {
     fillStyle: '',
     strokeStyle: '',
-    lineWidth: 0
+    lineWidth: 1,
+    lineCap: 'butt' as CanvasLineCap,
+    lineJoin: 'miter' as CanvasLineJoin,
+    beginPath() {
+      commands = []
+    },
+    moveTo(x: number, y: number) {
+      commands.push(['moveTo', x, y])
+    },
+    lineTo(x: number, y: number) {
+      commands.push(['lineTo', x, y])
+    },
+    closePath() {
+      commands.push(['closePath'])
+    },
+    fill() {
+      filled.push({ commands: [...commands], fillStyle: recorder.fillStyle })
+    },
+    stroke() {
+      stroked.push({
+        commands: [...commands],
+        strokeStyle: recorder.strokeStyle,
+        lineWidth: recorder.lineWidth,
+        lineCap: recorder.lineCap,
+        lineJoin: recorder.lineJoin
+      })
+    }
   }
+  return { ctx: recorder as unknown as CanvasRenderingContext2D, filled, stroked }
 }
 
 function makeColumn(...vertices: StackedVertex[]): StackedColumn {
@@ -193,63 +232,93 @@ function makeArea(...columns: StackedColumn[]): AreaSeries {
 const xScale = ((date: Date) => date.getTime() / 1000) as unknown as ScaleTime<number, number>
 const yScale = ((value: number) => value) as unknown as ScaleLinear<number, number>
 
+const COLOR = '#3366cc'
+
 describe('drawStackedBand', () => {
-  test('fills and strokes one closed polygon for a contiguous run of columns', () => {
-    const ctx = makeSpyCtx()
+  test('paints a contiguous run of columns as one band', () => {
+    const { ctx, filled, stroked } = makeRecordingCtx()
     const series = makeArea(
       makeColumn({ time: 0, lower: 0, upper: 1 }),
       makeColumn({ time: 1, lower: 0, upper: 2 }),
       makeColumn({ time: 2, lower: 0, upper: 3 })
     )
 
-    drawStackedBand(ctx as unknown as CanvasRenderingContext2D, series, xScale, yScale, '#3366cc')
+    drawStackedBand(ctx, series, xScale, yScale, COLOR)
 
-    expect(ctx.closePath).toHaveBeenCalledTimes(1)
-    expect(ctx.fill).toHaveBeenCalledTimes(1)
-    expect(ctx.stroke).toHaveBeenCalledTimes(1)
+    expect(filled).toHaveLength(1)
+    expect(stroked).toHaveLength(1)
   })
 
-  test('a gap splits the area into separate filled polygons', () => {
-    const ctx = makeSpyCtx()
+  test('a gap splits the area into separate bands', () => {
+    const { ctx, filled, stroked } = makeRecordingCtx()
     const series = makeArea(
       makeColumn({ time: 0, lower: 0, upper: 1 }),
       GAP_COLUMN,
       makeColumn({ time: 2, lower: 0, upper: 1 })
     )
 
-    drawStackedBand(ctx as unknown as CanvasRenderingContext2D, series, xScale, yScale, '#3366cc')
+    drawStackedBand(ctx, series, xScale, yScale, COLOR)
 
-    expect(ctx.fill).toHaveBeenCalledTimes(2)
-    expect(ctx.closePath).toHaveBeenCalledTimes(2)
+    expect(filled).toHaveLength(2)
+    expect(stroked).toHaveLength(2)
   })
 
-  test('traces the upper edge forward and the lower edge back, each vertex at its own time', () => {
-    const ctx = makeSpyCtx()
+  test('fills along the upper edge forward and the lower edge back, each vertex at its own time', () => {
+    const { ctx, filled } = makeRecordingCtx()
     const series = makeArea(
       makeColumn({ time: 0, lower: 0, upper: 1 }, { time: 1, lower: 0, upper: 2 }),
       makeColumn({ time: 2, lower: 1, upper: 3 })
     )
-    const vertices = series.columns.flatMap((column) => column.vertices)
 
-    drawStackedBand(ctx as unknown as CanvasRenderingContext2D, series, xScale, yScale, '#3366cc')
+    drawStackedBand(ctx, series, xScale, yScale, COLOR)
 
-    const [start, ...upperEdgeForward] = vertices.map((vertex) => [vertex.time, vertex.upper])
-    const lowerEdgeBack = [...vertices].reverse().map((vertex) => [vertex.time, vertex.lower])
-    expect(ctx.moveTo.mock.calls).toEqual([start])
-    expect(ctx.lineTo.mock.calls).toEqual([...upperEdgeForward, ...lowerEdgeBack])
+    expect(filled[0]!.commands).toEqual([
+      ['moveTo', 0, 1],
+      ['lineTo', 1, 2],
+      ['lineTo', 2, 3],
+      ['lineTo', 2, 1],
+      ['lineTo', 1, 0],
+      ['lineTo', 0, 0],
+      ['closePath']
+    ])
   })
 
-  test('outlines the area in the solid color and fills it at the requested opacity', () => {
-    const ctx = makeSpyCtx()
-    const color = '#3366cc'
-    const fillOpacity = 0.3
+  test('strokes the upper edge only, neither the lower edge nor the sides', () => {
+    const { ctx, stroked } = makeRecordingCtx()
+    const series = makeArea(
+      makeColumn({ time: 0, lower: 0, upper: 1 }, { time: 1, lower: 0, upper: 2 }),
+      makeColumn({ time: 2, lower: 1, upper: 3 })
+    )
+
+    drawStackedBand(ctx, series, xScale, yScale, COLOR)
+
+    expect(stroked[0]!.commands).toEqual([
+      ['moveTo', 0, 1],
+      ['lineTo', 1, 2],
+      ['lineTo', 2, 3]
+    ])
+  })
+
+  test('fills the band at 35 % of its color', () => {
+    const { ctx, filled } = makeRecordingCtx()
     const series = makeArea(makeColumn({ time: 0, lower: 0, upper: 1 }))
 
-    drawStackedBand(ctx as unknown as CanvasRenderingContext2D, series, xScale, yScale, color, {
-      fillOpacity
-    })
+    drawStackedBand(ctx, series, xScale, yScale, COLOR)
 
-    expect(ctx.strokeStyle).toBe(color)
-    expect(ctx.fillStyle).toMatch(new RegExp(`^rgba\\(\\d+, \\d+, \\d+, ${fillOpacity}\\)$`))
+    expect(filled[0]!.fillStyle).toBe('rgba(51, 102, 204, 0.35)')
+  })
+
+  test('strokes the edge in the solid color, 2 px wide with round caps and joins', () => {
+    const { ctx, stroked } = makeRecordingCtx()
+    const series = makeArea(makeColumn({ time: 0, lower: 0, upper: 1 }))
+
+    drawStackedBand(ctx, series, xScale, yScale, COLOR)
+
+    expect(stroked[0]).toMatchObject({
+      strokeStyle: COLOR,
+      lineWidth: 2,
+      lineCap: 'round',
+      lineJoin: 'round'
+    })
   })
 })

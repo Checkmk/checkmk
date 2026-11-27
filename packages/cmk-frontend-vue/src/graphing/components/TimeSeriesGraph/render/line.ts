@@ -59,13 +59,15 @@ export function drawLine(
   yScale: ScaleLinear<number, number>,
   color: string,
   interpolator: LineInterpolator = 'linear',
-  lineWidth: number = 1.5
+  lineWidth: number = 2
 ): void {
   if (buckets.length === 0) {
     return
   }
   ctx.strokeStyle = color
   ctx.lineWidth = lineWidth
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
 
   // Pass 1: connector polyline through bucket boundary points, segmented at gaps.
   const segments = connectorPolylines(buckets).map((polyline) =>

@@ -49,9 +49,14 @@ export function drawData(
       continue
     }
     ctx.globalAlpha = alphaFor(metrics[i]!)
-    drawStackedBand(ctx, series, xScale, yScale, metrics[i]!.metadata.color, {
-      strokeWidth: options.bandStrokeWidth
-    })
+    drawStackedBand(
+      ctx,
+      series,
+      xScale,
+      yScale,
+      metrics[i]!.metadata.color,
+      options.bandStrokeWidth
+    )
   }
   for (let i = 0; i < metrics.length; i++) {
     if (metrics[i]!.render.hidden || stacks[i]!.kind !== 'line') {

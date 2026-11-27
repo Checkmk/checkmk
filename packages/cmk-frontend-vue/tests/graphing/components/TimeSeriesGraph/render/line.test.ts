@@ -16,7 +16,9 @@ function makeSpyCtx() {
     lineTo: vi.fn(),
     stroke: vi.fn(),
     strokeStyle: '',
-    lineWidth: 0
+    lineWidth: 0,
+    lineCap: 'butt',
+    lineJoin: 'miter'
   }
 }
 
@@ -89,5 +91,18 @@ describe('drawLine', () => {
     const nonFiniteCoordinates = coordinates.filter((coordinate) => !Number.isFinite(coordinate))
 
     expect(nonFiniteCoordinates).toEqual([])
+  })
+
+  test('strokes 2 px wide with round caps and joins by default', () => {
+    const ctx = makeSpyCtx()
+
+    drawLine(ctx as unknown as CanvasRenderingContext2D, buckets, xScale, yScale, '#333')
+
+    expect(ctx).toMatchObject({
+      strokeStyle: '#333',
+      lineWidth: 2,
+      lineCap: 'round',
+      lineJoin: 'round'
+    })
   })
 })

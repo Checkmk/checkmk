@@ -18,6 +18,9 @@ bazel_dep(name = "aspect_rules_lint", version = "2.9.1")
 bazel_dep(name = "aspect_rules_py", version = "1.5.2")
 bazel_dep(name = "aspect_rules_ts", version = "3.10.1")
 bazel_dep(name = "aspect_rules_webpack", version = "0.18.0")
+
+# The next one is for the vendored rules_mypy in bazel/tools/rules_mypy.
+bazel_dep(name = "bazel_features", version = "1.50.0")
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "cmk", version = "0.0.0")
 bazel_dep(name = "crypt-ssleay", version = "0.72.cmk.2", repo_name = "Crypt-SSLeay")
@@ -50,7 +53,6 @@ bazel_dep(name = "rules_gzip", version = "1.0.0")
 bazel_dep(name = "rules_java", version = "9.9.0")
 bazel_dep(name = "rules_multirun", version = "0.12.0")
 bazel_dep(name = "rules_multitool", version = "1.9.0")
-bazel_dep(name = "rules_mypy", version = "0.41.0")
 bazel_dep(name = "rules_nodejs", version = "6.7.5")
 bazel_dep(name = "rules_oci", version = "2.2.6")
 bazel_dep(name = "rules_distroless", version = "0.6.2")
@@ -125,20 +127,6 @@ bazel_dep(name = "clang-resource-headers", version = "21.1.8.cmk.1", dev_depende
 # be configured from the root module.  It comes in via rules_gzip and
 # rules_coreutils.
 bazel_dep(name = "ape", version = "1.0.1", dev_dependency = True)
-
-single_version_override(
-    module_name = "rules_mypy",
-    patch_strip = 1,
-    patches = [
-        "bazel/patches/rules_mypy.patch",
-        "bazel/patches/rules_mypy-show_column_numbers.patch",
-        "bazel/patches/rules_mypy-pyhardlink-cache-merge.patch",
-        "bazel/patches/rules_mypy-exec_cfg_types.patch",
-        "bazel/patches/rules_mypy-bin_dir_in_mypypath.patch",
-        "bazel/patches/rules_mypy-no_sqlite_cache.patch",
-        "bazel/patches/rules_mypy-mypy_cli_pyc_collection.patch",
-    ],
-)
 
 single_version_override(
     module_name = "rules_go",

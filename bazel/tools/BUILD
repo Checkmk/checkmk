@@ -8,7 +8,6 @@ load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//bazel/tools:eslint/package_json.bzl", eslint_bin = "bin")
 load("@npm//bazel/tools:npm-groovy-lint/package_json.bzl", groovy_bin = "bin")
 load("@npm//bazel/tools:stylelint/package_json.bzl", stylelint_bin = "bin")
-load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
@@ -18,6 +17,7 @@ load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_stdlib_bytecode.bzl", "py_stdlib_bytecode")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 load("//bazel/tools:starlark_files.bzl", "STARLARK_EXCLUDED", "STARLARK_NAMES")
+load("//bazel/tools/rules_mypy/mypy:mypy.bzl", "mypy_cli")
 load(":mypy_version.bzl", "MYPY_VERSION")
 
 exports_files(
@@ -115,7 +115,6 @@ mypy_cli(
     pyc_collection = "include_pyc",
     # the default Python version, like the bytecode of the standard library for :mypy_cli
     python_version = None,
-    tags = ["no-mypy"],
     deps = [
         # for `plugins = ["pydantic.mypy"]`
         requirement("pydantic"),

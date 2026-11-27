@@ -9,11 +9,11 @@ load("@aspect_rules_lint//lint:shellcheck.bzl", "lint_shellcheck_aspect")
 load("@aspect_rules_lint//lint:stylelint.bzl", "lint_stylelint_aspect")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@cmk_types//:types.bzl", "types")
-load("@rules_mypy//mypy:mypy.bzl", "mypy")
 load("//bazel/tools:lint_astrein.bzl", "lint_astrein_aspect")
 load("//bazel/tools:lint_ps_script_analyzer.bzl", "lint_ps_script_analyzer_aspect")
 load("//bazel/tools:lint_py_import_cycles.bzl", "lint_py_import_cycles_aspect")
 load("//bazel/tools/clippy:clippy.bzl", "lint_clippy_aspect")
+load("//bazel/tools/rules_mypy/mypy:mypy.bzl", "mypy")
 load("//packages/cmk-repo-checks:deballast.bzl", "lint_deballast_aspect")
 load("//packages/cmk-repo-checks:lint_license_header.bzl", "lint_license_header_aspect")
 load("//packages/cmk-repo-checks:lint_python_extensions.bzl", "lint_python_extension_aspect")
@@ -42,10 +42,11 @@ def _mypy_aspect(mypy_ini):
         mypy_ini = mypy_ini,
         # TODO: Re-enable as soon as we have a solution regarding huge execroot folders
         # Reference: https://tribe29.slack.com/archives/C01UJKY2D7Y/p1773328309307479
+        # Before that, see "Limits of the cache merge" in bazel/tools/rules_mypy/VENDORED.md.
         cache = False,
         suppression_tags = ["no-mypy"],
         color = False,
-        # `rules_mypy//mypy:types.bzl` mostly takes care of this but needs help with some packages.
+        # `//bazel/tools/rules_mypy/mypy:types.bzl` mostly takes care of this but needs help with some packages.
         types = {
             pkg: types_pkg
             for pkg, types_pkg in types.items()

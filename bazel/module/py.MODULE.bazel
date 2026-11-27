@@ -87,7 +87,7 @@ pip.override(
     patches = ["//bazel/patches:elementpath-unicode_categories_fallback.patch"],
 )
 
-types = use_extension("@rules_mypy//mypy:types.bzl", "types")
+types = use_extension("//bazel/tools/rules_mypy/mypy:types.bzl", "types")
 types.requirements(
     name = "cmk_types",
     pip_requirements = "@cmk_requirements//:requirements.bzl",

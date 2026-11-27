@@ -49,6 +49,9 @@ GPL_HEADER_NOTIFICATION = re.compile(
 
 
 ignored_files = [
+    # Vendored, Apache-2.0
+    "bazel/tools/rules_mypy/mypy/private/mypy_runner.py",
+    "bazel/tools/rules_mypy/mypy/private/py_type_library.py",
     "packages/cmk-notification-plugins/cmk/notification_plugins/ilert.py",
     "packages/cmk-notification-plugins/cmk/notification_plugins/signl4.py",
     "tests/system/redfish/mockup-server/redfishMockupServer.py",

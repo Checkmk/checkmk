@@ -1,0 +1,40 @@
+# Modified by Checkmk GmbH, see bazel/tools/rules_mypy/VENDORED.md
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@rules_python//python:py_binary.bzl", "py_binary")
+load(":mypy.bzl", "mypy_cli")
+
+exports_files([
+    "mypy_runner.py",
+    "default_mypy.ini",
+])
+
+bzl_library(
+    name = "mypy_rules",
+    srcs = ["mypy.bzl"],
+    visibility = ["//bazel/tools/rules_mypy/mypy:__subpackages__"],
+)
+
+bzl_library(
+    name = "py_type_library_rules",
+    srcs = ["py_type_library.bzl"],
+    visibility = ["//bazel/tools/rules_mypy/mypy:__subpackages__"],
+)
+
+bzl_library(
+    name = "types_rules",
+    srcs = ["types.bzl"],
+    visibility = ["//bazel/tools/rules_mypy/mypy:__subpackages__"],
+)
+
+mypy_cli(name = "mypy")
+
+py_binary(
+    name = "py_type_library",
+    srcs = ["py_type_library.py"],
+    main = "py_type_library.py",
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("click"),
+    ],
+)

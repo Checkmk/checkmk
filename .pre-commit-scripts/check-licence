@@ -12,6 +12,8 @@ declare -a fails
 known_other_licened_files=(
     "packages/cmk-notification-plugins/cmk/notification_plugins/ilert.py"
     "packages/cmk-notification-plugins/cmk/notification_plugins/signl4.py"
+    "bazel/tools/rules_mypy/mypy/private/mypy_runner.py"
+    "bazel/tools/rules_mypy/mypy/private/py_type_library.py"
 )
 
 is_known_exception() {

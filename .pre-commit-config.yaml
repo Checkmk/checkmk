@@ -26,8 +26,9 @@ repos:
       rev: v4.6.0
       hooks:
           - id: trailing-whitespace
-            # Test inputs for the Groovy formatter keep their whitespace
-            exclude: ^(.*\.patch|bazel/tools/format/tests/component/groovy/.*)$
+            # Test inputs for the Groovy formatter keep their whitespace, and so does
+            # upstream's documentation of the vendored rules_mypy
+            exclude: ^(.*\.patch|bazel/tools/format/tests/component/groovy/.*|bazel/tools/rules_mypy/readme\.md)$
           - id: check-merge-conflict
             types: [file]
           - id: check-yaml # pre-commit cannot parse utf-16 files

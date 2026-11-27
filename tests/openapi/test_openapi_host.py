@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
+import ast
 import base64
 import json
 from collections.abc import Mapping
@@ -231,11 +232,27 @@ def test_openapi_livestatus_host_list_all(
         assert resp.json["value"][0]["extensions"]["notes"] == test_note
 
 
+@pytest.mark.parametrize(
+    ["payload_type", "inventory_bytes"],
+    [
+        (
+            "json",
+            b'{"Attributes": {}, "Table": {}, "Nodes": {"networking": {"Attributes": {"Pairs": {"hostname": "heute", "is_wan": true}}}}}',
+        ),
+        (
+            "python_repr",
+            b"{'Attributes': {}, 'Table': {}, 'Nodes': {'networking': {'Attributes': {'Pairs': {'hostname': 'heute', 'is_wan': True}}}}}",
+        ),
+    ],
+    ids=["json", "python_repr"],
+)
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_livestatus_host_inventory_parses_json_data(
-    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+def test_openapi_livestatus_host_inventory_parses_json_and_repr_data(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    inventory_bytes: bytes,
+    payload_type: str,
 ) -> None:
-    inventory_bytes = b'{"Attributes": {}, "Table": {}, "Nodes": {"networking": {"Attributes": {"Pairs": {"hostname": "heute", "is_wan": true}}}}}'
     _add_hosts_table(mock_livestatus, {"mk_inventory": inventory_bytes})
     mock_livestatus.expect_query("GET hosts\nColumns: name mk_inventory\nFilter: name = heute")
 
@@ -245,7 +262,9 @@ def test_openapi_livestatus_host_inventory_parses_json_data(
             columns=["mk_inventory"],
         )
 
-    assert resp.json["value"][0]["extensions"]["mk_inventory"] == json.loads(inventory_bytes)
+    raw = inventory_bytes.decode("utf-8")
+    decoder = json.loads if payload_type == "json" else ast.literal_eval
+    assert resp.json["value"][0]["extensions"]["mk_inventory"] == decoder(raw)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "monkeypatch")
@@ -283,11 +302,11 @@ def test_openapi_livestatus_host_inventory_not_json_serializable_regression(
                         "hostname": "heute",
                         "available_ethernet_ports": 1337,
                         "total_ethernet_ports": 42,
-                        "total_interfaces": 23
+                        "total_interfaces": 23,
                     }
                 }
             }
-        }
+        },
     }"""
     _add_hosts_table(mock_livestatus, {"mk_inventory": inventory_bytes})
     mock_livestatus.expect_query("GET hosts\nColumns: name mk_inventory\nFilter: name = heute")
@@ -298,4 +317,6 @@ def test_openapi_livestatus_host_inventory_not_json_serializable_regression(
             columns=["mk_inventory"],
         )
 
-    assert resp.json["value"][0]["extensions"]["mk_inventory"] == json.loads(inventory_bytes)
+    assert resp.json["value"][0]["extensions"]["mk_inventory"] == ast.literal_eval(
+        inventory_bytes.decode("utf-8")
+    )

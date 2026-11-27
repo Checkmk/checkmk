@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import gzip
 import io
 import json
@@ -449,9 +450,17 @@ def _parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
     )
 
 
+def parse_dump(dump: bytes) -> object:
+    try:
+        return json.loads(dump.decode("utf-8"))
+    except json.JSONDecodeError:
+        # TODO CMK-23408
+        return ast.literal_eval(dump.decode("utf-8"))
+
+
 def parse_from_gzipped(gzipped: bytes) -> SDMetaAndRawTree:
-    return _parse_from_unzipped(json.loads(gzip.GzipFile(fileobj=io.BytesIO(gzipped)).read()))
+    return _parse_from_unzipped(parse_dump(gzip.GzipFile(fileobj=io.BytesIO(gzipped)).read()))
 
 
 def parse_from_raw_status_data_tree(dump: bytes) -> ImmutableTree:
-    return deserialize_tree(json.loads(dump))
+    return deserialize_tree(parse_dump(dump))

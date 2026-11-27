@@ -14,7 +14,7 @@ from .merging import merge_trees
 from .paths import collect_files, InventoryPaths, parse_archive_timestamp
 from .raw_store import (
     archive_inventory_tree,
-    load_tree,
+    load_tree_from_tree_path,
     save_raw_tree,
     save_raw_tree_gz,
 )
@@ -83,7 +83,7 @@ class InventoryStore:
         self.inv_paths = InventoryPaths(omd_root)
 
     def load_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
-        return load_tree(self.inv_paths.inventory_tree(host_name))
+        return load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name))
 
     def save_inventory_tree(
         self, *, host_name: HostName, tree: MutableTree | ImmutableTree, meta: SDMeta
@@ -104,7 +104,7 @@ class InventoryStore:
         self.inv_paths.inventory_tree_gz(host_name).unlink(missing_ok=True)
 
     def load_status_data_tree(self, *, host_name: HostName) -> ImmutableTree:
-        return load_tree(self.inv_paths.status_data_tree(host_name))
+        return load_tree_from_tree_path(self.inv_paths.status_data_tree(host_name))
 
     def save_status_data_tree(
         self, *, host_name: HostName, tree: MutableTree | ImmutableTree
@@ -135,7 +135,7 @@ class InventoryStore:
         return merged_tree if tree_filters is None else filter_tree(merged_tree, tree_filters)
 
     def load_previous_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
-        if tree := load_tree(self.inv_paths.inventory_tree(host_name)):
+        if tree := load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name)):
             return tree
 
         latest_archive_tree = _latest_archive_tree(
@@ -143,7 +143,7 @@ class InventoryStore:
         )
         if latest_archive_tree is None:
             return ImmutableTree()
-        return load_tree(latest_archive_tree)
+        return load_tree_from_tree_path(latest_archive_tree)
 
     def save_if_changed(
         self,

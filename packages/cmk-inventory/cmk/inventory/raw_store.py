@@ -55,23 +55,23 @@ def rename(
     return list(actions)
 
 
-def load_tree(file_path: Path) -> ImmutableTree:
-    if raw_tree := store.load_text_from_file(file_path):
+def load_tree_from_tree_path(tree_path: Path) -> ImmutableTree:
+    if raw_tree := store.load_text_from_file(tree_path):
         return deserialize_tree(json.loads(raw_tree))
     return ImmutableTree()
 
 
-def save_raw_tree(file_path: Path, raw_tree: SDRawTree) -> None:
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-    store.save_text_to_file(file_path, json.dumps(raw_tree) + "\n")
+def save_raw_tree(tree_path: Path, raw_tree: SDRawTree) -> None:
+    tree_path.parent.mkdir(parents=True, exist_ok=True)
+    store.save_text_to_file(tree_path, json.dumps(raw_tree) + "\n")
 
 
-def save_raw_tree_gz(file_path: Path, meta_and_raw_tree: SDMetaAndRawTree) -> None:
-    file_path.parent.mkdir(parents=True, exist_ok=True)
+def save_raw_tree_gz(tree_path_gz: Path, meta_and_raw_tree: SDMetaAndRawTree) -> None:
+    tree_path_gz.parent.mkdir(parents=True, exist_ok=True)
     buf = io.BytesIO()
     with gzip.GzipFile(fileobj=buf, mode="wb") as f:
         f.write((json.dumps(meta_and_raw_tree) + "\n").encode("utf-8"))
-    store.save_bytes_to_file(file_path, buf.getvalue())
+    store.save_bytes_to_file(tree_path_gz, buf.getvalue())
 
 
 def archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> None:

@@ -10,7 +10,6 @@ from pathlib import Path
 
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
-from cmk.inventory.paths import Paths
 from cmk.inventory.structured_data import (
     HistoryStore,
     InventoryStore,
@@ -24,7 +23,6 @@ from cmk.inventory.structured_data import (
 )
 from cmk.inventory.transformation import (
     _compute_bundle_size,
-    _find_legacy_trees_of_removed_hosts,
     transform_inventory_trees,
     TransformationResultsStore,
 )
@@ -259,27 +257,3 @@ def test_transform_records_the_precise_duration(tmp_path: Path) -> None:
     )
 
     assert [r["duration"] for r in TransformationResultsStore(tmp_path).load()] == [0.25]
-
-
-def test_find_legacy_trees_of_removed_hosts() -> None:
-    inv_paths = Paths(Path("/site"))
-    assert _find_legacy_trees_of_removed_hosts(
-        inv_paths,
-        frozenset(
-            {
-                inv_paths.inventory_dir / "host",
-                inv_paths.inventory_dir / "host.gz",
-                inv_paths.inventory_dir / "removed",
-                inv_paths.inventory_dir / "removed.gz",
-                inv_paths.inventory_dir / "removed-json.json",
-                inv_paths.inventory_dir / "removed-json.json.gz",
-                inv_paths.status_data_dir / "host",
-                inv_paths.status_data_dir / "removed",
-            }
-        ),
-        ["host"],
-    ) == [
-        inv_paths.status_data_dir / "removed",
-        inv_paths.inventory_dir / "removed",
-        inv_paths.inventory_dir / "removed.gz",
-    ]

@@ -7,7 +7,7 @@ import logging
 import math
 import os
 import sys
-from collections.abc import Callable, Iterator, Sequence, Set
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TypedDict
@@ -26,17 +26,11 @@ class _HostTreePath:
     stat: os.stat_result
 
 
-_HIDDEN_FILE_PREFIX = "."
-_JSON_SUFFIXES = (".json", ".json.gz")
-
-
-def _collect_file_paths(directory: Path) -> Set[Path]:
+def _collect_file_paths(directory: Path) -> Sequence[Path]:
     try:
-        return frozenset(
-            fp for fp in directory.iterdir() if not fp.name.startswith(_HIDDEN_FILE_PREFIX)
-        )
+        return [fp for fp in directory.iterdir() if fp.name != ".last"]
     except FileNotFoundError:
-        return frozenset()
+        return []
 
 
 def _compute_file_path_stat(file_path: Path) -> os.stat_result | None:
@@ -46,32 +40,14 @@ def _compute_file_path_stat(file_path: Path) -> os.stat_result | None:
         return None
 
 
-def _iter_current_tree_paths(
-    inv_paths: Paths, host_name: HostName
-) -> Iterator[TreePath | TreePathGz]:
-    yield inv_paths.inventory_tree(host_name)
-    yield inv_paths.inventory_tree_gz(host_name)
-    yield inv_paths.status_data_tree(host_name)
-
-
-def _compute_host_tree_path(
-    host_name: HostName, tree_path: TreePath | TreePathGz, current_file_paths: Set[Path]
-) -> _HostTreePath | None:
-    if tree_path.path in current_file_paths or tree_path.legacy not in current_file_paths:
+def _compute_host_tree_path_or_unknown_file_path(
+    host_name: HostName, tree_path: TreePath | TreePathGz, all_file_paths: Sequence[Path]
+) -> _HostTreePath | Path | None:
+    if tree_path.path in all_file_paths:
         return None
-    if stat := _compute_file_path_stat(tree_path.legacy):
+    if tree_path.legacy in all_file_paths and (stat := _compute_file_path_stat(tree_path.legacy)):
         return _HostTreePath(str(host_name), tree_path, stat)
-    return None
-
-
-def _iter_current_host_tree_paths(
-    inv_paths: Paths, current_file_paths: Set[Path], all_host_names: Sequence[str]
-) -> Iterator[_HostTreePath]:
-    for raw_host_name in all_host_names:
-        host_name = HostName(raw_host_name)
-        for tree_path in _iter_current_tree_paths(inv_paths, host_name):
-            if host_tree_path := _compute_host_tree_path(host_name, tree_path, current_file_paths):
-                yield host_tree_path
+    return tree_path.legacy
 
 
 def _collect_history_file_paths(directory: Path) -> Iterator[tuple[str, Path]]:
@@ -88,7 +64,29 @@ def _collect_history_file_paths(directory: Path) -> Iterator[tuple[str, Path]]:
             yield host_dir.name, file_path
 
 
-def _iter_history_host_tree_paths(inv_paths: Paths) -> Iterator[_HostTreePath]:
+def _iter_host_tree_paths_or_unknown_file_paths(
+    omd_root: Path, all_host_names: Sequence[str]
+) -> Iterator[_HostTreePath | Path]:
+    inv_paths = Paths(omd_root)
+
+    inventory_file_paths = _collect_file_paths(inv_paths.inventory_dir)
+    status_data_file_paths = _collect_file_paths(inv_paths.status_data_dir)
+
+    for raw_host_name in all_host_names:
+        host_name = HostName(raw_host_name)
+        if path := _compute_host_tree_path_or_unknown_file_path(
+            host_name, inv_paths.inventory_tree(host_name), inventory_file_paths
+        ):
+            yield path
+        if path := _compute_host_tree_path_or_unknown_file_path(
+            host_name, inv_paths.inventory_tree_gz(host_name), inventory_file_paths
+        ):
+            yield path
+        if path := _compute_host_tree_path_or_unknown_file_path(
+            host_name, inv_paths.status_data_tree(host_name), status_data_file_paths
+        ):
+            yield path
+
     for raw_host_name, file_path in _collect_history_file_paths(inv_paths.archive_dir):
         tree_path = TreePath.from_archive_or_delta_cache_file_path(file_path)
         if stat := _compute_file_path_stat(tree_path.legacy):
@@ -100,35 +98,20 @@ def _iter_history_host_tree_paths(inv_paths: Paths) -> Iterator[_HostTreePath]:
             yield _HostTreePath(raw_host_name, delta_cache_path, stat)
 
 
-def _find_legacy_trees_of_removed_hosts(
-    inv_paths: Paths, current_file_paths: Set[Path], all_host_names: Sequence[str]
-) -> Sequence[Path]:
-    legacy_trees_of_hosts = {
-        tree_path.legacy
-        for raw_host_name in all_host_names
-        for tree_path in _iter_current_tree_paths(inv_paths, HostName(raw_host_name))
-    }
-    return sorted(
-        fp
-        for fp in current_file_paths
-        if not fp.name.endswith(_JSON_SUFFIXES) and fp not in legacy_trees_of_hosts
-    )
-
-
-def _collect_host_tree_paths_and_legacy_trees_of_removed_hosts(
+def _collect_host_tree_paths_or_unknown_file_paths(
     omd_root: Path, all_host_names: Sequence[str]
 ) -> tuple[Sequence[_HostTreePath], Sequence[Path]]:
-    inv_paths = Paths(omd_root)
-    current_file_paths = _collect_file_paths(inv_paths.inventory_dir) | _collect_file_paths(
-        inv_paths.status_data_dir
-    )
-    return (
-        [
-            *_iter_current_host_tree_paths(inv_paths, current_file_paths, all_host_names),
-            *_iter_history_host_tree_paths(inv_paths),
-        ],
-        _find_legacy_trees_of_removed_hosts(inv_paths, current_file_paths, all_host_names),
-    )
+    host_tree_paths = []
+    unknown_file_paths = []
+    for host_tree_path_or_unknown_file_path in _iter_host_tree_paths_or_unknown_file_paths(
+        omd_root, all_host_names
+    ):
+        match host_tree_path_or_unknown_file_path:
+            case _HostTreePath():
+                host_tree_paths.append(host_tree_path_or_unknown_file_path)
+            case Path():
+                unknown_file_paths.append(host_tree_path_or_unknown_file_path)
+    return host_tree_paths, unknown_file_paths
 
 
 class TransformationResult(TypedDict):
@@ -173,7 +156,7 @@ def _render_size(size: int | float) -> str:
 
 def _show_results(
     host_tree_paths: Sequence[_HostTreePath],
-    legacy_trees_of_removed_hosts: Sequence[Path],
+    unknown_file_paths: Sequence[Path],
     transformation_results: Sequence[TransformationResult],
 ) -> None:
     sys.stdout.write("=== Transformation summary ===\n")
@@ -196,14 +179,18 @@ def _show_results(
         sys.stdout.write(f"Duration: {_render_duration(result['duration'])}\n")
         sys.stdout.write(f"Size: {_render_size(result['size'])}\n")
 
-    if legacy_trees_of_removed_hosts:
-        sys.stdout.write("=== Legacy trees of removed hosts ===\n")
-        sys.stdout.write(
-            "These trees belong to no host and are not transformed. Delete these files before"
-            " updating to Checkmk 3.0:\n"
-        )
-        for file_path in legacy_trees_of_removed_hosts:
-            sys.stdout.write(f"- {file_path}\n")
+    if unknown_file_paths:
+        sys.stdout.write("=== Unknown file paths ===\n")
+        info = [
+            "Please check the following list of inventory file paths. These files may be belong"
+            " to removed hosts or could not be assigned to the current list of available hosts."
+            " In the first case you can safely remove these files. In the second case they may"
+            " be transformed with the next go or you can also try to transform these files via"
+            " 'cmk-transform-inventory-files <HOST> [<HOST> ...]'."
+        ]
+        sys.stdout.write(f"{'\n'.join(info)}\n")
+        for unknown_file_path in unknown_file_paths:
+            sys.stdout.write("- %r\n" % unknown_file_path)
 
 
 def _compute_bundle_size(bundle_length: int, pending_count: int, transformed_count: int) -> int:
@@ -252,8 +239,8 @@ def transform_inventory_trees(
     all_host_names: Sequence[str],
     clock: Callable[[], float],
 ) -> int:
-    host_tree_paths, legacy_trees_of_removed_hosts = (
-        _collect_host_tree_paths_and_legacy_trees_of_removed_hosts(omd_root, all_host_names)
+    host_tree_paths, unknown_file_paths = _collect_host_tree_paths_or_unknown_file_paths(
+        omd_root, all_host_names
     )
     if filter_host_names:
         host_tree_paths = [htp for htp in host_tree_paths if htp.host_name in filter_host_names]
@@ -262,7 +249,7 @@ def transform_inventory_trees(
     transformation_results = transformation_results_store.load()
 
     if show_results:
-        _show_results(host_tree_paths, legacy_trees_of_removed_hosts, transformation_results)
+        _show_results(host_tree_paths, unknown_file_paths, transformation_results)
         return 0
 
     bundle_size = (

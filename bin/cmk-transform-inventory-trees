@@ -46,14 +46,18 @@ def _parse_arguments(argv: Sequence[str]) -> Namespace:
 
 
 def _collect_hosts() -> Sequence[str]:
-    return list(
-        set(
-            subprocess.check_output(
-                ["check_mk", "--list-hosts", "--all-sites", "--include-offline"],
-                encoding="utf-8",
-            ).splitlines()
+    try:
+        return list(
+            set(
+                subprocess.check_output(
+                    ["check_mk", "--list-hosts", "--all-sites", "--include-offline"],
+                    encoding="utf-8",
+                ).splitlines()
+            )
         )
-    )
+    except subprocess.CalledProcessError as e:
+        logger.error("Failed to collect all host names: %s", e)
+        return []
 
 
 def main() -> int:

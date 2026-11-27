@@ -3370,6 +3370,20 @@ def test_check_aws_rds_cpu_credits_metric_not_found() -> None:
             ],
             id="If the BurstBalance metric is not present, no results are shown for it.",
         ),
+        pytest.param(
+            {"CPUCreditUsage": 99, "CPUCreditBalance": 30, "BurstBalance": 0.0},
+            {"balance_levels_lower": (10, 5), "burst_balance_levels_lower": (10, 5)},
+            [
+                Result(state=State.OK, summary="CPU Credit Usage: 99.00"),
+                Result(state=State.OK, summary="CPU Credit Balance: 30.00"),
+                Metric("aws_cpu_credit_balance", 30.0),
+                Result(
+                    state=State.CRIT, summary="Burst Balance: 0% (warn/crit below 10.00%/5.00%)"
+                ),
+                Metric("aws_burst_balance", 0.0),
+            ],
+            id="An empty BurstBalance is checked against the levels.",
+        ),
     ],
 )
 def test_check_aws_rds_cpu_credits(  # type: ignore[misc]

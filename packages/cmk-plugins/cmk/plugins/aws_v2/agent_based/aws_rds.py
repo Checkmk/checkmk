@@ -347,7 +347,7 @@ def check_aws_rds_cpu_credits(
         label="CPU Credit Balance",
     )
 
-    if burst_balance := section.get("BurstBalance"):
+    if (burst_balance := section.get("BurstBalance")) is not None:
         yield from check_levels_v1(
             value=burst_balance,
             metric_name="aws_burst_balance",

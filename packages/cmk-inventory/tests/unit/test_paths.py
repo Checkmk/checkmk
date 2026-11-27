@@ -12,6 +12,7 @@ import pytest
 from cmk.ccc.hostaddress import HostName, HostNameValidationError
 from cmk.inventory.paths import (
     InventoryPaths,
+    is_json_tree_file,
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
 )
@@ -70,9 +71,8 @@ def test_parse_archive_timestamp() -> None:
     assert parse_archive_timestamp(Path("/var/check_mk/inventory_archive/hostname/123.json")) == 123
 
 
-def test_parse_archive_timestamp_rejects_a_legacy_file() -> None:
-    with pytest.raises(ValueError):
-        parse_archive_timestamp(Path("/var/check_mk/inventory_archive/hostname/123"))
+def test_parse_archive_timestamp_of_a_legacy_file() -> None:
+    assert parse_archive_timestamp(Path("/var/check_mk/inventory_archive/hostname/123")) == 123
 
 
 def test_parse_archive_timestamp_of_an_unknown_file() -> None:
@@ -97,9 +97,16 @@ def test_parse_delta_cache_timestamps_of_an_unknown_file() -> None:
         parse_delta_cache_timestamps(Path("/var/check_mk/inventory_delta_cache/hostname/2.json"))
 
 
-def test_parse_delta_cache_timestamps_rejects_a_legacy_file() -> None:
-    with pytest.raises(ValueError):
-        parse_delta_cache_timestamps(Path("/var/check_mk/inventory_delta_cache/hostname/1_2"))
+@pytest.mark.parametrize(
+    "file_name, expected",
+    [
+        pytest.param("123.json", True, id="json"),
+        pytest.param("123", False, id="legacy"),
+        pytest.param("hostname.json.gz", False, id="gzipped"),
+    ],
+)
+def test_is_json_tree_file(file_name: str, expected: bool) -> None:
+    assert is_json_tree_file(Path(file_name)) is expected
 
 
 @pytest.mark.parametrize(

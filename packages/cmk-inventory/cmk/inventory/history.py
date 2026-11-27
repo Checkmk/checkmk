@@ -19,6 +19,7 @@ from .paths import (
     collect_files,
     file_mtime,
     InventoryPaths,
+    is_json_tree_file,
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
 )
@@ -125,6 +126,9 @@ class HistoryStore:
         self, host_name: HostName
     ) -> Iterator[Result[HistoryDeltaPath, Path]]:
         for file_path in collect_files(self.inv_paths.delta_cache_host(host_name)):
+            if not is_json_tree_file(file_path):
+                yield Error(file_path)
+                continue
             try:
                 previous_timestamp, current_timestamp = parse_delta_cache_timestamps(file_path)
             except ValueError:
@@ -148,6 +152,9 @@ class HistoryStore:
             return
 
         for file_path in file_paths:
+            if not is_json_tree_file(file_path):
+                yield Error(file_path)
+                continue
             try:
                 yield OK(
                     _HistoryPath(

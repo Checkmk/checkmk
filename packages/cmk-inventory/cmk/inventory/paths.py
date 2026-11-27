@@ -12,6 +12,10 @@ from cmk.ccc.hostaddress import HostName, HostNameValidationError
 _JSON_SUFFIX = ".json"
 
 
+def is_json_tree_file(file_path: Path) -> bool:
+    return file_path.suffix == _JSON_SUFFIX
+
+
 def _file_name(host_name: HostName) -> str:
     if not host_name:
         raise HostNameValidationError("empty host name", raw=str(host_name))
@@ -103,16 +107,10 @@ def has_history(inv_paths: InventoryPaths, host_name: HostName) -> bool:
     return has_archive(inv_paths, host_name) or _has_files(inv_paths.delta_cache_host(host_name))
 
 
-def _json_file_stem(file_path: Path) -> str:
-    if file_path.suffix != _JSON_SUFFIX:
-        raise ValueError(file_path)
-    return file_path.stem
-
-
 def parse_archive_timestamp(file_path: Path) -> int:
-    return int(_json_file_stem(file_path))
+    return int(file_path.with_suffix("").name)
 
 
 def parse_delta_cache_timestamps(file_path: Path) -> tuple[int, int]:
-    previous_name, current_name = _json_file_stem(file_path).split("_")
+    previous_name, current_name = file_path.with_suffix("").name.split("_")
     return -1 if previous_name == "None" else int(previous_name), int(current_name)

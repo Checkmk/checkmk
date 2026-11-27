@@ -14,6 +14,8 @@
               <xsl:value-of select="format-number(., '#.###')"/>
             </xsl:attribute>
           </xsl:when>
+          <!-- semgrep: xunit's schema has no "disabled" attribute -->
+          <xsl:when test="name() = 'disabled'"/>
           <xsl:otherwise>
             <xsl:copy-of select="."/>
           </xsl:otherwise>
@@ -35,16 +37,19 @@
           <xsl:value-of select="@tests"/>
         </xsl:attribute>
       </xsl:if>
-      <xsl:if test="@errors">
-        <xsl:attribute name="errors">
-          <xsl:value-of select="@errors"/>
-        </xsl:attribute>
-      </xsl:if>
-      <xsl:if test="@failures">
-        <xsl:attribute name="failures">
-          <xsl:value-of select="@failures"/>
-        </xsl:attribute>
-      </xsl:if>
+      <!-- xunit's schema requires both; Bandit writes neither, so count them -->
+      <xsl:attribute name="errors">
+        <xsl:choose>
+          <xsl:when test="@errors"><xsl:value-of select="@errors"/></xsl:when>
+          <xsl:otherwise><xsl:value-of select="count(testcase/error)"/></xsl:otherwise>
+        </xsl:choose>
+      </xsl:attribute>
+      <xsl:attribute name="failures">
+        <xsl:choose>
+          <xsl:when test="@failures"><xsl:value-of select="@failures"/></xsl:when>
+          <xsl:otherwise><xsl:value-of select="count(testcase/failure)"/></xsl:otherwise>
+        </xsl:choose>
+      </xsl:attribute>
       <xsl:choose>
         <xsl:when test="@skipped">
           <xsl:attribute name="skipped">

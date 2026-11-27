@@ -18,6 +18,11 @@ common:ci --repo_env=PIP_EXTRA_INDEX_URL=https://artifacts.lan.tribe29.com/repos
 # //:pip_index_url.
 common:ci --//:pip_index_url=https://artifacts.lan.tribe29.com/repository/pypi-proxy/simple
 
+# rules_python links the hermetic Python's stdlib __pycache__ dirs to a root it creates when it
+# fetches the toolchain. CI keeps the toolchain in the node's shared repo contents cache (see
+# /etc/ci.bazelrc), so the root must live on that mount, too, or the links dangle in other jobs.
+common:ci --repo_env=RULES_PYTHON_PYCACHE_DIR=/tmp/shared_repository_cache/rules_python_pycache
+
 # the onwards set jobs and CPU limits shall be aligned with the k8s pod limits
 common:ci --jobs=6
 common:ci --loading_phase_threads=4

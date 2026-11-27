@@ -265,11 +265,6 @@ void main() {
                     condition: run_condition && build_instance && item.RESULT_CHECK_FILE_PATTERN && item.RESULT_CHECK_TYPE,
                     raiseOnError: false,
                 ) {
-                    analyse_mapping["${item.NAME}"] << [
-                        unique_parser_name: "${item.RESULT_CHECK_FILE_PATTERN}".replaceAll("""([^A-Za-z0-9\\-\\_]+)""", "-"),
-                    ];
-                    update_result_table(current_description, analyse_mapping);
-
                     if (item.RESULT_CHECK_TYPE == "GoogleTest") {
                         try {
                             xunit(
@@ -290,6 +285,21 @@ void main() {
                         }
                         return;
                     }
+
+                    if (item.RESULT_CHECK_TYPE == "JUNIT") {
+                        // The JUnit parser of warnings-ng reports skipped tests as issues, which
+                        // the "TOTAL" quality gate below turns into a failed build. Let xunit
+                        // judge JUnit results instead: it fails the build on failed tests only.
+                        dir("${checkout_dir}") {
+                            test_jenkins_helper.publish_junit_results(item.RESULT_CHECK_FILE_PATTERN, item.NAME);
+                        }
+                        return;
+                    }
+
+                    analyse_mapping["${item.NAME}"] << [
+                        unique_parser_name: "${item.RESULT_CHECK_FILE_PATTERN}".replaceAll("""([^A-Za-z0-9\\-\\_]+)""", "-"),
+                    ];
+                    update_result_table(current_description, analyse_mapping);
 
                     // ensure the parser and publisher are able to find the files
                     dir("${checkout_dir}") {
@@ -316,37 +326,6 @@ void main() {
                                 unstable: false,
                             ]],
                         );
-                    }
-                    if (item.RESULT_CHECK_TYPE == "JUNIT") {
-                        try {
-                            xunit(
-                                checksName: item.NAME,
-                                tools: [
-                                    Custom(
-                                        customXSL: "${checkout_dir}/buildscripts/scripts/schema/pytest-xunit.xsl",
-                                        deleteOutputFiles: false,
-                                        failIfNotNew: false, // as they are copied from the single tests
-                                        /* groovylint-disable LineLength */
-                                        // not working: no found with the pattern
-                                        // '/home/jenkins/agent/workspace/checkmk/master/cv/test-gerrit/checkout/results/python3-file-content-junit.xml'
-                                        // relative to '/home/jenkins/agent/workspace/checkmk/master/cv/test-gerrit'
-                                        // pattern: "${checkout_dir}/${item.RESULT_CHECK_FILE_PATTERN}",
-                                        // not working: no found with the pattern 'results/python3-file-content-junit.xml'
-                                        // relative to '/home/jenkins/agent/workspace/checkmk/master/cv/test-gerrit'
-                                        // pattern: "${item.RESULT_CHECK_FILE_PATTERN}",
-                                        // works best, only picks that single specific file
-                                        pattern: "checkout/${item.RESULT_CHECK_FILE_PATTERN}",
-                                        // works as well, but finds also files in sub sub directories
-                                        // pattern: "**/${item.RESULT_CHECK_FILE_PATTERN}",
-                                        /* groovylint-enable LineLength */
-                                        skipNoTestFiles: true,
-                                        stopProcessingIfError: true,
-                                    )
-                                ]
-                            );
-                        } catch (Exception exc) {
-                            print("ERROR: ran into exception while running xunit() for ${item.NAME}: ${exc}");
-                        }
                     }
                 }
             }

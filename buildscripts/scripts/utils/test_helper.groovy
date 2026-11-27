@@ -388,6 +388,39 @@ Object analyse_issues(result_check_type, result_check_file_pattern, as_stage=tru
 }
 /* groovylint-enable MethodSize, LineLength */
 
+// publish JUnit results and fail the build if any test failed (skipped tests do not count)
+// @pattern: Ant pattern of the result files, relative to the current directory
+// @checks_name: Name of the published checks, defaults to the job name
+void publish_junit_results(String pattern, String checks_name = "") {
+    // Run xunit from the workspace root: it writes its generatedJUnitFiles into the
+    // current directory, which is not writable in e.g. the checkout of a k8s pod.
+    // Prefix the pattern accordingly (Windows nodes report paths with backslashes).
+    def current_dir = pwd().replace("\\", "/");
+    def workspace_dir = "${env.WORKSPACE}".replace("\\", "/") + "/";
+    def relative_dir = "";
+    if (current_dir.startsWith(workspace_dir)) {
+        relative_dir = current_dir.substring(workspace_dir.length());
+    }
+    dir("${env.WORKSPACE}") {
+        xunit(
+            checksName: checks_name ?: env.JOB_BASE_NAME,
+            thresholds: [
+                failed(failureThreshold: "0"),
+            ],
+            tools: [
+                Custom(
+                    customXSL: "${checkout_dir}/buildscripts/scripts/schema/pytest-xunit.xsl",
+                    deleteOutputFiles: false,
+                    failIfNotNew: false,
+                    pattern: relative_dir ? "${relative_dir}/${pattern}" : pattern,
+                    skipNoTestFiles: true,
+                    stopProcessingIfError: true,
+                )
+            ]
+        );
+    }
+}
+
 // pusblish issues stage based on given issue parser(s)
 void publish_issue_stages(issues) {
     if (issues) {

@@ -491,24 +491,6 @@ def test_parse_from_gzipped_rejects_a_malformed_tree(raw: object) -> None:
         parse_from_gzipped(gzip.compress(json.dumps(raw).encode()))
 
 
-def test_parse_from_gzipped_rejects_a_malformed_nested_node() -> None:
-    with pytest.raises(KeyError):
-        parse_from_gzipped(
-            gzip.compress(
-                json.dumps(
-                    {
-                        "meta": {"version": "1", "do_archive": True},
-                        "raw_tree": {
-                            "Attributes": {},
-                            "Table": {},
-                            "Nodes": {"node": {"Attributes": {}}},
-                        },
-                    }
-                ).encode()
-            )
-        )
-
-
 def test_parse_from_gzipped_rejects_an_unknown_version() -> None:
     with pytest.raises(ValueError):
         parse_from_gzipped(

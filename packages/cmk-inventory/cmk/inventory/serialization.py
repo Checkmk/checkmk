@@ -28,7 +28,10 @@ type _SDRawRetentionInterval = tuple[int, int, int, Literal["previous", "current
 
 type _SDRawRetentionIntervals = Mapping[SDKey, _SDRawRetentionInterval]
 
-type _SDRawTableRetentions = Sequence[tuple[Sequence[SDValue], _SDRawRetentionIntervals]]
+type _SDRawTableRetentions = (
+    Sequence[tuple[Sequence[SDValue], _SDRawRetentionIntervals]]
+    | Mapping[SDRowIdent, _SDRawRetentionIntervals]
+)
 
 
 class _SDRawAttributes(TypedDict, total=False):
@@ -145,12 +148,13 @@ def _deserialize_attributes(raw_attributes: _SDRawAttributes) -> ImmutableAttrib
 def _deserialize_table_retentions(
     raw_retentions: _SDRawTableRetentions,
 ) -> Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]]:
+    raw_items = raw_retentions.items() if isinstance(raw_retentions, Mapping) else raw_retentions
     return {
         tuple(raw_ident): {
             key: _deserialize_retention_interval(raw_retention_interval)
             for key, raw_retention_interval in raw_intervals_by_key.items()
         }
-        for raw_ident, raw_intervals_by_key in raw_retentions
+        for raw_ident, raw_intervals_by_key in raw_items
     }
 
 

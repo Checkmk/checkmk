@@ -725,13 +725,10 @@ def _make_tree_or_items(
                                         "keys": "Previous Keys 2",
                                     },
                                 ],
-                                "Retentions": [
-                                    (
-                                        list(i),
-                                        {k: _raw_retention_interval(v) for k, v in ri.items()},
-                                    )
+                                "Retentions": {
+                                    i: {k: _raw_retention_interval(v) for k, v in ri.items()}
                                     for i, ri in previous_table_retentions.items()
-                                ],
+                                },
                             },
                         },
                     },

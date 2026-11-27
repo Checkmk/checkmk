@@ -182,17 +182,17 @@ def check_aws_rds_disk_io(
 ) -> CheckResult:
     disk_data: MutableMapping[str, float] = {}
 
-    for key, metric_key, scale in [
-        ("read_ios", "ReadIOPS", 1.0),
-        ("write_ios", "WriteIOPS", 1.0),
-        ("read_throughput", "ReadThroughput", 1.0),
-        ("write_throughput", "WriteThroughput", 1.0),
-        ("read_latency", "ReadLatency", 1000.0),
-        ("write_latency", "WriteLatency", 1000.0),
+    for key, metric_key in [
+        ("read_ios", "ReadIOPS"),
+        ("write_ios", "WriteIOPS"),
+        ("read_throughput", "ReadThroughput"),
+        ("write_throughput", "WriteThroughput"),
+        ("read_latency", "ReadLatency"),
+        ("write_latency", "WriteLatency"),
     ]:
         if (metric := section.get(metric_key)) is None:
             continue
-        disk_data[key] = metric * scale
+        disk_data[key] = metric
 
     yield from check_diskstat_dict_legacy(
         params=params,

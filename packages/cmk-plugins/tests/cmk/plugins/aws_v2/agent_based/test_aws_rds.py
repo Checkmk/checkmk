@@ -3129,10 +3129,10 @@ def test_check_aws_rds_disk_io() -> None:
         Metric("disk_read_ios", 0.23333527781018573),
         Result(state=State.OK, notice="Write operations: 0.32/s"),
         Metric("disk_write_ios", 0.3249847523733059),
-        Result(state=State.OK, notice="Read latency: 40 milliseconds"),
-        Metric("disk_read_latency", 0.04),
-        Result(state=State.OK, notice="Write latency: 248 milliseconds"),
-        Metric("disk_write_latency", 0.24792140430921572),
+        Result(state=State.OK, notice="Read latency: 40 microseconds"),
+        Metric("disk_read_latency", 4e-05),
+        Result(state=State.OK, notice="Write latency: 248 microseconds"),
+        Metric("disk_write_latency", 0.00024792140430921573),
     ]
 
 

@@ -4,9 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Merges all bazel xunit output files to a single directory hierarchy.
+#
+# Paths into the test's runfiles tree of the main repository are made
+# relative to the repository root on the way, so tools reading the files
+# (e.g. Jenkins warnings-ng) find the sources in the workspace checkout
+# instead of in the long-gone sandbox. Paths into other repositories stay.
+#
+# A path whose first directory is not letters only, like "non-free/", gets
+# "tests/../" in front: the JUnit parser of warnings-ng (violations-lib)
+# wants a letters-only directory at the start of a relative path and would
+# read "non-free/x.py" as "free/x.py". Drop this once that is fixed:
+# https://github.com/tomasbjerre/violations-lib/issues/241
 
 BAZEL_TEST_LOGS_SRC=$(bazel info bazel-testlogs)
 BAZEL_TEST_LOGS_DEST="${BAZEL_TEST_LOGS_DEST:-../results}"
+# Stops at whitespace, quotes, tags, entities (&quot;) and the characters
+# that glue a path to its surroundings, like "self=" or "at (".
+RUNFILES_MAIN_PREFIX="[^][:space:]\"'<>&;()=:,[]*\.runfiles/_main/"
 
 if [ -z "${BAZEL_TEST_LOGS_SRC}" ]; then
     echo BAZEL_TEST_LOGS_SRC is empty!
@@ -33,7 +47,10 @@ find "${BAZEL_TEST_LOGS_SRC}" -name "test.xml" | while IFS= read -r src; do
     rel="${src#"${BAZEL_TEST_LOGS_SRC}"/}"
     dst="${BAZEL_TEST_LOGS_DEST}/${rel}"
     mkdir -p "$(dirname "$dst")"
-    cp "$src" "$dst"
+    sed -E \
+        -e "s#${RUNFILES_MAIN_PREFIX}([a-zA-Z]+/)#\1#g" \
+        -e "s#${RUNFILES_MAIN_PREFIX}#tests/../#g" \
+        "$src" >"$dst"
 done
 
 rc=$?

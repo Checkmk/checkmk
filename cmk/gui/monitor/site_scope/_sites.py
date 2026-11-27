@@ -5,7 +5,7 @@
 
 """Decide which sites a table search names."""
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 
 from cmk.ccc.site import SiteId
@@ -16,14 +16,15 @@ class MonitorSite:
     id: SiteId
     customer: str | None = None
 
-    def carries(self, needle: str) -> bool:
-        return any(needle in shown.lower() for shown in (self.id, self.customer) if shown)
-
 
 class MonitorSites:
     def __init__(self, sites: Iterable[MonitorSite] = ()) -> None:
         self._sites = tuple(sites)
 
-    def matching(self, value: str) -> Sequence[SiteId]:
-        needle = value.lower()
-        return [site.id for site in self._sites if site.carries(needle)]
+    def matching(self, carries: Callable[[str], bool]) -> Sequence[SiteId]:
+        """The sites whose ID or customer ``carries`` says the search names."""
+        return [
+            site.id
+            for site in self._sites
+            if any(carries(shown) for shown in (site.id, site.customer) if shown)
+        ]

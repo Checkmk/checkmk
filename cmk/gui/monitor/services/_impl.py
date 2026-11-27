@@ -27,7 +27,7 @@ from cmk.gui.livestatus_utils.commands.downtimes import recur_mode, RecurMode
 from cmk.gui.monitor.command import ModifiableAttribute
 from cmk.gui.monitor.hosts import reader_unavailable_sites
 from cmk.gui.monitor.setup_folders import SetupFolders
-from cmk.gui.monitor.shared import IconSource, may_open_in_setup
+from cmk.gui.monitor.shared import contains_wildcard, IconSource, may_open_in_setup
 from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.gui.utils.relay import is_scheduled_by_relay
 from cmk.livestatus_client import (
@@ -272,7 +272,7 @@ class LiveStatusServicesRepository:
     ) -> Sequence[Service]:
         return _fetch_services(
             self._connection,
-            self._search_filter(_sanitize_query(query), fields),
+            self._search_filter(query, fields),
             limit=limit,
             sorters=sorters,
             filters=filters,
@@ -285,9 +285,7 @@ class LiveStatusServicesRepository:
     def count_matched(
         self, *, query: str, filters: ServiceFilter, fields: Set[ServiceOptionalField]
     ) -> int:
-        return _count_services(
-            self._connection, self._search_filter(_sanitize_query(query), fields), filters
-        )
+        return _count_services(self._connection, self._search_filter(query, fields), filters)
 
     def unreachable_sites(self) -> list[str]:
         return sorted(self._connection.dead_sites())
@@ -296,12 +294,14 @@ class LiveStatusServicesRepository:
         if not query:
             return NothingExpression()
 
+        # The core takes the query as a regular expression, the sites take it as text.
+        pattern = _sanitize_query(query)
         return Or(
-            _build_query_filter(query, fields),
-            Services.host_name.contains(query, ignore_case=True),
+            _build_query_filter(pattern, fields),
+            Services.host_name.contains(pattern, ignore_case=True),
             *(
                 Services.host_labels.op("=", f"{BuiltinLabelsKey.SITE} {site_id}")
-                for site_id in self._sites.matching(query)
+                for site_id in self._sites.matching(lambda shown: contains_wildcard(shown, query))
             ),
         )
 

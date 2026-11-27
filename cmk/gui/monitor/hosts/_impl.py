@@ -28,6 +28,7 @@ from cmk.gui.livestatus_utils.commands.downtimes import child_hosts, recur_mode,
 from cmk.gui.logged_in import user
 from cmk.gui.monitor.command import ModifiableAttribute
 from cmk.gui.monitor.shared import (
+    contains_wildcard,
     folder_files_matching,
     HostState,
     IconSource,
@@ -148,7 +149,6 @@ class LiveStatusHostRepository:
         fields: Set[HostOptionalField],
         visible_relations: frozenset[tuple[str, str]] | None,
     ) -> Sequence[Host]:
-        query_ = _sanitize_query(query)
         extra_headers = [
             *_split_filter_lines(filters),
             _build_primary_sort(sorters),
@@ -184,7 +184,7 @@ class LiveStatusHostRepository:
                     for column in columns
                 ),
             ],
-            _build_query_filter(query_, fields, self._folders, self._sites),
+            _build_query_filter(query, fields, self._folders, self._sites),
             extra_headers=extra_headers,
         )
         # Only the relation count has to tell a site that did not answer from one that answered
@@ -477,9 +477,7 @@ class LiveStatusHostRepository:
         # ``Query`` class can't emit ``Stats`` headers yet, so the filter is assembled by hand.
         query_filter = (
             ": ".join(line)
-            for line in _build_query_filter(
-                _sanitize_query(query), fields, self._folders, self._sites
-            ).render()
+            for line in _build_query_filter(query, fields, self._folders, self._sites).render()
         )
         return self._count_hosts(extra_lines=[*query_filter, *_split_filter_lines(filters)])
 
@@ -863,7 +861,9 @@ def _build_query_filter(
     if not query:
         return NothingExpression()
 
-    searched = [build(query) for field, build in _SEARCHED_FIELDS.items() if field in fields]
+    # The core takes the query as a regular expression, folder titles and sites take it as text.
+    pattern = _sanitize_query(query)
+    searched = [build(pattern) for field, build in _SEARCHED_FIELDS.items() if field in fields]
     if HostOptionalField.FOLDER in fields:
         # The folder is searched by the title Setup shows, which Livestatus has never heard of, so
         # the folders carrying the query are resolved first and asked for by file.
@@ -872,10 +872,10 @@ def _build_query_filter(
         )
     searched.extend(
         Hosts.labels.op("=", f"{BuiltinLabelsKey.SITE} {site_id}")
-        for site_id in sites.matching(query)
+        for site_id in sites.matching(lambda shown: contains_wildcard(shown, query))
     )
 
-    return Or(Hosts.name.contains(query, ignore_case=True), *searched)
+    return Or(Hosts.name.contains(pattern, ignore_case=True), *searched)
 
 
 # The Livestatus column a sort column orders by, or ``None`` when no site's core has one - "site"

@@ -113,6 +113,15 @@ def test_column_prefix_only_renames_the_columns(node: FilterNode) -> None:
     ]
 
 
+@pytest.mark.parametrize("value", ["Rack", "Rack*", "*1", "rack*1"])
+def test_folder_condition_takes_a_star_as_any_text(value: str) -> None:
+    node = FolderCondition(type="condition", field="folder", op="contains", value=value)
+
+    assert livestatus_filter_lines(
+        node, setup_folders=lambda: {"dc_muc/rack1": "Data center Munich / Rack 1"}
+    ) == ["Filter: filename = /wato/dc_muc/rack1/hosts.mk"]
+
+
 def test_folder_condition_does_not_render_with_a_column_prefix() -> None:
     node = FolderCondition(type="condition", field="folder", op="contains", value="Munich")
 

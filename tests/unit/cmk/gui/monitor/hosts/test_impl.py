@@ -306,6 +306,19 @@ def test_build_query_filter_takes_a_regex_metacharacter_in_the_site_query_litera
     ]
 
 
+def test_build_query_filter_takes_a_star_as_any_text_in_folder_titles_and_sites() -> None:
+    assert _build_query_filter(
+        "*e*", frozenset({HostOptionalField.FOLDER}), _folders(), _sites()
+    ).render() == [
+        ("Filter", "name ~~ .*e.*"),
+        ("Filter", "filename = /wato/network/hosts.mk"),
+        ("Filter", "filename = /wato/web_dmz/hosts.mk"),
+        ("Filter", "labels = cmk/site heute"),
+        ("Filter", "labels = cmk/site remote_muc"),
+        ("Or", "5"),
+    ]
+
+
 def test_build_query_filter_searches_the_customer_of_every_host_its_sites_monitor() -> None:
     assert _build_query_filter("Müller", frozenset(), _folders(), _sites()).render() == [
         ("Filter", "name ~~ Müller"),

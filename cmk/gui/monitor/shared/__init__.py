@@ -43,6 +43,7 @@ from ._host_folders import (
 )
 from ._host_state import HostState, HostStateLabel
 from ._page_url import encode_filter_node
+from ._text_search import contains_wildcard
 from ._validators import validate_label_pairs, validate_uniqueness, validate_unix_timestamp
 
 __all__ = [
@@ -51,6 +52,7 @@ __all__ = [
     "BooleanCondition",
     "BooleanField",
     "ConditionNode",
+    "contains_wildcard",
     "custom_icons",
     "CustomIcon",
     "encode_filter_node",

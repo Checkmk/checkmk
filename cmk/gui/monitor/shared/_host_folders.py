@@ -14,6 +14,8 @@ from collections.abc import Callable, Iterable, Mapping
 
 from cmk.gui.utils.setup_folder_files import folder_path_from_filename
 
+from ._text_search import contains_wildcard
+
 
 def folder_matching_filters(value: str, titles: Mapping[str, str]) -> list[str]:
     """Livestatus filter lines selecting the hosts whose folder title carries ``value``.
@@ -47,9 +49,9 @@ def folder_files_matching(value: str, titles: Mapping[str, str]) -> list[str]:
 
 
 def folders_titled(value: str, titles: Mapping[str, str]) -> list[str]:
-    """The paths of the folders whose title carries ``value``, in a settled order."""
-    needle = value.lower()
-    return [path for path, title in sorted(titles.items()) if needle in title.lower()]
+    """The paths of the folders whose title carries ``value`` as ``contains_wildcard()`` says,
+    in a settled order."""
+    return [path for path, title in sorted(titles.items()) if contains_wildcard(title, value)]
 
 
 def folders_below(patterns: Iterable[str], titles: Mapping[str, str]) -> list[str]:

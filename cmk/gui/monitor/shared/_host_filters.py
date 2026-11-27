@@ -96,8 +96,8 @@ class FolderCondition:
         description=(
             "Substring to look for in the folder title, as the Folder column shows it: the titles "
             "down to the folder, e.g. 'Data center Munich / Rack 1', and 'Main' for the root "
-            "folder. A host whose folder Setup does not know - one not managed via Setup, or one "
-            "a remote site owns - has no title and is never selected."
+            "folder. '*' matches any text. A host whose folder Setup does not know - one not "
+            "managed via Setup, or one a remote site owns - has no title and is never selected."
         ),
         example="Data center Munich",
         pattern=_NO_NEWLINES_REGEX,

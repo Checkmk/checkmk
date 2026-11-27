@@ -932,6 +932,20 @@ def test_all_services_search_covers_host_name_and_sites_by_id_or_customer() -> N
         )
 
 
+def test_all_services_search_takes_a_star_as_any_text_in_sites() -> None:
+    with expect_single_query(
+        f"GET services\nColumns: {_SERVICES_COLUMNS}\n"
+        "Filter: description ~~ heu.*\nFilter: plugin_output ~~ heu.*\nOr: 2\n"
+        "Filter: host_name ~~ heu.*\n"
+        "Filter: host_labels = cmk/site heute\n"
+        "Filter: host_labels = cmk/site remote_muc\n"
+        f"Or: 4\n{_DEFAULT_ORDER_BY}",
+    ) as live:
+        LiveStatusServicesRepository(connection=live, sites=_SITES).fetch(
+            limit=None, query="heu*", sorters=[], filters=ServiceFilter(""), fields=frozenset()
+        )
+
+
 def test_all_services_count_total_counts_every_service() -> None:
     with expect_single_query("GET services\nStats: state >= 0") as live:
         assert (

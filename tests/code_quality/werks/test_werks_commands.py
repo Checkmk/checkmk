@@ -9,6 +9,8 @@ import os
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from cmk.utils.werks.__main__ import main as cmk_utils_werks_main
 from cmk.werks.tool.cli import main as cmk_werks_cli_main
 from cmk.werks.tool.utils.__main__ import main as cmk_werks_main
@@ -23,7 +25,7 @@ def _git_repo_root() -> Path:
     return Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip())
 
 
-def test_collect() -> None:
+def test_collect(capsys: pytest.CaptureFixture[str]) -> None:
     """Smoke test for `//packages/cmk-werks:utils-bin -- collect`."""
     # The branch name is hardcoded to master, but this is intentional —
     # it works correctly on version branches too.
@@ -31,8 +33,12 @@ def test_collect() -> None:
         ["collect", "cmk", str(_git_repo_root()), "--substitute-branches", "master:HEAD"]
     )
 
+    # Reading the output keeps the ~10 MB of werk JSON out of the JUnit report,
+    # which Jenkins xunit fails to process.
+    assert capsys.readouterr().out
 
-def test_list() -> None:
+
+def test_list(capsys: pytest.CaptureFixture[str]) -> None:
     """Smoke test for `werk list`."""
     original_cwd = os.getcwd()
     try:
@@ -40,6 +46,9 @@ def test_list() -> None:
     finally:
         # Ensure we return to the original working directory, since `werk list` changes it
         os.chdir(original_cwd)
+
+    # Reading the output keeps it out of the JUnit report, see test_collect.
+    assert capsys.readouterr().out
 
 
 def test_mail() -> None:

@@ -80,6 +80,11 @@ BIN_BINARIES: Sequence[BinarySmoke] = [
         stdin='{"drawings": []}',
         expected_stdout=r"^\[\]$",
     ),
+    BinarySmoke(
+        "cmk-transform-inventory-trees",
+        args=["-h"],
+        expected_stdout=r"usage:.*cmk-transform-inventory-trees",
+    ),
     BinarySmoke("cmk-ui-job-scheduler"),
     BinarySmoke("cmk-update-config", args=["-h"], expected_stdout=r"usage:.*cmk-update-config"),
     BinarySmoke("cmk-upload-crashes", args=["-h"], expected_stdout=r"usage:.*cmk-upload-crashes"),

@@ -191,6 +191,16 @@ def main_parallel() {
                     condition: run_condition && build_instance && item.RESULT_CHECK_FILE_PATTERN && item.RESULT_CHECK_TYPE,
                     raiseOnError: false,
                 ) {
+                    if (item.RESULT_CHECK_TYPE == "JUNIT") {
+                        // The JUnit parser of warnings-ng reports skipped tests as issues, which
+                        // the "TOTAL" quality gate below turns into a failed build. Let xunit
+                        // judge JUnit results instead: it fails the build on failed tests only.
+                        dir("${checkout_dir}") {
+                            test_jenkins_helper.publish_junit_results(item.RESULT_CHECK_FILE_PATTERN, item.NAME);
+                        }
+                        return;
+                    }
+
                     analyse_mapping["${item.NAME}"] << [
                         unique_parser_name: "${item.RESULT_CHECK_FILE_PATTERN}".replaceAll("""([^A-Za-z0-9\\-\\_]+)""", "-"),
                     ];
@@ -219,27 +229,6 @@ def main_parallel() {
                                 unstable: false,
                             ]],
                         );
-                        if (item.RESULT_CHECK_TYPE == "JUNIT") {
-                            dir("${checkout_dir}") {
-                                try {
-                                    xunit(
-                                        checksName: item.NAME,
-                                        tools: [
-                                            Custom(
-                                                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
-                                                deleteOutputFiles: false,
-                                                failIfNotNew: false, // as they are copied from the single tests
-                                                pattern: item.RESULT_CHECK_FILE_PATTERN,
-                                                skipNoTestFiles: true,
-                                                stopProcessingIfError: true,
-                                            )
-                                        ]
-                                    );
-                                } catch (Exception exc) {
-                                    print("ERROR: ran into exception while running xunit() for ${item.NAME}: ${exc}");
-                                }
-                            }
-                        }
                     }
                 }
             }

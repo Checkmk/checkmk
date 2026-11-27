@@ -33,7 +33,12 @@ from cmk.checkengine.plugins import (
 )
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.inventory.config import RawIntervalFromConfig
-from cmk.inventory.paths import has_archive, InventoryPaths
+from cmk.inventory.paths import (
+    has_archive,
+    has_inventory_tree,
+    has_status_data_tree,
+    InventoryPaths,
+)
 from cmk.inventory.retention import update_from_previous
 from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName, SDPath, SDValue
 
@@ -243,8 +248,8 @@ def _no_data_or_files(
     inv_paths = InventoryPaths(omd_root)
     return (
         not any(hs.sections or hs.piggybacked_raw_data for hs in host_sections)
-        and not inv_paths.inventory_tree(host_name).exists()
-        and not inv_paths.status_data_tree(host_name).exists()
+        and not has_inventory_tree(inv_paths, host_name)
+        and not has_status_data_tree(inv_paths, host_name)
         and not has_archive(inv_paths, host_name)
     )
 

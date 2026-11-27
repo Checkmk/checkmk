@@ -14,7 +14,7 @@ from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import Icon, IconConfig
 from cmk.gui.visual_link import url_to_visual
-from cmk.inventory.paths import has_history, InventoryPaths
+from cmk.inventory.paths import has_history, has_inventory_tree, InventoryPaths
 from cmk.ruleset_matcher.tags import TagID
 from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 
@@ -50,9 +50,8 @@ def _render_inventory_icon(
     user_permissions: UserPermissions,
     _icon_config: IconConfig,
 ) -> None | tuple[StaticIcon | DynamicIcon, str, str]:
-    if (
-        _is_inventory_row_of_a_host(what, row)
-        and InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(row["host_name"]).exists()
+    if _is_inventory_row_of_a_host(what, row) and has_inventory_tree(
+        InventoryPaths(cmk.utils.paths.omd_root), row["host_name"]
     ):
         return _link_to_view(row, user_permissions, "inv_host", _("Show HW/SW inventory tree"))
     return None

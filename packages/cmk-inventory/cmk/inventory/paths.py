@@ -80,6 +80,14 @@ def file_mtime(file_path: Path) -> int | None:
         return None
 
 
+def has_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> bool:
+    return inv_paths.inventory_tree(host_name).exists()
+
+
+def has_status_data_tree(inv_paths: InventoryPaths, host_name: HostName) -> bool:
+    return inv_paths.status_data_tree(host_name).exists()
+
+
 def _has_files(directory: Path) -> bool:
     try:
         return any(directory.iterdir())

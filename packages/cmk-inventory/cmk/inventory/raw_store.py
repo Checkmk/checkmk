@@ -15,7 +15,7 @@ from typing import Literal
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 
-from .paths import file_mtime, InventoryPaths
+from .paths import InventoryPaths, tree_mtime
 from .serialization import deserialize_tree, SDMetaAndRawTree, SDRawTree
 from .trees import ImmutableTree
 
@@ -76,7 +76,7 @@ def save_raw_tree_gz(tree_path_gz: Path, meta_and_raw_tree: SDMetaAndRawTree) ->
 
 def archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> None:
     tree_path = inv_paths.inventory_tree(host_name)
-    if (mtime := file_mtime(tree_path)) is None:
+    if (mtime := tree_mtime(tree_path)) is None:
         return
 
     tree_path_gz = inv_paths.inventory_tree_gz(host_name)

@@ -77,9 +77,9 @@ def collect_files(directory: Path) -> Sequence[Path]:
         return []
 
 
-def file_mtime(file_path: Path) -> int | None:
+def tree_mtime(tree_path: Path) -> int | None:
     try:
-        return int(file_path.stat().st_mtime)
+        return int(tree_path.stat().st_mtime)
     except FileNotFoundError:
         return None
 

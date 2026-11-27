@@ -116,24 +116,9 @@ void main() {
                 artifacts: "results/**/test.xml",
                 fingerprint: true,
             );
+            // also publishes the test results
             test_jenkins_helper.analyse_issues("JUNIT", "results/**/test.xml");
         }
-    }
-
-    stage("Publish test results") {
-        xunit(
-            checksName: "winagt-build-linux",
-            tools: [
-                Custom(
-                    customXSL: "${checkout_dir}/buildscripts/scripts/schema/pytest-xunit.xsl",
-                    deleteOutputFiles: false,
-                    failIfNotNew: false,
-                    pattern: "checkout/results/**/test.xml",
-                    skipNoTestFiles: false,
-                    stopProcessingIfError: true,
-                )
-            ]
-        );
     }
 }
 

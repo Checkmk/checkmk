@@ -250,12 +250,11 @@ Object analyse_issues(result_check_type, result_check_file_pattern, as_stage=tru
             ));
             break;
         case "JUNIT":
-            issues.add(scanForIssues(
-                tool: junitParser(
-                    pattern: "${result_check_file_pattern}"
-                )
-            ));
-            break;
+            // The JUnit parser of warnings-ng reports skipped tests as issues, which
+            // the "TOTAL" quality gate turns into a failed build. Let xunit judge
+            // JUnit results instead: it fails the build on failed tests only.
+            publish_junit_results(result_check_file_pattern);
+            return issues;
         case "MYPY":
             issues.add(scanForIssues(
                 tool: myPy(

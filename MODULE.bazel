@@ -185,6 +185,9 @@ single_version_override(
         # The directories of srcs become testpaths instead of positional
         # arguments, so that --test_arg=<test file> runs that file alone.
         "//bazel/patches:rules_py-pytest_paths_as_testpaths.patch",
+        # Backport of upstream #1372 (2.x): without it, every build on Windows
+        # fails while loading rules_py's toolchains.
+        "//bazel/patches:rules_py-windows_host_platform.patch",
     ],
     version = "1.13.0",
 )

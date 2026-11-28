@@ -1,0 +1,15 @@
+diff --git a/uv/private/host/repository.bzl b/uv/private/host/repository.bzl
+--- a/uv/private/host/repository.bzl
++++ b/uv/private/host/repository.bzl
+@@ -55,7 +55,10 @@ def _platform(rctx):
+         else:
+             fail("Unknown libc from ldd --version %r" % res.stdout)
+
+-    # TODO: Windows
++    elif os == "windows":
++        # Windows wheel tags encode no runtime version, so only the libc slot is meaningful.
++        return "msvc", "0.0"
++
+     # TODO: Other
+
+     fail("Unsupported platform {}".format(os))

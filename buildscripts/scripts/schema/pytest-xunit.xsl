@@ -14,9 +14,11 @@
               <xsl:value-of select="format-number(., '#.###')"/>
             </xsl:attribute>
           </xsl:when>
-          <xsl:otherwise>
+          <!-- Only those that xunit's JUnit schema allows. Others, like the
+               "disabled" of Pester and GoogleTest, would fail the build. -->
+          <xsl:when test="name() = 'name' or name() = 'tests' or name() = 'failures' or name() = 'errors'">
             <xsl:copy-of select="."/>
-          </xsl:otherwise>
+          </xsl:when>
         </xsl:choose>
       </xsl:for-each>
       <xsl:apply-templates select="testsuite"/>

@@ -23431,7 +23431,8 @@ msgstr "レベルを課さないでください"
 msgid "Do not impose levels, always be OK"
 msgstr "レベルを課さないでください、常に大丈夫です"
 
-msgid "Do not manage the controllers auto-registration"
+#, fuzzy
+msgid "Do not manage the agent controller's auto-registration"
 msgstr "コントローラーの自動登録を管理しない"
 
 msgid "Do not map roles"
@@ -24368,21 +24369,6 @@ msgid "Each rotation pool can be listed only once."
 msgstr "各属性は1回だけ指定できます。"
 
 msgid ""
-"Each rule associates OpenTelemetry data with this host via its host name "
-"template and attribute filters. A host may carry more than one rule: every "
-"rule is evaluated independently and the host receives the union of the "
-"series each matching rule selects. Rules are evaluated top to bottom; if two "
-"rules would contribute the same service, the topmost rule wins and the "
-"duplicate is ignored."
-msgstr ""
-"各ルールは、ホスト名テンプレートと属性フィルターを通じて、OpenTelemetryデータ"
-"をそのホストに関連付けます。一つのホストに複数のルールが割り当てられる場合が"
-"あります。各ルールは独立して評価され、ホストには、一致した各ルールが選択した"
-"シリーズの和集合が割り当てられます。ルールの評価は上から下へ行われます。２つ"
-"のルールが同じサービスに貢献する場合、最上位のルールが優先され、重複するルー"
-"ルは無視されます。"
-
-msgid ""
 "Each rule maps incoming OpenTelemetry data to Checkmk hosts (via its host "
 "name template) and defines which services to create on those hosts. More "
 "than one rule can match the same host. When that happens, services from all "
@@ -24396,6 +24382,21 @@ msgstr ""
 "合、一致したすべてのルールのサービスが、そのホスト上で統合されます。ルールは"
 "上から順に評価されます。2 つのルールが同じホスト上に同じサービスを作成する場"
 "合、最上位のルールが優先され、重複は無視されます。"
+
+#, fuzzy
+msgid ""
+"Each rule selects OpenTelemetry data for this host by its attribute filters. "
+"A host may carry more than one rule: every rule is evaluated independently "
+"and the host receives the union of the series each matching rule selects. "
+"Rules are evaluated top to bottom; if two rules would contribute the same "
+"service, the topmost rule wins and the duplicate is ignored."
+msgstr ""
+"各ルールは、ホスト名テンプレートと属性フィルターを通じて、OpenTelemetryデータ"
+"をそのホストに関連付けます。一つのホストに複数のルールが割り当てられる場合が"
+"あります。各ルールは独立して評価され、ホストには、一致した各ルールが選択した"
+"シリーズの和集合が割り当てられます。ルールの評価は上から下へ行われます。２つ"
+"のルールが同じサービスに貢献する場合、最上位のルールが優先され、重複するルー"
+"ルは無視されます。"
 
 msgid "Each service monitors on Robot Framework tests.\n"
 msgstr "各サービスはロボット・フレームワークのテストを監視する。\n"
@@ -28381,6 +28382,14 @@ msgstr "Windowsイベントログの重複メッセージのフィルタリン�
 
 msgid "Filter pattern (RegExp)"
 msgstr "フィルタパターン(RegExp)"
+
+#, fuzzy
+msgid "Filter rule"
+msgstr "フィルタビュー"
+
+#, fuzzy
+msgid "Filter rules"
+msgstr "フィルタビュー"
 
 msgid "Filter selection by host name:"
 msgstr "ホスト名でによるフィルター選択:"
@@ -33108,6 +33117,10 @@ msgstr ""
 "ホストラベル: %(total)d 合計 (%(added)d 追加, %(changed)d変更, %(removed)d 削"
 "除, %(kept)d 保持)"
 
+#, fuzzy
+msgid "Host layout"
+msgstr "レイアウトを編集する"
+
 msgid "Host limit"
 msgstr "ホスト制限"
 
@@ -33169,12 +33182,6 @@ msgstr "ホスト名の競合"
 #, python-format
 msgid "Host name contains illegal characters: %(error)s"
 msgstr "ホスト名に不正な文字が含まれています: %(error)s"
-
-msgid "Host name lookup rule"
-msgstr "ホスト名lookup ルール"
-
-msgid "Host name lookup rules"
-msgstr "ホスト名lookup ルール"
 
 msgid "Host name matching"
 msgstr "ホスト名の一致"
@@ -33831,6 +33838,13 @@ msgstr ""
 "ホストの識別ラベルが、そのホストの OpenTelemetry データを取得するクエリにどの"
 "ように変換されるか。必要に応じて、ラベルを組み合わせるさらなる方法をここに追"
 "加できます。"
+
+msgid ""
+"How the hosts are arranged. Tree runs from each site to the right, shows "
+"hosts with problems first and collapses large groups into one node. Network "
+"draws every host, placed by its links to its parents, as OrbVis did. A map "
+"without parent relations looks the same in both."
+msgstr ""
 
 msgid "How the map appears in the rotation and reacts to clicks."
 msgstr "マップが回転時にどのように表示され、クリックにどのように反応するか。"
@@ -38522,9 +38536,6 @@ msgstr "デフォルトです"
 msgid "Is disabled"
 msgstr "無効になっています"
 
-msgid "Is mount point"
-msgstr "マウントポイントです"
-
 #, python-format
 msgid "Is needed for seeing %(title_lower)s that other users have created."
 msgstr "他のユーザーが作成した %(title_lower)s を表示するために必要です。"
@@ -43125,7 +43136,8 @@ msgstr "サービス管理"
 msgid "Manage tags"
 msgstr "タグ管理"
 
-msgid "Manage the controllers auto-registration"
+#, fuzzy
+msgid "Manage the agent controller's auto-registration (Linux, Windows)"
 msgstr "コントローラーの自動登録の管理"
 
 msgid "Manage the dynamic configuration connections"
@@ -50864,42 +50876,6 @@ msgstr "オプション サービスグループの選択"
 
 msgid "Optional variable prefix"
 msgstr "オプションの変数プレフィックス"
-
-#, fuzzy, python-format
-msgid ""
-"Optional. A template that identifies the OpenTelemetry data belonging to "
-"this host, using the macros <tt>%(resource)s</tt>, <tt>%(scope)s</tt> and "
-"<tt>%(data_point)s</tt> (the value of an OpenTelemetry resource, "
-"instrumentation scope or data point attribute respectively). At fetch time "
-"the template is rendered for each attribute combination in the data and a "
-"host receives the series whose rendered name equals its own host name. "
-"Example: "
-"<tt>deployment_$RESOURCE_ATTR.k8s.namespace.name$_$RESOURCE_ATTR.k8s.deployment.name$</"
-"tt> collects the data for a host named <tt>deployment_production_nginx</tt>. "
-"A single bare macro like <tt>$RESOURCE_ATTR.service.name$</tt> simply "
-"matches the attribute whose value equals the host name. Leave unset to "
-"select the data via the attribute filters above only.<br><br>Characters in "
-"the attribute values that are not allowed in a host name are replaced with "
-"underscores before the rendered name is compared, so the data lands on the "
-"host that was created with the same substitution applied.<br><br>Data points "
-"missing any attribute referenced by the template are skipped: they are not "
-"attached to any host."
-msgstr ""
-"オプション。<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>、<tt>$SCOPE_ATTR.&lt;key&gt;"
-"$</tt>や<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt> （それぞれ、OpenTelemetryリ"
-"ソース、計測スコープ、またはデータポイント属性の値）を使用して、このホストに"
-"属するOpenTelemetryデータを識別するテンプレートです。取得時に、データ内の各属"
-"性の組み合わせに対してテンプレートがレンダリングされ、ホストは、レンダリング"
-"された名前が自身のホスト名と一致するシリーズを受け取ります。 例："
-"<tt>deployment_$RESOURCE_ATTR.k8s.namespace.name$_$RESOURCE_ATTR.k8s.deployment.name$</"
-"tt> は <tt>deployment_production_nginx</tt> という名前のホストのデータを収集"
-"します。<tt>$RESOURCE_ATTR.service.name$</tt> のような単一のマクロは、値がホ"
-"スト名と等しい属性に単純に一致します。 設定しない場合は、上記の属性フィルター"
-"のみを使用してデータが選択されます。<br><br>属性値に含まれるホスト名として許"
-"可されていない文字は、レンダリングされた名前が比較される前にアンダースコアに"
-"置換されるため、データは同じ置換が適用された状態で作成されたホストに割り当て"
-"られます。<br><br>テンプレートで参照されている属性が欠落しているデータポイン"
-"トはスキップされます。これらはどのホストにも関連付けられません。"
 
 msgid ""
 "Optional. The agent updater will try to auto-detect the protocol, first "
@@ -58661,6 +58637,10 @@ msgid "Require all failing components to be in a maintenance window"
 msgstr ""
 "障害が発生しているすべてのコンポーネントをメンテナンスウィンドウ内に含めるこ"
 "とを必須とする"
+
+#, fuzzy
+msgid "Require target below a mount point"
+msgstr "ボリューム名をマウントポイントとして使用する"
 
 msgid "Required"
 msgstr "必須"
@@ -74560,6 +74540,10 @@ msgstr "プレビューしようとしているレポートに有効なファイ
 msgid "The report you are trying to preview is not available"
 msgstr "プレビューしようとしているレポートは利用できません"
 
+#, fuzzy
+msgid "The request does not contain the OAuth2 connection data."
+msgstr "OAuth2接続のためのリフレッシュトークン。"
+
 msgid "The request is missing the filter infos to render"
 msgstr "このリクエストには、レンダリングに必要なフィルター情報が欠けています"
 
@@ -74736,6 +74720,9 @@ msgstr ""
 
 msgid "The rule conditions do not match."
 msgstr "ルールの条件が一致しません。"
+
+msgid "The rule data must contain the rule properties with a rule ID."
+msgstr ""
 
 msgid "The rule does not match"
 msgstr "ルールが一致しません"
@@ -77440,10 +77427,12 @@ msgstr ""
 "す。このディレクトリを指定するには絶対パスを使用します。例えば \"C:\\robot\" "
 "などです。"
 
+#, fuzzy
 msgid ""
 "This directory will be used for temporarily storing backups before uploading "
-"and after downloading. You can for example use the <tt>/tmp</tt> directory. "
-"Please note that Checkmk will not clean up this directory."
+"and after downloading. If you want to use a directory on the local disk, for "
+"example <tt>/tmp</tt>, disable the mount point option below. Please note "
+"that Checkmk will not clean up this directory."
 msgstr ""
 "このディレクトリは、アップロード前とダウンロード後のバックアップを一時的に保"
 "存するために使用されます。例えば、<tt>/tmp</tt>ディレクトリを使用することがで"
@@ -79247,7 +79236,7 @@ msgstr ""
 "このルールでは、Webアプリケーションサーバーのメモリプールの警告レベルおよび危"
 "機管理レベルを設定することができます。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "This rule allows you to bake controller connections into an agent package. "
 "Upon start, the controller daemon will make sure connections to the "
@@ -79258,7 +79247,13 @@ msgid ""
 "\"%(rule_set)s\".\n"
 "\n"
 "You can choose to keep or to delete all other connections that may be known "
-"to the controller."
+"to the controller.\n"
+"\n"
+"Only the agent packages for Linux and Windows contain the agent controller. "
+"By default, the Agent Bakery also builds Solaris and AIX packages for the "
+"hosts matching this rule. Hosts with these packages are not registered "
+"automatically. The rule set \"%(packages_rule_set)s\" can exclude the "
+"Solaris and AIX packages from baking."
 msgstr ""
 "このルールにより、エージェントパッケージにコントローラ接続を焼き付けることが"
 "できます。起動時に、コントローラデーモンは、指定したサイトへの接続が存在する"
@@ -91195,6 +91190,14 @@ msgstr ""
 "ため、セットアップGUI全体のパフォーマンスが低下します。"
 
 msgid ""
+"When enabled, the backup checks before each run that the target path is the "
+"mount point, or a directory below one. The root filesystem and the site's "
+"filesystem are not allowed. If the path resolves to one of them, for example "
+"because a network share is not mounted, the backup fails instead of writing "
+"to the local disk."
+msgstr ""
+
+msgid ""
 "When enabled, the headline of each page also displays the date in addition "
 "the time."
 msgstr "有効にすると、各ページの見出しに時間に加えて日付も表示されます。"
@@ -91638,15 +91641,6 @@ msgstr ""
 "すべてのセッションが無効になり、ユーザーは再度ログインする必要があります。デ"
 "フォルトでは、このフィールドは、ユーザーの最後のパスワード変更の時刻を保持す"
 "るフィールドを使用します。"
-
-msgid ""
-"When this is checked, the backup ensures that the configured path is a mount "
-"point. If there is no active mount on the path, the backup fails with an "
-"error message."
-msgstr ""
-"これがチェックされると、バックアップは設定されたパスがマウントポイントである"
-"ことを確認します。パスにアクティブなマウントがない場合、バックアップはエラー"
-"メッセージで失敗します。"
 
 #, python-format
 msgid ""
@@ -92144,9 +92138,10 @@ msgstr ""
 "行ごとに常に収集されるため、リストには表示されません。古いデータによって、停"
 "止したばかりのインスタンスが検出されなくなることを防ぐためです。"
 
+#, fuzzy
 msgid ""
-"Which slice of the host graph this Flow map renders, and how many service "
-"rows are drawn per host."
+"Which hosts this flow map shows, how they are arranged, and how many "
+"services are drawn per host."
 msgstr ""
 "このフローマップがホストグラフのどの部分をレンダリングするか、およびホストご"
 "とに何行のサービス行が描画されるか。"
@@ -94864,6 +94859,14 @@ msgstr ""
 "ションに対するサブレポートを含む単一のレポートを作成する場合、ここで希望のサ"
 "ブレポートを選択し、単一ホストコンテキストを使用するようにそのコンテキストを"
 "構成します。次に、選択したホストを選択するようにフィルタを設定します。"
+
+#, fuzzy
+msgid ""
+"You need to be a member of at least one contact group to be able to create "
+"an OAuth2 connection."
+msgstr ""
+"定義済み条件を作成するには、少なくとも１つの連絡先グループのメンバーである必"
+"要があります。"
 
 #, python-format
 msgid ""
@@ -98413,6 +98416,9 @@ msgstr "検索するには入力してください..."
 msgid "Select label..."
 msgstr "ラベルを選択..."
 
+msgid "No results found"
+msgstr "ルールが見つかりません"
+
 msgid "Remove row"
 msgstr "行を削除"
 
@@ -98441,9 +98447,6 @@ msgstr "値を選択..."
 
 msgid "No filters found matching: %{search}"
 msgstr "一致するフィルターは見つかりませんでした: %{search}"
-
-msgid "No results found"
-msgstr "ルールが見つかりません"
 
 msgid "required"
 msgstr "必須"
@@ -99286,51 +99289,63 @@ msgid "Select option"
 msgstr "オプション選択"
 
 #, fuzzy
-msgid "Add contextual link"
-msgstr "コンテキストヘルプアイコン"
+msgid "This widget has no links to other pages."
+msgstr "ダウンタイムは、発生したら速やかに解消されなければなりません。"
 
-msgid "Redirect to the default page defined by Checkmk."
+msgid "Opens Checkmk's default page for the clicked item."
 msgstr ""
 
 #, fuzzy
-msgid "Include current time range"
-msgstr "時間範囲で有効"
+msgid "Opens one view or dashboard."
+msgstr "ビューをダッシュボード要素にコピーします"
+
+msgid "Opens one or more views or dashboards."
+msgstr ""
 
 #, fuzzy
-msgid "Include dashboard & widget filters"
-msgstr "ダッシュボードにフォルダー %{n} を準備しました"
+msgid "(set by Checkmk)"
+msgstr "Checkmkが学習する"
 
 #, fuzzy
-msgid "Always included in the contextual link"
-msgstr "少なくとも1つの連絡先グループを追加してください。"
+msgid "Pass on to target page"
+msgstr "最後に経過日数を取得"
 
-#, fuzzy
-msgid "Contextual filter = clicked element"
-msgstr "このエレメントを削除します"
+msgid "(always passed on)"
+msgstr ""
 
 #, fuzzy
 msgid "Link %{n}"
 msgstr "単一の %{n}"
 
 #, fuzzy
-msgid "Delete contextual link"
-msgstr "コンテキストヘルプアイコン"
+msgid "Duplicate link"
+msgstr "重複排除率"
 
 #, fuzzy
-msgid "Link name"
-msgstr "アップリンク名"
+msgid "At least one link is needed"
+msgstr "少なくとも1つのセレクションが欠けています。"
 
 #, fuzzy
-msgid "e.g. host details"
-msgstr "BIホストの詳細"
+msgid "Delete link"
+msgstr "クライアントの削除"
 
 #, fuzzy
-msgid "Include filter context of clicked element"
-msgstr "このエレメントを削除します"
+msgid "Link description"
+msgstr "説明を入力"
+
+msgid ""
+"Shown in the link menu when users click an item. Describe how the target "
+"page relates to the clicked item, for example: Hosts with the same OS and "
+"folder."
+msgstr ""
 
 #, fuzzy
 msgid "Search filters ..."
 msgstr "検索フィルター"
+
+#, fuzzy
+msgid "Add another link"
+msgstr "新しい要素を追加する"
 
 #, fuzzy
 msgid "Error loading dashboards: "
@@ -99341,8 +99356,11 @@ msgid "Search target pages ..."
 msgstr "ホスト名に一致"
 
 #, fuzzy
-msgid "This action can’t be undone."
-msgstr "この操作は元に戻せません。"
+msgid "Dashboard & widget filters are passed on, but no time range."
+msgstr "ダッシュボードにフォルダー %{n} を準備しました"
+
+msgid "No dashboard & widget filters or time range are passed on."
+msgstr ""
 
 #, fuzzy
 msgid "Select a target for the contextual link."
@@ -99352,7 +99370,7 @@ msgstr "OAuth2接続の権限を選択してください。"
 msgid "Add at least one contextual link."
 msgstr "少なくとも1つの連絡先グループを追加してください。"
 
-msgid "Every contextual link needs a title and a target."
+msgid "Every contextual link needs a target."
 msgstr ""
 
 msgid "Select a key for every label, tag and auxiliary tag filter."
@@ -99789,6 +99807,10 @@ msgid ""
 "opens no details, and the rows offer no actions. The graph links next to the "
 "names still open the graphs."
 msgstr ""
+
+#, fuzzy
+msgid "Links to views and dashboards"
+msgstr "すべてのダッシュボードへのリンク"
 
 msgid "Value must be a valid URL"
 msgstr "値は有効なURLでなければなりません"
@@ -100299,6 +100321,11 @@ msgstr "現在のホスト、サービス、メトリックの選択では利用
 msgid "Data range"
 msgstr "データ範囲"
 
+msgid ""
+"A combined line has no single service to link from. Set Presentation to "
+"Lines or Stacked for links."
+msgstr ""
+
 #, fuzzy
 msgid "Show colored status label"
 msgstr "色付きのステータスラベルを表示する"
@@ -100708,18 +100735,18 @@ msgid "Regex input"
 msgstr "正規表現セット"
 
 #, fuzzy
-msgid "Enter regex (pattern match)"
-msgstr "パターン一致を試す"
-
-msgid "Enter plain text (single match)"
-msgstr "プレーンテキストを入力（1件から一致）"
-
-#, fuzzy
 msgid "show preview"
 msgstr "もっと表示"
 
 msgid "Preview of matches:"
 msgstr "一致のプレビュー："
+
+#, fuzzy
+msgid "Enter regex (pattern match)"
+msgstr "パターン一致を試す"
+
+msgid "Enter plain text (single match)"
+msgstr "プレーンテキストを入力（1件から一致）"
 
 msgid "%{specifier} parameter"
 msgstr "%s{specifier}パラメータ"
@@ -101369,6 +101396,10 @@ msgstr "すべてのメトリックを削除しますか？"
 msgid "Delete metric %{names}?"
 msgid_plural "Delete metrics %{names}?"
 msgstr[0] "メトリック %{names} を削除しますか？"
+
+#, fuzzy
+msgid "This action can’t be undone."
+msgstr "この操作は元に戻せません。"
 
 msgid "Calculations that use this metric are also deleted:"
 msgid_plural "Calculations that use these metrics are also deleted:"
@@ -102676,15 +102707,29 @@ msgstr "版"
 msgid "← Back to overview"
 msgstr "表示に戻る"
 
-msgid ""
-"%{total} service issues (%{critical} critical, %{warning} warning) across %"
-"{hostsWithProblems} hosts"
-msgstr ""
-"%{total} 件のサービス障害（%{critical} 件の重大な障害、%{warning} 件の警告）"
-"が、%{hostsWithProblems} 台のホストで発生"
+#, fuzzy
+msgid "%{count} %{state}"
+msgstr "%{count} %{ラベル}"
 
-msgid "%{critical} crit · %{warning} warn"
-msgstr "%{critical} クリティカル · %{warning} 警告"
+#, fuzzy
+msgid "%{n} host down"
+msgid_plural "%{n} hosts down"
+msgstr[0] "%{count} 台のホストの処理が完了しました。"
+
+#, fuzzy
+msgid "%{n} host unreachable"
+msgid_plural "%{n} hosts unreachable"
+msgstr[0] "ホストが到達不能になる"
+
+#, fuzzy
+msgid "%{n} service problem on one host"
+msgid_plural "%{n} service problems on one host"
+msgstr[0] "サービス問題の合計"
+
+#, fuzzy
+msgid "%{n} service problem on %{hosts} hosts"
+msgid_plural "%{n} service problems on %{hosts} hosts"
+msgstr[0] " ホスト %(host)s 上のサービス %(service)s"
 
 #, fuzzy
 msgid "Resume rotation"
@@ -103695,6 +103740,10 @@ msgid "The map view is out of range."
 msgstr "値は文字列であること"
 
 #, fuzzy
+msgid "Could not update the preview"
+msgstr "サーバーに接続できませんでした。変更内容は引き続き保存されています。"
+
+#, fuzzy
 msgid "No changes to save"
 msgstr "変更がありません"
 
@@ -103806,9 +103855,179 @@ msgid_plural "%{n} more services"
 msgstr[0] "施行されたサービス"
 
 #, fuzzy
+msgid "Site %{site}, %{state}"
+msgstr "%{selected} 件中 %{total} 件を選択しました"
+
+#, fuzzy
 msgid "+%{n} more"
 msgid_plural "+%{n} more"
 msgstr[0] "%d 時間"
+
+#, fuzzy
+msgid "Collapse the hosts below site %{name}"
+msgstr "サービス名を表示"
+
+#, fuzzy
+msgid "Collapse the hosts below %{name}"
+msgstr "(ホスト選択)"
+
+#, fuzzy
+msgid "Parent tree"
+msgstr "親フォルダ"
+
+msgid "all OK"
+msgstr "すべてOK"
+
+msgid "%{n} host below site %{parent}: %{states}"
+msgid_plural "%{n} hosts below site %{parent}: %{states}"
+msgstr[0] ""
+
+msgid "%{n} host below %{parent}: %{states}"
+msgid_plural "%{n} hosts below %{parent}: %{states}"
+msgstr[0] ""
+
+#, fuzzy
+msgid "%{n} down"
+msgid_plural "%{n} down"
+msgstr[0] "%d日間"
+
+#, fuzzy
+msgid "%{n} unreachable"
+msgid_plural "%{n} unreachable"
+msgstr[0] "ホストが到達不能になる"
+
+#, fuzzy
+msgid "%{n} with critical services"
+msgid_plural "%{n} with critical services"
+msgstr[0] "クリティカルなサービス"
+
+#, fuzzy
+msgid "%{n} with unknown services"
+msgid_plural "%{n} with unknown services"
+msgstr[0] "不明なサービス"
+
+#, fuzzy
+msgid "%{n} with warning services"
+msgid_plural "%{n} with warning services"
+msgstr[0] "警告のサービス"
+
+#, fuzzy
+msgid "%{n} with handled problems"
+msgid_plural "%{n} with handled problems"
+msgstr[0] "未処理のホストの問題"
+
+#, fuzzy
+msgid "%{n} pending"
+msgid_plural "%{n} pending"
+msgstr[0] "保留中"
+
+#, fuzzy
+msgid "Showing %{count} host below site %{name}"
+msgid_plural "Showing %{count} hosts below site %{name}"
+msgstr[0] "%{noun}とは、%{name}を持つものです："
+
+#, fuzzy
+msgid "Showing %{count} host below %{name}"
+msgid_plural "Showing %{count} hosts below %{name}"
+msgstr[0] "ホスト %{name} の詳細を表示"
+
+#, fuzzy
+msgid "Collapsed the hosts below site %{name}"
+msgstr "サービス名を表示"
+
+#, fuzzy
+msgid "Collapsed the hosts below %{name}"
+msgstr "(ホスト選択)"
+
+#, fuzzy
+msgid "Collapsed all hosts"
+msgstr "すべて折りたたむ"
+
+#, fuzzy
+msgid "Hosts below site %{site}"
+msgstr "ホストまたはサービス %ss"
+
+#, fuzzy
+msgid "Hosts below %{parent}"
+msgstr "ホストの親"
+
+msgid "%{n} host is unreachable because %{parent} is down"
+msgid_plural "%{n} hosts are unreachable because %{parent} is down"
+msgstr[0] ""
+
+#, fuzzy
+msgid "CRIT services"
+msgstr "重要なサービス"
+
+#, fuzzy
+msgid "WARN services"
+msgstr "警告サービス"
+
+#, fuzzy
+msgid "%{n} host needs attention"
+msgid_plural "%{n} hosts need attention"
+msgstr[0] "ホスト作成"
+
+#, fuzzy
+msgid "%{host}, %{reason}"
+msgstr "%{n} 台のホスト · %{breakdown}"
+
+#, fuzzy
+msgid "Show %{n} more"
+msgid_plural "Show %{n} more"
+msgstr[0] "もっと表示"
+
+#, fuzzy
+msgid "and %{n} more"
+msgid_plural "and %{n} more"
+msgstr[0] "および%s以上"
+
+msgid "Site; outlined in the colour of its worst problem"
+msgstr ""
+
+msgid "Host, in the colour of its state"
+msgstr ""
+
+msgid "Grey host: up, while only problems show"
+msgstr ""
+
+msgid "Group of hosts folded under their parent"
+msgstr ""
+
+msgid "Opened group; its − button folds it again"
+msgstr ""
+
+msgid "Rings and badges"
+msgstr ""
+
+#, fuzzy
+msgid "Host ring: its services' worst state"
+msgstr "ホスト/サービスの状態"
+
+msgid "Thick ring: one of the hosts worst affected"
+msgstr ""
+
+msgid "Glowing: down, and others unreachable because of it"
+msgstr ""
+
+msgid "Group ring: its hosts' states, handled problems grey"
+msgstr ""
+
+msgid "Group number: its hosts that need attention, or else those unreachable"
+msgstr ""
+
+msgid "To a child host, in its parent's state"
+msgstr ""
+
+#, fuzzy
+msgid "From a site to its hosts"
+msgstr "このホストのステータスを更新します"
+
+msgid "To a further parent, or past hosts left out"
+msgstr ""
+
+msgid "Arrow keys move along the tree, Enter opens a group, Escape folds it."
+msgstr ""
 
 msgid "Donut"
 msgstr "Donut"
@@ -103822,6 +104041,10 @@ msgstr "Orbit"
 
 msgid "Row"
 msgstr "行"
+
+#, fuzzy
+msgid "Services: %{layout}"
+msgstr "サービス状態"
 
 #, fuzzy
 msgid "Failed to load topology"
@@ -103979,9 +104202,6 @@ msgstr "リスナー"
 msgid "showing %{n} host"
 msgid_plural "showing %{n} hosts"
 msgstr[0] "%{n} 台のホストを表示中"
-
-msgid "all OK"
-msgstr "すべてOK"
 
 msgid "more matches exist — refine your search"
 msgstr "他にも一致する結果があります — 検索条件を絞り込んでください"
@@ -108541,6 +108761,402 @@ msgstr "%{shown} 台のホスト（%{total} 台中）に対して表示されて
 msgid "Showing %{shown} of %{matched} services"
 msgstr "%{shown} 台のホスト（%{total} 台中）に対して表示されているサービス"
 
+msgid "What needs my attention right now?"
+msgstr ""
+
+#, fuzzy
+msgid "What changed in the last hour?"
+msgstr "過去1時間以内の再起動数"
+
+msgid "Any recurring problems this week?"
+msgstr ""
+
+msgid "What should I do to fix the current problem?"
+msgstr ""
+
+msgid "The assistant is not set up yet"
+msgstr ""
+
+#, fuzzy
+msgid "Ask your administrator to set up the AI assistant."
+msgstr "管理者にお問い合わせください。"
+
+#, fuzzy
+msgid "Suggested questions"
+msgstr "セクション"
+
+msgid "Checkmk AI can make mistakes. Please double-check responses."
+msgstr ""
+
+#, fuzzy
+msgid "Ask across all hosts and services"
+msgstr "全てのホストとサービスを表示"
+
+#, fuzzy
+msgid "Dock to the left"
+msgstr "ルールのID"
+
+#, fuzzy
+msgid "Dock to the right"
+msgstr "表示に戻る"
+
+#, fuzzy
+msgid "AI assistant"
+msgstr "AIアシスタント"
+
+#, fuzzy
+msgid "Back to chat"
+msgstr "デフォルトにリセット"
+
+#, fuzzy
+msgid "New chat"
+msgstr "新しいタブ"
+
+#, fuzzy
+msgid "Chat history"
+msgstr "DCDバッチ履歴"
+
+#, fuzzy
+msgid "Dock position"
+msgstr "マウスの位置"
+
+#, fuzzy
+msgid "Welcome to"
+msgstr "ウェルカムページ"
+
+#, fuzzy
+msgid "Checkmk Assistant"
+msgstr "Checkmkの状態"
+
+msgid "An AI assistant that helps you dive into your data and investigate"
+msgstr ""
+
+#, fuzzy
+msgid "Thinking"
+msgstr "考え中..."
+
+#, fuzzy
+msgid "Writing answer"
+msgstr "警告アサート"
+
+#, fuzzy
+msgid "Thought process"
+msgstr "ホスト処理"
+
+#, fuzzy
+msgid "%{count} item"
+msgid_plural "%{count} items"
+msgstr[0] "選択されていない"
+
+#, fuzzy
+msgid "Reason: %{reason}"
+msgstr "理由:%(reason)s"
+
+#, fuzzy
+msgid "Cancelled"
+msgstr "キャンセル"
+
+#, fuzzy
+msgid "Error: %{code}"
+msgstr "エラー: "
+
+msgid "This prompt may not have been sent: %{prompt}"
+msgstr ""
+
+msgid "The answer ended before it was complete."
+msgstr ""
+
+msgid ""
+"The last answer could not be saved and is not part of this conversation. Ask "
+"again if you still need it."
+msgstr ""
+
+msgid "The answer was cut off because it reached the length limit."
+msgstr ""
+
+#, fuzzy
+msgid "The AI provider could not be reached or returned an error."
+msgstr "グループベースDNが見つかりませんでした。"
+
+#, fuzzy
+msgid "The AI provider stopped responding."
+msgstr "このサイトは応答していません。"
+
+msgid "The answer took too many steps and was stopped."
+msgstr ""
+
+msgid "The site refused the assistant access to its monitoring data."
+msgstr ""
+
+#, fuzzy
+msgid "The assistant could not reach the monitoring data of the site."
+msgstr "セントラルサイトは、このリモートサイトと互換性がありません"
+
+msgid ""
+"The conversation is too long to continue. Please start a new conversation."
+msgstr ""
+
+#, fuzzy
+msgid "No chats yet"
+msgstr "まだアラートはありません"
+
+#, fuzzy
+msgid "Untitled chat"
+msgstr "無題の設定"
+
+#, fuzzy
+msgid "Delete chat"
+msgstr "ホストを削除"
+
+#, fuzzy
+msgid "Delete chat “%{title}”?"
+msgstr "%(title)s を削除"
+
+msgid "This chat and all its messages will be deleted and can’t be recovered."
+msgstr ""
+
+#, fuzzy
+msgid "The graph could not be loaded."
+msgstr "グループベースDNが見つかりませんでした。"
+
+#, fuzzy
+msgid "Open in monitoring"
+msgstr "監視アイコン"
+
+#, fuzzy
+msgid "This link leaves Checkmk"
+msgstr "Checkmkが学習する"
+
+msgid "Make sure this address contains nothing you do not want to share:"
+msgstr ""
+
+#, fuzzy
+msgid "Open in new tab"
+msgstr "新しいタブで開く（全画面表示）"
+
+msgid "Image not loaded: %{url}"
+msgstr ""
+
+#, fuzzy
+msgid "Select an AI provider and a model in the global settings."
+msgstr "このオプションは、グローバル設定で変更されています。"
+
+#, fuzzy
+msgid "Open global settings"
+msgstr "グローバル設定"
+
+#, fuzzy
+msgid "The AI provider setting is invalid. Correct it in the global settings."
+msgstr "ntopng統合は、グローバル設定ではアクティブ化されません。"
+
+msgid "The AI provider is configured but not activated yet."
+msgstr ""
+
+msgid ""
+"Can’t delete chat “%{title}” while it’s answering. Wait until it finishes or "
+"stop it, then try again."
+msgstr ""
+
+#, fuzzy
+msgid "Context: Site"
+msgstr "コンテキストスイッチ"
+
+#, fuzzy
+msgid "Fold columns"
+msgstr "列"
+
+#, fuzzy
+msgid "Could not load the test executions"
+msgstr "結果を読み込めませんでした"
+
+#, fuzzy
+msgid "The trace backend is not available"
+msgstr "ターゲットルールは現在使用できません"
+
+#, fuzzy
+msgid "Synthetic monitoring keeps the test executions in a trace backend."
+msgstr "メトリックバックエンドからデータをクエリするためのポート。"
+
+#, fuzzy
+msgid "How to set up the trace backend"
+msgstr "メトリックバックエンドへのクエリ"
+
+#, fuzzy
+msgid "No test cases"
+msgstr "テストホストなし"
+
+msgid ""
+"Let a robot run your Robot Framework tests to see their executions here."
+msgstr ""
+
+#, fuzzy
+msgid "Synthetic monitoring in the user guide"
+msgstr "外形監視テスト"
+
+#, fuzzy
+msgid "+%{count} more"
+msgstr "カウント"
+
+#, fuzzy
+msgid "Partly failed"
+msgstr "アップロードされたファイル"
+
+#, fuzzy
+msgid "Not executed"
+msgstr "選択されていない"
+
+msgid "%{from} – %{to}"
+msgstr ""
+
+#, fuzzy
+msgid "Selected time slot"
+msgstr "期間を選択"
+
+msgid "%{site}: no execution in range"
+msgstr ""
+
+#, fuzzy
+msgid "%{site}: not applicable"
+msgstr "ホストが到達不能になる"
+
+#, fuzzy
+msgid "Test case"
+msgstr "テスト"
+
+#, fuzzy
+msgid "%{count} failed"
+msgstr "カウント"
+
+#, fuzzy
+msgid "no failures"
+msgstr "失敗"
+
+msgid "Fails on every site that ran it"
+msgstr ""
+
+#, fuzzy
+msgid "Hide hosts"
+msgstr "Vhosts"
+
+#, fuzzy
+msgid "Execution %{position}"
+msgstr "実行設定"
+
+#, fuzzy
+msgid "First execution"
+msgstr "最初に見た"
+
+#, fuzzy
+msgid "Previous execution"
+msgstr "前のステップ"
+
+#, fuzzy
+msgid "%{position} of %{total}"
+msgstr "%{selected} 件中 %{total} 件を選択しました"
+
+#, fuzzy
+msgid "Next execution"
+msgstr "再実行"
+
+#, fuzzy
+msgid "Last execution"
+msgstr "最後の例外"
+
+#, fuzzy
+msgid "Trace ID"
+msgstr "インターフェースID"
+
+#, fuzzy
+msgid "Not run"
+msgstr "次の実行"
+
+#, fuzzy
+msgid "Test executions"
+msgstr "再実行"
+
+#, fuzzy
+msgid "Earlier executions"
+msgstr "アラートハンドラーの実行"
+
+#, fuzzy
+msgid "Executions of this test"
+msgstr "チェックの実行"
+
+#, fuzzy
+msgid "Later executions"
+msgstr "再実行"
+
+msgid "Enlarge the screenshot"
+msgstr ""
+
+msgid "Screenshot of %{keyword}"
+msgstr ""
+
+#, fuzzy
+msgid "Elapsed"
+msgstr "崩壊した"
+
+#, fuzzy
+msgid "Arguments"
+msgstr "引数:"
+
+#, fuzzy
+msgid "This service no longer exists on %{host}."
+msgstr "このグループは存在しません。"
+
+#, fuzzy
+msgid "Open service"
+msgstr "OKサービス"
+
+#, fuzzy
+msgid "Loading the executions"
+msgstr "再実行なし"
+
+#, fuzzy
+msgid "The executions cannot be loaded"
+msgstr "そのホストの割り当て情報は読み取ることができません。"
+
+#, fuzzy
+msgid "There are no executions in this time range"
+msgstr "時間範囲内のパーセンタイル"
+
+msgid "Failed keyword %{keyword} after %{offset}"
+msgstr ""
+
+msgid "Failed keyword %{keyword} after %{offset}: %{message}"
+msgstr ""
+
+#, fuzzy
+msgid "Steps - %{test}"
+msgstr "%{selected} 件中 %{total} 件を選択しました"
+
+#, fuzzy
+msgid "Collapse one level"
+msgstr "すべて折りたたむ"
+
+#, fuzzy
+msgid "Expand one level"
+msgstr "すべて展開"
+
+#, fuzzy
+msgid "Go to the failed keyword"
+msgstr "他のフォルダに移動する"
+
+#, fuzzy
+msgid "Loading the trace"
+msgstr "ボンディングインターフェース"
+
+#, fuzzy
+msgid "This trace is no longer available"
+msgstr "ターゲットルールは現在使用できません"
+
+msgid "Its spans have expired, so the timeline cannot be shown."
+msgstr ""
+
+#, fuzzy
+msgid "This trace cannot be read"
+msgstr "このフィルターは表示できません"
+
 #, fuzzy
 msgid "One-time code"
 msgstr "ダウンタイムコメント"
@@ -110278,6 +110894,108 @@ msgstr ""
 msgid "To explore"
 msgstr "取り上げるトピック"
 
+#~ msgid "Host name lookup rule"
+#~ msgstr "ホスト名lookup ルール"
+
+#~ msgid "Host name lookup rules"
+#~ msgstr "ホスト名lookup ルール"
+
+#~ msgid "Is mount point"
+#~ msgstr "マウントポイントです"
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Optional. A template that identifies the OpenTelemetry data belonging to "
+#~ "this host, using the macros <tt>%(resource)s</tt>, <tt>%(scope)s</tt> and "
+#~ "<tt>%(data_point)s</tt> (the value of an OpenTelemetry resource, "
+#~ "instrumentation scope or data point attribute respectively). At fetch "
+#~ "time the template is rendered for each attribute combination in the data "
+#~ "and a host receives the series whose rendered name equals its own host "
+#~ "name. Example: "
+#~ "<tt>deployment_$RESOURCE_ATTR.k8s.namespace.name$_$RESOURCE_ATTR.k8s.deployment.name$</"
+#~ "tt> collects the data for a host named <tt>deployment_production_nginx</"
+#~ "tt>. A single bare macro like <tt>$RESOURCE_ATTR.service.name$</tt> "
+#~ "simply matches the attribute whose value equals the host name. Leave "
+#~ "unset to select the data via the attribute filters above only."
+#~ "<br><br>Characters in the attribute values that are not allowed in a host "
+#~ "name are replaced with underscores before the rendered name is compared, "
+#~ "so the data lands on the host that was created with the same substitution "
+#~ "applied.<br><br>Data points missing any attribute referenced by the "
+#~ "template are skipped: they are not attached to any host."
+#~ msgstr ""
+#~ "オプション。<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>、"
+#~ "<tt>$SCOPE_ATTR.&lt;key&gt;$</tt>や<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt> "
+#~ "（それぞれ、OpenTelemetryリソース、計測スコープ、またはデータポイント属性"
+#~ "の値）を使用して、このホストに属するOpenTelemetryデータを識別するテンプ"
+#~ "レートです。取得時に、データ内の各属性の組み合わせに対してテンプレートがレ"
+#~ "ンダリングされ、ホストは、レンダリングされた名前が自身のホスト名と一致する"
+#~ "シリーズを受け取ります。 例："
+#~ "<tt>deployment_$RESOURCE_ATTR.k8s.namespace.name$_$RESOURCE_ATTR.k8s.deployment.name$</"
+#~ "tt> は <tt>deployment_production_nginx</tt> という名前のホストのデータを収"
+#~ "集します。<tt>$RESOURCE_ATTR.service.name$</tt> のような単一のマクロは、値"
+#~ "がホスト名と等しい属性に単純に一致します。 設定しない場合は、上記の属性"
+#~ "フィルターのみを使用してデータが選択されます。<br><br>属性値に含まれるホス"
+#~ "ト名として許可されていない文字は、レンダリングされた名前が比較される前にア"
+#~ "ンダースコアに置換されるため、データは同じ置換が適用された状態で作成された"
+#~ "ホストに割り当てられます。<br><br>テンプレートで参照されている属性が欠落し"
+#~ "ているデータポイントはスキップされます。これらはどのホストにも関連付けられ"
+#~ "ません。"
+
+#~ msgid ""
+#~ "When this is checked, the backup ensures that the configured path is a "
+#~ "mount point. If there is no active mount on the path, the backup fails "
+#~ "with an error message."
+#~ msgstr ""
+#~ "これがチェックされると、バックアップは設定されたパスがマウントポイントであ"
+#~ "ることを確認します。パスにアクティブなマウントがない場合、バックアップはエ"
+#~ "ラーメッセージで失敗します。"
+
+#, fuzzy
+#~ msgid "Add contextual link"
+#~ msgstr "コンテキストヘルプアイコン"
+
+#, fuzzy
+#~ msgid "Include current time range"
+#~ msgstr "時間範囲で有効"
+
+#, fuzzy
+#~ msgid "Include dashboard & widget filters"
+#~ msgstr "ダッシュボードにフォルダー %{n} を準備しました"
+
+#, fuzzy
+#~ msgid "Always included in the contextual link"
+#~ msgstr "少なくとも1つの連絡先グループを追加してください。"
+
+#, fuzzy
+#~ msgid "Contextual filter = clicked element"
+#~ msgstr "このエレメントを削除します"
+
+#, fuzzy
+#~ msgid "Delete contextual link"
+#~ msgstr "コンテキストヘルプアイコン"
+
+#, fuzzy
+#~ msgid "Link name"
+#~ msgstr "アップリンク名"
+
+#, fuzzy
+#~ msgid "e.g. host details"
+#~ msgstr "BIホストの詳細"
+
+#, fuzzy
+#~ msgid "Include filter context of clicked element"
+#~ msgstr "このエレメントを削除します"
+
+#~ msgid ""
+#~ "%{total} service issues (%{critical} critical, %{warning} warning) across "
+#~ "%{hostsWithProblems} hosts"
+#~ msgstr ""
+#~ "%{total} 件のサービス障害（%{critical} 件の重大な障害、%{warning} 件の警"
+#~ "告）が、%{hostsWithProblems} 台のホストで発生"
+
+#~ msgid "%{critical} crit · %{warning} warn"
+#~ msgstr "%{critical} クリティカル · %{warning} 警告"
+
 #~ msgid "Services to fetch"
 #~ msgstr "取得するサービス"
 
@@ -110994,10 +111712,6 @@ msgstr "取り上げるトピック"
 #, fuzzy
 #~ msgid "Notifications updated"
 #~ msgstr "通知フェーズ"
-
-#, fuzzy
-#~ msgid "Host in Checkmk"
-#~ msgstr "Checkmkが学習する"
 
 #, fuzzy
 #~ msgid "Service in Checkmk"
@@ -112149,68 +112863,8 @@ msgstr "取り上げるトピック"
 #~ "条件を絞り込んでください。"
 
 #, fuzzy
-#~ msgid "What changed in the last hour?"
-#~ msgstr "過去1時間以内の再起動数"
-
-#, fuzzy
-#~ msgid "Suggested questions"
-#~ msgstr "セクション"
-
-#, fuzzy
-#~ msgid "Ask across all hosts and services"
-#~ msgstr "全てのホストとサービスを表示"
-
-#, fuzzy
-#~ msgid "Dock to the left"
-#~ msgstr "ルールのID"
-
-#, fuzzy
 #~ msgid "Dock to the bottom"
 #~ msgstr "レポートストアに移動します"
-
-#, fuzzy
-#~ msgid "Dock to the right"
-#~ msgstr "表示に戻る"
-
-#, fuzzy
-#~ msgid "AI assistant"
-#~ msgstr "AIアシスタント"
-
-#, fuzzy
-#~ msgid "New chat"
-#~ msgstr "新しいタブ"
-
-#, fuzzy
-#~ msgid "Chat history"
-#~ msgstr "DCDバッチ履歴"
-
-#, fuzzy
-#~ msgid "Dock position"
-#~ msgstr "マウスの位置"
-
-#, fuzzy
-#~ msgid "Welcome to"
-#~ msgstr "ウェルカムページ"
-
-#, fuzzy
-#~ msgid "Checkmk Assistant"
-#~ msgstr "Checkmkの状態"
-
-#, fuzzy
-#~ msgid "Cancelled"
-#~ msgstr "キャンセル"
-
-#, fuzzy
-#~ msgid "No chats yet"
-#~ msgstr "まだアラートはありません"
-
-#, fuzzy
-#~ msgid "Untitled chat"
-#~ msgstr "無題の設定"
-
-#, fuzzy
-#~ msgid "Delete chat"
-#~ msgstr "ホストを削除"
 
 #, fuzzy
 #~ msgid "Close for now"
@@ -113182,10 +113836,6 @@ msgstr "取り上げるトピック"
 #~ msgid "flapping"
 #~ msgstr "フラッピング"
 
-#~ msgid "%{n} host · %{breakdown}"
-#~ msgid_plural "%{n} hosts · %{breakdown}"
-#~ msgstr[0] "%{n} 台のホスト · %{breakdown}"
-
 #~ msgid ""
 #~ "The license usage history is older than five days. In order to have a "
 #~ "reliable average of the number of services the license usage report must "
@@ -113310,9 +113960,6 @@ msgstr "取り上げるトピック"
 #, fuzzy
 #~ msgid "Open the service graph page"
 #~ msgstr "サービスグループの選定"
-
-#~ msgid "Show details of host %{name}"
-#~ msgstr "ホスト %{name} の詳細を表示"
 
 #~ msgid "Last check:"
 #~ msgstr "最終チェック："
@@ -113529,9 +114176,6 @@ msgstr "取り上げるトピック"
 
 #~ msgid "The requested global setting does not exist."
 #~ msgstr "要求されたグローバル設定は存在しません。"
-
-#~ msgid "This option has been modified in the global settings."
-#~ msgstr "このオプションは、グローバル設定で変更されています。"
 
 #~ msgid "This option has been modified."
 #~ msgstr "このオプションは変更されました。"
@@ -114128,10 +114772,6 @@ msgstr "取り上げるトピック"
 #, fuzzy
 #~ msgid "State information"
 #~ msgstr "ログ:状態情報"
-
-#, fuzzy
-#~ msgid "Unhandled problems"
-#~ msgstr "未処理のホストの問題"
 
 #, fuzzy
 #~ msgid "Azure metric"
@@ -114968,9 +115608,6 @@ msgstr "取り上げるトピック"
 
 #~ msgid "Container Name"
 #~ msgstr "コンテナ名"
-
-#~ msgid "Context Switches"
-#~ msgstr "コンテキストスイッチ"
 
 #~ msgid "Crash Reports"
 #~ msgstr "クラッシュレポート"
@@ -117661,17 +118298,11 @@ msgstr "取り上げるトピック"
 #~ msgid "Trend performance data"
 #~ msgstr "トレンドパフォーマンスデータ"
 
-#~ msgid "Unknown services"
-#~ msgstr "不明なサービス"
-
 #~ msgid "Use WATO"
 #~ msgstr "WATOを使用する"
 
 #~ msgid "Varnish Backend success ratio"
 #~ msgstr "Varnishバックエンドの成功率"
-
-#~ msgid "Warning services"
-#~ msgstr "警告のサービス"
 
 #~ msgid "iops"
 #~ msgstr "iops"
@@ -118549,10 +119180,6 @@ msgstr "取り上げるトピック"
 #~ "Checkmkが内部的にメトリクスを処理する方法の制限により、結果には矛盾するメ"
 #~ "トリクスが含まれており、このトップリストは不正確または不完全である可能性が"
 #~ "あります。"
-
-#, python-format
-#~ msgid "Host or service %ss"
-#~ msgstr "ホストまたはサービス %ss"
 
 #~ msgid "Hosts or sites, depending on context"
 #~ msgstr "ホストかサイトか、文脈によって異なる"
@@ -119745,9 +120372,6 @@ msgstr "取り上げるトピック"
 #~ msgid "The identifier of the detector."
 #~ msgstr "検出器の識別子。"
 
-#~ msgid "failures"
-#~ msgstr "失敗"
-
 #~ msgid "l/s"
 #~ msgstr "l/s"
 
@@ -120313,9 +120937,6 @@ msgstr "取り上げるトピック"
 #~ "ターゲットサイト '%s'の監視コアのバージョンは '%s'です。これは、ログファイ"
 #~ "ル情報のフェッチをサポートしていません。新しいバージョンにアップグレードし"
 #~ "てください。"
-
-#~ msgid "At least one selection is missing."
-#~ msgstr "少なくとも1つのセレクションが欠けています。"
 
 #~ msgid "Use this custom start URL"
 #~ msgstr "このカスタム開始URLを使用する"
@@ -121039,9 +121660,6 @@ msgstr "取り上げるトピック"
 #~ "サブスクリプションを介してのみ使用できます。<b>注意:</b>このオプションは廃"
 #~ "止され、 '%s'に置き換えられました。このオプションを変更しても、Checkmkの動"
 #~ "作には影響しません"
-
-#~ msgid "CRITICAL services"
-#~ msgstr "重要なサービス"
 
 #~ msgid "DOWN hosts"
 #~ msgstr "DOWNホスト"

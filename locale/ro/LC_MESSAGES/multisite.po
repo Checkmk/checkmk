@@ -74048,6 +74048,10 @@ msgid "The report you are trying to preview is not available"
 msgstr "Raportul pe care încercați să îl previzualizați nu este disponibil"
 
 #, fuzzy
+msgid "The request does not contain the OAuth2 connection data."
+msgstr "ID-ul acestei conexiuni."
+
+#, fuzzy
 msgid "The request is missing the filter infos to render"
 msgstr "Prima linie din fișier conține titlurile."
 
@@ -74223,6 +74227,9 @@ msgstr ""
 
 msgid "The rule conditions do not match."
 msgstr "Condițiile regulii nu se potrivesc."
+
+msgid "The rule data must contain the rule properties with a rule ID."
+msgstr ""
 
 msgid "The rule does not match"
 msgstr "Regula nu se potrivește"
@@ -92852,6 +92859,11 @@ msgstr ""
 "Vă lipsește acțiunea cu ID-ul <b>%s</b>, care este încă utilizat în unele "
 "reguli."
 
+msgid ""
+"You are not a member of any contact group, so you cannot assign this OAuth2 "
+"connection to a contact group."
+msgstr ""
+
 #, python-format
 msgid "You are not allowed to access the host %s."
 msgstr "Nu aveți permisiunea de a accesa gazda %s."
@@ -94560,6 +94572,14 @@ msgstr ""
 "colecție de gazde, selectați aici subraportul dorit și configurați contextul "
 "acestuia pentru a utiliza un singur context de gazdă. Apoi, configurați "
 "filtrele pentru a selecta gazdele alese de dumneavoastră."
+
+#, fuzzy
+msgid ""
+"You need to be a member of at least one contact group to be able to create "
+"an OAuth2 connection."
+msgstr ""
+"Trebuie să fiți membru al cel puțin unui grup de contacte pentru a putea "
+"crea o condiție predefinită."
 
 #, fuzzy, python-format
 msgid "You need to be a member of at least one contact group to create a %s."

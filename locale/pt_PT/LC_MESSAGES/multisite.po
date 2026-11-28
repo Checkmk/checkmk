@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-11-27 09:07+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -73796,6 +73796,10 @@ msgid "The report you are trying to preview is not available"
 msgstr "O relatório que você está tentando visualizar não está disponível"
 
 #, fuzzy
+msgid "The request does not contain the OAuth2 connection data."
+msgstr "O ID desta ligação."
+
+#, fuzzy
 msgid "The request is missing the filter infos to render"
 msgstr "A primeira linha do arquivo contém títulos."
 
@@ -73971,6 +73975,9 @@ msgstr ""
 
 msgid "The rule conditions do not match."
 msgstr "As condições das regras não coincidem."
+
+msgid "The rule data must contain the rule properties with a rule ID."
+msgstr ""
 
 msgid "The rule does not match"
 msgstr "A regra não corresponde"
@@ -92369,6 +92376,11 @@ msgstr ""
 "Você está perdendo a ação com o ID <b>%s</b>, que ainda é usado em algumas "
 "regras."
 
+msgid ""
+"You are not a member of any contact group, so you cannot assign this OAuth2 "
+"connection to a contact group."
+msgstr ""
+
 #, python-format
 msgid "You are not allowed to access the host %s."
 msgstr "Você não está autorizado a acessar as %s anfitriãs."
@@ -94057,6 +94069,14 @@ msgstr ""
 "contexto para usar um único contexto de host. Em seguida, configure os "
 "filtros para selecionar os hosts de sua escolha."
 
+#, fuzzy
+msgid ""
+"You need to be a member of at least one contact group to be able to create "
+"an OAuth2 connection."
+msgstr ""
+"Você precisa ser membro de pelo menos um grupo de contato para poder criar "
+"uma condição pré-definida."
+
 #, fuzzy, python-format
 msgid "You need to be a member of at least one contact group to create a %s."
 msgstr ""
@@ -94961,7 +94981,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -95483,7 +95502,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""

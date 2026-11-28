@@ -73793,6 +73793,10 @@ msgid "The report you are trying to preview is not available"
 msgstr "Het rapport dat u probeert te bekijken is niet beschikbaar"
 
 #, fuzzy
+msgid "The request does not contain the OAuth2 connection data."
+msgstr "Het ID van deze verbinding."
+
+#, fuzzy
 msgid "The request is missing the filter infos to render"
 msgstr "De eerste regel in het bestand bevat titels."
 
@@ -73970,6 +73974,9 @@ msgstr ""
 
 msgid "The rule conditions do not match."
 msgstr "De regelvoorwaarden komen niet overeen."
+
+msgid "The rule data must contain the rule properties with a rule ID."
+msgstr ""
 
 msgid "The rule does not match"
 msgstr "De regel komt niet overeen met"
@@ -92418,6 +92425,11 @@ msgstr ""
 "U mist de actie met de ID <b>%s</b>, die in sommige regels nog wordt "
 "gebruikt."
 
+msgid ""
+"You are not a member of any contact group, so you cannot assign this OAuth2 "
+"connection to a contact group."
+msgstr ""
+
 #, python-format
 msgid "You are not allowed to access the host %s."
 msgstr "U heeft geen toegang tot de host %s."
@@ -94116,6 +94128,14 @@ msgstr ""
 "een verzameling van hosts, selecteer dan hier het subrapport van uw keuze en "
 "configureer de context ervan om een enkele host context te gebruiken. "
 "Configureer dan de filters om de hosts van uw keuze te selecteren."
+
+#, fuzzy
+msgid ""
+"You need to be a member of at least one contact group to be able to create "
+"an OAuth2 connection."
+msgstr ""
+"U moet lid zijn van minstens één contactgroep om een voorgedefinieerde "
+"voorwaarde te kunnen creëren."
 
 #, fuzzy, python-format
 msgid "You need to be a member of at least one contact group to create a %s."

@@ -73574,6 +73574,10 @@ msgstr ""
 "Il rapporto che stai cercando di visualizzare in anteprima non è disponibile"
 
 #, fuzzy
+msgid "The request does not contain the OAuth2 connection data."
+msgstr "L'ID di questa connessione."
+
+#, fuzzy
 msgid "The request is missing the filter infos to render"
 msgstr "La prima riga del file contiene i titoli."
 
@@ -73750,6 +73754,9 @@ msgstr ""
 
 msgid "The rule conditions do not match."
 msgstr "Le condizioni della regola non corrispondono."
+
+msgid "The rule data must contain the rule properties with a rule ID."
+msgstr ""
 
 msgid "The rule does not match"
 msgstr "La regola non corrisponde"
@@ -92198,6 +92205,11 @@ msgid ""
 msgstr ""
 "Ti manca l'azione con l'ID <b>%s</b>, che è ancora usato in alcune regole."
 
+msgid ""
+"You are not a member of any contact group, so you cannot assign this OAuth2 "
+"connection to a contact group."
+msgstr ""
+
 #, python-format
 msgid "You are not allowed to access the host %s."
 msgstr "Non sei autorizzato ad accedere all'host %s."
@@ -93921,6 +93933,14 @@ msgstr ""
 "collezione di host, seleziona qui il sotto rapporto di tua scelta e "
 "configura il suo contesto per utilizzare un contesto di host singolo. Poi "
 "configura i filtri per selezionare gli host di tua scelta."
+
+#, fuzzy
+msgid ""
+"You need to be a member of at least one contact group to be able to create "
+"an OAuth2 connection."
+msgstr ""
+"Devi essere membro di almeno un gruppo di contatti per poter creare una "
+"condizione predefinita."
 
 #, fuzzy, python-format
 msgid "You need to be a member of at least one contact group to create a %s."

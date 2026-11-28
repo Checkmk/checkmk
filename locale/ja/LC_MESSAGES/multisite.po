@@ -70034,6 +70034,10 @@ msgstr "プレビューしようとしているレポートに有効なファイ
 msgid "The report you are trying to preview is not available"
 msgstr "プレビューしようとしているレポートは利用できません"
 
+#, fuzzy
+msgid "The request does not contain the OAuth2 connection data."
+msgstr "この接続のID。"
+
 msgid "The request is missing the filter infos to render"
 msgstr "このリクエストには、レンダリングに必要なフィルター情報が欠けています"
 
@@ -70209,6 +70213,9 @@ msgstr ""
 
 msgid "The rule conditions do not match."
 msgstr "ルールの条件が一致しません。"
+
+msgid "The rule data must contain the rule properties with a rule ID."
+msgstr ""
 
 msgid "The rule does not match"
 msgstr "ルールが一致しません"
@@ -87523,6 +87530,11 @@ msgstr ""
 "ID <b>%s</b>のアクションがありません。これは、一部のルールで引き続き使用され"
 "ています。"
 
+msgid ""
+"You are not a member of any contact group, so you cannot assign this OAuth2 "
+"connection to a contact group."
+msgstr ""
+
 #, python-format
 msgid "You are not allowed to access the host %s."
 msgstr "ホスト%sへのアクセスは許可されていません。"
@@ -89167,6 +89179,14 @@ msgstr ""
 "ションに対するサブレポートを含む単一のレポートを作成する場合、ここで希望のサ"
 "ブレポートを選択し、単一ホストコンテキストを使用するようにそのコンテキストを"
 "構成します。次に、選択したホストを選択するようにフィルタを設定します。"
+
+#, fuzzy
+msgid ""
+"You need to be a member of at least one contact group to be able to create "
+"an OAuth2 connection."
+msgstr ""
+"定義済み条件を作成するには、少なくとも１つの連絡先グループのメンバーである必"
+"要があります。"
 
 #, fuzzy, python-format
 msgid "You need to be a member of at least one contact group to create a %s."

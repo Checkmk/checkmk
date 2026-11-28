@@ -74418,6 +74418,10 @@ msgid "The report you are trying to preview is not available"
 msgstr "Le rapport que vous essayez de visualiser n'est pas disponible"
 
 #, fuzzy
+msgid "The request does not contain the OAuth2 connection data."
+msgstr "L'ID de cette connexion."
+
+#, fuzzy
 msgid "The request is missing the filter infos to render"
 msgstr "La première ligne du fichier contient les titres."
 
@@ -74594,6 +74598,9 @@ msgstr ""
 
 msgid "The rule conditions do not match."
 msgstr "Les conditions de la règle ne correspondent pas."
+
+msgid "The rule data must contain the rule properties with a rule ID."
+msgstr ""
 
 msgid "The rule does not match"
 msgstr "La règle ne correspond pas"
@@ -93252,6 +93259,11 @@ msgstr ""
 "Vous manquez l'action avec l'ID <b>%s</b>, qui est encore utilisé dans "
 "certaines règles."
 
+msgid ""
+"You are not a member of any contact group, so you cannot assign this OAuth2 "
+"connection to a contact group."
+msgstr ""
+
 #, python-format
 msgid "You are not allowed to access the host %s."
 msgstr "Vous n'êtes pas autorisé à accéder à l'hôte %s."
@@ -94997,6 +95009,14 @@ msgstr ""
 "d'hôtes, sélectionnez le sous-rapport de votre choix ici et configurez son "
 "contexte pour utiliser un contexte d'hôte unique. Configurez ensuite les "
 "filtres pour sélectionner les hôtes de votre choix."
+
+#, fuzzy
+msgid ""
+"You need to be a member of at least one contact group to be able to create "
+"an OAuth2 connection."
+msgstr ""
+"Vous devez être membre d'au moins un groupe de contacts pour pouvoir créer "
+"une condition prédéfinie."
 
 #, fuzzy, python-format
 msgid "You need to be a member of at least one contact group to create a %s."
